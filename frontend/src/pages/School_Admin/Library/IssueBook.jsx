@@ -144,7 +144,12 @@ const IssueBook = () => {
       schoolId,
       bookId:       values.bookId,
       memberType:   values.memberType,
-      issuedToUserId: values.issuedToUserId,
+      // The picker's value is a Student._id for members, a User._id for
+      // teacher/staff — IssuedBook stores those under different fields
+      // (studentId vs issuedToUserId), so route it to the right one.
+      ...(values.memberType === "Student"
+        ? { studentId: values.issuedToUserId }
+        : { issuedToUserId: values.issuedToUserId }),
       issueDate:    values.issueDate?.toISOString(),
     };
     try {

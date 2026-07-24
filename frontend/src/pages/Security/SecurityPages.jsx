@@ -303,7 +303,7 @@ export const EntryRegister = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    dispatch(fetchGateEntries({}));
+    dispatch(fetchGateEntries({ limit: 500 }));
     dispatch(fetchGateStats());
   }, [dispatch]);
 
@@ -511,12 +511,12 @@ export const GateLogs = () => {
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
-    dispatch(fetchGateEntries({}));
+    dispatch(fetchGateEntries({ limit: 500 }));
     dispatch(fetchGateStats());
   }, [dispatch]);
 
   const refresh = () => {
-    dispatch(fetchGateEntries({}));
+    dispatch(fetchGateEntries({ limit: 500 }));
     dispatch(fetchGateStats());
   };
 
@@ -646,7 +646,7 @@ export const EmergencyAlerts = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [form] = Form.useForm();
 
-  useEffect(() => { dispatch(fetchEmergencyAlerts({})); }, [dispatch]);
+  useEffect(() => { dispatch(fetchEmergencyAlerts({ limit: 500 })); }, [dispatch]);
 
   const handleRaise = async (values) => {
     const res = await dispatch(raiseEmergencyAlert(values));

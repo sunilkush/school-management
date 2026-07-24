@@ -67,7 +67,7 @@ const SchoolClass = ({ next }) => {
   const boardState = useSelector((s) => s.boards || {});
   const schoolClassState = useSelector((s) => s.schoolClass || {});
   const academicYearState = useSelector((s) => s.academicYear || {});
-  const sectionState = useSelector((s) => s.sections || {});
+  const sectionState = useSelector((s) => s.section || {});
   const user = useSelector((s) => s.auth?.user || {});
 
   const boardClass = useMemo(

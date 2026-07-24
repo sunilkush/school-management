@@ -57,6 +57,7 @@ const SELF_ATTENDANCE_ROLES = [
   "Lab Technician",
   "Medical Officer",
   "Class Teacher",
+  "Driver",
 ];
 
 const REPORT_ROLES = [
@@ -87,6 +88,7 @@ const VIEW_ROLES = Array.from(new Set([
   "Lab Technician",
   "Medical Officer",
   "Class Teacher",
+  "Driver",
 ]));
 
 const MY_ATTENDANCE_ROLES = [

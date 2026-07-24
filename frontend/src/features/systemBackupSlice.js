@@ -72,6 +72,18 @@ export const toggleBackupSchedule = createAsyncThunk(
   }
 );
 
+export const deleteBackupSchedule = createAsyncThunk(
+  "systemBackup/deleteSchedule",
+  async (id, { rejectWithValue }) => {
+    try {
+      await apiClient.delete(`/backup-schedules/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(getMessage(error, "Failed to delete schedule"));
+    }
+  }
+);
+
 export const fetchRestoreJobs = createAsyncThunk("systemBackup/fetchRestoreJobs", async (_, { rejectWithValue }) => {
   try {
     const response = await apiClient.get("/restore-jobs");
@@ -215,6 +227,10 @@ const systemBackupSlice = createSlice({
         state.schedules = state.schedules.map((item) =>
           item._id === action.payload._id ? action.payload : item
         );
+      })
+      .addCase(deleteBackupSchedule.fulfilled, (state, action) => {
+        state.schedules = state.schedules.filter((item) => item._id !== action.payload);
+        state.successMessage = "Schedule deleted successfully";
       })
       .addCase(fetchRestoreJobs.fulfilled, (state, action) => {
         state.restoreJobs = action.payload;

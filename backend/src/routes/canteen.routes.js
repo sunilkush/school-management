@@ -16,11 +16,19 @@ const gate = [auth, roleMiddleware(CANTEEN_ROLES)];
 router.post(
   "/items",
   ...gate,
-  validate({ body: { name: { required: true, type: "string" }, price: { required: true, type: "positiveInt" } } }),
+  validate({ body: { name: { required: true, type: "string" }, price: { required: true, type: "positiveNumber" } } }),
   createItem
 );
 router.get("/items", ...gate, getItems);
-router.put("/items/:id", ...gate, validate({ params: { id: { required: true, type: "objectId" } } }), updateItem);
+router.put(
+  "/items/:id",
+  ...gate,
+  validate({
+    params: { id: { required: true, type: "objectId" } },
+    body: { price: { type: "positiveNumber" } },
+  }),
+  updateItem
+);
 router.delete("/items/:id", ...gate, validate({ params: { id: { required: true, type: "objectId" } } }), deleteItem);
 
 // ── Wallet ──

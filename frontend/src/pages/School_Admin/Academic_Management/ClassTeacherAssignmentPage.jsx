@@ -55,7 +55,7 @@ const ClassTeacherAssignmentPage = () => {
   const dispatch = useDispatch();
   const { assignments, loading, saving } = useSelector((s) => s.classTeacher);
   const { schoolClasses = [] }           = useSelector((s) => s.schoolClass);
-  const { sections = [] }                = useSelector((s) => s.sections);
+  const { sections = [] }                = useSelector((s) => s.section);
   const { users = [], user: me }         = useSelector((s) => s.auth);
   const { selectedAcademicYear, activeYear } = useSelector((s) => s.academicYear || {});
 

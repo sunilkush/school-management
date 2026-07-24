@@ -82,6 +82,10 @@ const isVisibleToUser = (notification, user) => {
   const userIds = normalizeUserIdentityTokens(user).map((token) => token.toLowerCase());
 
   if (!canNotificationBeSeenNow(notification)) return false;
+  // The sender must always see what they sent — otherwise a role/user-targeted broadcast
+  // that excludes the sender's own role (e.g. Receptionist → Students) vanishes from their
+  // own "sent" history right after creation, looking like the send silently failed.
+  if (notification.createdById && `${notification.createdById}` === `${user?._id || ""}`) return true;
   if (notification.level === "all") return true;
 
   if (notification.level === "role") {

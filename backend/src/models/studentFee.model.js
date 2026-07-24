@@ -84,6 +84,18 @@ const studentFeeSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+
+    // 🔹 Snapshot of the most recent payment against this fee record.
+    // Full transaction history lives in the Payment collection — this is
+    // just a quick "last touched" reference on the fee record itself.
+    lastPayment: {
+      amount: { type: Number },
+      paymentMode: { type: String },
+      referenceNo: { type: String },
+      remarks: { type: String },
+      paidAt: { type: Date },
+      collectedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    },
   },
   {
     timestamps: true,

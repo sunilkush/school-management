@@ -214,10 +214,10 @@ const ParentDashboard = () => {
                     </div>
 
                     <Space wrap size={6}>
-                      <Button size="small" onClick={() => navigate("/dashboard/parent/attendance")}>Attendance</Button>
-                      <Button size="small" onClick={() => navigate("/dashboard/parent/homework")}>Homework</Button>
-                      <Button size="small" onClick={() => navigate("/dashboard/parent/grades")}>Grades</Button>
-                      <Button size="small" onClick={() => navigate("/dashboard/parent/fees")}>Fees</Button>
+                      <Button size="small" onClick={() => navigate(`/dashboard/parent/attendance?childId=${child.userId}`)}>Attendance</Button>
+                      <Button size="small" onClick={() => navigate(`/dashboard/parent/homework?childId=${child.userId}`)}>Homework</Button>
+                      <Button size="small" onClick={() => navigate(`/dashboard/parent/grades?childId=${child.userId}`)}>Grades</Button>
+                      <Button size="small" onClick={() => navigate(`/dashboard/parent/fees?childId=${child.userId}`)}>Fees</Button>
                     </Space>
                   </div>
                 </Col>

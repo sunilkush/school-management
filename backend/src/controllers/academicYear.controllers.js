@@ -184,8 +184,8 @@ export const getActiveAcademicYearBySchool = asyncHandler(async (req, res) => {
 
   if (!academicYear) {
     return res
-    .status(201)
-    .json(new ApiResponse(404,"No active academic year found for this school"));
+      .status(200)
+      .json(new ApiResponse(200, null, "No active academic year found for this school"));
   }
 
   res.status(200).json({

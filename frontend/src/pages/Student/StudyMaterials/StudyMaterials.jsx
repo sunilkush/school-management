@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Button, Input, Select, Tag, Space, Empty, Spin, message,
 } from "antd";
@@ -8,6 +8,7 @@ import {
   DownloadOutlined,
 } from "@ant-design/icons";
 import apiClient from "../../../api/httpClient";
+import { fetchStudentEnrollment } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow } from "../../../styles/pageStyles";
 
@@ -85,6 +86,7 @@ const MaterialCard = ({ item }) => {
 };
 
 const StudyMaterials = () => {
+  const dispatch = useDispatch();
   const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
   const studentPortal = useSelector((s) => s.studentPortal || {});
   const enrollment = studentPortal.enrollment;
@@ -95,15 +97,19 @@ const StudyMaterials = () => {
   const [filterSubject, setFilterSubject] = useState(undefined);
   const [filterType, setFilterType]       = useState(undefined);
 
+  useEffect(() => {
+    if (!enrollment) dispatch(fetchStudentEnrollment());
+  }, [dispatch, enrollment]);
+
   const fetchMaterials = useCallback(async () => {
-    if (!selectedAcademicYear?._id || !enrollment?.schoolClassId) return;
+    if (!selectedAcademicYear?._id || !enrollment?.schoolClass) return;
     setLoading(true);
     try {
       const params = {
         academicYearId: selectedAcademicYear._id,
-        schoolClassId: typeof enrollment.schoolClassId === "object"
-          ? enrollment.schoolClassId._id
-          : enrollment.schoolClassId,
+        schoolClassId: typeof enrollment.schoolClass === "object"
+          ? enrollment.schoolClass._id
+          : enrollment.schoolClass,
       };
       const res = await apiClient.get("/study-materials", { params });
       setMaterials(res.data?.data?.items || []);
@@ -112,7 +118,7 @@ const StudyMaterials = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedAcademicYear?._id, enrollment?.schoolClassId]);
+  }, [selectedAcademicYear?._id, enrollment?.schoolClass]);
 
   useEffect(() => { fetchMaterials(); }, [fetchMaterials]);
 

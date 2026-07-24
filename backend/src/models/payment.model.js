@@ -28,9 +28,12 @@ academicYearId: {
       index: true,
     },
     installmentId: {
+      // Optional: only set for payments made against the FeeInstallment/self-service
+      // flow. Payments recorded directly against a StudentFee (e.g. Accountant "Collect
+      // Fees") have no matching installment, so this must stay nullable.
       type: mongoose.Schema.Types.ObjectId,
       ref: "FeeInstallment",
-      required: true,
+      default: null,
       index: true,
     },
 
@@ -42,7 +45,7 @@ academicYearId: {
 
     paymentMode: {
       type: String,
-      enum: ["cash", "online", "cheque","razorpay"],
+      enum: ["cash", "online", "cheque", "razorpay", "bank_transfer", "upi"],
       required: true,
     },
 
@@ -85,19 +88,8 @@ paymentSchema.index(
 );
 paymentSchema.index({ schoolId: 1, studentId: 1, paymentDate: -1 });
 
-/**
- * Auto-update installment status after payment
- */
-paymentSchema.post("save", async function (doc) {
-  const FeeInstallment = mongoose.model("FeeInstallment");
-
-  const installment = await FeeInstallment.findById(doc.installmentId);
-  if (!installment) return;
-
-  if (doc.amountPaid >= installment.amount) {
-    installment.status = "paid";
-    await installment.save();
-  }
-});
+// Installment status is updated atomically alongside the Payment write inside
+// the same transaction (see recordPayment() in payment.controllers.js) —
+// a post-save hook here would run outside that transaction and race it.
 
 export const Payment = mongoose.model("Payment", paymentSchema);

@@ -37,6 +37,16 @@ const StudentAllowedBook = () => {
         </span>
       ),
     },
+    {
+      title: "Fine",
+      dataIndex: "fineAmount",
+      render: (value) =>
+        value > 0 ? (
+          <span style={pill("#EF4444", "#fff1f2")}>₹{value}</span>
+        ) : (
+          <span style={{ color: "var(--text-muted)" }}>—</span>
+        ),
+    },
   ];
 
   return (

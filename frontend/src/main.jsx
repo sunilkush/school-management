@@ -385,6 +385,7 @@ const EmergencyAlerts    = lazy(() => import("./pages/Security/SecurityPages.jsx
 const DriversPage             = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.DriversPage })));
 const VehicleMaintenance      = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.VehicleMaintenance })));
 const TransportManagerDashboard = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.TransportManagerDashboard })));
+const DriverDashboard         = lazy(() => import("./pages/Driver/DriverDashboard.jsx"));
 const ReceptionistDashboard   = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.ReceptionistDashboard })));
 const CounselorDashboard      = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselorDashboard })));
 const SecurityDashboard       = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.SecurityDashboard })));
@@ -449,6 +450,7 @@ const router = createBrowserRouter([
                   "Sports Teacher",
                   "Lab Technician",
                   "Medical Officer",
+                  "Driver",
                 ]}
               >
                 <ModuleOverview />
@@ -483,6 +485,7 @@ const router = createBrowserRouter([
                   "Sports Teacher",
                   "Lab Technician",
                   "Medical Officer",
+                  "Driver",
                 ]}
               >
                 <ModuleDetail />
@@ -517,6 +520,7 @@ const router = createBrowserRouter([
                   "Sports Teacher",
                   "Lab Technician",
                   "Medical Officer",
+                  "Driver",
                 ]}
               >
                 <SupportTicketsPage />
@@ -551,6 +555,7 @@ const router = createBrowserRouter([
                   "Lab Technician",
                   "Medical Officer",
                   "Class Teacher",
+                  "Driver",
                 ]}
               >
                 <RoleDocumentation />
@@ -585,6 +590,7 @@ const router = createBrowserRouter([
                   "Sports Teacher",
                   "Lab Technician",
                   "Medical Officer",
+                  "Driver",
                 ]}
               >
                 <SecuritySettings />
@@ -1095,6 +1101,26 @@ const router = createBrowserRouter([
               { path: "*",               element: <RoleDynamicPortal /> },
             ],
           },
+          {
+            path: "driver",
+            element: (
+              <ProtectedRoute allowedRoles={["Driver"]}>
+                <Outlet />
+              </ProtectedRoute>
+            ),
+            children: [
+              { index: true,             element: <DriverDashboard /> },
+              { path: "tasks",           element: <MyTasks /> },
+              { path: "payroll",         element: <PayrollSelfServicePage /> },
+              { path: "attendance/self", element: <EmployeeSelfAttendance /> },
+              { path: "attendance/my",   element: <MyAttendancePage /> },
+              { path: "leave",           element: <TeacherLeave /> },
+              { path: "profile",         element: <Profile /> },
+              { path: "message",         element: <Message /> },
+              { path: "notification",    element: <Notification /> },
+              { path: "*",               element: <RoleDynamicPortal /> },
+            ],
+          },
            {
             path: "examcoordinator",
             element: (
@@ -1175,6 +1201,7 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "tasks",            element: <MyTasks /> },
+              { path: "*",                element: <RoleDynamicPortal /> },
             ],
           },
           {
@@ -1236,7 +1263,6 @@ const router = createBrowserRouter([
               { path: "sports",                     element: <SportsPage /> },
               { path: "classes",                    element: <AssignedClasses /> },
               { path: "classes/:classId",           element: <ClassDetails /> },
-              { path: "students",                   element: <MyStudents /> },
               { path: "assignments",                element: <Assignments /> },
               { path: "attendance/students",        element: <StudentAttendance /> },
               { path: "attendance/self",            element: <EmployeeSelfAttendance /> },
@@ -1250,6 +1276,7 @@ const router = createBrowserRouter([
               { path: "communication/history",      element: <SmsEmailHistory /> },
               { path: "profile",                    element: <Profile /> },
               { path: "profile/change-password",    element: <ChangePassword /> },
+              { path: "*",                          element: <RoleDynamicPortal /> },
             ],
           },
           {
@@ -1261,7 +1288,6 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,                        element: <TeacherDashboard /> },
-              { path: "students",                   element: <MyStudents /> },
               { path: "timetable",                  element: <TeacherTimetablePage /> },
               { path: "attendance/self",            element: <EmployeeSelfAttendance /> },
               { path: "attendance/my",              element: <MyAttendancePage /> },
@@ -1274,6 +1300,7 @@ const router = createBrowserRouter([
               { path: "communication/history",      element: <SmsEmailHistory /> },
               { path: "profile",                    element: <Profile /> },
               { path: "profile/change-password",    element: <ChangePassword /> },
+              { path: "*",                          element: <RoleDynamicPortal /> },
             ],
           },
           {
@@ -1285,7 +1312,6 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,                        element: <TeacherDashboard /> },
-              { path: "students",                   element: <MyStudents /> },
               { path: "health-records",              element: <HealthRecordsPage /> },
               { path: "attendance/self",            element: <EmployeeSelfAttendance /> },
               { path: "attendance/my",              element: <MyAttendancePage /> },
@@ -1298,6 +1324,7 @@ const router = createBrowserRouter([
               { path: "communication/history",      element: <SmsEmailHistory /> },
               { path: "profile",                    element: <Profile /> },
               { path: "profile/change-password",    element: <ChangePassword /> },
+              { path: "*",                          element: <RoleDynamicPortal /> },
             ],
           },
           {
@@ -1329,6 +1356,7 @@ const router = createBrowserRouter([
               { path: "communication/history",      element: <SmsEmailHistory /> },
               { path: "profile",                    element: <Profile /> },
               { path: "profile/change-password",    element: <ChangePassword /> },
+              { path: "*",                          element: <RoleDynamicPortal /> },
             ],
           },
           {
@@ -1359,74 +1387,6 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "classteacher",
-            element: (
-              <ProtectedRoute allowedRoles={["Class Teacher"]}>
-                <Outlet />
-              </ProtectedRoute>
-            ),
-            children: [
-              { index: true,          element: <RoleWorkspace /> },
-              { path: "tasks",        element: <MyTasks /> },
-              { path: "payroll",      element: <PayrollSelfServicePage /> },
-              { path: "profile",      element: <Profile /> },
-              { path: "message",      element: <Message /> },
-              { path: "notification", element: <Notification /> },
-              { path: "*",            element: <RoleDynamicPortal /> },
-            ],
-          },
-          {
-            path: "sportsteacher",
-            element: (
-              <ProtectedRoute allowedRoles={["Sports Teacher"]}>
-                <Outlet />
-              </ProtectedRoute>
-            ),
-            children: [
-              { index: true,          element: <RoleWorkspace /> },
-              { path: "tasks",        element: <MyTasks /> },
-              { path: "payroll",      element: <PayrollSelfServicePage /> },
-              { path: "profile",      element: <Profile /> },
-              { path: "message",      element: <Message /> },
-              { path: "notification", element: <Notification /> },
-              { path: "*",            element: <RoleDynamicPortal /> },
-            ],
-          },
-          {
-            path: "labtechnician",
-            element: (
-              <ProtectedRoute allowedRoles={["Lab Technician"]}>
-                <Outlet />
-              </ProtectedRoute>
-            ),
-            children: [
-              { index: true,          element: <RoleWorkspace /> },
-              { path: "tasks",        element: <MyTasks /> },
-              { path: "payroll",      element: <PayrollSelfServicePage /> },
-              { path: "profile",      element: <Profile /> },
-              { path: "message",      element: <Message /> },
-              { path: "notification", element: <Notification /> },
-              { path: "*",            element: <RoleDynamicPortal /> },
-            ],
-          },
-          {
-            path: "medicalofficer",
-            element: (
-              <ProtectedRoute allowedRoles={["Medical Officer"]}>
-                <Outlet />
-              </ProtectedRoute>
-            ),
-            children: [
-              { index: true,          element: <RoleWorkspace /> },
-              { path: "tasks",        element: <MyTasks /> },
-              { path: "payroll",      element: <PayrollSelfServicePage /> },
-              { path: "profile",      element: <Profile /> },
-              { path: "message",      element: <Message /> },
-              { path: "notification", element: <Notification /> },
-              { path: "*",            element: <RoleDynamicPortal /> },
-            ],
-          },
-          {
             path: "staff",
             element: (
                 <ProtectedRoute allowedRoles={["Staff", "Support Staff"]}>
@@ -1445,6 +1405,7 @@ const router = createBrowserRouter([
               { path: "notification",    element: <Notification /> },
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
+              { path: "*",               element: <RoleDynamicPortal /> },
             ],
           },
         ],

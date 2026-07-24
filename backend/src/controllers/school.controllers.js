@@ -53,9 +53,9 @@ const registerSchool = asyncHandler(async (req, res) => {
   const schoolId = newSchool._id;
 
   // 2️⃣ Assign Boards
-  if (SchoolBoard && SchoolBoard.length > 0) {
+  if (boards && boards.length > 0) {
 
-    const schoolBoards = SchoolBoard.map((boardId, index) => ({
+    const schoolBoards = boards.map((boardId, index) => ({
       schoolId,
       boardId,
       isPrimary: index === 0,

@@ -69,7 +69,7 @@ const LibraryMembers = () => {
       const id   = s?.userId || s?.studentId || s?.student?._id || s?._id;
       const name = s?.userDetails?.name || s?.user?.name || s?.studentName || "Unknown";
       const reg  = s?.registrationNumber || s?.admissionNumber || "-";
-      list.push({ id, name, regNo: reg, type: "Student", email: s?.userDetails?.email || s?.email || "" });
+      list.push({ id, name, regNo: reg, type: "Student", email: s?.user?.email || s?.userDetails?.email || s?.email || "" });
     });
 
     // Teachers & Staff from allUsers

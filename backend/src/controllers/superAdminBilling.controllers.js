@@ -5,6 +5,7 @@ import { SchoolSubscription } from "../models/schoolSubscription.model.js";
 import { SubscriptionInvoice } from "../models/SubscriptionInvoice.model.js";
 import { SubscriptionPayment } from "../models/SubscriptionPayment.model.js";
 import { SchoolUsage } from "../models/SchoolUsage.model.js";
+import { PlanUpdateLog } from "../models/planUpdateLog.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -65,11 +66,21 @@ export const createPlanV2 = asyncHandler(async (req, res) => {
 });
 
 export const updatePlanV2 = asyncHandler(async (req, res) => {
+  const oldPlan = await SubscriptionPlan.findById(req.params.planId);
+  if (!oldPlan) throw new ApiError(404, "Plan not found");
+  const oldData = oldPlan.toObject();
+
   const plan = await SubscriptionPlan.findByIdAndUpdate(req.params.planId, req.body, {
     new: true,
     runValidators: true,
   });
-  if (!plan) throw new ApiError(404, "Plan not found");
+
+  await PlanUpdateLog.create({
+    planId: plan._id,
+    oldData,
+    newData: plan.toObject(),
+    updatedBy: req.user?._id,
+  });
 
   const autoSyncSubs = await SchoolSubscription.find({
     planId: plan._id,

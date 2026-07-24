@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import { fetchMyFees } from "../../../features/studentFeeSlice";
 import { fetchFeeInstallments, generateInstallments } from "../../../features/feeInstallmentSlice";
@@ -165,6 +166,8 @@ const InstCard = ({ inst, onPay, onPrint }) => {
 /* ── Page ── */
 const ParentFees = () => {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const requestedChildId = searchParams.get("childId");
 
   const { children = [], loading: childrenLoading }          = useSelector((s) => s.studentPortal || {});
   const { myFees = [], loading: feeLoading }                 = useSelector((s) => s.studentFee || {});
@@ -184,8 +187,10 @@ const ParentFees = () => {
   useEffect(() => { dispatch(fetchMyChildren()); }, [dispatch]);
 
   useEffect(() => {
-    if (!selectedChildId && children.length) setSelectedChildId(children[0]?.userId);
-  }, [children, selectedChildId]);
+    if (selectedChildId || !children.length) return;
+    const requested = requestedChildId && children.some((c) => c.userId === requestedChildId);
+    setSelectedChildId(requested ? requestedChildId : children[0]?.userId);
+  }, [children, selectedChildId, requestedChildId]);
 
   const selectedChild  = useMemo(() => children.find((c) => c.userId === selectedChildId) || null, [children, selectedChildId]);
   const enrollmentId   = selectedChild?._id;

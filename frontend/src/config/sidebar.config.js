@@ -588,6 +588,15 @@ export const sidebarMenu = {
     ...commonSelfService("transportmanager"),
   ],
 
+  /* ================= DRIVER ================= */
+  driver: [
+    { title: "Overview",   path: "driver",         icon: LayoutDashboard },
+    { title: "My Tasks",   path: "driver/tasks",    icon: ListChecks      },
+    { title: "My Payroll", path: "driver/payroll",  icon: IndianRupee     },
+    ...employeeAttendance("driver"),
+    ...commonSelfService("driver"),
+  ],
+
   /* ================= RECEPTIONIST ================= */
   receptionist: [
     { title: "Overview", path: "receptionist", icon: LayoutDashboard },
@@ -613,7 +622,7 @@ export const sidebarMenu = {
     { title: "My Payroll", path: "itsupport/payroll", icon: IndianRupee },
     ...employeeAttendance("itsupport"),
     roleWorkspaceItem,
-    { title: "Profile", path: "itsupport/profile", icon: User },
+    ...commonSelfService("itsupport"),
   ],
 
   /* ================= COUNSELOR ================= */
@@ -651,6 +660,7 @@ export const sidebarMenu = {
     { title: "My Attendance",    path: "staff/attendance",     icon: Clock           },
     { title: "GPS Check-In/Out", path: "staff/attendance/self",icon: MapPinned       },
     { title: "Leave Requests",   path: "staff/leave",          icon: CalendarClock   },
+    { title: "My Payroll",       path: "staff/payroll",        icon: IndianRupee     },
     communicationMenu("staff"),
     ...commonSelfService("staff"),
   ],
@@ -660,6 +670,7 @@ export const sidebarMenu = {
     { title: "My Attendance",    path: "staff/attendance",     icon: Clock           },
     { title: "GPS Check-In/Out", path: "staff/attendance/self",icon: MapPinned       },
     { title: "Leave Requests",   path: "staff/leave",          icon: CalendarClock   },
+    { title: "My Payroll",       path: "staff/payroll",        icon: IndianRupee     },
     communicationMenu("staff"),
     roleWorkspaceItem,
     ...commonSelfService("staff"),
@@ -670,7 +681,6 @@ export const sidebarMenu = {
     { title: "Dashboard",        path: "sportsteacher",                  icon: LayoutDashboard },
     { title: "Sports",           path: "sportsteacher/sports",           icon: Trophy          },
     { title: "My Classes",       path: "sportsteacher/classes",          icon: BookOpen        },
-    { title: "My Students",      path: "sportsteacher/students",         icon: Users           },
     { title: "Mark Attendance",  path: "sportsteacher/attendance/students", icon: ClipboardCheck },
     { title: "Assignments",      path: "sportsteacher/assignments",      icon: ClipboardList   },
     { title: "My Payroll",       path: "sportsteacher/payroll",          icon: IndianRupee     },
@@ -683,7 +693,6 @@ export const sidebarMenu = {
   /* ================= LAB TECHNICIAN ================= */
   "lab technician": [
     { title: "Dashboard",        path: "labtechnician",                  icon: LayoutDashboard },
-    { title: "Lab Students",     path: "labtechnician/students",         icon: Users           },
     { title: "Lab Schedule",     path: "labtechnician/timetable",        icon: CalendarCheck   },
     { title: "My Payroll",       path: "labtechnician/payroll",          icon: IndianRupee     },
     { title: "My Tasks",         path: "labtechnician/tasks",            icon: ListChecks      },
@@ -695,7 +704,6 @@ export const sidebarMenu = {
   /* ================= MEDICAL OFFICER ================= */
   "medical officer": [
     { title: "Dashboard",        path: "medicalofficer",                 icon: LayoutDashboard },
-    { title: "Students",         path: "medicalofficer/students",        icon: Users           },
     { title: "Health Records",   path: "medicalofficer/health-records",  icon: Stethoscope     },
     { title: "My Payroll",       path: "medicalofficer/payroll",         icon: IndianRupee     },
     { title: "My Tasks",         path: "medicalofficer/tasks",           icon: ListChecks      },

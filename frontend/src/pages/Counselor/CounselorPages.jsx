@@ -32,7 +32,7 @@ export const CounselorDashboard = () => {
   const { sessions, stats, loading } = useSelector((s) => s.counselingSessions);
 
   useEffect(() => {
-    dispatch(fetchCounselingSessions({}));
+    dispatch(fetchCounselingSessions({ limit: 500 }));
     dispatch(fetchCounselingStats());
   }, [dispatch]);
 
@@ -87,7 +87,7 @@ export const CounselorStudents = () => {
   const dispatch = useDispatch();
   const { sessions, loading } = useSelector((s) => s.counselingSessions);
 
-  useEffect(() => { dispatch(fetchCounselingSessions({})); }, [dispatch]);
+  useEffect(() => { dispatch(fetchCounselingSessions({ limit: 500 })); }, [dispatch]);
 
   const studentMap = {};
   sessions.forEach((s) => {
@@ -128,7 +128,7 @@ export const CounselingSessions = () => {
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => { dispatch(fetchCounselingSessions({ type: "Session" })); }, [dispatch]);
+  useEffect(() => { dispatch(fetchCounselingSessions({ type: "Session", limit: 500 })); }, [dispatch]);
 
   const handleCreate = async (values) => {
     const res = await dispatch(createCounselingSession({ ...values, type: "Session" }));
@@ -207,7 +207,7 @@ export const Appointments = () => {
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => { dispatch(fetchCounselingSessions({ type: "Appointment" })); }, [dispatch]);
+  useEffect(() => { dispatch(fetchCounselingSessions({ type: "Appointment", limit: 500 })); }, [dispatch]);
 
   const appointments = sessions.filter((s) => s.type === "Appointment");
 
@@ -279,7 +279,7 @@ export const CounselorReports = () => {
   const { sessions, stats, loading } = useSelector((s) => s.counselingSessions);
 
   useEffect(() => {
-    dispatch(fetchCounselingSessions({}));
+    dispatch(fetchCounselingSessions({ limit: 500 }));
     dispatch(fetchCounselingStats());
   }, [dispatch]);
 

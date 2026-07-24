@@ -21,6 +21,19 @@ const isPositiveInt = (value) => {
   return false;
 };
 
+const isPositiveNumber = (value) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value > 0;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return /^\d+(\.\d+)?$/.test(trimmed) && Number(trimmed) > 0;
+  }
+
+  return false;
+};
+
 const isBooleanLike = (value) =>
   typeof value === "boolean" ||
   value === "true" ||
@@ -61,6 +74,13 @@ const validate = ({ body = {}, params = {}, query = {} }) => {
           case "positiveInt":
             if (!isPositiveInt(value)) {
               errors.push(`${targetName}.${field} must be a positive integer`);
+              typeValid = false;
+            }
+            break;
+
+          case "positiveNumber":
+            if (!isPositiveNumber(value)) {
+              errors.push(`${targetName}.${field} must be a positive number`);
               typeValid = false;
             }
             break;

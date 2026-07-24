@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { StudentFee } from "../models/studentFee.model.js";
+import { Payment } from "../models/payment.model.js";
 import { FeeStructure } from "../models/feeStructure.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
@@ -266,16 +267,35 @@ export const payStudentFee = asyncHandler(async (req, res) => {
     feeRecord.status = "pending";
   }
 
+  const paidAt = new Date();
   feeRecord.lastPayment = {
     amount,
     paymentMode: paymentMode || "cash",
     referenceNo: referenceNo || "",
     remarks: remarks || "",
-    paidAt: new Date(),
+    paidAt,
     collectedBy: req.user?._id || null,
   };
 
   await feeRecord.save();
+
+  // Mirror this into the Payment ledger too — Fee Reports' transaction history,
+  // payment-mode breakdown, and collection trend all read from Payment, not
+  // StudentFee, so without this an accountant's cash/cheque/UPI collections here
+  // would be invisible everywhere except the aggregate paid/due totals.
+  await Payment.create({
+    schoolId: feeRecord.schoolId,
+    studentId: feeRecord.studentId,
+    academicYearId: feeRecord.academicYearId,
+    studentFeeId: feeRecord._id,
+    amountPaid: amount,
+    paymentMode: paymentMode || "cash",
+    transactionId: referenceNo || null,
+    paymentDate: paidAt,
+    status: "success",
+    receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    collectedBy: req.user?._id || null,
+  });
 
   return sendSuccess(res, {
     message:

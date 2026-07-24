@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Button, Form, Input, Select, Modal, Table, Tag, Space, Popconfirm, message, Empty, Upload,
 } from "antd";
@@ -7,6 +7,7 @@ import {
   PlusOutlined, BookOutlined, UploadOutlined, EditOutlined, DeleteOutlined, LinkOutlined,
 } from "@ant-design/icons";
 import apiClient from "../../../api/httpClient";
+import { fetchAssignedClasses } from "../../../features/classSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow } from "../../../styles/pageStyles";
 
@@ -34,8 +35,13 @@ const StatCard = ({ icon, label, value, color }) => (
 );
 
 const SubjectResources = () => {
+  const dispatch = useDispatch();
   const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
   const { classAssignTeacher = [] } = useSelector((s) => s.class || {});
+
+  useEffect(() => {
+    if (selectedAcademicYear?._id) dispatch(fetchAssignedClasses({ academicYearId: selectedAcademicYear._id }));
+  }, [dispatch, selectedAcademicYear?._id]);
 
   const [materials, setMaterials]   = useState([]);
   const [loading, setLoading]       = useState(false);

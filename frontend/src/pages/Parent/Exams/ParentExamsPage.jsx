@@ -1,15 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Alert, Collapse, Empty, Progress, Select, Segmented, Space, Table, Tag, message,
+  Alert, Button, Collapse, Empty, Progress, Select, Segmented, Space, Table, Tag, message,
 } from "antd";
 import {
   BarChartOutlined, CalendarOutlined, CheckCircleOutlined,
-  CloseCircleOutlined, TrophyOutlined,
+  CloseCircleOutlined, FilePdfOutlined, TrophyOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getExams, getParentResults } from "../../../features/examSlice";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
+import { getAccessToken } from "../../../api/authToken";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, sectionPanel,
@@ -25,6 +26,7 @@ const ParentExamsPage = () => {
 
   const [selectedChildId, setSelectedChildId] = useState(null);
   const [scheduleFilter,  setScheduleFilter]  = useState("upcoming");
+  const [admitCardDownloadingId, setAdmitCardDownloadingId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchMyChildren()).unwrap().catch((err) => message.error(err || "Failed to load children"));
@@ -71,6 +73,36 @@ const ParentExamsPage = () => {
       .filter((e) => dayjs(e.examDate).isAfter(now, "day") || dayjs(e.examDate).isSame(now, "day"))
       .sort((a, b) => dayjs(a.examDate).valueOf() - dayjs(b.examDate).valueOf())[0];
   }, [exams]);
+
+  const handleDownloadAdmitCard = async (exam) => {
+    if (!selectedChildId) return;
+    setAdmitCardDownloadingId(exam._id);
+    try {
+      const token = getAccessToken();
+      const apiBase = import.meta.env.VITE_API_URL || "/api/v1";
+      const url = `${apiBase}/exams/${exam._id}/admit-cards/pdf?studentId=${selectedChildId}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || "Admit card not available for this exam yet");
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `admit-card-${exam.title || exam._id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      message.error(err.message || "Failed to download admit card");
+    } finally {
+      setAdmitCardDownloadingId(null);
+    }
+  };
 
   const filteredExams = useMemo(() => {
     const now = dayjs();
@@ -217,21 +249,36 @@ const ParentExamsPage = () => {
                     background: "var(--surface-soft)",
                     border: "1px solid var(--border-muted)",
                     borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap",
                   }}
                 >
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-                    {exam.title || "Untitled Exam"}
+                  <div>
+                    <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
+                      {exam.title || "Untitled Exam"}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                      <CalendarOutlined style={{ marginRight: 5 }} />
+                      {dayjs(exam.examDate).format("DD MMM YYYY")}
+                      {exam.subjectId?.name && (
+                        <span style={{ marginLeft: 12 }}>📚 {exam.subjectId.name}</span>
+                      )}
+                      <span style={{ marginLeft: 12 }}>
+                        Total {exam.totalMarks ?? 0} &nbsp;·&nbsp; Passing {exam.passingMarks ?? 0}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                    <CalendarOutlined style={{ marginRight: 5 }} />
-                    {dayjs(exam.examDate).format("DD MMM YYYY")}
-                    {exam.subjectId?.name && (
-                      <span style={{ marginLeft: 12 }}>📚 {exam.subjectId.name}</span>
-                    )}
-                    <span style={{ marginLeft: 12 }}>
-                      Total {exam.totalMarks ?? 0} &nbsp;·&nbsp; Passing {exam.passingMarks ?? 0}
-                    </span>
-                  </div>
+                  <Button
+                    size="small"
+                    icon={<FilePdfOutlined />}
+                    loading={admitCardDownloadingId === exam._id}
+                    onClick={() => handleDownloadAdmitCard(exam)}
+                  >
+                    Admit Card
+                  </Button>
                 </div>
               ))}
             </div>

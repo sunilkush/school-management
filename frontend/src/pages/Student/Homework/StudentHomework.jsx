@@ -39,25 +39,6 @@ import {
 
 const { Text, Paragraph } = Typography;
 
-const FALLBACK_HOMEWORK = [
-  {
-    _id: "demo-1",
-    subject: "Mathematics",
-    title: "Algebra Practice",
-    description: "Solve questions from chapter 3",
-    dueDate: "2026-04-30",
-    status: "Pending",
-  },
-  {
-    _id: "demo-2",
-    subject: "Science",
-    title: "Physics Assignment",
-    description: "Write short notes on Motion",
-    dueDate: "2026-04-20",
-    status: "Submitted",
-  },
-];
-
 const normalizeStatus = (status, dueDate) => {
   if (status === "Submitted") return "Submitted";
   if (!dueDate) return "Pending";
@@ -114,8 +95,8 @@ const StudentHomework = () => {
 
       setHomeworkList(normalized);
     } catch (err) {
-      setError(err?.response?.data?.message || "Homework API unavailable right now. Showing demo data.");
-      setHomeworkList(FALLBACK_HOMEWORK);
+      setError(err?.response?.data?.message || "Failed to load homework. Please try again.");
+      setHomeworkList([]);
     } finally {
       setLoading(false);
     }

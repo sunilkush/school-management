@@ -295,13 +295,19 @@ const SubscriptionPlans = () => {
     setIsLogsOpen(true);
   };
 
-  const handleSubmit = (data) => {
-    if (editingPlan) {
-      dispatch(updateSubscriptionPlan({ id: editingPlan._id, formData: data }));
-    } else {
-      dispatch(createSubscriptionPlan(data));
+  const handleSubmit = async (data) => {
+    try {
+      if (editingPlan) {
+        await dispatch(updateSubscriptionPlan({ id: editingPlan._id, formData: data })).unwrap();
+        message.success("Plan updated successfully");
+      } else {
+        await dispatch(createSubscriptionPlan(data)).unwrap();
+        message.success("Plan created successfully");
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to save plan");
     }
-    setIsModalOpen(false);
   };
 
   const handleAssignPlan = async () => {

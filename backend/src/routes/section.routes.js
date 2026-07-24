@@ -17,7 +17,7 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 const ADMIN_ONLY = ["Super Admin", "School Admin"];
-const ADMIN_READ = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator", "Teacher"];
+const ADMIN_READ = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator", "Teacher", "Medical Officer"];
 const ADMIN_AND_COORDINATOR = ["Super Admin", "School Admin", "Subject Coordinator", "Exam Coordinator"];
 
 

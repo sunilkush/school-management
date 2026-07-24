@@ -13,6 +13,7 @@ import {
 } from "@ant-design/icons";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import memoryStorage from "../../../utils/memoryStorage";
+import { getRoleName, getRolePath } from "../../../utils/roles";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper,
@@ -116,6 +117,7 @@ const ClassDetails = () => {
   const teacherId = user?._id;
   const schoolId = academic?.schoolId;
   const academicYearId = academic?._id;
+  const rolePath = getRolePath(getRoleName(user));
 
   useEffect(() => {
     if (!classAssignTeacher.length && teacherId && schoolId && academicYearId) {
@@ -136,7 +138,7 @@ const ClassDetails = () => {
 
   const handleAttendance = () =>
     classData?._id &&
-    navigate(`/dashboard/teacher/attendance/students?classId=${classData._id}&className=${encodeURIComponent(classData?.name || "")}`);
+    navigate(`/dashboard/${rolePath}/attendance/students?classId=${classData._id}&className=${encodeURIComponent(classData?.name || "")}`);
 
   if (!loading && !classData) {
     return (
@@ -146,7 +148,7 @@ const ClassDetails = () => {
           subtitle="Class not found"
           icon={<ReadOutlined />}
           extra={
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard/teacher/classes")}>
+            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/dashboard/${rolePath}/classes`)}>
               Back to Classes
             </Button>
           }
@@ -167,7 +169,7 @@ const ClassDetails = () => {
         extra={
           <Space wrap>
             <Tooltip title="Back to Classes">
-              <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/dashboard/teacher/classes")} />
+              <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/dashboard/${rolePath}/classes`)} />
             </Tooltip>
             <Button type="primary" icon={<CalendarOutlined />} onClick={handleAttendance}>
               Take Attendance

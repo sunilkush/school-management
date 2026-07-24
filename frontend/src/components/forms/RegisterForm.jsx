@@ -110,8 +110,12 @@ const StatusIcon = ({ status }) => {
   return <span style={{ width: 14, height: 14, borderRadius: "50%", border: "1.5px solid #cbd5e1", display: "inline-block" }} />;
 };
 
-/* ─── main component ─── */
-const RegisterForm = ({ onClose }) => {
+/* ─── main component ───
+   allowedRoleNames: optional array of role names (case-insensitive) to restrict the Role
+   dropdown to, overriding the default Super-Admin-creates-School-Admin-only behavior. Used by
+   pages like Transport Management, which reuse this form to register a specific role set
+   (Driver/Transporter) rather than a School Admin. */
+const RegisterForm = ({ onClose, allowedRoleNames }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
@@ -142,10 +146,14 @@ const RegisterForm = ({ onClose }) => {
 
   const filteredRoles = useMemo(() => {
     if (!roles?.length || !currentUserRole) return [];
+    if (allowedRoleNames?.length) {
+      const allowed = allowedRoleNames.map((n) => n.toLowerCase());
+      return roles.filter((r) => allowed.includes(r.name.toLowerCase()));
+    }
     if (isSuperAdmin)  return roles.filter((r) => r.name.toLowerCase() === "school admin");
     if (isSchoolAdmin) return roles.filter((r) => !EXCLUDED_ROLES_FOR_SCHOOL_ADMIN.includes(r.name.toLowerCase()));
     return [];
-  }, [roles, currentUserRole, isSuperAdmin, isSchoolAdmin]);
+  }, [roles, currentUserRole, isSuperAdmin, isSchoolAdmin, allowedRoleNames]);
 
   const schoolOptions = useMemo(() => schools.map((s) => ({ value: s._id, label: s.name })), [schools]);
   const roleOptions   = useMemo(() => filteredRoles.map((r) => ({ value: r._id, label: r.name })), [filteredRoles]);

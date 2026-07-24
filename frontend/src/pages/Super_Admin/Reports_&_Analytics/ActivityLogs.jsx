@@ -9,15 +9,18 @@ import {
   Input,
   Tag,
   Avatar,
+  Popconfirm,
+  message,
 } from "antd";
 import {
   ReloadOutlined,
   SearchOutlined,
   DownloadOutlined,
   HistoryOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { fetchSchools } from "../../../features/schoolSlice";
-import { fetchActivityLogs } from "../../../features/activitySlice";
+import { fetchActivityLogs, deleteActivityLog } from "../../../features/activitySlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper,
@@ -114,6 +117,15 @@ const ActivityLogs = () => {
     dispatch(fetchSchools());
     dispatch(fetchActivityLogs());
   }, [dispatch]);
+
+  const handleDelete = async (id) => {
+    try {
+      await dispatch(deleteActivityLog(id)).unwrap();
+      message.success("Log entry deleted");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to delete log entry");
+    }
+  };
 
 const normalizedLogs = useMemo(() => {
     return logs.map((log) => ({
@@ -296,6 +308,21 @@ const normalizedLogs = useMemo(() => {
         <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--text-muted)" }}>
           {formatDate(date)}
         </span>
+      ),
+    },
+    {
+      title: "",
+      key: "actions",
+      width: 50,
+      render: (_, record) => (
+        <Popconfirm
+          title="Delete this log entry?"
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          onConfirm={() => handleDelete(record._id)}
+        >
+          <Button size="small" danger type="text" icon={<DeleteOutlined />} />
+        </Popconfirm>
       ),
     },
   ];

@@ -25,7 +25,7 @@ const ExamCoordinatorDashboard = () => {
   const [qCount, setQCount] = useState(null);
 
   useEffect(() => {
-    dispatch(getExams({}));
+    dispatch(getExams({ limit: 100 }));
     apiClient
       .get("/questions/getQuestions", { params: { limit: 100 } })
       .then((r) => {

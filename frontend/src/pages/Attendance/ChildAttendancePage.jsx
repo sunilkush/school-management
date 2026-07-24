@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert, Button, DatePicker, Empty,
   Select, Skeleton, Table, Tag, Tooltip,
@@ -124,6 +125,8 @@ const AttendanceCalendar = ({ records, month, year }) => {
 /* ─── page ───────────────────────────────────────────────────────────── */
 const ChildAttendancePage = () => {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const requestedChildId = searchParams.get("childId");
 
   const { children = [], loading: childLoading }          = useSelector((s) => s.studentPortal || {});
   const { myAttendance = [], loading: attendanceLoading } = useSelector((s) => s.attendance    || {});
@@ -134,10 +137,12 @@ const ChildAttendancePage = () => {
   /* fetch children once */
   useEffect(() => { dispatch(fetchMyChildren()); }, [dispatch]);
 
-  /* auto-select first child */
+  /* select child requested via ?childId= (e.g. from the dashboard), else first child */
   useEffect(() => {
-    if (!childId && children.length) setChildId(children[0].userId);
-  }, [children, childId]);
+    if (childId || !children.length) return;
+    const requested = requestedChildId && children.some((c) => c.userId === requestedChildId);
+    setChildId(requested ? requestedChildId : children[0].userId);
+  }, [children, childId, requestedChildId]);
 
   /* load attendance whenever child or month changes */
   const loadAttendance = useCallback((id, month) => {

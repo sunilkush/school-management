@@ -5,6 +5,9 @@ import {
   Select,
   Space,
   Input,
+  Popconfirm,
+  Tooltip,
+  message,
 } from "antd";
 import {
   PlusOutlined,
@@ -13,9 +16,11 @@ import {
   SearchOutlined,
   ApartmentOutlined,
   AppstoreOutlined,
+  DeleteOutlined,
+  SwapOutlined,
 } from "@ant-design/icons";
 import AddBoardClassModal from "../../../components/forms/AddBoardClassModal.jsx";
-import { getBoardClass } from "../../../features/boardClassSlice.js";
+import { getBoardClass, updateBoardClass, deleteBoardClass } from "../../../features/boardClassSlice.js";
 import { getBoards } from "../../../features/boardSlice.js";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../../components/layout/PageHeader";
@@ -99,6 +104,29 @@ export default function BoardClassPage() {
   const inactiveClasses = totalClasses - activeClasses;
   const boardCount = new Set(boardClass.map((c) => c.boardId?._id).filter(Boolean)).size;
 
+  const refresh = () => dispatch(getBoardClass(selectedBoard ? { boardId: selectedBoard } : {}));
+
+  const handleToggleStatus = async (record) => {
+    const nextStatus = record.status === "active" ? "inactive" : "active";
+    try {
+      await dispatch(
+        updateBoardClass({ id: record._id, data: { status: nextStatus } })
+      ).unwrap();
+      message.success(`Marked as ${nextStatus}`);
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to update status");
+    }
+  };
+
+  const handleDelete = async (record) => {
+    try {
+      await dispatch(deleteBoardClass(record._id)).unwrap();
+      message.success("Board class deleted");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to delete board class");
+    }
+  };
+
   const columns = [
     {
       title: "Board Name",
@@ -113,6 +141,28 @@ export default function BoardClassPage() {
       title: "Status",
       dataIndex: "status",
       render: (status) => <StatusBadge status={status} />,
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 100,
+      render: (_, record) => (
+        <Space size={4}>
+          <Tooltip title={record.status === "active" ? "Mark Inactive" : "Mark Active"}>
+            <Button size="small" icon={<SwapOutlined />} onClick={() => handleToggleStatus(record)} />
+          </Tooltip>
+          <Popconfirm
+            title="Delete this board class?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleDelete(record)}
+          >
+            <Tooltip title="Delete">
+              <Button size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      ),
     },
   ];
 
@@ -219,7 +269,7 @@ export default function BoardClassPage() {
         setOpen={setOpen}
         onSuccess={() => {
           setOpen(false);
-          dispatch(getBoardClass(selectedBoard ? { boardId: selectedBoard } : {}));
+          refresh();
         }}
       />
     </div>

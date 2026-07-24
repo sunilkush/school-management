@@ -28,7 +28,7 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
 
   // Privileged roles can submit leave on behalf of another user outright;
   // a Parent may only do so for a child verified as their own.
-  const canActOnBehalf = ["Super Admin", "HR"].includes(req.userRole?.name);
+  const canActOnBehalf = ["Super Admin", "HR", "School Admin"].includes(req.userRole?.name);
   const isParent = req.userRole?.name === "Parent";
   let resolvedUserId = req.user._id;
   if (canActOnBehalf && userId) {

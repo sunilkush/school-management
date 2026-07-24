@@ -20,6 +20,7 @@ const READ_ROLES = [
   "Teacher", "Subject Coordinator", "Exam Coordinator",
   "Accountant", "Student", "Parent",
   "Librarian", "Hostel Warden", "Transport Manager", "Receptionist",
+  "Medical Officer",
 ];
 
 router.post("/",             auth, roleMiddleware(WRITE_ROLES), createSchoolClass);

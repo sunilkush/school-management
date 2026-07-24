@@ -88,7 +88,20 @@ const VISITOR_COLORS = {
   Contractor: "#ec4899", Other: "#8b5cf6",
 };
 const CALL_COLORS = { Incoming: "#10b981", Outgoing: "#6366f1", Missed: "#ef4444" };
-const INQ_COLORS  = { Pending: "#f59e0b", Enrolled: "#10b981", "In Progress": "#0ea5e9", Rejected: "#ef4444" };
+
+// AdmissionInquiry.status enum values (backend/src/models/AdmissionInquiry.model.js) — lowercase,
+// snake_case. Keep these in sync with that schema, not with display casing.
+const INQ_STATUS_LABELS = {
+  new: "New", contacted: "Contacted", visit_scheduled: "Visit Scheduled",
+  docs_submitted: "Docs Submitted", approved: "Approved", enrolled: "Enrolled",
+  rejected: "Rejected", waitlist: "Waitlisted",
+};
+const INQ_COLORS = {
+  new: "#f59e0b", contacted: "#0ea5e9", visit_scheduled: "#0ea5e9",
+  docs_submitted: "#0ea5e9", approved: "#0ea5e9", enrolled: "#10b981",
+  rejected: "#ef4444", waitlist: "#8b5cf6",
+};
+const INQ_IN_PROGRESS = ["contacted", "visit_scheduled", "docs_submitted", "approved", "waitlist"];
 
 /* ══════════════════════════════════════════════════════════════════
    RECEPTIONIST DASHBOARD
@@ -101,15 +114,15 @@ export const ReceptionistDashboard = () => {
 
   const refresh = () => {
     dispatch(fetchGateStats());
-    dispatch(fetchInquiries({}));
-    dispatch(fetchCallLogs({}));
-    dispatch(fetchGateEntries({}));
+    dispatch(fetchInquiries({ limit: 500 }));
+    dispatch(fetchCallLogs({ limit: 500 }));
+    dispatch(fetchGateEntries({ limit: 500 }));
   };
 
   useEffect(() => { refresh(); }, [dispatch]); // eslint-disable-line
 
   const pending = useMemo(
-    () => inquiries.filter((i) => ["pending", "New", "Pending"].includes(i.status)).length,
+    () => inquiries.filter((i) => i.status === "new" || !i.status).length,
     [inquiries]
   );
   const todayCalls = useMemo(() => {
@@ -200,7 +213,7 @@ export const VisitorManagement = () => {
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => { dispatch(fetchGateEntries({})); }, [dispatch]);
+  useEffect(() => { dispatch(fetchGateEntries({ limit: 500 })); }, [dispatch]);
 
   const handleCreate = async (values) => {
     const res = await dispatch(createGateEntry(values));
@@ -287,7 +300,7 @@ export const VisitorManagement = () => {
         icon={<UserPlus size={20} />}
         extra={
           <div style={{ display: "flex", gap: 8 }}>
-            <RefreshBtn onClick={() => dispatch(fetchGateEntries({}))} />
+            <RefreshBtn onClick={() => dispatch(fetchGateEntries({ limit: 500 }))} />
             <PrimaryBtn icon={Plus} onClick={() => setOpen(true)}>Check In Visitor</PrimaryBtn>
           </div>
         }
@@ -347,7 +360,7 @@ export const Enquiries = () => {
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => { dispatch(fetchInquiries({})); }, [dispatch]);
+  useEffect(() => { dispatch(fetchInquiries({ limit: 500 })); }, [dispatch]);
 
   const handleCreate = async (values) => {
     const res = await dispatch(createInquiry(values));
@@ -368,9 +381,9 @@ export const Enquiries = () => {
 
   const counts = useMemo(() => ({
     total:      inquiries.length,
-    pending:    inquiries.filter((i) => ["pending","Pending","New"].includes(i.status)).length,
-    enrolled:   inquiries.filter((i) => i.status === "Enrolled").length,
-    inProgress: inquiries.filter((i) => ["In Progress","in-progress"].includes(i.status)).length,
+    pending:    inquiries.filter((i) => i.status === "new" || !i.status).length,
+    enrolled:   inquiries.filter((i) => i.status === "enrolled").length,
+    inProgress: inquiries.filter((i) => INQ_IN_PROGRESS.includes(i.status)).length,
   }), [inquiries]);
 
   const SOURCE_COLORS = { "walk-in": "#6366f1", phone: "#0ea5e9", website: "#10b981", referral: "#f59e0b", other: "#8b5cf6" };
@@ -400,14 +413,14 @@ export const Enquiries = () => {
       title: "Status", dataIndex: "status", width: 120,
       render: (v) => {
         const c = INQ_COLORS[v] || "#94a3b8";
-        return <span style={pill(c, `${c}15`)}>{v || "Pending"}</span>;
+        return <span style={pill(c, `${c}15`)}>{INQ_STATUS_LABELS[v] || "New"}</span>;
       },
     },
     {
       title: "Actions", width: 130, align: "center",
       render: (_, r) => (
         <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-          <Popconfirm title="Mark as Enrolled?" okText="Enroll" onConfirm={() => handleStatus(r._id, "Enrolled")}>
+          <Popconfirm title="Mark as Enrolled?" okText="Enroll" onConfirm={() => handleStatus(r._id, "enrolled")}>
             <button style={{
               padding: "4px 10px", borderRadius: 7, border: "1px solid #10b98140",
               background: "#10b98110", color: "#10b981", cursor: "pointer", fontSize: 11, fontWeight: 600,
@@ -433,7 +446,7 @@ export const Enquiries = () => {
         icon={<HelpCircle size={20} />}
         extra={
           <div style={{ display: "flex", gap: 8 }}>
-            <RefreshBtn onClick={() => dispatch(fetchInquiries({}))} />
+            <RefreshBtn onClick={() => dispatch(fetchInquiries({ limit: 500 }))} />
             <PrimaryBtn icon={Plus} onClick={() => setOpen(true)}>New Enquiry</PrimaryBtn>
           </div>
         }
@@ -495,7 +508,7 @@ export const CallLog = () => {
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
 
-  useEffect(() => { dispatch(fetchCallLogs({})); }, [dispatch]);
+  useEffect(() => { dispatch(fetchCallLogs({ limit: 500 })); }, [dispatch]);
 
   const handleCreate = async (values) => {
     const res = await dispatch(createCallLog(values));
@@ -576,7 +589,7 @@ export const CallLog = () => {
         icon={<Phone size={20} />}
         extra={
           <div style={{ display: "flex", gap: 8 }}>
-            <RefreshBtn onClick={() => dispatch(fetchCallLogs({}))} />
+            <RefreshBtn onClick={() => dispatch(fetchCallLogs({ limit: 500 }))} />
             <PrimaryBtn icon={Plus} onClick={() => setOpen(true)}>Log Call</PrimaryBtn>
           </div>
         }

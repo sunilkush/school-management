@@ -638,13 +638,13 @@ export const getRoleDashboardOverview = asyncHandler(async (req, res) => {
     );
   }
 
-  if (normalizedRole === "staff") {
+  if (normalizedRole === "staff" || normalizedRole === "support staff") {
     const [attendance, taskCounts] = await Promise.all([
       Attendance.aggregate([
         {
           $match: {
             userId,
-            role: "staff",
+            role: { $in: ["staff", "support_staff"] },
             date: { $gte: startDate, $lt: endDate },
           },
         },

@@ -14,7 +14,7 @@ import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
 import { Employee } from '../models/Employee.model.js'
 import { Teacher } from '../models/teacherAssignment.model.js'
 import { SchoolSubscription } from '../models/schoolSubscription.model.js'
-import { recordLoginEvent } from './loginLog.controllers.js'
+import { recordLoginEvent, recordLogoutByUserId } from './loginLog.controllers.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -658,6 +658,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
  */
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } })
+  recordLogoutByUserId(req.user._id);
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

@@ -525,7 +525,7 @@ export default function CanteenPage() {
             </Col>
             <Col span={12}>
               <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>PRICE (₹)</Text>
-              <InputNumber min={0} style={{ width: "100%" }} value={itemForm.price} onChange={(v) => setItemForm((f) => ({ ...f, price: v }))} />
+              <InputNumber min={0} precision={2} step={0.5} style={{ width: "100%" }} value={itemForm.price} onChange={(v) => setItemForm((f) => ({ ...f, price: v }))} />
             </Col>
           </Row>
           <Flex align="center" gap={10}>

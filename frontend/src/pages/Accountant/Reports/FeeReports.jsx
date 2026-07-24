@@ -101,7 +101,7 @@ const FeeReports = () => {
   const handleExport = () => {
     const headers = ["Student", "Amount", "Mode", "Receipt No", "Date", "Status"];
     const rows = payments.map((p) => [
-      p.studentId?.name || "-",
+      p.studentId?.userId?.name || "-",
       p.amountPaid,
       p.paymentMode,
       p.receiptNo || "-",
@@ -133,7 +133,7 @@ const FeeReports = () => {
     ? Math.round((feeStats.totalPaid / (feeStats.totalPaid + feeStats.totalPending)) * 100) : 0;
 
   const paymentColumns = [
-    { title: "Student",    render: (_, r) => r.studentId?.name || "—" },
+    { title: "Student",    render: (_, r) => r.studentId?.userId?.name || "—" },
     { title: "Amount",     dataIndex: "amountPaid",  render: (v) => <span style={{ fontWeight: 700, color: "#22C55E" }}>{money(v)}</span> },
     { title: "Mode",       dataIndex: "paymentMode", render: (m) => <Tag style={{ textTransform: "capitalize" }}>{m}</Tag> },
     { title: "Receipt No", dataIndex: "receiptNo",   render: (r) => r || "—" },

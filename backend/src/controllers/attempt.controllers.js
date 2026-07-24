@@ -284,6 +284,10 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
   if (evaluatorRole !== "Super Admin" && `${attempt.schoolId}` !== `${req.user.schoolId}`) {
     throw new ApiError(403, "Forbidden access outside your school");
   }
+  if (evaluatorRole === "Teacher") {
+    const ownsExam = await Exam.exists({ _id: attempt.examId, createdBy: req.user._id });
+    if (!ownsExam) throw new ApiError(403, "Forbidden: you may only evaluate exams you created");
+  }
 
   attempt.answers = attempt.answers.map((ans) => {
     const questionId = ans.questionId?.toString?.() || ans.questionRef?.toString?.();
@@ -330,6 +334,17 @@ export const getAttempts = asyncHandler(async (req, res) => {
 
   if (req.userRole?.name === "Student") {
     filters.studentId = req.user._id;
+  }
+  if (req.userRole?.name === "Teacher") {
+    // A plain Teacher (unlike Exam/Subject Coordinators, Principal, etc.) may only
+    // see attempts for exams they themselves created — not the whole school's.
+    if (examId) {
+      const ownsExam = await Exam.exists({ _id: examId, createdBy: req.user._id });
+      if (!ownsExam) throw new ApiError(403, "Forbidden: this exam is not yours");
+    } else {
+      const ownExamIds = await Exam.find({ createdBy: req.user._id }).select("_id").lean();
+      filters.examId = { $in: ownExamIds.map((e) => e._id) };
+    }
   }
   if (req.userRole?.name === "Parent") {
     const childQuery = {

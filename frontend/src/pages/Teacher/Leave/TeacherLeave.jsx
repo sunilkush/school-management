@@ -12,6 +12,7 @@ import {
 } from "../../../features/leaveRequestSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell } from "../../../styles/pageStyles";
+import { getRoleName } from "../../../utils/roles";
 
 const { RangePicker } = DatePicker;
 
@@ -37,6 +38,7 @@ const StatCard = ({ icon, label, value, color }) => (
 
 const TeacherLeave = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((s) => s.auth || {});
   const { myRequests = [], loading, saving } = useSelector((s) => s.leaveRequests || {});
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
@@ -47,8 +49,9 @@ const TeacherLeave = () => {
     const values = await form.validateFields();
     const [from, to] = values.dateRange;
     const totalDays = to.diff(from, "day") + 1;
+    const roleSlug = (getRoleName(user) || "teacher").toLowerCase().replace(/\s+/g, "_");
     const result = await dispatch(createLeaveRequest({
-      role: "teacher",
+      role: roleSlug,
       leaveType: values.leaveType,
       reason: values.reason,
       startDate: from.toISOString(),

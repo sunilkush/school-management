@@ -32,6 +32,7 @@ const SELF_ROLES = [
   "Lab Technician",
   "Medical Officer",
   "Class Teacher",
+  "Driver",
   ...ADMIN_ROLES,
 ];
 

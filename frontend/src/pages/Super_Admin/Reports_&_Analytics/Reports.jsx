@@ -19,12 +19,29 @@ const Reports = () => {
   
   const [filters, setFilters] = useState({
     school: "",
-    academicYear: "",
-    reportType: "",
+    session: "",
+    type: "",
     dateFrom: "",
     dateTo: "",
     status: "",
   });
+
+  // Report.createdAt needs Mongo range operators (createdAt[gte]/[lte]), which
+  // apiFeatures.js only builds from a nested object — the plain dateFrom/dateTo
+  // strings above are just for the date-picker UI.
+  const apiFilters = {
+    ...filters,
+    dateFrom: undefined,
+    dateTo: undefined,
+    ...(filters.dateFrom || filters.dateTo
+      ? {
+          createdAt: {
+            ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
+            ...(filters.dateTo ? { lte: filters.dateTo } : {}),
+          },
+        }
+      : {}),
+  };
   const { user } = useSelector((state) => state.auth) || {};
   // ✅ Correctly parse role 
   const storedUser = user;
@@ -52,7 +69,7 @@ const Reports = () => {
 }, [dispatch, parsedRole]);
 
   useEffect(() => {
-    dispatch(fetchReports(filters));
+    dispatch(fetchReports(apiFilters));
   }, [dispatch, filters]);
 
   return (

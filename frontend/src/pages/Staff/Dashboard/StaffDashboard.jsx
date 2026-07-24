@@ -140,7 +140,7 @@ const StaffDashboard = () => {
             <Button block icon={<WalletOutlined />} onClick={() => navigate("/dashboard/staff/payroll")}>
               My Payroll
             </Button>
-            <Button block icon={<MessageOutlined />} onClick={() => navigate("/dashboard/staff/communication")}>
+            <Button block icon={<MessageOutlined />} onClick={() => navigate("/dashboard/staff/message")}>
               Messages
             </Button>
           </Space>

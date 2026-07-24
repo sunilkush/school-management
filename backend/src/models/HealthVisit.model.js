@@ -22,7 +22,7 @@ const healthVisitSchema = new Schema(
     parentNotifiedAt: { type: Date, default: null },
 
     followUpDate: { type: Date, default: null },
-    status: { type: String, enum: ["Open", "Resolved"], default: "Resolved", index: true },
+    status: { type: String, enum: ["Open", "Resolved"], default: "Open", index: true },
 
     recordedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },

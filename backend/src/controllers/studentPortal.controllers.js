@@ -594,10 +594,20 @@ export const getMyHostel = asyncHandler(async (req, res) => {
   const room = await HostelRoom.findOne({
     schoolId: req.user.schoolId,
     "students.studentId": req.user._id,
-  }).lean();
+  })
+    .populate("academicYearId", "name")
+    .lean();
 
   const hostel = room
-    ? { roomNumber: room.roomNumber, capacity: room.capacity, status: "occupied" }
+    ? {
+        roomNumber: room.roomNumber,
+        capacity: room.capacity,
+        status: "occupied",
+        academicYear: room.academicYearId || null,
+        roommates: (room.students || [])
+          .filter((s) => `${s.studentId}` !== `${req.user._id}`)
+          .map((s) => s.name),
+      }
     : null;
 
   return res.status(200).json(
@@ -792,10 +802,20 @@ export const getChildHostel = asyncHandler(async (req, res) => {
   const room = await HostelRoom.findOne({
     schoolId: req.user.schoolId,
     "students.studentId": childId,
-  }).lean();
+  })
+    .populate("academicYearId", "name")
+    .lean();
 
   const hostel = room
-    ? { roomNumber: room.roomNumber, capacity: room.capacity, status: "occupied" }
+    ? {
+        roomNumber: room.roomNumber,
+        capacity: room.capacity,
+        status: "occupied",
+        academicYear: room.academicYearId || null,
+        roommates: (room.students || [])
+          .filter((s) => `${s.studentId}` !== `${childId}`)
+          .map((s) => s.name),
+      }
     : null;
 
   return res.status(200).json(

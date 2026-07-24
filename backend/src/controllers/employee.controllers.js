@@ -219,16 +219,19 @@ export const updateEmployee = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, employee, "Employee updated successfully"));
 });
 
-// Delete Employee
+// Deactivate Employee (soft delete) — the frontend calls this "Deactivate" and
+// promises the record is only marked inactive, not removed. A hard delete here
+// would silently orphan every PayrollStructure/PayrollEntry/LoanAdvance/
+// BonusIncentive/Reimbursement record that references this employeeId.
 export const deleteEmployee = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const isSuperAdmin = req.userRole?.name === "Super Admin";
   const query = isSuperAdmin ? { _id: id } : { _id: id, schoolId: req.user.schoolId };
-  const employee = await Employee.findOneAndDelete(query);
+  const employee = await Employee.findOneAndUpdate(query, { isActive: false }, { new: true });
 
   if (!employee) throw new ApiError(404, "Employee not found");
 
   return res
     .status(200)
-    .json(new ApiResponse(200, null, "Employee deleted successfully"));
+    .json(new ApiResponse(200, employee, "Employee deactivated successfully"));
 });

@@ -94,7 +94,7 @@ const MyStudents = () => {
 
     return schoolStudents.filter(
       (student) =>
-        student?.class?._id === selectedClassSection.classId &&
+        student?.schoolClass?._id === selectedClassSection.classId &&
         student?.section?._id === selectedClassSection.sectionId
     );
   }, [schoolStudents, selectedClassSection]);

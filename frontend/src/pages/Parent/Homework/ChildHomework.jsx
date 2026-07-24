@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { Button, Empty, Modal, Select, Skeleton, Space, Table, Tag, message } from "antd";
 import {
   BookOutlined, CheckCircleOutlined, ClockCircleOutlined,
@@ -15,12 +16,14 @@ const STAT_COLORS = ["#14B8A6", "#2563EB", "#F59E0B", "#22C55E"];
 
 const statusTag = (hw) => {
   if (!hw.submission) return <Tag color="orange">Pending</Tag>;
-  if (hw.grade !== null && hw.grade !== undefined) return <Tag color="green">Graded</Tag>;
+  if (hw.submission?.grade !== null && hw.submission?.grade !== undefined) return <Tag color="green">Graded</Tag>;
   return <Tag color="blue">Submitted</Tag>;
 };
 
 const ChildHomework = () => {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const requestedChildId = searchParams.get("childId");
   const { children = [], loading: childLoading } = useSelector((s) => s.studentPortal || {});
 
   const [selectedChildId, setSelectedChildId] = useState(null);
@@ -31,8 +34,10 @@ const ChildHomework = () => {
   useEffect(() => { dispatch(fetchMyChildren()); }, [dispatch]);
 
   useEffect(() => {
-    if (!selectedChildId && children.length) setSelectedChildId(children[0].userId);
-  }, [children, selectedChildId]);
+    if (selectedChildId || !children.length) return;
+    const requested = requestedChildId && children.some((c) => c.userId === requestedChildId);
+    setSelectedChildId(requested ? requestedChildId : children[0].userId);
+  }, [children, selectedChildId, requestedChildId]);
 
   const fetchHomework = useCallback(async () => {
     if (!selectedChildId) return;
@@ -52,8 +57,8 @@ const ChildHomework = () => {
   const stats = useMemo(() => ({
     total:     homework.length,
     pending:   homework.filter((h) => !h.submission).length,
-    submitted: homework.filter((h) => h.submission && (h.grade === null || h.grade === undefined)).length,
-    graded:    homework.filter((h) => h.submission && h.grade !== null && h.grade !== undefined).length,
+    submitted: homework.filter((h) => h.submission && (h.submission?.grade === null || h.submission?.grade === undefined)).length,
+    graded:    homework.filter((h) => h.submission && h.submission?.grade !== null && h.submission?.grade !== undefined).length,
   }), [homework]);
 
   const statMeta = [
@@ -92,8 +97,8 @@ const ChildHomework = () => {
     {
       title: "Grade",
       render: (_, r) =>
-        r.grade !== null && r.grade !== undefined
-          ? <span style={pill("#22C55E", "rgba(220,252,231,0.2)")}>{r.grade}/100</span>
+        r.submission?.grade !== null && r.submission?.grade !== undefined
+          ? <span style={pill("#22C55E", "rgba(220,252,231,0.2)")}>{r.submission.grade}/100</span>
           : "—",
     },
     {
@@ -190,17 +195,17 @@ const ChildHomework = () => {
                   <div>{detailHw.submission.submittedAt ? dayjs(detailHw.submission.submittedAt).format("DD MMM YYYY, hh:mm A") : "—"}</div>
                 </div>
               )}
-              {detailHw.grade !== null && detailHw.grade !== undefined && (
+              {detailHw.submission?.grade !== null && detailHw.submission?.grade !== undefined && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 4 }}>Grade</div>
-                  <span style={pill("#22C55E", "rgba(220,252,231,0.2)")}>{detailHw.grade}/100</span>
+                  <span style={pill("#22C55E", "rgba(220,252,231,0.2)")}>{detailHw.submission.grade}/100</span>
                 </div>
               )}
-              {detailHw.feedback && (
+              {detailHw.submission?.feedback && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 4 }}>Teacher Feedback</div>
                   <div style={{ background: "var(--surface)", padding: "10px 14px", borderRadius: 8, fontStyle: "italic" }}>
-                    {detailHw.feedback}
+                    {detailHw.submission.feedback}
                   </div>
                 </div>
               )}
