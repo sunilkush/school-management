@@ -41,7 +41,10 @@ export const TransportManagerDashboard = () => {
     dispatch(fetchVehicles());
     dispatch(fetchRoutes());
     dispatch(fetchMaintenanceStats());
-    dispatch(fetchMaintenanceRecords({}));
+    // Backend defaults to limit=50; the dashboard/table below render straight from this array
+    // with client-side-only Table pagination (no `total` override), so a school with more than
+    // 50 records ever had would silently lose the older ones from view.
+    dispatch(fetchMaintenanceRecords({ limit: 500 }));
   }, [dispatch]);
 
   const statCards = [
@@ -286,7 +289,7 @@ export const VehicleMaintenance = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    dispatch(fetchMaintenanceRecords({}));
+    dispatch(fetchMaintenanceRecords({ limit: 500 }));
     dispatch(fetchMaintenanceStats());
     dispatch(fetchVehicles());
   }, [dispatch]);
