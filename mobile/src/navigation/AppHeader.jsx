@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { setThemeMode } from '../store/slices/uiSlice';
 import { useGetNotificationsQuery } from '../store/api/apiSlice';
+import { resolveRoleNav } from './resolveRoleNav';
 
 const THEME_CYCLE = ['system', 'light', 'dark'];
 const THEME_ICON = { system: 'theme-light-dark', light: 'white-balance-sunny', dark: 'moon-waning-crescent' };
@@ -27,17 +28,46 @@ const FALLBACK_ICONS = {
   StudentDetails: 'account-outline',
 };
 
-// "Notifications" is a direct tab for a role with few enough nav items to avoid overflow, but
-// tucked inside the "More" tab's own stack for everyone else — this header can render from
-// either place, so it resolves the right target at tap time instead of assuming one shape.
-function navigateToNotifications(navigation) {
-  const tabNavigation = navigation.getParent() ?? navigation;
-  const routeNames = tabNavigation.getState?.()?.routeNames ?? [];
-  if (routeNames.includes('Notifications')) {
-    tabNavigation.navigate('Notifications');
-  } else {
-    tabNavigation.navigate('More', { screen: 'Notifications' });
+// Every role in constants/roles.js nests 'Notifications' inside a { group: 'Communication',
+// items: [...] } block — it is never a bare top-level NAV_CONFIG item for any of the 12 curated
+// roles. That means the real registered screen name one level up is always 'group:Communication'
+// (GroupMenuScreen), with 'Notifications' as ITS OWN nested Stack.Screen inside that — a plain
+// navigate('Notifications') or navigate('More', {screen:'Notifications'}) can never match a real
+// screen name, so the bell silently did nothing for every role. Whether the Communication group
+// ends up a quick tab or tucked inside "More" depends on how many total items that role's nav has
+// (resolveRoleNav's quick-tab/overflow split) — recomputed here from the real resolved nav tree
+// instead of guessed from route names, so it stays correct if NAV_CONFIG or granted permissions
+// ever change.
+function findNavPath(items, targetKey) {
+  for (const item of items) {
+    if (item.isGroup) {
+      if ((item.children ?? []).some((c) => c.key === targetKey)) return [item.key, targetKey];
+    } else if (item.key === targetKey) {
+      return [targetKey];
+    }
   }
+  return null;
+}
+
+function navigateToNotifications(navigation, roleName, permissions) {
+  const tabNavigation = navigation.getParent() ?? navigation;
+  const nav = resolveRoleNav(roleName, permissions);
+  const inQuick = findNavPath(nav.quickItems, 'Notifications');
+  const inMore = findNavPath(nav.moreItems, 'Notifications');
+
+  if (inQuick) {
+    if (inQuick.length === 1) tabNavigation.navigate(inQuick[0]);
+    else tabNavigation.navigate(inQuick[0], { screen: inQuick[1] });
+    return;
+  }
+  if (inMore) {
+    if (inMore.length === 1) tabNavigation.navigate('More', { screen: inMore[0] });
+    else tabNavigation.navigate('More', { screen: inMore[0], params: { screen: inMore[1] } });
+    return;
+  }
+  // Shouldn't happen — 'Notifications' is in resolveRoleNav's ALWAYS_VISIBLE set — but fail
+  // safe rather than silently doing nothing.
+  tabNavigation.navigate('More', { screen: 'Notifications' });
 }
 
 /** Custom header for every authenticated screen — page icon + title on the left, Academic Year /
@@ -47,7 +77,7 @@ export function AppHeader({ navigation, route, options, back }) {
   const { colors, typography, spacing } = useAppTheme();
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
-  const { user } = useAuth();
+  const { user, role, permissions } = useAuth();
   const themeMode = useSelector((state) => state.ui.themeMode);
   const { data: notifications } = useGetNotificationsQuery();
 
@@ -90,7 +120,7 @@ export function AppHeader({ navigation, route, options, back }) {
           <MaterialCommunityIcons name={THEME_ICON[themeMode]} size={20} color={colors.textSecondary} />
         </Pressable>
 
-        <Pressable onPress={() => navigateToNotifications(navigation)} hitSlop={8} style={{ position: 'relative' }}>
+        <Pressable onPress={() => navigateToNotifications(navigation, role?.name, permissions)} hitSlop={8} style={{ position: 'relative' }}>
           <MaterialCommunityIcons name={unreadCount > 0 ? 'bell' : 'bell-outline'} size={20} color={colors.textSecondary} />
           {unreadCount > 0 && (
             <Badge size={14} style={{ position: 'absolute', top: -4, right: -6, backgroundColor: colors.danger }}>

@@ -13,6 +13,7 @@ import { roleColor } from '../utils/roleColors';
 import { SuperAdminReportsView } from './superAdmin/SuperAdminReportsView';
 import { AcademicReportsScreen } from './AcademicReportsScreen';
 import { CounselorReportsView } from './counselor/CounselorReportsView';
+import { TeacherReportsView } from './teacher/TeacherReportsView';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useGetSchoolReportQuery } from '../store/api/apiSlice';
@@ -56,6 +57,24 @@ function CounselorReports() {
         </View>
       </View>
       <CounselorReportsView />
+    </ScreenContainer>
+  );
+}
+
+function TeacherReports() {
+  const { colors, typography, spacing } = useAppTheme();
+  return (
+    <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="chart-box-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Reports</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            View and track all your generated reports
+          </Text>
+        </View>
+      </View>
+      <TeacherReportsView />
     </ScreenContainer>
   );
 }
@@ -168,6 +187,9 @@ export function ReportsScreen() {
   }
   if (role?.name === 'Counselor') {
     return <CounselorReports />;
+  }
+  if (role?.name === 'Teacher') {
+    return <TeacherReports />;
   }
 
   return (

@@ -8,6 +8,8 @@ import { School } from "../models/school.model.js";
 import { Payment } from "../models/payment.model.js";
 import { Employee } from "../models/Employee.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { Section } from "../models/section.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
 import { PayrollEntry } from "../models/payrollEntry.model.js";
 import { StudentFee } from "../models/studentFee.model.js";
 import { ExamClass } from "../models/ExamClass.model.js";
@@ -106,23 +108,45 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
       feesCollected: feesCollected[0]?.total || 0,
     };
   } else if (roleName === "Teacher") {
+    // Previously queried Class.find({ teacher }) and Student.countDocuments({ schoolClassId })
+    // and Attendance.aggregate({ teacherId }) — none of those fields exist on those models
+    // (Class has no `teacher` field, Student has no `schoolClassId` field, Attendance's marker
+    // field is `markedBy` not `teacherId`), so both stats silently returned 0 for every teacher.
+    // A teacher's actual sections are Section docs where they're class-teacher or a subject
+    // teacher (same $or fetchAssignedClasses in class.controllers.js uses), and student
+    // membership lives on StudentEnrollment, not Student itself.
     const teacherId = new ObjectId(req.user._id);
+    const activeYear = schoolId
+      ? await AcademicYear.findOne({ schoolId, isActive: true }).select("_id").lean()
+      : null;
 
-    const teacherClasses = await Class.find({ teacher: teacherId }).select("_id");
+    const teacherSections = activeYear
+      ? await Section.find({
+          schoolId,
+          academicYearId: activeYear._id,
+          $or: [{ classTeacherId: teacherId }, { "subjects.teacherId": teacherId }],
+        }).select("_id")
+      : [];
 
-    const [studentsCount, attendance] = await Promise.all([
-      Student.countDocuments({
-        schoolClassId: { $in: teacherClasses.map((classItem) => classItem._id) },
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+
+    const [studentsCount, attendanceMarked] = await Promise.all([
+      StudentEnrollment.countDocuments({
+        sectionId: { $in: teacherSections.map((sec) => sec._id) },
+        status: "Active",
       }),
-      Attendance.aggregate([
-        { $match: { teacherId } },
-        { $group: { _id: null, totalMarked: { $sum: 1 } } },
-      ]),
+      Attendance.countDocuments({
+        markedBy: teacherId,
+        date: { $gte: todayStart, $lt: todayEnd },
+      }),
     ]);
 
     response = {
       students: studentsCount,
-      attendanceMarked: attendance[0]?.totalMarked || 0,
+      attendanceMarked,
     };
   } else if (roleName === "Accountant") {
     // Accountant was already allowed through this route's role middleware but had no branch here,

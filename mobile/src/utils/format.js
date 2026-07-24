@@ -30,6 +30,23 @@ export function formatDateOnly(date) {
   return `${y}-${m}-${d}`;
 }
 
+export function formatTime(dateInput) {
+  if (!dateInput) return '—';
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+/** "12:04" or "1:02:04" countdown display for a remaining-seconds duration (exam timers). */
+export function formatDuration(totalSeconds) {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const hh = Math.floor(s / 3600);
+  const mm = Math.floor((s % 3600) / 60);
+  const ss = s % 60;
+  const mmss = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  return hh > 0 ? `${hh}:${mmss}` : mmss;
+}
+
 export function formatBytes(bytes) {
   const value = Number(bytes) || 0;
   if (value === 0) return '0 B';
