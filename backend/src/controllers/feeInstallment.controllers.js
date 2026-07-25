@@ -32,9 +32,15 @@ const assertOwnsStudentRecord = async ({ roleName, userId, studentId, schoolId }
 /* =====================================================
    ✅ GENERATE INSTALLMENTS (Monthly | Quarterly | Yearly)
 ===================================================== */
+const VALID_FREQUENCIES = ["monthly", "quarterly", "half_yearly", "yearly"];
+
 export const generateInstallments = asyncHandler(async (req, res) => {
-  const { studentId, academicYearId } = req.body;
+  const { studentId, academicYearId, frequency: requestedFrequency } = req.body;
   const schoolId = req.user?.schoolId || req.user?.school?._id;
+
+  if (requestedFrequency && !VALID_FREQUENCIES.includes(requestedFrequency)) {
+    throw new ApiError(400, `Invalid frequency. Must be one of: ${VALID_FREQUENCIES.join(", ")}`);
+  }
 
   if (!schoolId) {
     throw new ApiError(400, "School not found");
@@ -90,7 +96,7 @@ export const generateInstallments = asyncHandler(async (req, res) => {
 
     if (hasExistingInstallment(fee._id, effectiveAcademicYearId)) continue;
 
-    const frequency = fee?.feeStructureId?.frequency || "yearly";
+    const frequency = requestedFrequency || fee?.feeStructureId?.frequency || "yearly";
 
     const count =
       frequency === "monthly" ? 12 :

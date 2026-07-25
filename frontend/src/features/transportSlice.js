@@ -40,6 +40,15 @@ export const deleteVehicle = createAsyncThunk("transport/deleteVehicle", async (
   }
 });
 
+export const fetchMyVehicles = createAsyncThunk("transport/fetchMyVehicles", async (_, { rejectWithValue }) => {
+  try {
+    const response = await apiClient.get("/transport/vehicles/my");
+    return response.data?.data || [];
+  } catch (error) {
+    return rejectWithValue(error?.response?.data?.message || "Failed to fetch assigned vehicles");
+  }
+});
+
 export const fetchRoutes = createAsyncThunk("transport/fetchRoutes", async (_, { rejectWithValue }) => {
   try {
     const response = await apiClient.get("/transport/routes");
@@ -120,6 +129,8 @@ export const deleteAssignment = createAsyncThunk("transport/deleteAssignment", a
 
 const initialState = {
   vehicles: [],
+  myVehicles: [],
+  myVehiclesLoading: false,
   routes: [],
   students: [],
   assignments: [],
@@ -160,6 +171,18 @@ const transportSlice = createSlice({
       })
       .addCase(deleteVehicle.fulfilled, (state, action) => {
         state.vehicles = state.vehicles.filter((vehicle) => vehicle._id !== action.payload);
+      })
+      .addCase(fetchMyVehicles.pending, (state) => {
+        state.myVehiclesLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyVehicles.fulfilled, (state, action) => {
+        state.myVehiclesLoading = false;
+        state.myVehicles = action.payload;
+      })
+      .addCase(fetchMyVehicles.rejected, (state, action) => {
+        state.myVehiclesLoading = false;
+        state.error = action.payload;
       })
       .addCase(fetchRoutes.pending, (state) => {
         state.loading = true;

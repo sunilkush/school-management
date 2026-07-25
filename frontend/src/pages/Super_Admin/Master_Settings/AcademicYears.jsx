@@ -60,7 +60,7 @@ import {
 const { Option } = Select;
 
 const StatusTag = ({ record, activeYear }) => {
-  if (record.archived)
+  if (record.status === "archived")
     return (
       <Tag
         icon={<InboxOutlined />}
@@ -220,9 +220,9 @@ const AcademicYearPage = () => {
   };
 
   const total = academicYears.length;
-  const archivedTotal = academicYears.filter((a) => a.archived).length;
+  const archivedTotal = academicYears.filter((a) => a.status === "archived").length;
   const inactiveTotal = academicYears.filter(
-    (a) => !a.archived && activeYear?._id !== a._id
+    (a) => a.status !== "archived" && activeYear?._id !== a._id
   ).length;
 
   const columns = [
@@ -289,7 +289,7 @@ const AcademicYearPage = () => {
         const isActive = activeYear?._id === record._id;
         return (
           <Space size={4}>
-            {!isActive && !record.archived && (
+            {!isActive && record.status !== "archived" && (
               <Tooltip title="Set as active year">
                 <Button
                   type="text"
@@ -302,7 +302,7 @@ const AcademicYearPage = () => {
                 </Button>
               </Tooltip>
             )}
-            {!record.archived && (
+            {record.status !== "archived" && (
               <Tooltip title="Archive this year">
                 <Popconfirm
                   title="Archive this academic year?"

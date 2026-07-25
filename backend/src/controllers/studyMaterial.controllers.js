@@ -1,4 +1,6 @@
 import { StudyMaterial } from "../models/StudyMaterial.model.js";
+import { Student } from "../models/student.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -7,6 +9,25 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const getSchoolId = (req) => req.user.school?._id || req.user.schoolId;
 
 const isSuperAdmin = (req) => (req.userRole?.name || req.user?.role?.name) === "Super Admin";
+
+const isStudent = (req) => (req.userRole?.name || req.user?.role?.name) === "Student";
+
+// Students may only ever browse materials for their own enrolled class — resolve it
+// server-side rather than trusting a client-supplied schoolClassId query param.
+const getMyEnrolledClassId = async (req) => {
+  const student = await Student.findOne({ userId: req.user._id }).select("_id");
+  if (!student) throw new ApiError(404, "Student profile not found");
+
+  const enrollment = await StudentEnrollment.findOne({
+    studentId: student._id,
+    schoolId: getSchoolId(req),
+  })
+    .select("schoolClassId")
+    .sort({ createdAt: -1 });
+
+  if (!enrollment) throw new ApiError(404, "Enrollment not found");
+  return enrollment.schoolClassId;
+};
 
 const assertSameSchool = (req, material) => {
   if (isSuperAdmin(req)) return;
@@ -61,9 +82,14 @@ export const getStudyMaterials = asyncHandler(async (req, res) => {
 
   const filter = { schoolId, isActive: true };
   if (academicYearId) filter.academicYearId = academicYearId;
-  if (schoolClassId)  filter.schoolClassId  = schoolClassId;
   if (subjectId)      filter.subjectId      = subjectId;
   if (type)           filter.type           = type;
+
+  if (isStudent(req)) {
+    filter.schoolClassId = await getMyEnrolledClassId(req);
+  } else if (schoolClassId) {
+    filter.schoolClassId = schoolClassId;
+  }
 
   const skip  = (Number(page) - 1) * Number(limit);
   const total = await StudyMaterial.countDocuments(filter);
@@ -87,6 +113,14 @@ export const getStudyMaterialById = asyncHandler(async (req, res) => {
 
   if (!material || !material.isActive) throw new ApiError(404, "Study material not found");
   assertSameSchool(req, material);
+
+  if (isStudent(req)) {
+    const myClassId = await getMyEnrolledClassId(req);
+    if (`${material.schoolClassId?._id || material.schoolClassId}` !== `${myClassId}`) {
+      throw new ApiError(403, "Forbidden access outside your class");
+    }
+  }
+
   return res.json(new ApiResponse(200, material, "Study material fetched"));
 });
 

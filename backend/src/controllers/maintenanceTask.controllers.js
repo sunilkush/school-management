@@ -2,7 +2,7 @@ import MaintenanceTask from "../models/MaintenanceTask.model.js";
 
 export const listMaintenanceTasks = async (req, res) => {
   try {
-    const schoolFilter = req.user.school ? { school: req.user.school } : {};
+    const schoolFilter = req.user.schoolId ? { school: req.user.schoolId } : {};
     const tasks = await MaintenanceTask.find(schoolFilter)
       .populate("createdBy", "name")
       .sort({ createdAt: -1 });
@@ -22,7 +22,7 @@ export const createMaintenanceTask = async (req, res) => {
       description,
       priority,
       dueDate: dueDate || null,
-      school: req.user.school,
+      school: req.user.schoolId,
       createdBy: req.user._id,
     });
     res.status(201).json({ success: true, data: task });
@@ -33,7 +33,7 @@ export const createMaintenanceTask = async (req, res) => {
 
 export const updateMaintenanceTask = async (req, res) => {
   try {
-    const schoolFilter = req.user.school ? { school: req.user.school } : {};
+    const schoolFilter = req.user.schoolId ? { school: req.user.schoolId } : {};
     const task = await MaintenanceTask.findOneAndUpdate(
       { _id: req.params.id, ...schoolFilter },
       { $set: req.body },
@@ -48,7 +48,7 @@ export const updateMaintenanceTask = async (req, res) => {
 
 export const deleteMaintenanceTask = async (req, res) => {
   try {
-    const schoolFilter = req.user.school ? { school: req.user.school } : {};
+    const schoolFilter = req.user.schoolId ? { school: req.user.schoolId } : {};
     const task = await MaintenanceTask.findOneAndDelete({ _id: req.params.id, ...schoolFilter });
     if (!task) return res.status(404).json({ success: false, message: "Task not found" });
     res.json({ success: true, message: "Task deleted" });

@@ -52,6 +52,7 @@ import {
   requestRestoreJob,
   runRestoreJob,
   toggleBackupSchedule,
+  deleteBackupSchedule,
 } from "../../../features/systemBackupSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
 import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
@@ -260,6 +261,19 @@ export default function Backups() {
       ),
     },
     { title: "Created", dataIndex: "createdAt", render: fmtDate },
+    {
+      title: "Actions", width: 80,
+      render: (_, row) => (
+        <Popconfirm
+          title="Delete this schedule?"
+          disabled={!row?._id}
+          okButtonProps={{ danger: true }}
+          onConfirm={() => dispatch(deleteBackupSchedule(row._id))}
+        >
+          <Button size="small" danger type="link" icon={<DeleteOutlined />} disabled={!row?._id} />
+        </Popconfirm>
+      ),
+    },
   ];
 
   const restoreColumns = [

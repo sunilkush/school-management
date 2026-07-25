@@ -72,7 +72,7 @@ const recordPayment = async ({ installment, paymentData }) => {
     const [payment] = await Payment.create([paymentData], { session });
 
     installment.paidAmount += paymentData.amountPaid;
-    installment.status = installment.paidAmount >= installment.amount ? "PAID" : "PARTIAL";
+    installment.status = installment.paidAmount >= installment.amount ? "paid" : "partial";
     await installment.save({ session });
 
     await session.commitTransaction();
@@ -271,7 +271,7 @@ export const getPayments = asyncHandler(async (req, res) => {
   const [payments, total] = await Promise.all([
     Payment.find(filter)
       .select("studentId installmentId amountPaid paymentMode status paymentDate receiptNo createdAt")
-      .populate("studentId", "name regId")
+      .populate({ path: "studentId", select: "userId", populate: { path: "userId", select: "name email" } })
       .populate("installmentId", "amount dueDate")
       .sort({ createdAt: -1 })
       .skip(skip)

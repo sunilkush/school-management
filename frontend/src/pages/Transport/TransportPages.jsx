@@ -2,17 +2,19 @@ import React, { useEffect, useState } from "react";
 import {
   Card, Table, Button, Tag, Space, Typography, Modal, Form, Select,
   Input, Row, Col, Statistic, Spin, App, Drawer, Descriptions, Divider, List,
+  Popconfirm,
 } from "antd";
 import {
   CarOutlined, ToolOutlined, TeamOutlined, PlusOutlined,
   EyeOutlined, EditOutlined, EnvironmentOutlined, SwapOutlined,
   NodeIndexOutlined, PhoneOutlined, UserOutlined, CalendarOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchVehicles, fetchRoutes } from "../../features/transportSlice";
 import {
   fetchMaintenanceRecords, fetchMaintenanceStats,
-  createMaintenanceRecord, updateMaintenanceRecord,
+  createMaintenanceRecord, updateMaintenanceRecord, deleteMaintenanceRecord,
 } from "../../features/vehicleMaintenanceSlice";
 import { getEmployees, updateEmployee } from "../../features/employeeSlice";
 
@@ -39,7 +41,10 @@ export const TransportManagerDashboard = () => {
     dispatch(fetchVehicles());
     dispatch(fetchRoutes());
     dispatch(fetchMaintenanceStats());
-    dispatch(fetchMaintenanceRecords({}));
+    // Backend defaults to limit=50; the dashboard/table below render straight from this array
+    // with client-side-only Table pagination (no `total` override), so a school with more than
+    // 50 records ever had would silently lose the older ones from view.
+    dispatch(fetchMaintenanceRecords({ limit: 500 }));
   }, [dispatch]);
 
   const statCards = [
@@ -284,7 +289,7 @@ export const VehicleMaintenance = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    dispatch(fetchMaintenanceRecords({}));
+    dispatch(fetchMaintenanceRecords({ limit: 500 }));
     dispatch(fetchMaintenanceStats());
     dispatch(fetchVehicles());
   }, [dispatch]);
@@ -311,6 +316,12 @@ export const VehicleMaintenance = () => {
     else message.error(res.payload || "Failed");
   };
 
+  const handleDelete = async (id) => {
+    const res = await dispatch(deleteMaintenanceRecord(id));
+    if (res.meta.requestStatus === "fulfilled") message.success("Record deleted");
+    else message.error(res.payload || "Failed");
+  };
+
   const cols = [
     { title: "Vehicle",      dataIndex: "vehicleName", render: (v, r) => v || r.vehicleNo || "—" },
     { title: "Service Type", dataIndex: "serviceType" },
@@ -323,10 +334,16 @@ export const VehicleMaintenance = () => {
     },
     {
       title: "Action",
-      render: (_, r) =>
-        r.status !== "Completed"
-          ? <Button size="small" type="primary" onClick={() => handleMarkDone(r._id)}>Mark Done</Button>
-          : <Button size="small" type="link" icon={<EyeOutlined />}>Receipt</Button>,
+      render: (_, r) => (
+        <Space size={4}>
+          {r.status !== "Completed" && (
+            <Button size="small" type="primary" onClick={() => handleMarkDone(r._id)}>Mark Done</Button>
+          )}
+          <Popconfirm title="Delete this maintenance record?" okButtonProps={{ danger: true }} onConfirm={() => handleDelete(r._id)}>
+            <Button size="small" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
     },
   ];
 

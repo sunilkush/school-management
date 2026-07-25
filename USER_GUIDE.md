@@ -641,3 +641,27 @@ If you see the **"No Active Academic Year"** screen:
 ---
 
 *For technical support, contact your system administrator or use the Support section in the application.*
+
+roles 
+# Super Admin 
+# School Admin 
+# Principal 
+# Vice Principal 
+# Teacher 
+# Class Teacher 
+# Subject Coordinator 
+# Exam Coordinator 
+# Sports Teacher 
+# Lab Technician 
+# Medical Officer 
+# Student 
+# Parent 
+# Accountant 
+# Librarian 
+# Hostel Warden 
+# Staff 
+# Security 
+# Receptionist 
+# Counselor 
+# IT Support 
+# Transport Manager

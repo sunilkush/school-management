@@ -57,13 +57,17 @@ export const getInventoryItems = asyncHandler(async (req, res) => {
 export const createInventoryItem = asyncHandler(async (req, res) => {
   const schoolId = ensureSchoolScope(resolveSchoolId(req));
 
-  const { itemType, name, category, unit, location } = req.body;
+  const {
+    itemType, name, category, unit, location,
+    serialNumber, purchaseDate, purchasePrice, warrantyExpiry, condition, vendorId, assignedTo,
+  } = req.body;
 
   if (!itemType || !name) throw new ApiError(400, "itemType and name are required");
 
   const quantity = parseNumericField(req.body.quantity, 0);
   const allocated = parseNumericField(req.body.allocated, 0);
   const minThreshold = parseNumericField(req.body.minThreshold, 10);
+  const parsedPurchasePrice = parseNumericField(purchasePrice, 0);
 
   validateInventoryPayload({ quantity, allocated, minThreshold });
 
@@ -78,6 +82,13 @@ export const createInventoryItem = asyncHandler(async (req, res) => {
     allocated,
     location: location || "",
     minThreshold,
+    serialNumber: serialNumber || "",
+    purchaseDate: purchaseDate || null,
+    purchasePrice: parsedPurchasePrice,
+    warrantyExpiry: warrantyExpiry || null,
+    condition: condition || "good",
+    vendorId: vendorId || null,
+    assignedTo: assignedTo || "",
   });
 
   return res.status(201).json(new ApiResponse(201, item, "Inventory item created successfully"));
@@ -104,7 +115,10 @@ export const updateInventoryItem = asyncHandler(async (req, res) => {
     minThreshold: nextMinThreshold,
   });
 
-  ["itemType", "name", "category", "unit", "location"].forEach((field) => {
+  [
+    "itemType", "name", "category", "unit", "location",
+    "serialNumber", "purchaseDate", "purchasePrice", "warrantyExpiry", "condition", "vendorId", "assignedTo",
+  ].forEach((field) => {
     if (req.body[field] !== undefined) item[field] = req.body[field];
   });
 

@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Button, Tabs, Space, message } from "antd";
-import { ReloadOutlined, PlusOutlined, CheckCircleOutlined, StopOutlined, CarOutlined } from "@ant-design/icons";
+import { Table, Button, Tabs, Space, message, Modal } from "antd";
+import { ReloadOutlined, PlusOutlined, CheckCircleOutlined, StopOutlined, CarOutlined, UserSwitchOutlined } from "@ant-design/icons";
 import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
 import PageHeader from "../../../components/layout/PageHeader";
+import RegisterForm from "../../../components/forms/RegisterForm";
 import {
   pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, avatarStyle,
+  tableContainer, tableHeadCss, avatarStyle, modalTitle,
 } from "../../../styles/pageStyles";
 
 const StatCard = ({ icon, label, value, color }) => (
@@ -29,10 +30,16 @@ const Transport = () => {
   const dispatch = useDispatch();
   const { users = [], loading, user: currentUser } = useSelector((state) => state.auth || {});
   const [refreshTick, setRefreshTick] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAllUser());
   }, [dispatch, refreshTick]);
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setRefreshTick((t) => t + 1);
+  };
 
   const drivers = useMemo(() => users.filter((u) => u?.role?.name === "Driver"), [users]);
   const transporters = useMemo(() => users.filter((u) => u?.role?.name === "Transporter"), [users]);
@@ -102,10 +109,21 @@ const Transport = () => {
         extra={
           <Space wrap>
             <Button icon={<ReloadOutlined />} onClick={() => setRefreshTick((t) => t + 1)}>Refresh</Button>
-            <Button type="primary" icon={<PlusOutlined />}>Add Transport User</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>Add Transport User</Button>
           </Space>
         }
       />
+
+      <Modal
+        title={modalTitle(<UserSwitchOutlined />, "Register Transport User", "Select Driver or Transporter as the role")}
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        width={720}
+        destroyOnClose
+      >
+        <RegisterForm onClose={handleModalClose} allowedRoleNames={["Driver", "Transporter"]} />
+      </Modal>
 
       <div style={{ ...statGrid(170), marginTop: 20 }}>
         <StatCard icon={<CarOutlined />} label="Drivers" value={drivers.length} color="#2563EB" />

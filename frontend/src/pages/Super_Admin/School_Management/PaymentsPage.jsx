@@ -56,8 +56,8 @@ const statusConfig = {
 
 const paymentModeOptions = [
   { label: "Cash", value: "cash" },
-  { label: "Bank Transfer", value: "bank_transfer" },
-  { label: "UPI", value: "upi" },
+  { label: "Bank Transfer", value: "bank transfer" },
+  { label: "UPI", value: "UPI" },
   { label: "Card", value: "card" },
   { label: "Cheque", value: "cheque" },
   { label: "Gateway", value: "gateway" },
@@ -340,7 +340,7 @@ export default function PaymentsPage() {
                             paymentForm.setFieldsValue({
                               amount: row.totalAmount,
                               status: "success",
-                              paymentMode: "bank_transfer",
+                              paymentMode: "bank transfer",
                             });
                             setPaymentOpen(true);
                           }}
@@ -490,7 +490,7 @@ export default function PaymentsPage() {
         <Form
           form={paymentForm}
           layout="vertical"
-          initialValues={{ status: "success", paymentMode: "bank_transfer" }}
+          initialValues={{ status: "success", paymentMode: "bank transfer" }}
           style={{ marginTop: 16 }}
         >
           <Form.Item name="amount" label="Amount" rules={[{ required: true, message: "Please enter amount" }]}>

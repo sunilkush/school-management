@@ -1,15 +1,28 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Spin } from "antd";
-import { CalendarDays, Clock, User, MapPin, ChevronRight, Zap, RefreshCw } from "lucide-react";
+import {
+  CalendarDays, Clock, User, MapPin, ChevronRight, Zap, RefreshCw,
+  BookOpen, ListChecks, Coffee, TrendingUp,
+} from "lucide-react";
 import dayjs from "dayjs";
 import { fetchStudentTimetable } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { pageWrapper, sectionPanel, pill, emptyState } from "../../../styles/pageStyles.js";
+import {
+  pageWrapper, sectionPanel, pill, emptyState,
+  statGrid, statCard, statLabel, statValue, iconWell,
+} from "../../../styles/pageStyles.js";
 
 const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const COLORS = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"];
+// Mirrors the app's theme tokens in index.css (--primary/--accent/--success/…) —
+// kept as literal hex here (not var()) so the existing `${color}NN` alpha-suffix
+// trick used throughout this file and styles/pageStyles.js keeps working; these
+// values are identical in light and dark mode, so nothing is lost by inlining them.
+const COLORS = ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B", "#8B5CF6", "#06B6D4", "#3B82F6", "#F97316"];
+const PRIMARY = "#2563EB";
+const SUCCESS = "#22C55E";
+const INFO = "#3B82F6";
 
 function pickColor(name = "") {
   let h = 0;
@@ -82,21 +95,7 @@ function PeriodCard({ entry, isActive }) {
         }}
       >
         {/* Avatar */}
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            flexShrink: 0,
-            background: `${color}18`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
-            fontWeight: 800,
-            color,
-          }}
-        >
+        <div style={iconWell(color, 44, { fontSize: 18, fontWeight: 800 })}>
           {subject[0].toUpperCase()}
         </div>
 
@@ -123,7 +122,7 @@ function PeriodCard({ entry, isActive }) {
             {isActive && (
               <span
                 style={{
-                  ...pill("#10b981", "#10b98115"),
+                  ...pill(SUCCESS, `${SUCCESS}15`),
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 3,
@@ -173,6 +172,17 @@ function PeriodCard({ entry, isActive }) {
     </div>
   );
 }
+
+/* ── Stat tile ───────────────────────────────────────────────────── */
+const StatTile = ({ icon, label, value, color }) => (
+  <div style={statCard({ color })}>
+    <div>
+      <div style={statLabel(color)}>{label}</div>
+      <div style={statValue(color)}>{value}</div>
+    </div>
+    <div style={iconWell(color, 40)}>{icon}</div>
+  </div>
+);
 
 /* ── Main page ───────────────────────────────────────────────────── */
 export default function StudentTimeTable() {
@@ -237,6 +247,18 @@ export default function StudentTimeTable() {
 
   const today = dayjs().format("dddd");
 
+  // Header summary stats
+  const stats = useMemo(() => {
+    const entries = Object.entries(countPerDay);
+    const busiest = entries.reduce((max, cur) => (cur[1] > max[1] ? cur : max), ["—", 0]);
+    return {
+      total: sortedData.length,
+      todayCount: countPerDay[today] || 0,
+      freeDays: DAY_ORDER.filter((d) => !countPerDay[d]).length,
+      busiestDay: busiest[1] > 0 ? busiest[0].slice(0, 3) : "—",
+    };
+  }, [sortedData.length, countPerDay, today]);
+
   return (
     <div style={pageWrapper}>
       {/* Header */}
@@ -267,42 +289,35 @@ export default function StudentTimeTable() {
         }
       />
 
+      {/* Summary stats */}
+      <div style={{ ...statGrid(160), marginTop: 20 }}>
+        <StatTile icon={<BookOpen size={18} />}    label="Periods This Week" value={stats.total}       color={PRIMARY} />
+        <StatTile icon={<ListChecks size={18} />}  label="Today's Classes"   value={stats.todayCount}  color={SUCCESS} />
+        <StatTile icon={<TrendingUp size={18} />}  label="Busiest Day"       value={stats.busiestDay}  color="#8B5CF6" />
+        <StatTile icon={<Coffee size={18} />}      label="Free Days"         value={stats.freeDays}    color="#F59E0B" />
+      </div>
+
       {/* Next class banner */}
       {!loading && (
         <div
           style={{
-            marginTop: 20,
+            marginBottom: 20,
             padding: "14px 18px",
             borderRadius: 14,
-            background: nextClass ? "#10b98110" : "#0ea5e910",
-            border: `1px solid ${nextClass ? "#10b98130" : "#0ea5e930"}`,
+            background: nextClass ? `${SUCCESS}10` : `${INFO}10`,
+            border: `1px solid ${nextClass ? `${SUCCESS}30` : `${INFO}30`}`,
             display: "flex",
             alignItems: "center",
             gap: 12,
           }}
         >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              flexShrink: 0,
-              background: nextClass ? "#10b98118" : "#0ea5e918",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <ChevronRight
-              size={18}
-              color={nextClass ? "#10b981" : "#0ea5e9"}
-              strokeWidth={2.5}
-            />
+          <div style={iconWell(nextClass ? SUCCESS : INFO, 36)}>
+            <ChevronRight size={18} strokeWidth={2.5} />
           </div>
           <div>
             {nextClass ? (
               <>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#10b981" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: SUCCESS }}>
                   Next: {nextClass.subjectId?.name || "Class"} — {nextClass.day} at{" "}
                   {nextClass.startTime}
                 </div>
@@ -312,7 +327,7 @@ export default function StudentTimeTable() {
                 </div>
               </>
             ) : (
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#0ea5e9" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: INFO }}>
                 No upcoming classes found for this week.
               </div>
             )}
@@ -321,7 +336,7 @@ export default function StudentTimeTable() {
       )}
 
       {/* Day selector */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 20 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
         {DAY_ORDER.map((day) => {
           const active = activeDay === day;
           const isToday = day === today;
@@ -338,9 +353,9 @@ export default function StudentTimeTable() {
                 padding: "8px 14px",
                 borderRadius: 10,
                 border: active
-                  ? "1.5px solid #6366f1"
+                  ? `1.5px solid ${PRIMARY}`
                   : "1px solid var(--border-muted)",
-                background: active ? "#6366f1" : "var(--surface)",
+                background: active ? PRIMARY : "var(--surface)",
                 color: active ? "#fff" : "var(--text-primary)",
                 cursor: "pointer",
                 fontSize: 13,
@@ -357,8 +372,8 @@ export default function StudentTimeTable() {
                     padding: "1px 5px",
                     borderRadius: 99,
                     lineHeight: "16px",
-                    background: active ? "rgba(255,255,255,0.22)" : "#6366f115",
-                    color: active ? "#fff" : "#6366f1",
+                    background: active ? "rgba(255,255,255,0.22)" : `${PRIMARY}15`,
+                    color: active ? "#fff" : PRIMARY,
                   }}
                 >
                   TODAY
@@ -385,7 +400,7 @@ export default function StudentTimeTable() {
       </div>
 
       {/* Periods */}
-      <div style={{ ...sectionPanel, marginTop: 16 }}>
+      <div style={{ ...sectionPanel, marginTop: 0 }}>
         <div
           style={{
             fontSize: 11,

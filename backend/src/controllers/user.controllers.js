@@ -14,7 +14,7 @@ import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
 import { Employee } from '../models/Employee.model.js'
 import { Teacher } from '../models/teacherAssignment.model.js'
 import { SchoolSubscription } from '../models/schoolSubscription.model.js'
-import { recordLoginEvent } from './loginLog.controllers.js'
+import { recordLoginEvent, recordLogoutByUserId } from './loginLog.controllers.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -122,16 +122,17 @@ const registerUser = asyncHandler(async (req, res) => {
 
       await existingUser.save();
 
-      return res.status(200).json({
-        message: "User re-activated successfully",
-        user: existingUser,
-      });
+      // Was returning a raw {message, user} body — every other branch of this handler (and the
+      // callers on both web/authSlice.js and mobile/CreateUserView.jsx) reads the created user via
+      // response.data.data, which this shape never had, so re-registering a deactivated user's
+      // email crashed step 2 (employee creation) with "Cannot read properties of undefined".
+      return res
+        .status(200)
+        .json(new ApiResponse(200, existingUser, "User re-activated successfully"));
     }
 
     // ❌ Already active
-    return res.status(400).json({
-      message: "User already exists",
-    });
+    throw new ApiError(400, "User already exists");
   }
   // ✅ Handle avatar
   let avatarUrl = "";
@@ -658,6 +659,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
  */
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } })
+  recordLogoutByUserId(req.user._id);
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

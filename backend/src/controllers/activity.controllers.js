@@ -33,7 +33,19 @@ export const getActivityLogs = async (req, res) => {
 
     let query = {};
 
-    if (school) query.school = school;
+    // Non-Super-Admin callers (School Admin, IT Support, Principal) must never see another
+    // school's activity logs — without this, an empty/omitted `school` query param returned
+    // every school's logs, since the filter was only ever applied when explicitly passed.
+    const requesterRole = req.userRole?.name;
+    if (requesterRole === "Super Admin") {
+      if (school) query.school = school;
+    } else {
+      const ownSchoolId = req.user?.school?._id || req.user?.schoolId;
+      if (!ownSchoolId) {
+        return res.status(400).json({ success: false, message: "School context not found" });
+      }
+      query.school = ownSchoolId;
+    }
     if (user) query.user = user;
     if (role) query.role = role;
     if (startDate || endDate) {

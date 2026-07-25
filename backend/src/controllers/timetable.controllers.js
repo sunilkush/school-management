@@ -297,7 +297,7 @@ export const copyWeekTimetable = asyncHandler(async (req, res) => {
 });
 
 export const myTeacherTimetable = asyncHandler(async (req, res) => {
-  requireRole(req, ["Teacher", ...CRUD_ROLES, "Staff", "Support Staff"]);
+  requireRole(req, ["Teacher", "Subject Coordinator", "Class Teacher", "Lab Technician", ...CRUD_ROLES, "Staff", "Support Staff"]);
   const schoolId = resolveSchoolId(req);
   const { academicYearId } = req.query;
   const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, teacherId: req.user._id, status: "active" })));

@@ -7,13 +7,12 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell } from "../../../styles/pageStyles";
 
 const EVENT_TYPE_COLOR = {
-  holiday:     "red",
-  exam:        "blue",
-  sports:      "green",
-  cultural:    "purple",
-  ptm:         "orange",
-  meeting:     "cyan",
-  other:       "default",
+  Holiday:  "red",
+  Exam:     "blue",
+  Meeting:  "cyan",
+  Activity: "green",
+  Reminder: "orange",
+  Event:    "purple",
 };
 
 const StatCard = ({ icon, label, value, color }) => (
@@ -64,8 +63,8 @@ const AcademicCalendar = () => {
     return {
       total:    events.length,
       upcoming: events.filter((e) => dayjs(e.startDate || e.date).isAfter(now)).length,
-      holidays: events.filter((e) => e.eventType === "holiday").length,
-      exams:    events.filter((e) => e.eventType === "exam").length,
+      holidays: events.filter((e) => e.type === "Holiday").length,
+      exams:    events.filter((e) => e.type === "Exam").length,
     };
   }, [events]);
 
@@ -78,7 +77,7 @@ const AcademicCalendar = () => {
         {list.slice(0, 2).map((ev) => (
           <li key={ev._id} style={{ marginBottom: 2 }}>
             <Badge
-              color={EVENT_TYPE_COLOR[ev.eventType] === "default" ? "#666" : EVENT_TYPE_COLOR[ev.eventType]}
+              color={EVENT_TYPE_COLOR[ev.type] || "#666"}
               text={<span style={{ fontSize: 11, color: "var(--text-primary)" }}>{ev.title}</span>}
             />
           </li>
@@ -164,8 +163,8 @@ const AcademicCalendar = () => {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>{ev.title}</div>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                      <Tag color={EVENT_TYPE_COLOR[ev.eventType] || "default"} style={{ fontSize: 11 }}>
-                        {ev.eventType || "event"}
+                      <Tag color={EVENT_TYPE_COLOR[ev.type] || "default"} style={{ fontSize: 11 }}>
+                        {ev.type || "Event"}
                       </Tag>
                       {ev.description && (
                         <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{ev.description}</span>
@@ -193,7 +192,7 @@ const AcademicCalendar = () => {
             <List.Item>
               <div>
                 <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>{ev.title}</div>
-                <Tag color={EVENT_TYPE_COLOR[ev.eventType] || "default"}>{ev.eventType || "event"}</Tag>
+                <Tag color={EVENT_TYPE_COLOR[ev.type] || "default"}>{ev.type || "Event"}</Tag>
                 {ev.description && (
                   <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 6 }}>{ev.description}</div>
                 )}

@@ -29,10 +29,10 @@ const SubjectCoordinatorDashboard = () => {
 
   useEffect(() => {
     reduxDispatch(getAllSubjects({ limit: 200 }));
-    reduxDispatch(getExams({}));
+    reduxDispatch(getExams({ limit: 100 }));
     setPlansLoading(true);
     apiClient
-      .get("/lesson-plans")
+      .get("/lesson-plans", { params: { limit: 500 } })
       .then((r) => setPlans(r.data?.data?.items || r.data?.data || []))
       .catch(() => setPlans([]))
       .finally(() => setPlansLoading(false));

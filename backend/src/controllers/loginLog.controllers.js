@@ -36,6 +36,21 @@ export const recordLogoutEvent = async (logId) => {
   }
 };
 
+/* ── Internal helper — called from logoutUser (no logId available client-side,
+   so we close the most recent still-open session for this user) ─────────── */
+export const recordLogoutByUserId = async (userId) => {
+  try {
+    if (!userId) return;
+    await LoginLog.findOneAndUpdate(
+      { userId, logoutTime: { $exists: false } },
+      { logoutTime: new Date() },
+      { sort: { loginTime: -1 } }
+    );
+  } catch (err) {
+    console.error("[LoginLog] Failed to record logout:", err.message);
+  }
+};
+
 /* ── Simple UA parsers ──────────────────────────────────────────────────── */
 const parseBrowser = (ua = "") => {
   if (ua.includes("Chrome")) return "Chrome";

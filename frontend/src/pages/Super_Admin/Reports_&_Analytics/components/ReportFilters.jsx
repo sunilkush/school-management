@@ -1,15 +1,21 @@
-import React, { useEffect} from "react";
+import React, { useEffect } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSchools } from "../../../../features/schoolSlice";
+import { fetchAllAcademicYears } from "../../../../features/academicYearSlice";
 
 const ReportFilters = ({ filters, setFilters }) => {
   const dispatch = useDispatch();
   const { schools } = useSelector((state) => state.school);
+  const { academicYears = [] } = useSelector((state) => state.academicYear || {});
 
   useEffect(() => {
-    dispatch(fetchSchools());
+    dispatch(fetchSchools({ limit: 500 }));
   }, [dispatch]);
+
+  useEffect(() => {
+    if (filters.school) dispatch(fetchAllAcademicYears(filters.school));
+  }, [dispatch, filters.school]);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
@@ -17,7 +23,7 @@ const ReportFilters = ({ filters, setFilters }) => {
       <select
         className="border rounded p-2"
         value={filters.school}
-        onChange={(e) => setFilters({ ...filters, school: e.target.value })}
+        onChange={(e) => setFilters({ ...filters, school: e.target.value, session: "" })}
       >
         <option value="">All Schools</option>
         {schools.map((school) => (
@@ -27,31 +33,34 @@ const ReportFilters = ({ filters, setFilters }) => {
         ))}
       </select>
 
-      {/* Academic Year */}
+      {/* Academic Year — depends on a school being selected first, since
+          AcademicYear records belong to a single school */}
       <select
         className="border rounded p-2"
-        value={filters.academicYear}
-        onChange={(e) =>
-          setFilters({ ...filters, academicYear: e.target.value })
-        }
+        value={filters.session}
+        disabled={!filters.school}
+        onChange={(e) => setFilters({ ...filters, session: e.target.value })}
       >
-        <option value="">All Years</option>
-        <option value="2025-2026">2025-2026</option>
-        <option value="2024-2025">2024-2025</option>
+        <option value="">{filters.school ? "All Years" : "Select a school first"}</option>
+        {academicYears.map((year) => (
+          <option key={year._id} value={year._id}>
+            {year.name}
+          </option>
+        ))}
       </select>
 
       {/* Report Type */}
       <select
         className="border rounded p-2"
-        value={filters.reportType}
-        onChange={(e) =>
-          setFilters({ ...filters, reportType: e.target.value })
-        }
+        value={filters.type}
+        onChange={(e) => setFilters({ ...filters, type: e.target.value })}
       >
         <option value="">All Types</option>
         <option value="students">Students</option>
         <option value="fees">Fees</option>
         <option value="attendance">Attendance</option>
+        <option value="performance">Performance</option>
+        <option value="custom">Custom</option>
       </select>
 
       {/* Date Range From */}
@@ -77,8 +86,8 @@ const ReportFilters = ({ filters, setFilters }) => {
         onChange={(e) => setFilters({ ...filters, status: e.target.value })}
       >
         <option value="">All Status</option>
-        <option value="active">Active</option>
-        <option value="archived">Archived</option>
+        <option value="draft">Draft</option>
+        <option value="finalized">Finalized</option>
       </select>
     </div>
   );

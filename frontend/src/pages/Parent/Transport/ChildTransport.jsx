@@ -78,13 +78,10 @@ const ChildTransport = () => {
                 </div>
                 <Descriptions column={1} size="small" bordered>
                   <Descriptions.Item label="Route Name">
-                    {route.routeName || route.name || "—"}
+                    {route.name || "—"}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Start Point">
-                    {route.startPoint || "—"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="End Point">
-                    {route.endPoint || "—"}
+                  <Descriptions.Item label="All Stops">
+                    {route.stops?.length ? route.stops.join(" → ") : "—"}
                   </Descriptions.Item>
                   <Descriptions.Item label="Pickup Stop">
                     {transport.pickupStop || "—"}
@@ -104,7 +101,7 @@ const ChildTransport = () => {
                 </div>
                 <Descriptions column={1} size="small" bordered>
                   <Descriptions.Item label="Vehicle No">
-                    {vehicle.vehicleNumber || vehicle.registrationNumber || "—"}
+                    {vehicle.busNumber || "—"}
                   </Descriptions.Item>
                   <Descriptions.Item label="Type">
                     {vehicle.vehicleType || "—"}

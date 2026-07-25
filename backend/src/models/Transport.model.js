@@ -32,6 +32,14 @@ const TransportSchema = new Schema(
       required: true,
       trim: true,
     },
+    // Optional link to a real "Driver" role User account, so that user can see their own
+    // assigned vehicle on their dashboard. driverName stays the source of truth for display —
+    // this is only set when the vehicle is linked to an actual login-capable driver account.
+    driverId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     driverContact: {
       type: String,
       default: "NA",

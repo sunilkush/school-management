@@ -13,6 +13,10 @@ import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
 import { calculatePayrollEntry } from "../services/payrollCalculator.service.js";
 
+// Roles allowed to view/download any employee's payslip for payroll administration —
+// everyone else may only fetch their own, enforced in fetchAuthorizedPayslip() below.
+const PAYSLIP_ADMIN_ROLES = ["Super Admin", "School Admin", "Accountant", "Principal", "Admin"];
+
 const getSchoolId = (req) => {
   const requestedSchoolId = req.body?.schoolId || req.query?.schoolId;
   const userSchoolId = req.user?.schoolId;
@@ -492,7 +496,7 @@ const fetchAuthorizedPayslip = async ({ req, employeeId, month, year }) => {
   if (!entry) throw new ApiError(404, "Payslip not found for employee");
 
   const isSelf = req.user?._id?.toString() === entry.employeeId?.userId?._id?.toString();
-  if (!isSelf && ["Teacher", "Employee", "Staff", "Support Staff"].includes(req.userRole?.name)) {
+  if (!isSelf && !PAYSLIP_ADMIN_ROLES.includes(req.userRole?.name)) {
     throw new ApiError(403, "You can only view your own payslip");
   }
 

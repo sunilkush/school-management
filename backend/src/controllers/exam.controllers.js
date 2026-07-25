@@ -8,6 +8,7 @@ import { ExamResult } from '../models/ExamResult.model.js'
 import { AdmitCard } from '../models/AdmitCard.model.js'
 import { Question } from '../models/Questions.model.js'
 import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
+import { Student } from '../models/student.model.js'
 import {
     assignExamToClassService,
     createExamService,
@@ -393,6 +394,23 @@ const getStoredAdmitCards = async (examId) => AdmitCard.find({ examId })
     .sort({ seatNumber: 1, createdAt: 1 })
     .lean()
 
+// Admit cards cover an entire class/exam — Students and Parents must only ever
+// see their own (or their linked child's) card, never classmates'.
+const scopeAdmitCardsToCaller = async (admitCards, user) => {
+    const roleName = user.roleId?.name
+    if (roleName === 'Student') {
+        return admitCards.filter((c) => `${c.studentId}` === `${user._id}`)
+    }
+    if (roleName === 'Parent') {
+        const children = await Student.find({
+            $or: [{ fatherId: user._id }, { motherId: user._id }, { guardianId: user._id }],
+        }).select('userId').lean()
+        const childUserIds = new Set(children.map((c) => `${c.userId}`))
+        return admitCards.filter((c) => childUserIds.has(`${c.studentId}`))
+    }
+    return admitCards
+}
+
 const buildAdmitCardPayloads = async (exam, userId) => {
     const enrollmentFilter = {
         schoolId: exam.schoolId,
@@ -444,7 +462,7 @@ export const getExamAdmitCards = asyncHandler(async (req, res) => {
     const exam = await getExamForAdmitCards(req.params.id).lean()
     ensureExamAccess(exam, req.user)
 
-    const admitCards = await getStoredAdmitCards(req.params.id)
+    const admitCards = await scopeAdmitCardsToCaller(await getStoredAdmitCards(req.params.id), req.user)
 
     return res
         .status(200)
@@ -546,10 +564,11 @@ export const downloadAdmitCardPdf = asyncHandler(async (req, res) => {
     const exam = await getExamForAdmitCards(req.params.id).lean()
     ensureExamAccess(exam, req.user)
 
-    const cards = await getStoredAdmitCards(req.params.id)
+    let cards = await getStoredAdmitCards(req.params.id)
     if (!cards.length) {
         throw new ApiError(404, 'No admit cards found. Please generate admit cards first.')
     }
+    cards = await scopeAdmitCardsToCaller(cards, req.user)
 
     const { studentId } = req.query
     const filtered = studentId

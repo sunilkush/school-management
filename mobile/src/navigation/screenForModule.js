@@ -130,6 +130,13 @@ import { AlumniView } from '../screens/schoolAdmin/AlumniView';
 import { CanteenView } from '../screens/schoolAdmin/CanteenView';
 import { SchoolSetupView } from '../screens/schoolAdmin/SchoolSetupView';
 import { PayrollSettingsView } from '../screens/schoolAdmin/PayrollSettingsView';
+import { SalaryStructuresView } from '../screens/schoolAdmin/SalaryStructuresView';
+import { MonthlyRunView } from '../screens/schoolAdmin/MonthlyRunView';
+import { PayslipCenterView } from '../screens/schoolAdmin/PayslipCenterView';
+import { PayrollMonthlyReportsView } from '../screens/schoolAdmin/PayrollMonthlyReportsView';
+import { SalaryAdvanceView } from '../screens/schoolAdmin/SalaryAdvanceView';
+import { BonusIncentivesView } from '../screens/schoolAdmin/BonusIncentivesView';
+import { ReimbursementsView } from '../screens/schoolAdmin/ReimbursementsView';
 
 // Real screens built so far, keyed by nav item key (== permission module, or 'Dashboard'/'Profile').
 // Anything not listed here still renders ModulePlaceholderScreen until a later Phase 4 batch.
@@ -270,9 +277,22 @@ const SCREEN_MAP = {
   Evaluation: EvaluationView,
   ExamReports: ExamReportsView,
   StudentMonthlyReport: StudentMonthlyReportView,
-  // School Admin — first batch of a much larger remaining set (see conversation summary for the
-  // full deferred list: Payroll sub-system, Paper Builder, Seat Plan, Fee Collection, Admissions).
+  // School Admin — Payroll sub-system (Create Employee/Salary Structures/Monthly Run/Payslip
+  // Center/Monthly Reports/Salary Advance/Bonus & Incentives/Reimbursements). PaperBuilder
+  // remains deliberately unmapped — the Exam model has no paperBlueprint field, so anything
+  // "built" there would silently vanish on save under Mongoose's strict mode; same reason it's
+  // still dangling for Exam Coordinator too (see that role's own NAV_CONFIG comment).
   GeofenceSettings: GeofenceSettingsView,
+  // Create Employee — the exact same two-call (registerUser → registerEmployee) flow as
+  // School Admin's own 'CreateUser' item above, just reached from the Payroll submenu on web too.
+  CreateEmployee: CreateUserView,
+  SalaryStructures: SalaryStructuresView,
+  MonthlyRun: MonthlyRunView,
+  PayslipCenter: PayslipCenterView,
+  PayrollMonthlyReports: PayrollMonthlyReportsView,
+  SalaryAdvance: SalaryAdvanceView,
+  BonusIncentives: BonusIncentivesView,
+  Reimbursements: ReimbursementsView,
   Inventory: InventoryView,
   FeeCategories: FeeCategoriesView,
   // One admin-wide attendance browser (role filter chips) behind 5 separate web sidebar entries —
@@ -375,7 +395,7 @@ const SCREEN_MAP = {
 // Screens that are themselves a nested navigator (e.g. a list that pushes to a detail screen, or
 // Profile pushing to Settings) and so render their own header — the outer Tab/Drawer must not
 // also show one for that item, or the user sees two stacked header bars.
-export const SELF_HEADERED_KEYS = new Set(['Students', 'Profile', 'Assignments', 'Messages', 'MyChildren']);
+export const SELF_HEADERED_KEYS = new Set(['Students', 'Profile', 'Assignments', 'Messages', 'MyChildren', 'Exams', 'Assessments']);
 
 // True for anything that renders its own nested Stack.Navigator (and so its own header) — the
 // named self-headered screens above, plus every submenu group (GroupMenuScreen), regardless of

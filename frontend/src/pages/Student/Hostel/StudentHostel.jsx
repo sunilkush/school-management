@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Spin, Empty, Tag, Descriptions, Avatar } from "antd";
+import { Spin, Empty, Tag, Descriptions, List, Avatar } from "antd";
 import {
-  HomeOutlined, UserOutlined, PhoneOutlined,
+  HomeOutlined, UserOutlined,
   TeamOutlined, BankOutlined,
 } from "@ant-design/icons";
 import { fetchStudentHostel } from "../../../features/studentPortalSlice";
@@ -51,9 +51,9 @@ const StudentHostel = () => {
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
         <StatCard icon={<BankOutlined />}    label="Room Number"  value={allocation.roomNumber}  color="#14B8A6" />
-        <StatCard icon={<HomeOutlined />}    label="Block / Floor" value={allocation.block || allocation.floor || "N/A"} color="#0891b2" />
         <StatCard icon={<TeamOutlined />}    label="Capacity"     value={allocation.capacity}    color="#22C55E" />
         <StatCard icon={<UserOutlined />}    label="Status"       value={allocation.status === "occupied" ? "Occupied" : "Vacant"} color="#F59E0B" />
+        <StatCard icon={<HomeOutlined />}    label="Academic Year" value={allocation.academicYear?.name || "N/A"} color="#0891b2" />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 0 }}>
@@ -61,51 +61,36 @@ const StudentHostel = () => {
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Room Details</div>
           <Descriptions column={1} size="small" labelStyle={{ color: "var(--text-muted)", fontWeight: 600, fontSize: 12 }}>
             <Descriptions.Item label="Room Number">{allocation.roomNumber || "—"}</Descriptions.Item>
-            <Descriptions.Item label="Floor">{allocation.floor || "—"}</Descriptions.Item>
-            <Descriptions.Item label="Block">{allocation.block || "—"}</Descriptions.Item>
-            <Descriptions.Item label="Type">{allocation.roomType || "Standard"}</Descriptions.Item>
+            <Descriptions.Item label="Capacity">{allocation.capacity || "—"}</Descriptions.Item>
             <Descriptions.Item label="Status">
               <Tag color={allocation.status === "occupied" ? "green" : "default"}>
                 {allocation.status === "occupied" ? "Occupied" : "Vacant"}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Academic Year">{allocation.academicYearId?.name || "—"}</Descriptions.Item>
+            <Descriptions.Item label="Academic Year">{allocation.academicYear?.name || "—"}</Descriptions.Item>
           </Descriptions>
         </div>
 
         <div style={sectionPanel}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Hostel Warden</div>
-          {allocation.wardenName ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Avatar size={48} icon={<UserOutlined />} style={{ background: "var(--primary)" }} />
-              <div>
-                <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{allocation.wardenName}</div>
-                {allocation.wardenPhone && (
-                  <a href={`tel:${allocation.wardenPhone}`} style={{ color: "var(--primary)", fontSize: 13, display: "flex", alignItems: "center", gap: 4 }}>
-                    <PhoneOutlined /> {allocation.wardenPhone}
-                  </a>
-                )}
-                {allocation.wardenEmail && (
-                  <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 2 }}>{allocation.wardenEmail}</div>
-                )}
-              </div>
-            </div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Roommates</div>
+          {allocation.roommates?.length ? (
+            <List
+              size="small"
+              dataSource={allocation.roommates}
+              renderItem={(name) => (
+                <List.Item>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Avatar size={30} icon={<UserOutlined />} style={{ background: "var(--primary)" }} />
+                    <span style={{ color: "var(--text-primary)", fontSize: 13 }}>{name}</span>
+                  </div>
+                </List.Item>
+              )}
+            />
           ) : (
-            <span style={{ color: "var(--text-muted)", fontSize: 13 }}>Warden details not available.</span>
+            <span style={{ color: "var(--text-muted)", fontSize: 13 }}>No roommates assigned to this room.</span>
           )}
         </div>
       </div>
-
-      {Array.isArray(allocation.rules) && allocation.rules.length > 0 && (
-        <div style={sectionPanel}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 12 }}>Hostel Rules</div>
-          <ul style={{ paddingLeft: 20, margin: 0 }}>
-            {allocation.rules.map((rule, i) => (
-              <li key={i} style={{ color: "var(--text-primary)", fontSize: 13, marginBottom: 6 }}>{rule}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };

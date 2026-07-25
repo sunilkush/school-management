@@ -12,10 +12,15 @@ import { useAppTheme } from '../theme/ThemeProvider';
 
 // Every employee-type role gets self-service apply/track on the web app (~18 near-identical
 // pages) except Super Admin and School Admin — School Admin gets the approval console instead,
-// Super Admin has no leave route on web at all.
+// Super Admin has no leave route on web at all. Class Teacher/Sports Teacher both have their own
+// web route (classteacher/leave, sportsteacher/leave) rendering the identical TeacherLeave.jsx —
+// both were missing here, so tapping "Leave" silently fell to the "not available" placeholder
+// even though NAV_CONFIG lists it and the backend (leaveRequest.routes.js POST '/' and GET '/my')
+// has no role restriction at all.
 const SELF_SERVICE_ROLES = new Set([
   'Principal', 'Vice Principal', 'Teacher', 'Student', 'Accountant',
   'Librarian', 'Hostel Warden', 'Transport Manager', 'Receptionist',
+  'Class Teacher', 'Sports Teacher',
 ]);
 
 export function LeaveScreen() {

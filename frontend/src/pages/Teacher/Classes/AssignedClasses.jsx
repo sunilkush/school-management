@@ -21,6 +21,7 @@ import {
   pill,
   emptyState,
 } from "../../../styles/pageStyles";
+import { getRoleName, getRolePath } from "../../../utils/roles";
 
 const StatCard = ({ icon, label, value, color }) => (
   <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
@@ -165,6 +166,8 @@ const AssignedClasses = () => {
   const { selectedAcademicYear } = useSelector(
     (state) => state.academicYear || {}
   );
+  const { user } = useSelector((state) => state.auth || {});
+  const rolePath = getRolePath(getRoleName(user));
 
   const academicYearId = selectedAcademicYear?._id;
 
@@ -191,11 +194,11 @@ const AssignedClasses = () => {
     });
   }, [classAssignTeacher, searchText]);
 
-  const handleView = (cls) => cls?._id && navigate(`/dashboard/teacher/classes/${cls._id}`);
+  const handleView = (cls) => cls?._id && navigate(`/dashboard/${rolePath}/classes/${cls._id}`);
   const handleAttendance = (cls) =>
     cls?._id &&
     navigate(
-      `/dashboard/teacher/attendance/students?classId=${cls._id}&className=${encodeURIComponent(cls?.name || "")}`
+      `/dashboard/${rolePath}/attendance/students?classId=${cls._id}&className=${encodeURIComponent(cls?.name || "")}`
     );
 
   return (

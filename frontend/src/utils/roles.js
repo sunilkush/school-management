@@ -22,6 +22,7 @@ export const ROLE_PATH_MAP = {
   "IT Support": "itsupport",
   Counselor: "counselor",
   Security: "security",
+  Driver: "driver",
 };
 
 export const ALL_ROLE_NAMES = Object.keys(ROLE_PATH_MAP).filter((role) => role !== "Support Staff");

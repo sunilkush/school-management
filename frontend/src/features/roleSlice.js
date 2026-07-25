@@ -55,6 +55,32 @@ export const createRole = createAsyncThunk(
   }
 );
 
+// Update role
+export const updateRole = createAsyncThunk(
+  "role/updateRole",
+  async ({ id, ...data }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/role/updateRole/${id}`, data);
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to update role");
+    }
+  }
+);
+
+// Delete role
+export const deleteRole = createAsyncThunk(
+  "role/deleteRole",
+  async (id, { rejectWithValue }) => {
+    try {
+      await apiClient.delete(`/role/deleteRole/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to delete role");
+    }
+  }
+);
+
 // 4️⃣ Search roles by school
 export const fetchRoleBySchool = createAsyncThunk(
   "role/fetchRoleBySchool",
@@ -78,7 +104,7 @@ export const searchRoles = createAsyncThunk(
   "role/searchRoles",
   async (query, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/role/search/${query}`, {      });
+      const res = await apiClient.get(`/role/search`, { params: { name: query } });
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Role search failed");
@@ -157,6 +183,35 @@ const roleSlice = createSlice({
       .addCase(createRole.rejected, (state, action) => {
         state.loading = false;
         state.success = false;
+        state.error = action.payload;
+      })
+
+      // updateRole
+      .addCase(updateRole.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateRole.fulfilled, (state, action) => {
+        state.loading = false;
+        const idx = state.roles.findIndex((r) => r._id === action.payload?._id);
+        if (idx !== -1) state.roles[idx] = action.payload;
+      })
+      .addCase(updateRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // deleteRole
+      .addCase(deleteRole.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteRole.fulfilled, (state, action) => {
+        state.loading = false;
+        state.roles = state.roles.filter((r) => r._id !== action.payload);
+      })
+      .addCase(deleteRole.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload;
       })
 

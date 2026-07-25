@@ -34,7 +34,7 @@ export const createVehicle = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);
   if (!schoolId) throw new ApiError(400, "schoolId is required");
 
-  const { type, number, driver, capacity, status, route, driverContact, drivingLicense } = req.body;
+  const { type, number, driver, driverId, capacity, status, route, driverContact, drivingLicense } = req.body;
 
   if (!number || !driver) {
     throw new ApiError(400, "Vehicle number and driver are required");
@@ -46,6 +46,7 @@ export const createVehicle = asyncHandler(async (req, res) => {
     vehicleType: type || "Bus",
     busNumber: number,
     driverName: driver,
+    driverId: driverId || null,
     driverContact: driverContact || "NA",
     drivingLicense: drivingLicense || "NA",
     capacity: capacity || 0,
@@ -64,6 +65,7 @@ export const updateVehicle = asyncHandler(async (req, res) => {
     type: "vehicleType",
     number: "busNumber",
     driver: "driverName",
+    driverId: "driverId",
     capacity: "capacity",
     status: "status",
     route: "route",
@@ -96,6 +98,12 @@ export const deleteVehicle = asyncHandler(async (req, res) => {
   if (!vehicle) throw new ApiError(404, "Vehicle not found");
 
   return res.status(200).json(new ApiResponse(200, null, "Vehicle deleted successfully"));
+});
+
+// Self-service: the vehicle(s) a logged-in Driver account is linked to via driverId.
+export const getMyVehicles = asyncHandler(async (req, res) => {
+  const vehicles = await Transport.find({ driverId: req.user._id }).sort({ createdAt: -1 });
+  return res.status(200).json(new ApiResponse(200, vehicles, "Assigned vehicles fetched successfully"));
 });
 
 export const getRoutes = asyncHandler(async (req, res) => {

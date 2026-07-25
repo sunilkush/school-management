@@ -29,6 +29,7 @@ const ALL_MESSAGE_ROLES = [
   "IT Support",
   "Counselor",
   "Security",
+  "Driver",
 ];
 
 const MESSAGE_POPULATE = [

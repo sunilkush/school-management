@@ -5,6 +5,8 @@ import { IssuedBook } from "../models/IssuedBooks.model.js";
 import { Book } from "../models/Books.model.js";
 import { LibrarySetting } from "../models/LibrarySetting.model.js";
 import { Student } from "../models/student.model.js";
+import { User } from "../models/user.model.js";
+import { Role } from "../models/Roles.model.js";
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -221,6 +223,9 @@ export const getLibraryDashboard = asyncHandler(async (req, res) => {
     { $set: { status: "Overdue" } }
   );
 
+  const memberRoles = await Role.find({ name: { $in: ["Teacher", "Staff", "Accountant", "HR"] } }).select("_id").lean();
+  const memberRoleIds = memberRoles.map((r) => r._id);
+
   const [
     totalBooks,
     totalCopies,
@@ -231,6 +236,8 @@ export const getLibraryDashboard = asyncHandler(async (req, res) => {
     pendingFines,
     recentActivity,
     topBooks,
+    studentMemberCount,
+    staffMemberCount,
   ] = await Promise.all([
     Book.countDocuments({ schoolId }),
     Book.aggregate([{ $match: { schoolId: new (await import("mongoose")).default.Types.ObjectId(schoolId) } }, { $group: { _id: null, total: { $sum: "$totalCopies" } } }]),
@@ -258,6 +265,8 @@ export const getLibraryDashboard = asyncHandler(async (req, res) => {
       { $unwind: "$book" },
       { $project: { title: "$book.title", count: 1 } },
     ]),
+    Student.countDocuments({ schoolId, isActive: true }),
+    User.countDocuments({ schoolId, isActive: true, isDeleted: { $ne: true }, roleId: { $in: memberRoleIds } }),
   ]);
 
   res.status(200).json(new ApiResponse(200, {
@@ -268,6 +277,7 @@ export const getLibraryDashboard = asyncHandler(async (req, res) => {
     overdueCount,
     lostCount,
     pendingFinesAmount: pendingFines[0]?.total || 0,
+    totalMembers: studentMemberCount + staffMemberCount,
     recentActivity: recentActivity.map((r) => ({
       _id: r._id,
       bookTitle: r.bookId?.title || "Unknown",

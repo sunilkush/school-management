@@ -80,7 +80,9 @@ export const deleteAcademicYear = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const res = await apiClient.delete(`/academicYear/${id}`);
-      return res.data;
+      // Backend returns only { success, message } — no data payload — so the
+      // deleted id has to travel from the request itself, not the response.
+      return { ...res.data, deletedId: id };
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -185,7 +187,7 @@ const academicYearSlice = createSlice({
 
         state.academicYears = state.academicYears.map((y) =>
           y._id === archivedId
-            ? { ...y, isActive: false, archived: true }
+            ? { ...y, isActive: false, status: "archived" }
             : y
         );
 
@@ -202,7 +204,7 @@ const academicYearSlice = createSlice({
         state.loading = false;
         state.message = action.payload.message;
 
-        const deletedId = action.payload.data._id;
+        const deletedId = action.payload.deletedId;
 
         state.academicYears = state.academicYears.filter(
           (y) => y._id !== deletedId

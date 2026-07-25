@@ -55,9 +55,9 @@ const statusMap = {
 
 const paymentModes = [
   { label: "Cash", value: "cash" },
-  { label: "UPI", value: "upi" },
+  { label: "UPI", value: "UPI" },
   { label: "Card", value: "card" },
-  { label: "Bank Transfer", value: "bank_transfer" },
+  { label: "Bank Transfer", value: "bank transfer" },
   { label: "Cheque", value: "cheque" },
 ];
 

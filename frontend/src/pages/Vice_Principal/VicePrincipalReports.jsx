@@ -246,7 +246,14 @@ const VicePrincipalReports = () => {
   const roleWise   = schoolReports?.roleWise || [];
   const classWise  = schoolReports?.classWise || [];
   const sectionWise= schoolReports?.sectionWise || [];
-  const genderStats= schoolReports?.genderStats || {};
+  // Backend returns genderStats as an aggregate array ([{ _id: "Male", count }, ...]),
+  // same shape as roleWise/classWise — not a { male, female, other } object.
+  const genderStatsList = schoolReports?.genderStats || [];
+  const genderStats = {
+    male: genderStatsList.find((g) => g._id === "Male")?.count || 0,
+    female: genderStatsList.find((g) => g._id === "Female")?.count || 0,
+    other: genderStatsList.find((g) => g._id === "Other")?.count || 0,
+  };
 
   const kpis = [
     { icon: Users,       label: "Total Students",  value: summary.studentCount, color: "#6366F1", bg: "rgba(99,102,241,0.12)" },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Input, Spin, Typography } from "antd";
+import { Button, Form, Input, InputNumber, Modal, Popconfirm, Select, Spin, Typography, message } from "antd";
 import {
   SearchOutlined,
   BookOutlined,
@@ -8,8 +8,11 @@ import {
   CloseCircleOutlined,
   GlobalOutlined,
   BankOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
-import { getAllSubjects } from "../../../features/subjectSlice.js";
+import { getAllSubjects, createSubject, updateSubject, deleteSubject } from "../../../features/subjectSlice.js";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
 
 const { Text } = Typography;
@@ -70,9 +73,10 @@ const StatRow = ({ total, active, inactive, global: glob }) => (
 );
 
 /* ─── Subject card ───────────────────────────────────────────── */
-const SubjectCard = ({ item, index }) => {
+const SubjectCard = ({ item, index, onEdit, onDelete }) => {
   const p    = PASTEL[index % PASTEL.length];
   const name = toDisplay(item?.name, "Unnamed");
+  const canManage = !item?.isGlobal;
 
   return (
     <div style={{
@@ -89,7 +93,7 @@ const SubjectCard = ({ item, index }) => {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: p.light + "55",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 8, flexShrink: 0,
             background: p.light, border: `1.5px solid ${p.accent}30`,
@@ -101,18 +105,28 @@ const SubjectCard = ({ item, index }) => {
           <Text strong style={{ fontSize: 13, color: "var(--text)" }}>{name}</Text>
         </div>
 
-        <span style={{
-          fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99,
-          background: item?.isActive ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.1)",
-          color: item?.isActive ? C.success : C.danger,
-          border: `1px solid ${item?.isActive ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.2)"}`,
-          display: "flex", alignItems: "center", gap: 4,
-        }}>
-          {item?.isActive
-            ? <CheckCircleOutlined style={{ fontSize: 10 }} />
-            : <CloseCircleOutlined style={{ fontSize: 10 }} />}
-          {item?.isActive ? "Active" : "Inactive"}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          <span style={{
+            fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99,
+            background: item?.isActive ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.1)",
+            color: item?.isActive ? C.success : C.danger,
+            border: `1px solid ${item?.isActive ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.2)"}`,
+            display: "flex", alignItems: "center", gap: 4,
+          }}>
+            {item?.isActive
+              ? <CheckCircleOutlined style={{ fontSize: 10 }} />
+              : <CloseCircleOutlined style={{ fontSize: 10 }} />}
+            {item?.isActive ? "Active" : "Inactive"}
+          </span>
+          {canManage && (
+            <>
+              <Button size="small" type="text" icon={<EditOutlined />} onClick={() => onEdit(item)} />
+              <Popconfirm title="Delete this subject?" okText="Delete" okButtonProps={{ danger: true }} onConfirm={() => onDelete(item)}>
+                <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Card body */}
@@ -171,6 +185,10 @@ const SubjectCard = ({ item, index }) => {
 const Subjects = () => {
   const dispatch = useDispatch();
   const [searchText, setSearchText] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm();
 
   const { user }                   = useSelector((s) => s.auth || {});
   const { selectedAcademicYear }   = useSelector((s) => s.academicYear || {});
@@ -178,9 +196,65 @@ const Subjects = () => {
   const schoolId       = user?.school?._id;
   const academicYearId = selectedAcademicYear?._id;
 
+  const refresh = () => dispatch(getAllSubjects({ page: 1, limit: 50, schoolId, academicYearId }));
+
   useEffect(() => {
-    if (schoolId) dispatch(getAllSubjects({ page: 1, limit: 50, schoolId, academicYearId }));
+    if (schoolId) refresh();
   }, [dispatch, schoolId, academicYearId]);
+
+  const openCreate = () => {
+    setEditTarget(null);
+    form.resetFields();
+    setModalOpen(true);
+  };
+
+  const openEdit = (item) => {
+    setEditTarget(item);
+    form.setFieldsValue({
+      name: item.name,
+      category: item.category,
+      type: item.type,
+      maxMarks: item.maxMarks,
+      passMarks: item.passMarks,
+      description: item.description,
+    });
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditTarget(null);
+    form.resetFields();
+  };
+
+  const handleSave = async () => {
+    const values = await form.validateFields();
+    setSaving(true);
+    try {
+      if (editTarget) {
+        await dispatch(updateSubject({ subjectId: editTarget._id, subjectData: values })).unwrap();
+        message.success("Subject updated");
+      } else {
+        await dispatch(createSubject(values)).unwrap();
+        message.success("Subject created");
+      }
+      closeModal();
+      refresh();
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to save subject");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (item) => {
+    try {
+      await dispatch(deleteSubject(item._id)).unwrap();
+      message.success("Subject deleted");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to delete subject");
+    }
+  };
 
   const safe = useMemo(() => (Array.isArray(subjects) ? subjects : []), [subjects]);
 
@@ -202,6 +276,11 @@ const Subjects = () => {
         title="Subjects"
         subtitle={`Curriculum management · ${safe.length} subjects`}
         icon={<BookOutlined />}
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            Add Subject
+          </Button>
+        }
       />
 
       <div style={{ padding: "20px 24px 40px" }}>
@@ -252,11 +331,58 @@ const Subjects = () => {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 14 }}>
             {filtered.map((item, i) => (
-              <SubjectCard key={item?._id || i} item={item} index={i} />
+              <SubjectCard key={item?._id || i} item={item} index={i} onEdit={openEdit} onDelete={handleDelete} />
             ))}
           </div>
         )}
       </div>
+
+      <Modal
+        title={editTarget ? "Edit Subject" : "Add Subject"}
+        open={modalOpen}
+        onCancel={closeModal}
+        onOk={handleSave}
+        confirmLoading={saving}
+        okText={editTarget ? "Save Changes" : "Create"}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="Name" rules={[{ required: true, message: "Name is required" }]}>
+            <Input placeholder="e.g. Mathematics" />
+          </Form.Item>
+          <Form.Item name="category" label="Category" initialValue="Core">
+            <Select
+              options={[
+                { value: "Core", label: "Core" },
+                { value: "Elective", label: "Elective" },
+                { value: "Language", label: "Language" },
+                { value: "Practical", label: "Practical" },
+                { value: "Optional", label: "Optional" },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item name="type" label="Type" initialValue="Theory">
+            <Select
+              options={[
+                { value: "Theory", label: "Theory" },
+                { value: "Practical", label: "Practical" },
+                { value: "Both", label: "Both" },
+              ]}
+            />
+          </Form.Item>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Form.Item name="maxMarks" label="Max Marks" initialValue={100}>
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item name="passMarks" label="Pass Marks" initialValue={33}>
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+          </div>
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   );
 };

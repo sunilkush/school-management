@@ -4,9 +4,9 @@ import { Table, Button, Modal, Form, Input, InputNumber, Select, message, Divide
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined,
   MinusCircleOutlined, FileTextOutlined, CheckCircleOutlined,
-  ClockCircleOutlined, ShoppingCartOutlined,
+  ClockCircleOutlined, ShoppingCartOutlined, FormOutlined,
 } from "@ant-design/icons";
-import { fetchPurchaseOrders, createPO, updatePOStatus, deletePO } from "../../../features/purchaseOrderSlice";
+import { fetchPurchaseOrders, createPO, updatePO, updatePOStatus, deletePO } from "../../../features/purchaseOrderSlice";
 import { fetchVendors } from "../../../features/vendorSlice";
 import {
   toolbarRow, tableContainer, tableHeadCss,
@@ -44,18 +44,42 @@ export default function PurchaseOrderPage() {
   const { orders, loading, actionLoading } = useSelector((s) => s.purchaseOrder);
   const { vendors } = useSelector((s) => s.vendor);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
   const [viewOrder,  setViewOrder]  = useState(null);
   const [statusModal, setStatusModal] = useState(null);
   const [form] = Form.useForm();
 
   useEffect(() => { dispatch(fetchPurchaseOrders()); dispatch(fetchVendors()); }, [dispatch]);
 
+  const closeFormModal = () => {
+    setCreateOpen(false);
+    setEditingOrder(null);
+    form.resetFields();
+  };
+
+  const openEditModal = (order) => {
+    setEditingOrder(order);
+    form.setFieldsValue({
+      vendorId: order.vendorId?._id || order.vendorId,
+      expectedDate: order.expectedDate ? dayjs(order.expectedDate).format("YYYY-MM-DD") : undefined,
+      taxRate: order.taxRate || 0,
+      notes: order.notes,
+      items: order.items?.length ? order.items : [{ itemName: "", quantity: 1, unit: "pcs", unitPrice: 0 }],
+    });
+    setCreateOpen(true);
+  };
+
   const onCreateFinish = async (vals) => {
     try {
       const items = (vals.items || []).map((i) => ({ ...i, totalPrice: i.quantity * i.unitPrice }));
-      await dispatch(createPO({ ...vals, items })).unwrap();
-      message.success("Purchase order created");
-      setCreateOpen(false); form.resetFields();
+      if (editingOrder) {
+        await dispatch(updatePO({ id: editingOrder._id, ...vals, items })).unwrap();
+        message.success("Purchase order updated");
+      } else {
+        await dispatch(createPO({ ...vals, items })).unwrap();
+        message.success("Purchase order created");
+      }
+      closeFormModal();
     } catch (e) { message.error(e || "Failed"); }
   };
 
@@ -122,7 +146,10 @@ export default function PurchaseOrderPage() {
         <div style={{ display: "flex", gap: 4 }}>
           <Tooltip title="View"><Button size="small" icon={<EyeOutlined />} onClick={() => setViewOrder(r)} /></Tooltip>
           {!["received", "cancelled"].includes(r.status) && (
-            <Tooltip title="Update Status"><Button size="small" icon={<EditOutlined />} onClick={() => setStatusModal(r)} /></Tooltip>
+            <>
+              <Tooltip title="Edit Order"><Button size="small" icon={<FormOutlined />} onClick={() => openEditModal(r)} /></Tooltip>
+              <Tooltip title="Update Status"><Button size="small" icon={<EditOutlined />} onClick={() => setStatusModal(r)} /></Tooltip>
+            </>
           )}
           {r.status === "draft" && (
             <Tooltip title="Delete"><Button size="small" danger icon={<DeleteOutlined />} onClick={() => onDelete(r)} /></Tooltip>
@@ -160,11 +187,15 @@ export default function PurchaseOrderPage() {
         <Table columns={columns} dataSource={orders} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} scroll={{ x: 640 }} />
       </div>
 
-      {/* Create Modal */}
+      {/* Create / Edit Modal */}
       <Modal
-        title={modalTitle(<FileTextOutlined />, "New Purchase Order", "Create a purchase order for a vendor")}
+        title={modalTitle(
+          <FileTextOutlined />,
+          editingOrder ? `Edit ${editingOrder.poNumber}` : "New Purchase Order",
+          editingOrder ? "Update this purchase order" : "Create a purchase order for a vendor"
+        )}
         open={createOpen}
-        onCancel={() => { setCreateOpen(false); form.resetFields(); }}
+        onCancel={closeFormModal}
         footer={null}
         width={720}
         destroyOnClose
@@ -211,8 +242,8 @@ export default function PurchaseOrderPage() {
           </Form.List>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
-            <Button onClick={() => { setCreateOpen(false); form.resetFields(); }}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={actionLoading}>Create PO</Button>
+            <Button onClick={closeFormModal}>Cancel</Button>
+            <Button type="primary" htmlType="submit" loading={actionLoading}>{editingOrder ? "Save Changes" : "Create PO"}</Button>
           </div>
         </Form>
       </Modal>

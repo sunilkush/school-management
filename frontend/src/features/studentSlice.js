@@ -120,6 +120,34 @@ export const fetchStudentsBySchoolId = createAsyncThunk(
   }
 );
 
+export const updateStudent = createAsyncThunk(
+  "student/updateStudent",
+  async ({ id, ...data }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/student/update/${id}`, data);
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Failed to update student"
+      );
+    }
+  }
+);
+
+export const deleteStudent = createAsyncThunk(
+  "student/deleteStudent",
+  async (id, { rejectWithValue }) => {
+    try {
+      await apiClient.delete(`/student/delete/${id}`);
+      return id;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Failed to delete student"
+      );
+    }
+  }
+);
+
 export const fetchStudentById = createAsyncThunk(
   "student/fetchStudentById",
   async (userId, { rejectWithValue }) => {
@@ -325,6 +353,35 @@ const studentSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.success = false;
+      })
+
+      .addCase(updateStudent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateStudent.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(updateStudent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(deleteStudent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteStudent.fulfilled, (state, action) => {
+        state.loading = false;
+        state.schoolStudents = (Array.isArray(state.schoolStudents) ? state.schoolStudents : []).filter(
+          (s) => s.studentId !== action.payload && s._id !== action.payload
+        );
+        state.success = true;
+      })
+      .addCase(deleteStudent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
 
       .addCase(fetchStudentById.pending, (state) => {

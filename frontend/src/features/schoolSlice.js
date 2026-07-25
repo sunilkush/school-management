@@ -7,12 +7,13 @@ const Api_Base_Url = import.meta.env.VITE_API_URL;
 // ✅ Fetch all schools
 export const fetchSchools = createAsyncThunk(
   "school/fetchSchools",
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-
+      // Backend defaults to limit=10 when unset — nearly every caller here wants
+      // the full school list (dropdowns, cross-school reports), not a paginated
+      // page, so default generously unless a caller explicitly asks otherwise.
       const res = await apiClient.get(`/school/getAllSchool`, {
-        headers: {
-        },
+        params: { limit: 500, ...params },
       });
 
       return res.data.data.schools; // Ensure backend sends { data: { schools: [...] } }
@@ -29,10 +30,21 @@ export const addSchool = createAsyncThunk(
   "school/create",
   async (schoolData, { rejectWithValue }) => {
     try {
+      // The backend route is multer/multipart-only (it needs to accept the logo
+      // file) — a plain JSON object here would silently serialize the File to
+      // "{}" and the logo would never be saved.
+      const formData = new FormData();
+      Object.entries(schoolData || {}).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        if (Array.isArray(value)) {
+          value.forEach((item) => formData.append(key, item));
+        } else {
+          formData.append(key, value);
+        }
+      });
 
-      const res = await apiClient.post(`/school/register`, schoolData, {
-        headers: {
-        },
+      const res = await apiClient.post(`/school/register`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       // Backend should return { data: { school, message } }

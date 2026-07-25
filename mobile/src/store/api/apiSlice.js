@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard', 'PayrollSettings'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard', 'PayrollSettings', 'PayrollStructure', 'PayrollCycle', 'LoanAdvance', 'BonusIncentive', 'Reimbursement', 'ExamAttempt'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -975,10 +975,10 @@ export const apiSlice = createApi({
     }),
 
     // Exams — read-only list + published results. Exam creation/scheduling/paper-builder/admit-
-    // cards/seat-plan (School Admin/Principal/Teacher), marks entry + evaluation (Teacher), and
-    // online exam-taking (Student, a full timed-quiz engine) are all deferred as disproportionate
-    // for a first mobile pass. Note: ExamResult.studentId refs User, not Student — unlike most of
-    // this app's other student-scoped data — verified directly against the model before building.
+    // cards/seat-plan (School Admin/Principal/Teacher) and marks entry + evaluation (Teacher) are
+    // deferred as disproportionate for a first mobile pass. Note: ExamResult.studentId refs User,
+    // not Student — unlike most of this app's other student-scoped data — verified directly
+    // against the model before building.
     // Fixed a pre-existing URL bug here: exam.routes.js is mounted at '/exams' (plural,
     // registerRoutes.js), but these 3 endpoints were hitting singular '/exam' — a 404 in
     // production for every role using this screen. Verified against the actual route file before
@@ -995,6 +995,40 @@ export const apiSlice = createApi({
     }),
     getChildExamResults: builder.query({
       query: (studentUserId) => ({ url: `/exams/results/parent/${studentUserId}` }),
+    }),
+
+    // Online exam-taking (Student) — a genuine timed-quiz engine, mirroring web's ExamLive.jsx /
+    // StudentExamsPage.jsx / AttemptReview.jsx exactly against attempt.routes.js (mounted at
+    // '/attempt', registerRoutes.js). Not deferred: this is a fully working feature on web with a
+    // real backend contract (attempt.controllers.js), and it's the single most core student-facing
+    // action in the app, so it doesn't fit the "disproportionate for a first pass" bar the rest of
+    // the deferred exam sub-features (paper-builder etc.) were held to.
+    getExamAttempts: builder.query({
+      query: (params) => ({ url: '/attempt', params }),
+      providesTags: ['ExamAttempt'],
+    }),
+    getActiveExamAttempt: builder.query({
+      query: (examId) => ({ url: `/attempt/active/${examId}` }),
+      providesTags: ['ExamAttempt'],
+    }),
+    getExamAttemptById: builder.query({
+      query: (id) => ({ url: `/attempt/${id}` }),
+      providesTags: ['ExamAttempt'],
+    }),
+    startExamAttempt: builder.mutation({
+      query: (examId) => ({ url: '/attempt/start', method: 'post', data: { examId } }),
+      invalidatesTags: ['ExamAttempt'],
+    }),
+    autosaveExamAnswer: builder.mutation({
+      query: ({ attemptId, questionId, answer, flagged }) => ({
+        url: `/attempt/${attemptId}/answer`,
+        method: 'patch',
+        data: { questionId, answer, flagged },
+      }),
+    }),
+    submitExamAttempt: builder.mutation({
+      query: ({ attemptId, answers }) => ({ url: '/attempt/submit', method: 'post', data: { attemptId, answers } }),
+      invalidatesTags: ['ExamAttempt', 'Exam'],
     }),
 
     // Messages — a real, working mailbox feature (unlike "Chat", which is dead mockup code on the
@@ -1058,11 +1092,113 @@ export const apiSlice = createApi({
     }),
 
     // Payroll — read-only self-service (payslips/structure/attendance), matching the web app's
-    // PayrollSelfServicePage.jsx exactly: one GET, no writes. Full admin payroll management
-    // (structures, cycle generate/lock/pay, advances, bonuses, reimbursements) is a separate,
-    // much larger stateful workflow deferred entirely (School Admin only on web).
+    // PayrollSelfServicePage.jsx exactly: one GET, no writes.
     getMyPayrollSummary: builder.query({
       query: () => ({ url: '/payroll/self/summary' }),
+    }),
+
+    // Payroll admin — Salary Structures (School Admin only on web, FULL_ACCESS_ROLES server-side).
+    getPayrollStructures: builder.query({
+      query: (params) => ({ url: '/payroll/structure', params }),
+      providesTags: ['PayrollStructure'],
+    }),
+    createPayrollStructure: builder.mutation({
+      query: (payload) => ({ url: '/payroll/structure', method: 'post', data: payload }),
+      invalidatesTags: ['PayrollStructure'],
+    }),
+
+    // Payroll admin — Monthly Run (generate a cycle, then lock it, then mark it paid; each step
+    // is a one-way gate server-side — a paid cycle can't be regenerated or unlocked).
+    getLatestPayrollCycle: builder.query({
+      query: () => ({ url: '/payroll/cycle/latest' }),
+      providesTags: ['PayrollCycle'],
+    }),
+    getPayrollCycle: builder.query({
+      query: ({ month, year }) => ({ url: `/payroll/cycle/${month}/${year}` }),
+      providesTags: ['PayrollCycle'],
+    }),
+    generatePayrollCycle: builder.mutation({
+      query: (payload) => ({ url: '/payroll/cycle/generate', method: 'post', data: payload }),
+      invalidatesTags: ['PayrollCycle'],
+    }),
+    lockPayrollCycle: builder.mutation({
+      query: (id) => ({ url: `/payroll/cycle/${id}/lock`, method: 'post' }),
+      invalidatesTags: ['PayrollCycle'],
+    }),
+    payPayrollCycle: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/payroll/cycle/${id}/pay`, method: 'post', data: payload }),
+      invalidatesTags: ['PayrollCycle'],
+    }),
+
+    // Payroll admin — Monthly Reports (aggregate totals for a given cycle).
+    getMonthlyPayrollReport: builder.query({
+      query: (params) => ({ url: '/payroll/reports/monthly', params }),
+    }),
+
+    // Payroll admin — Salary Advance (loan) requests.
+    getAdvances: builder.query({
+      query: (params) => ({ url: '/advance', params }),
+      providesTags: ['LoanAdvance'],
+    }),
+    createAdvance: builder.mutation({
+      query: (payload) => ({ url: '/advance', method: 'post', data: payload }),
+      invalidatesTags: ['LoanAdvance'],
+    }),
+    approveAdvance: builder.mutation({
+      query: (id) => ({ url: `/advance/${id}/approve`, method: 'put' }),
+      invalidatesTags: ['LoanAdvance'],
+    }),
+    rejectAdvance: builder.mutation({
+      query: ({ id, reason }) => ({ url: `/advance/${id}/reject`, method: 'put', data: { reason } }),
+      invalidatesTags: ['LoanAdvance'],
+    }),
+    closeAdvance: builder.mutation({
+      query: (id) => ({ url: `/advance/${id}/close`, method: 'put' }),
+      invalidatesTags: ['LoanAdvance'],
+    }),
+
+    // Payroll admin — Bonus & Incentives.
+    getBonuses: builder.query({
+      query: (params) => ({ url: '/bonus', params }),
+      providesTags: ['BonusIncentive'],
+    }),
+    createBonus: builder.mutation({
+      query: (payload) => ({ url: '/bonus', method: 'post', data: payload }),
+      invalidatesTags: ['BonusIncentive'],
+    }),
+    approveBonus: builder.mutation({
+      query: (id) => ({ url: `/bonus/${id}/approve`, method: 'put' }),
+      invalidatesTags: ['BonusIncentive'],
+    }),
+    cancelBonus: builder.mutation({
+      query: (id) => ({ url: `/bonus/${id}/cancel`, method: 'put' }),
+      invalidatesTags: ['BonusIncentive'],
+    }),
+
+    // Payroll admin — Reimbursements (two-stage manager-then-finance approval).
+    getReimbursements: builder.query({
+      query: (params) => ({ url: '/reimbursements', params }),
+      providesTags: ['Reimbursement'],
+    }),
+    createReimbursement: builder.mutation({
+      query: (payload) => ({ url: '/reimbursements', method: 'post', data: payload }),
+      invalidatesTags: ['Reimbursement'],
+    }),
+    approveManagerReimbursement: builder.mutation({
+      query: (id) => ({ url: `/reimbursements/${id}/manager-approve`, method: 'put' }),
+      invalidatesTags: ['Reimbursement'],
+    }),
+    approveFinanceReimbursement: builder.mutation({
+      query: (id) => ({ url: `/reimbursements/${id}/finance-approve`, method: 'put' }),
+      invalidatesTags: ['Reimbursement'],
+    }),
+    rejectReimbursement: builder.mutation({
+      query: ({ id, reason }) => ({ url: `/reimbursements/${id}/reject`, method: 'put', data: { reason } }),
+      invalidatesTags: ['Reimbursement'],
+    }),
+    deleteReimbursement: builder.mutation({
+      query: (id) => ({ url: `/reimbursements/${id}`, method: 'delete' }),
+      invalidatesTags: ['Reimbursement'],
     }),
 
     // Support Tickets — every role can see this (list auto-scopes to createdBy for non-privileged
@@ -1352,6 +1488,12 @@ export const apiSlice = createApi({
     registerEmployee: builder.mutation({
       query: (payload) => ({ url: '/employee', method: 'post', data: payload }),
       invalidatesTags: ['User'],
+    }),
+    // Employee directory — powers the employeeId pickers across the Payroll sub-system
+    // (Salary Structures/Advance/Bonus/Reimbursements all reference Employee._id, not User._id).
+    getEmployees: builder.query({
+      query: (params) => ({ url: '/employee', params }),
+      providesTags: ['User'],
     }),
 
     // Exam creation/management — same Exam model the read-only getExams (above) lists; School
@@ -1991,6 +2133,12 @@ export const {
   useGetExamsQuery,
   useGetMyExamResultsQuery,
   useGetChildExamResultsQuery,
+  useGetExamAttemptsQuery,
+  useGetActiveExamAttemptQuery,
+  useGetExamAttemptByIdQuery,
+  useStartExamAttemptMutation,
+  useAutosaveExamAnswerMutation,
+  useSubmitExamAttemptMutation,
   useGetMessageRecipientsQuery,
   useGetMessagesQuery,
   useGetMessageThreadQuery,
@@ -2005,6 +2153,36 @@ export const {
   useApproveLeaveRequestMutation,
   useRejectLeaveRequestMutation,
   useGetMyPayrollSummaryQuery,
+  // These 24 hooks (Payroll structures/cycles/advances/bonuses/reimbursements + the employee
+  // directory picker) were defined as endpoints but never re-exported here, so every screen that
+  // imported them (SalaryStructuresView, MonthlyRunView, PayslipCenterView,
+  // PayrollMonthlyReportsView, SalaryAdvanceView, BonusIncentivesView, ReimbursementsView, and
+  // their Create*Sheet companions) was importing `undefined` and would crash the instant it tried
+  // to call the hook.
+  useGetPayrollStructuresQuery,
+  useCreatePayrollStructureMutation,
+  useGetLatestPayrollCycleQuery,
+  useGetPayrollCycleQuery,
+  useGeneratePayrollCycleMutation,
+  useLockPayrollCycleMutation,
+  usePayPayrollCycleMutation,
+  useGetMonthlyPayrollReportQuery,
+  useGetAdvancesQuery,
+  useCreateAdvanceMutation,
+  useApproveAdvanceMutation,
+  useRejectAdvanceMutation,
+  useCloseAdvanceMutation,
+  useGetBonusesQuery,
+  useCreateBonusMutation,
+  useApproveBonusMutation,
+  useCancelBonusMutation,
+  useGetReimbursementsQuery,
+  useCreateReimbursementMutation,
+  useApproveManagerReimbursementMutation,
+  useApproveFinanceReimbursementMutation,
+  useRejectReimbursementMutation,
+  useDeleteReimbursementMutation,
+  useGetEmployeesQuery,
   useGetEventsQuery,
   useGetEventStatsQuery,
   useCreateEventMutation,

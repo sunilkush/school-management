@@ -11,7 +11,8 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   createVehicle, deleteVehicle, fetchRoutes, fetchVehicles, updateVehicle,
 } from "../../../features/transportSlice";
-import { fetchAllUser } from "../../../features/authSlice";
+import { getEmployees } from "../../../features/employeeSlice";
+import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
@@ -58,7 +59,8 @@ const StatusBadge = ({ status }) => {
 const Vehicles = () => {
   const dispatch = useDispatch();
   const { vehicles, routes, loading } = useSelector((s) => s.transport);
-  const { users = [] }                = useSelector((s) => s.auth);
+  const { employees = [] }            = useSelector((s) => s.employee);
+  const [driverAccounts, setDriverAccounts] = useState([]);
 
   const [modalVisible, setModalVisible]   = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
@@ -67,18 +69,32 @@ const Vehicles = () => {
   useEffect(() => {
     dispatch(fetchVehicles());
     dispatch(fetchRoutes());
-    dispatch(fetchAllUser());
+    dispatch(getEmployees());
+    apiClient
+      .get("/user/all", { params: { roleName: "Driver" } })
+      .then((r) => setDriverAccounts(Array.isArray(r?.data?.data) ? r.data.data : []))
+      .catch(() => setDriverAccounts([]));
   }, [dispatch]);
 
+  // The driver name/contact shown on a vehicle is free text — it doesn't require a login
+  // account, so most schools just record it against the Employee roster (department/designation
+  // based, same as the Drivers page). driverAccounts below is a separate, optional link to a
+  // real "Driver" role User account, only needed if that driver should see their own vehicle
+  // on their own dashboard.
   const driverOptions = useMemo(
-    () => users
-      .filter((u) => u?.role?.name === "Driver")
-      .map((u) => ({
-        value: u.name,
-        label: u.name,
-        contact: u.phone || u.mobile || u.contactNumber || u.email || "",
+    () => employees
+      .filter((e) => e.department?.toLowerCase().includes("transport") || e.designation?.toLowerCase().includes("driver"))
+      .map((e) => ({
+        value: e.userId?.name || e.name,
+        label: e.userId?.name || e.name,
+        contact: e.phoneNo || e.userId?.email || "",
       })),
-    [users],
+    [employees],
+  );
+
+  const driverAccountOptions = useMemo(
+    () => driverAccounts.map((u) => ({ value: u._id, label: `${u.name} (${u.email || "no email"})` })),
+    [driverAccounts],
   );
 
   const routeOptions = useMemo(
@@ -92,6 +108,7 @@ const Vehicles = () => {
       type:           v.vehicleType,
       number:         v.busNumber,
       driver:         v.driverName,
+      driverId:       v.driverId,
       driverContact:  v.driverContact,
       drivingLicense: v.drivingLicense,
       capacity:       v.capacity,
@@ -415,6 +432,18 @@ const Vehicles = () => {
               <Input placeholder="License number" />
             </Form.Item>
           </div>
+
+          <Form.Item
+            label="Linked Driver Account (optional)"
+            name="driverId"
+            tooltip="Only needed if this driver has a login account and should see this vehicle on their own dashboard."
+          >
+            <Select
+              allowClear showSearch optionFilterProp="label"
+              placeholder="Search a Driver account to link…"
+              options={driverAccountOptions}
+            />
+          </Form.Item>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item label="Capacity" name="capacity" rules={[{ required: true, message: "Required" }]}>

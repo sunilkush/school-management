@@ -86,10 +86,10 @@ const ChildProgress = () => {
     total:     homework.length,
     pending:   homework.filter((h) => !h.submission).length,
     submitted: homework.filter((h) => h.submission).length,
-    graded:    homework.filter((h) => h.submission && h.grade !== null && h.grade !== undefined).length,
+    graded:    homework.filter((h) => h.submission && h.submission?.grade !== null && h.submission?.grade !== undefined).length,
     avgGrade:  (() => {
-      const graded = homework.filter((h) => h.grade !== null && h.grade !== undefined);
-      return graded.length ? Math.round(graded.reduce((a, b) => a + Number(b.grade || 0), 0) / graded.length) : null;
+      const graded = homework.filter((h) => h.submission?.grade !== null && h.submission?.grade !== undefined);
+      return graded.length ? Math.round(graded.reduce((a, b) => a + Number(b.submission.grade || 0), 0) / graded.length) : null;
     })(),
   }), [homework]);
 

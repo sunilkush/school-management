@@ -8,6 +8,7 @@ import {
   deleteTransportAssignment,
   deleteVehicle,
   getAssignableStudents,
+  getMyVehicles,
   getRoutes,
   getTransportAssignments,
   getVehicles,
@@ -28,6 +29,7 @@ const TRANSPORT_READ = [
   "Principal", "Vice Principal", "Accountant",
 ];
 
+router.get("/vehicles/my",       auth, roleMiddleware(["Driver"]),       getMyVehicles);
 router.get("/vehicles",          auth, roleMiddleware(TRANSPORT_READ),   getVehicles);
 router.post("/vehicles",         auth, roleMiddleware(TRANSPORT_MANAGE), createVehicle);
 router.put("/vehicles/:id",      auth, roleMiddleware(TRANSPORT_MANAGE), updateVehicle);

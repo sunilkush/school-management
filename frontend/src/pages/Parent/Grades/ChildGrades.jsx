@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { Button, Col, Collapse, Empty, Row, Select, Space, Table, Tag } from "antd";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -16,6 +17,8 @@ const STAT_COLORS = ["#14B8A6", "#22C55E", "#EF4444", "#F59E0B"];
 
 const ChildGrades = () => {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const requestedChildId = searchParams.get("childId");
   const { children = [], loading: childLoading } = useSelector((s) => s.studentPortal || {});
   const { results = [], loading } = useSelector((s) => s.exams || {});
   const [selectedChildId, setSelectedChildId] = useState(null);
@@ -23,8 +26,10 @@ const ChildGrades = () => {
   useEffect(() => { dispatch(fetchMyChildren()); }, [dispatch]);
 
   useEffect(() => {
-    if (!selectedChildId && children.length) setSelectedChildId(children[0].userId);
-  }, [children, selectedChildId]);
+    if (selectedChildId || !children.length) return;
+    const requested = requestedChildId && children.some((c) => c.userId === requestedChildId);
+    setSelectedChildId(requested ? requestedChildId : children[0].userId);
+  }, [children, selectedChildId, requestedChildId]);
 
   useEffect(() => {
     if (selectedChildId) dispatch(getParentResults({ studentId: selectedChildId }));

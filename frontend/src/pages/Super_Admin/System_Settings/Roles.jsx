@@ -26,9 +26,10 @@ import {
   LockOutlined,
   DeleteOutlined,
   StopOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchRoles } from "../../../features/roleSlice";
+import { fetchRoles, updateRole, deleteRole } from "../../../features/roleSlice";
 import apiClient from "../../../api/httpClient";
 import AddRoleForm from "../../../components/forms/AddRoleForm";
 import PageHeader from "../../../components/layout/PageHeader";
@@ -110,6 +111,10 @@ const Roles = () => {
   const [temporaryAccess, setTemporaryAccess] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [form] = Form.useForm();
+
+  const [editingRole, setEditingRole] = useState(null);
+  const [editRoleForm] = Form.useForm();
+  const [savingRole, setSavingRole] = useState(false);
 
   const templateRoles = useMemo(
     () => ROLE_TEMPLATES[selectedTemplate] || [],
@@ -204,6 +209,101 @@ const Roles = () => {
       message.error(err?.response?.data?.message || "Failed to delete record.");
     }
   };
+
+  // ---------------------------------------------------------------------------
+  // Role edit / delete
+  // ---------------------------------------------------------------------------
+  const openEditRole = (role) => {
+    setEditingRole(role);
+    editRoleForm.setFieldsValue({ name: role.name, description: role.description });
+  };
+
+  const closeEditRole = () => {
+    setEditingRole(null);
+    editRoleForm.resetFields();
+  };
+
+  const handleSaveRole = async () => {
+    try {
+      const values = await editRoleForm.validateFields();
+      setSavingRole(true);
+      await dispatch(updateRole({ id: editingRole._id, ...values })).unwrap();
+      message.success("Role updated successfully");
+      closeEditRole();
+    } catch (err) {
+      if (err?.errorFields) return;
+      message.error(typeof err === "string" ? err : "Failed to update role");
+    } finally {
+      setSavingRole(false);
+    }
+  };
+
+  const handleDeleteRole = async (role) => {
+    try {
+      await dispatch(deleteRole(role._id)).unwrap();
+      message.success("Role deleted successfully");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to delete role");
+    }
+  };
+
+  const roleColumns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      render: (name, r) => (
+        <Space>
+          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{name}</span>
+          {r.type === "system" && <span style={pill("var(--text-muted)")}>System</span>}
+        </Space>
+      ),
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      ellipsis: true,
+      render: (v) => v || <span style={{ color: "var(--text-muted)" }}>—</span>,
+    },
+    {
+      title: "Permissions",
+      dataIndex: "permissions",
+      width: 110,
+      render: (perms) => <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{perms?.length || 0}</span>,
+    },
+    {
+      title: "Action",
+      key: "action",
+      width: 100,
+      render: (_, role) => (
+        <Space size={4}>
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            title="Edit"
+            disabled={role.type === "system"}
+            onClick={() => openEditRole(role)}
+          />
+          <Popconfirm
+            title="Delete this role?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            disabled={role.type === "system"}
+            onConfirm={() => handleDeleteRole(role)}
+          >
+            <Button
+              danger
+              type="text"
+              size="small"
+              icon={<DeleteOutlined />}
+              title="Delete"
+              disabled={role.type === "system"}
+            />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
   // ---------------------------------------------------------------------------
   // Table columns
@@ -376,6 +476,44 @@ const Roles = () => {
           </div>
         </div>
       </div>
+
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <SafetyCertificateOutlined style={{ color: "var(--primary)" }} />
+          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>All Roles</span>
+          <span style={pill("var(--primary)")}>{roles.length}</span>
+        </div>
+
+        <style>{tableHeadCss("roles-all-tbl")}</style>
+        <div className="roles-all-tbl" style={tableContainer}>
+          <Table
+            rowKey="_id"
+            columns={roleColumns}
+            dataSource={roles}
+            pagination={{ pageSize: 6 }}
+            locale={{ emptyText: <Empty description="No roles yet" /> }}
+          />
+        </div>
+      </div>
+
+      <Modal
+        open={!!editingRole}
+        title={`Edit Role — ${editingRole?.name ?? ""}`}
+        onCancel={closeEditRole}
+        onOk={handleSaveRole}
+        confirmLoading={savingRole}
+        okText="Save Changes"
+        destroyOnClose
+      >
+        <Form form={editRoleForm} layout="vertical">
+          <Form.Item name="name" label="Name" rules={[{ required: true, message: "Name is required" }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={10}>

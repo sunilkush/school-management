@@ -15,6 +15,7 @@ import { getExams } from "../../../features/examSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
+import { getRoleName, getRolePath } from "../../../utils/roles";
 
 const STAT_COLORS = ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B"];
 const STAT_ACCENT_BARS = ["#DBEAFE", "rgba(20,184,166,0.15)", "#DCFCE7", "#FEF3C7"];
@@ -30,6 +31,11 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
 
   const { user } = useSelector((state) => state.auth || {});
+  const roleName = getRoleName(user);
+  const rolePath = getRolePath(roleName);
+  const isMedicalOfficer = roleName === "Medical Officer";
+  const isLabTechnician = roleName === "Lab Technician";
+  const isSportsTeacher = roleName === "Sports Teacher";
   const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   const { classAssignTeacher = [], loading: classLoading } = useSelector((state) => state.class || {});
   const { myAttendance = [], loading: attendanceLoading } = useSelector((state) => state.attendance || {});
@@ -107,7 +113,7 @@ const TeacherDashboard = () => {
   return (
     <>
       <PageHeader
-        title="Teacher Dashboard"
+        title={isMedicalOfficer ? "Medical Officer Dashboard" : isLabTechnician ? "Lab Technician Dashboard" : isSportsTeacher ? "Sports Teacher Dashboard" : "Teacher Dashboard"}
         subtitle={`Welcome back, ${user?.name || "Teacher"} · ${selectedAcademicYear?.name ?? ""}`}
         icon={<DashboardOutlined />}
       />
@@ -164,24 +170,64 @@ const TeacherDashboard = () => {
               <div style={sectionPanel}>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Quick Actions</div>
                 <Space direction="vertical" style={{ width: "100%" }}>
-                  <Button type="primary" block onClick={() => navigate("/dashboard/teacher/attendance/students")}>
-                    Mark Attendance
-                  </Button>
-                  <Button block onClick={() => navigate("/dashboard/teacher/assignments")}>
-                    Assignments
-                  </Button>
-                  <Button block onClick={() => navigate("/dashboard/teacher/resources")}>
-                    Upload Resources
-                  </Button>
-                  <Button block onClick={() => navigate("/dashboard/teacher/lesson-plans")}>
-                    Lesson Plans
-                  </Button>
-                  <Button block onClick={() => navigate("/dashboard/teacher/leave")}>
-                    Apply Leave
-                  </Button>
-                  <Button block onClick={() => navigate("/dashboard/teacher/students")}>
-                    View Students
-                  </Button>
+                  {isMedicalOfficer ? (
+                    <>
+                      <Button type="primary" block onClick={() => navigate(`/dashboard/${rolePath}/health-records`)}>
+                        Health Records
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/leave`)}>
+                        Apply Leave
+                      </Button>
+                    </>
+                  ) : isLabTechnician ? (
+                    <>
+                      <Button type="primary" block onClick={() => navigate(`/dashboard/${rolePath}/timetable`)}>
+                        Lab Schedule
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/leave`)}>
+                        Apply Leave
+                      </Button>
+                    </>
+                  ) : isSportsTeacher ? (
+                    <>
+                      <Button type="primary" block onClick={() => navigate(`/dashboard/${rolePath}/attendance/students`)}>
+                        Mark Attendance
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/sports`)}>
+                        Sports & Co-curricular
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/classes`)}>
+                        My Classes
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/assignments`)}>
+                        Assignments
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/leave`)}>
+                        Apply Leave
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button type="primary" block onClick={() => navigate(`/dashboard/${rolePath}/attendance/students`)}>
+                        Mark Attendance
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/assignments`)}>
+                        Assignments
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/resources`)}>
+                        Upload Resources
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/lesson-plans`)}>
+                        Lesson Plans
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/leave`)}>
+                        Apply Leave
+                      </Button>
+                      <Button block onClick={() => navigate(`/dashboard/${rolePath}/students`)}>
+                        View Students
+                      </Button>
+                    </>
+                  )}
                 </Space>
               </div>
             </Col>

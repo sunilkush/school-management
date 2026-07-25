@@ -151,7 +151,7 @@ const PlatformUsage = () => {
     const schoolRows = schoolsList.map((school, index) => {
       const schoolId = school?._id;
       const schoolUsers = usersBySchool[schoolId] || 0;
-      const userLimit = Number(school?.subscriptionPlan?.userLimit || 0);
+      const userLimit = Number(school?.subscriptionPlan?.limits?.maxUsers || 0);
       const usage =
         userLimit > 0
           ? Math.min(100, Math.round((schoolUsers / userLimit) * 100))

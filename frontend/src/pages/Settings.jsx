@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useDispatch, useSelector } from "react-redux";
-import { updateUser } from "../features/authSlice";
-import { fetchRoles } from "../features/roleSlice";
-import { fetchSchools } from "../features/schoolSlice";
+import { updateUser, changePassword } from "../features/authSlice";
+import { fetchGlobalConfig, updateGlobalConfig } from "../features/globalConfigSlice";
 import {
   Row,
   Col,
@@ -23,7 +22,6 @@ import {
   SafetyCertificateOutlined,
   NotificationOutlined,
   DatabaseOutlined,
-  ToolOutlined,
   UploadOutlined,
   SaveOutlined,
   ReloadOutlined,
@@ -36,8 +34,8 @@ const Settings = () => {
   const { themeMode, setThemeMode } = useTheme();
 
   const { user } = useSelector((state) => state.auth || {});
-  const { roles = [] } = useSelector((state) => state.role || {});
-  const { schools = [] } = useSelector((state) => state.school || {});
+  const { config } = useSelector((state) => state.globalConfig || {});
+  const isSuperAdmin = user?.role?.name === "Super Admin";
 
   const [avatarFile, setAvatarFile] = useState(null);
   const [form, setForm] = useState({
@@ -45,36 +43,21 @@ const Settings = () => {
     email: "",
     phone: "",
     theme: "light",
-    language: "english",
-    notifications: true,
-    timezone: "Asia/Kolkata",
-
-    defaultRole: "",
-    academicYear: "",
-    approvalRequired: true,
-    maxSchools: 10,
 
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-    twoFactor: false,
 
-    emailNotif: true,
-    whatsappSupport: false,
     smsKey: "",
-    emailSignature: "",
-
-    autoBackup: false,
-    backupFreq: "Daily",
-
-    appName: "SchoolPro",
+    approvalRequired: true,
+    maxSchools: 10,
+    appName: "",
     maintenance: false,
   });
 
   useEffect(() => {
-    dispatch(fetchRoles());
-    dispatch(fetchSchools());
-  }, [dispatch]);
+    if (isSuperAdmin) dispatch(fetchGlobalConfig());
+  }, [dispatch, isSuperAdmin]);
 
   useEffect(() => {
     setForm((prev) => ({
@@ -91,32 +74,21 @@ const Settings = () => {
       fullName: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
-      defaultRole: user?.role?.name || "",
     }));
   }, [user]);
 
-  const academicYearOptions = useMemo(() => {
-    const values = schools
-      ?.map((school) => {
-        if (typeof school?.academicYear === "string") return school.academicYear;
-        if (school?.academicYear?.name) return school.academicYear.name;
-        if (school?.academicYear?.title) return school.academicYear.title;
-        return null;
-      })
-      .filter(Boolean);
+  useEffect(() => {
+    if (!config) return;
 
-    return [...new Set(values)].map((year) => ({
-      value: year,
-      label: year,
+    setForm((prev) => ({
+      ...prev,
+      smsKey: config.smsApiKey || "",
+      approvalRequired: config.allowRegistration ?? true,
+      maxSchools: config.maxSchools ?? 10,
+      appName: config.platformName || "",
+      maintenance: config.maintenanceMode ?? false,
     }));
-  }, [schools]);
-
-  const roleOptions = useMemo(() => {
-    return (roles || []).map((role) => ({
-      value: role?.name,
-      label: role?.name,
-    }));
-  }, [roles]);
+  }, [config]);
 
   const updateField = (name, value) => {
     setForm((prev) => ({
@@ -130,23 +102,22 @@ const Settings = () => {
   };
 
   const handleSave = async () => {
-    try {
-      if (
-        form.newPassword ||
-        form.confirmPassword ||
-        form.currentPassword
-      ) {
-        if (!form.currentPassword) {
-          return message.error("Current password is required");
-        }
-        if (!form.newPassword) {
-          return message.error("New password is required");
-        }
-        if (form.newPassword !== form.confirmPassword) {
-          return message.error("New password and confirm password do not match");
-        }
-      }
+    const wantsPasswordChange =
+      form.newPassword || form.confirmPassword || form.currentPassword;
 
+    if (wantsPasswordChange) {
+      if (!form.currentPassword) {
+        return message.error("Current password is required");
+      }
+      if (!form.newPassword) {
+        return message.error("New password is required");
+      }
+      if (form.newPassword !== form.confirmPassword) {
+        return message.error("New password and confirm password do not match");
+      }
+    }
+
+    try {
       await dispatch(
         updateUser({
           name: form.fullName,
@@ -156,9 +127,37 @@ const Settings = () => {
         })
       ).unwrap();
 
+      if (wantsPasswordChange) {
+        await dispatch(
+          changePassword({
+            oldPassword: form.currentPassword,
+            newPassword: form.newPassword,
+          })
+        ).unwrap();
+
+        setForm((prev) => ({
+          ...prev,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
+      }
+
+      if (isSuperAdmin) {
+        await dispatch(
+          updateGlobalConfig({
+            platformName: form.appName,
+            maxSchools: form.maxSchools,
+            maintenanceMode: form.maintenance,
+            allowRegistration: form.approvalRequired,
+            smsApiKey: form.smsKey,
+          })
+        ).unwrap();
+      }
+
       message.success("Settings saved successfully");
     } catch (error) {
-      message.error(error?.message || typeof error === "string" ? error : "Failed to save settings");
+      message.error(typeof error === "string" ? error : error?.message || "Failed to save settings");
     }
   };
 
@@ -186,7 +185,7 @@ const Settings = () => {
     <div style={pageWrapper}>
       <PageHeader
         title={`${user?.role?.name || "User"} Settings`}
-        subtitle="Manage your account preferences, security and system configuration"
+        subtitle="Manage your account preferences and security"
         icon={<SettingOutlined />}
       />
 
@@ -259,43 +258,6 @@ const Settings = () => {
                     />
                   </Form.Item>
                 </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Language">
-                    <Select
-                      value={form.language}
-                      onChange={(value) => updateField("language", value)}
-                      options={[
-                        { value: "english", label: "English" },
-                        { value: "hindi", label: "Hindi" },
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Timezone">
-                    <Select
-                      value={form.timezone}
-                      onChange={(value) => updateField("timezone", value)}
-                      options={[
-                        { value: "Asia/Kolkata", label: "Asia/Kolkata" },
-                        { value: "UTC", label: "UTC" },
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Enable Notifications">
-                    <Switch
-                      checked={form.notifications}
-                      onChange={(value) =>
-                        updateField("notifications", value)
-                      }
-                    />
-                  </Form.Item>
-                </Col>
               </Row>
             </Form>
           </SectionPanel>
@@ -337,179 +299,82 @@ const Settings = () => {
                     />
                   </Form.Item>
                 </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Enable Two-Factor Authentication">
-                    <Switch
-                      checked={form.twoFactor}
-                      onChange={(value) => updateField("twoFactor", value)}
-                    />
-                  </Form.Item>
-                </Col>
               </Row>
             </Form>
           </SectionPanel>
         </Col>
 
-        <Col xs={24} lg={12}>
-          <SectionPanel icon={<NotificationOutlined />} title="Communication" color="#F59E0B">
-            <Form layout="vertical">
-              <Row gutter={12}>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Enable Email Notifications">
-                    <Switch
-                      checked={form.emailNotif}
-                      onChange={(value) => updateField("emailNotif", value)}
-                    />
-                  </Form.Item>
-                </Col>
+        {isSuperAdmin && (
+          <Col xs={24} lg={12}>
+            <SectionPanel icon={<NotificationOutlined />} title="Communication (Platform)" color="#F59E0B">
+              <Form layout="vertical">
+                <Row gutter={12}>
+                  <Col xs={24}>
+                    <Form.Item label="SMS Gateway API Key">
+                      <Input
+                        value={form.smsKey}
+                        onChange={(e) => updateField("smsKey", e.target.value)}
+                        placeholder="Configured in Global Config"
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Form>
+            </SectionPanel>
+          </Col>
+        )}
 
-                <Col xs={24} md={12}>
-                  <Form.Item label="Enable WhatsApp Support">
-                    <Switch
-                      checked={form.whatsappSupport}
-                      onChange={(value) =>
-                        updateField("whatsappSupport", value)
-                      }
-                    />
-                  </Form.Item>
-                </Col>
+        {isSuperAdmin && (
+          <Col xs={24} lg={12}>
+            <SectionPanel icon={<DatabaseOutlined />} title="Platform Settings" color="#14B8A6">
+              <Form layout="vertical">
+                <Row gutter={12}>
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Application Name">
+                      <Input
+                        value={form.appName}
+                        onChange={(e) => updateField("appName", e.target.value)}
+                      />
+                    </Form.Item>
+                  </Col>
 
-                <Col xs={24} md={12}>
-                  <Form.Item label="SMS API Key">
-                    <Input
-                      value={form.smsKey}
-                      onChange={(e) => updateField("smsKey", e.target.value)}
-                    />
-                  </Form.Item>
-                </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Max Allowed Schools">
+                      <InputNumber
+                        min={1}
+                        style={{ width: "100%" }}
+                        value={form.maxSchools}
+                        onChange={(value) =>
+                          updateField("maxSchools", value || 1)
+                        }
+                      />
+                    </Form.Item>
+                  </Col>
 
-                <Col xs={24} md={12}>
-                  <Form.Item label="Email Signature">
-                    <Input.TextArea
-                      value={form.emailSignature}
-                      onChange={(e) =>
-                        updateField("emailSignature", e.target.value)
-                      }
-                      rows={3}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Form>
-          </SectionPanel>
-        </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Allow New School Self-Registration">
+                      <Switch
+                        checked={form.approvalRequired}
+                        onChange={(value) =>
+                          updateField("approvalRequired", value)
+                        }
+                      />
+                    </Form.Item>
+                  </Col>
 
-        <Col xs={24} lg={12}>
-          <SectionPanel icon={<DatabaseOutlined />} title="School & Backup" color="#14B8A6">
-            <Form layout="vertical">
-              <Row gutter={12}>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Default Role">
-                    <Select
-                      value={form.defaultRole}
-                      onChange={(value) => updateField("defaultRole", value)}
-                      options={roleOptions}
-                      allowClear
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Academic Year">
-                    <Select
-                      value={form.academicYear}
-                      onChange={(value) => updateField("academicYear", value)}
-                      options={academicYearOptions}
-                      allowClear
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Max Allowed Schools">
-                    <InputNumber
-                      min={1}
-                      style={{ width: "100%" }}
-                      value={form.maxSchools}
-                      onChange={(value) =>
-                        updateField("maxSchools", value || 1)
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Enable Approval for New Schools">
-                    <Switch
-                      checked={form.approvalRequired}
-                      onChange={(value) =>
-                        updateField("approvalRequired", value)
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Auto Backup">
-                    <Switch
-                      checked={form.autoBackup}
-                      onChange={(value) => updateField("autoBackup", value)}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Backup Frequency">
-                    <Select
-                      value={form.backupFreq}
-                      onChange={(value) => updateField("backupFreq", value)}
-                      options={[
-                        { value: "Daily", label: "Daily" },
-                        { value: "Weekly", label: "Weekly" },
-                        { value: "Monthly", label: "Monthly" },
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Form>
-          </SectionPanel>
-        </Col>
-
-        <Col xs={24} lg={12}>
-          <SectionPanel icon={<ToolOutlined />} title="System Settings" color="#0891B2">
-            <Form layout="vertical">
-              <Row gutter={12}>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Application Name">
-                    <Input
-                      value={form.appName}
-                      onChange={(e) => updateField("appName", e.target.value)}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} md={12}>
-                  <Form.Item label="Logo">
-                    <Upload maxCount={1} beforeUpload={() => false}>
-                      <Button icon={<UploadOutlined />}>Upload</Button>
-                    </Upload>
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24}>
-                  <Form.Item label="Maintenance Mode">
-                    <Switch
-                      checked={form.maintenance}
-                      onChange={(value) => updateField("maintenance", value)}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Form>
-          </SectionPanel>
-        </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Maintenance Mode">
+                      <Switch
+                        checked={form.maintenance}
+                        onChange={(value) => updateField("maintenance", value)}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Form>
+            </SectionPanel>
+          </Col>
+        )}
       </Row>
 
       <Space style={{ justifyContent: "flex-end", width: "100%", marginTop: 20 }}>

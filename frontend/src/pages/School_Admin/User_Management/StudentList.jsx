@@ -2,14 +2,16 @@ import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Table, Modal, Input, Select, Button, Space, Tooltip, Tag, Badge,
+  Popconfirm, DatePicker, Form, message,
 } from "antd";
 import {
   PlusOutlined, ReloadOutlined, ExportOutlined, SearchOutlined,
   TeamOutlined, CheckCircleOutlined, BookOutlined, EyeOutlined,
-  LockOutlined,
+  LockOutlined, EditOutlined, DeleteOutlined,
 } from "@ant-design/icons";
 import { Cake } from "lucide-react";
-import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
+import dayjs from "dayjs";
+import { fetchStudentsBySchoolId, updateStudent, deleteStudent } from "../../../features/studentSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
@@ -45,10 +47,14 @@ const StudentList = () => {
   const [searchText, setSearchText]       = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
   const [selectedSection, setSelectedSection] = useState("all");
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [editForm] = Form.useForm();
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const schoolId       = user?.school?._id;
   const academicYearId = selectedAcademicYear?._id || activeYear?._id;
   const canViewStudents = ["School Admin", "Principal", "Vice Principal"].includes(user?.role?.name);
+  const canManageStudents = user?.role?.name === "School Admin";
 
   useEffect(() => {
     if (!canViewStudents || !schoolId) return;
@@ -64,6 +70,7 @@ const StudentList = () => {
   const formatted = useMemo(() =>
     studentsArray.map((s) => ({
       key: s._id,
+      studentId:     s.student?._id,
       name:          s.user?.name          ?? "N/A",
       email:         s.user?.email         ?? "N/A",
       schoolClass:   s.schoolClass?.name   ?? "N/A",
@@ -74,6 +81,7 @@ const StudentList = () => {
       admissionDate: s.admissionDate
         ? new Date(s.admissionDate).toISOString().split("T")[0] : "N/A",
       bloodGroup:    s.student?.bloodGroup ?? "N/A",
+      address:       s.student?.address    ?? "",
       academicYear:  s.academicYear?.name  ?? "N/A",
       status:        s.status              ?? "Active",
     })),
@@ -193,7 +201,99 @@ const StudentList = () => {
         );
       },
     },
+    ...(canManageStudents
+      ? [{
+          title: "Actions",
+          key: "actions",
+          width: 100,
+          fixed: "right",
+          render: (_, record) => (
+            <Space size={4}>
+              <Tooltip title="Edit">
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => openEditModal(record)}
+                />
+              </Tooltip>
+              <Popconfirm
+                title="Delete this student?"
+                description="This action cannot be undone."
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+                onConfirm={() => handleDelete(record)}
+              >
+                <Tooltip title="Delete">
+                  <Button size="small" danger icon={<DeleteOutlined />} />
+                </Tooltip>
+              </Popconfirm>
+            </Space>
+          ),
+        }]
+      : []),
   ];
+
+  const openEditModal = (record) => {
+    setEditingStudent(record);
+    editForm.setFieldsValue({
+      mobileNumber: record.mobileNumber !== "N/A" ? record.mobileNumber : "",
+      bloodGroup: record.bloodGroup !== "N/A" ? record.bloodGroup : undefined,
+      status: record.status,
+      address: record.address,
+      dateOfBirth: record.dateOfBirth !== "N/A" ? dayjs(record.dateOfBirth) : null,
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditingStudent(null);
+    editForm.resetFields();
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      const values = await editForm.validateFields();
+      if (!editingStudent?.studentId) {
+        message.error("Missing student reference, cannot update");
+        return;
+      }
+      setSavingEdit(true);
+      await dispatch(
+        updateStudent({
+          id: editingStudent.studentId,
+          academicYearId,
+          mobileNumber: values.mobileNumber,
+          status: values.status,
+          otherInfo: {
+            bloodGroup: values.bloodGroup,
+            address: values.address,
+            dateOfBirth: values.dateOfBirth ? values.dateOfBirth.toISOString() : undefined,
+          },
+        })
+      ).unwrap();
+      message.success("Student updated successfully");
+      closeEditModal();
+      dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+    } catch (error) {
+      if (error?.errorFields) return; // form validation error, already shown inline
+      message.error(typeof error === "string" ? error : "Failed to update student");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async (record) => {
+    if (!record?.studentId) {
+      message.error("Missing student reference, cannot delete");
+      return;
+    }
+    try {
+      await dispatch(deleteStudent(record.studentId)).unwrap();
+      message.success("Student deleted successfully");
+      dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+    } catch (error) {
+      message.error(typeof error === "string" ? error : "Failed to delete student");
+    }
+  };
 
   if (!canViewStudents) {
     return (
@@ -258,6 +358,44 @@ const StudentList = () => {
           }
         >
           <AdmissionForm onClose={() => setIsModalOpen(false)} />
+        </Modal>
+
+        <Modal
+          open={!!editingStudent}
+          title={`Edit Student — ${editingStudent?.name ?? ""}`}
+          onCancel={closeEditModal}
+          onOk={handleEditSubmit}
+          confirmLoading={savingEdit}
+          okText="Save Changes"
+          destroyOnClose
+        >
+          <Form form={editForm} layout="vertical">
+            <Form.Item name="mobileNumber" label="Mobile Number">
+              <Input placeholder="Mobile number" />
+            </Form.Item>
+            <Form.Item name="bloodGroup" label="Blood Group">
+              <Select
+                allowClear
+                placeholder="Select blood group"
+                options={Object.keys(bloodGroupColor).map((bg) => ({ value: bg, label: bg }))}
+              />
+            </Form.Item>
+            <Form.Item name="dateOfBirth" label="Date of Birth">
+              <DatePicker style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item name="status" label="Status">
+              <Select
+                options={[
+                  { value: "Active", label: "Active" },
+                  { value: "Inactive", label: "Inactive" },
+                  { value: "Pending", label: "Pending" },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item name="address" label="Address">
+              <Input.TextArea rows={2} placeholder="Address" />
+            </Form.Item>
+          </Form>
         </Modal>
 
         <div style={pageCard}>
@@ -333,7 +471,7 @@ const StudentList = () => {
                     <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{range[0]}–{range[1]} of {total} students</span>
                   ),
                 }}
-                scroll={{ x: 1000 }}
+                scroll={{ x: canManageStudents ? 1100 : 1000 }}
               />
             </div>
           )}

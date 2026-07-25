@@ -20,7 +20,7 @@ const ALL_USERS = [
   "Accountant", "Staff", "Support Staff",
   "Librarian", "Hostel Warden", "Transport Manager",
   "Receptionist", "IT Support", "Counselor", "Security",
-  "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer",
+  "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer", "Driver",
 ];
 
 router.use(auth);
