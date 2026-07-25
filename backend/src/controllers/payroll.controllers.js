@@ -49,18 +49,10 @@ const resolvePayrollPolicy = async ({ schoolId, asOfDate }) => {
   return policy;
 };
 
-const getAttendanceSummary = async ({ schoolId, employeeUserId, month, year }) => {
-  const { start, end } = monthRangeUTC({ month, year });
-
-  const records = await Attendance.find({
-    schoolId,
-    userId: employeeUserId,
-    role: { $in: ["teacher", "staff"] },
-    date: { $gte: start, $lte: end },
-  })
-    .select("status checkInAt checkOutAt")
-    .lean();
-
+// Pure summarizer — takes an already-fetched slice of Attendance records for one employee
+// rather than querying, so a whole cycle's worth of employees can share a single batched
+// Attendance.find() instead of one query per employee (see generatePayrollCycle).
+const summarizeAttendanceRecords = (records) => {
   const statusCount = records.reduce(
     (acc, item) => {
       acc[item.status] = (acc[item.status] || 0) + 1;
@@ -267,10 +259,15 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   const cycleStart = new Date(Date.UTC(year, month - 1, 1));
   const cycleEnd = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
- for (const employee of employees) {
-  const structure = await PayrollStructure.findOne({
+  const employeeIds = employees.map((e) => e._id);
+  const userIds = employees.map((e) => e.userId);
+
+  // Batch-fetch every structure that could apply to any of these employees in one query
+  // (was one findOne() per employee), most-recent-first, then keep only the first per
+  // employee in memory — same "latest effective version wins" rule as before.
+  const allStructures = await PayrollStructure.find({
     schoolId: new mongoose.Types.ObjectId(schoolId),
-    employeeId: employee._id,
+    employeeId: { $in: employeeIds },
     status: "active",
     effectiveFrom: { $lte: cycleEnd },
     $or: [
@@ -282,16 +279,38 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     .sort({ effectiveFrom: -1 })
     .lean();
 
+  const structureByEmployee = new Map();
+  for (const s of allStructures) {
+    const key = String(s.employeeId);
+    if (!structureByEmployee.has(key)) structureByEmployee.set(key, s);
+  }
 
+  // Batch-fetch the whole month's attendance for every employee in one query (was one
+  // Attendance.find() per employee), then group by userId in memory.
+  const { start: attStart, end: attEnd } = monthRangeUTC({ month, year });
+  const allAttendance = await Attendance.find({
+    schoolId,
+    userId: { $in: userIds },
+    role: { $in: ["teacher", "staff"] },
+    date: { $gte: attStart, $lte: attEnd },
+  })
+    .select("userId status checkInAt checkOutAt")
+    .lean();
+
+  const attendanceByUser = new Map();
+  for (const rec of allAttendance) {
+    const key = String(rec.userId);
+    if (!attendanceByUser.has(key)) attendanceByUser.set(key, []);
+    attendanceByUser.get(key).push(rec);
+  }
+
+ for (const employee of employees) {
+  const structure = structureByEmployee.get(String(employee._id));
 
   if (!structure) continue;
 
-  const attendance = await getAttendanceSummary({
-    schoolId,
-    employeeUserId: employee.userId,
-    month,
-    year,
-  });
+  const records = attendanceByUser.get(String(employee.userId)) || [];
+  const attendance = summarizeAttendanceRecords(records);
 
   const calculated = calculatePayrollEntry({
     structure,

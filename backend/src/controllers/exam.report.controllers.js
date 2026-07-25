@@ -23,7 +23,7 @@ export const getExamReport = asyncHandler(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, null, "Forbidden for this school exam"));
   }
 
-  const attempts = await ExamAttempt.find({ examId, schoolId: exam.schoolId }).populate("studentId", "name email");
+  const attempts = await ExamAttempt.find({ examId, schoolId: exam.schoolId }).populate("studentId", "name email").lean();
 
   return res.status(200).json(
     new ApiResponse(200, { exam, attempts }, "Exam report fetched successfully")
@@ -50,7 +50,7 @@ export const getStudentReport = asyncHandler(async (req, res) => {
   const attempts = await ExamAttempt.find({ studentId, schoolId: student.schoolId }).populate(
     "examId",
     "title subjectId"
-  );
+  ).lean();
 
   return res.status(200).json(
     new ApiResponse(200, { student, attempts }, "Student report fetched successfully")
@@ -74,7 +74,7 @@ export const getPerformanceSummary = asyncHandler(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, null, "Forbidden for this school exam"));
   }
 
-  const attempts = await ExamAttempt.find({ examId, schoolId: exam.schoolId });
+  const attempts = await ExamAttempt.find({ examId, schoolId: exam.schoolId }).lean();
   if (!attempts.length) {
     return res.status(404).json(new ApiResponse(404, null, "No attempts found for this exam"));
   }

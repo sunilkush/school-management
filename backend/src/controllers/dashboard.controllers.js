@@ -53,9 +53,11 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
 
   let response = {};
 
-  const teacherRole = await Role.findOne({ name: { $regex: /^teacher$/i } });
-  const studentRole = await Role.findOne({ name: { $regex: /^student$/i } });
-  const schoolAdminRole = await Role.findOne({ name: { $regex: /^school admin$/i } });
+  const [teacherRole, studentRole, schoolAdminRole] = await Promise.all([
+    Role.findOne({ name: { $regex: /^teacher$/i } }),
+    Role.findOne({ name: { $regex: /^student$/i } }),
+    Role.findOne({ name: { $regex: /^school admin$/i } }),
+  ]);
 
   const teacherRoleId = teacherRole?._id;
   const studentRoleId = studentRole?._id;

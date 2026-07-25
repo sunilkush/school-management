@@ -439,10 +439,18 @@ export const getFeatureAccessControl = asyncHandler(async (req, res) => {
 });
 
 
+// No pagination controls exist on the frontend for these yet (plain array response, rendered
+// straight into an AntD Table with client-side paging), so this keeps the same array shape —
+// .lean() is a pure win either way, and the .limit() is just a safety net against genuinely
+// unbounded growth rather than real pagination.
+const RECENT_BILLING_LIMIT = 500;
+
 export const listAllInvoices = asyncHandler(async (req, res) => {
   const invoices = await SubscriptionInvoice.find()
     .populate("schoolId", "name")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .limit(RECENT_BILLING_LIMIT)
+    .lean();
 
   return res.status(200).json(new ApiResponse(200, invoices, "All invoices fetched"));
 });
@@ -451,23 +459,42 @@ export const listAllPayments = asyncHandler(async (req, res) => {
   const payments = await SubscriptionPayment.find()
     .populate("schoolId", "name")
     .populate("invoiceId", "invoiceNumber totalAmount status dueDate")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .limit(RECENT_BILLING_LIMIT)
+    .lean();
 
   return res.status(200).json(new ApiResponse(200, payments, "All payments fetched"));
 });
 
 export const getRevenueSummary = asyncHandler(async (req, res) => {
-  const invoices = await SubscriptionInvoice.find();
-  const totalInvoiced = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
-  const totalPaid = invoices
-    .filter((inv) => inv.status === "paid")
-    .reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
-  const overdue = invoices
-    .filter((inv) => ["overdue", "unpaid"].includes(inv.status))
-    .reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
+  // Was: fetch every invoice ever created into memory just to sum/group it in JS. An
+  // aggregation pipeline does the same sums and grouping inside MongoDB instead, so this
+  // stops growing linearly with the platform's total invoice history.
+  const [totals, statusCounts] = await Promise.all([
+    SubscriptionInvoice.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalInvoiced: { $sum: { $ifNull: ["$totalAmount", 0] } },
+          totalPaid: {
+            $sum: { $cond: [{ $eq: ["$status", "paid"] }, { $ifNull: ["$totalAmount", 0] }, 0] },
+          },
+          overdue: {
+            $sum: {
+              $cond: [{ $in: ["$status", ["overdue", "unpaid"]] }, { $ifNull: ["$totalAmount", 0] }, 0],
+            },
+          },
+        },
+      },
+    ]),
+    SubscriptionInvoice.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
+  ]);
 
-  const byStatus = invoices.reduce((acc, inv) => {
-    acc[inv.status] = (acc[inv.status] || 0) + 1;
+  const { totalInvoiced = 0, totalPaid = 0, overdue = 0 } = totals[0] || {};
+  const byStatus = statusCounts.reduce((acc, s) => {
+    acc[s._id] = s.count;
     return acc;
   }, {});
 

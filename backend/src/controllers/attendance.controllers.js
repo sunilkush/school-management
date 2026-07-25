@@ -278,7 +278,8 @@ export const getAttendance = asyncHandler(async (req, res) => {
     .populate("markedBy", "name")
     .sort({ date: -1, createdAt: -1 })
     .skip(skip)
-    .limit(limitNum);
+    .limit(limitNum)
+    .lean();
 
   if (search) {
     query.where({ remarks: { $regex: search, $options: "i" } });
@@ -467,7 +468,7 @@ export const deleteAttendance = asyncHandler(async (req, res) => {
 });
 
 export const getMyAttendance = asyncHandler(async (req, res) => {
-  const { month, year, childId, schoolId } = req.query;
+  const { month, year, childId, schoolId, limit } = req.query;
 
   let targetUserId = req.user._id;
   if (req.userRole?.name === PARENT) {
@@ -506,7 +507,15 @@ export const getMyAttendance = asyncHandler(async (req, res) => {
     };
   }
 
-  const data = await Attendance.find(filter).sort({ date: -1 });
+  // `limit` was accepted by at least one caller (TeacherDashboard.jsx) but silently ignored
+  // here — now actually honored, capped at 500 either way so a caller passing neither a
+  // month/year filter nor a limit can't pull a user's entire attendance history in one go.
+  const limitNum = Math.min(parseInt(limit, 10) || 0, 500);
+  let query = Attendance.find(filter).sort({ date: -1 }).lean();
+  if (limitNum > 0) query = query.limit(limitNum);
+  else if (!filter.date) query = query.limit(500);
+
+  const data = await query;
 
   return res.status(200).json(new ApiResponse(200, data, "My attendance fetched"));
 });

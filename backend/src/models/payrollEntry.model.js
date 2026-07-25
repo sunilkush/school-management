@@ -66,4 +66,7 @@ const payrollEntrySchema = new Schema(
 
 payrollEntrySchema.index({ payrollCycleId: 1, employeeId: 1 }, { unique: true });
 
+// PF/ESI statutory reports and payment-status filtered listings query on this pair.
+payrollEntrySchema.index({ schoolId: 1, paymentStatus: 1 });
+
 export const PayrollEntry = mongoose.model("PayrollEntry", payrollEntrySchema);

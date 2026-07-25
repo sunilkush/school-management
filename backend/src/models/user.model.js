@@ -188,6 +188,11 @@ userSchema.index(
   { unique: true, partialFilterExpression: { regId: { $exists: true, $type: "string" } }, name: "regId_1_schoolId_1_partial" }
 );
 
+// Role-scoped user lists/counts (dashboard summaries, role-based staff/student listings)
+// filter on exactly this pair — without it, those queries fall back to a full collection
+// scan filtered in memory.
+userSchema.index({ schoolId: 1, roleId: 1 });
+
 
 // 🔹 Password Hash Middleware
 // Hash password

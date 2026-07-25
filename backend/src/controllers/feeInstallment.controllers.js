@@ -61,16 +61,34 @@ export const generateInstallments = asyncHandler(async (req, res) => {
 
   const allInstallments = [];
 
+  // One batched lookup for every fee record's existing installments, instead of a separate
+  // FeeInstallment.exists() query per fee — studentFees here is small (one student's own fee
+  // records), but there's no reason to pay per-record round-trips for it.
+  const existingInstallments = await FeeInstallment.find({
+    studentFeeId: { $in: studentFees.map((f) => f._id) },
+    schoolId,
+  })
+    .select("studentFeeId academicYearId")
+    .lean();
+
+  const existingByFeeId = new Map();
+  for (const inst of existingInstallments) {
+    const key = String(inst.studentFeeId);
+    if (!existingByFeeId.has(key)) existingByFeeId.set(key, []);
+    existingByFeeId.get(key).push(inst.academicYearId ? String(inst.academicYearId) : null);
+  }
+  // Mirrors the original per-fee query's semantics: with no academicYearId filter, ANY
+  // existing installment for that fee counts; with one, only a matching year does.
+  const hasExistingInstallment = (feeId, effectiveAcademicYearId) => {
+    const years = existingByFeeId.get(String(feeId));
+    if (!years) return false;
+    return effectiveAcademicYearId ? years.includes(String(effectiveAcademicYearId)) : years.length > 0;
+  };
+
   for (const fee of studentFees) {
     const effectiveAcademicYearId = academicYearId || fee.academicYearId;
 
-    const exists = await FeeInstallment.exists({
-      studentFeeId: fee._id,
-      schoolId,
-      ...(effectiveAcademicYearId ? { academicYearId: effectiveAcademicYearId } : {}),
-    });
-
-    if (exists) continue;
+    if (hasExistingInstallment(fee._id, effectiveAcademicYearId)) continue;
 
     const frequency = fee?.feeStructureId?.frequency || "yearly";
 
