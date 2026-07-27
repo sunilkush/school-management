@@ -84,13 +84,21 @@ export const darkColors = {
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 };
 
-export const radii = { sm: 6, md: 10, lg: 14, xl: 20, pill: 999 };
+// Matches web's index.css --radius-sm/md/lg/xl exactly (8/12/16/20) — these were previously
+// 6/10/14/20, a consistent 2px-per-tier drift from the web design system across every card,
+// button, and chip in the app (98 files reference these tokens, so this one change cascades
+// everywhere at once).
+export const radii = { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 };
 
+// fontFamily here must be one of the 4 weights App.jsx loads via useFonts (Inter_400Regular/
+// _500Medium/_600SemiBold/_700Bold) — RN doesn't synthesize bold/medium faces for custom fonts
+// the way it does for system fonts, so each weight needs its own distinct loaded family name
+// rather than a single family + a `fontWeight` style prop.
 export const typography = {
-  h1: { fontSize: 28, fontWeight: '700', lineHeight: 34 },
-  h2: { fontSize: 22, fontWeight: '700', lineHeight: 28 },
-  h3: { fontSize: 18, fontWeight: '600', lineHeight: 24 },
-  body: { fontSize: 15, fontWeight: '400', lineHeight: 22 },
-  bodyStrong: { fontSize: 15, fontWeight: '600', lineHeight: 22 },
-  caption: { fontSize: 12, fontWeight: '500', lineHeight: 16 },
+  h1: { fontSize: 28, fontWeight: '700', lineHeight: 34, fontFamily: 'Inter_700Bold' },
+  h2: { fontSize: 22, fontWeight: '700', lineHeight: 28, fontFamily: 'Inter_700Bold' },
+  h3: { fontSize: 18, fontWeight: '600', lineHeight: 24, fontFamily: 'Inter_600SemiBold' },
+  body: { fontSize: 15, fontWeight: '400', lineHeight: 22, fontFamily: 'Inter_400Regular' },
+  bodyStrong: { fontSize: 15, fontWeight: '600', lineHeight: 22, fontFamily: 'Inter_600SemiBold' },
+  caption: { fontSize: 12, fontWeight: '500', lineHeight: 16, fontFamily: 'Inter_500Medium' },
 };

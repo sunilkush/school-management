@@ -1,11 +1,16 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import { PaperProvider, MD3LightTheme, MD3DarkTheme, adaptNavigationTheme } from 'react-native-paper';
+import { PaperProvider, MD3LightTheme, MD3DarkTheme, adaptNavigationTheme, configureFonts } from 'react-native-paper';
 import { DefaultTheme as NavDefaultTheme, DarkTheme as NavDarkTheme } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { darkColors, lightColors, radii, spacing, typography } from './tokens';
 
 const AppThemeContext = createContext(null);
+
+// react-native-paper's own components (Button/Chip/TextInput/SegmentedButtons labels) render
+// through the Paper theme's own `fonts` config, not through typography.js — without this they'd
+// keep using MD3's default system-font config even after App.jsx loads Inter everywhere else.
+const paperFonts = configureFonts({ config: { fontFamily: 'Inter_500Medium' } });
 
 function buildTheme(scheme) {
   const isDark = scheme === 'dark';
@@ -15,6 +20,7 @@ function buildTheme(scheme) {
   const paperTheme = {
     ...base,
     roundness: radii.md,
+    fonts: paperFonts,
     colors: {
       ...base.colors,
       primary: colors.primary,
