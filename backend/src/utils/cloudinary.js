@@ -16,13 +16,24 @@ const uploadOnCloudinary = async (filePath) => {
         if (!filePath) {
             throw new ApiError(400, "localpath Required !")
         }
+        // "image" rejected every non-image upload outright (Cloudinary errors, this function's
+        // own catch swallows it and returns null) — multer.middleware.js's ALLOWED_MIME_TYPES
+        // explicitly allows PDF/Word/Excel too, and studyMaterial.controllers.js uses this same
+        // helper for exactly those, so every non-image study material silently saved with no
+        // file at all. "auto" detects image/video/raw correctly and still handles plain images.
         const result = await cloudinary.uploader.upload(filePath,{
-            resource_type: "image",
+            resource_type: "auto",
         });
         fs.unlinkSync(filePath)
         return result;
     } catch (error) {
         console.error("Cloudinary Upload Error:", error);
+        // Previously only cleaned up the local temp file on success — a failed upload (bad
+        // credentials, network error, wrong resource_type for the file, ...) left it sitting in
+        // ./public/temp indefinitely, which app.js serves publicly via express.static.
+        try {
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        } catch { /* best-effort cleanup */ }
         return null;
     }
 };
