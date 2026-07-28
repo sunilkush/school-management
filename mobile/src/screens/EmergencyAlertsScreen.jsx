@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { RaiseEmergencyAlertSheet } from './security/RaiseEmergencyAlertSheet';
 import { formatDate } from '../utils/format';
+import { confirmDelete } from '../utils/confirm';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useDeleteEmergencyAlertMutation, useGetEmergencyAlertsQuery, useResolveEmergencyAlertMutation } from '../store/api/apiSlice';
 
@@ -20,7 +21,9 @@ export function EmergencyAlertsScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const [raising, setRaising] = useState(false);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetEmergencyAlertsQuery({});
+  // Backend default limit=50 with no override would silently truncate the alert history — safety
+  // relevant, so err on the side of showing everything.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetEmergencyAlertsQuery({ limit: 500 });
   const alerts = data?.alerts ?? data ?? [];
   const [resolveAlert, resolveState] = useResolveEmergencyAlertMutation();
   const [deleteAlert, deleteState] = useDeleteEmergencyAlertMutation();
@@ -79,7 +82,7 @@ export function EmergencyAlertsScreen() {
                     Mark Resolved
                   </Button>
                 )}
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteAlert(a._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteAlert(a._id), 'this alert')} />
               </>
             }
           />

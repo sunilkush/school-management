@@ -19,7 +19,9 @@ export function QuestionBankView() {
   const [subjectId, setSubjectId] = useState(null);
 
   const { data: subjects = [] } = useGetSubjectsQuery();
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetQuestionsQuery({ subjectId: subjectId || undefined });
+  // Backend default limit=10 (the lowest of any list endpoint in the app) with no override meant
+  // any subject with more than 10 questions silently hid the rest.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetQuestionsQuery({ subjectId: subjectId || undefined, limit: 500 });
   const questions = data?.questions ?? [];
 
   return (

@@ -1495,11 +1495,27 @@ export const apiSlice = createApi({
       query: (params) => ({ url: '/employee', params }),
       providesTags: ['User'],
     }),
+    // Transport Manager's Drivers roster (DriversView) — same PUT /employee/updateEmployee/:id
+    // controller CreateUserView's step 2 doesn't use but web's DriversPage.jsx edit modal does;
+    // employee.routes.js's EMPLOYEE_UPDATE_ROLES already includes Transport Manager for this
+    // exact route.
+    updateEmployee: builder.mutation({
+      query: ({ id, payload }) => ({ url: `/employee/updateEmployee/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['User'],
+    }),
 
     // Exam creation/management — same Exam model the read-only getExams (above) lists; School
     // Admin/Teacher/Principal/VP/Exam+Subject Coordinator can all create.
     createExam: builder.mutation({
       query: (payload) => ({ url: '/exams', method: 'post', data: payload }),
+      invalidatesTags: ['Exam'],
+    }),
+    // Paper Builder (School Admin) — same PUT /exams/:id updateExam controller CreateExamSheet's
+    // edit flow would use, just writing paperBlueprint instead. Exam.model.js's paperBlueprint
+    // schema path was missing until recently (silently dropped under Mongoose strict mode even
+    // though PageBuilder.jsx has always sent it) — confirmed fixed before building this.
+    updateExam: builder.mutation({
+      query: ({ examId, payload }) => ({ url: `/exams/${examId}`, method: 'put', data: payload }),
       invalidatesTags: ['Exam'],
     }),
 
@@ -2183,6 +2199,7 @@ export const {
   useRejectReimbursementMutation,
   useDeleteReimbursementMutation,
   useGetEmployeesQuery,
+  useUpdateEmployeeMutation,
   useGetEventsQuery,
   useGetEventStatsQuery,
   useCreateEventMutation,
@@ -2293,6 +2310,7 @@ export const {
   useRegisterUserMutation,
   useRegisterEmployeeMutation,
   useCreateExamMutation,
+  useUpdateExamMutation,
   useGetExamAdmitCardsQuery,
   useGenerateExamAdmitCardsMutation,
   useGetExamAnalyticsQuery,

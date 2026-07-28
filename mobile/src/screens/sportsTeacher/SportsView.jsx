@@ -10,6 +10,7 @@ import { CreateTeamSheet } from './CreateTeamSheet';
 import { CreateSportsEventSheet } from './CreateSportsEventSheet';
 import { CreateAchievementSheet } from './CreateAchievementSheet';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import {
   useGetSportsTeamsQuery,
   useDeleteSportsTeamMutation,
@@ -47,7 +48,7 @@ function TeamsTab() {
               { label: 'Coach', value: t.coachId?.name || '—' },
             ]}
             expandable
-            actions={<Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => deleteTeam(t._id)}>Delete</Button>}
+            actions={<Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteTeam(t._id), 'this team')}>Delete</Button>}
           />
         ))}
       </QueryState>
@@ -119,7 +120,7 @@ function AchievementsTab() {
               { label: 'Type', value: a.holderType },
             ]}
             expandable
-            actions={<Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => deleteAchievement(a._id)}>Delete</Button>}
+            actions={<Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteAchievement(a._id), 'this achievement')}>Delete</Button>}
           />
         ))}
       </QueryState>

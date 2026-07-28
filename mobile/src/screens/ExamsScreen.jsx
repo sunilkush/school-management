@@ -20,7 +20,11 @@ const HANDLED_ROLES = new Set(['Teacher', 'Student', 'Parent']);
 // create/schedule capability as School Admin, not a read-only view. Subject Coordinator's web
 // sidebar labels this destination "Assessments" rather than "Exams", but it's the exact same
 // ExamPage.jsx component and backend contract — reused verbatim via the 'Assessments' nav key.
-const MANAGE_ROLES = new Set(['School Admin', 'Principal', 'Vice Principal', 'Subject Coordinator']);
+// Exam Coordinator was missing here entirely — their own NAV_CONFIG references 'Exams' directly
+// (the "Exam Operations" group), so this role's actual core feature was showing "Exams view
+// isn't available for this role yet" despite the backend's EXAM_MANAGE_ROLES already granting it
+// full create/schedule access.
+const MANAGE_ROLES = new Set(['School Admin', 'Principal', 'Vice Principal', 'Subject Coordinator', 'Exam Coordinator']);
 
 function ExamsMain({ navigation }) {
   const { colors, typography, spacing } = useAppTheme();

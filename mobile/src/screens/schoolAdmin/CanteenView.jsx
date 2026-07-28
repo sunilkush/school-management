@@ -11,6 +11,7 @@ import { StudentPicker } from '../../components/ui/StudentPicker';
 import { CreateCanteenItemSheet } from './CreateCanteenItemSheet';
 import { CanteenOrderSheet } from './CanteenOrderSheet';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import {
   useGetCanteenItemsQuery,
   useDeleteCanteenItemMutation,
@@ -46,7 +47,7 @@ function ItemsTab() {
             title={item.name}
             subtitle={item.category}
             badge={<StatusPill label={`₹${item.price}`} color={colors.primary} />}
-            actions={<Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => deleteItem(item._id)}>Delete</Button>}
+            actions={<Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteItem(item._id), 'this item')}>Delete</Button>}
           />
         ))}
       </QueryState>

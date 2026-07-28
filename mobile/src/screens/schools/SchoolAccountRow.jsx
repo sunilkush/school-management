@@ -5,6 +5,7 @@ import { IconWell } from '../../components/ui/IconWell';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { ManageSubscriptionSheet } from './ManageSubscriptionSheet';
 import { STATUS_SEMANTICS } from '../../theme/patterns';
+import { confirmDelete } from '../../utils/confirm';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import {
   useActivateSchoolAccountMutation,
@@ -57,7 +58,7 @@ export function SchoolAccountRow({ school }) {
               iconColor={colors.danger}
               size={18}
               disabled={busy}
-              onPress={() => deleteSchool(school._id)}
+              onPress={() => confirmDelete(() => deleteSchool(school._id), `the school "${school.name}" and all of its data`)}
             />
           </>
         }

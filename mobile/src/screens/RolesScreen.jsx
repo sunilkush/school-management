@@ -10,6 +10,7 @@ import { CreateRoleSheet } from './superAdmin/CreateRoleSheet';
 import { GrantTempAccessSheet } from './superAdmin/GrantTempAccessSheet';
 import { formatDate } from '../utils/format';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import {
   useDeleteRoleMutation,
   useDeleteTempAccessGrantMutation,
@@ -78,7 +79,7 @@ export function RolesScreen() {
             expandable
             actions={
               r.type !== 'system' ? (
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteRoleState.isLoading} onPress={() => deleteRole(r._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteRoleState.isLoading} onPress={() => confirmDelete(() => deleteRole(r._id), 'this role')} />
               ) : null
             }
           />
@@ -122,7 +123,7 @@ export function RolesScreen() {
                     Revoke
                   </Button>
                 )}
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => deleteGrant(g._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => confirmDelete(() => deleteGrant(g._id), 'this access grant')} />
               </>
             }
           />

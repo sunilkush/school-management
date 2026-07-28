@@ -10,6 +10,7 @@ import { CreateFeeStructureSheet } from './CreateFeeStructureSheet';
 import { formatCurrency } from '../../utils/format';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import { useDeleteFeeStructureMutation, useGetClassDetailsQuery, useGetFeeStructuresQuery } from '../../store/api/apiSlice';
 
 const FREQUENCY_COLOR = { monthly: '#2563EB', quarterly: '#F59E0B', yearly: '#22C55E' };
@@ -62,7 +63,7 @@ export function FeeStructuresView() {
                 iconColor={colors.danger}
                 size={18}
                 disabled={deleteState.isLoading}
-                onPress={() => deleteFeeStructure(fs._id)}
+                onPress={() => confirmDelete(() => deleteFeeStructure(fs._id), 'this fee structure')}
               />
             }
           />

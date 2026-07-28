@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateBoardSheet } from './superAdmin/CreateBoardSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteBoardMutation, useGetBoardsQuery } from '../store/api/apiSlice';
 
 export function BoardsScreen() {
@@ -56,7 +57,7 @@ export function BoardsScreen() {
             actions={
               <>
                 <IconButton icon="pencil-outline" size={18} onPress={() => setEditingBoard(b)} />
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteBoard(b._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteBoard(b._id), 'this board')} />
               </>
             }
           />

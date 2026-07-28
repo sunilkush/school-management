@@ -25,7 +25,8 @@ export function ComplaintsScreen() {
   const [status, setStatus] = useState(null);
   const [creating, setCreating] = useState(false);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelComplaintsQuery({ status: status || undefined });
+  // Backend default limit=25 with no override would silently truncate the complaint list.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelComplaintsQuery({ status: status || undefined, limit: 500 });
   const complaints = data?.complaints ?? [];
   const summary = data?.summary ?? [];
   const [updateComplaint, updateState] = useUpdateHostelComplaintMutation();

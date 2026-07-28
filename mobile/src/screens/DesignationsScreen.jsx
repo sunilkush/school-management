@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateDesignationSheet } from './superAdmin/CreateDesignationSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteDesignationMutation, useGetDesignationsQuery } from '../store/api/apiSlice';
 
 const LEVEL_COLOR = { Senior: '#7C3AED', Mid: '#2563EB', Junior: '#22C55E' };
@@ -58,7 +59,7 @@ export function DesignationsScreen() {
             actions={
               <>
                 <IconButton icon="pencil-outline" size={18} onPress={() => setEditingDesignation(d)} />
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteDesignation(d._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteDesignation(d._id), 'this designation')} />
               </>
             }
           />

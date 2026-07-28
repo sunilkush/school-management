@@ -8,6 +8,7 @@ import { IconWell } from '../../components/ui/IconWell';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { CreateTaskSheet } from './CreateTaskSheet';
 import { formatDate } from '../../utils/format';
+import { confirmDelete } from '../../utils/confirm';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useDeleteTaskMutation, useGetMyTasksQuery, useUpdateTaskMutation } from '../../store/api/apiSlice';
 
@@ -31,7 +32,10 @@ export function TaskManagementView() {
   const [status, setStatus] = useState(null);
   const [creating, setCreating] = useState(false);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetMyTasksQuery({ status: status || undefined });
+  // School Admin sees every task in the school (not just self-assigned), so the backend's
+  // default limit=50 with no override was a real truncation risk here — missed in the earlier
+  // pagination pass since this call wasn't parameterless.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetMyTasksQuery({ status: status || undefined, limit: 500 });
   const tasks = data ?? [];
   const [updateTask, updateState] = useUpdateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
@@ -88,7 +92,7 @@ export function TaskManagementView() {
                 >
                   Advance
                 </Button>
-                <IconButton icon="delete-outline" size={18} onPress={() => deleteTask(task._id)} />
+                <IconButton icon="delete-outline" size={18} onPress={() => confirmDelete(() => deleteTask(task._id), 'this task')} />
               </>
             }
             expandable

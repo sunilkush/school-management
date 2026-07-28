@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateBoardClassSheet } from './superAdmin/CreateBoardClassSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteBoardClassMutation, useGetBoardClassesQuery, useGetBoardsQuery } from '../store/api/apiSlice';
 
 export function BoardClassesScreen() {
@@ -67,7 +68,7 @@ export function BoardClassesScreen() {
                   meta={[...(bc.description ? [{ label: 'Description', value: bc.description }] : [])]}
                   expandable
                   actions={
-                    <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteBoardClass(bc._id)} />
+                    <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteBoardClass(bc._id), 'this class')} />
                   }
                 />
               ))}

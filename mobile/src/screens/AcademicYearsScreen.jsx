@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateAcademicYearSheet } from './superAdmin/CreateAcademicYearSheet';
 import { formatDate } from '../utils/format';
+import { confirmDelete } from '../utils/confirm';
 import { useAppTheme } from '../theme/ThemeProvider';
 import {
   useActivateAcademicYearMutation,
@@ -87,7 +88,7 @@ export function AcademicYearsScreen() {
                           </Button>
                         )}
                         <IconButton icon="archive-outline" size={18} disabled={isBusy} onPress={() => archiveYear(y._id)} />
-                        <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={isBusy} onPress={() => deleteYear(y._id)} />
+                        <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={isBusy} onPress={() => confirmDelete(() => deleteYear(y._id), 'this academic year')} />
                       </>
                     )
                   }

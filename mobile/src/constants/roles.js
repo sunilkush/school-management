@@ -373,11 +373,10 @@ export const NAV_CONFIG = {
     unrestricted: true,
     items: [
       'Dashboard',
-      // 'PaperBuilder' deliberately omitted — confirmed the Exam model has no paperBlueprint
-      // field, so the "paper" a user builds silently vanishes on save under Mongoose's strict
-      // mode (real network calls, no persisted content). Same reason it's still a dangling,
-      // unmapped key for School Admin. Not worth wiring to a screen that would just replicate
-      // that backend bug.
+      // 'PaperBuilder' omitted — the backend gap that originally justified this (Exam.model.js
+      // had no paperBlueprint schema path) is now fixed and School Admin has the real screen
+      // (see screenForModule.js's PaperBuilderView). Not extended to Exam Coordinator in that
+      // same pass since it was out of scope — revisit if this role should get it too.
       { group: 'Exam Operations', icon: 'pencil-box-outline', items: ['Exams', 'CreateExam', 'ExamSchedule', 'QuestionBank', 'AdmitCard', 'SeatPlan', 'GradeEntry', 'ExamAnalytics', 'ExamReports'] },
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',

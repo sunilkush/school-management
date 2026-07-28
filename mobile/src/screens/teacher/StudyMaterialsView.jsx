@@ -25,7 +25,8 @@ export function StudyMaterialsView() {
   const classesQuery = useGetAssignedClassesQuery(academicYearId, { skip: !academicYearId });
   const classes = classesQuery.data ?? [];
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetStudyMaterialsQuery({ academicYearId }, { skip: !academicYearId });
+  // Backend default limit=20 with no override would silently truncate a full year of uploads.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetStudyMaterialsQuery({ academicYearId, limit: 500 }, { skip: !academicYearId });
   const materials = data?.items ?? [];
 
   const openLink = (item) => {

@@ -6,6 +6,7 @@ import { AccentListCard } from '../../components/ui/AccentListCard';
 import { IconWell } from '../../components/ui/IconWell';
 import { CreateTimetableRoomSheet } from './CreateTimetableRoomSheet';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import { useDeleteTimetableRoomMutation, useGetTimetableRoomsQuery } from '../../store/api/apiSlice';
 
 export function RoomsTab() {
@@ -45,7 +46,7 @@ export function RoomsTab() {
                 iconColor={colors.danger}
                 size={18}
                 disabled={deleteState.isLoading}
-                onPress={() => deleteRoom(room._id)}
+                onPress={() => confirmDelete(() => deleteRoom(room._id), 'this room')}
               />
             }
           />

@@ -15,6 +15,7 @@ import uiReducer from './slices/uiSlice';
 import { apiSlice } from './api/apiSlice';
 import { setSessionExpiredHandler } from '../api/client';
 import { sessionExpired } from './slices/authSlice';
+import { rtkMutationErrorMiddleware } from './errorMiddleware';
 
 // Only the UI preference and a non-sensitive snapshot of the signed-in user persist across
 // launches — access/refresh tokens live exclusively in SecureStore (see utils/secureStorage.js),
@@ -56,7 +57,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(apiSlice.middleware),
+    }).concat(apiSlice.middleware, rtkMutationErrorMiddleware),
 });
 
 export const persistor = persistStore(store);

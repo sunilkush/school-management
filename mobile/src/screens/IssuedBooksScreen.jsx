@@ -13,6 +13,7 @@ import { ReturnBookSheet } from './library/ReturnBookSheet';
 import { ISSUED_BOOK_STATUS_META } from '../utils/library';
 import { formatCurrency, formatDate } from '../utils/format';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteIssuedBookMutation, useGetIssuedBooksQuery } from '../store/api/apiSlice';
 
 /** Mirrors frontend/src/pages/School_Admin/Library/IssueBook.jsx. Issuing to staff and manual
@@ -110,7 +111,7 @@ export function IssuedBooksScreen() {
                     iconColor={colors.danger}
                     size={18}
                     disabled={deleteState.isLoading}
-                    onPress={() => deleteIssuedBook(r._id)}
+                    onPress={() => confirmDelete(() => deleteIssuedBook(r._id), 'this issued-book record')}
                   />
                 </>
               }

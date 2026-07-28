@@ -8,6 +8,7 @@ import { PeriodEntrySheet } from './PeriodEntrySheet';
 import { DAY_LABELS, DAY_ORDER, TEACHING_ENTRY_TYPES, timetableRowTitle, timetableTypeColor } from '../../utils/timetable';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import {
   useDeleteTimetableEntryMutation,
   useGetAllUsersQuery,
@@ -125,7 +126,7 @@ export function ScheduleTab() {
                         iconColor={colors.danger}
                         size={18}
                         disabled={deleteState.isLoading}
-                        onPress={() => deleteEntry(entry._id)}
+                        onPress={() => confirmDelete(() => deleteEntry(entry._id), 'this period')}
                       />
                     </>
                   }

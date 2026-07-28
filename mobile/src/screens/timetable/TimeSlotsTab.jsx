@@ -7,6 +7,7 @@ import { IconWell } from '../../components/ui/IconWell';
 import { CreateTimeSlotSheet } from './CreateTimeSlotSheet';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import { useDeleteTimeSlotMutation, useGetTimeSlotsQuery } from '../../store/api/apiSlice';
 
 export function TimeSlotsTab() {
@@ -52,7 +53,7 @@ export function TimeSlotsTab() {
                 iconColor={colors.danger}
                 size={18}
                 disabled={deleteState.isLoading}
-                onPress={() => deleteTimeSlot(slot._id)}
+                onPress={() => confirmDelete(() => deleteTimeSlot(slot._id), 'this time slot')}
               />
             }
           />

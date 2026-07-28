@@ -54,6 +54,7 @@ import { RolesScreen } from '../screens/RolesScreen';
 import { PermissionsScreen } from '../screens/PermissionsScreen';
 import { BackupsScreen } from '../screens/BackupsScreen';
 import { AuditLogsScreen } from '../screens/AuditLogsScreen';
+import { PlatformModulesView } from '../screens/superAdmin/PlatformModulesView';
 import { SystemMaintenanceScreen } from '../screens/SystemMaintenanceScreen';
 import { NetworkStatusScreen } from '../screens/NetworkStatusScreen';
 import { CounselorStudentsView } from '../screens/counselor/CounselorStudentsView';
@@ -63,6 +64,7 @@ import { EmergencyAlertsScreen } from '../screens/EmergencyAlertsScreen';
 import { BooksScreen } from '../screens/BooksScreen';
 import { RoutesScreen } from '../screens/RoutesScreen';
 import { VehiclesScreen } from '../screens/VehiclesScreen';
+import { DriversView } from '../screens/transport/DriversView';
 import { RoomsScreen } from '../screens/RoomsScreen';
 import { UsersScreen } from '../screens/UsersScreen';
 import { SchoolsScreen } from '../screens/SchoolsScreen';
@@ -75,6 +77,7 @@ import { PayrollScreen } from '../screens/PayrollScreen';
 import { EventsScreen } from '../screens/EventsScreen';
 import { ModulePlaceholderScreen } from '../screens/ModulePlaceholderScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { RoleWorkspaceView } from '../screens/RoleWorkspaceView';
 import { GroupMenuScreen } from '../screens/GroupMenuScreen';
 import { AssignedClassesView } from '../screens/teacher/AssignedClassesView';
 import { MyClassStudentsView } from '../screens/teacher/MyClassStudentsView';
@@ -107,6 +110,7 @@ import { AdmissionInquiriesView } from '../screens/schoolAdmin/AdmissionInquirie
 import { StudentPromotionView } from '../screens/schoolAdmin/StudentPromotionView';
 import { CreateUserView } from '../screens/schoolAdmin/CreateUserView';
 import { ExamManagementView } from '../screens/schoolAdmin/ExamManagementView';
+import { PaperBuilderView } from '../screens/schoolAdmin/PaperBuilderView';
 import { AdmitCardView } from '../screens/schoolAdmin/AdmitCardView';
 import { ExamAnalyticsView } from '../screens/schoolAdmin/ExamAnalyticsView';
 import { SeatPlanView } from '../screens/schoolAdmin/SeatPlanView';
@@ -175,6 +179,9 @@ const SCREEN_MAP = {
   // Reuses the same generic app-settings screen every other role gets — web has no distinct
   // Super Admin Settings page either (shared <Settings/> component for all roles).
   Settings: SettingsScreen,
+  // Shared "what can I do" reference — Vice Principal/Librarian/Transport Manager/Receptionist
+  // all reference this same key in their own NAV_CONFIG.
+  RoleWorkspace: RoleWorkspaceView,
   RevenueAnalytics: RevenueAnalyticsScreen,
   PlatformUsage: PlatformUsageScreen,
   ActivityLogs: ActivityLogsScreen,
@@ -192,6 +199,10 @@ const SCREEN_MAP = {
   Permissions: PermissionsScreen,
   SystemBackup: BackupsScreen,
   AuditLogs: AuditLogsScreen,
+  // Super Admin's "System Control" group — the one NAV_CONFIG item with no SCREEN_MAP entry at
+  // all until now, silently falling to ModulePlaceholderScreen. Mirrors web's "All Modules"
+  // launcher (Super_Admin/Modules/Modules.jsx).
+  PlatformModules: PlatformModulesView,
   SystemMaintenance: SystemMaintenanceScreen,
   NetworkStatus: NetworkStatusScreen,
   // IT Support — web calls this "System Logs", but it's the same ActivityLog model/screen every
@@ -223,6 +234,9 @@ const SCREEN_MAP = {
   Books: BooksScreen,
   Routes: RoutesScreen,
   Vehicles: VehiclesScreen,
+  // Transport Manager's own HR-style driver roster — distinct from the "Driver" role's login
+  // account concept (see Vehicles.jsx's driverId picker comment).
+  Drivers: DriversView,
   FuelMaintenance: FuelMaintenanceScreen,
   VisitorManagement: VisitorManagementScreen,
   // Security — same GateEntry model/screen as Receptionist's Visitor Management, just under two
@@ -278,16 +292,22 @@ const SCREEN_MAP = {
   ExamReports: ExamReportsView,
   StudentMonthlyReport: StudentMonthlyReportView,
   // School Admin — Payroll sub-system (Create Employee/Salary Structures/Monthly Run/Payslip
-  // Center/Monthly Reports/Salary Advance/Bonus & Incentives/Reimbursements). PaperBuilder
-  // remains deliberately unmapped — the Exam model has no paperBlueprint field, so anything
-  // "built" there would silently vanish on save under Mongoose's strict mode; same reason it's
-  // still dangling for Exam Coordinator too (see that role's own NAV_CONFIG comment).
+  // Center/Monthly Reports/Salary Advance/Bonus & Incentives/Reimbursements).
   GeofenceSettings: GeofenceSettingsView,
+  // Exam.model.js's paperBlueprint schema path (previously missing, silently dropping the
+  // blueprint on save under Mongoose strict mode) has since been added — confirmed fixed before
+  // building this, not assumed. Still not wired into Exam Coordinator's own NAV_CONFIG (see that
+  // role's comment in constants/roles.js) — out of scope for this pass, School Admin only.
+  PaperBuilder: PaperBuilderView,
   // Create Employee — the exact same two-call (registerUser → registerEmployee) flow as
   // School Admin's own 'CreateUser' item above, just reached from the Payroll submenu on web too.
   CreateEmployee: CreateUserView,
   SalaryStructures: SalaryStructuresView,
   MonthlyRun: MonthlyRunView,
+  // Accountant's own web sidebar label for the exact same generate/lock/pay cycle feature —
+  // confirmed via EmployeeSalaries.jsx's own page title ("Monthly Payroll Run") and its
+  // usePayrollCycle/usePayrollActions hooks hitting the identical /payroll/cycle/* endpoints.
+  SalaryRun: MonthlyRunView,
   PayslipCenter: PayslipCenterView,
   PayrollMonthlyReports: PayrollMonthlyReportsView,
   SalaryAdvance: SalaryAdvanceView,

@@ -6,6 +6,7 @@ import { AccentListCard } from '../../../components/ui/AccentListCard';
 import { StatusPill } from '../../../components/ui/StatusPill';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAppTheme } from '../../../theme/ThemeProvider';
+import { confirmDelete } from '../../../utils/confirm';
 import {
   useGetAcademicYearsBySchoolQuery,
   useCreateAcademicYearMutation,
@@ -130,7 +131,7 @@ export function AcademicYearStep() {
                     </Button>
                   )}
                   {!yr.isActive && (
-                    <Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => deleteYear(yr._id)}>
+                    <Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteYear(yr._id), 'this academic year')}>
                       Delete
                     </Button>
                   )}

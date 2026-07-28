@@ -7,6 +7,7 @@ import { IconWell } from '../../components/ui/IconWell';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { CreateBackupSheet } from './CreateBackupSheet';
 import { formatBytes, formatDate } from '../../utils/format';
+import { confirmDelete } from '../../utils/confirm';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useDeleteSystemBackupMutation, useGetSystemBackupsQuery } from '../../store/api/apiSlice';
 
@@ -60,7 +61,7 @@ export function BackupHistoryView() {
               ...(b.notes ? [{ label: 'Notes', value: b.notes }] : []),
             ]}
             expandable
-            actions={<IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteBackup(b._id)} />}
+            actions={<IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteBackup(b._id), 'this backup')} />}
           />
         ))}
       </QueryState>

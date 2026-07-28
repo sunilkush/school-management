@@ -23,7 +23,8 @@ export function CounselingSessionListView({ type, icon, screenTitle, issueLabel,
   const { colors, typography, spacing } = useAppTheme();
   const [creating, setCreating] = useState(false);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetCounselingSessionsQuery({ type });
+  // Backend default limit=50 with no override would silently truncate the list.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetCounselingSessionsQuery({ type, limit: 500 });
   const sessions = data?.sessions ?? [];
   const [updateSession, updateState] = useUpdateCounselingSessionMutation();
 

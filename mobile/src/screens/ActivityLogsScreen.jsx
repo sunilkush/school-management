@@ -7,6 +7,7 @@ import { AccentListCard } from '../components/ui/AccentListCard';
 import { AvatarInitials } from '../components/ui/AvatarInitials';
 import { IconWell } from '../components/ui/IconWell';
 import { timeAgo } from '../utils/format';
+import { confirmDelete } from '../utils/confirm';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useDeleteActivityLogMutation, useGetActivityLogsQuery } from '../store/api/apiSlice';
@@ -52,7 +53,7 @@ export function ActivityLogsScreen() {
               ...(log.school?.name ? [{ label: 'School', value: log.school.name }] : []),
             ]}
             expandable
-            actions={canDelete ? <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => deleteLog(log._id)} /> : undefined}
+            actions={canDelete ? <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => confirmDelete(() => deleteLog(log._id), 'this activity log')} /> : undefined}
           />
         ))}
       </QueryState>

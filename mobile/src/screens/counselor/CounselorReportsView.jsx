@@ -14,7 +14,10 @@ import { useGetCounselingSessionsQuery, useGetCounselingSessionStatsQuery } from
 export function CounselorReportsView() {
   const { colors, typography, spacing } = useAppTheme();
 
-  const sessionsQuery = useGetCounselingSessionsQuery({});
+  // "Total Sessions" below reads sessions.length (a page, not the true total) — needs a limit
+  // high enough that the page effectively IS the whole dataset for realistic school sizes,
+  // otherwise the reported total silently undercounts past the backend's default limit=50.
+  const sessionsQuery = useGetCounselingSessionsQuery({ limit: 500 });
   const totalSessions = sessionsQuery.data?.sessions?.length ?? sessionsQuery.data?.total ?? 0;
 
   const statsQuery = useGetCounselingSessionStatsQuery();

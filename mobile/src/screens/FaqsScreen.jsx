@@ -7,6 +7,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { CreateFaqSheet } from './superAdmin/CreateFaqSheet';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteFaqMutation, useGetFaqsQuery } from '../store/api/apiSlice';
 
 const CATEGORIES = [null, 'general', 'billing', 'technical', 'academic', 'other'];
@@ -74,7 +75,7 @@ export function FaqsScreen() {
               {canManage && (
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: spacing.sm, paddingBottom: spacing.sm }}>
                   <IconButton icon="pencil-outline" size={18} onPress={() => setEditingFaq(f)} />
-                  <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => deleteFaq(f._id)} />
+                  <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => confirmDelete(() => deleteFaq(f._id), 'this FAQ')} />
                 </View>
               )}
             </List.Accordion>

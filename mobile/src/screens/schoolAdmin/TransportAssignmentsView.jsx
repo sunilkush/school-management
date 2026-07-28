@@ -7,6 +7,7 @@ import { AccentListCard } from '../../components/ui/AccentListCard';
 import { IconWell } from '../../components/ui/IconWell';
 import { AssignTransportSheet } from './AssignTransportSheet';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import { useDeleteTransportAssignmentMutation, useGetTransportAssignmentsQuery } from '../../store/api/apiSlice';
 
 /** Assign a student to a transport route + vehicle — distinct from the Routes/Vehicles fleet
@@ -56,7 +57,7 @@ export function TransportAssignmentsView() {
                 iconColor={colors.danger}
                 size={18}
                 disabled={deleteState.isLoading}
-                onPress={() => deleteAssignment(a._id)}
+                onPress={() => confirmDelete(() => deleteAssignment(a._id), 'this assignment')}
               />
             }
           />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Button, IconButton, Modal, Portal, Text } from 'react-native-paper';
 import { FormField } from '../../components/ui/FormField';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -34,7 +34,7 @@ export function RoomDetailSheet({ room, onDismiss }) {
     <Portal>
       <Modal visible={Boolean(room)} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
         {room && (
-          <View>
+          <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.xs }]}>Room {room.roomNumber}</Text>
             <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.md }]}>
               {room.students.length}/{room.capacity} occupied
@@ -67,7 +67,7 @@ export function RoomDetailSheet({ room, onDismiss }) {
             <Button mode="outlined" onPress={onDismiss} style={{ marginTop: spacing.lg }}>
               Close
             </Button>
-          </View>
+          </ScrollView>
         )}
       </Modal>
     </Portal>

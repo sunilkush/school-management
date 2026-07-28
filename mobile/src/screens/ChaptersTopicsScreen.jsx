@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateChapterSheet } from './superAdmin/CreateChapterSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteChapterMutation, useGetBoardClassesQuery, useGetBoardsQuery, useGetChaptersQuery, useGetSubjectsQuery } from '../store/api/apiSlice';
 
 /** Board → BoardClass → Subject cascading pickers, then a flat filtered chapter list — a flatter
@@ -115,7 +116,7 @@ export function ChaptersTopicsScreen() {
                   ]}
                   expandable
                   actions={
-                    <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteChapter(c._id)} />
+                    <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteChapter(c._id), 'this chapter')} />
                   }
                 />
               ))}

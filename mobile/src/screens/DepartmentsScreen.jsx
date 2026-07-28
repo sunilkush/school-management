@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateDepartmentSheet } from './superAdmin/CreateDepartmentSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteDepartmentMutation, useGetDepartmentsQuery } from '../store/api/apiSlice';
 
 const STATUS_COLOR = { active: '#22C55E', inactive: '#94A3B8' };
@@ -61,7 +62,7 @@ export function DepartmentsScreen() {
             actions={
               <>
                 <IconButton icon="pencil-outline" size={18} onPress={() => setEditingDept(d)} />
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteDepartment(d._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteDepartment(d._id), 'this department')} />
               </>
             }
           />

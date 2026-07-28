@@ -30,7 +30,7 @@ function ChartTitle({ title }) {
  * landing page; here it's the content of the "Hostel" tab (mobile has a separate generic Dashboard
  * tab already). Leaves/Visitors/Complaints full management (5 sub-features on web) are out of
  * scope — this is the read-only KPI+chart overview only. */
-function HostelWardenDashboard() {
+export function HostelWardenDashboard() {
   const { colors, typography, spacing } = useAppTheme();
   const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelWardenDashboardQuery();
   const kpis = data?.kpis;

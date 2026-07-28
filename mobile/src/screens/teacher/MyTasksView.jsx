@@ -23,7 +23,10 @@ export function MyTasksView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetMyTasksQuery();
+  // No explicit limit override previously sent -> backend's listTasks default (limit=50) could
+  // silently hide older assigned tasks with no UI indication. Override high since this list has
+  // no pagination controls of its own.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetMyTasksQuery({ limit: 500 });
   const [updateStatus, updateState] = useUpdateMyTaskStatusMutation();
   const tasks = data ?? [];
 

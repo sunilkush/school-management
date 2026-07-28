@@ -9,6 +9,7 @@ import { StatusPill } from '../../components/ui/StatusPill';
 import { CreateReimbursementSheet } from './CreateReimbursementSheet';
 import { formatCurrency, formatDate } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import {
   useApproveFinanceReimbursementMutation,
   useApproveManagerReimbursementMutation,
@@ -94,7 +95,7 @@ export function ReimbursementsView() {
                   </>
                 )}
                 {(r.status === 'pending_manager' || r.status === 'rejected') && (
-                  <Button mode="text" compact textColor={colors.danger} disabled={busy} onPress={() => remove(r._id)}>
+                  <Button mode="text" compact textColor={colors.danger} disabled={busy} onPress={() => confirmDelete(() => remove(r._id), 'this reimbursement')}>
                     Delete
                   </Button>
                 )}

@@ -11,6 +11,7 @@ import { StatusPill } from '../../components/ui/StatusPill';
 import { LedgerRecordSheet } from './LedgerRecordSheet';
 import { paymentModeLabel } from '../../utils/finance';
 import { formatCurrency, formatDate } from '../../utils/format';
+import { confirmDelete } from '../../utils/confirm';
 import { useAppTheme } from '../../theme/ThemeProvider';
 
 /** Shared list/create/delete view for Income and Expense ledgers — identical shape on the web app
@@ -35,10 +36,13 @@ export function FinanceLedgerView({
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [creating, setCreating] = useState(false);
 
+  // No "load more"/infinite-scroll here, so limit=50 (the backend's own default) would silently
+  // hide older records for any school with a full year of entries — raised so search/category
+  // filters are the only narrowing a user needs.
   const { data, isLoading, isFetching, isError, error, refetch } = useRecordsQuery({
     category: selectedCategory || undefined,
     search: search.trim() || undefined,
-    limit: 50,
+    limit: 500,
   });
   const [deleteRecord, deleteState] = useDeleteMutation();
 
@@ -130,7 +134,7 @@ export function FinanceLedgerView({
                   iconColor={colors.danger}
                   size={18}
                   disabled={deleteState.isLoading}
-                  onPress={() => deleteRecord(r._id)}
+                  onPress={() => confirmDelete(() => deleteRecord(r._id), 'this record')}
                 />
               }
             />
