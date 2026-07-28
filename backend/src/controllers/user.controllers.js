@@ -188,6 +188,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   // 1️⃣ Find user
   const user = await User.findOne({ email, isActive: true, isDeleted: { $ne: true } })
+    .select("+password")
     .populate("roleId")
     .populate("schoolId");
 

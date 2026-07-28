@@ -32,7 +32,12 @@ const userSchema = new Schema(
 
     password: {
       type: String,
-      required: true
+      required: true,
+      // Unlike refreshToken right below (already select: false), this had no default exclusion —
+      // every one of the ~30 User.find/findOne/findById call sites across the controllers had to
+      // remember to .select('-password') themselves to avoid returning the bcrypt hash. Call sites
+      // that actually need to compare it (login, change-password) now use .select('+password').
+      select: false,
     },
 
     roleId: {

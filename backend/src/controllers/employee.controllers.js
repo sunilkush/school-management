@@ -3,6 +3,16 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+
+// EMPLOYEE_ROLES (employee.routes.js) also grants Teacher/Sports Teacher/Transport Manager read
+// access to these two endpoints for basic staff-directory lookups (assign-task pickers, driver
+// info, etc. — confirmed against mobile/src, none of which ever reads bankDetails). Neither
+// endpoint restricted any fields, so every one of those roles could also read every employee's
+// bank account number, IFSC code, PAN, and Aadhaar number — payroll-only PII with no directory
+// use case at all.
+const PAYROLL_ROLES = new Set(["Super Admin", "School Admin", "Accountant"]);
+const canViewBankDetails = (req) => PAYROLL_ROLES.has(req.userRole?.name);
+
 // Create Employee
 export const registerEmployee = asyncHandler(async (req, res) => {
   const {
@@ -171,10 +181,12 @@ export const getAllEmployees = asyncHandler(async (req, res) => {
   if (employeeType) filter.employeeType = employeeType;
   if (isActive !== undefined) filter.isActive = isActive;
 
-  const employees = await Employee.find(filter)
+  const query = Employee.find(filter)
     .populate({ path: "userId", select: "name email regId", populate: { path: "roleId", select: "name" } })
     .populate("schoolId", "name")
     .populate("academicYearId", "name year");
+  if (!canViewBankDetails(req)) query.select("-bankDetails");
+  const employees = await query;
 
   return res
     .status(200)
@@ -187,10 +199,12 @@ export const getEmployeeById = asyncHandler(async (req, res) => {
   const isSuperAdmin = req.userRole?.name === "Super Admin";
   const query = isSuperAdmin ? { _id: id } : { _id: id, schoolId: req.user.schoolId };
 
-  const employee = await Employee.findOne(query)
+  const employeeQuery = Employee.findOne(query)
     .populate({ path: "userId", select: "name email regId", populate: { path: "roleId", select: "name" } })
     .populate("schoolId", "name")
     .populate("academicYearId", "name year");
+  if (!canViewBankDetails(req)) employeeQuery.select("-bankDetails");
+  const employee = await employeeQuery;
 
   if (!employee) {
     throw new ApiError(404, "Employee not found");
