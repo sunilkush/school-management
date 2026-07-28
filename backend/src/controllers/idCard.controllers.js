@@ -8,6 +8,7 @@ import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { School } from "../models/school.model.js";
 import { exportIdCardsPdf } from "../utils/exportService.js";
 import { generateNextCardNumber, getCardPrefix } from "../utils/generateCardNumber.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const ensureIdCardAccess = (doc, user) => {
   if (!doc) throw new ApiError(404, "ID card not found");
@@ -257,7 +258,7 @@ export const getIdCards = asyncHandler(async (req, res) => {
   if (holderType) filter.holderType = holderType;
   if (status) filter.status = status;
   if (search) {
-    const regex = new RegExp(search.trim(), "i");
+    const regex = new RegExp(escapeRegex(search.trim()), "i");
     filter.$or = [{ cardNumber: regex }, { fullName: regex }];
   }
 

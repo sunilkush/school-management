@@ -15,9 +15,8 @@ const CATEGORIES = ['Attendance', 'Behavior', 'Academic Integrity', 'Property Da
 const SEVERITIES = ['Minor', 'Moderate', 'Major'];
 
 /** Same class → section → student picker as Health Records / Certificates — School Admin/
- * Principal/Vice Principal/Teacher only, per the shared class/section/roll-number endpoints' role
- * gates. Class Teacher also has this nav item but is NOT in those endpoints' role gates either
- * (only "Teacher" is) — a real pre-existing gap, same class of issue flagged in Batch 1. */
+ * Principal/Vice Principal/Teacher/Class Teacher, per the shared class/section/roll-number
+ * endpoints' role gates (schoolClass.routes.js READ_ROLES, student.routes.js /roll-numbers). */
 export function LogIncidentSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();

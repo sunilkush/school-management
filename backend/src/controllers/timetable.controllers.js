@@ -323,6 +323,12 @@ export const childTimetable = asyncHandler(async (req, res) => {
   }
   const enrollment = await StudentEnrollment.findOne(compact({ studentId: student._id, academicYearId, status: "Active" })).sort({ createdAt: -1 }).lean();
   if (!enrollment) throw new ApiError(404, "Active student enrollment not found");
+  // CRUD_ROLES (School Admin, Principal, ...) had no ownership check at all here — only the
+  // Parent branch above was scoped, so any school-scoped staff role could view another school's
+  // student's timetable just by knowing/guessing a studentId.
+  if (roleName(req) !== "Parent" && roleName(req) !== "Super Admin" && id(enrollment.schoolId) !== id(req.user?.schoolId ?? req.user?.school?._id)) {
+    throw new ApiError(403, "You are not allowed to access another school's timetable");
+  }
   const rows = await populateTimetable(Timetable.find({ schoolId: enrollment.schoolId, academicYearId: enrollment.academicYearId, schoolClassId: enrollment.schoolClassId, sectionId: enrollment.sectionId, status: "active" }));
   return success(res, 200, sortTimetable(rows), "Child timetable fetched successfully");
 });

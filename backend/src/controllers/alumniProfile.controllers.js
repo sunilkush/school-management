@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 import { AlumniProfile } from "../models/AlumniProfile.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
@@ -64,7 +65,7 @@ export const getAlumni = asyncHandler(async (req, res) => {
   if (graduationYear) filter.graduationYear = parseInt(graduationYear, 10);
   if (isReachable !== undefined) filter.isReachable = isReachable === "true";
   if (search) {
-    const regex = new RegExp(search.trim(), "i");
+    const regex = new RegExp(escapeRegex(search.trim()), "i");
     filter.$or = [{ fullName: regex }, { currentOccupation: regex }, { currentEmployer: regex }];
   }
 

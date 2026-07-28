@@ -3,6 +3,7 @@ import { Vendor } from "../models/Vendor.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const resolveSchoolId = (req) => req.user?.schoolId || req.body?.schoolId || req.query?.schoolId;
 
@@ -19,11 +20,14 @@ export const getVendors = asyncHandler(async (req, res) => {
   const filter = { schoolId };
   if (isActive !== undefined) filter.isActive = isActive === "true";
   if (category) filter.category = category;
-  if (search) filter.$or = [
-    { name: { $regex: search, $options: "i" } },
-    { contactPerson: { $regex: search, $options: "i" } },
-    { email: { $regex: search, $options: "i" } },
-  ];
+  if (search) {
+    const safeSearch = escapeRegex(search);
+    filter.$or = [
+      { name: { $regex: safeSearch, $options: "i" } },
+      { contactPerson: { $regex: safeSearch, $options: "i" } },
+      { email: { $regex: safeSearch, $options: "i" } },
+    ];
+  }
 
   const vendors = await Vendor.find(filter).sort({ createdAt: -1 }).lean();
   return res.status(200).json(new ApiResponse(200, vendors, "Vendors fetched"));

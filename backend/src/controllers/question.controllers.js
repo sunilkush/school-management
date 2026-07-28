@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Question } from "../models/Questions.model.js";
 import * as XLSX from "xlsx";
 import mongoose from "mongoose";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 // =============================
 // Create Question
@@ -192,7 +193,7 @@ export const getQuestions = asyncHandler(async (req, res) => {
     if (schoolClassId) filters.schoolClassId = schoolClassId;
     if (chapterId) filters.chapterId = chapterId;
     if (tags) filters.tags = { $in: tags.split(",").map((t) => t.trim().toLowerCase()) };
-    if (search) filters.statement = { $regex: search, $options: "i" };
+    if (search) filters.statement = { $regex: escapeRegex(search), $options: "i" };
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 

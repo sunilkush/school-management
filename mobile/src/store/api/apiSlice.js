@@ -1686,12 +1686,12 @@ export const apiSlice = createApi({
       query: () => ({ url: '/class-teacher-assignments/my' }),
     }),
 
-    // ── Shared "pick a class → section → student" building blocks (School Admin/Principal/Vice
-    // Principal/Teacher — same READ_ROLES the web app's own class/section pickers use). NOT
-    // available to Medical Officer (see HealthRecords section below for why that matters) — this
-    // mirrors a real, pre-existing gap in the web app's own backend role gates, not something
-    // introduced here. Reused across Health Records, Certificates, ID Cards, Discipline, Alumni,
-    // and PTM session creation's student/class pickers instead of one-off duplicates per screen.
+    // ── Shared "pick a class → section → student" building blocks (schoolClass.routes.js
+    // READ_ROLES / student.routes.js's /roll-numbers role list — cover every role with a screen
+    // using this picker: School Admin/Principal/Vice Principal/Teacher/Class Teacher/Medical
+    // Officer/Sports Teacher and more). Reused across Health Records, Certificates, ID Cards,
+    // Discipline, Alumni, and PTM session creation's student/class pickers instead of one-off
+    // duplicates per screen.
     getSchoolClassDetails: builder.query({
       query: (params) => ({ url: '/school-class/class-detailes', params }),
       providesTags: ['Class'],

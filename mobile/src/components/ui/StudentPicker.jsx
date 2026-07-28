@@ -9,10 +9,9 @@ import { useGetSchoolClassDetailsQuery, useGetClassRollNumbersQuery, useGetActiv
 /**
  * Shared class → section → student chip picker, extracted after the same inline pattern was
  * written for Health Records, Certificates, ID Cards, Discipline, and Alumni's create sheets.
- * Backed by GET /school-class/class-detailes + GET /student/roll-numbers — gated to Super Admin/
- * School Admin/Principal/Vice Principal/Teacher server-side. Roles outside that set (Medical
- * Officer, Sports Teacher) will see this render a clean QueryState error rather than a crash —
- * that's a real pre-existing gap in those endpoints' own role lists, not a bug here.
+ * Backed by GET /school-class/class-detailes + GET /student/roll-numbers, whose role gates now
+ * cover every role that has a screen using this picker (Class Teacher, Medical Officer, Sports
+ * Teacher included).
  *
  * <StudentPicker enabled={visible} selectedId={studentId} selectedName={studentName}
  *                onSelect={(id, name) => ...} onClear={() => ...} />

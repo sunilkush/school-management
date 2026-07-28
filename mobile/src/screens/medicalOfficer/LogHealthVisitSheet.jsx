@@ -15,10 +15,8 @@ const SEVERITIES = ['Minor', 'Moderate', 'Severe'];
 
 /**
  * Class → Section → Student picker followed by the visit form. The picker queries
- * (GET /school-class/class-detailes, GET /student/roll-numbers) are gated to School Admin/
- * Principal/Vice Principal/Teacher server-side, not Medical Officer — see HealthRecordsView's own
- * header comment. A Medical Officer opening this sheet will see that gap surface honestly as a
- * QueryState error on the class list, rather than a silent crash.
+ * (GET /school-class/class-detailes, GET /student/roll-numbers) both include Medical Officer in
+ * their server-side role gates, same as the write-side HEALTH_ROLES check on submit.
  */
 export function LogHealthVisitSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();

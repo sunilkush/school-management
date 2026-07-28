@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { SchoolClass } from "../models/schoolClass.model.js";
 import { Section } from "../models/section.model.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const createClass = asyncHandler(async (req, res) => {
   const { name, code, description, isGlobal, status } = req.body;
@@ -76,7 +77,7 @@ const getAllClasses = asyncHandler(async (req, res) => {
   const search = req.query.search || "";
 
   const query = {};
-  if (search) query.name = { $regex: search, $options: "i" };
+  if (search) query.name = { $regex: escapeRegex(search), $options: "i" };
 
   const shouldPaginate = Number.isFinite(limit) && limit > 0;
   const skip = shouldPaginate ? (page - 1) * limit : 0;

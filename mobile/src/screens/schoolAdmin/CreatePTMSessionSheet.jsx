@@ -14,9 +14,9 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /** Class → section picker (no student needed — a PTM session is scheduled for a whole
- * class-section, individual parents book their own slot within it). Same School Admin/Principal/
- * Vice Principal/Teacher-only class list as the other sheets in this batch — Class Teacher is
- * NOT in that endpoint's role gate either, a pre-existing gap noted in DisciplineView. */
+ * class-section, individual parents book their own slot within it). Same class list as the other
+ * sheets in this batch — School Admin/Principal/Vice Principal/Teacher/Class Teacher, matching
+ * ptm.routes.js's own PTM_STAFF_ROLES. */
 export function CreatePTMSessionSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();

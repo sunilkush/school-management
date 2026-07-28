@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 import { CanteenItem, CANTEEN_CATEGORIES } from "../models/CanteenItem.model.js";
 import { StudentWallet } from "../models/StudentWallet.model.js";
 import { WalletTransaction } from "../models/WalletTransaction.model.js";
@@ -300,7 +301,7 @@ export const getOrders = asyncHandler(async (req, res) => {
     if (to) filter.orderDate.$lte = new Date(to);
   }
   if (search) {
-    filter.studentName = new RegExp(search.trim(), "i");
+    filter.studentName = new RegExp(escapeRegex(search.trim()), "i");
   }
 
   const pageNum = parseInt(page, 10) || 1;

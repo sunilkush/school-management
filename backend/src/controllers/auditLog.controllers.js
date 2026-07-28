@@ -1,4 +1,5 @@
 import AuditLog from "../models/AuditLog.model.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const resolveRoleName = (req) => req.userRole?.name || req.user?.roleId?.name || req.user?.role?.name || req.user?.role;
 
@@ -8,12 +9,13 @@ const applyQueryFilters = ({ search, module, status, startDate, endDate, schoolI
   const query = {};
 
   if (search) {
+    const safeSearch = escapeRegex(search);
     query.$or = [
-      { actorName: { $regex: search, $options: "i" } },
-      { actorEmail: { $regex: search, $options: "i" } },
-      { action: { $regex: search, $options: "i" } },
-      { entityType: { $regex: search, $options: "i" } },
-      { entityId: { $regex: search, $options: "i" } },
+      { actorName: { $regex: safeSearch, $options: "i" } },
+      { actorEmail: { $regex: safeSearch, $options: "i" } },
+      { action: { $regex: safeSearch, $options: "i" } },
+      { entityType: { $regex: safeSearch, $options: "i" } },
+      { entityId: { $regex: safeSearch, $options: "i" } },
     ];
   }
 

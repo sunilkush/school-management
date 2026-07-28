@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import Board from "../models/Board.model.js";
 import mongoose from "mongoose";
 import{SchoolBoard} from "../models/School_board.model.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const isSuperAdmin = (req) => (req.userRole?.name || req.user?.role?.name) === "Super Admin";
 
@@ -54,7 +55,7 @@ export const getBoards = asyncHandler(async (req, res) => {
   const query = {};
 
   if (search) {
-    query.name = { $regex: search, $options: "i" };
+    query.name = { $regex: escapeRegex(search), $options: "i" };
   }
 
   const boards = await Board.find(query)

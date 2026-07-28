@@ -14,10 +14,9 @@ import {
 
 const LEVELS = ['School', 'District', 'State', 'National', 'International'];
 
-/** Student achievements need the class → section → student picker (School Admin/Principal/Vice
- * Principal/Teacher only — Sports Teacher is NOT in that endpoint's role gate, same class of
- * pre-existing gap as Medical Officer in Health Records). Team achievements only need a team,
- * which Sports Teacher can always see — so that path stays fully usable for them either way. */
+/** Student achievements need the class → section → student picker — Sports Teacher is included in
+ * that picker's role gates (schoolClass.routes.js READ_ROLES, student.routes.js /roll-numbers).
+ * Team achievements only need a team, which Sports Teacher can always see either way. */
 export function CreateAchievementSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();

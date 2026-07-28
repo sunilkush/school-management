@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
@@ -24,6 +24,15 @@ export function PTMSessionsView() {
   const { data, isLoading, isFetching, isError, error, refetch } = useGetPTMSessionsQuery();
   const sessions = data ?? [];
   const [cancelSession, cancelState] = useCancelPTMSessionMutation();
+
+  // Parents may already have booked slots within this session, so cancelling isn't a low-stakes
+  // toggle — it's confirmed like the app's other irreversible actions.
+  const confirmCancel = (session) => {
+    Alert.alert('Cancel Session', `Cancel "${session.title}"? Parents who already booked a slot will lose their booking.`, [
+      { text: 'Keep Session', style: 'cancel' },
+      { text: 'Cancel Session', style: 'destructive', onPress: () => cancelSession(session._id) },
+    ]);
+  };
 
   return (
     <ScreenContainer scrollable>

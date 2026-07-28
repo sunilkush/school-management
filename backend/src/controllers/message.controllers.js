@@ -3,6 +3,7 @@ import { Message } from "../models/message.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 import { sendSuccess } from "../utils/response.js";
 
 const ALL_MESSAGE_ROLES = [
@@ -134,10 +135,11 @@ export const listMessages = asyncHandler(async (req, res) => {
 
   const query = search.trim();
   if (query) {
+    const safeQuery = escapeRegex(query);
     filters.push({
       $or: [
-        { subject: { $regex: query, $options: "i" } },
-        { body: { $regex: query, $options: "i" } },
+        { subject: { $regex: safeQuery, $options: "i" } },
+        { body: { $regex: safeQuery, $options: "i" } },
       ],
     });
   }

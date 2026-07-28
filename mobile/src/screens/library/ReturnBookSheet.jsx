@@ -4,9 +4,8 @@ import { Button, Modal, Portal, SegmentedButtons, Text } from 'react-native-pape
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useReturnIssuedBookMutation } from '../../store/api/apiSlice';
 
-// backend/src/models/IssuedBooks.model.js status enum has no "Damaged" value even though the
-// returnBook controller checks for it — offering it here would hit a real (separate, unfixed)
-// backend validation bug, so only the two values actually in the enum are offered.
+// "Damaged" applies settings.damagedBookFine, same as "Lost" applies settings.lostBookFine
+// (issuedBook.controllers.js's returnBook).
 export function ReturnBookSheet({ issuedBook, onDismiss, onReturned }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const [status, setStatus] = useState('Returned');
@@ -41,6 +40,7 @@ export function ReturnBookSheet({ issuedBook, onDismiss, onReturned }) {
               onValueChange={setStatus}
               buttons={[
                 { value: 'Returned', label: 'Returned' },
+                { value: 'Damaged', label: 'Damaged' },
                 { value: 'Lost', label: 'Lost' },
               ]}
             />

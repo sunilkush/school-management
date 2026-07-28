@@ -13,6 +13,7 @@ import { Student } from '../models/student.model.js'
 import { StudentEnrollment } from '../models/StudentEnrollment.model.js'
 import { Employee } from '../models/Employee.model.js'
 import { Teacher } from '../models/teacherAssignment.model.js'
+import { escapeRegex } from '../utils/escapeRegex.js'
 import { SchoolSubscription } from '../models/schoolSubscription.model.js'
 import { recordLoginEvent, recordLogoutByUserId } from './loginLog.controllers.js'
 // ✅ Generate Access & Refresh Token
@@ -750,10 +751,11 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
   // ✅ Search filter
   if (search) {
+    const safeSearch = escapeRegex(search);
     matchStage.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } },
-      { regId: { $regex: search, $options: "i" } },
+      { name: { $regex: safeSearch, $options: "i" } },
+      { email: { $regex: safeSearch, $options: "i" } },
+      { regId: { $regex: safeSearch, $options: "i" } },
     ];
   }
 
@@ -793,7 +795,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
                 $in: (Array.isArray(roleName)
                   ? roleName
                   : [roleName]
-                ).map((r) => new RegExp(`^${r}$`, "i")), // 🔥 case-insensitive exact match
+                ).map((r) => new RegExp(`^${escapeRegex(r)}$`, "i")), // 🔥 case-insensitive exact match
               },
             },
           },

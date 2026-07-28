@@ -3,6 +3,7 @@ import { Chapter } from "../models/Chapter.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 const chapterPopulate = [
   { path: "boardClassId", populate: [{ path: "boardId", select: "name" }, { path: "classId", select: "name" }] },
   { path: "subjectId", select: "name shortName" },
@@ -96,7 +97,7 @@ const getAllChapters = asyncHandler(async (req, res) => {
   }
 
   if (req.query.search?.trim()) {
-    filter.name = { $regex: req.query.search.trim(), $options: "i" };
+    filter.name = { $regex: escapeRegex(req.query.search.trim()), $options: "i" };
   }
 
   // ✅ Direct fetch without pagination

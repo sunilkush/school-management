@@ -17,10 +17,10 @@ const WRITE_ROLES = ["Super Admin", "School Admin"];
 // All school members can read class info (teachers need it for scheduling, students/parents for reference)
 const READ_ROLES = [
   "Super Admin", "School Admin", "Principal", "Vice Principal",
-  "Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Teacher", "Class Teacher", "Subject Coordinator", "Exam Coordinator",
   "Accountant", "Student", "Parent",
   "Librarian", "Hostel Warden", "Transport Manager", "Receptionist",
-  "Medical Officer",
+  "Medical Officer", "Sports Teacher",
 ];
 
 router.post("/",             auth, roleMiddleware(WRITE_ROLES), createSchoolClass);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { Button, IconButton, Text } from 'react-native-paper';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { QueryState } from '../components/ui/QueryState';
@@ -24,6 +24,15 @@ export function SubscriptionPlansScreen() {
   const { data, isLoading, isFetching, isError, error, refetch } = useGetSubscriptionPlansQuery();
   const plans = data ?? [];
   const [deactivatePlan, deactivateState] = useDeactivateSubscriptionPlanMutation();
+
+  // No reactivate path exists anywhere in this app (the edit sheet has no isActive field), so this
+  // is effectively permanent from the UI's perspective and may affect schools currently on the plan.
+  const confirmDeactivate = (plan) => {
+    Alert.alert('Deactivate Plan', `Deactivate "${plan.name}"? It will no longer be available for new subscriptions.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Deactivate', style: 'destructive', onPress: () => deactivatePlan(plan._id) },
+    ]);
+  };
 
   return (
     <ScreenContainer scrollable>
@@ -73,7 +82,7 @@ export function SubscriptionPlansScreen() {
                     iconColor={colors.danger}
                     size={18}
                     disabled={deactivateState.isLoading}
-                    onPress={() => deactivatePlan(p._id)}
+                    onPress={() => confirmDeactivate(p)}
                   />
                 )}
               </>

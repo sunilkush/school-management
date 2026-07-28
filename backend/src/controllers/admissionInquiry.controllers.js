@@ -2,6 +2,7 @@ import { AdmissionInquiry } from "../models/AdmissionInquiry.model.js";
 import { ApiError }          from "../utils/ApiError.js";
 import { ApiResponse }       from "../utils/ApiResponse.js";
 import { asyncHandler }      from "../utils/asyncHandler.js";
+import { escapeRegex }       from "../utils/escapeRegex.js";
 
 const getSchoolId = (req) => req.user.school?._id || req.user.schoolId;
 
@@ -44,7 +45,7 @@ export const getInquiries = asyncHandler(async (req, res) => {
   if (status) filter.status = status;
   if (source) filter.source = source;
   if (search) {
-    const re = new RegExp(search.trim(), "i");
+    const re = new RegExp(escapeRegex(search.trim()), "i");
     filter.$or = [
       { studentName: re },
       { parentName:  re },

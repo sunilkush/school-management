@@ -7,6 +7,7 @@ import { initializeNewSchool } from "../utils/schoolSetup.js"; // ✅ import set
 import { SubscriptionPlan } from "../models/SubscriptionPlan.model.js";
 import { SchoolSubscription } from '../models/schoolSubscription.model.js';
 import { SchoolBoard } from '../models/School_board.model.js';
+import { escapeRegex } from '../utils/escapeRegex.js';
 
 
 const registerSchool = asyncHandler(async (req, res) => {
@@ -127,7 +128,7 @@ const getAllSchools = asyncHandler(async (req, res) => {
 
   const matchStage = search
     ? {
-        name: { $regex: search, $options: "i" },
+        name: { $regex: escapeRegex(search), $options: "i" },
       }
     : {};
 

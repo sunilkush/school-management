@@ -3,6 +3,7 @@ import { Attendance } from "../models/attendance.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const SUPER_ADMIN = "Super Admin";
 const SCHOOL_ADMIN = "School Admin";
@@ -282,7 +283,7 @@ export const getAttendance = asyncHandler(async (req, res) => {
     .lean();
 
   if (search) {
-    query.where({ remarks: { $regex: search, $options: "i" } });
+    query.where({ remarks: { $regex: escapeRegex(search), $options: "i" } });
   }
 
   const [items, total] = await Promise.all([query, Attendance.countDocuments(filter)]);
@@ -448,7 +449,10 @@ export const updateAttendance = asyncHandler(async (req, res) => {
 
   assertTeacherScope(req, { markedBy: attendance.markedBy });
 
-  const updated = await Attendance.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+  // Identity fields must not be attacker-settable via the body — an unfiltered $set would let a
+  // caller reassign this (already-verified) record to a different school/student/marker.
+  const { schoolId, userId, markedBy, _id, ...updates } = req.body;
+  const updated = await Attendance.findByIdAndUpdate(req.params.id, { $set: updates }, { new: true });
   return res.status(200).json(new ApiResponse(200, updated, "Attendance updated"));
 });
 

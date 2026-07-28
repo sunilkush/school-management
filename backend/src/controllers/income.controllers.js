@@ -3,6 +3,7 @@ import { Income } from "../models/Income.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const resolveSchoolId = (user) =>
   user?.schoolId?._id || user?.schoolId || user?.school?._id || null;
@@ -63,7 +64,7 @@ export const getAllIncome = asyncHandler(async (req, res) => {
     if (startDate) filter.date.$gte = new Date(startDate);
     if (endDate)   filter.date.$lte = new Date(new Date(endDate).setHours(23, 59, 59));
   }
-  if (search) filter.title = { $regex: search.trim(), $options: "i" };
+  if (search) filter.title = { $regex: escapeRegex(search.trim()), $options: "i" };
 
   const skip = (Number(page) - 1) * Number(limit);
   const [records, total] = await Promise.all([

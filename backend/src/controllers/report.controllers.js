@@ -140,8 +140,13 @@ export const createReport = async (req, res, next) => {
 
 export const deleteReport = async (req, res, next) => {
   try {
-    const deleted = await Report.findByIdAndDelete(req.params.id);
-    if (!deleted) throw new ApiError(404, "Report not found");
+    const report = await Report.findById(req.params.id);
+    if (!report) throw new ApiError(404, "Report not found");
+    // School Admin is in REPORT_DELETE (report.routes.js) but this had no ownership check at
+    // all — any school's report could be deleted by ID.
+    ensureSchoolAccess(req, report.school);
+
+    await report.deleteOne();
 
     return sendSuccess(res, { message: "Report deleted", data: null });
   } catch (err) {
