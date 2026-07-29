@@ -64,7 +64,7 @@ export function GrantTempAccessSheet({ visible, onDismiss, onCreated }) {
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>USER</Text>
           <FormField label="Search user" value={search} onChangeText={setSearch} style={{ marginBottom: spacing.xs }} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {users.slice(0, 30).map((u) => (
               <Chip key={u._id} selected={u._id === userId} onPress={() => setUserId(u._id)}>
                 {u.name}
@@ -73,7 +73,7 @@ export function GrantTempAccessSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>ROLE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {roles.map((r) => (
               <Chip key={r._id} selected={r._id === roleId} onPress={() => setRoleId(r._id)}>
                 {r.name}
@@ -82,7 +82,7 @@ export function GrantTempAccessSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SCOPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {SCOPE_OPTIONS.map((s) => (
               <Chip key={s.value} selected={s.value === scope} onPress={() => setScope(s.value)}>
                 {s.label}

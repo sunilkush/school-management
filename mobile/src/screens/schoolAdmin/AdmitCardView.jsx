@@ -81,7 +81,7 @@ export function AdmitCardView() {
           emptyIcon="pencil-box-outline"
           emptyLabel="No exams available yet"
         >
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
             {exams.map((e) => (
               <Chip key={e._id} selected={e._id === examId} onPress={() => setExamId(e._id)}>
                 {e.title}

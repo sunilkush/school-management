@@ -37,7 +37,7 @@ export function QuestionBankView() {
       </View>
 
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SUBJECT</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         <Chip selected={!subjectId} onPress={() => setSubjectId(null)}>All</Chip>
         {subjects.map((s) => (
           <Chip key={s._id} selected={s._id === subjectId} onPress={() => setSubjectId(s._id)}>

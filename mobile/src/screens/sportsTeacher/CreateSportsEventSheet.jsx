@@ -53,7 +53,7 @@ export function CreateSportsEventSheet({ visible, onDismiss, onCreated }) {
           {teams.length > 0 && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>TEAM (optional)</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.sm, alignItems: 'center' }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.sm, alignItems: 'center' }}>
                 {teams.map((t) => (
                   <Chip key={t._id} selected={t._id === teamId} onPress={() => setTeamId(t._id === teamId ? null : t._id)}>{t.name}</Chip>
                 ))}

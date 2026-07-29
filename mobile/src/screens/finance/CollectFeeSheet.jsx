@@ -45,7 +45,7 @@ function FeeRow({ fee, onCollected }) {
 
       {fee.status !== 'paid' && (
         <>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.xs, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {PAYMENT_MODES.map((m) => (
               <Chip key={m} compact selected={m === paymentMode} onPress={() => setPaymentMode(m)}>
                 {m.replace('_', ' ')}

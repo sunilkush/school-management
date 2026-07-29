@@ -62,7 +62,7 @@ export function CreateSalaryAdvanceSheet({ visible, onDismiss, onCreated }) {
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Salary Advance</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>EMPLOYEE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {employees.map((e) => (
               <Chip key={e._id} selected={e._id === employeeId} onPress={() => setEmployeeId(e._id)}>
                 {e.userId?.name ?? 'Employee'}

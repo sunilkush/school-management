@@ -60,7 +60,7 @@ export function CreateMaintenanceSheet({ visible, onDismiss, onCreated }) {
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Schedule Maintenance</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>VEHICLE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {vehicles.map((v) => (
               <Chip key={v._id} selected={v._id === vehicleId} onPress={() => setVehicleId(v._id)}>
                 {v.busNumber}
@@ -69,7 +69,7 @@ export function CreateMaintenanceSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SERVICE TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {SERVICE_TYPES.map((t) => (
               <Chip key={t} selected={t === serviceType} onPress={() => setServiceType(t)}>
                 {t}

@@ -77,7 +77,7 @@ export function LedgerRecordSheet({ visible, onDismiss, onCreated, categories, e
           <FormField label="Title" value={title} onChangeText={setTitle} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CATEGORY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {categories.map((c) => (
               <Chip key={c} selected={c === category} onPress={() => setCategory(c)}>
                 {c}
@@ -89,7 +89,7 @@ export function LedgerRecordSheet({ visible, onDismiss, onCreated, categories, e
           <FormField label="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>PAYMENT MODE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {PAYMENT_MODES.map((m) => (
               <Chip key={m} selected={m === paymentMode} onPress={() => setPaymentMode(m)}>
                 {paymentModeLabel(m)}

@@ -49,7 +49,7 @@ export function AddManualPaymentSheet({ visible, onDismiss, onCreated }) {
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Add Payment</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>INVOICE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {unpaidInvoices.map((inv) => (
               <Chip key={inv._id} selected={inv._id === invoiceId} onPress={() => setInvoiceId(inv._id)}>
                 {inv.invoiceNumber} · {inv.schoolId?.name}
@@ -61,7 +61,7 @@ export function AddManualPaymentSheet({ visible, onDismiss, onCreated }) {
           <FormField label="Transaction ID (optional)" value={transactionId} onChangeText={setTransactionId} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>PAYMENT MODE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {PAYMENT_MODES.map((m) => (
               <Chip key={m} selected={m === paymentMode} onPress={() => setPaymentMode(m)}>
                 {m}

@@ -140,7 +140,7 @@ function NotificationCard({ item, onPress }) {
 function RolePicker({ selected, onToggle }) {
   const { spacing } = useAppTheme();
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs, alignItems: 'center' }}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.xs, alignItems: 'center' }}>
       {ALL_ROLE_OPTIONS.map((role) => (
         <Chip key={role} compact selected={selected.includes(role)} onPress={() => onToggle(role)}>
           {role}
@@ -219,7 +219,7 @@ function ComposePanel({ onCreated }) {
       </View>
 
       <Text style={[typography.caption, { color: colors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: spacing.sm }]}>Audience</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         {FILTER_OPTIONS.map((opt) => (
           <Chip key={opt.value} selected={level === opt.value} onPress={() => setLevel(opt.value)}>
             {opt.label === 'All' ? 'All Roles & Users' : opt.label}
@@ -394,7 +394,7 @@ export function NotificationsScreen() {
             )}
           </View>
           <SearchField value={search} onChangeText={setSearch} placeholder="Search notifications" style={{ marginBottom: spacing.sm }} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.xs, alignItems: 'center' }}>
             {FILTER_OPTIONS.map((opt) => (
               <Chip key={opt.value} selected={filterLevel === opt.value} onPress={() => setFilterLevel(opt.value)} compact>
                 {opt.label}

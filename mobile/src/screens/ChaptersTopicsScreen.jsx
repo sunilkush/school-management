@@ -48,7 +48,7 @@ export function ChaptersTopicsScreen() {
 
       <QueryState isLoading={boardsQuery.isLoading} isError={boardsQuery.isError} error={boardsQuery.error} onRetry={boardsQuery.refetch} isEmpty={boards.length === 0} emptyIcon="certificate-outline" emptyLabel="No boards found — create one first">
         <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>BOARD</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           {boards.map((b) => (
             <Chip key={b._id} selected={b._id === boardId} onPress={() => { setBoardId(b._id); setBoardClassId(null); }}>
               {b.name}
@@ -59,7 +59,7 @@ export function ChaptersTopicsScreen() {
         {boardId && boardClasses.length > 0 && (
           <>
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>CLASS</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
               {boardClasses.map((bc) => (
                 <Chip key={bc._id} selected={bc._id === boardClassId} onPress={() => setBoardClassId(bc._id)}>
                   {bc.classId?.name ?? bc.name}
@@ -72,7 +72,7 @@ export function ChaptersTopicsScreen() {
         {boardClassId && subjects.length > 0 && (
           <>
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SUBJECT (optional)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
               <Chip selected={!subjectId} onPress={() => setSubjectId(null)}>
                 All Subjects
               </Chip>

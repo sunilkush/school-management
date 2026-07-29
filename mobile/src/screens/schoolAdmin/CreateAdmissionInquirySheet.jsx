@@ -71,7 +71,7 @@ export function CreateAdmissionInquirySheet({ visible, onDismiss, onCreated }) {
           <FormField label="Parent Email (optional)" value={parentEmail} onChangeText={setParentEmail} autoCapitalize="none" keyboardType="email-address" disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>RELATIONSHIP</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {RELATIONSHIPS.map((r) => (
               <Chip key={r} selected={r === relationship} onPress={() => setRelationship(r)}>
                 {r}
@@ -80,7 +80,7 @@ export function CreateAdmissionInquirySheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SOURCE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {SOURCES.map((s) => (
               <Chip key={s} selected={s === source} onPress={() => setSource(s)}>
                 {s.replace('_', ' ')}

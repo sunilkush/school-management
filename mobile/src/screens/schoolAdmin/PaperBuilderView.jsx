@@ -47,7 +47,7 @@ function SectionCard({ sec, totalMarks, onChange, onDelete }) {
       </View>
 
       <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>QUESTION TYPE</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         {QUESTION_TYPES.map((t) => (
           <Chip key={t} selected={t === sec.questionType} onPress={() => onChange({ ...sec, questionType: t })} compact>
             {t}
@@ -152,7 +152,7 @@ export function PaperBuilderView() {
         emptyIcon="pencil-box-outline"
         emptyLabel="No exams available — create one first from Exams"
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
           {exams.map((e) => (
             <Chip key={e._id} selected={e._id === selectedExamId} onPress={() => handleSelectExam(e)}>
               {e.title}

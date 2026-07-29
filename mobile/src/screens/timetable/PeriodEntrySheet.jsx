@@ -90,7 +90,7 @@ export function PeriodEntrySheet({ visible, context, entry, onDismiss, onSaved, 
           {needsTeaching && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SUBJECT</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {subjects.map((s) => (
                   <Chip key={s._id} selected={s._id === subjectId} onPress={() => setSubjectId(s._id)}>
                     {s.name}
@@ -99,7 +99,7 @@ export function PeriodEntrySheet({ visible, context, entry, onDismiss, onSaved, 
               </ScrollView>
 
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>TEACHER</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {teachers.map((t) => (
                   <Chip key={t._id} selected={t._id === teacherId} onPress={() => setTeacherId(t._id)}>
                     {t.name}
@@ -110,7 +110,7 @@ export function PeriodEntrySheet({ visible, context, entry, onDismiss, onSaved, 
           )}
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>ROOM (optional)</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {rooms.map((r) => (
               <Chip key={r._id} selected={r._id === roomId} onPress={() => setRoomId(r._id === roomId ? null : r._id)}>
                 {r.name}

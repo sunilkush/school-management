@@ -52,7 +52,7 @@ export function CreateChapterSheet({ visible, onDismiss, onCreated, boardClassId
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Chapter</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SUBJECT</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {subjects.map((s) => (
               <Chip key={s._id} selected={s._id === subjectId} onPress={() => onSubjectChange(s._id)}>
                 {s.name}

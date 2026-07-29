@@ -73,7 +73,7 @@ export function CreateSubscriptionPlanSheet({ visible, onDismiss, onCreated, pla
           <FormField label="Name" value={name} onChangeText={setName} disabled={saveState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>CATEGORY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {CATEGORIES.map((c) => (
               <Chip key={c} selected={c === category} onPress={() => setCategory(c)}>
                 {c}

@@ -27,7 +27,7 @@ export function QueryState({
 
   if (isLoading) {
     return (
-      <View style={{ padding: spacing.xl }}>
+      <View style={{ padding: spacing.xl, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>{loadingLabel}</Text>
       </View>

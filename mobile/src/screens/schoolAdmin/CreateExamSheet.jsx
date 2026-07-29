@@ -87,7 +87,7 @@ export function CreateExamSheet({ visible, onDismiss, onCreated, classes, academ
           <FormField label="Title" value={title} onChangeText={setTitle} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>EXAM TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {EXAM_TYPES.map((t) => (
               <Chip key={t} selected={t === examType} onPress={() => setExamType(t)}>
                 {t}
@@ -96,7 +96,7 @@ export function CreateExamSheet({ visible, onDismiss, onCreated, classes, academ
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {classes.map((c) => (
               <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); }}>
                 {c.name}
@@ -107,7 +107,7 @@ export function CreateExamSheet({ visible, onDismiss, onCreated, classes, academ
           {sections.length > 0 && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SECTION (optional)</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {sections.map((s) => (
                   <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id === sectionId ? null : s._id)}>
                     {s.name}
@@ -118,7 +118,7 @@ export function CreateExamSheet({ visible, onDismiss, onCreated, classes, academ
           )}
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SUBJECT</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {subjects.map((s) => (
               <Chip key={s._id} selected={s._id === subjectId} onPress={() => setSubjectId(s._id)}>
                 {s.name}

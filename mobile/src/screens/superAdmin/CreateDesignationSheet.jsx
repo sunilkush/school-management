@@ -60,7 +60,7 @@ export function CreateDesignationSheet({ visible, onDismiss, onCreated, designat
           <FormField label="Description (optional)" value={description} onChangeText={setDescription} multiline numberOfLines={2} disabled={saveState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>LEVEL</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {LEVELS.map((l) => (
               <Chip key={l} selected={l === level} onPress={() => setLevel(l)}>
                 {l}
@@ -71,7 +71,7 @@ export function CreateDesignationSheet({ visible, onDismiss, onCreated, designat
           {departments.length > 0 && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>DEPARTMENT (optional)</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {departments.map((d) => (
                   <Chip key={d._id} selected={d._id === departmentId} onPress={() => setDepartmentId(d._id === departmentId ? null : d._id)}>
                     {d.name}

@@ -77,7 +77,7 @@ export function MyClassStudentsView() {
         emptyLabel="You haven't been assigned as a class teacher for any section yet"
       >
         {classTeacherSections.length > 1 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
             {classTeacherSections.map((s) => (
               <Chip key={s.key} selected={s.sectionId === selectedSection?.sectionId} onPress={() => setSectionId(s.sectionId)}>
                 {s.className} · {s.sectionName}

@@ -78,7 +78,7 @@ export function CreateBonusSheet({ visible, onDismiss, onCreated }) {
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Bonus / Incentive</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>EMPLOYEE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {employees.map((e) => (
               <Chip key={e._id} selected={e._id === employeeId} onPress={() => setEmployeeId(e._id)}>
                 {e.userId?.name ?? 'Employee'}
@@ -87,7 +87,7 @@ export function CreateBonusSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {TYPES.map((t) => (
               <Chip key={t.value} selected={t.value === type} onPress={() => setType(t.value)}>
                 {t.label}

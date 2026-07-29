@@ -174,7 +174,7 @@ export function StudentPromotionView() {
           <DirectionLabel color={colors.primary}>From</DirectionLabel>
           <QueryState isLoading={yearsQuery.isLoading} isError={yearsQuery.isError} error={yearsQuery.error} onRetry={yearsQuery.refetch} isEmpty={years.length === 0} emptyIcon="calendar-range-outline" emptyLabel="No academic years found">
             <FieldLabel>Academic Year</FieldLabel>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
               {years.map((y) => (
                 <Chip key={y._id} selected={y._id === fromYearId} onPress={() => { setFromYearId(y._id); setFromClassId(null); setSelectedIds([]); }}>
                   {y.name}
@@ -184,7 +184,7 @@ export function StudentPromotionView() {
             {fromYearId && (
               <>
                 <FieldLabel>Class</FieldLabel>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
                   {fromClasses.map((c) => (
                     <Chip key={c._id} selected={c._id === fromClassId} onPress={() => { setFromClassId(c._id); setSelectedIds([]); }}>
                       {c.name}
@@ -207,7 +207,7 @@ export function StudentPromotionView() {
         <View style={{ backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, padding: spacing.md }}>
           <DirectionLabel color={TO_COLOR}>To</DirectionLabel>
           <FieldLabel>Academic Year</FieldLabel>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {years.filter((y) => y._id !== fromYearId).map((y) => (
               <Chip key={y._id} selected={y._id === toYearId} onPress={() => { setToYearId(y._id); setToClassId(null); setToSectionId(null); }}>
                 {y.name}
@@ -217,7 +217,7 @@ export function StudentPromotionView() {
           {toYearId && (
             <>
               <FieldLabel>Class</FieldLabel>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {toClasses.map((c) => (
                   <Chip key={c._id} selected={c._id === toClassId} onPress={() => { setToClassId(c._id); setToSectionId(null); }}>
                     {c.name}
@@ -229,7 +229,7 @@ export function StudentPromotionView() {
           {toClassId && (
             <QueryState isLoading={false} isError={false} isEmpty={toSections.length === 0} emptyIcon="google-classroom" emptyLabel="No sections in this class">
               <FieldLabel>Section</FieldLabel>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
                 {toSections.map((s) => (
                   <Chip key={s._id} selected={s._id === toSectionId} onPress={() => setToSectionId(s._id)}>
                     {s.name}

@@ -66,7 +66,7 @@ export function CreateTaskSheet({ visible, onDismiss, onCreated }) {
           <FormField label="Due Date (YYYY-MM-DD, optional)" value={dueDate} onChangeText={setDueDate} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>PRIORITY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {PRIORITIES.map((p) => (
               <Chip key={p} selected={p === priority} onPress={() => setPriority(p)}>
                 {p}
