@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Text, TextInput } from 'react-native-paper';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useCreateSportsEventMutation, useGetSportsTeamsQuery } from '../../store/api/apiSlice';
 
@@ -47,6 +47,7 @@ export function CreateSportsEventSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Sports Event</Text>
 

@@ -1529,6 +1529,16 @@ export const apiSlice = createApi({
       query: ({ examId, payload }) => ({ url: `/exams/${examId}`, method: 'put', data: payload }),
       invalidatesTags: ['Exam'],
     }),
+    deleteExam: builder.mutation({
+      query: (examId) => ({ url: `/exams/${examId}`, method: 'delete' }),
+      invalidatesTags: ['Exam'],
+    }),
+    // Dedicated status toggle (PUT /exams/:id/publish, body optional { status: 'draft'|'published' }
+    // defaulting to 'published') — lighter-weight than a full updateExam call just to flip status.
+    publishExam: builder.mutation({
+      query: ({ examId, status }) => ({ url: `/exams/${examId}/publish`, method: 'put', data: status ? { status } : {} }),
+      invalidatesTags: ['Exam'],
+    }),
 
     // Admit Cards — generation is idempotent (returns the existing set if already generated).
     getExamAdmitCards: builder.query({
@@ -2324,6 +2334,8 @@ export const {
   useRegisterEmployeeMutation,
   useCreateExamMutation,
   useUpdateExamMutation,
+  useDeleteExamMutation,
+  usePublishExamMutation,
   useGetExamAdmitCardsQuery,
   useGenerateExamAdmitCardsMutation,
   useGetExamAnalyticsQuery,

@@ -57,29 +57,34 @@ export const lightColors = {
   chartSeries: palette.primary,
 };
 
+// True-black / OLED-style dark theme — pure black at the base (`background`), with two subtle
+// elevation steps above it (`surface`, then `surfaceSoft` for nested content) instead of the
+// previous navy-tinted slate scale. Brand colors (primary/accent/semantic) are kept identical to
+// light mode's `palette` rather than re-hued, so this is a darkness/tone change, not a rebrand —
+// and it happens to fix a pre-existing contrast bug for free: the old primary (#60A5FA, a light
+// blue) paired with white `textOnPrimary` on contained buttons was ~1.9:1 contrast (fails WCAG AA);
+// `palette.primary` (#2563EB) with white gives ~4.9:1.
 export const darkColors = {
-  background: palette.slate[900],
-  backgroundSoft: palette.secondaryLight,
-  surface: palette.secondaryLight,
-  surfaceSoft: palette.slate[800],
-  border: palette.slate[700],
-  borderMuted: palette.slate[800],
-  text: '#F1F5F9',
-  textSecondary: palette.slate[400],
-  textMuted: palette.slate[500],
-  textDisabled: palette.slate[600],
+  background: '#000000',
+  backgroundSoft: '#0A0A0A',
+  surface: '#121212',
+  surfaceSoft: '#1C1C1E',
+  border: '#2C2C2E',
+  borderMuted: '#1C1C1E',
+  text: '#F2F2F2',
+  textSecondary: '#A1A1AA',
+  textMuted: '#71717A',
+  textDisabled: '#48484A',
   textOnPrimary: '#FFFFFF',
-  primary: '#60A5FA',
-  primaryHover: '#3B82F6',
+  primary: palette.primary,
+  primaryHover: palette.primaryHover,
   primaryLight: '#1E3A5F',
-  accent: '#2DD4BF',
-  success: '#4ADE80',
-  warning: '#FBBF24',
-  danger: '#F87171',
-  info: '#60A5FA',
-  // #60A5FA (the dark-mode `primary`) fails the dataviz skill's validator at this surface
-  // (lightness band, `validate_palette.js "#60A5FA" --mode dark`) — this step passes.
-  chartSeries: '#2F6FD6',
+  accent: palette.accent,
+  success: palette.success,
+  warning: palette.warning,
+  danger: palette.danger,
+  info: palette.info,
+  chartSeries: palette.primary,
 };
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 };

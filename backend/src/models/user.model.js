@@ -66,6 +66,16 @@ const userSchema = new Schema(
         ref:"School",
     },
 
+    // registerUser has passed this to User.create() since academic-year scoping was added, but
+    // with no schema path declared here Mongoose's default strict mode silently dropped it on
+    // every save — every user in the database had it missing, which cascades into every screen
+    // (mobile and web) that gates a query on `user.academicYear` being present at login.
+    academicYearId: {
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null,
+    },
+
     // 🔹 Status
     isActive: {
       type: Boolean,

@@ -15,7 +15,6 @@ function GroupMenuList({ route, navigation }) {
           key={item.key}
           title={item.label}
           left={(props) => <List.Icon {...props} icon={item.icon} />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate(item.key)}
         />
       ))}

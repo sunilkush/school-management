@@ -53,6 +53,7 @@ export function CanteenOrderSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '88%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Canteen Order</Text>
 

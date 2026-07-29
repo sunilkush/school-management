@@ -4,6 +4,8 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { useAuth } from './useAuth';
 import { useRegisterDeviceTokenMutation, useUnregisterDeviceTokenMutation } from '../store/api/apiSlice';
+import { navigationRef } from '../navigation/navigationRef';
+import { navigateToNavItem } from '../navigation/navigateToNavItem';
 
 // Without this, a push that arrives while the app is in the foreground is delivered to JS but
 // never surfaced — expo-notifications only auto-presents a system notification for background/
@@ -29,7 +31,7 @@ Notifications.setNotificationHandler({
  * regardless of the try/catch below. Skip the whole path under Expo Go so that never fires.
  */
 export function usePushRegistration() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, role, permissions } = useAuth();
   const [registerDeviceToken] = useRegisterDeviceTokenMutation();
   const [unregisterDeviceToken] = useUnregisterDeviceTokenMutation();
   const tokenRef = useRef(null);
@@ -75,4 +77,27 @@ export function usePushRegistration() {
       }
     };
   }, [isAuthenticated, registerDeviceToken, unregisterDeviceToken]);
+
+  // Routes a tapped push to the Notifications screen — every push this app sends originates from
+  // the Notification model (see notification.controllers.js's sendPushToUsers call), so that's the
+  // one real "deep link" destination that matters, not a per-notification-type path. Covers both
+  // ways a tap can reach the app: already running (the live listener) and cold-started by the tap
+  // itself (getLastNotificationResponseAsync, checked once on mount). Uses navigationRef instead of
+  // a screen's own `navigation` prop since this listener lives outside the component tree and can
+  // fire before any screen has mounted.
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    const routeToNotifications = () => {
+      if (!navigationRef.isReady()) return;
+      navigateToNavItem(navigationRef, role?.name, permissions, 'Notifications');
+    };
+
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) routeToNotifications();
+    });
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(routeToNotifications);
+    return () => subscription.remove();
+  }, [isAuthenticated, role?.name, permissions]);
 }
