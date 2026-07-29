@@ -94,11 +94,15 @@ export const radii = { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 };
 // _500Medium/_600SemiBold/_700Bold) — RN doesn't synthesize bold/medium faces for custom fonts
 // the way it does for system fonts, so each weight needs its own distinct loaded family name
 // rather than a single family + a `fontWeight` style prop.
+// Every size bumped +2px (line-height along with it, to keep each style's original
+// leading-to-size gap rather than cramping lines together) per a direct request to make app-wide
+// text larger — this scale is the single source every screen's typography.* styles read from, so
+// the change cascades everywhere at once.
 export const typography = {
-  h1: { fontSize: 28, fontWeight: '700', lineHeight: 34, fontFamily: 'Inter_700Bold' },
-  h2: { fontSize: 22, fontWeight: '700', lineHeight: 28, fontFamily: 'Inter_700Bold' },
-  h3: { fontSize: 18, fontWeight: '600', lineHeight: 24, fontFamily: 'Inter_600SemiBold' },
-  body: { fontSize: 15, fontWeight: '400', lineHeight: 22, fontFamily: 'Inter_400Regular' },
-  bodyStrong: { fontSize: 15, fontWeight: '600', lineHeight: 22, fontFamily: 'Inter_600SemiBold' },
-  caption: { fontSize: 12, fontWeight: '500', lineHeight: 16, fontFamily: 'Inter_500Medium' },
+  h1: { fontSize: 30, fontWeight: '700', lineHeight: 36, fontFamily: 'Inter_700Bold' },
+  h2: { fontSize: 24, fontWeight: '700', lineHeight: 30, fontFamily: 'Inter_700Bold' },
+  h3: { fontSize: 20, fontWeight: '600', lineHeight: 26, fontFamily: 'Inter_600SemiBold' },
+  body: { fontSize: 17, fontWeight: '400', lineHeight: 24, fontFamily: 'Inter_400Regular' },
+  bodyStrong: { fontSize: 17, fontWeight: '600', lineHeight: 24, fontFamily: 'Inter_600SemiBold' },
+  caption: { fontSize: 14, fontWeight: '500', lineHeight: 18, fontFamily: 'Inter_500Medium' },
 };

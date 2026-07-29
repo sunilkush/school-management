@@ -80,11 +80,11 @@ export function AppHeader({ navigation, route, options, back }) {
         ) : null}
 
         <Pressable onPress={cycleTheme} hitSlop={8}>
-          <MaterialCommunityIcons name={THEME_ICON[themeMode]} size={20} color={colors.textSecondary} />
+          <MaterialCommunityIcons name={THEME_ICON[themeMode]} size={22} color={colors.textSecondary} />
         </Pressable>
 
         <Pressable onPress={() => navigateToNavItem(navigation, role?.name, permissions, 'Notifications')} hitSlop={8} style={{ position: 'relative' }}>
-          <MaterialCommunityIcons name={unreadCount > 0 ? 'bell' : 'bell-outline'} size={20} color={colors.textSecondary} />
+          <MaterialCommunityIcons name={unreadCount > 0 ? 'bell' : 'bell-outline'} size={22} color={colors.textSecondary} />
           {unreadCount > 0 && (
             <Badge size={14} style={{ position: 'absolute', top: -4, right: -6, backgroundColor: colors.danger }}>
               {unreadCount > 9 ? '9+' : unreadCount}
