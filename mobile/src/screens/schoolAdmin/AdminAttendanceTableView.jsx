@@ -61,7 +61,7 @@ export function AdminAttendanceTableView() {
         </StatGrid>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {ROLE_OPTIONS.map((opt) => (
           <Chip key={opt.label} selected={role === opt.value} onPress={() => setRole(opt.value)}>
             {opt.label}

@@ -57,7 +57,7 @@ export function CreateFeeStructureSheet({ visible, onDismiss, onCreated, classes
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Fee Structure</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {classes.map((c) => (
               <Chip key={c._id} selected={c._id === classId} onPress={() => setClassId(c._id)}>
                 {c.name}
@@ -66,7 +66,7 @@ export function CreateFeeStructureSheet({ visible, onDismiss, onCreated, classes
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>FEE CATEGORY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {feeHeads.map((fh) => (
               <Chip key={fh._id} selected={fh._id === feeHeadId} onPress={() => setFeeHeadId(fh._id)}>
                 {fh.name}
@@ -77,7 +77,7 @@ export function CreateFeeStructureSheet({ visible, onDismiss, onCreated, classes
           <FormField label="Amount" value={amount} onChangeText={setAmount} keyboardType="numeric" style={{ marginTop: spacing.sm }} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>FREQUENCY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {FREQUENCIES.map((f) => (
               <Chip key={f} selected={f === frequency} onPress={() => setFrequency(f)}>
                 {f}

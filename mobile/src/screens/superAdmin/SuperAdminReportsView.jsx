@@ -50,7 +50,7 @@ export function SuperAdminReportsView() {
         </Button>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {TYPES.map((t) => (
           <Chip key={t || 'all'} selected={type === t} onPress={() => setType(t)}>
             {t ?? 'All'}

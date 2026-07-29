@@ -56,7 +56,7 @@ export function CreateFaqSheet({ visible, onDismiss, onCreated, faq }) {
           <FormField label="Answer" value={answer} onChangeText={setAnswer} multiline numberOfLines={4} disabled={saveState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>CATEGORY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {CATEGORIES.map((c) => (
               <Chip key={c} selected={c === category} onPress={() => setCategory(c)}>
                 {c}

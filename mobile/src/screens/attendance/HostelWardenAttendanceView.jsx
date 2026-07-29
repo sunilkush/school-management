@@ -107,7 +107,7 @@ export function HostelWardenAttendanceView() {
         ]}
       />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {SESSIONS.map((s) => (
           <Chip key={s} selected={s === session} onPress={() => setSession(s)}>
             {s}

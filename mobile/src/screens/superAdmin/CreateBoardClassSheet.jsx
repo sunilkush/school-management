@@ -43,7 +43,7 @@ export function CreateBoardClassSheet({ visible, onDismiss, onCreated, boardId }
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Add Class to Board</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {classes.map((c) => (
               <Chip key={c._id} selected={c._id === classId} onPress={() => setClassId(c._id)}>
                 {c.name}

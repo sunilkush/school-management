@@ -33,7 +33,7 @@ export function BoardClassesScreen() {
       </View>
 
       <QueryState isLoading={boardsQuery.isLoading} isError={boardsQuery.isError} error={boardsQuery.error} onRetry={boardsQuery.refetch} isEmpty={boards.length === 0} emptyIcon="certificate-outline" emptyLabel="No boards found — create one first">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
           {boards.map((b) => (
             <Chip key={b._id} selected={b._id === boardId} onPress={() => setBoardId(b._id)}>
               {b.name}

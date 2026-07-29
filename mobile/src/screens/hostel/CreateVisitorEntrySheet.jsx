@@ -62,7 +62,7 @@ export function CreateVisitorEntrySheet({ visible, onDismiss, onCreated }) {
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>STUDENT</Text>
           <FormField label="Search student" value={search} onChangeText={setSearch} style={{ marginBottom: spacing.xs }} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {students.map((row) => (
               <Chip
                 key={row.user?._id}
@@ -82,7 +82,7 @@ export function CreateVisitorEntrySheet({ visible, onDismiss, onCreated }) {
           <FormField label="Visitor Phone" value={visitorPhone} onChangeText={setVisitorPhone} keyboardType="phone-pad" disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>RELATION</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {RELATIONS.map((r) => (
               <Chip key={r} selected={r === relation} onPress={() => setRelation(r)}>
                 {r}

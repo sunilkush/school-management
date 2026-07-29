@@ -93,7 +93,7 @@ export function EvaluationView() {
           emptyIcon="pencil-box-outline"
           emptyLabel="No exams available yet"
         >
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
             {exams.map((e) => (
               <Chip key={e._id} selected={e._id === examId} onPress={() => setExamId(e._id)}>
                 {e.title}

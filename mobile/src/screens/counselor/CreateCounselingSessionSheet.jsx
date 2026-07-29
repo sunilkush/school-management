@@ -68,7 +68,7 @@ export function CreateCounselingSessionSheet({ visible, type, title, issueLabel,
           <FormField label="Duration (minutes)" value={duration} onChangeText={setDuration} keyboardType="number-pad" disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>MOOD (optional)</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {MOODS.map((m) => (
               <Chip key={m} selected={m === mood} onPress={() => setMood(m === mood ? null : m)}>
                 {m}

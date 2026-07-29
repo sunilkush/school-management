@@ -80,7 +80,7 @@ export function IssueBookSheet({ visible, onDismiss, onIssued }) {
           )}
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>BOOK</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {availableBooks.map((b) => (
               <Chip key={b._id} selected={b._id === selectedBookId} onPress={() => setSelectedBookId(b._id)}>
                 {b.title} ({b.availableCopies})

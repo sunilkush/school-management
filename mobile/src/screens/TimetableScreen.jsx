@@ -201,7 +201,7 @@ function PrincipalTimetableView() {
       emptyLabel="No classes found"
     >
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         {classes.map((c) => (
           <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); }}>
             {c.name}
@@ -212,7 +212,7 @@ function PrincipalTimetableView() {
       {sections.length > 0 && (
         <>
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SECTION</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
             {sections.map((s) => (
               <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id)}>
                 {s.name}
@@ -249,25 +249,26 @@ const TEACHER_TIMETABLE_ROLES = new Set(['Teacher', 'Lab Technician', 'Class Tea
 export function TimetableScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const { role } = useAuth();
-  const isBuilder = role?.name === 'School Admin';
 
   return (
     <ScreenContainer scrollable>
       {/* Web's own timetable pages (StudentTimetablePage.jsx etc.) use a plain title+subtitle Card,
           not the full icon-well page header — matched at that same weight here rather than
-          over-decorating a page web itself keeps simple. School Admin's builder gets its own
-          header from SchoolAdminTimetableView, so it's skipped here to avoid a duplicate. */}
-      {!isBuilder && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
-          <IconWell icon="calendar-clock-outline" color={colors.primary} size={44} />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={[typography.h2, { color: colors.text }]}>Timetable</Text>
-            <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
-              {role?.name === 'Student' || role?.name === 'Parent' ? 'Weekly class timetable' : 'Weekly teaching schedule'}
-            </Text>
-          </View>
+          over-decorating a page web itself keeps simple. SchoolAdminTimetableView is just a bare
+          tabbed builder with no header of its own, so it shares this one like every other role. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="calendar-clock-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Timetable</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            {role?.name === 'Student' || role?.name === 'Parent'
+              ? 'Weekly class timetable'
+              : role?.name === 'School Admin'
+                ? 'Manage the school\'s weekly schedule, time slots and rooms'
+                : 'Weekly teaching schedule'}
+          </Text>
         </View>
-      )}
+      </View>
 
       {role?.name === 'Student' && <StudentTimetableView />}
       {TEACHER_TIMETABLE_ROLES.has(role?.name) && <TeacherTimetableView />}

@@ -46,7 +46,7 @@ export function AcademicYearsScreen() {
       </View>
 
       <QueryState isLoading={schoolsQuery.isLoading} isError={schoolsQuery.isError} error={schoolsQuery.error} onRetry={schoolsQuery.refetch} isEmpty={schools.length === 0} emptyIcon="domain" emptyLabel="No schools found">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
           {schools.map((s) => (
             <Chip key={s._id} selected={s._id === schoolId} onPress={() => setSchoolId(s._id)}>
               {s.name}

@@ -37,7 +37,7 @@ export function FinanceSummaryScreen() {
         </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         {YEARS.map((y) => (
           <Chip key={y} selected={y === year} onPress={() => setYear(y)}>
             {y}–{y + 1}
@@ -45,7 +45,7 @@ export function FinanceSummaryScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         <Chip selected={!schoolId} onPress={() => setSchoolId(null)}>
           All Schools
         </Chip>

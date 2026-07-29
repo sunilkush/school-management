@@ -42,7 +42,7 @@ export function FaqsScreen() {
         </View>
       )}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {CATEGORIES.map((c) => (
           <Chip key={c || 'all'} selected={category === c} onPress={() => setCategory(c)}>
             {c ?? 'All'}

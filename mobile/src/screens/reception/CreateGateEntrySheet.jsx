@@ -64,7 +64,7 @@ export function CreateGateEntrySheet({ visible, onDismiss, onCreated }) {
           <FormField label="Vehicle No. (optional)" value={vehicleNo} onChangeText={setVehicleNo} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {TYPES.map((t) => (
               <Chip key={t} selected={t === type} onPress={() => setType(t)}>
                 {t}
@@ -73,7 +73,7 @@ export function CreateGateEntrySheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>GATE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {GATES.map((g) => (
               <Chip key={g} selected={g === gate} onPress={() => setGate(g)}>
                 {g}

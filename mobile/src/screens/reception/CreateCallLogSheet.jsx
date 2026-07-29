@@ -64,7 +64,7 @@ export function CreateCallLogSheet({ visible, onDismiss, onCreated }) {
           <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} multiline numberOfLines={2} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {TYPES.map((t) => (
               <Chip key={t} selected={t === type} onPress={() => setType(t)}>
                 {t}

@@ -67,7 +67,7 @@ export function CreateSchoolSheet({ visible, onDismiss, onCreated }) {
           {plans.length > 0 && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SUBSCRIPTION PLAN (optional)</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {plans.map((p) => (
                   <Chip key={p._id} selected={p._id === planId} onPress={() => setPlanId(p._id === planId ? null : p._id)}>
                     {p.name}

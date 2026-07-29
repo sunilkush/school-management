@@ -1,6 +1,6 @@
 import React from 'react';
-import { Linking } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Linking, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
@@ -36,6 +36,16 @@ export function StudyMaterialsBrowseView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="folder-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Study Materials</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Notes, books and resources for your class
+          </Text>
+        </View>
+      </View>
+
       <QueryState
         isLoading={enrollmentQuery.isLoading || isLoading || isFetching}
         isError={enrollmentQuery.isError || isError}

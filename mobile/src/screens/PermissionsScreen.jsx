@@ -110,7 +110,7 @@ export function PermissionsScreen() {
           <Text style={[typography.bodyStrong, { color: colors.text, marginBottom: spacing.md }]}>Compare Roles</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>BASE ROLE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {roles.map((r) => (
               <Chip key={r._id} selected={r._id === baseRoleId} onPress={() => setBaseRoleId(r._id)}>
                 {r.name}
@@ -119,7 +119,7 @@ export function PermissionsScreen() {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>COMPARE TO</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
             {roles.map((r) => (
               <Chip key={r._id} selected={r._id === compareRoleId} onPress={() => setCompareRoleId(r._id)}>
                 {r.name}

@@ -53,7 +53,7 @@ export function TeacherTimetableView() {
           emptyLabel="No teachers found"
         >
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>TEACHER</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
             {teachers.map((t) => (
               <Chip key={t._id} selected={t._id === teacherId} onPress={() => setTeacherId(t._id)}>
                 {t.name}

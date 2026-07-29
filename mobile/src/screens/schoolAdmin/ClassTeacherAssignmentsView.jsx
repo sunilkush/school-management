@@ -5,9 +5,11 @@ import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
 import { AvatarInitials } from '../../components/ui/AvatarInitials';
+import { IconWell } from '../../components/ui/IconWell';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import {
+  useGetAcademicYearsBySchoolQuery,
   useGetSchoolClassesQuery,
   useGetAllUsersQuery,
   useAssignClassTeacherMutation,
@@ -35,18 +37,25 @@ function compareClassNames(a, b) {
 
 /** Assign (or reassign) a section's class teacher — covers the web sidebar's "Class Teacher
  * Assignments" item via POST /sections/assign-teacher. Pick a class, then a section, then a
- * teacher from the school's teacher directory. */
+ * teacher from the school's teacher directory. Class/section lists are scoped to the school's
+ * active academic year — matching web's fetchActiveAcademicYear behavior — rather than trusting
+ * user.academicYear off the profile, which isn't guaranteed to be the currently-active session and
+ * left the class list unscoped (or scoped to a stale year) when it wasn't. */
 export function ClassTeacherAssignmentsView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+
+  const yearsQuery = useGetAcademicYearsBySchoolQuery(schoolId, { skip: !schoolId });
+  const years = yearsQuery.data ?? [];
+  const activeYear = years.find((y) => y.isActive);
+  const academicYearId = activeYear?._id;
 
   const [classId, setClassId] = useState(null);
   const [sectionId, setSectionId] = useState(null);
   const [snackbar, setSnackbar] = useState('');
 
-  const classesQuery = useGetSchoolClassesQuery({ schoolId, academicYearId }, { skip: !schoolId });
+  const classesQuery = useGetSchoolClassesQuery({ schoolId, academicYearId }, { skip: !schoolId || !academicYearId });
   const classesRaw = classesQuery.data ?? [];
   const classes = useMemo(
     () => [...classesRaw].sort((a, b) => compareClassNames(a.name, b.name)),
@@ -85,17 +94,27 @@ export function ClassTeacherAssignmentsView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="account-tie-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Class Teacher Assignments</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            {activeYear?.name ? `Active session: ${activeYear.name}` : 'Assign a teacher as class in-charge'}
+          </Text>
+        </View>
+      </View>
+
       <QueryState
-        isLoading={classesQuery.isLoading}
-        isError={classesQuery.isError}
-        error={classesQuery.error}
-        onRetry={classesQuery.refetch}
-        isEmpty={classes.length === 0}
+        isLoading={yearsQuery.isLoading || classesQuery.isLoading}
+        isError={yearsQuery.isError || classesQuery.isError}
+        error={yearsQuery.error || classesQuery.error}
+        onRetry={() => { yearsQuery.refetch(); classesQuery.refetch(); }}
+        isEmpty={!yearsQuery.isLoading && (!activeYear || classes.length === 0)}
         emptyIcon="google-classroom"
-        emptyLabel="No classes found"
+        emptyLabel={!activeYear ? 'No active academic year set for this school yet' : 'No classes found for the active academic year'}
       >
         <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           {classes.map((c) => (
             <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); }}>
               {c.name}
@@ -106,7 +125,7 @@ export function ClassTeacherAssignmentsView() {
         {sections.length > 0 && (
           <>
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SECTION</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
               {sections.map((s) => (
                 <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id)}>
                   {s.name}

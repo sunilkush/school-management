@@ -45,7 +45,7 @@ export function DisciplineView() {
 
       <SearchField value={search} onChangeText={setSearch} placeholder="Search by student name" style={{ marginBottom: spacing.sm }} />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         <Chip selected={!severity} onPress={() => setSeverity(null)}>All</Chip>
         {['Minor', 'Moderate', 'Major'].map((s) => (
           <Chip key={s} selected={severity === s} onPress={() => setSeverity(s)}>{s}</Chip>

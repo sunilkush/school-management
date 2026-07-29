@@ -88,7 +88,7 @@ export function PrincipalMarkAttendanceView() {
         emptyLabel="No classes found"
       >
         <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>CLASS</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           {classes.map((c) => (
             <Chip
               key={c._id}
@@ -107,7 +107,7 @@ export function PrincipalMarkAttendanceView() {
         {selectedClass && (
           <>
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.sm }]}>SECTION</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
               {sections.map((s) => (
                 <Chip
                   key={s._id}

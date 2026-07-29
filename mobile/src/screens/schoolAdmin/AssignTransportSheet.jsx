@@ -68,7 +68,7 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated, editing })
           </Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>STUDENT</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {students.map((s) => (
               <Chip key={s._id} selected={s._id === studentEnrollmentId} onPress={() => setStudentEnrollmentId(s._id)}>
                 {s.name}
@@ -77,7 +77,7 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated, editing })
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>ROUTE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {routes.map((r) => (
               <Chip key={r._id} selected={r._id === routeId} onPress={() => setRouteId(r._id)}>
                 {r.name}
@@ -86,7 +86,7 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated, editing })
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>VEHICLE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {vehicles.map((v) => (
               <Chip key={v._id} selected={v._id === vehicleId} onPress={() => setVehicleId(v._id)}>
                 {v.busNumber}

@@ -108,7 +108,7 @@ export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
           <FormField label="Message" value={message} onChangeText={setMessage} multiline numberOfLines={3} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>AUDIENCE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {LEVELS.map((l) => (
               <Chip key={l.value} selected={level === l.value} onPress={() => setLevel(l.value)}>
                 {l.label}
@@ -117,7 +117,7 @@ export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           {level === 'role' && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
               {ROLE_OPTIONS.map((r) => (
                 <Chip key={r} selected={targetRoles.includes(r)} onPress={() => toggleRole(r)}>
                   {r}

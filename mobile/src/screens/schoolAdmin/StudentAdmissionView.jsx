@@ -147,7 +147,7 @@ export function StudentAdmissionView() {
       <Panel>
         <Text style={[typography.bodyStrong, { color: colors.text, marginBottom: spacing.sm }]}>Class</Text>
         <QueryState isLoading={classesQuery.isLoading} isError={classesQuery.isError} error={classesQuery.error} onRetry={classesQuery.refetch} isEmpty={classes.length === 0} emptyIcon="google-classroom" emptyLabel="No classes found">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {classes.map((c) => (
               <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); }}>
                 {c.name}
@@ -155,7 +155,7 @@ export function StudentAdmissionView() {
             ))}
           </ScrollView>
           {sections.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
               {sections.map((s) => (
                 <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id)}>
                   {s.name}

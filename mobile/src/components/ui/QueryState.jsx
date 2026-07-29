@@ -27,7 +27,7 @@ export function QueryState({
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl }}>
+      <View style={{ padding: spacing.xl }}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>{loadingLabel}</Text>
       </View>
@@ -36,7 +36,7 @@ export function QueryState({
 
   if (isError) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl }}>
+      <View style={{ padding: spacing.xl }}>
         <Icon source="alert-circle-outline" size={40} color={colors.danger} />
         <Text style={[typography.bodyStrong, { color: colors.text, marginTop: spacing.md, textAlign: 'center' }]}>
           {error?.message || 'Something went wrong'}
@@ -52,7 +52,7 @@ export function QueryState({
 
   if (isEmpty) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl }}>
+      <View style={{ padding: spacing.xl }}>
         <Icon source={emptyIcon} size={40} color={colors.textMuted} />
         <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md, textAlign: 'center' }]}>
           {emptyLabel}

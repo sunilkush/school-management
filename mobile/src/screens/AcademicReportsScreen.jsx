@@ -42,7 +42,7 @@ export function AcademicReportsScreen() {
 
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>EXAM (optional)</Text>
       <QueryState isLoading={examsQuery.isLoading} isError={examsQuery.isError} error={examsQuery.error} onRetry={examsQuery.refetch} isEmpty={exams.length === 0} emptyIcon="pencil-box-outline" emptyLabel="No exams available yet">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           <Chip selected={!examId} onPress={() => setExamId(null)}>
             All Exams
           </Chip>
@@ -53,7 +53,7 @@ export function AcademicReportsScreen() {
           ))}
         </ScrollView>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
           {TYPE_OPTIONS.map((t) => (
             <Chip key={t || 'all'} selected={type === t} onPress={() => setType(t)}>
               {t ? t[0].toUpperCase() + t.slice(1) : 'All'}

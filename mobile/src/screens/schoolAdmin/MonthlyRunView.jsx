@@ -120,7 +120,7 @@ export function MonthlyRunView() {
               {cycle.status === 'locked' && (
                 <View style={{ marginBottom: spacing.md }}>
                   <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>PAYMENT MODE</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                     {PAYMENT_MODES.map((m) => (
                       <Chip key={m} selected={m === paymentMode} onPress={() => setPaymentMode(m)}>
                         {m}

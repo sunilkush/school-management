@@ -58,7 +58,7 @@ export function TaskManagementView() {
         </Button>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {STATUS_OPTIONS.map((opt) => (
           <Chip key={opt.label} selected={status === opt.value} onPress={() => setStatus(opt.value)}>
             {opt.label}

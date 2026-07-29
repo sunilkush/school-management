@@ -66,7 +66,7 @@ export function CreateHostelComplaintSheet({ visible, onDismiss, onCreated }) {
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>STUDENT</Text>
           <FormField label="Search student" value={search} onChangeText={setSearch} style={{ marginBottom: spacing.xs }} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {students.map((row) => (
               <Chip
                 key={row.user?._id}
@@ -87,7 +87,7 @@ export function CreateHostelComplaintSheet({ visible, onDismiss, onCreated }) {
           <FormField label="Room Number (optional)" value={roomNumber} onChangeText={setRoomNumber} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {TYPES.map((t) => (
               <Chip key={t} selected={t === type} onPress={() => setType(t)}>
                 {t}
@@ -96,7 +96,7 @@ export function CreateHostelComplaintSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>PRIORITY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {PRIORITIES.map((p) => (
               <Chip key={p} selected={p === priority} onPress={() => setPriority(p)}>
                 {p}

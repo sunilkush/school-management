@@ -55,7 +55,7 @@ export function CreateMaintenanceTaskSheet({ visible, onDismiss, onCreated }) {
           <FormField label="Description (optional)" value={description} onChangeText={setDescription} multiline numberOfLines={3} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>PRIORITY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {PRIORITIES.map((p) => (
               <Chip key={p} selected={p === priority} onPress={() => setPriority(p)}>
                 {p}

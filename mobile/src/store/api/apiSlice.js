@@ -432,6 +432,17 @@ export const apiSlice = createApi({
       query: (payload) => ({ url: '/student-portal/teacher/homework', method: 'post', data: payload }),
       invalidatesTags: ['Homework'],
     }),
+    updateTeacherHomework: builder.mutation({
+      // Backend's updateTeacherHomework only reads title/description/dueDate/attachments/status —
+      // schoolClassId/sectionId/subjectId are immutable after creation despite web's edit form
+      // implying otherwise (it submits them, but the controller silently ignores them).
+      query: ({ id, ...payload }) => ({ url: `/student-portal/teacher/homework/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Homework'],
+    }),
+    deleteTeacherHomework: builder.mutation({
+      query: (id) => ({ url: `/student-portal/teacher/homework/${id}`, method: 'delete' }),
+      invalidatesTags: ['Homework'],
+    }),
     getHomeworkSubmissions: builder.query({
       query: (assignmentId) => ({ url: `/student-portal/teacher/homework/${assignmentId}/submissions` }),
       providesTags: ['Homework'],
@@ -2066,6 +2077,8 @@ export const {
   useSubmitHomeworkMutation,
   useGetTeacherHomeworkQuery,
   useCreateTeacherHomeworkMutation,
+  useUpdateTeacherHomeworkMutation,
+  useDeleteTeacherHomeworkMutation,
   useGetHomeworkSubmissionsQuery,
   useGradeSubmissionMutation,
   useGetIncomeRecordsQuery,

@@ -249,7 +249,7 @@ export function CreateUserView() {
           <FormField label="Join Date (YYYY-MM-DD)" value={joinDate} onChangeText={setJoinDate} disabled={submitting} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>EMPLOYMENT TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
             {EMPLOYMENT_TYPES.map((t) => (
               <Chip key={t} selected={t === employmentType} onPress={() => setEmploymentType(t)}>
                 {t}
@@ -300,7 +300,7 @@ export function CreateUserView() {
 
         <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>ROLE</Text>
         <QueryState isLoading={rolesQuery.isLoading} isError={rolesQuery.isError} error={rolesQuery.error} onRetry={rolesQuery.refetch} isEmpty={roles.length === 0} emptyIcon="shield-account-outline" emptyLabel="No roles available">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
             {roles.map((r) => (
               <Chip key={r._id} selected={r._id === roleId} onPress={() => setRoleId(r._id)}>
                 {r.name}

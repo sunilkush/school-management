@@ -52,7 +52,7 @@ export function IdCardsView() {
 
       <SearchField value={search} onChangeText={setSearch} placeholder="Search by name or card no." style={{ marginBottom: spacing.sm }} />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         <Chip selected={!status} onPress={() => setStatus(null)}>All</Chip>
         <Chip selected={status === 'Active'} onPress={() => setStatus('Active')}>Active</Chip>
         <Chip selected={status === 'Inactive'} onPress={() => setStatus('Inactive')}>Inactive</Chip>

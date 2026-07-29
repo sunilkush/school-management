@@ -8,7 +8,7 @@ export function ChildPicker({ children, selectedId, onSelect }) {
   const { spacing } = useAppTheme();
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
       {children.map((child) => (
         <Chip
           key={child._id}

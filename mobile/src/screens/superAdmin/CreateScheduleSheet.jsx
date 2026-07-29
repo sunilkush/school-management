@@ -82,7 +82,7 @@ export function CreateScheduleSheet({ visible, onDismiss, onCreated }) {
           <FormField label="Name" value={name} onChangeText={setName} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {TYPES.map((t) => (
               <Chip key={t} selected={t === type} onPress={() => setType(t)}>
                 {t}
@@ -93,7 +93,7 @@ export function CreateScheduleSheet({ visible, onDismiss, onCreated }) {
           {type === 'school' && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SCHOOL</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {schools.map((s) => (
                   <Chip key={s._id} selected={s._id === schoolId} onPress={() => setSchoolId(s._id)}>
                     {s.name}
@@ -106,7 +106,7 @@ export function CreateScheduleSheet({ visible, onDismiss, onCreated }) {
           {type === 'module' && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>MODULES</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {MODULES.map((m) => (
                   <Chip key={m} selected={modules.includes(m)} onPress={() => toggleModule(m)}>
                     {m.replace('_', ' ')}
@@ -117,7 +117,7 @@ export function CreateScheduleSheet({ visible, onDismiss, onCreated }) {
           )}
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>FREQUENCY</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {FREQUENCIES.map((f) => (
               <Chip key={f} selected={f === frequency} onPress={() => setFrequency(f)}>
                 {f}

@@ -53,7 +53,7 @@ export function VisitorLogScreen() {
         </Button>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {STATUS_OPTIONS.map((s) => (
           <Chip key={s || 'all'} selected={status === s} onPress={() => setStatus(s)}>
             {s ?? 'All'}
