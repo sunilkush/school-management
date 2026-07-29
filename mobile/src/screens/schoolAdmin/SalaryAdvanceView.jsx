@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
 import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { StatusPill } from '../../components/ui/StatusPill';
+import { IconWell } from '../../components/ui/IconWell';
 import { CreateSalaryAdvanceSheet } from './CreateSalaryAdvanceSheet';
 import { formatCurrency, formatDate } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -16,7 +17,7 @@ const STATUS_COLOR = { pending: '#F59E0B', active: '#2563EB', rejected: '#EF4444
 /** Employee salary advance (loan) requests — mirrors
  * frontend/src/pages/School_Admin/Payroll/SalaryAdvance.jsx. */
 export function SalaryAdvanceView() {
-  const { colors, spacing } = useAppTheme();
+  const { colors, typography, spacing } = useAppTheme();
   const [creating, setCreating] = useState(false);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetAdvancesQuery();
@@ -28,6 +29,16 @@ export function SalaryAdvanceView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="cash-fast" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Salary Advances</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Employee salary advance (loan) requests
+          </Text>
+        </View>
+      </View>
+
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
         <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
           New Advance

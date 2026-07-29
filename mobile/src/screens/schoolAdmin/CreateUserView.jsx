@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Button, Chip, SegmentedButtons, Switch, Text } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { FormField } from '../../components/ui/FormField';
+import { IconWell } from '../../components/ui/IconWell';
+import { Panel } from '../../components/ui/Panel';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import {
@@ -22,6 +25,48 @@ const GENDERS = ['Male', 'Female', 'Other'];
 // failed its Mongoose validation on every single submission.
 const EMPLOYMENT_TYPES = ['Permanent', 'Contract', 'Part Time', 'Full Time', 'Intern'];
 const PHONE_PATTERN = /^[0-9]{10,13}$/;
+
+/** Mirrors web's antd <Steps> indicator (RegisterForm.jsx) — a numbered circle per step,
+ * connected by a line, current/completed steps colored in. */
+function StepIndicator({ current, labels }) {
+  const { colors, typography, spacing } = useAppTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg }}>
+      {labels.map((label, i) => {
+        const stepNum = i + 1;
+        const isDone = stepNum < current;
+        const isActive = stepNum === current;
+        const active = isDone || isActive;
+        return (
+          <React.Fragment key={label}>
+            <View style={{ alignItems: 'center', width: 74 }}>
+              <View
+                style={{
+                  width: 28, height: 28, borderRadius: 14,
+                  backgroundColor: active ? colors.primary : colors.surfaceSoft,
+                  borderWidth: 2, borderColor: active ? colors.primary : colors.border,
+                  alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                {isDone ? (
+                  <MaterialCommunityIcons name="check" size={15} color="#fff" />
+                ) : (
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: active ? '#fff' : colors.textMuted }}>{stepNum}</Text>
+                )}
+              </View>
+              <Text style={[typography.caption, { color: isActive ? colors.primary : colors.textMuted, marginTop: 4, textAlign: 'center' }]} numberOfLines={1}>
+                {label}
+              </Text>
+            </View>
+            {i < labels.length - 1 && (
+              <View style={{ flex: 1, height: 2, backgroundColor: stepNum < current ? colors.primary : colors.border, marginBottom: 16 }} />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </View>
+  );
+}
 
 /** Create a new staff user — mirrors web's "Add Staff" flow (RegisterForm.jsx) field-for-field:
  * same 2-screen shape (Account / Employee & Payroll), same 3 backend calls (register the bare
@@ -168,13 +213,16 @@ export function CreateUserView() {
   if (done) {
     return (
       <ScreenContainer scrollable>
-        <Text style={[typography.h3, { color: colors.success, marginBottom: spacing.md }]}>Staff User Created</Text>
-        <Text style={[typography.body, { color: colors.textSecondary, marginBottom: spacing.lg }]}>
-          {name} has been registered, their employee profile created, and a starter payroll structure set up. A verification email has been sent.
-        </Text>
-        <Button mode="contained" onPress={resetAll}>
-          Create Another User
-        </Button>
+        <View style={{ alignItems: 'center', paddingVertical: spacing.xl }}>
+          <IconWell icon="check-circle-outline" color={colors.success} size={64} />
+          <Text style={[typography.h3, { color: colors.success, marginTop: spacing.md, marginBottom: spacing.sm }]}>Staff User Created</Text>
+          <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.lg }]}>
+            {name} has been registered, their employee profile created, and a starter payroll structure set up. A verification email has been sent.
+          </Text>
+          <Button mode="contained" onPress={resetAll}>
+            Create Another User
+          </Button>
+        </View>
       </ScreenContainer>
     );
   }
@@ -182,33 +230,45 @@ export function CreateUserView() {
   if (step === 2) {
     return (
       <ScreenContainer scrollable>
-        <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.md }]}>STEP 2 OF 2 — EMPLOYEE & PAYROLL</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+          <IconWell icon="account-plus-outline" color={colors.primary} size={44} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[typography.h2, { color: colors.text }]}>Create Staff User</Text>
+            <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>Employee profile and payroll setup</Text>
+          </View>
+        </View>
 
-        <Text style={[typography.caption, { color: colors.primary, fontWeight: '700', marginBottom: spacing.sm }]}>EMPLOYEE PROFILE</Text>
-        <FormField label="Phone Number" value={phoneNo} onChangeText={setPhoneNo} keyboardType="phone-pad" disabled={submitting} />
-        <SegmentedButtons value={gender} onValueChange={setGender} style={{ marginBottom: spacing.sm }} buttons={GENDERS.map((g) => ({ value: g, label: g }))} />
-        <FormField label="Department (optional)" value={department} onChangeText={setDepartment} disabled={submitting} />
-        <FormField label="Designation (optional)" value={designation} onChangeText={setDesignation} disabled={submitting} />
-        <FormField label="Join Date (YYYY-MM-DD)" value={joinDate} onChangeText={setJoinDate} disabled={submitting} />
+        <StepIndicator current={2} labels={['Account', 'Employee & Payroll']} />
 
-        <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>EMPLOYMENT TYPE</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
-          {EMPLOYMENT_TYPES.map((t) => (
-            <Chip key={t} selected={t === employmentType} onPress={() => setEmploymentType(t)}>
-              {t}
-            </Chip>
-          ))}
-        </ScrollView>
+        <Panel>
+          <Text style={[typography.bodyStrong, { color: colors.primary, marginBottom: spacing.md }]}>Employee Profile</Text>
+          <FormField label="Phone Number" value={phoneNo} onChangeText={setPhoneNo} keyboardType="phone-pad" disabled={submitting} />
+          <SegmentedButtons value={gender} onValueChange={setGender} style={{ marginBottom: spacing.sm }} buttons={GENDERS.map((g) => ({ value: g, label: g }))} />
+          <FormField label="Department (optional)" value={department} onChangeText={setDepartment} disabled={submitting} />
+          <FormField label="Designation (optional)" value={designation} onChangeText={setDesignation} disabled={submitting} />
+          <FormField label="Join Date (YYYY-MM-DD)" value={joinDate} onChangeText={setJoinDate} disabled={submitting} />
 
-        <Text style={[typography.caption, { color: colors.primary, fontWeight: '700', marginTop: spacing.sm, marginBottom: spacing.sm }]}>PAYROLL SETUP</Text>
-        <FormField label="Basic Salary (₹/month)" value={basicSalary} onChangeText={setBasicSalary} keyboardType="numeric" disabled={submitting} />
-        <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.md }]}>
-          HRA will be auto-calculated as 40% of basic. You can update the full salary structure later from Payroll → Salary Structures.
-        </Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>EMPLOYMENT TYPE</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+            {EMPLOYMENT_TYPES.map((t) => (
+              <Chip key={t} selected={t === employmentType} onPress={() => setEmploymentType(t)}>
+                {t}
+              </Chip>
+            ))}
+          </ScrollView>
+        </Panel>
+
+        <Panel>
+          <Text style={[typography.bodyStrong, { color: colors.primary, marginBottom: spacing.md }]}>Payroll Setup</Text>
+          <FormField label="Basic Salary (₹/month)" value={basicSalary} onChangeText={setBasicSalary} keyboardType="numeric" disabled={submitting} />
+          <Text style={[typography.caption, { color: colors.textMuted }]}>
+            HRA will be auto-calculated as 40% of basic. You can update the full salary structure later from Payroll → Salary Structures.
+          </Text>
+        </Panel>
 
         {error && <Text style={[typography.caption, { color: colors.danger, marginBottom: spacing.sm }]}>{error}</Text>}
 
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl }}>
           <Button mode="outlined" onPress={() => setStep(1)} disabled={submitting} style={{ flex: 1 }}>
             Back
           </Button>
@@ -222,23 +282,33 @@ export function CreateUserView() {
 
   return (
     <ScreenContainer scrollable>
-      <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.md }]}>STEP 1 OF 2 — ACCOUNT</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="account-plus-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Create Staff User</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>Account credentials and role</Text>
+        </View>
+      </View>
 
-      <FormField label="Full Name" value={name} onChangeText={setName} disabled={registerState.isLoading} />
-      <FormField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" disabled={registerState.isLoading} />
-      <FormField label="Password" value={password} onChangeText={setPassword} secureTextEntry disabled={registerState.isLoading} />
-      <FormField label="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry disabled={registerState.isLoading} />
+      <StepIndicator current={1} labels={['Account', 'Employee & Payroll']} />
 
-      <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>ROLE</Text>
-      <QueryState isLoading={rolesQuery.isLoading} isError={rolesQuery.isError} error={rolesQuery.error} onRetry={rolesQuery.refetch} isEmpty={roles.length === 0} emptyIcon="shield-account-outline" emptyLabel="No roles available">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
-          {roles.map((r) => (
-            <Chip key={r._id} selected={r._id === roleId} onPress={() => setRoleId(r._id)}>
-              {r.name}
-            </Chip>
-          ))}
-        </ScrollView>
-      </QueryState>
+      <Panel>
+        <FormField label="Full Name" value={name} onChangeText={setName} disabled={registerState.isLoading} />
+        <FormField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" disabled={registerState.isLoading} />
+        <FormField label="Password" value={password} onChangeText={setPassword} secureTextEntry disabled={registerState.isLoading} />
+        <FormField label="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry disabled={registerState.isLoading} />
+
+        <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>ROLE</Text>
+        <QueryState isLoading={rolesQuery.isLoading} isError={rolesQuery.isError} error={rolesQuery.error} onRetry={rolesQuery.refetch} isEmpty={roles.length === 0} emptyIcon="shield-account-outline" emptyLabel="No roles available">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+            {roles.map((r) => (
+              <Chip key={r._id} selected={r._id === roleId} onPress={() => setRoleId(r._id)}>
+                {r.name}
+              </Chip>
+            ))}
+          </ScrollView>
+        </QueryState>
+      </Panel>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.md, borderRadius: 10, backgroundColor: colors.surfaceSoft, marginBottom: spacing.md }}>
         <View style={{ flex: 1, minWidth: 0 }}>

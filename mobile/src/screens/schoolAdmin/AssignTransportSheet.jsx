@@ -10,7 +10,7 @@ import {
   useSaveTransportAssignmentMutation,
 } from '../../store/api/apiSlice';
 
-export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
+export function AssignTransportSheet({ visible, onDismiss, onCreated, editing }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const [saveAssignment, saveState] = useSaveTransportAssignmentMutation();
 
@@ -30,13 +30,14 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
 
   useEffect(() => {
     if (visible) {
-      setStudentEnrollmentId(null);
-      setRouteId(null);
-      setVehicleId(null);
-      setPickupStop('');
-      setDropStop('');
+      setStudentEnrollmentId(editing?.studentEnrollmentId ?? null);
+      setRouteId(editing?.routeId ?? null);
+      setVehicleId(editing?.vehicleId ?? null);
+      setPickupStop(editing?.pickupStop ?? '');
+      setDropStop(editing?.dropStop ?? '');
       setError(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handleSave = async () => {
@@ -62,7 +63,9 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Assign Transport</Text>
+          <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>
+            {editing ? 'Edit Assignment' : 'Assign Transport'}
+          </Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>STUDENT</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
@@ -101,7 +104,7 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
               Cancel
             </Button>
             <Button mode="contained" onPress={handleSave} loading={saveState.isLoading} disabled={saveState.isLoading} style={{ flex: 1 }}>
-              Save
+              {editing ? 'Update' : 'Save'}
             </Button>
           </View>
         </ScrollView>

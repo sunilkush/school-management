@@ -7,6 +7,7 @@ import { AccentListCard } from '../../components/ui/AccentListCard';
 import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { FormField } from '../../components/ui/FormField';
+import { IconWell } from '../../components/ui/IconWell';
 import { formatDate } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useGetEmployeesQuery, useUpdateEmployeeMutation } from '../../store/api/apiSlice';
@@ -54,6 +55,16 @@ export function DriversView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="account-tie-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Drivers</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Transport department & driver-designation staff roster
+          </Text>
+        </View>
+      </View>
+
       <QueryState
         isLoading={employeesQuery.isLoading}
         isError={employeesQuery.isError}

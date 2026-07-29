@@ -33,6 +33,16 @@ export function ExamManagementView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="pencil-box-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Exam Management</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Create and schedule exams across classes
+          </Text>
+        </View>
+      </View>
+
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
         <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
           New Exam

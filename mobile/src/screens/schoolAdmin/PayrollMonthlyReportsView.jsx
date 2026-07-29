@@ -6,6 +6,7 @@ import { QueryState } from '../../components/ui/QueryState';
 import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { MonthYearPicker } from '../../components/ui/MonthYearPicker';
+import { IconWell } from '../../components/ui/IconWell';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useGetMonthlyPayrollReportQuery } from '../../store/api/apiSlice';
 
@@ -26,6 +27,16 @@ export function PayrollMonthlyReportsView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="chart-box-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Monthly Payroll Report</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Aggregate totals for a generated payroll cycle
+          </Text>
+        </View>
+      </View>
+
       <MonthYearPicker month={month} year={year} onChangeMonth={setMonth} onChangeYear={setYear} />
 
       {notGeneratedYet ? (

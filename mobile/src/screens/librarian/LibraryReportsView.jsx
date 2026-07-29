@@ -5,6 +5,7 @@ import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { Panel } from '../../components/ui/Panel';
+import { IconWell } from '../../components/ui/IconWell';
 import { VerticalBarChart } from '../../components/charts/VerticalBarChart';
 import { formatCurrency } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -56,6 +57,16 @@ export function LibraryReportsView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="chart-bar" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Library Reports</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Collection utilization, circulation and fines
+          </Text>
+        </View>
+      </View>
+
       <QueryState isLoading={isLoading} isError={isError} error={booksQuery.error || issuedQuery.error} onRetry={() => { booksQuery.refetch(); issuedQuery.refetch(); }} isEmpty={false}>
         <View style={{ marginBottom: spacing.lg }}>
           <StatGrid>

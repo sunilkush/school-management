@@ -1,13 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Chip, List, Text } from 'react-native-paper';
+import { Chip, Text } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
 import { QueryState } from '../components/ui/QueryState';
 import { ChildPicker } from '../components/ui/ChildPicker';
+import { IconWell } from '../components/ui/IconWell';
+import { AvatarInitials } from '../components/ui/AvatarInitials';
 import { SchoolAdminTimetableView } from './timetable/SchoolAdminTimetableView';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
-import { groupTimetableByDay, timetableRowSubtitle, timetableRowTitle } from '../utils/timetable';
+import { groupTimetableByDay, timetableRowSubtitle, timetableRowTitle, timetableTypeColor } from '../utils/timetable';
 import {
   useGetChildTimetableQuery,
   useGetClassDetailsQuery,
@@ -17,27 +20,80 @@ import {
   useGetMyTeacherTimetableQuery,
 } from '../store/api/apiSlice';
 
-export function TimetableList({ rows }) {
+const NON_TEACHING_TYPES = new Set(['break', 'lunch', 'assembly']);
+const TODAY_KEY = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
+
+/** Per-entry card — mirrors web's TimetableGrid.jsx TimetableCell colors/content (type-color
+ * accent, teacher-initial circle, room chip) but as a vertical card instead of a grid cell, since
+ * a 7-day-wide table doesn't fit a phone screen; a day-grouped agenda list is the mobile-native
+ * equivalent of the same weekly schedule. */
+function TimetableEntryCard({ row }) {
   const { colors, typography, spacing, radii } = useAppTheme();
+  const color = timetableTypeColor(row.type);
+  const isNonTeaching = NON_TEACHING_TYPES.has(row.type);
+  const teacherName = row.teacherId?.name;
+  const roomName = row.roomId?.name;
+
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        backgroundColor: `${color}10`,
+        borderWidth: 1,
+        borderColor: `${color}35`,
+        borderLeftWidth: 4,
+        borderLeftColor: color,
+        borderRadius: radii.md,
+        padding: spacing.sm,
+        marginBottom: spacing.xs,
+      }}
+    >
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={[typography.bodyStrong, { color, textTransform: isNonTeaching ? 'capitalize' : 'none' }]} numberOfLines={1}>
+          {timetableRowTitle(row)}
+        </Text>
+        <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+          {timetableRowSubtitle(row) || '—'}
+        </Text>
+      </View>
+
+      {!isNonTeaching && teacherName && <AvatarInitials name={teacherName} size={26} />}
+      {roomName && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+          <MaterialCommunityIcons name="door" size={12} color={colors.textMuted} />
+          <Text style={[typography.caption, { color: colors.textMuted }]} numberOfLines={1}>{roomName}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+export function TimetableList({ rows }) {
+  const { colors, typography, spacing } = useAppTheme();
   const days = groupTimetableByDay(rows);
 
   return (
     <QueryState isLoading={false} isError={false} isEmpty={days.length === 0} emptyIcon="calendar-blank-outline" emptyLabel="No timetable published yet">
-      {days.map(({ day, label, rows: dayRows }) => (
-        <View key={day} style={{ marginBottom: spacing.lg }}>
-          <Text style={[typography.bodyStrong, { color: colors.text, marginBottom: spacing.xs }]}>{label}</Text>
-          <List.Section style={{ backgroundColor: colors.surface, borderRadius: radii.md, overflow: 'hidden' }}>
+      {days.map(({ day, label, rows: dayRows }) => {
+        const isToday = day === TODAY_KEY;
+        return (
+          <View key={day} style={{ marginBottom: spacing.lg }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
+              <Text style={[typography.bodyStrong, { color: isToday ? colors.primary : colors.text }]}>{label}</Text>
+              {isToday && (
+                <View style={{ backgroundColor: `${colors.primary}18`, borderWidth: 1, borderColor: `${colors.primary}40`, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 1 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: colors.primary }}>TODAY</Text>
+                </View>
+              )}
+            </View>
             {dayRows.map((row) => (
-              <List.Item
-                key={row._id}
-                title={timetableRowTitle(row)}
-                description={timetableRowSubtitle(row)}
-                left={(props) => <List.Icon {...props} icon={row.type === 'regular' ? 'book-open-variant' : 'clock-outline'} />}
-              />
+              <TimetableEntryCard key={row._id} row={row} />
             ))}
-          </List.Section>
-        </View>
-      ))}
+          </View>
+        );
+      })}
     </QueryState>
   );
 }
@@ -191,10 +247,28 @@ const HANDLED_ROLES = new Set(['Student', 'Teacher', 'Parent', 'School Admin', '
 const TEACHER_TIMETABLE_ROLES = new Set(['Teacher', 'Lab Technician', 'Class Teacher']);
 
 export function TimetableScreen() {
+  const { colors, typography, spacing } = useAppTheme();
   const { role } = useAuth();
+  const isBuilder = role?.name === 'School Admin';
 
   return (
     <ScreenContainer scrollable>
+      {/* Web's own timetable pages (StudentTimetablePage.jsx etc.) use a plain title+subtitle Card,
+          not the full icon-well page header — matched at that same weight here rather than
+          over-decorating a page web itself keeps simple. School Admin's builder gets its own
+          header from SchoolAdminTimetableView, so it's skipped here to avoid a duplicate. */}
+      {!isBuilder && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+          <IconWell icon="calendar-clock-outline" color={colors.primary} size={44} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[typography.h2, { color: colors.text }]}>Timetable</Text>
+            <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+              {role?.name === 'Student' || role?.name === 'Parent' ? 'Weekly class timetable' : 'Weekly teaching schedule'}
+            </Text>
+          </View>
+        </View>
+      )}
+
       {role?.name === 'Student' && <StudentTimetableView />}
       {TEACHER_TIMETABLE_ROLES.has(role?.name) && <TeacherTimetableView />}
       {role?.name === 'Parent' && <ParentTimetableView />}

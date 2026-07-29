@@ -1,16 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Button, Chip, Modal, Portal, Switch, Text } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FormField } from '../../components/ui/FormField';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useCreateNotificationMutation } from '../../store/api/apiSlice';
+import { ROLE_NAMES } from '../../constants/roles';
 
 const LEVELS = [
   { value: 'all', label: 'Everyone' },
   { value: 'role', label: 'By Role' },
   { value: 'user-level', label: 'By Class/Level' },
+  { value: 'user', label: 'Specific Users' },
 ];
-const ROLE_OPTIONS = ['Teacher', 'Student', 'Parent', 'Accountant', 'Librarian', 'Hostel Warden', 'Transport Manager', 'Receptionist'];
+const ROLE_OPTIONS = Object.values(ROLE_NAMES);
+
+// Same 4 delivery channels the backend model actually stores and dispatches
+// (notification.controllers.js createNotification) — matches web's ChannelToggle exactly.
+const CHANNEL_META = {
+  inApp: { icon: 'bell-outline', label: 'In-App', color: '#2563EB' },
+  email: { icon: 'email-outline', label: 'Email', color: '#16A34A' },
+  sms: { icon: 'message-text-outline', label: 'SMS', color: '#D97706' },
+  whatsapp: { icon: 'whatsapp', label: 'WhatsApp', color: '#25D366' },
+};
 
 export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
@@ -21,8 +33,10 @@ export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
   const [level, setLevel] = useState('all');
   const [targetRoles, setTargetRoles] = useState([]);
   const [targetLevels, setTargetLevels] = useState('');
-  const [channelInApp, setChannelInApp] = useState(true);
-  const [channelEmail, setChannelEmail] = useState(false);
+  const [targetUserIds, setTargetUserIds] = useState('');
+  const [channels, setChannels] = useState({ inApp: true, email: false, sms: false, whatsapp: false });
+  const [scheduledAt, setScheduledAt] = useState('');
+  const [saveAsDraft, setSaveAsDraft] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -32,8 +46,10 @@ export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
       setLevel('all');
       setTargetRoles([]);
       setTargetLevels('');
-      setChannelInApp(true);
-      setChannelEmail(false);
+      setTargetUserIds('');
+      setChannels({ inApp: true, email: false, sms: false, whatsapp: false });
+      setScheduledAt('');
+      setSaveAsDraft(false);
       setError(null);
     }
   }, [visible]);
@@ -41,6 +57,7 @@ export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
   const toggleRole = (role) => {
     setTargetRoles((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]));
   };
+  const toggleChannel = (key) => setChannels((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) {
@@ -55,6 +72,14 @@ export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
       setError('Enter at least one class/level tag');
       return;
     }
+    if (level === 'user' && !targetUserIds.trim()) {
+      setError('Enter at least one target user');
+      return;
+    }
+    if (!Object.values(channels).some(Boolean)) {
+      setError('Select at least one delivery channel');
+      return;
+    }
     try {
       await createNotification({
         title: title.trim(),
@@ -62,8 +87,10 @@ export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
         level,
         targetRoles: level === 'role' ? targetRoles : [],
         targetLevels: level === 'user-level' ? targetLevels.split(',').map((t) => t.trim()).filter(Boolean) : [],
-        channels: { inApp: channelInApp, email: channelEmail },
-        status: 'sent',
+        targetUserIds: level === 'user' ? targetUserIds.split(',').map((t) => t.trim()).filter(Boolean) : [],
+        channels,
+        scheduledAt: scheduledAt.trim() ? new Date(scheduledAt.trim()).toISOString() : null,
+        status: saveAsDraft ? 'draft' : undefined,
       }).unwrap();
       onCreated?.();
     } catch (err) {
@@ -108,13 +135,43 @@ export function ComposeNotificationSheet({ visible, onDismiss, onCreated }) {
             />
           )}
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md }}>
-            <Text style={[typography.body, { color: colors.text }]}>In-App</Text>
-            <Switch value={channelInApp} onValueChange={setChannelInApp} />
+          {level === 'user' && (
+            <FormField
+              label="Target users (emails/reg IDs, comma-separated)"
+              value={targetUserIds}
+              onChangeText={setTargetUserIds}
+              disabled={createState.isLoading}
+            />
+          )}
+
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>DELIVERY CHANNELS</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm }}>
+            {Object.entries(CHANNEL_META).map(([key, meta]) => {
+              const active = channels[key];
+              return (
+                <Chip
+                  key={key}
+                  selected={active}
+                  onPress={() => toggleChannel(key)}
+                  icon={() => <MaterialCommunityIcons name={meta.icon} size={16} color={active ? meta.color : colors.textMuted} />}
+                >
+                  {meta.label}
+                </Chip>
+              );
+            })}
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.xs }}>
-            <Text style={[typography.body, { color: colors.text }]}>Email</Text>
-            <Switch value={channelEmail} onValueChange={setChannelEmail} />
+
+          <FormField
+            label="Schedule (optional, YYYY-MM-DD HH:mm)"
+            placeholder="Leave empty to send immediately"
+            value={scheduledAt}
+            onChangeText={setScheduledAt}
+            disabled={createState.isLoading}
+          />
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md }}>
+            <Text style={[typography.body, { color: colors.text }]}>Save as draft instead of publishing now</Text>
+            <Switch value={saveAsDraft} onValueChange={setSaveAsDraft} />
           </View>
 
           {error && <Text style={[typography.caption, { color: colors.danger, marginTop: spacing.sm }]}>{error}</Text>}

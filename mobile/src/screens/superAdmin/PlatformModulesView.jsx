@@ -53,6 +53,16 @@ export function PlatformModulesView({ navigation }) {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="view-grid-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>All Modules</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Jump straight to any destination your role can reach
+          </Text>
+        </View>
+      </View>
+
       <View style={{ marginBottom: spacing.lg }}>
         <StatGrid>
           <StatCard label="Total Modules" metric={{ icon: 'view-grid-outline', color: colors.primary, value: modules.length }} />

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Button, IconButton } from 'react-native-paper';
+import { Button, IconButton, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
@@ -33,6 +33,16 @@ export function FeeStructuresView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="file-table-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Fee Structures</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Link fee heads to classes with amount and frequency
+          </Text>
+        </View>
+      </View>
+
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
         <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
           New Fee Structure
