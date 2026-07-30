@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Text } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Text } from 'react-native-paper';
 import { FormField } from '../../components/ui/FormField';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useCreateGateEntryMutation } from '../../store/api/apiSlice';
@@ -55,6 +55,7 @@ export function CreateGateEntrySheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Gate Entry</Text>
 
@@ -64,7 +65,7 @@ export function CreateGateEntrySheet({ visible, onDismiss, onCreated }) {
           <FormField label="Vehicle No. (optional)" value={vehicleNo} onChangeText={setVehicleNo} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {TYPES.map((t) => (
               <Chip key={t} selected={t === type} onPress={() => setType(t)}>
                 {t}
@@ -73,7 +74,7 @@ export function CreateGateEntrySheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>GATE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {GATES.map((g) => (
               <Chip key={g} selected={g === gate} onPress={() => setGate(g)}>
                 {g}

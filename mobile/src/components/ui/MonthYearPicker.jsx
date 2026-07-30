@@ -19,7 +19,7 @@ export function MonthYearPicker({ month, year, onChangeMonth, onChangeYear, disa
   return (
     <View style={{ marginBottom: spacing.md }}>
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>MONTH</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         {MONTHS.map((m) => (
           <Chip key={m.value} selected={m.value === month} onPress={() => !disabled && onChangeMonth(m.value)}>
             {m.label}

@@ -10,6 +10,7 @@ import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateVisitorEntrySheet } from './hostel/CreateVisitorEntrySheet';
 import { formatDate } from '../utils/format';
+import { confirmDelete } from '../utils/confirm';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useDeleteVisitorEntryMutation, useGetHostelVisitorsQuery, useMarkVisitorExitMutation } from '../store/api/apiSlice';
 
@@ -23,7 +24,8 @@ export function VisitorLogScreen() {
   const [status, setStatus] = useState(null);
   const [creating, setCreating] = useState(false);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelVisitorsQuery({ status: status || undefined });
+  // Backend default limit=25 with no override would silently truncate the visitor history.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelVisitorsQuery({ status: status || undefined, limit: 500 });
   const visitors = data?.visitors ?? [];
   const [markExit, exitState] = useMarkVisitorExitMutation();
   const [deleteVisitor] = useDeleteVisitorEntryMutation();
@@ -51,7 +53,7 @@ export function VisitorLogScreen() {
         </Button>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {STATUS_OPTIONS.map((s) => (
           <Chip key={s || 'all'} selected={status === s} onPress={() => setStatus(s)}>
             {s ?? 'All'}
@@ -91,7 +93,7 @@ export function VisitorLogScreen() {
                     Mark Exit
                   </Button>
                 )}
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => deleteVisitor(v._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => confirmDelete(() => deleteVisitor(v._id), 'this visitor entry')} />
               </>
             }
           />

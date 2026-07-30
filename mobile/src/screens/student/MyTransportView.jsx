@@ -1,7 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Text } from 'react-native-paper';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -16,17 +15,16 @@ export function MyTransportView() {
   const vehicle = assignment?.vehicleId;
 
   return (
-    <ScreenContainer scrollable>
-      <QueryState
-        isLoading={isLoading || isFetching}
-        isError={isError}
-        error={error}
-        onRetry={refetch}
-        isEmpty={!assignment}
-        emptyIcon="bus-school"
-        emptyLabel="No transport has been assigned to you yet"
-      >
-        {assignment && (
+    <QueryState
+      isLoading={isLoading || isFetching}
+      isError={isError}
+      error={error}
+      onRetry={refetch}
+      isEmpty={!assignment}
+      emptyIcon="bus-school"
+      emptyLabel="No transport has been assigned to you yet"
+    >
+      {assignment && (
           <>
             <View style={{ marginBottom: spacing.lg }}>
               <StatGrid>
@@ -68,9 +66,8 @@ export function MyTransportView() {
                 </Text>
               ))}
             </View>
-          </>
-        )}
-      </QueryState>
-    </ScreenContainer>
+        </>
+      )}
+    </QueryState>
   );
 }

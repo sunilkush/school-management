@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Switch, Text } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Switch, Text } from 'react-native-paper';
 import { FormField } from '../../components/ui/FormField';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useCreateManualBackupMutation, useGetAcademicYearsBySchoolQuery, useGetAllSchoolsQuery } from '../../store/api/apiSlice';
@@ -89,11 +89,12 @@ export function CreateBackupSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Manual Backup</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {TYPES.map((t) => (
               <Chip key={t} selected={t === type} onPress={() => setType(t)}>
                 {t.replace('_', ' ')}
@@ -104,7 +105,7 @@ export function CreateBackupSheet({ visible, onDismiss, onCreated }) {
           {(type === 'school' || type === 'academic_year') && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SCHOOL</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {schools.map((s) => (
                   <Chip key={s._id} selected={s._id === schoolId} onPress={() => { setSchoolId(s._id); setAcademicYearId(null); }}>
                     {s.name}
@@ -117,7 +118,7 @@ export function CreateBackupSheet({ visible, onDismiss, onCreated }) {
           {type === 'academic_year' && schoolId && years.length > 0 && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>ACADEMIC YEAR</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {years.map((y) => (
                   <Chip key={y._id} selected={y._id === academicYearId} onPress={() => setAcademicYearId(y._id)}>
                     {y.name}
@@ -130,7 +131,7 @@ export function CreateBackupSheet({ visible, onDismiss, onCreated }) {
           {type === 'module' && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>MODULES</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {MODULES.map((m) => (
                   <Chip key={m} selected={modules.includes(m)} onPress={() => toggleModule(m)}>
                     {m.replace('_', ' ')}
@@ -141,7 +142,7 @@ export function CreateBackupSheet({ visible, onDismiss, onCreated }) {
           )}
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>STORAGE PROVIDER</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {STORAGE_PROVIDERS.map((p) => (
               <Chip key={p} selected={p === storageProvider} onPress={() => setStorageProvider(p)}>
                 {p}

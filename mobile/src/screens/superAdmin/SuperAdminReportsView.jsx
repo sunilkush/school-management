@@ -8,6 +8,7 @@ import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { CreateReportSheet } from './CreateReportSheet';
 import { formatDate } from '../../utils/format';
+import { confirmDelete } from '../../utils/confirm';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useDeleteReportMutation, useGetDashboardSummaryQuery, useGetReportsQuery } from '../../store/api/apiSlice';
 
@@ -49,7 +50,7 @@ export function SuperAdminReportsView() {
         </Button>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {TYPES.map((t) => (
           <Chip key={t || 'all'} selected={type === t} onPress={() => setType(t)}>
             {t ?? 'All'}
@@ -81,7 +82,7 @@ export function SuperAdminReportsView() {
               { label: 'Data', value: typeof r.data === 'string' ? r.data : JSON.stringify(r.data) },
             ]}
             expandable
-            actions={<IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteReport(r._id)} />}
+            actions={<IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteReport(r._id), 'this report')} />}
           />
         ))}
       </QueryState>

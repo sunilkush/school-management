@@ -2,6 +2,9 @@ import { Designation } from "../models/Designation.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
+
+const isSuperAdmin = (req) => (req.userRole?.name || req.user?.roleId?.name) === "Super Admin";
 
 /* ── CREATE ──────────────────────────────────────────────────────────────── */
 export const createDesignation = asyncHandler(async (req, res) => {
@@ -27,10 +30,16 @@ export const getDesignations = asyncHandler(async (req, res) => {
   const { schoolId, status, level, page = 1, limit = 20, search } = req.query;
 
   const filter = {};
-  if (schoolId) filter.schoolId = schoolId;
+  // Non-Super-Admin is always locked to their own school — leaving this unscoped when
+  // req.query.schoolId is omitted let School Admin list every school's designations.
+  if (isSuperAdmin(req)) {
+    if (schoolId) filter.schoolId = schoolId;
+  } else {
+    filter.schoolId = req.user.schoolId;
+  }
   if (status) filter.status = status;
   if (level) filter.level = level;
-  if (search) filter.title = { $regex: search, $options: "i" };
+  if (search) filter.title = { $regex: escapeRegex(search), $options: "i" };
 
   const skip = (Number(page) - 1) * Number(limit);
   const [designations, total] = await Promise.all([
@@ -50,7 +59,10 @@ export const getDesignations = asyncHandler(async (req, res) => {
 
 /* ── GET BY ID ───────────────────────────────────────────────────────────── */
 export const getDesignationById = asyncHandler(async (req, res) => {
-  const desig = await Designation.findById(req.params.id)
+  // findById had no schoolId scoping at all, despite School Admin (not just Super Admin) being
+  // allowed to call this route — any school's designation could be viewed by ID.
+  const query = isSuperAdmin(req) ? { _id: req.params.id } : { _id: req.params.id, schoolId: req.user.schoolId };
+  const desig = await Designation.findOne(query)
     .populate("departmentId", "name")
     .populate("schoolId", "name");
   if (!desig) throw new ApiError(404, "Designation not found");

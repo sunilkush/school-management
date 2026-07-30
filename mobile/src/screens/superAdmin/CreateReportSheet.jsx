@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Text } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Text } from 'react-native-paper';
 import { FormField } from '../../components/ui/FormField';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useCreateReportMutation, useGetAcademicYearsBySchoolQuery, useGetAllSchoolsQuery } from '../../store/api/apiSlice';
@@ -52,13 +52,14 @@ export function CreateReportSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Report</Text>
 
           <FormField label="Title" value={title} onChangeText={setTitle} disabled={createState.isLoading} />
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {TYPES.map((t) => (
               <Chip key={t} selected={t === type} onPress={() => setType(t)}>
                 {t}
@@ -67,7 +68,7 @@ export function CreateReportSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SCHOOL</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {schools.map((s) => (
               <Chip key={s._id} selected={s._id === schoolId} onPress={() => { setSchoolId(s._id); setSessionId(null); }}>
                 {s.name}
@@ -78,7 +79,7 @@ export function CreateReportSheet({ visible, onDismiss, onCreated }) {
           {schoolId && years.length > 0 && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SESSION (ACADEMIC YEAR)</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {years.map((y) => (
                   <Chip key={y._id} selected={y._id === sessionId} onPress={() => setSessionId(y._id)}>
                     {y.name}

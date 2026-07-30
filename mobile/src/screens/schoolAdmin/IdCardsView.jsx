@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
@@ -16,8 +16,9 @@ const STATUS_COLOR = { Active: '#22C55E', Inactive: '#94A3B8' };
 const fmtDate = (v) => (v ? new Date(v).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
 /** School Admin/Principal/Vice Principal management view — same ID_CARD_ROLES gate as web's
- * idCard.routes.js. Deactivate fires immediately on tap, no confirm dialog — matches this app's
- * own established pattern for destructive actions (see BooksScreen's delete button). */
+ * idCard.routes.js. Deactivation has no reactivate endpoint (a new card must be generated
+ * instead), so it's effectively permanent — confirmed before firing, same as every other
+ * irreversible action in the app. */
 export function IdCardsView() {
   const { colors, typography, spacing } = useAppTheme();
   const [search, setSearch] = useState('');
@@ -28,6 +29,13 @@ export function IdCardsView() {
   const { data, isLoading, isFetching, isError, error, refetch } = useGetIdCardsQuery(params);
   const cards = data?.cards ?? [];
   const [deactivateIdCard, deactivateState] = useDeactivateIdCardMutation();
+
+  const confirmDeactivate = (card) => {
+    Alert.alert('Deactivate ID Card', `Deactivate ${card.cardNumber}? A new card must be generated to replace it.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Deactivate', style: 'destructive', onPress: () => deactivateIdCard(card._id) },
+    ]);
+  };
 
   return (
     <ScreenContainer scrollable>
@@ -44,7 +52,7 @@ export function IdCardsView() {
 
       <SearchField value={search} onChangeText={setSearch} placeholder="Search by name or card no." style={{ marginBottom: spacing.sm }} />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         <Chip selected={!status} onPress={() => setStatus(null)}>All</Chip>
         <Chip selected={status === 'Active'} onPress={() => setStatus('Active')}>Active</Chip>
         <Chip selected={status === 'Inactive'} onPress={() => setStatus('Inactive')}>Inactive</Chip>
@@ -76,7 +84,7 @@ export function IdCardsView() {
             ]}
             expandable
             actions={card.status === 'Active' ? (
-              <Button compact textColor={colors.danger} disabled={deactivateState.isLoading} onPress={() => deactivateIdCard(card._id)}>
+              <Button compact textColor={colors.danger} disabled={deactivateState.isLoading} onPress={() => confirmDeactivate(card)}>
                 Deactivate
               </Button>
             ) : null}

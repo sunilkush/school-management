@@ -43,13 +43,16 @@ export const createFeeHead = asyncHandler(async (req, res) => {
 
 /* ================= GET ================= */
 export const getFeeHeads = asyncHandler(async (req, res) => {
+  const currentRole = req.userRole?.name || req.user?.role;
   const filter = {};
-    if (req.query.schoolId){
-       filter.schoolId = req.query.schoolId;
-    }
+  // Non-Super-Admin is always locked to their own school — leaving this unscoped when
+  // req.query.schoolId is omitted let School Admin/Accountant list every school's fee heads.
+  if (currentRole === "Super Admin") {
+    if (req.query.schoolId) filter.schoolId = req.query.schoolId;
+  } else {
+    filter.schoolId = req.user.schoolId;
+  }
 
-   
-  
   const feeHeads = await FeeHead.find(filter)
     .sort({ createdAt: -1 });
 
@@ -73,10 +76,19 @@ export const getFeeHeadsBySchool = asyncHandler(async (req, res) => {
 
 /* ================= UPDATE ================= */
 export const updateFeeHead = asyncHandler(async (req, res) => {
-    const feeHead = await FeeHead.findById(req.params.id);
+    const currentRole = req.userRole?.name || req.user?.role;
+    // Non-Super-Admin was previously able to update ANY school's fee head by ID — findById had no
+    // schoolId scoping at all despite School Admin/Accountant both being allowed to call this route.
+    const query = currentRole === "Super Admin"
+        ? { _id: req.params.id }
+        : { _id: req.params.id, schoolId: req.user.schoolId };
+    const feeHead = await FeeHead.findOne(query);
     if (!feeHead) throw new ApiError(404, "FeeHead not found");
 
-    Object.assign(feeHead, req.body);
+    // schoolId must not be attacker-settable via the body — Object.assign would otherwise let a
+    // caller reassign their own fee head into another school's namespace.
+    const { schoolId, _id, ...updates } = req.body;
+    Object.assign(feeHead, updates);
     await feeHead.save();
 
     res.status(200).json(new ApiResponse(200, feeHead, "Updated"));
@@ -84,7 +96,12 @@ export const updateFeeHead = asyncHandler(async (req, res) => {
 
 /* ================= DELETE ================= */
 export const deleteFeeHead = asyncHandler(async (req, res) => {
-    await FeeHead.findByIdAndDelete(req.params.id);
+    const currentRole = req.userRole?.name || req.user?.role;
+    const query = currentRole === "Super Admin"
+        ? { _id: req.params.id }
+        : { _id: req.params.id, schoolId: req.user.schoolId };
+    const feeHead = await FeeHead.findOneAndDelete(query);
+    if (!feeHead) throw new ApiError(404, "FeeHead not found");
     res.status(200).json(new ApiResponse(200, null, "Deleted"));
 });
 

@@ -23,7 +23,8 @@ export function LessonPlansView() {
   const classesQuery = useGetAssignedClassesQuery(academicYearId, { skip: !academicYearId });
   const classes = classesQuery.data ?? [];
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetLessonPlansQuery({ academicYearId }, { skip: !academicYearId });
+  // Backend default limit=20 with no override would silently truncate a full year of lesson plans.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetLessonPlansQuery({ academicYearId, limit: 500 }, { skip: !academicYearId });
   const plans = data?.items ?? [];
 
   return (

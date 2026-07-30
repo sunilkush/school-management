@@ -18,7 +18,9 @@ import { useGetCounselingSessionsQuery } from '../../store/api/apiSlice';
 export function CounselorStudentsView() {
   const { colors, typography, spacing } = useAppTheme();
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetCounselingSessionsQuery({});
+  // This whole student list is synthesized client-side by grouping sessions, so a truncated
+  // backend page (default limit=50) would silently drop students, not just old sessions.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetCounselingSessionsQuery({ limit: 500 });
   const sessions = data?.sessions ?? [];
 
   const students = useMemo(() => {

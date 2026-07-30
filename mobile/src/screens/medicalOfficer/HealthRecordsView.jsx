@@ -20,12 +20,7 @@ const fmtDate = (v) => (v ? new Date(v).toLocaleDateString('en-IN', { day: '2-di
 /**
  * Medical Officer's core screen — also read+write for School Admin/Principal/Vice Principal, same
  * HEALTH_ROLES gate as web's healthRecord.routes.js. The visit list (no studentId filter) is the
- * primary view because it's the one Health Records capability Medical Officer can reach without a
- * class/section picker — that picker (inside LogHealthVisitSheet) is gated to School Admin/
- * Principal/Vice Principal/Teacher server-side (GET /school-class/class-detailes, /student/
- * roll-numbers), a real pre-existing gap in the web app's own backend role gates, not something
- * introduced here. Medical Officer will see a clean "can't load" state on that specific action
- * while everything else on this screen — viewing, searching, and updating visits — works fully.
+ * primary view since it needs no class/section picker up front.
  */
 export function HealthRecordsView() {
   const { colors, typography, spacing } = useAppTheme();
@@ -61,7 +56,7 @@ export function HealthRecordsView() {
 
       <SearchField value={search} onChangeText={setSearch} placeholder="Search by student name" style={{ marginBottom: spacing.sm }} />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         <Chip selected={!severity} onPress={() => setSeverity(null)}>All</Chip>
         {['Minor', 'Moderate', 'Severe'].map((s) => (
           <Chip key={s} selected={severity === s} onPress={() => setSeverity(s)}>{s}</Chip>

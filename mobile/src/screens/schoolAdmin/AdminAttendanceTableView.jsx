@@ -6,6 +6,8 @@ import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
 import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { StatusPill } from '../../components/ui/StatusPill';
+import { IconWell } from '../../components/ui/IconWell';
+import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { formatDate, formatDateOnly } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useGetAttendanceRecordsQuery } from '../../store/api/apiSlice';
@@ -39,14 +41,27 @@ export function AdminAttendanceTableView() {
 
   return (
     <ScreenContainer scrollable>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.md }}>
-        <Text style={[typography.body, { color: colors.textSecondary }]}>{formatDate(date)}</Text>
-        <Text style={[typography.bodyStrong, { color: colors.text }]}>
-          {stats.present} present · {stats.absent} absent · {stats.total} total
-        </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="clipboard-check-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Attendance Table</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Browse attendance across students, teachers and staff
+          </Text>
+        </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <Text style={[typography.body, { color: colors.textSecondary, marginBottom: spacing.md }]}>{formatDate(date)}</Text>
+
+      <View style={{ marginBottom: spacing.lg }}>
+        <StatGrid>
+          <StatCard label="Total" metric={{ value: stats.total, icon: 'account-group-outline', color: colors.primary }} />
+          <StatCard label="Present" metric={{ value: stats.present, icon: 'check-circle-outline', color: STATUS_COLOR.present }} />
+          <StatCard label="Absent" metric={{ value: stats.absent, icon: 'close-circle-outline', color: STATUS_COLOR.absent }} />
+        </StatGrid>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {ROLE_OPTIONS.map((opt) => (
           <Chip key={opt.label} selected={role === opt.value} onPress={() => setRole(opt.value)}>
             {opt.label}

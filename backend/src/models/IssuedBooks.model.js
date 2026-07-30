@@ -22,7 +22,7 @@ const issuedBookSchema = new Schema({
 
   status: {
     type: String,
-    enum: ["Issued", "Returned", "Overdue", "Lost"],
+    enum: ["Issued", "Returned", "Overdue", "Lost", "Damaged"],
     default: "Issued",
   },
 

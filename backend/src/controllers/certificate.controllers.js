@@ -6,6 +6,7 @@ import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { School } from "../models/school.model.js";
 import { exportCertificatePdf } from "../utils/exportService.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 import {
   generateNextCertificateNumber,
   getCertificatePrefix,
@@ -160,7 +161,7 @@ export const getCertificates = asyncHandler(async (req, res) => {
     if (to) filter.issueDate.$lte = new Date(to);
   }
   if (search) {
-    const regex = new RegExp(search.trim(), "i");
+    const regex = new RegExp(escapeRegex(search.trim()), "i");
     filter.$or = [{ certificateNumber: regex }, { studentName: regex }];
   }
 

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { List, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
+import { SearchField } from '../../components/ui/SearchField';
+import { IconWell } from '../../components/ui/IconWell';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 
@@ -15,11 +17,16 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 // state instead of mislabeled content.
 const SCHOOL_ADMIN_LIKE_ROLES = new Set(['School Admin', 'Principal', 'Vice Principal']);
 
+// icon/color per section match web's SCHOOL_ADMIN_DOCS exactly (RocketOutlined #2563EB,
+// TeamOutlined #059669, CheckSquareOutlined #D97706, FileTextOutlined #7C3AED, DollarOutlined
+// #DC2626, BarChartOutlined #0891B2).
 const SECTIONS = [
   {
     id: 'overview',
     title: 'Dashboard Overview',
     subtitle: 'Your school management control centre',
+    icon: 'rocket-launch-outline',
+    color: '#2563EB',
     overview:
       'Your dashboard gives you a real-time summary of your school — active students, staff, attendance today, upcoming exams, fee collection status, and quick-action buttons.',
     list: [
@@ -42,6 +49,8 @@ const SECTIONS = [
     id: 'users',
     title: 'User Management',
     subtitle: 'Add and manage all school staff and students',
+    icon: 'account-group-outline',
+    color: '#059669',
     overview:
       'Manage all users in your school from one place. You can register new teachers, students, parents, and support staff, and activate or deactivate accounts.',
     steps: [
@@ -59,6 +68,8 @@ const SECTIONS = [
     id: 'attendance',
     title: 'Attendance Management',
     subtitle: 'Monitor daily attendance across the school',
+    icon: 'calendar-check-outline',
+    color: '#D97706',
     overview:
       'View and manage student and staff attendance. You can see attendance across all classes, correct submitted records, and generate compliance reports.',
     list: [
@@ -73,6 +84,8 @@ const SECTIONS = [
     id: 'exams',
     title: 'Exams & Results',
     subtitle: 'Schedule exams, enter marks, issue report cards',
+    icon: 'file-document-outline',
+    color: '#7C3AED',
     overview:
       'The exam module lets you create exam schedules, assign subjects and invigilators, collect marks from teachers, and generate rank lists and report cards.',
     steps: [
@@ -88,6 +101,8 @@ const SECTIONS = [
     id: 'fees',
     title: 'Fee Management',
     subtitle: 'Structure, collect, and track school fees',
+    icon: 'cash-multiple',
+    color: '#DC2626',
     overview:
       'Configure fee structures per class, track collections, generate receipts, and monitor defaulters. Accountants handle day-to-day collection; you set the structures.',
     list: [
@@ -102,6 +117,8 @@ const SECTIONS = [
     id: 'reports',
     title: 'Reports & Analytics',
     subtitle: 'School performance at a glance',
+    icon: 'chart-bar',
+    color: '#0891B2',
     overview:
       'Access comprehensive reports on attendance trends, exam performance, fee collection, and staff metrics.',
     list: [
@@ -127,9 +144,36 @@ function Bullets({ items, color }) {
   );
 }
 
+/** Numbered step list — mirrors web's StepBlock (a colored numbered circle per step) instead of
+ * plain bullets, since `steps` sections are explicitly sequential how-tos, unlike `list` sections. */
+function Steps({ items, color }) {
+  const { colors, typography, spacing } = useAppTheme();
+  return (
+    <View style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm }}>
+      {items.map((item, i) => (
+        <View key={i} style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+          <View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: `${color}18`, alignItems: 'center', justifyContent: 'center', marginTop: 1 }}>
+            <Text style={{ fontSize: 11, fontWeight: '800', color }}>{i + 1}</Text>
+          </View>
+          <Text style={[typography.body, { color: colors.text, flex: 1 }]}>{item}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function DocumentationView() {
   const { colors, typography, spacing } = useAppTheme();
   const { role } = useAuth();
+  const [search, setSearch] = useState('');
+
+  const filteredSections = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return SECTIONS;
+    return SECTIONS.filter((s) =>
+      `${s.title} ${s.subtitle} ${s.overview}`.toLowerCase().includes(query)
+    );
+  }, [search]);
 
   if (!SCHOOL_ADMIN_LIKE_ROLES.has(role?.name)) {
     return (
@@ -147,34 +191,48 @@ export function DocumentationView() {
 
   return (
     <ScreenContainer scrollable>
-      <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.md }]}>
-        Quick-reference guide for the School Admin role.
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="book-open-page-variant-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Documentation</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Quick-reference guide for the {role?.name} role
+          </Text>
+        </View>
+      </View>
 
-      <List.AccordionGroup>
-        {SECTIONS.map((section) => (
-          <List.Accordion
-            key={section.id}
-            id={section.id}
-            title={section.title}
-            description={section.subtitle}
-            left={(props) => <List.Icon {...props} icon="book-open-variant" />}
-            style={{ backgroundColor: colors.surface, marginBottom: spacing.sm, borderRadius: 12 }}
-          >
-            <Text style={[typography.body, { color: colors.textSecondary, paddingHorizontal: spacing.md, paddingBottom: spacing.sm }]}>
-              {section.overview}
-            </Text>
-            {section.steps && <Bullets items={section.steps} color={colors.text} />}
-            {section.list && <Bullets items={section.list} color={colors.text} />}
-            {section.tips && (
-              <View style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.md }}>
-                <Text style={[typography.caption, { color: colors.primary, fontWeight: '700' }]}>TIPS</Text>
-                <Bullets items={section.tips} color={colors.textMuted} />
-              </View>
-            )}
-          </List.Accordion>
-        ))}
-      </List.AccordionGroup>
+      <SearchField value={search} onChangeText={setSearch} placeholder="Search documentation" style={{ marginBottom: spacing.md }} />
+
+      <QueryState isLoading={false} isError={false} isEmpty={filteredSections.length === 0} emptyIcon="file-search-outline" emptyLabel="No matching topics">
+        <List.AccordionGroup>
+          {filteredSections.map((section) => (
+            <List.Accordion
+              key={section.id}
+              id={section.id}
+              title={section.title}
+              description={section.subtitle}
+              left={() => (
+                <View style={{ marginLeft: spacing.sm }}>
+                  <IconWell icon={section.icon} color={section.color} size={34} />
+                </View>
+              )}
+              style={{ backgroundColor: colors.surface, marginBottom: spacing.sm, borderRadius: 12 }}
+            >
+              <Text style={[typography.body, { color: colors.textSecondary, paddingHorizontal: spacing.md, paddingBottom: spacing.sm }]}>
+                {section.overview}
+              </Text>
+              {section.steps && <Steps items={section.steps} color={section.color} />}
+              {section.list && <Bullets items={section.list} color={colors.text} />}
+              {section.tips && (
+                <View style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.md }}>
+                  <Text style={[typography.caption, { color: colors.primary, fontWeight: '700' }]}>TIPS</Text>
+                  <Bullets items={section.tips} color={colors.textMuted} />
+                </View>
+              )}
+            </List.Accordion>
+          ))}
+        </List.AccordionGroup>
+      </QueryState>
     </ScreenContainer>
   );
 }

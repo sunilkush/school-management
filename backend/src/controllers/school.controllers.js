@@ -7,6 +7,7 @@ import { initializeNewSchool } from "../utils/schoolSetup.js"; // ✅ import set
 import { SubscriptionPlan } from "../models/SubscriptionPlan.model.js";
 import { SchoolSubscription } from '../models/schoolSubscription.model.js';
 import { SchoolBoard } from '../models/School_board.model.js';
+import { escapeRegex } from '../utils/escapeRegex.js';
 
 
 const registerSchool = asyncHandler(async (req, res) => {
@@ -127,7 +128,7 @@ const getAllSchools = asyncHandler(async (req, res) => {
 
   const matchStage = search
     ? {
-        name: { $regex: search, $options: "i" },
+        name: { $regex: escapeRegex(search), $options: "i" },
       }
     : {};
 
@@ -255,7 +256,11 @@ const getAllSchools = asyncHandler(async (req, res) => {
 });
 
 const getSchoolById = asyncHandler(async (req, res) => {
-    const school = await School.findById(req.params.schoolId)
+    // school.routes.js grants this to Student/Teacher too (general "view school profile"), but
+    // the response included the school's own `bank` sub-document (account number, IFSC) with no
+    // restriction — nothing anywhere actually reads school.bank server-side, so it was purely an
+    // unnecessary financial-data leak to every student and teacher in the school.
+    const school = await School.findById(req.params.schoolId).select('-bank')
     if (!school) throw new ApiError(404, 'School not found')
 
     res.status(200).json(

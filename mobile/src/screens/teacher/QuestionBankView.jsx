@@ -19,13 +19,25 @@ export function QuestionBankView() {
   const [subjectId, setSubjectId] = useState(null);
 
   const { data: subjects = [] } = useGetSubjectsQuery();
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetQuestionsQuery({ subjectId: subjectId || undefined });
+  // Backend default limit=10 (the lowest of any list endpoint in the app) with no override meant
+  // any subject with more than 10 questions silently hid the rest.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetQuestionsQuery({ subjectId: subjectId || undefined, limit: 500 });
   const questions = data?.questions ?? [];
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="help-box-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Question Bank</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Browse questions by subject and difficulty
+          </Text>
+        </View>
+      </View>
+
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SUBJECT</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         <Chip selected={!subjectId} onPress={() => setSubjectId(null)}>All</Chip>
         {subjects.map((s) => (
           <Chip key={s._id} selected={s._id === subjectId} onPress={() => setSubjectId(s._id)}>

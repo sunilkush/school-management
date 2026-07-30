@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
 import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { StatusPill } from '../../components/ui/StatusPill';
+import { IconWell } from '../../components/ui/IconWell';
 import { CreateBonusSheet } from './CreateBonusSheet';
 import { formatCurrency } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -20,7 +21,7 @@ const TYPE_LABEL = {
 /** Bonus & incentive payouts (festival, performance, target, etc.) — mirrors
  * frontend/src/pages/School_Admin/Payroll/BonusIncentivePage.jsx. */
 export function BonusIncentivesView() {
-  const { colors, spacing } = useAppTheme();
+  const { colors, typography, spacing } = useAppTheme();
   const [creating, setCreating] = useState(false);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetBonusesQuery();
@@ -31,6 +32,16 @@ export function BonusIncentivesView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="gift-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Bonus & Incentives</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Festival, performance and target-based payouts
+          </Text>
+        </View>
+      </View>
+
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
         <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
           New Bonus

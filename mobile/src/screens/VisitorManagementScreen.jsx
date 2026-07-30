@@ -10,6 +10,7 @@ import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateGateEntrySheet } from './reception/CreateGateEntrySheet';
 import { formatDate } from '../utils/format';
+import { confirmDelete } from '../utils/confirm';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useDeleteGateEntryMutation, useGetGateEntriesQuery, useGetGateEntryStatsQuery, useMarkGateExitMutation } from '../store/api/apiSlice';
 
@@ -25,7 +26,9 @@ export function VisitorManagementScreen() {
   const statsQuery = useGetGateEntryStatsQuery();
   const stats = statsQuery.data ?? {};
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetGateEntriesQuery({});
+  // No date filter applied here (this is the full log, not "today's" view), so the backend's
+  // default limit=50 would silently truncate a busy front desk's history without any override.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetGateEntriesQuery({ limit: 500 });
   const entries = data?.entries ?? [];
   const [markExit, exitState] = useMarkGateExitMutation();
   const [deleteEntry] = useDeleteGateEntryMutation();
@@ -85,7 +88,7 @@ export function VisitorManagementScreen() {
                     Mark Exit
                   </Button>
                 )}
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => deleteEntry(e._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => confirmDelete(() => deleteEntry(e._id), 'this entry')} />
               </>
             }
           />

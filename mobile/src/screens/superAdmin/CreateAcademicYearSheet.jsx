@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Modal, Portal, Text } from 'react-native-paper';
+import { Button, IconButton, Modal, Portal, Text } from 'react-native-paper';
 import { FormField } from '../../components/ui/FormField';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useCreateAcademicYearMutation } from '../../store/api/apiSlice';
@@ -37,6 +37,7 @@ export function CreateAcademicYearSheet({ visible, onDismiss, onCreated, schoolI
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Academic Year</Text>
 

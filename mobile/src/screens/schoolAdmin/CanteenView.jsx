@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { Button, Chip, Text, TextInput } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
@@ -11,6 +11,7 @@ import { StudentPicker } from '../../components/ui/StudentPicker';
 import { CreateCanteenItemSheet } from './CreateCanteenItemSheet';
 import { CanteenOrderSheet } from './CanteenOrderSheet';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import {
   useGetCanteenItemsQuery,
   useDeleteCanteenItemMutation,
@@ -46,7 +47,7 @@ function ItemsTab() {
             title={item.name}
             subtitle={item.category}
             badge={<StatusPill label={`₹${item.price}`} color={colors.primary} />}
-            actions={<Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => deleteItem(item._id)}>Delete</Button>}
+            actions={<Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteItem(item._id), 'this item')}>Delete</Button>}
           />
         ))}
       </QueryState>
@@ -58,9 +59,20 @@ function ItemsTab() {
 function OrdersTab() {
   const { colors, spacing } = useAppTheme();
   const [creating, setCreating] = useState(false);
-  const { data, isLoading, isError, error, refetch } = useGetCanteenOrdersQuery({ limit: 30 });
+  // Backend default limit=20; bumped well past the prior explicit 30 to avoid truncating a busy
+  // canteen's order history.
+  const { data, isLoading, isError, error, refetch } = useGetCanteenOrdersQuery({ limit: 500 });
   const orders = data?.orders ?? [];
   const [cancelOrder, cancelState] = useCancelCanteenOrderMutation();
+
+  // Cancelling refunds the full order amount back to the student's wallet (canteen.controllers.js)
+  // — a real money movement with no "un-cancel" path in this app, so it's confirmed first.
+  const confirmCancel = (order) => {
+    Alert.alert('Cancel & Refund', `Cancel this order and refund ₹${order.totalAmount} to ${order.studentName}'s wallet?`, [
+      { text: 'Keep Order', style: 'cancel' },
+      { text: 'Cancel & Refund', style: 'destructive', onPress: () => cancelOrder(order._id) },
+    ]);
+  };
 
   return (
     <>
@@ -79,7 +91,7 @@ function OrdersTab() {
             meta={(order.items ?? []).map((i) => ({ label: i.name, value: `x${i.quantity} · ₹${i.price * i.quantity}` }))}
             expandable
             actions={order.status !== 'Cancelled' ? (
-              <Button compact textColor={colors.danger} loading={cancelState.isLoading} disabled={cancelState.isLoading} onPress={() => cancelOrder(order._id)}>
+              <Button compact textColor={colors.danger} loading={cancelState.isLoading} disabled={cancelState.isLoading} onPress={() => confirmCancel(order)}>
                 Cancel & Refund
               </Button>
             ) : null}

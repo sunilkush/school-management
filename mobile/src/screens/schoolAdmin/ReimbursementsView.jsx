@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
 import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { StatusPill } from '../../components/ui/StatusPill';
+import { IconWell } from '../../components/ui/IconWell';
 import { CreateReimbursementSheet } from './CreateReimbursementSheet';
 import { formatCurrency, formatDate } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import {
   useApproveFinanceReimbursementMutation,
   useApproveManagerReimbursementMutation,
@@ -30,7 +32,7 @@ const TYPE_LABEL = { travel: 'Travel', fuel: 'Fuel', internet: 'Internet', medic
 /** Employee expense reimbursement claims (two-stage manager-then-finance approval) — mirrors
  * frontend/src/pages/School_Admin/Payroll/ReimbursementsPage.jsx. */
 export function ReimbursementsView() {
-  const { colors, spacing } = useAppTheme();
+  const { colors, typography, spacing } = useAppTheme();
   const [creating, setCreating] = useState(false);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetReimbursementsQuery();
@@ -43,6 +45,16 @@ export function ReimbursementsView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="cash-refund" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Reimbursements</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Employee expense claims and approvals
+          </Text>
+        </View>
+      </View>
+
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
         <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
           New Claim
@@ -94,7 +106,7 @@ export function ReimbursementsView() {
                   </>
                 )}
                 {(r.status === 'pending_manager' || r.status === 'rejected') && (
-                  <Button mode="text" compact textColor={colors.danger} disabled={busy} onPress={() => remove(r._id)}>
+                  <Button mode="text" compact textColor={colors.danger} disabled={busy} onPress={() => confirmDelete(() => remove(r._id), 'this reimbursement')}>
                     Delete
                   </Button>
                 )}

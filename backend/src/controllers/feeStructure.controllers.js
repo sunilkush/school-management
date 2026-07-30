@@ -72,7 +72,10 @@ export const updateFeeStructure = asyncHandler(async (req, res) => {
   const fee = await FeeStructure.findOne(query);
   if (!fee) throw new ApiError(404, "Not found");
 
-  Object.assign(fee, req.body);
+  // schoolId must not be attacker-settable via the body — Object.assign would otherwise let a
+  // caller reassign their own fee structure into another school's namespace.
+  const { schoolId: _schoolId, _id, ...updates } = req.body;
+  Object.assign(fee, updates);
   await fee.save();
 
   res.status(200).json(new ApiResponse(200, fee, "Updated"));

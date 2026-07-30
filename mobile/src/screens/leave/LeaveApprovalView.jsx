@@ -18,7 +18,9 @@ export function LeaveApprovalView() {
   const [statusFilter, setStatusFilter] = useState('pending');
   const [rejecting, setRejecting] = useState(null);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetLeaveRequestsForSchoolQuery({ status: statusFilter || undefined });
+  // Backend default limit=20 with no override would silently truncate once "All" is selected
+  // (the default 'pending' filter is naturally small, but the unfiltered view isn't).
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetLeaveRequestsForSchoolQuery({ status: statusFilter || undefined, limit: 500 });
   const [approveLeaveRequest, approveState] = useApproveLeaveRequestMutation();
   const requests = data?.requests ?? [];
 

@@ -9,6 +9,7 @@ import { sendPushToUsers } from "../utils/pushService.js";
 import { sendWhatsAppToUsers } from "../utils/whatsappServices.js";
 import { sendSmsToUsers } from "../utils/smsServices.js";
 import { sendEmailToUsers } from "../utils/mailServices.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const CREATE_ALLOWED_ROLES = [
   "Super Admin",
@@ -145,13 +146,14 @@ const buildQueryFilter = (req) => {
   if (level && TARGET_LEVELS.includes(level)) filter.level = level;
   if (status && ["draft", "scheduled", "sent"].includes(status)) filter.status = status;
   if (q?.trim()) {
+    const safeQ = escapeRegex(q.trim());
     filter.$and = [
       ...(filter.$and || []),
       {
         $or: [
-          { title: { $regex: q.trim(), $options: "i" } },
-          { message: { $regex: q.trim(), $options: "i" } },
-          { createdBy: { $regex: q.trim(), $options: "i" } },
+          { title: { $regex: safeQ, $options: "i" } },
+          { message: { $regex: safeQ, $options: "i" } },
+          { createdBy: { $regex: safeQ, $options: "i" } },
         ],
       },
     ];
@@ -159,8 +161,6 @@ const buildQueryFilter = (req) => {
 
   return filter;
 };
-
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
  * Turns a Notification's targeting (level/targetRoles/targetUserObjectIds) into a concrete list of

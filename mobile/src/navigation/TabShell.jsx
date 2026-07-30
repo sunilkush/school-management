@@ -42,7 +42,7 @@ function TabLabel({ label, color, focused }) {
     <Text
       numberOfLines={1}
       ellipsizeMode="tail"
-      style={{ fontSize: 10.5, fontWeight: focused ? '700' : '600', color, marginTop: 3, textAlign: 'center', width: '100%' }}
+      style={{ fontSize: 12.5, fontWeight: focused ? '700' : '600', color, marginTop: 3, textAlign: 'center', width: '100%' }}
     >
       {label}
     </Text>
@@ -68,9 +68,9 @@ export function TabShell({ quickItems, moreItems = [] }) {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: BAR_CONTENT_HEIGHT + insets.bottom,
+          height: BAR_CONTENT_HEIGHT + insets.bottom + 5,
           paddingTop: 4,
-          paddingBottom: insets.bottom + 4,
+          paddingBottom: insets.bottom + 9,
         },
         tabBarItemStyle: { paddingHorizontal: 2 },
       }}

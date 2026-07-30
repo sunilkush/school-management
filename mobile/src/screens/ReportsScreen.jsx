@@ -14,6 +14,8 @@ import { SuperAdminReportsView } from './superAdmin/SuperAdminReportsView';
 import { AcademicReportsScreen } from './AcademicReportsScreen';
 import { CounselorReportsView } from './counselor/CounselorReportsView';
 import { TeacherReportsView } from './teacher/TeacherReportsView';
+import { LibraryReportsView } from './librarian/LibraryReportsView';
+import { HostelWardenDashboard } from './HostelScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useGetSchoolReportQuery } from '../store/api/apiSlice';
@@ -190,6 +192,15 @@ export function ReportsScreen() {
   }
   if (role?.name === 'Teacher') {
     return <TeacherReports />;
+  }
+  // Librarian and Hostel Warden both reference this same 'Reports' key in their own NAV_CONFIG
+  // but had no branch here at all — the SCREEN_MAP entry existed, so the tab opened, but every
+  // tap landed on the generic "not available" placeholder below regardless.
+  if (role?.name === 'Librarian') {
+    return <LibraryReportsView />;
+  }
+  if (role?.name === 'Hostel Warden') {
+    return <HostelWardenDashboard />;
   }
 
   return (

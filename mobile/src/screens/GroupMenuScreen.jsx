@@ -15,7 +15,6 @@ function GroupMenuList({ route, navigation }) {
           key={item.key}
           title={item.label}
           left={(props) => <List.Icon {...props} icon={item.icon} />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate(item.key)}
         />
       ))}
@@ -34,10 +33,21 @@ const Stack = createNativeStackNavigator();
 export function GroupMenuScreen({ route }) {
   const children = route.params?.items ?? [];
   const title = route.params?.title ?? 'Menu';
+  // navigateToNavItem passes this when jumping straight to one specific child of the group (e.g.
+  // the header bell targeting 'Notifications' inside the Communication group) — without it, that
+  // param sat unused and every deep-link into a grouped item silently landed on this group's own
+  // list screen instead. Keyed by the target so re-navigating here with a different (or no) target
+  // remounts the stack fresh and honors the new initialRouteName, since React Navigation won't
+  // re-evaluate initialRouteName on an already-mounted navigator.
+  const targetScreen = route.params?.screen;
   const headerOptions = useAppHeaderOptions();
 
   return (
-    <Stack.Navigator screenOptions={{ ...headerOptions, headerShown: true }}>
+    <Stack.Navigator
+      key={targetScreen ?? 'GroupMenuList'}
+      initialRouteName={targetScreen ?? 'GroupMenuList'}
+      screenOptions={{ ...headerOptions, headerShown: true }}
+    >
       <Stack.Screen name="GroupMenuList" component={GroupMenuList} initialParams={{ items: children }} options={{ title }} />
       {children.map((item) => (
         <Stack.Screen

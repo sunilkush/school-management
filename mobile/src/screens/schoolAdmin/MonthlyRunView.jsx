@@ -7,6 +7,7 @@ import { AccentListCard } from '../../components/ui/AccentListCard';
 import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { MonthYearPicker } from '../../components/ui/MonthYearPicker';
+import { IconWell } from '../../components/ui/IconWell';
 import { formatCurrency } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import {
@@ -68,6 +69,16 @@ export function MonthlyRunView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="cash-sync" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Monthly Payroll Run</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Generate, lock and pay the school's monthly payroll cycle
+          </Text>
+        </View>
+      </View>
+
       <MonthYearPicker month={month} year={year} onChangeMonth={setMonth} onChangeYear={setYear} disabled={generateState.isLoading} />
 
       {notGeneratedYet ? (
@@ -109,7 +120,7 @@ export function MonthlyRunView() {
               {cycle.status === 'locked' && (
                 <View style={{ marginBottom: spacing.md }}>
                   <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>PAYMENT MODE</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                     {PAYMENT_MODES.map((m) => (
                       <Chip key={m} selected={m === paymentMode} onPress={() => setPaymentMode(m)}>
                         {m}

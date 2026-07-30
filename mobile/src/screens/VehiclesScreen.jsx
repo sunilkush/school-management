@@ -9,6 +9,7 @@ import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateVehicleSheet } from './transport/CreateVehicleSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteVehicleMutation, useGetVehiclesQuery } from '../store/api/apiSlice';
 
 // backend/src/models/Transport.model.js status enum.
@@ -87,7 +88,7 @@ export function VehiclesScreen() {
                   iconColor={colors.danger}
                   size={18}
                   disabled={deleteState.isLoading}
-                  onPress={() => deleteVehicle(v._id)}
+                  onPress={() => confirmDelete(() => deleteVehicle(v._id), 'this vehicle')}
                 />
               }
             />

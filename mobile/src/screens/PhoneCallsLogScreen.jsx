@@ -10,6 +10,7 @@ import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateCallLogSheet } from './reception/CreateCallLogSheet';
 import { formatDate } from '../utils/format';
+import { confirmDelete } from '../utils/confirm';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useDeleteCallLogMutation, useGetCallLogsQuery } from '../store/api/apiSlice';
 
@@ -21,7 +22,9 @@ export function PhoneCallsLogScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const [creating, setCreating] = useState(false);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetCallLogsQuery({});
+  // Backend default limit=50 with no override would silently truncate the list AND skew the
+  // client-computed stats below (they're derived from `logs`, not a separate server aggregate).
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetCallLogsQuery({ limit: 500 });
   const logs = data?.logs ?? [];
   const [deleteLog] = useDeleteCallLogMutation();
 
@@ -82,7 +85,7 @@ export function PhoneCallsLogScreen() {
               { label: 'Handled By', value: l.handledBy?.name ?? '—' },
             ]}
             expandable
-            actions={<IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => deleteLog(l._id)} />}
+            actions={<IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} onPress={() => confirmDelete(() => deleteLog(l._id), 'this call log')} />}
           />
         ))}
       </QueryState>

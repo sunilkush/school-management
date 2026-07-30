@@ -9,6 +9,7 @@ import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { CreateRoomSheet } from './hostel/CreateRoomSheet';
 import { RoomDetailSheet } from './hostel/RoomDetailSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteHostelRoomMutation, useGetHostelRoomsQuery } from '../store/api/apiSlice';
 
 /** Mirrors frontend/src/pages/School_Admin/Hostel/HostelManagement.jsx (rooms view). Editing a
@@ -91,7 +92,7 @@ export function RoomsScreen() {
                     iconColor={colors.danger}
                     size={18}
                     disabled={deleteState.isLoading}
-                    onPress={() => deleteRoom(r._id)}
+                    onPress={() => confirmDelete(() => deleteRoom(r._id), 'this room')}
                   />
                 </>
               }

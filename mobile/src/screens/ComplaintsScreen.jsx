@@ -25,7 +25,8 @@ export function ComplaintsScreen() {
   const [status, setStatus] = useState(null);
   const [creating, setCreating] = useState(false);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelComplaintsQuery({ status: status || undefined });
+  // Backend default limit=25 with no override would silently truncate the complaint list.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelComplaintsQuery({ status: status || undefined, limit: 500 });
   const complaints = data?.complaints ?? [];
   const summary = data?.summary ?? [];
   const [updateComplaint, updateState] = useUpdateHostelComplaintMutation();
@@ -55,7 +56,7 @@ export function ComplaintsScreen() {
         </Button>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {STATUS_OPTIONS.map((s) => (
           <Chip key={s || 'all'} selected={status === s} onPress={() => setStatus(s)}>
             {s ? s.replace('_', ' ') : 'All'}

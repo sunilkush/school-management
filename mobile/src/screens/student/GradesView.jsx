@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { ExamResultsSection } from '../exams/ExamResultsSection';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -21,7 +20,7 @@ export function GradesView() {
   }, [results]);
 
   return (
-    <ScreenContainer scrollable>
+    <>
       <View style={{ marginBottom: 16 }}>
         <StatGrid>
           <StatCard label="Results" metric={{ label: 'Results', icon: 'file-chart-outline', color: colors.primary, value: stats.total }} />
@@ -31,6 +30,6 @@ export function GradesView() {
       </View>
 
       <ExamResultsSection query={resultsQuery} />
-    </ScreenContainer>
+    </>
   );
 }

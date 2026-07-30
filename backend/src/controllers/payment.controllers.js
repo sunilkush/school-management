@@ -91,6 +91,17 @@ export const createPayment = asyncHandler(async (req, res) => {
   const installment = await ensureInstallmentAccess({ installmentId, schoolId, user: req.user });
   const mode = String(paymentMethod || paymentMode || "cash").toLowerCase();
 
+  // The "cash"/"cheque"/"online" branch below records payment.amount straight from the request
+  // body with no real-money verification (only the razorpay branch cryptographically verifies
+  // anything actually happened). PAYMENT_CREATE_ROLES (payment.routes.js) includes Student/Parent
+  // for self-service online payment, but with no mode restriction either of those roles could
+  // submit a fabricated "cash" payment for their own installment and have it marked paid/partial
+  // without paying anything at all.
+  const selfServiceRoleName = req.user?.roleId?.name?.toLowerCase();
+  if ((selfServiceRoleName === "student" || selfServiceRoleName === "parent") && mode !== "razorpay") {
+    throw new ApiError(403, "Only online payment is available for self-service fee payment");
+  }
+
   if (mode === "razorpay") {
     const dueAmount = installment.amount - installment.paidAmount;
     if (dueAmount <= 0) throw new ApiError(400, "Installment already paid");

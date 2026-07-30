@@ -9,6 +9,7 @@ import { pillStyle } from '../../theme/patterns';
 import { CreateEventSheet } from './CreateEventSheet';
 import { EVENT_TYPES, eventTypeColor } from '../../utils/events';
 import { formatDate } from '../../utils/format';
+import { confirmDelete } from '../../utils/confirm';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useDeleteEventMutation, useGetEventStatsQuery, useGetEventsQuery } from '../../store/api/apiSlice';
 
@@ -89,7 +90,7 @@ export function SchoolAdminEventsView() {
                   iconColor={colors.danger}
                   size={18}
                   disabled={deleteState.isLoading}
-                  onPress={() => deleteEvent(e._id)}
+                  onPress={() => confirmDelete(() => deleteEvent(e._id), 'this event')}
                 />
               }
             />

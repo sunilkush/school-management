@@ -3,6 +3,8 @@ import { ScrollView, View } from 'react-native';
 import { Button, Chip, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
+import { IconWell } from '../../components/ui/IconWell';
+import { Panel } from '../../components/ui/Panel';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { formatDate } from '../../utils/format';
@@ -58,46 +60,59 @@ export function AdmitCardView() {
 
   return (
     <ScreenContainer scrollable>
-      <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>EXAM</Text>
-      <QueryState
-        isLoading={examsQuery.isLoading}
-        isError={examsQuery.isError}
-        error={examsQuery.error}
-        onRetry={examsQuery.refetch}
-        isEmpty={exams.length === 0}
-        emptyIcon="pencil-box-outline"
-        emptyLabel="No exams available yet"
-      >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
-          {exams.map((e) => (
-            <Chip key={e._id} selected={e._id === examId} onPress={() => setExamId(e._id)}>
-              {e.title}
-            </Chip>
-          ))}
-        </ScrollView>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="card-account-details-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Admit Cards</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Generate and preview exam admit cards
+          </Text>
+        </View>
+      </View>
 
-        {examId && (
-          <QueryState
-            isLoading={cardsQuery.isLoading || cardsQuery.isFetching}
-            isError={cardsQuery.isError}
-            error={cardsQuery.error}
-            onRetry={cardsQuery.refetch}
-            isEmpty={cards.length === 0}
-            emptyIcon="card-account-details-outline"
-            emptyLabel="No admit cards generated yet for this exam"
-          >
-            {cards.map((card) => (
-              <AdmitCardPreview key={card._id} card={card} />
+      <Panel>
+        <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>EXAM</Text>
+        <QueryState
+          isLoading={examsQuery.isLoading}
+          isError={examsQuery.isError}
+          error={examsQuery.error}
+          onRetry={examsQuery.refetch}
+          isEmpty={exams.length === 0}
+          emptyIcon="pencil-box-outline"
+          emptyLabel="No exams available yet"
+        >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
+            {exams.map((e) => (
+              <Chip key={e._id} selected={e._id === examId} onPress={() => setExamId(e._id)}>
+                {e.title}
+              </Chip>
             ))}
-          </QueryState>
-        )}
+          </ScrollView>
+        </QueryState>
+      </Panel>
 
-        {examId && cards.length === 0 && (
-          <Button mode="contained" onPress={() => generate(examId)} loading={generateState.isLoading} disabled={generateState.isLoading} style={{ marginTop: spacing.md }}>
-            Generate Admit Cards
-          </Button>
-        )}
-      </QueryState>
+      {examId && (
+        <QueryState
+          isLoading={cardsQuery.isLoading || cardsQuery.isFetching}
+          isError={cardsQuery.isError}
+          error={cardsQuery.error}
+          onRetry={cardsQuery.refetch}
+          isEmpty={cards.length === 0}
+          emptyIcon="card-account-details-outline"
+          emptyLabel="No admit cards generated yet for this exam"
+        >
+          <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>{cards.length} card{cards.length !== 1 ? 's' : ''} generated</Text>
+          {cards.map((card) => (
+            <AdmitCardPreview key={card._id} card={card} />
+          ))}
+        </QueryState>
+      )}
+
+      {examId && cards.length === 0 && (
+        <Button mode="contained" onPress={() => generate(examId)} loading={generateState.isLoading} disabled={generateState.isLoading} style={{ marginTop: spacing.md, marginBottom: spacing.xl }}>
+          Generate Admit Cards
+        </Button>
+      )}
     </ScreenContainer>
   );
 }

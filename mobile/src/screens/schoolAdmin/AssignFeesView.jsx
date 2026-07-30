@@ -3,6 +3,9 @@ import { ScrollView, View } from 'react-native';
 import { Button, Chip, Snackbar, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
+import { IconWell } from '../../components/ui/IconWell';
+import { Panel } from '../../components/ui/Panel';
+import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import {
@@ -72,44 +75,61 @@ export function AssignFeesView() {
 
   return (
     <ScreenContainer scrollable>
-      <QueryState
-        isLoading={classesQuery.isLoading}
-        isError={classesQuery.isError}
-        error={classesQuery.error}
-        onRetry={classesQuery.refetch}
-        isEmpty={classes.length === 0}
-        emptyIcon="google-classroom"
-        emptyLabel="No classes found"
-      >
-        <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
-          {classes.map((c) => (
-            <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); setFeeStructureIds([]); }}>
-              {c.name}
-            </Chip>
-          ))}
-        </ScrollView>
-
-        {sections.length > 0 && (
-          <>
-            <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SECTION (optional)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
-              {sections.map((s) => (
-                <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id === sectionId ? null : s._id)}>
-                  {s.name}
-                </Chip>
-              ))}
-            </ScrollView>
-          </>
-        )}
-
-        {classId && (
-          <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.md }]}>
-            {studentsQuery.isLoading ? 'Loading roster…' : `${roster.length} student(s) in this selection`}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="cash-plus" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Assign Fees</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Bulk-assign a fee structure to a class or section
           </Text>
-        )}
+        </View>
+      </View>
 
-        {classId && (
+      <Panel>
+        <QueryState
+          isLoading={classesQuery.isLoading}
+          isError={classesQuery.isError}
+          error={classesQuery.error}
+          onRetry={classesQuery.refetch}
+          isEmpty={classes.length === 0}
+          emptyIcon="google-classroom"
+          emptyLabel="No classes found"
+        >
+          <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+            {classes.map((c) => (
+              <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); setFeeStructureIds([]); }}>
+                {c.name}
+              </Chip>
+            ))}
+          </ScrollView>
+
+          {sections.length > 0 && (
+            <>
+              <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SECTION (optional)</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
+                {sections.map((s) => (
+                  <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id === sectionId ? null : s._id)}>
+                    {s.name}
+                  </Chip>
+                ))}
+              </ScrollView>
+            </>
+          )}
+        </QueryState>
+      </Panel>
+
+      {classId && (
+        <View style={{ marginBottom: spacing.lg }}>
+          <StatGrid>
+            <StatCard label="Students in Selection" metric={{ value: studentsQuery.isLoading ? '…' : roster.length, icon: 'account-group-outline', color: colors.primary }} />
+            <StatCard label="Structures Selected" metric={{ value: feeStructureIds.length, icon: 'file-table-outline', color: colors.success }} />
+          </StatGrid>
+        </View>
+      )}
+
+      {classId && (
+        <Panel>
           <QueryState
             isLoading={structuresQuery.isLoading}
             isError={structuresQuery.isError}
@@ -122,7 +142,7 @@ export function AssignFeesView() {
             <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>
               FEE STRUCTURES ({feeStructureIds.length} selected)
             </Text>
-            <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
+            <View style={{ gap: spacing.xs }}>
               {structures.map((fs) => (
                 <Chip
                   key={fs._id}
@@ -134,13 +154,15 @@ export function AssignFeesView() {
                 </Chip>
               ))}
             </View>
-
-            <Button mode="contained" onPress={handleAssign} loading={isAssigning} disabled={isAssigning || roster.length === 0}>
-              Assign to {roster.length} Student(s)
-            </Button>
           </QueryState>
-        )}
-      </QueryState>
+        </Panel>
+      )}
+
+      {classId && structures.length > 0 && (
+        <Button mode="contained" onPress={handleAssign} loading={isAssigning} disabled={isAssigning || roster.length === 0} style={{ marginBottom: spacing.xl }}>
+          Assign to {roster.length} Student(s)
+        </Button>
+      )}
 
       <Snackbar visible={!!snackbar} onDismiss={() => setSnackbar('')} duration={3000}>
         {snackbar}

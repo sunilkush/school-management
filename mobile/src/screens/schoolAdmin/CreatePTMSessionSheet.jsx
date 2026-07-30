@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Text, TextInput } from 'react-native-paper';
 import { QueryState } from '../../components/ui/QueryState';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -14,9 +14,9 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /** Class → section picker (no student needed — a PTM session is scheduled for a whole
- * class-section, individual parents book their own slot within it). Same School Admin/Principal/
- * Vice Principal/Teacher-only class list as the other sheets in this batch — Class Teacher is
- * NOT in that endpoint's role gate either, a pre-existing gap noted in DisciplineView. */
+ * class-section, individual parents book their own slot within it). Same class list as the other
+ * sheets in this batch — School Admin/Principal/Vice Principal/Teacher/Class Teacher, matching
+ * ptm.routes.js's own PTM_STAFF_ROLES. */
 export function CreatePTMSessionSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();
@@ -78,6 +78,7 @@ export function CreatePTMSessionSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '88%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New PTM Session</Text>
 
@@ -91,7 +92,7 @@ export function CreatePTMSessionSheet({ visible, onDismiss, onCreated }) {
             emptyLabel="No classes available for your role"
           >
             <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md, alignItems: 'center' }}>
               {classes.map((c) => (
                 <Chip key={c._id} selected={c._id === schoolClassId} onPress={() => { setSchoolClassId(c._id); setSectionId(null); }}>{c.name}</Chip>
               ))}
@@ -100,7 +101,7 @@ export function CreatePTMSessionSheet({ visible, onDismiss, onCreated }) {
             {schoolClassId && (
               <>
                 <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SECTION</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md, alignItems: 'center' }}>
                   {sections.map((s) => {
                     const secId = s.sectionId?._id ?? s.sectionId ?? s._id;
                     const secName = s.sectionId?.name ?? s.name;

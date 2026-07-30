@@ -32,7 +32,12 @@ const userSchema = new Schema(
 
     password: {
       type: String,
-      required: true
+      required: true,
+      // Unlike refreshToken right below (already select: false), this had no default exclusion —
+      // every one of the ~30 User.find/findOne/findById call sites across the controllers had to
+      // remember to .select('-password') themselves to avoid returning the bcrypt hash. Call sites
+      // that actually need to compare it (login, change-password) now use .select('+password').
+      select: false,
     },
 
     roleId: {
@@ -59,6 +64,16 @@ const userSchema = new Schema(
     schoolId:{
         type:Schema.Types.ObjectId,
         ref:"School",
+    },
+
+    // registerUser has passed this to User.create() since academic-year scoping was added, but
+    // with no schema path declared here Mongoose's default strict mode silently dropped it on
+    // every save — every user in the database had it missing, which cascades into every screen
+    // (mobile and web) that gates a query on `user.academicYear` being present at login.
+    academicYearId: {
+      type: Schema.Types.ObjectId,
+      ref: "AcademicYear",
+      default: null,
     },
 
     // 🔹 Status

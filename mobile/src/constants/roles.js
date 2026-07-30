@@ -33,7 +33,7 @@ export const ROLE_NAMES = {
 // without a mobile screen yet still gets a working nav entry; screenForModule.js falls back to
 // ModulePlaceholderScreen for any key not in its SCREEN_MAP, so tapping one is always safe.
 export const MODULE_META = {
-  Dashboard: { label: 'Dashboard', icon: 'view-dashboard-outline' },
+  Dashboard: { label: 'Overview', icon: 'view-dashboard-outline' },
   Schools: { label: 'Schools', icon: 'domain' },
   Users: { label: 'Users', icon: 'account-group-outline' },
   Students: { label: 'Students', icon: 'school-outline' },
@@ -272,7 +272,8 @@ export const NAV_CONFIG = {
       { group: 'Transport', icon: 'bus-school', items: ['Routes', 'Vehicles', 'TransportAssignments'] },
       'Hostel',
       { group: 'Payroll', icon: 'cash-multiple', items: ['CreateEmployee', 'SalaryStructures', 'MonthlyRun', 'PayslipCenter', 'PayrollMonthlyReports', 'SalaryAdvance', 'BonusIncentives', 'Reimbursements'] },
-      'Inventory', 'Communication', 'TaskManagement', 'Reports', 'SchoolSettings',
+      'Inventory', 'TaskManagement', 'Reports', 'SchoolSettings',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Communication', 'Notifications'] },
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
       'Profile',
     ],
@@ -283,6 +284,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'StaffUsers', 'Students', 'AcademicReports', 'Timetable',
       'AttendanceReports', 'MarkAttendance', 'AttendanceTable', 'Exams', 'Library', 'Transport', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },
@@ -291,6 +293,7 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard', 'Timetable', 'Exams', 'StudentAttendance', 'TeacherAttendance', 'AttendanceTable', 'Reports', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },
@@ -342,6 +345,7 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard', 'BookCatalog', 'IssuedBooks', 'Members', 'FineManagement', 'Reports', 'LibrarySettings',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },
@@ -350,6 +354,7 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard', 'Rooms', 'Allocations', 'Leave', 'VisitorLog', 'Complaints', 'Attendance', 'Reports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },
@@ -358,14 +363,16 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard', 'Routes', 'Vehicles', 'Drivers', 'TransportAssignments', 'FuelMaintenance',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },
   [ROLE_NAMES.RECEPTIONIST]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'VisitorManagement', 'Enquiries', 'PhoneCallsLog', 'Broadcasts',
+      'Dashboard', 'VisitorManagement', 'Enquiries', 'PhoneCallsLog',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Broadcasts', 'Notifications'] },
       'Profile',
     ],
   },
@@ -373,11 +380,10 @@ export const NAV_CONFIG = {
     unrestricted: true,
     items: [
       'Dashboard',
-      // 'PaperBuilder' deliberately omitted — confirmed the Exam model has no paperBlueprint
-      // field, so the "paper" a user builds silently vanishes on save under Mongoose's strict
-      // mode (real network calls, no persisted content). Same reason it's still a dangling,
-      // unmapped key for School Admin. Not worth wiring to a screen that would just replicate
-      // that backend bug.
+      // 'PaperBuilder' omitted — the backend gap that originally justified this (Exam.model.js
+      // had no paperBlueprint schema path) is now fixed and School Admin has the real screen
+      // (see screenForModule.js's PaperBuilderView). Not extended to Exam Coordinator in that
+      // same pass since it was out of scope — revisit if this role should get it too.
       { group: 'Exam Operations', icon: 'pencil-box-outline', items: ['Exams', 'CreateExam', 'ExamSchedule', 'QuestionBank', 'AdmitCard', 'SeatPlan', 'GradeEntry', 'ExamAnalytics', 'ExamReports'] },
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
@@ -391,6 +397,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'Subjects', 'Teachers', 'Classes', 'Assessments', 'Reports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },
@@ -405,6 +412,7 @@ export const NAV_CONFIG = {
       // group) listed alongside it rather than re-referencing the same key twice.
       'SupportTickets', 'NetworkStatus', 'SystemLogs', 'Documentation',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },
@@ -414,6 +422,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'StudentProfiles', 'CounselingSessions', 'Appointments', 'Reports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },
@@ -427,6 +436,7 @@ export const NAV_CONFIG = {
       'EntryRegister', 'GateLogs', 'ShiftAttendance', 'EmergencyAlerts',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'Leave',
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications'] },
       'Profile',
     ],
   },

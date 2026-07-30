@@ -8,6 +8,7 @@ import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { MonthYearPicker } from '../../components/ui/MonthYearPicker';
 import { SearchField } from '../../components/ui/SearchField';
+import { IconWell } from '../../components/ui/IconWell';
 import { formatCurrency, formatDate } from '../../utils/format';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useGetPayrollCycleQuery } from '../../store/api/apiSlice';
@@ -36,6 +37,16 @@ export function PayslipCenterView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="file-document-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Payslip Center</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Browse every employee's payslip for a generated cycle
+          </Text>
+        </View>
+      </View>
+
       <MonthYearPicker month={month} year={year} onChangeMonth={setMonth} onChangeYear={setYear} />
 
       {notGeneratedYet ? (

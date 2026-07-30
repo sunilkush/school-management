@@ -9,7 +9,7 @@ import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { CreateAdmissionInquirySheet } from './CreateAdmissionInquirySheet';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useAuth } from '../../hooks/useAuth';
+import { confirmDelete } from '../../utils/confirm';
 import {
   useDeleteAdmissionInquiryMutation,
   useGetAdmissionInquiriesQuery,
@@ -58,7 +58,9 @@ export function AdmissionInquiriesView() {
   const statsQuery = useGetAdmissionInquiryStatsQuery(undefined, { skip: !canViewStats });
   const stats = statsQuery.data ?? {};
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetAdmissionInquiriesQuery({ status: status || undefined });
+  // Backend default limit=20 with no override would silently truncate the inquiry list during a
+  // busy admission season.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetAdmissionInquiriesQuery({ status: status || undefined, limit: 500 });
   const inquiries = data?.inquiries ?? data ?? [];
   const [updateInquiry, updateState] = useUpdateAdmissionInquiryMutation();
   const [deleteInquiry] = useDeleteAdmissionInquiryMutation();
@@ -81,7 +83,7 @@ export function AdmissionInquiriesView() {
         </Button>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         {STATUS_OPTIONS.map((s) => (
           <Chip key={s || 'all'} selected={status === s} onPress={() => setStatus(s)}>
             {s ? s.replace('_', ' ') : 'All'}
@@ -124,7 +126,7 @@ export function AdmissionInquiriesView() {
                 >
                   Advance
                 </Button>
-                <Button size="small" textColor={colors.danger} onPress={() => deleteInquiry(inq._id)}>
+                <Button size="small" textColor={colors.danger} onPress={() => confirmDelete(() => deleteInquiry(inq._id), 'this inquiry')}>
                   Delete
                 </Button>
               </>

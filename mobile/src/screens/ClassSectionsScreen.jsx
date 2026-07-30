@@ -41,7 +41,7 @@ export function ClassSectionsScreen() {
 
       <QueryState isLoading={schoolsQuery.isLoading} isError={schoolsQuery.isError} error={schoolsQuery.error} onRetry={schoolsQuery.refetch} isEmpty={schools.length === 0} emptyIcon="domain" emptyLabel="No schools found">
         <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SCHOOL</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           {schools.map((s) => (
             <Chip key={s._id} selected={s._id === schoolId} onPress={() => { setSchoolId(s._id); setClassId(null); }}>
               {s.name}
@@ -52,7 +52,7 @@ export function ClassSectionsScreen() {
         {schoolId && classes.length > 0 && (
           <>
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>CLASS (optional)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
               <Chip selected={!classId} onPress={() => setClassId(null)}>
                 All Classes
               </Chip>

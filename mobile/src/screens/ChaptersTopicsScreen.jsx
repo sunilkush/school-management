@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateChapterSheet } from './superAdmin/CreateChapterSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteChapterMutation, useGetBoardClassesQuery, useGetBoardsQuery, useGetChaptersQuery, useGetSubjectsQuery } from '../store/api/apiSlice';
 
 /** Board → BoardClass → Subject cascading pickers, then a flat filtered chapter list — a flatter
@@ -47,7 +48,7 @@ export function ChaptersTopicsScreen() {
 
       <QueryState isLoading={boardsQuery.isLoading} isError={boardsQuery.isError} error={boardsQuery.error} onRetry={boardsQuery.refetch} isEmpty={boards.length === 0} emptyIcon="certificate-outline" emptyLabel="No boards found — create one first">
         <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>BOARD</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           {boards.map((b) => (
             <Chip key={b._id} selected={b._id === boardId} onPress={() => { setBoardId(b._id); setBoardClassId(null); }}>
               {b.name}
@@ -58,7 +59,7 @@ export function ChaptersTopicsScreen() {
         {boardId && boardClasses.length > 0 && (
           <>
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>CLASS</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
               {boardClasses.map((bc) => (
                 <Chip key={bc._id} selected={bc._id === boardClassId} onPress={() => setBoardClassId(bc._id)}>
                   {bc.classId?.name ?? bc.name}
@@ -71,7 +72,7 @@ export function ChaptersTopicsScreen() {
         {boardClassId && subjects.length > 0 && (
           <>
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>SUBJECT (optional)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
               <Chip selected={!subjectId} onPress={() => setSubjectId(null)}>
                 All Subjects
               </Chip>
@@ -115,7 +116,7 @@ export function ChaptersTopicsScreen() {
                   ]}
                   expandable
                   actions={
-                    <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteChapter(c._id)} />
+                    <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteChapter(c._id), 'this chapter')} />
                   }
                 />
               ))}

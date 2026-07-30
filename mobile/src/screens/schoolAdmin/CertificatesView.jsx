@@ -45,7 +45,7 @@ export function CertificatesView() {
 
       <SearchField value={search} onChangeText={setSearch} placeholder="Search by student or certificate no." style={{ marginBottom: spacing.sm }} />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
         <Chip selected={!status} onPress={() => setStatus(null)}>All</Chip>
         <Chip selected={status === 'Issued'} onPress={() => setStatus('Issued')}>Issued</Chip>
         <Chip selected={status === 'Revoked'} onPress={() => setStatus('Revoked')}>Revoked</Chip>

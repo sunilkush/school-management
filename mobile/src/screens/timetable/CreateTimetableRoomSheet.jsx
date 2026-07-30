@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Chip, Modal, Portal, Text } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Text } from 'react-native-paper';
 import { FormField } from '../../components/ui/FormField';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { ROOM_TYPES } from '../../utils/timetable';
@@ -42,6 +42,7 @@ export function CreateTimetableRoomSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Room</Text>
 
         <FormField label="Room Name" value={name} onChangeText={setName} disabled={createState.isLoading} />

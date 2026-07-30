@@ -152,7 +152,7 @@ router.delete(
 router.get(
   "/roll-numbers",
   auth,
-  roleMiddleware(["Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher", "Medical Officer"]),
+  roleMiddleware(["Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher", "Class Teacher", "Medical Officer", "Sports Teacher"]),
   getClassRollNumbers
 );
 

@@ -4,6 +4,8 @@ import { Button, Chip, SegmentedButtons, Snackbar, Text } from 'react-native-pap
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { FormField } from '../../components/ui/FormField';
+import { IconWell } from '../../components/ui/IconWell';
+import { Panel } from '../../components/ui/Panel';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useCreateStudentAdmissionMutation, useGetClassDetailsQuery } from '../../store/api/apiSlice';
@@ -95,8 +97,11 @@ export function StudentAdmissionView() {
   if (result) {
     return (
       <ScreenContainer scrollable>
-        <Text style={[typography.h3, { color: colors.success, marginBottom: spacing.md }]}>Student Admitted</Text>
-        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: spacing.lg, gap: spacing.sm }}>
+        <View style={{ alignItems: 'center', paddingVertical: spacing.lg }}>
+          <IconWell icon="check-circle-outline" color={colors.success} size={64} />
+          <Text style={[typography.h3, { color: colors.success, marginTop: spacing.md }]}>Student Admitted</Text>
+        </View>
+        <Panel>
           <Text style={[typography.bodyStrong, { color: colors.text }]}>Login Credentials</Text>
           {['student', 'father', 'mother'].map((who) =>
             result.credentials?.[who] ? (
@@ -107,8 +112,8 @@ export function StudentAdmissionView() {
               </View>
             ) : null
           )}
-        </View>
-        <Button mode="contained" style={{ marginTop: spacing.lg }} onPress={() => setResult(null)}>
+        </Panel>
+        <Button mode="contained" style={{ marginBottom: spacing.xl }} onPress={() => setResult(null)}>
           Admit Another Student
         </Button>
       </ScreenContainer>
@@ -117,53 +122,71 @@ export function StudentAdmissionView() {
 
   return (
     <ScreenContainer scrollable>
-      <Text style={[typography.bodyStrong, { color: colors.text, marginBottom: spacing.sm }]}>Student Details</Text>
-      <FormField label="Full Name" value={studentName} onChangeText={setStudentName} disabled={createState.isLoading} />
-      <FormField label="Email" value={studentEmail} onChangeText={setStudentEmail} autoCapitalize="none" keyboardType="email-address" disabled={createState.isLoading} />
-      <FormField label="Date of Birth (YYYY-MM-DD, optional)" value={dateOfBirth} onChangeText={setDateOfBirth} disabled={createState.isLoading} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="account-school-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Student Admission</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Enroll a new student and link their parents
+          </Text>
+        </View>
+      </View>
 
-      <SegmentedButtons value={gender} onValueChange={setGender} style={{ marginBottom: spacing.sm }} buttons={GENDERS.map((g) => ({ value: g, label: g }))} />
+      <Panel>
+        <Text style={[typography.bodyStrong, { color: colors.text, marginBottom: spacing.sm }]}>Student Details</Text>
+        <FormField label="Full Name" value={studentName} onChangeText={setStudentName} disabled={createState.isLoading} />
+        <FormField label="Email" value={studentEmail} onChangeText={setStudentEmail} autoCapitalize="none" keyboardType="email-address" disabled={createState.isLoading} />
+        <FormField label="Date of Birth (YYYY-MM-DD, optional)" value={dateOfBirth} onChangeText={setDateOfBirth} disabled={createState.isLoading} />
 
-      <FormField label="Address (optional)" value={address} onChangeText={setAddress} disabled={createState.isLoading} />
-      <FormField label="Blood Group (optional)" value={bloodGroup} onChangeText={setBloodGroup} disabled={createState.isLoading} />
+        <SegmentedButtons value={gender} onValueChange={setGender} style={{ marginBottom: spacing.sm }} buttons={GENDERS.map((g) => ({ value: g, label: g }))} />
 
-      <Text style={[typography.bodyStrong, { color: colors.text, marginTop: spacing.lg, marginBottom: spacing.sm }]}>Class</Text>
-      <QueryState isLoading={classesQuery.isLoading} isError={classesQuery.isError} error={classesQuery.error} onRetry={classesQuery.refetch} isEmpty={classes.length === 0} emptyIcon="google-classroom" emptyLabel="No classes found">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
-          {classes.map((c) => (
-            <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); }}>
-              {c.name}
-            </Chip>
-          ))}
-        </ScrollView>
-        {sections.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
-            {sections.map((s) => (
-              <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id)}>
-                {s.name}
+        <FormField label="Address (optional)" value={address} onChangeText={setAddress} disabled={createState.isLoading} />
+        <FormField label="Blood Group (optional)" value={bloodGroup} onChangeText={setBloodGroup} disabled={createState.isLoading} />
+      </Panel>
+
+      <Panel>
+        <Text style={[typography.bodyStrong, { color: colors.text, marginBottom: spacing.sm }]}>Class</Text>
+        <QueryState isLoading={classesQuery.isLoading} isError={classesQuery.isError} error={classesQuery.error} onRetry={classesQuery.refetch} isEmpty={classes.length === 0} emptyIcon="google-classroom" emptyLabel="No classes found">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
+            {classes.map((c) => (
+              <Chip key={c._id} selected={c._id === classId} onPress={() => { setClassId(c._id); setSectionId(null); }}>
+                {c.name}
               </Chip>
             ))}
           </ScrollView>
-        )}
-      </QueryState>
+          {sections.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, alignItems: 'center' }}>
+              {sections.map((s) => (
+                <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id)}>
+                  {s.name}
+                </Chip>
+              ))}
+            </ScrollView>
+          )}
+        </QueryState>
+      </Panel>
 
-      <Text style={[typography.bodyStrong, { color: colors.text, marginTop: spacing.lg, marginBottom: spacing.sm }]}>
-        Father's Details (optional)
-      </Text>
-      <FormField label="Name" value={fatherName} onChangeText={setFatherName} disabled={createState.isLoading} />
-      <FormField label="Email" value={fatherEmail} onChangeText={setFatherEmail} autoCapitalize="none" keyboardType="email-address" disabled={createState.isLoading} />
-      <FormField label="Mobile" value={fatherMobile} onChangeText={setFatherMobile} keyboardType="phone-pad" disabled={createState.isLoading} />
+      <Panel>
+        <Text style={[typography.bodyStrong, { color: colors.text, marginBottom: spacing.sm }]}>
+          Father's Details (optional)
+        </Text>
+        <FormField label="Name" value={fatherName} onChangeText={setFatherName} disabled={createState.isLoading} />
+        <FormField label="Email" value={fatherEmail} onChangeText={setFatherEmail} autoCapitalize="none" keyboardType="email-address" disabled={createState.isLoading} />
+        <FormField label="Mobile" value={fatherMobile} onChangeText={setFatherMobile} keyboardType="phone-pad" disabled={createState.isLoading} />
+      </Panel>
 
-      <Text style={[typography.bodyStrong, { color: colors.text, marginTop: spacing.lg, marginBottom: spacing.sm }]}>
-        Mother's Details (optional)
-      </Text>
-      <FormField label="Name" value={motherName} onChangeText={setMotherName} disabled={createState.isLoading} />
-      <FormField label="Email" value={motherEmail} onChangeText={setMotherEmail} autoCapitalize="none" keyboardType="email-address" disabled={createState.isLoading} />
-      <FormField label="Mobile" value={motherMobile} onChangeText={setMotherMobile} keyboardType="phone-pad" disabled={createState.isLoading} />
+      <Panel>
+        <Text style={[typography.bodyStrong, { color: colors.text, marginBottom: spacing.sm }]}>
+          Mother's Details (optional)
+        </Text>
+        <FormField label="Name" value={motherName} onChangeText={setMotherName} disabled={createState.isLoading} />
+        <FormField label="Email" value={motherEmail} onChangeText={setMotherEmail} autoCapitalize="none" keyboardType="email-address" disabled={createState.isLoading} />
+        <FormField label="Mobile" value={motherMobile} onChangeText={setMotherMobile} keyboardType="phone-pad" disabled={createState.isLoading} />
+      </Panel>
 
-      {error && <Text style={[typography.caption, { color: colors.danger, marginTop: spacing.md }]}>{error}</Text>}
+      {error && <Text style={[typography.caption, { color: colors.danger, marginBottom: spacing.md }]}>{error}</Text>}
 
-      <Button mode="contained" onPress={handleSubmit} loading={createState.isLoading} disabled={createState.isLoading} style={{ marginTop: spacing.lg, marginBottom: spacing.xl }}>
+      <Button mode="contained" onPress={handleSubmit} loading={createState.isLoading} disabled={createState.isLoading} style={{ marginBottom: spacing.xl }}>
         Admit Student
       </Button>
     </ScreenContainer>

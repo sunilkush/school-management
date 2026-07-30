@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Switch, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Switch, Text, TextInput } from 'react-native-paper';
 import { QueryState } from '../../components/ui/QueryState';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -15,10 +15,8 @@ const SEVERITIES = ['Minor', 'Moderate', 'Severe'];
 
 /**
  * Class → Section → Student picker followed by the visit form. The picker queries
- * (GET /school-class/class-detailes, GET /student/roll-numbers) are gated to School Admin/
- * Principal/Vice Principal/Teacher server-side, not Medical Officer — see HealthRecordsView's own
- * header comment. A Medical Officer opening this sheet will see that gap surface honestly as a
- * QueryState error on the class list, rather than a silent crash.
+ * (GET /school-class/class-detailes, GET /student/roll-numbers) both include Medical Officer in
+ * their server-side role gates, same as the write-side HEALTH_ROLES check on submit.
  */
 export function LogHealthVisitSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
@@ -86,6 +84,7 @@ export function LogHealthVisitSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '88%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Log Clinic Visit</Text>
 
@@ -101,7 +100,7 @@ export function LogHealthVisitSheet({ visible, onDismiss, onCreated }) {
             {!studentId ? (
               <>
                 <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md, alignItems: 'center' }}>
                   {classes.map((c) => (
                     <Chip key={c._id} selected={c._id === schoolClassId} onPress={() => { setSchoolClassId(c._id); setSectionId(null); }}>{c.name}</Chip>
                   ))}
@@ -110,7 +109,7 @@ export function LogHealthVisitSheet({ visible, onDismiss, onCreated }) {
                 {schoolClassId && (
                   <>
                     <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SECTION</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md }}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md, alignItems: 'center' }}>
                       {sections.map((s) => {
                         const secId = s.sectionId?._id ?? s.sectionId ?? s._id;
                         const secName = s.sectionId?.name ?? s.name;

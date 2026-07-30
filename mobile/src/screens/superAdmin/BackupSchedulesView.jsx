@@ -7,6 +7,7 @@ import { IconWell } from '../../components/ui/IconWell';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { CreateScheduleSheet } from './CreateScheduleSheet';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import { useDeleteBackupScheduleMutation, useGetBackupSchedulesQuery, useUpdateBackupScheduleMutation } from '../../store/api/apiSlice';
 
 // There is no cron/scheduler actually running these server-side — confirmed nothing ever writes
@@ -57,7 +58,7 @@ export function BackupSchedulesView() {
             actions={
               <>
                 <Switch value={!!s.isActive} disabled={updateState.isLoading} onValueChange={(next) => updateSchedule({ id: s._id, isActive: next })} />
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteSchedule(s._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteSchedule(s._id), 'this backup schedule')} />
               </>
             }
           />

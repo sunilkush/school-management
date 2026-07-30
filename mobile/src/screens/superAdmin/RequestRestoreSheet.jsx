@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Switch, Text } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Switch, Text } from 'react-native-paper';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useGetSystemBackupsQuery, useRequestRestoreJobMutation } from '../../store/api/apiSlice';
 
@@ -55,11 +55,12 @@ export function RequestRestoreSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Request Restore</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>BACKUP</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {backups.map((b) => (
               <Chip key={b._id} selected={b._id === backupId} onPress={() => setBackupId(b._id)}>
                 {b.backupNo}
@@ -71,7 +72,7 @@ export function RequestRestoreSheet({ visible, onDismiss, onCreated }) {
           )}
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>RESTORE TYPE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {RESTORE_TYPES.map((t) => (
               <Chip key={t} selected={t === restoreType} onPress={() => setRestoreType(t)}>
                 {t}
@@ -82,7 +83,7 @@ export function RequestRestoreSheet({ visible, onDismiss, onCreated }) {
           {restoreType === 'module' && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>MODULES</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {MODULES.map((m) => (
                   <Chip key={m} selected={modules.includes(m)} onPress={() => toggleModule(m)}>
                     {m.replace('_', ' ')}

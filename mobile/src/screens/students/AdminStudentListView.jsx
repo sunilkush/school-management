@@ -125,7 +125,7 @@ export function AdminStudentListView({ navigation }) {
         </StatGrid>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         <Chip selected={selectedClassId === null} onPress={() => selectClass(null)}>
           All Classes
         </Chip>
@@ -137,7 +137,7 @@ export function AdminStudentListView({ navigation }) {
       </ScrollView>
 
       {sections.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.sm }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           <Chip selected={selectedSectionId === null} onPress={() => selectSection(null)}>
             All Sections
           </Chip>

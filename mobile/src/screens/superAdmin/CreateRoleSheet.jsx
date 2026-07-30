@@ -20,7 +20,7 @@ function PermissionRow({ row, onChange, onRemove }) {
         <Text style={[typography.caption, { color: colors.textMuted }]}>MODULE</Text>
         <IconButton icon="close" size={16} onPress={onRemove} />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs, paddingBottom: spacing.xs }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.xs, paddingBottom: spacing.xs, alignItems: 'center' }}>
         {MODULE_OPTIONS.map((m) => (
           <Chip key={m} compact selected={row.module === m} onPress={() => onChange({ ...row, module: m })}>
             {m}
@@ -28,7 +28,7 @@ function PermissionRow({ row, onChange, onRemove }) {
         ))}
       </ScrollView>
       <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.xs }]}>ACTIONS</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs, paddingTop: spacing.xs }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.xs, paddingTop: spacing.xs, alignItems: 'center' }}>
         {ACTION_OPTIONS.map((a) => (
           <Chip key={a} compact selected={row.actions.includes(a)} onPress={() => toggleAction(a)}>
             {a}
@@ -102,7 +102,7 @@ export function CreateRoleSheet({ visible, onDismiss, onCreated }) {
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>New Role</Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>ROLE NAME</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {ROLE_NAME_OPTIONS.map((n) => (
               <Chip key={n} selected={n === name} onPress={() => setName(n)}>
                 {n}
@@ -132,7 +132,7 @@ export function CreateRoleSheet({ visible, onDismiss, onCreated }) {
           {type === 'custom' && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SCHOOL</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
                 {schools.map((s) => (
                   <Chip key={s._id} selected={s._id === schoolId} onPress={() => setSchoolId(s._id)}>
                     {s.name}

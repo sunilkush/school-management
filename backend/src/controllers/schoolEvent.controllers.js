@@ -8,6 +8,7 @@ import {
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const ADMIN_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal"];
 
@@ -80,7 +81,7 @@ const buildListFilter = (req) => {
   }
 
   if (q?.trim()) {
-    const query = q.trim();
+    const query = escapeRegex(q.trim());
     filter.$or = [
       { title: { $regex: query, $options: "i" } },
       { description: { $regex: query, $options: "i" } },

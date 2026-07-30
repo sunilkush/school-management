@@ -3,6 +3,7 @@ import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
@@ -912,8 +913,8 @@ const getLastRegisteredStudent = asyncHandler(async (req, res) => {
           {
             $match: {
               $or: [
-                { "user.name": { $regex: search, $options: "i" } },
-                { "user.email": { $regex: search, $options: "i" } },
+                { "user.name": { $regex: escapeRegex(search), $options: "i" } },
+                { "user.email": { $regex: escapeRegex(search), $options: "i" } },
               ],
             },
           },

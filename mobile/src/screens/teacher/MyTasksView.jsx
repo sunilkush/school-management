@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
@@ -23,7 +23,10 @@ export function MyTasksView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetMyTasksQuery();
+  // No explicit limit override previously sent -> backend's listTasks default (limit=50) could
+  // silently hide older assigned tasks with no UI indication. Override high since this list has
+  // no pagination controls of its own.
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetMyTasksQuery({ limit: 500 });
   const [updateStatus, updateState] = useUpdateMyTaskStatusMutation();
   const tasks = data ?? [];
 
@@ -34,6 +37,16 @@ export function MyTasksView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="format-list-checks" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>My Tasks</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Tasks assigned to you
+          </Text>
+        </View>
+      </View>
+
       <QueryState
         isLoading={isLoading || isFetching}
         isError={isError}

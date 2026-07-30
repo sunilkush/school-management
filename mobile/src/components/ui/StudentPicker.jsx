@@ -9,10 +9,9 @@ import { useGetSchoolClassDetailsQuery, useGetClassRollNumbersQuery, useGetActiv
 /**
  * Shared class → section → student chip picker, extracted after the same inline pattern was
  * written for Health Records, Certificates, ID Cards, Discipline, and Alumni's create sheets.
- * Backed by GET /school-class/class-detailes + GET /student/roll-numbers — gated to Super Admin/
- * School Admin/Principal/Vice Principal/Teacher server-side. Roles outside that set (Medical
- * Officer, Sports Teacher) will see this render a clean QueryState error rather than a crash —
- * that's a real pre-existing gap in those endpoints' own role lists, not a bug here.
+ * Backed by GET /school-class/class-detailes + GET /student/roll-numbers, whose role gates now
+ * cover every role that has a screen using this picker (Class Teacher, Medical Officer, Sports
+ * Teacher included).
  *
  * <StudentPicker enabled={visible} selectedId={studentId} selectedName={studentName}
  *                onSelect={(id, name) => ...} onClear={() => ...} />
@@ -62,7 +61,7 @@ export function StudentPicker({ enabled = true, selectedId, selectedName, onSele
       emptyLabel="No classes available for your role"
     >
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md, alignItems: 'center' }}>
         {classes.map((c) => (
           <Chip key={c._id} selected={c._id === schoolClassId} onPress={() => { setSchoolClassId(c._id); setSectionId(null); }}>{c.name}</Chip>
         ))}
@@ -71,7 +70,7 @@ export function StudentPicker({ enabled = true, selectedId, selectedName, onSele
       {schoolClassId && (
         <>
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SECTION</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md, alignItems: 'center' }}>
             {sections.map((s) => {
               const secId = s.sectionId?._id ?? s.sectionId ?? s._id;
               const secName = s.sectionId?.name ?? s.name;

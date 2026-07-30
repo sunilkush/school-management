@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateAcademicYearSheet } from './superAdmin/CreateAcademicYearSheet';
 import { formatDate } from '../utils/format';
+import { confirmDelete } from '../utils/confirm';
 import { useAppTheme } from '../theme/ThemeProvider';
 import {
   useActivateAcademicYearMutation,
@@ -45,7 +46,7 @@ export function AcademicYearsScreen() {
       </View>
 
       <QueryState isLoading={schoolsQuery.isLoading} isError={schoolsQuery.isError} error={schoolsQuery.error} onRetry={schoolsQuery.refetch} isEmpty={schools.length === 0} emptyIcon="domain" emptyLabel="No schools found">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
           {schools.map((s) => (
             <Chip key={s._id} selected={s._id === schoolId} onPress={() => setSchoolId(s._id)}>
               {s.name}
@@ -87,7 +88,7 @@ export function AcademicYearsScreen() {
                           </Button>
                         )}
                         <IconButton icon="archive-outline" size={18} disabled={isBusy} onPress={() => archiveYear(y._id)} />
-                        <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={isBusy} onPress={() => deleteYear(y._id)} />
+                        <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={isBusy} onPress={() => confirmDelete(() => deleteYear(y._id), 'this academic year')} />
                       </>
                     )
                   }

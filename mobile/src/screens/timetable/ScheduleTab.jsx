@@ -8,6 +8,7 @@ import { PeriodEntrySheet } from './PeriodEntrySheet';
 import { DAY_LABELS, DAY_ORDER, TEACHING_ENTRY_TYPES, timetableRowTitle, timetableTypeColor } from '../../utils/timetable';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { confirmDelete } from '../../utils/confirm';
 import {
   useDeleteTimetableEntryMutation,
   useGetAllUsersQuery,
@@ -58,7 +59,7 @@ export function ScheduleTab() {
 
   return (
     <View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         {classes.map((c) => (
           <Chip key={c._id} selected={c._id === classId} onPress={() => selectClass(c._id)}>
             {c.name}
@@ -67,7 +68,7 @@ export function ScheduleTab() {
       </ScrollView>
 
       {sections.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.sm }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           {sections.map((s) => (
             <Chip key={s._id} selected={s._id === sectionId} onPress={() => setSectionId(s._id)}>
               {s.name}
@@ -78,7 +79,7 @@ export function ScheduleTab() {
 
       {sectionId && (
         <>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {DAY_ORDER.filter((d) => d !== 'sunday').map((d) => (
               <Chip key={d} selected={d === day} onPress={() => setDay(d)}>
                 {DAY_LABELS[d]}
@@ -125,7 +126,7 @@ export function ScheduleTab() {
                         iconColor={colors.danger}
                         size={18}
                         disabled={deleteState.isLoading}
-                        onPress={() => deleteEntry(entry._id)}
+                        onPress={() => confirmDelete(() => deleteEntry(entry._id), 'this period')}
                       />
                     </>
                   }

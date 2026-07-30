@@ -87,7 +87,7 @@ export function TeacherMarkAttendanceView() {
         emptyLabel="No classes are assigned to you yet"
       >
         <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>CLASS</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
           {classes.map((c) => (
             <Chip
               key={c._id}
@@ -106,7 +106,7 @@ export function TeacherMarkAttendanceView() {
         {selectedClass && (
           <>
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.sm }]}>SECTION</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
               {sections.map((s) => (
                 <Chip
                   key={s.sectionId._id}

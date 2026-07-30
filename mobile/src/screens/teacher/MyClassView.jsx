@@ -7,22 +7,8 @@ import { IconWell } from '../../components/ui/IconWell';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useAuth } from '../../hooks/useAuth';
+import { navigateToNavItem } from '../../navigation/navigateToNavItem';
 import { useGetMyClassTeacherAssignmentQuery } from '../../store/api/apiSlice';
-
-// Class Teacher's 14 nav items push everything past the first 4 ('Dashboard'/'MyClass'/
-// 'MyStudents'/'Attendance') into the "More" tab's own nested Stack.Navigator (see
-// resolveRoleNav.js's splitQuickAndOverflow) — so 'Timetable'/'GpsCheckInOut' below aren't direct
-// tabs and a plain navigation.navigate(key) silently fails to find them. Same dynamic
-// direct-tab-vs-More lookup AppHeader.jsx's navigateToNotifications already uses, generalized to
-// any target key instead of just 'Notifications'.
-function navigateToNavItem(navigation, key) {
-  const routeNames = navigation.getState?.()?.routeNames ?? [];
-  if (routeNames.includes(key)) {
-    navigation.navigate(key);
-  } else {
-    navigation.navigate('More', { screen: key });
-  }
-}
 
 /** "Which class am I in charge of" summary + shortcuts — mirrors frontend's MyClassPage.jsx
  * exactly: a single-assignment info card (not a roster/subject dashboard, that's AssignedClasses)
@@ -31,7 +17,7 @@ function navigateToNavItem(navigation, key) {
  * model than Section.classTeacherId used by MyStudents. */
 export function MyClassView({ navigation }) {
   const { colors, typography, spacing } = useAppTheme();
-  const { user } = useAuth();
+  const { user, role, permissions } = useAuth();
 
   const { data: assignment, isLoading, isError, error, refetch } = useGetMyClassTeacherAssignmentQuery();
 
@@ -87,7 +73,7 @@ export function MyClassView({ navigation }) {
               mode="outlined"
               icon={action.icon}
               style={{ flexBasis: '47%', flexGrow: 1 }}
-              onPress={() => navigation && navigateToNavItem(navigation, action.key)}
+              onPress={() => navigation && navigateToNavItem(navigation, role?.name, permissions, action.key)}
             >
               {action.label}
             </Button>

@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 // ✅ Allowed Actions
 const allActions = [
@@ -328,6 +329,14 @@ const allActions = [
   export const getRoleById = asyncHandler(async (req, res) => {
     const role = await Role.findById(req.params.id);
     if (!role) throw new ApiError(404, "Role not found");
+
+    // Same ownership check updateRole/deleteRole already enforce — this had none, letting School
+    // Admin view another school's custom role (including its exact permissions array) by ID.
+    if (req.userRole?.name !== "Super Admin" && role.type !== "system" &&
+        role.schoolId?.toString() !== req.user.schoolId?.toString()) {
+      throw new ApiError(403, "Access denied");
+    }
+
     res.status(200).json(new ApiResponse(200, role, "Role found successfully"));
   });
 
@@ -408,7 +417,7 @@ const allActions = [
 
     const query = {};
 
-    if (name) query.name = { $regex: name, $options: "i" };
+    if (name) query.name = { $regex: escapeRegex(name), $options: "i" };
     if (schoolId && mongoose.Types.ObjectId.isValid(schoolId)) query.schoolId = schoolId;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);

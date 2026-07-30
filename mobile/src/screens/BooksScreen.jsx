@@ -10,6 +10,7 @@ import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { CreateBookSheet } from './library/CreateBookSheet';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteBookMutation, useGetBooksQuery } from '../store/api/apiSlice';
 
 // backend/src/routes/book.routes.js LIBRARY_STAFF — create/update allows School Admin/Teacher/
@@ -133,7 +134,7 @@ export function BooksScreen() {
                       iconColor={colors.danger}
                       size={18}
                       disabled={deleteState.isLoading}
-                      onPress={() => deleteBook(b._id)}
+                      onPress={() => confirmDelete(() => deleteBook(b._id), 'this book')}
                     />
                   )}
                 </>

@@ -432,6 +432,17 @@ export const apiSlice = createApi({
       query: (payload) => ({ url: '/student-portal/teacher/homework', method: 'post', data: payload }),
       invalidatesTags: ['Homework'],
     }),
+    updateTeacherHomework: builder.mutation({
+      // Backend's updateTeacherHomework only reads title/description/dueDate/attachments/status —
+      // schoolClassId/sectionId/subjectId are immutable after creation despite web's edit form
+      // implying otherwise (it submits them, but the controller silently ignores them).
+      query: ({ id, ...payload }) => ({ url: `/student-portal/teacher/homework/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Homework'],
+    }),
+    deleteTeacherHomework: builder.mutation({
+      query: (id) => ({ url: `/student-portal/teacher/homework/${id}`, method: 'delete' }),
+      invalidatesTags: ['Homework'],
+    }),
     getHomeworkSubmissions: builder.query({
       query: (assignmentId) => ({ url: `/student-portal/teacher/homework/${assignmentId}/submissions` }),
       providesTags: ['Homework'],
@@ -1495,11 +1506,37 @@ export const apiSlice = createApi({
       query: (params) => ({ url: '/employee', params }),
       providesTags: ['User'],
     }),
+    // Transport Manager's Drivers roster (DriversView) — same PUT /employee/updateEmployee/:id
+    // controller CreateUserView's step 2 doesn't use but web's DriversPage.jsx edit modal does;
+    // employee.routes.js's EMPLOYEE_UPDATE_ROLES already includes Transport Manager for this
+    // exact route.
+    updateEmployee: builder.mutation({
+      query: ({ id, payload }) => ({ url: `/employee/updateEmployee/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['User'],
+    }),
 
     // Exam creation/management — same Exam model the read-only getExams (above) lists; School
     // Admin/Teacher/Principal/VP/Exam+Subject Coordinator can all create.
     createExam: builder.mutation({
       query: (payload) => ({ url: '/exams', method: 'post', data: payload }),
+      invalidatesTags: ['Exam'],
+    }),
+    // Paper Builder (School Admin) — same PUT /exams/:id updateExam controller CreateExamSheet's
+    // edit flow would use, just writing paperBlueprint instead. Exam.model.js's paperBlueprint
+    // schema path was missing until recently (silently dropped under Mongoose strict mode even
+    // though PageBuilder.jsx has always sent it) — confirmed fixed before building this.
+    updateExam: builder.mutation({
+      query: ({ examId, payload }) => ({ url: `/exams/${examId}`, method: 'put', data: payload }),
+      invalidatesTags: ['Exam'],
+    }),
+    deleteExam: builder.mutation({
+      query: (examId) => ({ url: `/exams/${examId}`, method: 'delete' }),
+      invalidatesTags: ['Exam'],
+    }),
+    // Dedicated status toggle (PUT /exams/:id/publish, body optional { status: 'draft'|'published' }
+    // defaulting to 'published') — lighter-weight than a full updateExam call just to flip status.
+    publishExam: builder.mutation({
+      query: ({ examId, status }) => ({ url: `/exams/${examId}/publish`, method: 'put', data: status ? { status } : {} }),
       invalidatesTags: ['Exam'],
     }),
 
@@ -1670,12 +1707,12 @@ export const apiSlice = createApi({
       query: () => ({ url: '/class-teacher-assignments/my' }),
     }),
 
-    // ── Shared "pick a class → section → student" building blocks (School Admin/Principal/Vice
-    // Principal/Teacher — same READ_ROLES the web app's own class/section pickers use). NOT
-    // available to Medical Officer (see HealthRecords section below for why that matters) — this
-    // mirrors a real, pre-existing gap in the web app's own backend role gates, not something
-    // introduced here. Reused across Health Records, Certificates, ID Cards, Discipline, Alumni,
-    // and PTM session creation's student/class pickers instead of one-off duplicates per screen.
+    // ── Shared "pick a class → section → student" building blocks (schoolClass.routes.js
+    // READ_ROLES / student.routes.js's /roll-numbers role list — cover every role with a screen
+    // using this picker: School Admin/Principal/Vice Principal/Teacher/Class Teacher/Medical
+    // Officer/Sports Teacher and more). Reused across Health Records, Certificates, ID Cards,
+    // Discipline, Alumni, and PTM session creation's student/class pickers instead of one-off
+    // duplicates per screen.
     getSchoolClassDetails: builder.query({
       query: (params) => ({ url: '/school-class/class-detailes', params }),
       providesTags: ['Class'],
@@ -2050,6 +2087,8 @@ export const {
   useSubmitHomeworkMutation,
   useGetTeacherHomeworkQuery,
   useCreateTeacherHomeworkMutation,
+  useUpdateTeacherHomeworkMutation,
+  useDeleteTeacherHomeworkMutation,
   useGetHomeworkSubmissionsQuery,
   useGradeSubmissionMutation,
   useGetIncomeRecordsQuery,
@@ -2183,6 +2222,7 @@ export const {
   useRejectReimbursementMutation,
   useDeleteReimbursementMutation,
   useGetEmployeesQuery,
+  useUpdateEmployeeMutation,
   useGetEventsQuery,
   useGetEventStatsQuery,
   useCreateEventMutation,
@@ -2293,6 +2333,9 @@ export const {
   useRegisterUserMutation,
   useRegisterEmployeeMutation,
   useCreateExamMutation,
+  useUpdateExamMutation,
+  useDeleteExamMutation,
+  usePublishExamMutation,
   useGetExamAdmitCardsQuery,
   useGenerateExamAdmitCardsMutation,
   useGetExamAnalyticsQuery,

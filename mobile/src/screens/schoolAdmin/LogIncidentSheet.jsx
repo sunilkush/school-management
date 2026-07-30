@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Switch, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Switch, Text, TextInput } from 'react-native-paper';
 import { QueryState } from '../../components/ui/QueryState';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -15,9 +15,8 @@ const CATEGORIES = ['Attendance', 'Behavior', 'Academic Integrity', 'Property Da
 const SEVERITIES = ['Minor', 'Moderate', 'Major'];
 
 /** Same class → section → student picker as Health Records / Certificates — School Admin/
- * Principal/Vice Principal/Teacher only, per the shared class/section/roll-number endpoints' role
- * gates. Class Teacher also has this nav item but is NOT in those endpoints' role gates either
- * (only "Teacher" is) — a real pre-existing gap, same class of issue flagged in Batch 1. */
+ * Principal/Vice Principal/Teacher/Class Teacher, per the shared class/section/roll-number
+ * endpoints' role gates (schoolClass.routes.js READ_ROLES, student.routes.js /roll-numbers). */
 export function LogIncidentSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();
@@ -82,6 +81,7 @@ export function LogIncidentSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '88%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Log Discipline Incident</Text>
 
@@ -97,7 +97,7 @@ export function LogIncidentSheet({ visible, onDismiss, onCreated }) {
             {!studentId ? (
               <>
                 <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CLASS</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md, alignItems: 'center' }}>
                   {classes.map((c) => (
                     <Chip key={c._id} selected={c._id === schoolClassId} onPress={() => { setSchoolClassId(c._id); setSectionId(null); }}>{c.name}</Chip>
                   ))}
@@ -106,7 +106,7 @@ export function LogIncidentSheet({ visible, onDismiss, onCreated }) {
                 {schoolClassId && (
                   <>
                     <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SECTION</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md }}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.md, alignItems: 'center' }}>
                       {sections.map((s) => {
                         const secId = s.sectionId?._id ?? s.sectionId ?? s._id;
                         const secName = s.sectionId?.name ?? s.name;
@@ -148,7 +148,7 @@ export function LogIncidentSheet({ visible, onDismiss, onCreated }) {
           {studentId && (
             <>
               <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>CATEGORY</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.sm }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, marginBottom: spacing.sm, alignItems: 'center' }}>
                 {CATEGORIES.map((c) => <Chip key={c} selected={c === category} onPress={() => setCategory(c)}>{c}</Chip>)}
               </ScrollView>
 

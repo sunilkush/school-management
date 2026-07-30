@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 /* ── CREATE ──────────────────────────────────────────────────────────────── */
 export const createDepartment = asyncHandler(async (req, res) => {
@@ -35,7 +36,7 @@ export const getDepartments = asyncHandler(async (req, res) => {
 
   const filter = buildSchoolAccessFilter(req);
   if (status) filter.status = status;
-  if (search) filter.name = { $regex: search, $options: "i" };
+  if (search) filter.name = { $regex: escapeRegex(search), $options: "i" };
 
   const skip = (Number(page) - 1) * Number(limit);
   const [departments, total] = await Promise.all([

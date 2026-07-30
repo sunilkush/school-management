@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateBoardClassSheet } from './superAdmin/CreateBoardClassSheet';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteBoardClassMutation, useGetBoardClassesQuery, useGetBoardsQuery } from '../store/api/apiSlice';
 
 export function BoardClassesScreen() {
@@ -32,7 +33,7 @@ export function BoardClassesScreen() {
       </View>
 
       <QueryState isLoading={boardsQuery.isLoading} isError={boardsQuery.isError} error={boardsQuery.error} onRetry={boardsQuery.refetch} isEmpty={boards.length === 0} emptyIcon="certificate-outline" emptyLabel="No boards found — create one first">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
           {boards.map((b) => (
             <Chip key={b._id} selected={b._id === boardId} onPress={() => setBoardId(b._id)}>
               {b.name}
@@ -67,7 +68,7 @@ export function BoardClassesScreen() {
                   meta={[...(bc.description ? [{ label: 'Description', value: bc.description }] : [])]}
                   expandable
                   actions={
-                    <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteBoardClass(bc._id)} />
+                    <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteBoardClass(bc._id), 'this class')} />
                   }
                 />
               ))}

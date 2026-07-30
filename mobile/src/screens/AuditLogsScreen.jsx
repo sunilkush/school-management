@@ -62,7 +62,7 @@ export function AuditLogsScreen() {
 
       <SearchField value={search} onChangeText={setSearch} placeholder="Search by actor / action / entity" style={{ marginBottom: spacing.sm }} />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         <Chip selected={!moduleFilter} onPress={() => setModuleFilter(null)}>
           All Modules
         </Chip>
@@ -73,7 +73,7 @@ export function AuditLogsScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
         <Chip selected={!statusFilter} onPress={() => setStatusFilter(null)}>
           All Statuses
         </Chip>

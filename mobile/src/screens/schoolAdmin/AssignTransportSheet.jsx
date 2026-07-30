@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Text } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Text } from 'react-native-paper';
 import { FormField } from '../../components/ui/FormField';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import {
@@ -10,7 +10,7 @@ import {
   useSaveTransportAssignmentMutation,
 } from '../../store/api/apiSlice';
 
-export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
+export function AssignTransportSheet({ visible, onDismiss, onCreated, editing }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const [saveAssignment, saveState] = useSaveTransportAssignmentMutation();
 
@@ -30,13 +30,14 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
 
   useEffect(() => {
     if (visible) {
-      setStudentEnrollmentId(null);
-      setRouteId(null);
-      setVehicleId(null);
-      setPickupStop('');
-      setDropStop('');
+      setStudentEnrollmentId(editing?.studentEnrollmentId ?? null);
+      setRouteId(editing?.routeId ?? null);
+      setVehicleId(editing?.vehicleId ?? null);
+      setPickupStop(editing?.pickupStop ?? '');
+      setDropStop(editing?.dropStop ?? '');
       setError(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const handleSave = async () => {
@@ -61,11 +62,14 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Assign Transport</Text>
+          <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>
+            {editing ? 'Edit Assignment' : 'Assign Transport'}
+          </Text>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>STUDENT</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {students.map((s) => (
               <Chip key={s._id} selected={s._id === studentEnrollmentId} onPress={() => setStudentEnrollmentId(s._id)}>
                 {s.name}
@@ -74,7 +78,7 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>ROUTE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {routes.map((r) => (
               <Chip key={r._id} selected={r._id === routeId} onPress={() => setRouteId(r._id)}>
                 {r.name}
@@ -83,7 +87,7 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
           </ScrollView>
 
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs }]}>VEHICLE</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm, alignItems: 'center' }}>
             {vehicles.map((v) => (
               <Chip key={v._id} selected={v._id === vehicleId} onPress={() => setVehicleId(v._id)}>
                 {v.busNumber}
@@ -101,7 +105,7 @@ export function AssignTransportSheet({ visible, onDismiss, onCreated }) {
               Cancel
             </Button>
             <Button mode="contained" onPress={handleSave} loading={saveState.isLoading} disabled={saveState.isLoading} style={{ flex: 1 }}>
-              Save
+              {editing ? 'Update' : 'Save'}
             </Button>
           </View>
         </ScrollView>

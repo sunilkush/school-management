@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Modal, Portal, Text, TextInput } from 'react-native-paper';
+import { Button, IconButton, Modal, Portal, Text, TextInput } from 'react-native-paper';
 import { QueryState } from '../../../components/ui/QueryState';
 import { AccentListCard } from '../../../components/ui/AccentListCard';
 import { StatusPill } from '../../../components/ui/StatusPill';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAppTheme } from '../../../theme/ThemeProvider';
+import { confirmDelete } from '../../../utils/confirm';
 import {
   useGetAcademicYearsBySchoolQuery,
   useCreateAcademicYearMutation,
@@ -60,6 +61,7 @@ function YearFormSheet({ visible, initial, onDismiss, onSaved }) {
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>
           {initial ? 'Edit Academic Year' : 'Create Academic Year'}
         </Text>
@@ -130,7 +132,7 @@ export function AcademicYearStep() {
                     </Button>
                   )}
                   {!yr.isActive && (
-                    <Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => deleteYear(yr._id)}>
+                    <Button compact textColor={colors.danger} loading={deleteState.isLoading} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteYear(yr._id), 'this academic year')}>
                       Delete
                     </Button>
                   )}

@@ -4,4 +4,5 @@ export const ISSUED_BOOK_STATUS_META = {
   Overdue: { label: 'Overdue', color: '#EF4444' },
   Returned: { label: 'Returned', color: '#22C55E' },
   Lost: { label: 'Lost', color: '#7C3AED' },
+  Damaged: { label: 'Damaged', color: '#F59E0B' },
 };

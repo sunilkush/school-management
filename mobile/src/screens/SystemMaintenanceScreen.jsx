@@ -8,6 +8,7 @@ import { IconWell } from '../components/ui/IconWell';
 import { StatusPill } from '../components/ui/StatusPill';
 import { CreateMaintenanceTaskSheet } from './itSupport/CreateMaintenanceTaskSheet';
 import { formatDate } from '../utils/format';
+import { confirmDelete } from '../utils/confirm';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { useDeleteMaintenanceTaskMutation, useGetMaintenanceTasksQuery, useUpdateMaintenanceTaskMutation } from '../store/api/apiSlice';
 
@@ -78,7 +79,7 @@ export function SystemMaintenanceScreen() {
                     {t.status === 'pending' ? 'Start' : 'Mark Done'}
                   </Button>
                 )}
-                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => deleteTask(t._id)} />
+                <IconButton icon="trash-can-outline" iconColor={colors.danger} size={18} disabled={deleteState.isLoading} onPress={() => confirmDelete(() => deleteTask(t._id), 'this task')} />
               </>
             }
           />

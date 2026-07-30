@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from 'react-native-paper';
+import { View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
@@ -8,9 +9,11 @@ import { StatusPill } from '../../components/ui/StatusPill';
 import { HomeworkSubmitSheet } from './HomeworkSubmitSheet';
 import { HOMEWORK_STATUS_META, homeworkStatus } from '../../utils/homework';
 import { formatDate } from '../../utils/format';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { useGetMyHomeworkQuery } from '../../store/api/apiSlice';
 
 export function StudentHomeworkView() {
+  const { colors, typography, spacing } = useAppTheme();
   const [submitting, setSubmitting] = useState(null);
   const { data, isLoading, isFetching, isError, error, refetch } = useGetMyHomeworkQuery();
   // getMyHomework's backend response is wrapped ({ enrollmentId, homework: [...] }), not a plain
@@ -19,6 +22,16 @@ export function StudentHomeworkView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="clipboard-text-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Homework</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Your assigned homework and submissions
+          </Text>
+        </View>
+      </View>
+
       <QueryState
         isLoading={isLoading || isFetching}
         isError={isError}

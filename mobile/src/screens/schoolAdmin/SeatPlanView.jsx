@@ -31,6 +31,16 @@ export function SeatPlanView() {
 
   return (
     <ScreenContainer scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg }}>
+        <IconWell icon="seat-outline" color={colors.primary} size={44} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[typography.h2, { color: colors.text }]}>Exam Seat Plan</Text>
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
+            Room and seat assignment for an exam
+          </Text>
+        </View>
+      </View>
+
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>EXAM</Text>
       <QueryState
         isLoading={examsQuery.isLoading}
@@ -41,7 +51,7 @@ export function SeatPlanView() {
         emptyIcon="pencil-box-outline"
         emptyLabel="No exams available yet"
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.md, alignItems: 'center' }}>
           {exams.map((e) => (
             <Chip key={e._id} selected={e._id === examId} onPress={() => setExamId(e._id)}>
               {e.title}

@@ -2,6 +2,7 @@ import { Faq } from "../models/Faq.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 /* ── CREATE ──────────────────────────────────────────────────────────────── */
 export const createFaq = asyncHandler(async (req, res) => {
@@ -29,9 +30,10 @@ export const getFaqs = asyncHandler(async (req, res) => {
   const filter = {};
   if (category) filter.category = category;
   if (search) {
+    const safeSearch = escapeRegex(search);
     filter.$or = [
-      { question: { $regex: search, $options: "i" } },
-      { answer: { $regex: search, $options: "i" } },
+      { question: { $regex: safeSearch, $options: "i" } },
+      { answer: { $regex: safeSearch, $options: "i" } },
     ];
   }
   if (isPublished !== undefined) filter.isPublished = isPublished === "true";

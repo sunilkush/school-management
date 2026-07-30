@@ -3,6 +3,7 @@ import Topic from "../models/Topic.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const topicPopulate = [
   { path: "chapterId", select: "name chapterNo subjectId boardClassId" },
@@ -71,7 +72,7 @@ const getAllTopics = asyncHandler(async (req, res) => {
   }
 
   if (req.query.search?.trim()) {
-    filter.name = { $regex: req.query.search.trim(), $options: "i" };
+    filter.name = { $regex: escapeRegex(req.query.search.trim()), $options: "i" };
   }
 
   const topics = await Topic.find(filter)

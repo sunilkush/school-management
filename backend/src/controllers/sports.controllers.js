@@ -5,6 +5,7 @@ import { SportsTeam, SPORTS_TEAM_CATEGORIES } from "../models/SportsTeam.model.j
 import { SportsEvent, SPORTS_EVENT_TYPES } from "../models/SportsEvent.model.js";
 import { Achievement, ACHIEVEMENT_HOLDER_TYPES, ACHIEVEMENT_LEVELS } from "../models/Achievement.model.js";
 import { Student } from "../models/student.model.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const resolveSchoolId = (req) =>
   req.user.roleId?.name === "Super Admin" ? req.query.schoolId || req.body.schoolId || req.user.schoolId : req.user.schoolId;
@@ -237,7 +238,7 @@ export const getAchievements = asyncHandler(async (req, res) => {
     if (to) filter.achievementDate.$lte = new Date(to);
   }
   if (search) {
-    const regex = new RegExp(search.trim(), "i");
+    const regex = new RegExp(escapeRegex(search.trim()), "i");
     filter.$or = [{ holderName: regex }, { title: regex }];
   }
 

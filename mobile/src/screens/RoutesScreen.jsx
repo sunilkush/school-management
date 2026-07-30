@@ -9,6 +9,7 @@ import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { CreateRouteSheet } from './transport/CreateRouteSheet';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
+import { confirmDelete } from '../utils/confirm';
 import { useDeleteTransportRouteMutation, useGetTransportRoutesQuery } from '../store/api/apiSlice';
 
 // backend/src/routes/transport.routes.js TRANSPORT_MANAGE — Principal/VP/Accountant are
@@ -84,7 +85,7 @@ export function RoutesScreen() {
                   iconColor={colors.danger}
                   size={18}
                   disabled={deleteState.isLoading}
-                  onPress={() => deleteRoute(r._id)}
+                  onPress={() => confirmDelete(() => deleteRoute(r._id), 'this route')}
                 />
               ) : undefined
             }

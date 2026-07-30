@@ -2,6 +2,7 @@ import { CounselingSession } from "../models/CounselingSession.model.js";
 import { ApiError }          from "../utils/ApiError.js";
 import { ApiResponse }       from "../utils/ApiResponse.js";
 import { asyncHandler }      from "../utils/asyncHandler.js";
+import { escapeRegex }       from "../utils/escapeRegex.js";
 
 const getSchoolId = (req) => req.user.school?._id || req.user.schoolId;
 
@@ -36,7 +37,7 @@ export const getSessions = asyncHandler(async (req, res) => {
   if (type)   filter.type   = type;
   if (status) filter.status = status;
   if (search) {
-    const re = new RegExp(search.trim(), "i");
+    const re = new RegExp(escapeRegex(search.trim()), "i");
     filter.$or = [{ studentName: re }, { issue: re }];
   }
 

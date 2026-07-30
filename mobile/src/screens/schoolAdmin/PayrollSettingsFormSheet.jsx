@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Modal, Portal, Switch, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, IconButton, Modal, Portal, Switch, Text, TextInput } from 'react-native-paper';
 import { IconWell } from '../../components/ui/IconWell';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useSavePayrollSettingsMutation } from '../../store/api/apiSlice';
@@ -153,6 +153,7 @@ export function PayrollSettingsFormSheet({ visible, current, onDismiss, onSaved 
   return (
     <Portal>
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '90%' }}>
+        <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <Text style={[typography.h3, { color: colors.text }]}>New Payroll Settings Version</Text>
         <ScrollView showsVerticalScrollIndicator={false}>
           <SectionHeader icon="shield-check-outline" color={colors.primary} title="EPF (Provident Fund)" subtitle="EPF & Misc Provisions Act, 1952" />

@@ -6,6 +6,7 @@ import { HealthVisit } from "../models/HealthVisit.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { School } from "../models/school.model.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const resolveSchoolId = (req) =>
   req.user.roleId?.name === "Super Admin" ? req.query.schoolId || req.body.schoolId || req.user.schoolId : req.user.schoolId;
@@ -135,7 +136,7 @@ export const getHealthVisits = asyncHandler(async (req, res) => {
     if (to) filter.visitDate.$lte = new Date(to);
   }
   if (search) {
-    filter.studentName = new RegExp(search.trim(), "i");
+    filter.studentName = new RegExp(escapeRegex(search.trim()), "i");
   }
 
   const pageNum = parseInt(page, 10) || 1;

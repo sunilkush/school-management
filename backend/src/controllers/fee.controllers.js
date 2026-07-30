@@ -113,7 +113,10 @@ export const updateFeeStructure = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You cannot update this fee structure");
   }
 
-  Object.assign(fee, req.body);
+  // schoolId must not be attacker-settable via the body — Object.assign would otherwise let a
+  // caller reassign their own fee structure into another school's namespace.
+  const { schoolId: _schoolId, _id, ...updates } = req.body;
+  Object.assign(fee, updates);
   await fee.save();
 
   return res.status(200).json(

@@ -36,6 +36,8 @@ import { Designation }         from "./models/Designation.model.js";
 import { Assignment }          from "./models/AssignmentsAndHomework.model.js";
 import { AssignmentSubmission } from "./models/AssignmentSubmission.model.js";
 import { Marks }               from "./models/Marks.model.js";
+import { ExamResult }          from "./models/ExamResult.model.js";
+import { Question }            from "./models/Questions.model.js";
 import { FeeHead }             from "./models/feeHead.model.js";
 import { FeeStructure }        from "./models/feeStructure.model.js";
 import { StudentFee }          from "./models/studentFee.model.js";
@@ -759,21 +761,136 @@ async function seed() {
 
   // ── 19. Marks (for completed exams) ─────────────────────────────────────────
   let marksCount = 0;
+  const marksObjects = []; // { examDoc, sub, cls, sec, stuUser, marksDoc } — feeds ExamResult below
   for (const { examDoc, sub, cls, status } of examObjects) {
     if (status !== "completed") continue;
     const studentsForClass = studentObjects.filter((s) => String(s.cls._id) === String(cls._id));
     for (const { stuUser, cls: sCls, sec } of studentsForClass) {
-      const exists = await Marks.findOne({ schoolId, examId: examDoc._id, studentId: stuUser._id, subjectId: sub._id });
-      if (!exists) {
+      let marksDoc = await Marks.findOne({ schoolId, examId: examDoc._id, studentId: stuUser._id, subjectId: sub._id });
+      if (!marksDoc) {
         try {
           const obtained = Math.floor(Math.random() * 55) + 35; // 35–89
-          await Marks.create({ schoolId, academicYearId: ayId, examId: examDoc._id, studentId: stuUser._id, schoolClassId: sCls._id, sectionId: sec._id, subjectId: sub._id, totalMarks: 100, passingMarks: 35, obtainedMarks: obtained, enteredBy: adminId, isFinalSubmitted: true });
+          marksDoc = await Marks.create({ schoolId, academicYearId: ayId, examId: examDoc._id, studentId: stuUser._id, schoolClassId: sCls._id, sectionId: sec._id, subjectId: sub._id, totalMarks: 100, passingMarks: 35, obtainedMarks: obtained, enteredBy: adminId, isFinalSubmitted: true });
           marksCount++;
-        } catch (e) { if (e.code !== 11000) throw e; }
+        } catch (e) { if (e.code !== 11000) throw e; marksDoc = await Marks.findOne({ schoolId, examId: examDoc._id, studentId: stuUser._id, subjectId: sub._id }); }
       }
+      if (marksDoc) marksObjects.push({ examDoc, sub, cls: sCls, sec, stuUser, marksDoc });
     }
   }
   ok(`Marks entries: ${marksCount}`);
+
+  // ── 19b. Exam Results (published, aggregated per student per exam) ──────────
+  // Mobile/web's "Grades"/"My Results" screens read ExamResult, not Marks — Marks is the raw
+  // per-subject entry teachers submit; ExamResult is the published, ranked outcome derived from
+  // it. No backend endpoint auto-generates ExamResult from Marks (confirmed: ExamResult is only
+  // ever read in exam.controllers.js/studentPortal.controllers.js, never written), so without this
+  // step every completed exam above would show real Marks to teachers but an empty Grades tab to
+  // students/parents. Built directly off the marksObjects just created/found so the numbers a
+  // student sees under "My Results" match what a teacher sees under Evaluation for the same exam.
+  function gradeFor(pct) {
+    if (pct >= 90) return "A+";
+    if (pct >= 80) return "A";
+    if (pct >= 70) return "B+";
+    if (pct >= 60) return "B";
+    if (pct >= 50) return "C";
+    if (pct >= 35) return "D";
+    return "F";
+  }
+  const marksByExam = new Map();
+  for (const m of marksObjects) {
+    const key = String(m.examDoc._id);
+    if (!marksByExam.has(key)) marksByExam.set(key, []);
+    marksByExam.get(key).push(m);
+  }
+  let resultCount = 0;
+  for (const [, group] of marksByExam) {
+    const ranked = [...group].sort((a, b) => b.marksDoc.obtainedMarks - a.marksDoc.obtainedMarks);
+    for (let i = 0; i < ranked.length; i++) {
+      const { examDoc, sub, cls, sec, stuUser, marksDoc } = ranked[i];
+      const exists = await ExamResult.findOne({ schoolId, examId: examDoc._id, studentId: stuUser._id });
+      if (exists) continue;
+      const obtained = marksDoc.obtainedMarks;
+      const total = marksDoc.totalMarks;
+      const passing = marksDoc.passingMarks;
+      const pct = Math.round((obtained / total) * 10000) / 100;
+      const isPassed = obtained >= passing;
+      try {
+        await ExamResult.create({
+          schoolId, academicYearId: ayId, examId: examDoc._id, studentId: stuUser._id,
+          schoolClassId: cls._id, sectionId: sec._id,
+          subjects: [{ subjectId: sub._id, subjectName: sub.name, obtainedMarks: obtained, totalMarks: total, passingMarks: passing, isPassed }],
+          totalObtainedMarks: obtained, totalMaximumMarks: total, percentage: pct,
+          grade: gradeFor(pct), resultStatus: isPassed ? "PASS" : "FAIL", rank: i + 1,
+          isPublished: true, publishedAt: new Date(), publishedBy: adminId,
+        });
+        resultCount++;
+      } catch (e) { if (e.code !== 11000) throw e; }
+    }
+  }
+  ok(`Exam Results (published): ${resultCount}`);
+
+  // ── 19c. Live Practice Quiz (question bank + a right-now-takeable online exam) ──
+  // Every exam above (real Unit Test/Mid Term/Annual dates) is either already in the past or
+  // scheduled days out, and none carry real Question docs in their `questions[]` — attempt.
+  // controllers.js's startAttempt requires status "published" AND now within [startTime, endTime],
+  // plus real questionId refs to populate. Without this, the actual student-facing "take an exam"
+  // flow (ExamTakeScreen/AttemptReviewScreen) would have nothing to test against no matter how
+  // many report-style exams exist. This one exam is deliberately scheduled around "now" with a wide
+  // window so it stays takeable regardless of when this script is actually run relative to seeding.
+  const quizClass = targetClasses[0];
+  const quizSection = (sectionMap[String(quizClass?._id)] || [])[0];
+  const quizSubject = subjects[0];
+  const quizTeacher = teachers[0];
+  if (quizClass && quizSubject && quizTeacher) {
+    const questionDefs = [
+      { statement: "What is 7 + 5?", options: [["A", "10"], ["B", "11"], ["C", "12"], ["D", "13"]], correct: ["C"], type: "mcq_single" },
+      { statement: "What is 9 - 4?", options: [["A", "3"], ["B", "4"], ["C", "5"], ["D", "6"]], correct: ["C"], type: "mcq_single" },
+      { statement: "Which of these numbers is even?", options: [["A", "3"], ["B", "7"], ["C", "8"], ["D", "11"]], correct: ["C"], type: "mcq_single" },
+      { statement: "What is 6 × 3?", options: [["A", "16"], ["B", "18"], ["C", "20"], ["D", "24"]], correct: ["B"], type: "mcq_single" },
+      { statement: "True or False: 10 is greater than 15", options: [], correct: ["false"], type: "true_false" },
+    ];
+    const quizQuestions = [];
+    for (const q of questionDefs) {
+      let doc = await Question.findOne({ schoolId, schoolClassId: quizClass._id, subjectId: quizSubject._id, statement: q.statement });
+      if (!doc) {
+        doc = await Question.create({
+          schoolId, schoolClassId: quizClass._id, subjectId: quizSubject._id, academicYearId: ayId,
+          questionType: q.type,
+          statement: q.statement,
+          options: q.options.map(([key, text]) => ({ key, text })),
+          correctAnswers: q.correct,
+          marks: 4, negativeMarks: 0, difficulty: "easy",
+          createdBy: quizTeacher._id,
+        });
+      }
+      quizQuestions.push(doc);
+    }
+    ok(`Question bank: ${quizQuestions.length} questions ready`);
+
+    const quizTitle = "Live Practice Quiz – Mathematics";
+    let quizExam = await Exam.findOne({ schoolId, title: quizTitle, schoolClassId: quizClass._id });
+    if (!quizExam) {
+      const now = new Date();
+      const totalMarks = quizQuestions.reduce((sum, q) => sum + (q.marks || 0), 0);
+      quizExam = await Exam.create({
+        academicYearId: ayId, schoolId, title: quizTitle,
+        examCode: `QZ${Date.now().toString().slice(-6)}`,
+        schoolClassId: quizClass._id, sectionId: quizSection?._id ?? null, subjectId: quizSubject._id,
+        examType: "Practice",
+        examDate: now,
+        startTime: new Date(now.getTime() - 60 * 60 * 1000),   // 1h before "now" ...
+        endTime: new Date(now.getTime() + 4 * 60 * 60 * 1000), // ... to 4h after, so it stays live whenever this is tested
+        durationMinutes: 30,
+        totalMarks, passingMarks: Math.ceil(totalMarks * 0.4),
+        questions: quizQuestions.map((q) => ({ questionId: q._id, marks: q.marks })),
+        settings: { negativeMarking: 0, allowPartialScoring: false, maxAttempts: 1 },
+        createdBy: quizTeacher._id, status: "published",
+      });
+      ok(`Live exam created: "${quizTitle}" (open now → ${quizExam.endTime.toISOString()})`);
+    } else {
+      skip(`Live exam already exists: "${quizTitle}"`);
+    }
+  }
 
   // ── 20. Lesson Plans ─────────────────────────────────────────────────────────
   const planDefs = [
@@ -1458,6 +1575,8 @@ MODULES SEEDED:
   ✓ Timetable (TimeSlots + Periods)
   ✓ Assignments + Submissions
   ✓ Exam Marks (completed exams)
+  ✓ Exam Results (published, ranked — powers Student/Parent "Grades")
+  ✓ Question Bank (5 questions) + a live "Practice Quiz" exam, open now
   ✓ Lesson Plans
   ✓ Study Materials
   ✓ Fee Heads + Fee Structures + Student Fees + Installments
