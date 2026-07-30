@@ -626,34 +626,34 @@ export const apiSlice = createApi({
     ...buildLedgerEndpoints(builder, { key: 'Income', url: '/income', tag: 'Income' }),
     ...buildLedgerEndpoints(builder, { key: 'Expense', url: '/expenses', tag: 'Expense' }),
 
-    // Books — GET /book has no schoolId scoping if the caller has no schoolId (never true for a
+    // Books — GET /books has no schoolId scoping if the caller has no schoolId (never true for a
     // signed-in staff member here), category is free text server-side (no enum), so filter chips
     // are built from whatever categories are actually in use rather than a hardcoded list.
     getBooks: builder.query({
-      query: () => ({ url: '/book' }),
+      query: () => ({ url: '/books' }),
       providesTags: ['Book'],
     }),
     createBook: builder.mutation({
-      query: (payload) => ({ url: '/book', method: 'post', data: payload }),
+      query: (payload) => ({ url: '/books', method: 'post', data: payload }),
       invalidatesTags: ['Book'],
     }),
     updateBook: builder.mutation({
-      query: ({ id, ...payload }) => ({ url: `/book/${id}`, method: 'put', data: payload }),
+      query: ({ id, ...payload }) => ({ url: `/books/${id}`, method: 'put', data: payload }),
       invalidatesTags: ['Book'],
     }),
     deleteBook: builder.mutation({
-      query: (id) => ({ url: `/book/${id}`, method: 'delete' }),
+      query: (id) => ({ url: `/books/${id}`, method: 'delete' }),
       invalidatesTags: ['Book'],
     }),
 
     // Fine Management — a separate feature from IssuedBooksScreen's return flow (which only
     // auto-computes and displays a fine; it never calls a collection endpoint).
     getFineSummary: builder.query({
-      query: () => ({ url: '/issued-books/fines' }),
+      query: () => ({ url: '/issuedBooks/fines' }),
       providesTags: ['IssuedBook'],
     }),
     collectFine: builder.mutation({
-      query: ({ id, ...payload }) => ({ url: `/issued-books/${id}/fine`, method: 'patch', data: payload }),
+      query: ({ id, ...payload }) => ({ url: `/issuedBooks/${id}/fine`, method: 'patch', data: payload }),
       invalidatesTags: ['IssuedBook'],
     }),
 
@@ -950,19 +950,19 @@ export const apiSlice = createApi({
     // covers the dominant workflow, issuing to a Student. Invalidates 'Book' too since issue/
     // return changes a Book's availableCopies, which the Books screen's stat cards read.
     getIssuedBooks: builder.query({
-      query: () => ({ url: '/issued-books' }),
+      query: () => ({ url: '/issuedBooks' }),
       providesTags: ['IssuedBook'],
     }),
     issueBookToStudent: builder.mutation({
-      query: (payload) => ({ url: '/issued-books/issue', method: 'post', data: payload }),
+      query: (payload) => ({ url: '/issuedBooks/issue', method: 'post', data: payload }),
       invalidatesTags: ['IssuedBook', 'Book'],
     }),
     returnIssuedBook: builder.mutation({
-      query: ({ id, status }) => ({ url: `/issued-books/return/${id}`, method: 'put', data: { status } }),
+      query: ({ id, status }) => ({ url: `/issuedBooks/return/${id}`, method: 'put', data: { status } }),
       invalidatesTags: ['IssuedBook', 'Book'],
     }),
     deleteIssuedBook: builder.mutation({
-      query: (id) => ({ url: `/issued-books/${id}`, method: 'delete' }),
+      query: (id) => ({ url: `/issuedBooks/${id}`, method: 'delete' }),
       invalidatesTags: ['IssuedBook'],
     }),
 

@@ -161,8 +161,7 @@ const LoginForm = () => {
                 All-in-One Platform
               </div>
               <h1 className="lf-headline">
-                The smarter way to<br />
-                <span className="lf-hl-grad">run your school</span>
+                The smarter way to <span className="lf-hl-grad">run your school</span>
               </h1>
               <p className="lf-tagline">
                 All roles, all modules — one unified platform built for modern schools.
@@ -176,8 +175,11 @@ const LoginForm = () => {
                   <div className="lf-feat-ico" style={{ background: f.bg, color: f.color }}>
                     <f.Icon size={16} />
                   </div>
-                  <div className="lf-feat-title">{f.title}</div>
+                  <div>
+                      <div className="lf-feat-title">{f.title}</div>
                   <div className="lf-feat-desc">{f.desc}</div>
+                  </div>
+                
                 </div>
               ))}
             </div>
@@ -229,7 +231,7 @@ const LoginForm = () => {
                   <SafetyCertificateOutlined style={{ fontSize: 12 }} />
                   School Portal
                 </div>
-                <h2 className="lf-card-title">{requiresTwoFactor ? "Verify Identity" : "Welcome back"}</h2>
+                <h2 className="lf-card-title">{requiresTwoFactor ? "Verify Identity" : "Sign In"}</h2>
                 <p className="lf-card-sub">{requiresTwoFactor ? "Enter the 6-digit code sent to your email" : "Sign in to access your dashboard"}</p>
               </div>
 
@@ -371,7 +373,7 @@ const LoginForm = () => {
               </Form>
 
               <div className="lf-trust-row">
-                {["SSL Encrypted", "FERPA Compliant", "2FA Ready"].map((t) => (
+                {["SSL Encrypted", "Role-Based Access", "2FA Ready"].map((t) => (
                   <span key={t} className="lf-trust-badge">
                     <CheckCircleFilled style={{ fontSize: 10, color: "var(--success)" }} />
                     {t}
@@ -566,6 +568,7 @@ const CSS = `
     border-radius: 14px; padding: 14px;
     animation: lfFeatIn 0.45s ease both;
     transition: background 0.2s, border-color 0.2s;
+    display: flex; align-items: flex-start; gap: 10px;
   }
   .lf-feat-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.14); }
   @keyframes lfFeatIn {

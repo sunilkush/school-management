@@ -9,12 +9,19 @@ import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { CreateAdmissionInquirySheet } from './CreateAdmissionInquirySheet';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { useAuth } from '../../hooks/useAuth';
 import {
   useDeleteAdmissionInquiryMutation,
   useGetAdmissionInquiriesQuery,
   useGetAdmissionInquiryStatsQuery,
   useUpdateAdmissionInquiryMutation,
 } from '../../store/api/apiSlice';
+
+// Mirrors backend/src/routes/admissionInquiry.routes.js's own INQUIRY_STATS list — the stats
+// endpoint is leadership-only server-side; Receptionist and Counselor can manage inquiries but
+// get a 403 on /stats, same as the web app's separate Receptionist Enquiries page already avoids
+// calling it at all. This one shared component serves both, so it skips instead.
+const CAN_VIEW_STATS = ['Super Admin', 'School Admin', 'Principal', 'Vice Principal'];
 
 const STATUS_COLOR = {
   new: '#2563EB',
@@ -43,10 +50,12 @@ const NEXT_STATUS = {
  * isn't implemented server-side, so this stops at "approved/enrolled" status, not a real link. */
 export function AdmissionInquiriesView() {
   const { colors, typography, spacing } = useAppTheme();
+  const { role } = useAuth();
   const [status, setStatus] = useState(null);
   const [creating, setCreating] = useState(false);
 
-  const statsQuery = useGetAdmissionInquiryStatsQuery();
+  const canViewStats = CAN_VIEW_STATS.includes(role);
+  const statsQuery = useGetAdmissionInquiryStatsQuery(undefined, { skip: !canViewStats });
   const stats = statsQuery.data ?? {};
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetAdmissionInquiriesQuery({ status: status || undefined });
@@ -56,13 +65,15 @@ export function AdmissionInquiriesView() {
 
   return (
     <ScreenContainer scrollable>
-      <View style={{ marginBottom: spacing.lg }}>
-        <StatGrid>
-          <StatCard label="New" metric={{ label: 'New', icon: 'account-plus-outline', color: '#2563EB', value: stats.new ?? 0 }} />
-          <StatCard label="Approved" metric={{ label: 'Approved', icon: 'check-circle-outline', color: '#22C55E', value: stats.approved ?? 0 }} />
-          <StatCard label="Enrolled" metric={{ label: 'Enrolled', icon: 'school-outline', color: '#16A34A', value: stats.enrolled ?? 0 }} />
-        </StatGrid>
-      </View>
+      {canViewStats && (
+        <View style={{ marginBottom: spacing.lg }}>
+          <StatGrid>
+            <StatCard label="New" metric={{ label: 'New', icon: 'account-plus-outline', color: '#2563EB', value: stats.new ?? 0 }} />
+            <StatCard label="Approved" metric={{ label: 'Approved', icon: 'check-circle-outline', color: '#22C55E', value: stats.approved ?? 0 }} />
+            <StatCard label="Enrolled" metric={{ label: 'Enrolled', icon: 'school-outline', color: '#16A34A', value: stats.enrolled ?? 0 }} />
+          </StatGrid>
+        </View>
+      )}
 
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
         <Button mode="contained" icon="plus" onPress={() => setCreating(true)}>
