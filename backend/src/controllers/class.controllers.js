@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { SchoolClass } from "../models/schoolClass.model.js";
 import { Section } from "../models/section.model.js";
+import { BoardClass } from "../models/BoardClass.model.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 
 const createClass = asyncHandler(async (req, res) => {
@@ -58,6 +59,15 @@ const deleteClass = asyncHandler(async (req, res) => {
 
   if (!mongoose.Types.ObjectId.isValid(schoolClassId)) {
     throw new ApiError(400, "Invalid Class ID");
+  }
+
+  // This is a shared, platform-wide catalog entry (no schoolId on this model — every school's
+  // BoardClass/SchoolClass records can reference it), not one school's own data. Deleting an
+  // in-use entry would silently break every other school still relying on it, so block that
+  // instead of just checking the caller's own tenant.
+  const inUse = await BoardClass.exists({ classId: schoolClassId });
+  if (inUse) {
+    throw new ApiError(409, "This class is referenced by one or more boards and cannot be deleted");
   }
 
   const deleted = await Class.findByIdAndDelete(schoolClassId);

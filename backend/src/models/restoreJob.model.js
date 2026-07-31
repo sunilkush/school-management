@@ -59,4 +59,6 @@ const restoreJobSchema = new Schema(
   { timestamps: true }
 );
 
+restoreJobSchema.index({ schoolId: 1 });
+
 export const RestoreJob = mongoose.model("RestoreJob", restoreJobSchema);

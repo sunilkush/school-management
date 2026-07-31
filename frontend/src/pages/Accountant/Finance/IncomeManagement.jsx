@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Button, Col, DatePicker, Empty, Form, Input, InputNumber,
-  Modal, Popconfirm, Row, Select, Spin, Table, Tag, message,
+  Modal, Popconfirm, Row, Select, Spin, Table, Tag, Tooltip, message,
 } from "antd";
 import {
   DeleteOutlined, DownloadOutlined,
@@ -14,8 +14,9 @@ import {
   createIncome, deleteIncome, fetchIncome, fetchIncomeSummary, updateIncome,
 } from "../../../features/financeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
+import StatCardsRow from "../../../components/layout/StatCardsRow";
 import {
-  iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss,
+  pageWrapper, pill, sectionPanel, tableHeadCss,
 } from "../../../styles/pageStyles";
 
 const { Option } = Select;
@@ -189,9 +190,13 @@ const IncomeManagement = () => {
       width: 100,
       render: (_, r) => (
         <div style={{ display: "flex", gap: 6 }}>
-          <Button size="small" type="text" icon={<EditOutlined />}   onClick={() => openEdit(r)} />
+          <Tooltip title="Edit">
+            <Button size="small" type="text" icon={<EditOutlined />} aria-label="Edit income record" onClick={() => openEdit(r)} />
+          </Tooltip>
           <Popconfirm title="Delete this income record?" onConfirm={() => handleDelete(r._id)} okText="Delete" okType="danger">
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+            <Tooltip title="Delete">
+              <Button size="small" type="text" danger icon={<DeleteOutlined />} aria-label="Delete income record" />
+            </Tooltip>
           </Popconfirm>
         </div>
       ),
@@ -214,21 +219,14 @@ const IncomeManagement = () => {
       />
 
       {/* ── Summary KPIs ─────────────────────────────────────────── */}
-      <div style={statGrid(150)}>
-        {[
-          { label: "Total Income",   value: money(incomeTotalAmount), color: "#22C55E", icon: <RupeeIcon /> },
-          { label: "Total Records",  value: incomeTotal,              color: "#0891b2", icon: <FilterOutlined /> },
-          { label: "This Month",     value: money(incomeSummary?.total), color: "#14B8A6", icon: <RupeeIcon /> },
-        ].map(({ label, value, color, icon }) => (
-          <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
-            <div style={iconWell(color, 40)}>{icon}</div>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}>{value ?? "—"}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <StatCardsRow
+        style={{ marginTop: 0 }}
+        items={[
+          { label: "Total Income",   value: money(incomeTotalAmount) ?? "—", color: "#22C55E", icon: <RupeeIcon /> },
+          { label: "Total Records",  value: incomeTotal ?? "—",              color: "#0891b2", icon: <FilterOutlined /> },
+          { label: "This Month",     value: money(incomeSummary?.total) ?? "—", color: "#14B8A6", icon: <RupeeIcon /> },
+        ]}
+      />
 
       {/* ── Category breakdown ────────────────────────────────────── */}
       {byCategory.length > 0 && (

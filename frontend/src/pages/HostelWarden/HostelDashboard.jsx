@@ -72,7 +72,14 @@ const HostelDashboard = () => {
         subtitle="Live overview — occupancy, leaves, visitors and complaints"
         icon={<HomeOutlined />}
         extra={
-          <div style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "var(--primary)", fontWeight: 600, fontSize: 13 }} onClick={() => dispatch(fetchHostelDashboard())}>
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Refresh dashboard"
+            style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "var(--primary)", fontWeight: 600, fontSize: 13 }}
+            onClick={() => dispatch(fetchHostelDashboard())}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); dispatch(fetchHostelDashboard()); } }}
+          >
             <ReloadOutlined /> Refresh
           </div>
         }

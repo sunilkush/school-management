@@ -8,7 +8,7 @@ const HostelSchema = new Schema(
         },
         academicYearId:{
                     type: Schema.Types.ObjectId,
-                    ref: "AcademicYears",
+                    ref: "AcademicYear",
                     required: true
                 },
         studentId: {
@@ -28,5 +28,7 @@ const HostelSchema = new Schema(
     },
     { timestamps: true }
 );
+
+HostelSchema.index({ schoolId: 1, academicYearId: 1 });
 
 export const Hostel = mongoose.model("Hostel", HostelSchema)

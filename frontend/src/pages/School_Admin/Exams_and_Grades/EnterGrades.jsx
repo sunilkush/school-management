@@ -122,7 +122,7 @@ const EnterGrades = () => {
 
   useEffect(() => {
     if (!selectedClass || !schoolId || !academicYearId) return;
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: selectedClass }));
+    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: selectedClass, limit: 200 }));
   }, [dispatch, selectedClass, schoolId, academicYearId]);
 
   useEffect(() => {

@@ -42,12 +42,14 @@ import {
   ExclamationCircleOutlined,
   GlobalOutlined,
   LockOutlined,
+  MessageOutlined,
   ReloadOutlined,
   SafetyOutlined,
   SaveOutlined,
   SettingOutlined,
   UploadOutlined,
   UserOutlined,
+  WhatsAppOutlined,
 } from "@ant-design/icons";
 
 import PageHeader from "../../../components/layout/PageHeader.jsx";
@@ -74,11 +76,12 @@ const TAB_FIELDS = {
 };
 
 const TAB_COLORS = {
-  profile:     "#2563EB",
-  preferences: "#7C3AED",
-  school:      "#10B981",
-  security:    "#EF4444",
-  backup:      "#14B8A6",
+  profile:      "#2563EB",
+  preferences:  "#7C3AED",
+  school:       "#10B981",
+  communication:"#0EA5E9",
+  security:     "#EF4444",
+  backup:       "#14B8A6",
 };
 
 /* ── Password strength ───────────────────────────────────────────── */
@@ -144,9 +147,11 @@ const Settings = () => {
 
   const [form]         = Form.useForm();
   const [razorpayForm] = Form.useForm();
+  const [commsForm]    = Form.useForm();
 
   const [isSaving,        setIsSaving]        = useState(false);
   const [isRazorpaySaving, setIsRazorpaySaving] = useState(false);
+  const [isCommsSaving,   setIsCommsSaving]   = useState(false);
   const [avatarFile,      setAvatarFile]      = useState(null);
   const [avatarPreview,   setAvatarPreview]   = useState(null);
   const [dirtyTabs,       setDirtyTabs]       = useState(new Set());
@@ -189,6 +194,24 @@ const Settings = () => {
       } catch { /* config may not exist yet */ }
     })();
   }, [razorpayForm]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res    = await apiClient.get("/communication-settings");
+        const config = res?.data?.data || {};
+        commsForm.setFieldsValue({
+          provider:           config.provider || "none",
+          accountSid:         config.accountSid || "",
+          authToken:          "",
+          smsFromNumber:      config.smsFromNumber || "",
+          whatsappFromNumber: config.whatsappFromNumber || "",
+          isSmsEnabled:       Boolean(config.isSmsEnabled),
+          isWhatsappEnabled:  Boolean(config.isWhatsappEnabled),
+        });
+      } catch { /* config may not exist yet */ }
+    })();
+  }, [commsForm]);
 
   const safeRoles = Array.isArray(roles) ? roles : [];
 
@@ -351,6 +374,28 @@ const Settings = () => {
       message.error(err?.response?.data?.message || "Unable to save Razorpay settings.");
     } finally {
       setIsRazorpaySaving(false);
+    }
+  };
+
+  /* ── Communication (SMS/WhatsApp) save ─────────────────────────── */
+  const handleCommsSave = async (values) => {
+    setIsCommsSaving(true);
+    try {
+      const res = await apiClient.put("/communication-settings", values);
+      message.success("Communication settings saved successfully.");
+      commsForm.setFieldValue("authToken", "");
+      const saved = res?.data?.data;
+      if (saved) {
+        commsForm.setFieldsValue({
+          accountSid: saved.accountSid || "",
+          smsFromNumber: saved.smsFromNumber || "",
+          whatsappFromNumber: saved.whatsappFromNumber || "",
+        });
+      }
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Unable to save communication settings.");
+    } finally {
+      setIsCommsSaving(false);
     }
   };
 
@@ -618,6 +663,106 @@ const Settings = () => {
               </Col>
             </Row>
           </Form>
+        </div>
+      ),
+    },
+
+    {
+      key: "communication",
+      label: tabLabel("communication", <MessageOutlined />, "Communication"),
+      children: (
+        <div>
+          <SectionTitle
+            icon={<MessageOutlined />} color={TAB_COLORS.communication}
+            label="SMS & WhatsApp Sender"
+            description="Use your own Twilio account to send SMS and WhatsApp notifications under your school's own number. Leave disabled to keep using the platform's shared sender."
+          />
+          <Form form={commsForm} layout="vertical" onFinish={handleCommsSave}>
+            <Row gutter={[16, 0]}>
+              <Col xs={24} md={8}>
+                <Form.Item label="Provider" name="provider">
+                  <Select
+                    options={[
+                      { value: "none",   label: "None — use platform default" },
+                      { value: "twilio", label: "Twilio (own account)" },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <Form.Item label="Twilio Account SID" name="accountSid">
+                  <Input placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <Form.Item label="Twilio Auth Token" name="authToken" extra="Leave blank to keep the existing token.">
+                  <Input.Password placeholder="Enter new auth token (optional)" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item label={<Flex align="center" gap={6}><MessageOutlined />SMS From Number</Flex>} name="smsFromNumber">
+                  <Input placeholder="+1XXXXXXXXXX" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item label={<Flex align="center" gap={6}><WhatsAppOutlined />WhatsApp From Number</Flex>} name="whatsappFromNumber">
+                  <Input placeholder="+1XXXXXXXXXX" />
+                </Form.Item>
+              </Col>
+              <Col xs={24}>
+                <div style={{ background: "var(--surface-soft)", borderRadius: 12, padding: "16px 20px", border: "1px solid var(--border-muted)" }}>
+                  <Row gutter={[16, 12]}>
+                    <Col xs={24} md={12}>
+                      <Flex align="center" justify="space-between" gap={12}>
+                        <div>
+                          <Flex align="center" gap={8} style={{ marginBottom: 2 }}>
+                            <MessageOutlined style={{ color: TAB_COLORS.communication }} />
+                            <Text strong style={{ color: "var(--text-primary)" }}>Enable SMS</Text>
+                          </Flex>
+                          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                            Send SMS notifications via this Twilio account.
+                          </Text>
+                        </div>
+                        <Form.Item name="isSmsEnabled" valuePropName="checked" style={{ margin: 0 }}>
+                          <Switch />
+                        </Form.Item>
+                      </Flex>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Flex align="center" justify="space-between" gap={12}>
+                        <div>
+                          <Flex align="center" gap={8} style={{ marginBottom: 2 }}>
+                            <WhatsAppOutlined style={{ color: TAB_COLORS.communication }} />
+                            <Text strong style={{ color: "var(--text-primary)" }}>Enable WhatsApp</Text>
+                          </Flex>
+                          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                            Send WhatsApp notifications via this Twilio account.
+                          </Text>
+                        </div>
+                        <Form.Item name="isWhatsappEnabled" valuePropName="checked" style={{ margin: 0 }}>
+                          <Switch />
+                        </Form.Item>
+                      </Flex>
+                    </Col>
+                  </Row>
+                </div>
+              </Col>
+              <Col xs={24}>
+                <Flex justify="flex-end" style={{ marginTop: 4 }}>
+                  <Button
+                    type="primary" icon={<SaveOutlined />} onClick={() => commsForm.submit()}
+                    loading={isCommsSaving} style={{ background: TAB_COLORS.communication, borderColor: TAB_COLORS.communication }}
+                  >
+                    Save Communication Settings
+                  </Button>
+                </Flex>
+              </Col>
+            </Row>
+          </Form>
+          <InfoBox icon={<MessageOutlined />}>
+            A Twilio Account SID and Auth Token are required before enabling SMS or WhatsApp. Get these from your{" "}
+            <a href="https://console.twilio.com" target="_blank" rel="noreferrer">Twilio Console</a>.
+          </InfoBox>
         </div>
       ),
     },

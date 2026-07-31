@@ -169,7 +169,7 @@ export const registerEmployee = asyncHandler(async (req, res) => {
  * Get All Employees (with optional filters)
  */
 export const getAllEmployees = asyncHandler(async (req, res) => {
-  const { employeeType, isActive } = req.query;
+  const { employeeType, isActive, page = 1, limit = 1000 } = req.query;
   const isSuperAdmin = req.userRole?.name === "Super Admin";
   const filter = {};
   // Super Admin may optionally filter by school; others are locked to their school
@@ -181,16 +181,24 @@ export const getAllEmployees = asyncHandler(async (req, res) => {
   if (employeeType) filter.employeeType = employeeType;
   if (isActive !== undefined) filter.isActive = isActive;
 
+  const pageNumber = Math.max(Number(page) || 1, 1);
+  const limitNumber = Math.min(Math.max(Number(limit) || 1000, 1), 3000);
+  const skip = (pageNumber - 1) * limitNumber;
+
   const query = Employee.find(filter)
     .populate({ path: "userId", select: "name email regId", populate: { path: "roleId", select: "name" } })
     .populate("schoolId", "name")
-    .populate("academicYearId", "name year");
+    .populate("academicYearId", "name year")
+    .skip(skip)
+    .limit(limitNumber);
   if (!canViewBankDetails(req)) query.select("-bankDetails");
-  const employees = await query;
+  const [employees, total] = await Promise.all([query, Employee.countDocuments(filter)]);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, employees, "Employees fetched successfully"));
+    .json(new ApiResponse(200, employees, "Employees fetched successfully", {
+      pagination: { total, page: pageNumber, limit: limitNumber, totalPages: Math.ceil(total / limitNumber) },
+    }));
 });
 
 // Get Single Employee
@@ -218,9 +226,12 @@ export const getEmployeeById = asyncHandler(async (req, res) => {
 // Update Employee
 export const updateEmployee = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const updateData = req.body;
   const isSuperAdmin = req.userRole?.name === "Super Admin";
   const query = isSuperAdmin ? { _id: id } : { _id: id, schoolId: req.user.schoolId };
+
+  // schoolId/_id/userId must not be attacker-settable via the body — otherwise a caller could
+  // reassign this employee into another school's namespace despite the read-scope check above.
+  const { schoolId: _schoolId, _id, userId: _userId, ...updateData } = req.body;
 
   const employee = await Employee.findOneAndUpdate(query, updateData, {
     new: true,
@@ -241,7 +252,11 @@ export const deleteEmployee = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const isSuperAdmin = req.userRole?.name === "Super Admin";
   const query = isSuperAdmin ? { _id: id } : { _id: id, schoolId: req.user.schoolId };
-  const employee = await Employee.findOneAndUpdate(query, { isActive: false }, { new: true });
+  // Payroll pro-rates a leaver's final cycle against this date (see generatePayrollCycle) —
+  // without it, a mid-month leaver was either paid for the whole month or excluded from that
+  // cycle's payroll entirely.
+  const relievingDate = req.body?.relievingDate ? new Date(req.body.relievingDate) : new Date();
+  const employee = await Employee.findOneAndUpdate(query, { isActive: false, relievingDate }, { new: true });
 
   if (!employee) throw new ApiError(404, "Employee not found");
 

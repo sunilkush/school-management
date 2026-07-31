@@ -66,4 +66,6 @@ const backupScheduleSchema = new Schema(
   { timestamps: true }
 );
 
+backupScheduleSchema.index({ schoolId: 1 });
+
 export const BackupSchedule = mongoose.model("BackupSchedule", backupScheduleSchema);

@@ -171,6 +171,12 @@ export const getAssignableStudents = asyncHandler(async (req, res) => {
 
   const activeAcademicYear = await resolveActiveAcademicYear(schoolId);
 
+  // The transport-assignment picker needs the full active roster to search/select against, so the
+  // cap here is deliberately generous (matches the same full-roster pattern used by
+  // HostelAllocations/HostelManagement) rather than a tight page size — it exists only to stop an
+  // unbounded query, not to page through the picker.
+  const limit = Math.min(Math.max(Number(req.query.limit) || 2000, 1), 5000);
+
   const enrollments = await StudentEnrollment.find({
     schoolId,
     academicYearId: activeAcademicYear._id,
@@ -187,6 +193,7 @@ export const getAssignableStudents = asyncHandler(async (req, res) => {
     .populate("schoolClassId", "name")
     .populate("sectionId", "name")
     .sort({ createdAt: -1 })
+    .limit(limit)
     .lean();
 
   const students = enrollments.map((enrollment) => ({
@@ -207,33 +214,42 @@ export const getTransportAssignments = asyncHandler(async (req, res) => {
 
   const activeAcademicYear = await resolveActiveAcademicYear(schoolId);
 
-  const assignments = await StudentTransportAssignment.find({
-    schoolId,
-    academicYearId: activeAcademicYear._id,
-    isActive: true,
-  })
-    .populate("routeId")
-    .populate("vehicleId")
-    .populate({
-      path: "studentEnrollmentId",
-      select: "registrationNumber schoolClassId sectionId studentId",
-      populate: [
-        {
-          path: "studentId",
-          select: "userId",
-          populate: {
-            path: "userId",
-            select: "name",
-          },
-        },
-        { path: "schoolClassId", select: "name" },
-        { path: "sectionId", select: "name" },
-      ],
-    })
-    .sort({ createdAt: -1 })
-    .lean();
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 500, 1), 2000);
+  const skip = (page - 1) * limit;
 
-  return res.status(200).json(new ApiResponse(200, assignments, "Transport assignments fetched successfully"));
+  const filter = { schoolId, academicYearId: activeAcademicYear._id, isActive: true };
+
+  const [assignments, total] = await Promise.all([
+    StudentTransportAssignment.find(filter)
+      .populate("routeId")
+      .populate("vehicleId")
+      .populate({
+        path: "studentEnrollmentId",
+        select: "registrationNumber schoolClassId sectionId studentId",
+        populate: [
+          {
+            path: "studentId",
+            select: "userId",
+            populate: {
+              path: "userId",
+              select: "name",
+            },
+          },
+          { path: "schoolClassId", select: "name" },
+          { path: "sectionId", select: "name" },
+        ],
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    StudentTransportAssignment.countDocuments(filter),
+  ]);
+
+  return res.status(200).json(new ApiResponse(200, assignments, "Transport assignments fetched successfully", {
+    pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+  }));
 });
 
 export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) => {
@@ -247,6 +263,32 @@ export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) =
   }
 
   const activeAcademicYear = await resolveActiveAcademicYear(schoolId);
+
+  // Seat-capacity check — Hostel already enforces this for rooms (assignStudentToRoom in
+  // hostelRoom.controllers.js), Transport didn't, so a vehicle could be assigned more students
+  // than it physically has seats for. Skipped when this call is just updating an existing
+  // occupant's own pickup/drop details on the same vehicle they're already assigned to.
+  const existingAssignment = await StudentTransportAssignment.findOne({
+    schoolId,
+    academicYearId: activeAcademicYear._id,
+    studentEnrollmentId,
+  }).select("vehicleId isActive");
+  const isNewOccupant = !existingAssignment || !existingAssignment.isActive || String(existingAssignment.vehicleId) !== String(vehicleId);
+
+  if (isNewOccupant) {
+    const vehicle = await Transport.findOne({ _id: vehicleId, schoolId }).select("capacity");
+    if (!vehicle) throw new ApiError(404, "Vehicle not found");
+
+    const occupiedSeats = await StudentTransportAssignment.countDocuments({
+      schoolId,
+      academicYearId: activeAcademicYear._id,
+      vehicleId,
+      isActive: true,
+    });
+    if (occupiedSeats >= Number(vehicle.capacity || 0)) {
+      throw new ApiError(400, "This vehicle is already at full capacity");
+    }
+  }
 
   const assignment = await StudentTransportAssignment.findOneAndUpdate(
     {

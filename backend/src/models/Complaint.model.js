@@ -32,4 +32,6 @@ const complaintSchema = new Schema({
     timestamps: true
 });
 
+complaintSchema.index({ schoolId: 1, status: 1 });
+
 export const Complaint = mongoose.model('Complaint', complaintSchema);

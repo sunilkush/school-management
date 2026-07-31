@@ -47,6 +47,7 @@ const UserRoleList = ({
   nounPlural = "users",
   enableBulkActions = true,
   headerExtra = null,
+  extraRowAction = null,
   children,
 }) => {
   const dispatch = useDispatch();
@@ -173,15 +174,18 @@ const UserRoleList = ({
       title: "Action",
       align: "right",
       render: (_, record) => (
-        <Button
-          size="middle"
-          danger={record.isActive}
-          type={record.isActive ? "default" : "primary"}
-          icon={record.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
-          onClick={() => handleToggleStatus(record)}
-        >
-          {record.isActive ? "Deactivate" : "Activate"}
-        </Button>
+        <Space size={8}>
+          {extraRowAction?.(record)}
+          <Button
+            size="middle"
+            danger={record.isActive}
+            type={record.isActive ? "default" : "primary"}
+            icon={record.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+            onClick={() => handleToggleStatus(record)}
+          >
+            {record.isActive ? "Deactivate" : "Activate"}
+          </Button>
+        </Space>
       ),
     },
   ];

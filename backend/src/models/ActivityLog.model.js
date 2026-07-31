@@ -40,4 +40,8 @@ const activityLogSchema = new mongoose.Schema(
   }
 );
 
+// Activity logs are almost always queried "most recent first, for this school" — no index
+// existed at all, so every such query was a full collection scan.
+activityLogSchema.index({ school: 1, createdAt: -1 });
+
 export default mongoose.model("ActivityLog", activityLogSchema);

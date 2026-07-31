@@ -209,7 +209,15 @@ const Profile = () => {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ position: "relative", flexShrink: 0, cursor: "pointer" }} onClick={() => !uploadingPhoto && fileInputRef.current?.click()} title="Click to change photo">
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Change profile photo"
+              style={{ position: "relative", flexShrink: 0, cursor: "pointer" }}
+              onClick={() => !uploadingPhoto && fileInputRef.current?.click()}
+              onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !uploadingPhoto) { e.preventDefault(); fileInputRef.current?.click(); } }}
+              title="Click to change photo"
+            >
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
               {user?.avatar
                 ? <img src={user.avatar} alt={user.name} style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--border-muted)", display: "block" }} />

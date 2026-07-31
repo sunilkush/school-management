@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Form, Input, InputNumber, Modal, Popconfirm, Select, Spin, Typography, message } from "antd";
+import { Button, Form, Input, InputNumber, Modal, Popconfirm, Select, Spin, Tooltip, Typography, message } from "antd";
 import {
   SearchOutlined,
   BookOutlined,
@@ -120,9 +120,13 @@ const SubjectCard = ({ item, index, onEdit, onDelete }) => {
           </span>
           {canManage && (
             <>
-              <Button size="small" type="text" icon={<EditOutlined />} onClick={() => onEdit(item)} />
+              <Tooltip title="Edit">
+                <Button size="small" type="text" icon={<EditOutlined />} aria-label="Edit subject" onClick={() => onEdit(item)} />
+              </Tooltip>
               <Popconfirm title="Delete this subject?" okText="Delete" okButtonProps={{ danger: true }} onConfirm={() => onDelete(item)}>
-                <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+                <Tooltip title="Delete">
+                  <Button size="small" type="text" danger icon={<DeleteOutlined />} aria-label="Delete subject" />
+                </Tooltip>
               </Popconfirm>
             </>
           )}

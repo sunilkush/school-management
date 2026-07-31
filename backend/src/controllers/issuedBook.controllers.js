@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -56,26 +57,51 @@ export const issueBook = asyncHandler(async (req, res) => {
         return d;
       })();
 
-  const issuedBook = await IssuedBook.create({
-    schoolId,
-    bookId,
-    studentId: studentId || undefined,
-    issuedToUserId: issuedToUserId || undefined,
-    memberType: memberType || "Student",
-    issueDate: issueDate ? new Date(issueDate) : new Date(),
-    dueDate: computedDue,
-    issuedBy: req.user._id,
-    status: "Issued",
-  });
+  // The read-then-write pattern this replaced (check availableCopies > 0, create the IssuedBook,
+  // separately save the decremented Book) let two concurrent issue requests both pass the check
+  // against the same stale count and both proceed — issuing more copies than physically exist.
+  // The $gt guard makes the decrement itself atomic (fails outright if no copy is actually free),
+  // and the transaction keeps it and the IssuedBook record consistent with each other.
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const updatedBook = await Book.findOneAndUpdate(
+      { _id: bookId, schoolId, availableCopies: { $gt: 0 } },
+      { $inc: { availableCopies: -1 } },
+      { new: true, session }
+    );
+    if (!updatedBook) {
+      throw new ApiError(400, "No available copies of this book");
+    }
 
-  book.availableCopies -= 1;
-  await book.save();
+    const [issuedBook] = await IssuedBook.create(
+      [{
+        schoolId,
+        bookId,
+        studentId: studentId || undefined,
+        issuedToUserId: issuedToUserId || undefined,
+        memberType: memberType || "Student",
+        issueDate: issueDate ? new Date(issueDate) : new Date(),
+        dueDate: computedDue,
+        issuedBy: req.user._id,
+        status: "Issued",
+      }],
+      { session }
+    );
 
-  const populated = await IssuedBook.findById(issuedBook._id)
-    .populate("bookId", "title author isbn")
-    .populate("schoolId", "name");
+    await session.commitTransaction();
 
-  res.status(201).json(new ApiResponse(201, populated, "Book issued successfully"));
+    const populated = await IssuedBook.findById(issuedBook._id)
+      .populate("bookId", "title author isbn")
+      .populate("schoolId", "name");
+
+    res.status(201).json(new ApiResponse(201, populated, "Book issued successfully"));
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
 });
 
 // ── Get all issued books ──────────────────────────────────────────────────────
@@ -89,17 +115,26 @@ export const getAllIssuedBooks = asyncHandler(async (req, res) => {
     { $set: { status: "Overdue" } }
   );
 
-  const issuedBooks = await IssuedBook.find(filter)
-    .populate("bookId", "title author isbn shelfLocation")
-    .populate({
-      path: "studentId",
-      select: "userId",
-      populate: { path: "userId", select: "name email" },
-    })
-    .populate("issuedToUserId", "name email")
-    .populate("issuedBy", "name")
-    .populate("schoolId", "name")
-    .sort({ createdAt: -1 });
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 200, 1), 1000);
+  const skip = (page - 1) * limit;
+
+  const [issuedBooks, total] = await Promise.all([
+    IssuedBook.find(filter)
+      .populate("bookId", "title author isbn shelfLocation")
+      .populate({
+        path: "studentId",
+        select: "userId",
+        populate: { path: "userId", select: "name email" },
+      })
+      .populate("issuedToUserId", "name email")
+      .populate("issuedBy", "name")
+      .populate("schoolId", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    IssuedBook.countDocuments(filter),
+  ]);
 
   const records = issuedBooks.map((r) => {
     const obj = r.toObject();
@@ -116,7 +151,9 @@ export const getAllIssuedBooks = asyncHandler(async (req, res) => {
     return obj;
   });
 
-  res.status(200).json(new ApiResponse(200, records, "Issued books fetched"));
+  res.status(200).json(new ApiResponse(200, records, "Issued books fetched", {
+    pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+  }));
 });
 
 // ── Get issued books for a student (student-portal) ──────────────────────────
@@ -159,22 +196,48 @@ export const returnBook = asyncHandler(async (req, res) => {
     fine = calcFine(settings, issuedBook.dueDate, returnDate);
   }
 
-  issuedBook.status     = finalStatus;
-  issuedBook.returnDate = returnDate;
-  issuedBook.fine       = fine;
-  issuedBook.fineStatus = fine > 0 ? "Pending" : "Paid";
-  await issuedBook.save();
-
-  // Restore available copies only if book is physically returned
-  if (finalStatus !== "Lost") {
-    const book = await Book.findById(issuedBook.bookId);
-    if (book) {
-      book.availableCopies = Math.min(book.availableCopies + 1, book.totalCopies);
-      await book.save();
+  // Same non-atomic issuedBook.save()-then-book.save() pattern as issueBook had — two concurrent
+  // returns of the same record could both pass the earlier "already returned" check and both
+  // increment availableCopies. The status: {$in:[...]} guard makes the IssuedBook update itself
+  // atomic (only the first of two racing requests succeeds), and the transaction keeps the book's
+  // copy count consistent with it.
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const updatedIssuedBook = await IssuedBook.findOneAndUpdate(
+      { _id: issuedBook._id, status: { $in: ["Issued", "Overdue"] } },
+      {
+        $set: {
+          status: finalStatus,
+          returnDate,
+          fine,
+          fineStatus: fine > 0 ? "Pending" : "Paid",
+        },
+      },
+      { new: true, session }
+    );
+    if (!updatedIssuedBook) {
+      throw new ApiError(400, "Book already returned");
     }
-  }
 
-  res.status(200).json(new ApiResponse(200, { ...issuedBook.toObject(), fine }, "Book return processed"));
+    // Restore available copies only if book is physically returned
+    if (finalStatus !== "Lost") {
+      await Book.findByIdAndUpdate(
+        issuedBook.bookId,
+        [{ $set: { availableCopies: { $min: [{ $add: ["$availableCopies", 1] }, "$totalCopies"] } } }],
+        { session }
+      );
+    }
+
+    await session.commitTransaction();
+
+    res.status(200).json(new ApiResponse(200, { ...updatedIssuedBook.toObject(), fine }, "Book return processed"));
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
 });
 
 // ── Collect / waive fine ──────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ const HostelRoomSchema = new Schema(
     },
     academicYearId: {
       type: Schema.Types.ObjectId,
-      ref: "AcademicYears",
+      ref: "AcademicYear",
       default: null,
     },
     roomNumber: {

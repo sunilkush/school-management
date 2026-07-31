@@ -4,7 +4,7 @@ const HostelLeaveSchema = new Schema(
   {
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
     studentId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYears", default: null },
+    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear", default: null },
 
     roomNumber: { type: String, trim: true },
     leaveType: {

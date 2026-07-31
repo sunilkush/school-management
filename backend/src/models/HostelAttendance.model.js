@@ -3,7 +3,7 @@ import mongoose, { Schema } from "mongoose";
 const HostelAttendanceSchema = new Schema(
   {
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
-    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYears", default: null },
+    academicYearId: { type: Schema.Types.ObjectId, ref: "AcademicYear", default: null },
 
     date: { type: Date, required: true },
     session: {

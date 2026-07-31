@@ -199,7 +199,13 @@ const resolveTargetUserIds = async (notification) => {
 };
 
 export const listNotifications = asyncHandler(async (req, res) => {
-  const rows = await Notification.find(buildQueryFilter(req)).sort({ createdAt: -1 }).lean();
+  // isVisibleToUser below is a per-user, in-memory targeting check (role/level/user-id token
+  // matching) that can't safely translate into a Mongo $match under time pressure, so this can't
+  // do true skip/limit pagination without risking rows a user should see being cut off mid-filter.
+  // Capping the candidate window at the DB level at least bounds it — was previously fully
+  // unbounded, returning every notification ever sent to the school on every call.
+  const candidateLimit = Math.min(Math.max(Number(req.query.limit) || 500, 1), 2000);
+  const rows = await Notification.find(buildQueryFilter(req)).sort({ createdAt: -1 }).limit(candidateLimit).lean();
   const visibleRows = rows.filter((row) => isVisibleToUser(row, req.user));
 
   return sendSuccess(res, {
@@ -307,7 +313,7 @@ export const createNotification = asyncHandler(async (req, res) => {
     }
 
     if (normalizedChannels.whatsapp) {
-      const whatsappResult = await sendWhatsAppToUsers(targetUserIds, { title: created.title, body: created.message });
+      const whatsappResult = await sendWhatsAppToUsers(targetUserIds, { title: created.title, body: created.message, schoolId: created.schoolId });
 
       if (!whatsappResult.skipped) {
         result = await Notification.findByIdAndUpdate(
@@ -331,7 +337,7 @@ export const createNotification = asyncHandler(async (req, res) => {
     }
 
     if (normalizedChannels.sms) {
-      const smsResult = await sendSmsToUsers(targetUserIds, { title: created.title, body: created.message });
+      const smsResult = await sendSmsToUsers(targetUserIds, { title: created.title, body: created.message, schoolId: created.schoolId });
 
       if (!smsResult.skipped) {
         result = await Notification.findByIdAndUpdate(

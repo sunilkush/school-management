@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { generateFeeReport } from "../services/feeReport.js";
+import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 
 /**
  * GET /fees/report
@@ -31,11 +32,22 @@ export const getFeeReport = asyncHandler(async (req, res) => {
     to,
     year,
     schoolClassId,
+    academicYearId,
   } = req.query;
 
   // 🔴 Mandatory
   if (!type) {
     throw new ApiError(400, "Report type is required");
+  }
+
+  // The schoolId query param is only trusted for Super Admin — otherwise any School
+  // Admin/Accountant/Principal could read another school's fee report just by passing a
+  // different schoolId, since nothing else here checks tenancy.
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const userSchoolId = resolveSchoolId(req.user);
+  const schoolId = isSuperAdmin ? (req.query.schoolId || userSchoolId) : userSchoolId;
+  if (!schoolId) {
+    throw new ApiError(400, "schoolId is required");
   }
 
   // 🔍 Type-wise validations (SMART)
@@ -76,7 +88,7 @@ export const getFeeReport = asyncHandler(async (req, res) => {
   }
 
   // 🧠 Delegate to service (NO LOGIC HERE)
-  const reportData = await generateFeeReport(req.query);
+  const reportData = await generateFeeReport({ ...req.query, schoolId, academicYearId });
 
   return res.status(200).json(
     new ApiResponse(

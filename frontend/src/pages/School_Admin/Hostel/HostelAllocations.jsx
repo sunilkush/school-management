@@ -49,7 +49,11 @@ const HostelAllocations = () => {
 
   useEffect(() => { dispatch(fetchHostelRooms()); }, [dispatch]);
   useEffect(() => {
-    if (schoolId) dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+    // This page's whole purpose is spotting students with no room, so — unlike the paginated
+    // StudentList.jsx — it genuinely needs the full roster in memory at once, not a page at a
+    // time. Still passes an explicit, documented cap instead of silently relying on the
+    // backend's 500-record default; the Table below already paginates for display.
+    if (schoolId) dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, limit: 2000 }));
   }, [dispatch, schoolId, academicYearId]);
 
   // For every student, find which room (if any) lists them — matched by the real User id when

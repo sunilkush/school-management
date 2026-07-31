@@ -124,7 +124,7 @@ export const listMessageRecipients = asyncHandler(async (req, res) => {
 export const listMessages = asyncHandler(async (req, res) => {
   assertCanUseMessages(req.user);
 
-  const { mailbox = "inbox", search = "" } = req.query;
+  const { mailbox = "inbox", search = "", page = 1, limit = 100 } = req.query;
   const userId = req.user._id;
   const baseScope = buildMessageScope(req);
   const filters = [{ ...baseScope, deletedBy: { $ne: userId } }];
@@ -144,11 +144,19 @@ export const listMessages = asyncHandler(async (req, res) => {
     });
   }
 
-  const rows = await Message.find({ $and: filters }).populate(MESSAGE_POPULATE).sort({ createdAt: -1 }).lean();
+  const pageNumber = Math.max(Number(page) || 1, 1);
+  const limitNumber = Math.min(Math.max(Number(limit) || 100, 1), 500);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const [rows, total] = await Promise.all([
+    Message.find({ $and: filters }).populate(MESSAGE_POPULATE).sort({ createdAt: -1 }).skip(skip).limit(limitNumber).lean(),
+    Message.countDocuments({ $and: filters }),
+  ]);
 
   return sendSuccess(res, {
     message: "Messages fetched successfully",
     data: rows.map((row) => mapMessage(row, userId)),
+    meta: { pagination: { total, page: pageNumber, limit: limitNumber, totalPages: Math.ceil(total / limitNumber) } },
   });
 });
 

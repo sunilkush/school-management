@@ -1,12 +1,11 @@
 import mongoose from "mongoose";
 import { Task } from "../models/Task.model.js";
 import { User } from "../models/user.model.js";
+import { Role } from "../models/Roles.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
-
-const getSchoolId = (user) =>
-  user?.schoolId?._id || user?.schoolId || user?.school?._id || user?.school || null;
+import { resolveSchoolId as getSchoolId } from "../utils/resolveSchoolId.js";
 
 const getRoleName = (user) => user?.roleId?.name || user?.role?.name || user?.role || "";
 
@@ -170,10 +169,26 @@ export const getAssignableUsers = asyncHandler(async (req, res) => {
   if (roleName !== "School Admin") throw new ApiError(403, "Forbidden");
 
   const schoolId = getSchoolId(req.user);
-  const users = await User.find({ schoolId, isActive: true })
+
+  // Tasks are staff work items — Students/Parents were never meant to be assignable, but with no
+  // role filter at all this returned literally every active user in the school (the entire
+  // family+student body alongside staff), which is both wrong for the dropdown and unbounded at
+  // scale. Excluding those two roles, plus a generous cap, addresses both.
+  const excludedRoles = await Role.find({
+    name: { $in: [/^student$/i, /^parent$/i] },
+  }).select("_id");
+
+  const limit = Math.min(Math.max(Number(req.query.limit) || 500, 1), 2000);
+
+  const users = await User.find({
+    schoolId,
+    isActive: true,
+    roleId: { $nin: excludedRoles.map((r) => r._id) },
+  })
     .populate("roleId", "name")
     .select("name email avatar roleId")
     .sort({ name: 1 })
+    .limit(limit)
     .lean();
 
   const formatted = users.map((u) => ({

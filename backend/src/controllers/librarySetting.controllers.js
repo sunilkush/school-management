@@ -2,9 +2,7 @@ import { LibrarySetting } from "../models/LibrarySetting.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
-const resolveSchoolId = (req) =>
-  req.user?.schoolId || req.user?.school?._id || req.body?.schoolId || req.query?.schoolId;
+import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
 
 export const getLibrarySettings = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);

@@ -1,17 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Button, Col, DatePicker, Empty, Progress, Row, Select, Spin, Table, Tag, Typography,
+  Button, Col, DatePicker, Empty, Form, Input, InputNumber, Modal, Progress, Row, Select, Spin, Table, Tag, Typography, message,
 } from "antd";
 import {
   CheckCircleOutlined, ClockCircleOutlined, DownloadOutlined,
-  PrinterOutlined, WalletOutlined,
+  PrinterOutlined, RollbackOutlined, WalletOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { fetchPayments, fetchPaymentSummary } from "../../../features/paymentSlice";
+import { fetchPayments, fetchPaymentSummary, refundPayment } from "../../../features/paymentSlice";
 import { fetchStudentFeeSummary } from "../../../features/studentFeeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
@@ -31,12 +31,14 @@ const FeeReports = () => {
   const dispatch = useDispatch();
   const printRef = useRef();
 
-  const { payments = [], summary: paymentSummary, loading: paymentsLoading } = useSelector((s) => s.payment || {});
+  const { payments = [], summary: paymentSummary, loading: paymentsLoading, refundLoading } = useSelector((s) => s.payment || {});
   const { summary: feeSummary = [] } = useSelector((s) => s.studentFee || {});
 
   const [modeFilter, setModeFilter] = useState("");
   const [dateRange, setDateRange] = useState([]);
   const [page, setPage] = useState(1);
+  const [refundTarget, setRefundTarget] = useState(null);
+  const [refundForm] = Form.useForm();
 
   useEffect(() => {
     dispatch(fetchStudentFeeSummary());
@@ -132,6 +134,35 @@ const FeeReports = () => {
   const collectUtilization = feeStats.totalPaid + feeStats.totalPending > 0
     ? Math.round((feeStats.totalPaid / (feeStats.totalPaid + feeStats.totalPending)) * 100) : 0;
 
+  const openRefundModal = (record) => {
+    setRefundTarget(record);
+    refundForm.setFieldsValue({
+      amount: Number(record.amountPaid || 0) - Number(record.refundedAmount || 0),
+      reason: "",
+      refundMode: "cash",
+      transactionId: "",
+    });
+  };
+
+  const handleRefundSubmit = async (values) => {
+    try {
+      await dispatch(refundPayment({ paymentId: refundTarget._id, ...values })).unwrap();
+      message.success("Refund processed successfully");
+      setRefundTarget(null);
+      dispatch(fetchPaymentSummary());
+      dispatch(fetchStudentFeeSummary());
+    } catch (err) {
+      message.error(err || "Refund failed");
+    }
+  };
+
+  const STATUS_STYLE = {
+    success:  ["#22C55E", "rgba(220,252,231,0.2)"],
+    pending:  ["#F59E0B", "rgba(254,243,199,0.2)"],
+    failed:   ["#EF4444", "rgba(254,226,226,0.2)"],
+    refunded: ["#7C3AED", "rgba(237,233,254,0.3)"],
+  };
+
   const paymentColumns = [
     { title: "Student",    render: (_, r) => r.studentId?.userId?.name || "—" },
     { title: "Amount",     dataIndex: "amountPaid",  render: (v) => <span style={{ fontWeight: 700, color: "#22C55E" }}>{money(v)}</span> },
@@ -140,11 +171,29 @@ const FeeReports = () => {
     { title: "Date",       dataIndex: "paymentDate", render: (d) => dayjs(d).format("DD MMM YYYY") },
     {
       title: "Status", dataIndex: "status",
-      render: (s) => (
-        <span style={pill(s === "success" ? "#22C55E" : "#EF4444", s === "success" ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
-          {s}
-        </span>
-      ),
+      render: (s, r) => {
+        const [color, bg] = STATUS_STYLE[s] || STATUS_STYLE.pending;
+        return (
+          <span style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
+            <span style={pill(color, bg)}>{s}</span>
+            {r.refundedAmount > 0 && s === "success" && (
+              <span style={{ fontSize: 10, color: "#7C3AED" }}>{money(r.refundedAmount)} refunded</span>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Action",
+      render: (_, r) => {
+        const refundable = Number(r.amountPaid || 0) - Number(r.refundedAmount || 0);
+        if (r.status !== "success" || refundable <= 0) return null;
+        return (
+          <Button size="small" icon={<RollbackOutlined />} onClick={() => openRefundModal(r)}>
+            Refund
+          </Button>
+        );
+      },
     },
   ];
 
@@ -283,6 +332,61 @@ const FeeReports = () => {
           )}
         </div>
       </div>
+
+      <Modal
+        title={`Refund Payment${refundTarget?.receiptNo ? ` — ${refundTarget.receiptNo}` : ""}`}
+        open={Boolean(refundTarget)}
+        onCancel={() => setRefundTarget(null)}
+        onOk={() => refundForm.submit()}
+        okText="Process Refund"
+        okButtonProps={{ danger: true, loading: refundLoading }}
+        destroyOnClose
+      >
+        {refundTarget && (
+          <>
+            <Text style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 16 }}>
+              Student: <strong>{refundTarget.studentId?.userId?.name || "—"}</strong> · Paid {money(refundTarget.amountPaid)}
+              {refundTarget.refundedAmount > 0 && <> · Already refunded {money(refundTarget.refundedAmount)}</>}
+            </Text>
+            <Form form={refundForm} layout="vertical" onFinish={handleRefundSubmit}>
+              <Form.Item
+                label="Refund Amount"
+                name="amount"
+                rules={[
+                  { required: true, message: "Enter a refund amount" },
+                  {
+                    validator: (_, v) => {
+                      const max = Number(refundTarget.amountPaid || 0) - Number(refundTarget.refundedAmount || 0);
+                      if (v > 0 && v <= max) return Promise.resolve();
+                      return Promise.reject(new Error(`Amount must be between ₹1 and ₹${max}`));
+                    },
+                  },
+                ]}
+              >
+                <InputNumber min={1} style={{ width: "100%" }} addonBefore="₹" />
+              </Form.Item>
+              <Form.Item label="Refund Mode" name="refundMode" rules={[{ required: true }]}>
+                <Select
+                  options={[
+                    { value: "cash", label: "Cash" },
+                    { value: "online", label: "Online" },
+                    { value: "cheque", label: "Cheque" },
+                    { value: "bank_transfer", label: "Bank Transfer" },
+                    { value: "upi", label: "UPI" },
+                    { value: "adjustment", label: "Fee Adjustment (no money movement)" },
+                  ]}
+                />
+              </Form.Item>
+              <Form.Item label="Reference / Transaction ID" name="transactionId">
+                <Input placeholder="Optional" />
+              </Form.Item>
+              <Form.Item label="Reason" name="reason" rules={[{ required: true, message: "A reason is required" }]}>
+                <Input.TextArea rows={3} placeholder="e.g. Duplicate payment, admission withdrawn, overcollection" />
+              </Form.Item>
+            </Form>
+          </>
+        )}
+      </Modal>
     </div>
   );
 };

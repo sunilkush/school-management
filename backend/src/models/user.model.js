@@ -38,6 +38,19 @@ const userSchema = new Schema(
       // remember to .select('-password') themselves to avoid returning the bcrypt hash. Call sites
       // that actually need to compare it (login, change-password) now use .select('+password').
       select: false,
+      validate: {
+        validator: function (value) {
+          // Only enforce complexity when new plaintext is actually being set. Mongoose runs path
+          // validators before the pre('save') hash hook below, but on every later save of this
+          // document (editing an unrelated field) this same validator re-runs against whatever is
+          // currently in `password` — which by then is the bcrypt hash, not a real password — so
+          // without this guard every unrelated profile edit would fail complexity validation.
+          if (!this.isModified("password")) return true;
+          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(value);
+        },
+        message:
+          "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.",
+      },
     },
 
     roleId: {

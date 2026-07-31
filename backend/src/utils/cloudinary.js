@@ -30,7 +30,7 @@ const uploadOnCloudinary = async (filePath) => {
         console.error("Cloudinary Upload Error:", error);
         // Previously only cleaned up the local temp file on success — a failed upload (bad
         // credentials, network error, wrong resource_type for the file, ...) left it sitting in
-        // ./public/temp indefinitely, which app.js serves publicly via express.static.
+        // the temp upload directory indefinitely.
         try {
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
         } catch { /* best-effort cleanup */ }

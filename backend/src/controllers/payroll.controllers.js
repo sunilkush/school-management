@@ -56,7 +56,16 @@ const resolvePayrollPolicy = async ({ schoolId, asOfDate }) => {
 // Pure summarizer — takes an already-fetched slice of Attendance records for one employee
 // rather than querying, so a whole cycle's worth of employees can share a single batched
 // Attendance.find() instead of one query per employee (see generatePayrollCycle).
-const summarizeAttendanceRecords = (records) => {
+//
+// `workingDays` is passed in rather than derived from `records.length`: it used to just count
+// this employee's own attendance rows, which for a mid-cycle joiner/leaver is naturally smaller
+// than the full cycle — and since perDay pay is (gross / workingDays), that shrunk denominator
+// exactly cancelled out their shorter presence, paying them a full month's gross for however many
+// days they actually worked. The caller now passes the SAME fixed whole-cycle working-day count
+// to every employee, so a shorter tenure (naturally fewer of *their own* attendance records)
+// shows up as fewer paid days relative to that shared denominator, not as a proportionally
+// smaller denominator that cancels itself back out to a full month.
+const summarizeAttendanceRecords = (records, workingDays) => {
   const statusCount = records.reduce(
     (acc, item) => {
       acc[item.status] = (acc[item.status] || 0) + 1;
@@ -65,7 +74,6 @@ const summarizeAttendanceRecords = (records) => {
     { present: 0, leave: 0, halfday: 0, absent: 0, late: 0 }
   );
 
-  const workingDays = records.length;
   const presentDays = statusCount.present + statusCount.late + statusCount.halfday * 0.5;
   const leaveDays = statusCount.leave;
   const lateCount = statusCount.late;
@@ -83,9 +91,10 @@ const summarizeAttendanceRecords = (records) => {
     leaveDays,
     lateCount,
     overtimeHours: Number(overtimeHours.toFixed(2)),
-    isMissingAttendance: workingDays === 0,
+    isMissingAttendance: records.length === 0,
   };
 };
+
 
 const writeAuditLog = async (req, action, description, meta = {}) => {
   if (!req.user?._id) return;
@@ -226,10 +235,18 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     );
   }
 
+  const { start: cycleStartForQuery, end: cycleEndForQuery } = monthRangeUTC({ month, year });
+
+  // Currently-active employees, PLUS anyone deactivated during this cycle (they still worked
+  // part of it and are owed a pro-rated payslip) — previously only isActive:true was queried, so
+  // a mid-cycle leaver was excluded from payroll for the very cycle they left in.
   const employees = await Employee.find({
     schoolId,
-    isActive: true,
-  }).select("_id userId statutoryCompliance").lean();
+    $or: [
+      { isActive: true },
+      { isActive: false, relievingDate: { $gte: cycleStartForQuery, $lte: cycleEndForQuery } },
+    ],
+  }).select("_id userId statutoryCompliance joinDate relievingDate").lean();
   if (!employees.length) {
     throw new ApiError(400, "No active employees found for this school");
   }
@@ -298,7 +315,7 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     role: { $in: ["teacher", "staff"] },
     date: { $gte: attStart, $lte: attEnd },
   })
-    .select("userId status checkInAt checkOutAt")
+    .select("userId date status checkInAt checkOutAt")
     .lean();
 
   const attendanceByUser = new Map();
@@ -308,13 +325,35 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     attendanceByUser.get(key).push(rec);
   }
 
+  // Distinct calendar dates anyone at the school has an attendance record for this cycle — the
+  // "real" working-day count — the fixed per-day pay rate denominator used for every employee
+  // below. This must stay the same across every employee in the cycle: a mid-cycle joiner/leaver
+  // is meant to be shown as "present for fewer of the cycle's real working days" (via their own,
+  // naturally-shorter attendance history), not given their own shrunken denominator — that was
+  // exactly the original bug, since a smaller denominator alongside a proportionally smaller
+  // presentDays cancels out back to a full month's pay regardless of actual tenure length.
+  const cycleWorkingDays = new Set(allAttendance.map((rec) => new Date(rec.date).toISOString().slice(0, 10))).size;
+
  for (const employee of employees) {
   const structure = structureByEmployee.get(String(employee._id));
 
   if (!structure) continue;
 
-  const records = attendanceByUser.get(String(employee.userId)) || [];
-  const attendance = summarizeAttendanceRecords(records);
+  // Still bounded to this employee's own tenure window so a stray attendance record from before
+  // they joined or after they left (data-entry error, or a rehire reusing the same userId) can't
+  // count as legitimate presence — but note this only filters which of *their* records count,
+  // not the shared cycleWorkingDays denominator above.
+  const employeeJoin = employee.joinDate ? new Date(employee.joinDate) : cycleStart;
+  const employeeLeave = employee.relievingDate ? new Date(employee.relievingDate) : cycleEnd;
+  const windowStart = employeeJoin > cycleStart ? employeeJoin : cycleStart;
+  const windowEnd = employeeLeave < cycleEnd ? employeeLeave : cycleEnd;
+
+  const rawRecords = attendanceByUser.get(String(employee.userId)) || [];
+  const records = rawRecords.filter((r) => {
+    const d = new Date(r.date);
+    return d >= windowStart && d <= windowEnd;
+  });
+  const attendance = summarizeAttendanceRecords(records, cycleWorkingDays);
 
   const calculated = calculatePayrollEntry({
     structure,
@@ -417,12 +456,18 @@ export const getPayrollCycle = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
   assertSchoolId(schoolId);
   const cycle = await PayrollCycle.findOne({ schoolId, month: Number(month), year: Number(year) }).lean();
-  
+
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
+
+  // A payroll admin reviewing a cycle before locking/paying it needs to see every entry at once
+  // (totals must reconcile against the whole cycle, not a page of it) — the cap here is generous
+  // headroom for a large school's headcount, not a UI page size.
+  const limit = Math.min(Math.max(Number(req.query.limit) || 1000, 1), 3000);
 
   const entries = await PayrollEntry.find({ payrollCycleId: cycle._id })
     .populate({ path: "employeeId", select: "department designation userId", populate: { path: "userId", select: "name email" } })
     .sort({ createdAt: -1 })
+    .limit(limit)
     .lean();
 
   return sendSuccess(res, {

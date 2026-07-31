@@ -21,4 +21,7 @@ const maintenanceTaskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Task boards are queried "for this school, filtered by status" — no index existed at all.
+maintenanceTaskSchema.index({ school: 1, status: 1 });
+
 export default mongoose.model("MaintenanceTask", maintenanceTaskSchema);

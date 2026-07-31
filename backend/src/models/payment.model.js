@@ -61,9 +61,24 @@ academicYearId: {
     },
    razorpay: Object,
   status: {
-  type: String,
-  enum: ["success", "failed", "pending"]
-},
+    // No default previously meant a Payment saved without an explicit status was `undefined` —
+    // every `$match: {status:"success"}` revenue aggregation across the app silently excluded
+    // such records with no error surfaced anywhere. Defaults to "pending" (never "success") so
+    // an incomplete/unconfirmed payment can never fail-open into counting as collected revenue.
+    // "refunded" is set once refundedAmount reaches amountPaid — every existing revenue
+    // aggregation already filters on status:"success", so a fully-refunded payment is
+    // automatically excluded from collected-revenue figures with no changes needed there.
+    type: String,
+    enum: ["success", "failed", "pending", "refunded"],
+    default: "pending",
+  },
+  // Running total of Refund docs issued against this payment. Never mutate amountPaid itself —
+  // it must stay the original transaction record; refundedAmount is the only thing that changes.
+  refundedAmount: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
     receiptNo: {
       type: String,
       required: true,

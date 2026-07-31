@@ -282,7 +282,15 @@ const examSlice = createSlice({
               ? payload.data
               : [];
       })
+      .addCase(getParentResults.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        // Cleared up front, not just on success — otherwise switching to a child whose fetch
+        // then fails would keep rendering the previously-selected child's stale results.
+        state.results = [];
+      })
       .addCase(getParentResults.fulfilled, (state, action) => {
+        state.loading = false;
         const payload = action.payload;
         state.results = Array.isArray(payload)
           ? payload
@@ -291,6 +299,13 @@ const examSlice = createSlice({
             : Array.isArray(payload?.data)
               ? payload.data
               : [];
+      })
+      .addCase(getParentResults.rejected, (state, action) => {
+        // Previously had no pending/rejected handler at all — a failed request left `loading`
+        // stuck at whatever an unrelated thunk last set it to, and `error` never got populated,
+        // so a parent had no way to tell "child has no grades yet" from "the request failed."
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

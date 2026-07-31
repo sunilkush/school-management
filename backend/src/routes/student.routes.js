@@ -1,6 +1,8 @@
 import { Router } from "express";
 import {
   createStudentAdmission,
+  bulkImportStudents,
+  transferStudent,
   getStudentsByRole,
   getStudentsSuperAdmin,
   getStudentById,
@@ -42,6 +44,24 @@ router.post(
   roleMiddleware(ADMIN_ROLE),
   uploadAdmissionDocs.fields([{ name: "documents", maxCount: 5 }]),
   createStudentAdmission
+);
+
+// ✅ Bulk import students from a spreadsheet (Super Admin & School Admin) — frontend parses the
+// .xlsx client-side (same convention as /questions/bulk) and posts plain JSON rows.
+router.post(
+  "/bulk-import",
+  auth,
+  roleMiddleware(ADMIN_ROLE),
+  bulkImportStudents
+);
+
+// ✅ Transfer a student to a different school (Super Admin only) — crosses a tenant boundary, so
+// unlike every other student-management action this is deliberately not available to School Admin.
+router.post(
+  "/transfer",
+  auth,
+  roleMiddleware(["Super Admin"]),
+  transferStudent
 );
 
 // ✅ Get All Students (Super Admin, School Admin, Teacher, Accountant)

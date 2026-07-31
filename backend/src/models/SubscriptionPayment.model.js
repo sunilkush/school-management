@@ -27,6 +27,8 @@ const subscriptionPaymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+subscriptionPaymentSchema.index({ schoolId: 1, paymentDate: -1 });
+
 export const SubscriptionPayment =
   mongoose.models.SubscriptionPayment ||
   mongoose.model("SubscriptionPayment", subscriptionPaymentSchema);

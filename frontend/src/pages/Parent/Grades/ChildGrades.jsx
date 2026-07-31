@@ -20,7 +20,7 @@ const ChildGrades = () => {
   const [searchParams] = useSearchParams();
   const requestedChildId = searchParams.get("childId");
   const { children = [], loading: childLoading } = useSelector((s) => s.studentPortal || {});
-  const { results = [], loading } = useSelector((s) => s.exams || {});
+  const { results = [], loading, error } = useSelector((s) => s.exams || {});
   const [selectedChildId, setSelectedChildId] = useState(null);
 
   useEffect(() => { dispatch(fetchMyChildren()); }, [dispatch]);
@@ -139,6 +139,19 @@ const ChildGrades = () => {
         <div style={sectionPanel}>
           {!selectedChildId ? (
             <Empty description="Select a child to view grades" />
+          ) : error && !results.length ? (
+            // Distinct from the "no results yet" empty state below — otherwise a failed request
+            // and a child with genuinely zero published grades look identical to a parent.
+            <Empty
+              description={
+                <Space direction="vertical" align="center">
+                  <span>Couldn't load results — {typeof error === "string" ? error : "something went wrong"}</span>
+                  <Button size="small" icon={<ReloadOutlined />} onClick={() => dispatch(getParentResults({ studentId: selectedChildId }))}>
+                    Retry
+                  </Button>
+                </Space>
+              }
+            />
           ) : !results.length ? (
             <Empty description="No published results found" />
           ) : (

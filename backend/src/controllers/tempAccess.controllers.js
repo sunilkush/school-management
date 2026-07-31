@@ -46,15 +46,26 @@ export const listTempAccess = asyncHandler(async (req, res) => {
     { $set: { status: "Expired" } }
   );
 
-  const records = await TempAccess.find()
-    .populate("userId", "name email")
-    .populate("roleId", "name")
-    .populate("grantedBy", "name email")
-    .sort({ createdAt: -1 });
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 200, 1), 1000);
+  const skip = (page - 1) * limit;
+
+  const [records, total] = await Promise.all([
+    TempAccess.find()
+      .populate("userId", "name email")
+      .populate("roleId", "name")
+      .populate("grantedBy", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    TempAccess.countDocuments(),
+  ]);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, records, "Temporary access records fetched"));
+    .json(new ApiResponse(200, records, "Temporary access records fetched", {
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    }));
 });
 
 export const revokeTempAccess = asyncHandler(async (req, res) => {

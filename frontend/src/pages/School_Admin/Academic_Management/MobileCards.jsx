@@ -8,6 +8,7 @@ import {
   Col,
   Empty,
   Button,
+  Tooltip,
 } from "antd";
 import {
   EditOutlined,
@@ -79,8 +80,12 @@ const MobileCards = ({ data = [] }) => {
 
               {/* Actions */}
               <Space>
-                <Button size="small" icon={<EditOutlined />} />
-                <Button size="small" danger icon={<DeleteOutlined />} />
+                <Tooltip title="Edit">
+                  <Button size="small" icon={<EditOutlined />} aria-label="Edit class" />
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <Button size="small" danger icon={<DeleteOutlined />} aria-label="Delete class" />
+                </Tooltip>
               </Space>
             </Space>
           </Card>

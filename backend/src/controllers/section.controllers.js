@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 // ==============================
 // 🔹 CREATE SECTION
@@ -30,7 +31,7 @@ export const createSection = asyncHandler(async (req, res) => {
   // ✅ Prevent duplicate section name in same class
   const exists = await Section.findOne({
     schoolClassId,
-    name: { $regex: `^${name}$`, $options: "i" },
+    name: { $regex: `^${escapeRegex(name)}$`, $options: "i" },
   });
 
   if (exists) {

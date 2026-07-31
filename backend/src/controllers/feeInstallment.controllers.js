@@ -7,6 +7,7 @@ import { Student } from "../models/student.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 
 // 🔒 Student/Parent may only ever read or generate installments for their own (or their linked
 // child's) records — filtering by {studentId, schoolId} alone (as both handlers below used to)
@@ -36,7 +37,7 @@ const VALID_FREQUENCIES = ["monthly", "quarterly", "half_yearly", "yearly"];
 
 export const generateInstallments = asyncHandler(async (req, res) => {
   const { studentId, academicYearId, frequency: requestedFrequency } = req.body;
-  const schoolId = req.user?.schoolId || req.user?.school?._id;
+  const schoolId = resolveSchoolId(req.user);
 
   if (requestedFrequency && !VALID_FREQUENCIES.includes(requestedFrequency)) {
     throw new ApiError(400, `Invalid frequency. Must be one of: ${VALID_FREQUENCIES.join(", ")}`);
@@ -155,7 +156,7 @@ export const generateInstallments = asyncHandler(async (req, res) => {
 ===================================================== */
 export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
   const { studentId, academicYearId } = req.query;
-  const schoolId = req.user?.schoolId || req.user?.school?._id;
+  const schoolId = resolveSchoolId(req.user);
 
   if (!schoolId) {
     throw new ApiError(400, "School not found");
@@ -206,8 +207,14 @@ export const payInstallment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid installment ID");
   }
 
-  if (!amount || amount <= 0) {
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
     throw new ApiError(400, "Invalid payment amount");
+  }
+
+  const schoolId = resolveSchoolId(req.user);
+  if (!schoolId) {
+    throw new ApiError(400, "School not found");
   }
 
   /* ================= FIND INSTALLMENT ================= */
@@ -217,51 +224,71 @@ export const payInstallment = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Installment not found");
   }
 
-  const remaining = installment.amount - installment.paidAmount;
+  // Tenant + ownership check — this previously let any authenticated user from any school pay
+  // against any installment ID just by knowing/guessing it, with no verification at all.
+  if (installment.schoolId.toString() !== schoolId.toString()) {
+    throw new ApiError(403, "Unauthorized access");
+  }
+  await assertOwnsStudentRecord({
+    roleName: req.userRole?.name,
+    userId: req.user._id,
+    studentId: installment.studentId,
+    schoolId,
+  });
 
-  if (amount > remaining) {
+  const remaining = installment.amount - installment.paidAmount;
+  if (numericAmount > remaining) {
     throw new ApiError(400, `Remaining amount is ₹${remaining}`);
   }
 
-  /* ================= UPDATE INSTALLMENT ================= */
-  installment.paidAmount += amount;
-  installment.status =
-    installment.paidAmount >= installment.amount ? "paid" : "partial";
+  // Both the installment and its parent StudentFee must move together — a crash between the two
+  // writes previously could leave an installment marked paid while the fee ledger disagreed. The
+  // installment's own paidAmount also used a read-modify-write (`+= amount`) that raced under
+  // concurrent payments; both money fields now use atomic $inc inside the same transaction.
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const updatedInstallment = await FeeInstallment.findByIdAndUpdate(
+      installmentId,
+      { $inc: { paidAmount: numericAmount } },
+      { new: true, session }
+    );
+    updatedInstallment.status =
+      updatedInstallment.paidAmount >= updatedInstallment.amount ? "paid" : "partial";
+    await updatedInstallment.save({ session });
 
-  await installment.save();
-  const studentFeeId = installment.studentFeeId;
-  /* ================= UPDATE STUDENT FEE (CORRECT WAY) ================= */
-  const studentFee = await StudentFee.findByIdAndUpdate(
-    studentFeeId,
-    {
-      $inc: {
-        paidAmount: amount,
-        dueAmount: -amount,
-      },
-    },
-    { new: true }
-  );
+    const studentFee = await StudentFee.findByIdAndUpdate(
+      updatedInstallment.studentFeeId,
+      { $inc: { paidAmount: numericAmount, dueAmount: -numericAmount } },
+      { new: true, session }
+    );
 
-  if (!studentFee) {
-    throw new ApiError(404, "Student fee not found");
+    if (!studentFee) {
+      throw new ApiError(404, "Student fee not found");
+    }
+
+    if (studentFee.dueAmount <= 0) {
+      studentFee.status = "paid";
+      studentFee.dueAmount = 0;
+      await studentFee.save({ session });
+    }
+
+    await session.commitTransaction();
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          installment: updatedInstallment,
+          studentFee,
+        },
+        "Installment paid & student fee updated successfully"
+      )
+    );
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
   }
-
-  /* ================= FINAL STATUS FIX ================= */
-  if (studentFee.dueAmount <= 0) {
-    studentFee.status = "paid";
-    studentFee.dueAmount = 0;
-  }
-  await studentFee.save();
-   
-  /* ================= RESPONSE ================= */
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        installment,
-        studentFee,
-      },
-      "Installment paid & student fee updated successfully"
-    )
-  );
 });

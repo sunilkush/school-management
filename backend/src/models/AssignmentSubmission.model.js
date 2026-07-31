@@ -17,7 +17,7 @@ const assignmentSubmissionSchema = new Schema(
     },
     academicYearId: {
       type: Schema.Types.ObjectId,
-      ref: "AcademicYears",
+      ref: "AcademicYear",
       required: true,
       index: true,
     },

@@ -9,7 +9,7 @@ const InventorySchema = new Schema(
     },
     academicYearId: {
       type: Schema.Types.ObjectId,
-      ref: "AcademicYears",
+      ref: "AcademicYear",
       default: null,
     },
     itemType: {
@@ -63,5 +63,7 @@ const InventorySchema = new Schema(
   },
   { timestamps: true }
 );
+
+InventorySchema.index({ schoolId: 1, category: 1 });
 
 export const Inventory = mongoose.model("Inventory", InventorySchema);

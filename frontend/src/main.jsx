@@ -206,6 +206,7 @@ const PaperBuilder = lazy(() => import("./pages/School_Admin/Exams_and_Grades/Pa
 const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/AdmitCardPage.jsx"));
 const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/SeatPlanPage.jsx"));
 const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ExamAnalyticsPage.jsx"));
+const GradingScaleSettings = lazy(() => import("./pages/School_Admin/Exams_and_Grades/GradingScaleSettings.jsx"));
 const AllStudentsAttendance     = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
 const StaffAttendance           = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
 const SATeacherAttendance       = lazy(() => import("./pages/School_Admin/Attendance/TeacherAttendance.jsx"));
@@ -336,21 +337,11 @@ const CollectFees = lazy(() => import("./pages/Accountant/Fees_Management/Collec
 const UserRegister = lazy(() => import("./pages/UserRegister.jsx"));
 const RoleWorkspace = lazy(() => import("./pages/RoleWorkspace.jsx"));
 const RoleDynamicPortal = lazy(() => import("./pages/RoleDynamicPortal.jsx"));
-const ITSupportDashboard = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.ITSupportDashboard }))
-);
-const SystemMaintenance = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemMaintenance }))
-);
-const UserSupportTickets = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.UserSupportTickets }))
-);
-const NetworkStatus = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.NetworkStatus }))
-);
-const SystemLogs = lazy(() =>
-  import("./pages/IT_Support/ITSupportPages.jsx").then((module) => ({ default: module.SystemLogs }))
-);
+const ITSupportDashboard = lazy(() => import("./pages/IT_Support/ITSupportDashboard.jsx"));
+const SystemMaintenance = lazy(() => import("./pages/IT_Support/SystemMaintenance.jsx"));
+const UserSupportTickets = lazy(() => import("./pages/IT_Support/UserSupportTickets.jsx"));
+const NetworkStatus = lazy(() => import("./pages/IT_Support/NetworkStatus.jsx"));
+const SystemLogs = lazy(() => import("./pages/IT_Support/SystemLogs.jsx"));
 const ModuleOverview = lazy(() => import("./pages/modules/ModuleOverview.jsx"));
 const ModuleDetail = lazy(() => import("./pages/modules/ModuleDetail.jsx"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide.jsx"));
@@ -369,27 +360,27 @@ const SupportTicketsPage = lazy(() => import("./pages/Support/SupportTicketsPage
 const VicePrincipalReports = lazy(() => import("./pages/Vice_Principal/VicePrincipalReports.jsx"));
 
 // Role-specific pages (Receptionist, Counselor, Security, Transport)
-const VisitorManagement  = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.VisitorManagement })));
-const Enquiries          = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.Enquiries })));
-const CallLog            = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.CallLog })));
-const Broadcasts         = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.Broadcasts })));
+const VisitorManagement  = lazy(() => import("./pages/Receptionist/VisitorManagement.jsx"));
+const Enquiries          = lazy(() => import("./pages/Receptionist/Enquiries.jsx"));
+const CallLog            = lazy(() => import("./pages/Receptionist/CallLog.jsx"));
+const Broadcasts         = lazy(() => import("./pages/Receptionist/Broadcasts.jsx"));
 
 const CounselorStudents  = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselorStudents })));
 const CounselingSessions = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselingSessions })));
 const Appointments       = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.Appointments })));
 const CounselorReports   = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselorReports })));
 
-const EntryRegister      = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.EntryRegister })));
-const GateLogs           = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.GateLogs })));
-const EmergencyAlerts    = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.EmergencyAlerts })));
+const EntryRegister      = lazy(() => import("./pages/Security/EntryRegister.jsx"));
+const GateLogs           = lazy(() => import("./pages/Security/GateLogs.jsx"));
+const EmergencyAlerts    = lazy(() => import("./pages/Security/EmergencyAlerts.jsx"));
 
 const DriversPage             = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.DriversPage })));
 const VehicleMaintenance      = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.VehicleMaintenance })));
 const TransportManagerDashboard = lazy(() => import("./pages/Transport/TransportPages.jsx").then(m => ({ default: m.TransportManagerDashboard })));
 const DriverDashboard         = lazy(() => import("./pages/Driver/DriverDashboard.jsx"));
-const ReceptionistDashboard   = lazy(() => import("./pages/Receptionist/ReceptionistPages.jsx").then(m => ({ default: m.ReceptionistDashboard })));
+const ReceptionistDashboard   = lazy(() => import("./pages/Receptionist/ReceptionistDashboard.jsx"));
 const CounselorDashboard      = lazy(() => import("./pages/Counselor/CounselorPages.jsx").then(m => ({ default: m.CounselorDashboard })));
-const SecurityDashboard       = lazy(() => import("./pages/Security/SecurityPages.jsx").then(m => ({ default: m.SecurityDashboard })));
+const SecurityDashboard       = lazy(() => import("./pages/Security/SecurityDashboard.jsx"));
 const ExamCoordinatorDashboard = lazy(() => import("./pages/Exam_Coordinator/ExamCoordinatorDashboard.jsx"));
 const SubjectCoordinatorDashboard = lazy(() => import("./pages/Subject_Coordinator/SubjectCoordinatorDashboard.jsx"));
 
@@ -749,7 +740,8 @@ const router = createBrowserRouter([
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
               { path: "exams/reports", element: <ExamReports /> },
-            
+              { path: "exams/grading-scale", element: <GradingScaleSettings /> },
+
               { path: "users/employee-details", element: <AdminUserProfile /> },
               { path: "users/employee-form",    element: <AdminUserProfile /> },
               // Legacy alias

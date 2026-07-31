@@ -68,6 +68,8 @@ import studyMaterialRoutes from "./studyMaterial.routes.js";
 import lessonPlanRoutes from "./lessonPlan.routes.js";
 import tempAccessRoutes from "./tempAccess.routes.js";
 import librarySettingRoutes from "./librarySetting.routes.js";
+import gradingScaleRoutes from "./gradingScale.routes.js";
+import communicationSettingsRoutes from "./communicationSettings.routes.js";
 import incomeRoutes from "./income.routes.js";
 import expenseRoutes from "./expense.routes.js";
 import advanceRoutes from "./advance.routes.js";
@@ -165,6 +167,8 @@ export const apiV1Routes = [
   ["/lesson-plans", lessonPlanRoutes],
   ["/role/temp-access", tempAccessRoutes],
   ["/library-settings", librarySettingRoutes],
+  ["/grading-scale", gradingScaleRoutes],
+  ["/communication-settings", communicationSettingsRoutes],
   ["/income", incomeRoutes],
   ["/expenses", expenseRoutes],
   ["/advance", advanceRoutes],

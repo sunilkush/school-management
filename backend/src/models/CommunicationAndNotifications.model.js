@@ -3,7 +3,7 @@ const CommunicationSchema = new Schema(
     {
         academicYearId:{
                     type: Schema.Types.ObjectId,
-                    ref: "AcademicYears",
+                    ref: "AcademicYear",
                     required: true
                 },
         schoolId: {
@@ -34,5 +34,7 @@ const CommunicationSchema = new Schema(
     },
     { timestamps: true }
 );
+
+CommunicationSchema.index({ schoolId: 1, createdAt: -1 });
 
 export const Communication = mongoose.model("Communication", CommunicationSchema)

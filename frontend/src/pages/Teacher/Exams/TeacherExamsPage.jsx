@@ -83,7 +83,7 @@ const TeacherExamsPage = () => {
   useEffect(() => {
     const classId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
     if (!selectedExamId || !classId || !schoolId || !academicYearId) { setRows([]); return; }
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: classId }));
+    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: classId, limit: 200 }));
   }, [dispatch, selectedExamId, selectedExam, schoolId, academicYearId]);
 
   /* ── Build rows when students load ── */

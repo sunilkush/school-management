@@ -229,13 +229,16 @@ const allActions = [
     ================================ */
     const SYSTEM_ROLES = ["Super Admin"];
 
-    // Only Super Admin can explicitly create system roles
-    if (type === "system" && req.userRole?.name !== "Super Admin") {
-      throw new ApiError(403, "Only Super Admin can create system roles");
-    }
-
+    // Auto-derive type BEFORE the guard below runs — checking `type === "system"` first meant a
+    // caller who simply omitted `type` from the body (so it defaulted here) skipped the guard
+    // entirely while still ending up with a system-type role.
     if (!type) {
       type = SYSTEM_ROLES.includes(name) ? "system" : "custom";
+    }
+
+    // Only Super Admin may create (or cause the creation of) a system role.
+    if (type === "system" && req.userRole?.name !== "Super Admin") {
+      throw new ApiError(403, "Only Super Admin can create system roles");
     }
 
     /* ===============================
@@ -280,7 +283,7 @@ const allActions = [
        6. DUPLICATE CHECK
     ================================ */
     const existingRole = await Role.findOne({
-      name: { $regex: `^${name}$`, $options: "i" },
+      name: { $regex: `^${escapeRegex(name)}$`, $options: "i" },
       schoolId: schoolObjectId, // null for system
     });
 

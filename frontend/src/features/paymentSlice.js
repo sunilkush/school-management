@@ -92,6 +92,21 @@ export const fetchPaymentSummary = createAsyncThunk(
     }
 );
 
+// ✅ Refund a payment (full or partial)
+export const refundPayment = createAsyncThunk(
+    "payment/refund",
+    async ({ paymentId, ...body }, { rejectWithValue }) => {
+        try {
+            const res = await apiClient.post(`/payments/${paymentId}/refund`, body);
+            return res.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Refund failed"
+            );
+        }
+    }
+);
+
 /* ============================
    SLICE
 ============================ */
@@ -103,6 +118,7 @@ const paymentSlice = createSlice({
         payment: null,
         summary: null,
         loading: false,
+        refundLoading: false,
         error: null,
         success: false,
     },
@@ -154,6 +170,25 @@ const paymentSlice = createSlice({
             // SUMMARY
             .addCase(fetchPaymentSummary.fulfilled, (state, action) => {
                 state.summary = action.payload?.data;
+            })
+
+            // REFUND
+            .addCase(refundPayment.pending, (state) => {
+                state.refundLoading = true;
+            })
+            .addCase(refundPayment.fulfilled, (state, action) => {
+                state.refundLoading = false;
+                const updatedPayment = action.payload?.data?.payment;
+                if (updatedPayment?._id) {
+                    const idx = state.payments.findIndex((p) => p._id === updatedPayment._id);
+                    if (idx !== -1) {
+                        state.payments[idx] = { ...state.payments[idx], ...updatedPayment };
+                    }
+                }
+            })
+            .addCase(refundPayment.rejected, (state, action) => {
+                state.refundLoading = false;
+                state.error = action.payload;
             });
     },
 });

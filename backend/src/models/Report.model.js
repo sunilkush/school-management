@@ -45,6 +45,9 @@ const reportSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Reports are listed "for this school, most recent first" — no index existed at all.
+reportSchema.index({ school: 1, createdAt: -1 });
+
 export const Report = mongoose.model("Report", reportSchema);
 
 

@@ -100,4 +100,6 @@ const systemBackupSchema = new Schema(
   { timestamps: true }
 );
 
+systemBackupSchema.index({ schoolId: 1, createdAt: -1 });
+
 export const SystemBackup = mongoose.model("SystemBackup", systemBackupSchema);

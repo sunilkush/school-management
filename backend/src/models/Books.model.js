@@ -4,7 +4,7 @@ const bookSchema = new Schema({
   title:    { type: String, required: true, trim: true, lowercase: true },
   author:   { type: String, required: true, trim: true, lowercase: true },
   publisher:{ type: String, required: true, trim: true, lowercase: true },
-  isbn:     { type: String, unique: true, sparse: true, trim: true },
+  isbn:     { type: String, trim: true },
 
   category:      { type: String, required: true, trim: true, lowercase: true },
   description:   { type: String, trim: true },
@@ -25,7 +25,15 @@ const bookSchema = new Schema({
 }, { timestamps: true });
 
 bookSchema.index({ schoolId: 1, category: 1 });
-bookSchema.index({ isbn: 1 });
+// ISBN uniqueness is per-school, not global — two different schools cataloguing the same
+// real-world book (identical ISBN) is normal, not a duplicate. Partial filter skips the check
+// for books with no ISBN (local/handwritten titles) instead of colliding on missing/empty values.
+bookSchema.index(
+  // $ne isn't allowed in a partial index filter — $gt: "" achieves the same "non-empty string"
+  // exclusion, since "" sorts lower than every other string.
+  { schoolId: 1, isbn: 1 },
+  { unique: true, partialFilterExpression: { isbn: { $type: "string", $gt: "" } } }
+);
 bookSchema.index({ title: "text", author: "text", isbn: 1 });
 
 export const Book = mongoose.model("Book", bookSchema);

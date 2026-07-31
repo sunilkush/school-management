@@ -26,6 +26,8 @@ const subscriptionInvoiceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+subscriptionInvoiceSchema.index({ schoolId: 1, dueDate: 1 });
+
 export const SubscriptionInvoice =
   mongoose.models.SubscriptionInvoice ||
   mongoose.model("SubscriptionInvoice", subscriptionInvoiceSchema);

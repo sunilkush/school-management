@@ -2,9 +2,7 @@ import { HostelComplaint } from "../models/HostelComplaint.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
-const resolveSchoolId = (req) =>
-  req.user?.schoolId?._id || req.user?.schoolId || req.user?.school?._id;
+import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
 
 // POST /hostel/complaints
 export const createComplaint = asyncHandler(async (req, res) => {

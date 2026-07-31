@@ -104,7 +104,15 @@ const ComplaintManagement = () => {
       title: "Complaint",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 600, fontSize: 13, cursor: "pointer", color: "var(--primary)" }} onClick={() => setDetailModal(r)}>{r.title}</div>
+          <div
+            role="button"
+            tabIndex={0}
+            style={{ fontWeight: 600, fontSize: 13, cursor: "pointer", color: "var(--primary)" }}
+            onClick={() => setDetailModal(r)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setDetailModal(r); } }}
+          >
+            {r.title}
+          </div>
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>#{r.complaintNo} · {r.type}</div>
         </div>
       ),

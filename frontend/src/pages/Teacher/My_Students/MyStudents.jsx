@@ -54,8 +54,6 @@ const MyStudents = () => {
 
   useEffect(() => {
     if (!schoolId || !academicYearId || !user?._id) return;
-
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
     dispatch(fetchAssignedClasses({ schoolId, academicYearId, teacherId: user._id }));
   }, [dispatch, schoolId, academicYearId, user?._id]);
 
@@ -89,15 +87,20 @@ const MyStudents = () => {
     [classTeacherSections, selectedClassSectionKey]
   );
 
-  const classStudents = useMemo(() => {
-    if (!selectedClassSection) return [];
+  // Scoped to just this one class-teacher section (~30-40 students) — this used to fetch the
+  // entire school's roster on every visit just to filter it down to one homeroom afterward.
+  useEffect(() => {
+    if (!schoolId || !academicYearId || !selectedClassSection) return;
+    dispatch(fetchStudentsBySchoolId({
+      schoolId,
+      academicYearId,
+      schoolClassId: selectedClassSection.classId,
+      sectionId: selectedClassSection.sectionId,
+      limit: 200,
+    }));
+  }, [dispatch, schoolId, academicYearId, selectedClassSection]);
 
-    return schoolStudents.filter(
-      (student) =>
-        student?.schoolClass?._id === selectedClassSection.classId &&
-        student?.section?._id === selectedClassSection.sectionId
-    );
-  }, [schoolStudents, selectedClassSection]);
+  const classStudents = schoolStudents;
 
   const filteredStudents = useMemo(() => {
     const keyword = searchText.trim().toLowerCase();

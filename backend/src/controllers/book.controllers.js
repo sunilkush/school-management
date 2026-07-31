@@ -34,9 +34,11 @@ export const createBook = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Required fields missing");
   }
 
-  // 🔹 ISBN unique check
+  // 🔹 ISBN unique check — scoped to this school. Two different schools cataloguing the same
+  // real-world book (identical ISBN) is normal, not a duplicate — matches the compound
+  // {schoolId, isbn} unique index on the model.
   if (isbn) {
-    const exists = await Book.findOne({ isbn });
+    const exists = await Book.findOne({ isbn, schoolId });
     if (exists) throw new ApiError(400, "Book with this ISBN already exists");
   }
 
@@ -65,13 +67,24 @@ export const createBook = asyncHandler(async (req, res) => {
 export const getAllBooks = asyncHandler(async (req, res) => {
   const filter = buildSchoolAccessFilter(req);
 
-  const books = await Book.find(filter)
-    .populate("schoolId", "name")
-    .sort({ createdAt: -1 });
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 500, 1), 2000);
+  const skip = (page - 1) * limit;
+
+  const [books, total] = await Promise.all([
+    Book.find(filter)
+      .populate("schoolId", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Book.countDocuments(filter),
+  ]);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, books, "Books fetched successfully"));
+    .json(new ApiResponse(200, books, "Books fetched successfully", {
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    }));
 });
 
 // ✅ GET SINGLE
@@ -114,12 +127,11 @@ export const updateBook = asyncHandler(async (req, res) => {
     }
   });
 
-  // 🔹 ISBN duplicate check
+  // 🔹 ISBN duplicate check — scoped the same way the update itself is below.
   if (updates.isbn) {
-    const exists = await Book.findOne({
-      isbn: updates.isbn,
-      _id: { $ne: id },
-    });
+    const exists = await Book.findOne(
+      buildSchoolAccessFilter(req, { isbn: updates.isbn, _id: { $ne: id } })
+    );
     if (exists) throw new ApiError(400, "ISBN already exists");
   }
 

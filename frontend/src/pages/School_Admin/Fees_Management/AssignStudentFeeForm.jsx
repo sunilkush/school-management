@@ -313,6 +313,9 @@ const AssignStudentFee = () => {
       schoolId,
       ...(selectedAcademicYear?._id && { academicYearId: selectedAcademicYear._id }),
       ...(selectedClassId && { schoolClassId: selectedClassId }),
+      // Bulk fee assignment can target every student school-wide with no class filter — pass an
+      // explicit, documented cap instead of silently relying on the backend's 500-record default.
+      limit: selectedClassId ? 200 : 2000,
     };
     dispatch(fetchStudentsBySchoolId(params));
     dispatch(fetchSchoolClasses({
@@ -345,6 +348,9 @@ const AssignStudentFee = () => {
       schoolId,
       ...(selectedAcademicYear?._id && { academicYearId: selectedAcademicYear._id }),
       ...(selectedClassId && { schoolClassId: selectedClassId }),
+      // Bulk fee assignment can target every student school-wide with no class filter — pass an
+      // explicit, documented cap instead of silently relying on the backend's 500-record default.
+      limit: selectedClassId ? 200 : 2000,
     };
     dispatch(fetchStudentsBySchoolId(params));
     dispatch(fetchSchoolClasses(params));

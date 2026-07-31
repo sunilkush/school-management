@@ -210,7 +210,12 @@ export const listTimetable = asyncHandler(async (req, res) => {
   const { academicYearId, schoolClassId, sectionId, teacherId, dayOfWeek, day } = req.query;
   validateIds({ academicYearId, schoolClassId, sectionId, teacherId });
   const selectedTeacherId = req.path.endsWith("/teacher") && !teacherId ? req.user._id : teacherId;
-  const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, schoolClassId, sectionId, teacherId: selectedTeacherId, dayOfWeek: normalizeDay(dayOfWeek || day), status: "active" })));
+  // A whole-school timetable grid (no class/section filter) is naturally bounded by sections ×
+  // days × periods, not headcount — the cap is generous headroom for that, not a UI page size.
+  const limit = Math.min(Math.max(Number(req.query.limit) || 3000, 1), 10000);
+  const rows = await populateTimetable(
+    Timetable.find(compact({ schoolId, academicYearId, schoolClassId, sectionId, teacherId: selectedTeacherId, dayOfWeek: normalizeDay(dayOfWeek || day), status: "active" })).limit(limit)
+  );
   return success(res, 200, sortTimetable(rows), "Timetable fetched successfully");
 });
 

@@ -50,7 +50,10 @@ const isAnswered = (val) => {
 
 /* ── Question Navigator ── */
 const QuestionNav = ({ questions, answers, onNavigate }) => {
-  const answeredCount = questions.filter((q) => isAnswered(answers[q._id])).length;
+  const answeredCount = useMemo(
+    () => questions.filter((q) => isAnswered(answers[q._id])).length,
+    [questions, answers]
+  );
 
   return (
     <div style={{
@@ -130,6 +133,13 @@ const ExamLive = () => {
     return currentAttempt.answers.map(normalizeQuestion);
   }, [currentAttempt]);
 
+  // Recomputed on every answer click, not every render — must sit above the loading early-return
+  // below (Hooks can't be called conditionally).
+  const answeredCount = useMemo(
+    () => questions.filter((q) => isAnswered(answers[q._id])).length,
+    [questions, answers]
+  );
+
   /* ── Remaining time calculation (fixes resume timer) ── */
   const remainingSeconds = useMemo(() => {
     if (!currentAttempt) return null;
@@ -177,8 +187,7 @@ const ExamLive = () => {
   };
 
   const handleSubmitClick = () => {
-    const answered    = questions.filter((q) => isAnswered(answers[q._id])).length;
-    const unanswered  = questions.length - answered;
+    const unanswered  = questions.length - answeredCount;
     Modal.confirm({
       title:   "Submit Exam?",
       icon:    <WarningOutlined style={{ color: "#F59E0B" }} />,
@@ -211,7 +220,6 @@ const ExamLive = () => {
   }
 
   const examTitle = currentAttempt?.examId?.title || "Live Exam";
-  const answeredCount = questions.filter((q) => isAnswered(answers[q._id])).length;
 
   return (
     <div style={{ background: "var(--surface-page)", minHeight: "100vh" }}>

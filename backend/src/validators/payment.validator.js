@@ -61,6 +61,30 @@ export const paymentListQuerySchema = z.object({
   }),
 });
 
+export const refundPaymentSchema = z.object({
+  body: z.object({
+    amount: z.coerce.number().positive(),
+    reason: z.string().trim().min(1, "reason is required"),
+    refundMode: z.enum(["cash", "online", "cheque", "bank_transfer", "upi", "adjustment"]).optional(),
+    transactionId: z.string().trim().optional(),
+  }),
+  params: z.object({
+    id: objectId,
+  }),
+  query: z.object({}).optional().default({}),
+});
+
+export const refundListQuerySchema = z.object({
+  body: z.object({}).optional().default({}),
+  params: z.object({}).optional().default({}),
+  query: z.object({
+    studentId: objectId.optional(),
+    paymentId: objectId.optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+  }),
+});
+
 export const razorpayConfigUpdateSchema = z.object({
   body: z.object({
     keyId: z.string().trim().min(1, "keyId is required"),

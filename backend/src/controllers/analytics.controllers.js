@@ -27,8 +27,12 @@ const countByRoleName = (roleName, schoolId) =>
 /* ── ATTENDANCE SUMMARY ──────────────────────────────────────────────────── */
 export const getAttendanceSummary = asyncHandler(async (req, res) => {
   const userRole = req.userRole?.name || req.user?.role?.name;
-  const isSchoolScoped = userRole && userRole !== "Super Admin";
-  const schoolId = req.query.schoolId || (isSchoolScoped ? (req.user.school?._id || req.user.schoolId)?.toString() : null);
+  const isSuperAdmin = userRole === "Super Admin";
+  // Non-Super-Admin is always locked to their own school — the query param is only trusted for
+  // Super Admin, matching getFinanceSummary/getAcademicSummary below.
+  const schoolId = isSuperAdmin
+    ? req.query.schoolId
+    : (req.user.school?._id || req.user.schoolId)?.toString();
 
   const { date } = req.query;
   const targetDate = date ? new Date(date) : new Date();

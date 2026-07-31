@@ -173,6 +173,10 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
   const resolvedSchoolId = ensureSchoolAccess(req, schoolId);
   const normalizedDate = normalizeDateStart(date);
 
+  if (normalizedDate.getTime() > normalizeDateStart(new Date()).getTime()) {
+    throw new ApiError(400, "Cannot mark attendance for a future date");
+  }
+
   const docs = records.map((record) => {
     const doc = {
       schoolId: resolvedSchoolId,

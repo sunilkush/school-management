@@ -8,9 +8,7 @@ import { Student } from "../models/student.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 import { ApiError } from "../utils/ApiError.js";
-
-const resolveSchoolId = (user) =>
-  user?.schoolId?._id || user?.schoolId || user?.school?._id || null;
+import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 
 const toOid = (id) => new mongoose.Types.ObjectId(String(id));
 
@@ -64,12 +62,12 @@ export const getAccountantDashboard = asyncHandler(async (req, res) => {
     // All-time collected fees
     Payment.aggregate([
       { $match: { schoolId: sid, status: "success" } },
-      { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+      { $group: { _id: null, total: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } } } },
     ]),
     // This month collected fees
     Payment.aggregate([
       { $match: { schoolId: sid, status: "success", paymentDate: { $gte: monthStart, $lte: monthEnd } } },
-      { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+      { $group: { _id: null, total: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } } } },
     ]),
     // Fee dues
     StudentFee.aggregate([
@@ -142,7 +140,7 @@ export const getAccountantDashboard = asyncHandler(async (req, res) => {
       {
         $group: {
           _id: { year: { $year: "$paymentDate" }, month: { $month: "$paymentDate" } },
-          total: { $sum: "$amountPaid" },
+          total: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } },
           count: { $sum: 1 },
         },
       },

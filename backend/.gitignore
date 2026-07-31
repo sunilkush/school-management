@@ -1,3 +1,6 @@
+# Temp file uploads (staged briefly before push to Cloudinary — see middlewares/multer.middleware.js)
+uploads_tmp
+
 # Logs
 logs
 *.log

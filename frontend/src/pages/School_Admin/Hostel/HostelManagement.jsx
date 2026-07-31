@@ -104,7 +104,10 @@ const HostelManagement = () => {
 
   useEffect(() => { dispatch(fetchHostelRooms()); }, [dispatch]);
   useEffect(() => {
-    if (schoolId) dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+    // Populates the "assign student to room" search dropdown below, which needs to search across
+    // the whole roster — passes an explicit, documented cap instead of silently relying on the
+    // backend's 500-record default.
+    if (schoolId) dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, limit: 2000 }));
   }, [dispatch, schoolId, academicYearId]);
 
   const stats = useMemo(() => {

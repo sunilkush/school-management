@@ -4,12 +4,18 @@ import mongoose from "mongoose";
 
 import { Payment } from "../models/payment.model.js";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
+import { StudentFee } from "../models/studentFee.model.js";
+import { Refund } from "../models/Refund.model.js";
 import { School } from "../models/school.model.js";
 import { Student } from "../models/student.model.js";
 
 import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
+import { requireSchoolId } from "../utils/resolveSchoolId.js";
+
+const REFUND_MODES = ["cash", "online", "cheque", "bank_transfer", "upi", "adjustment"];
 
 const getRazorpayInstance = async (schoolId) => {
   if (!mongoose.Types.ObjectId.isValid(schoolId)) throw new ApiError(400, "Invalid school ID");
@@ -53,15 +59,6 @@ const ensureInstallmentAccess = async ({ installmentId, schoolId, user }) => {
   return installment;
 };
 
-const resolveSchoolIdFromUser = (user) => {
-  if (!user) return null;
-  return user.schoolId?._id || user.schoolId || user.school?._id || null;
-};
-const requireSchoolId = (user) => {
-  const schoolId = resolveSchoolIdFromUser(user);
-  if (!schoolId) throw new ApiError(400, "School not found for this user");
-  return schoolId;
-};
 
 // Atomically creates the Payment record and updates the installment so a
 // crash between the two can never leave a payment without its installment update (or vice versa).
@@ -281,7 +278,7 @@ export const getPayments = asyncHandler(async (req, res) => {
 
   const [payments, total] = await Promise.all([
     Payment.find(filter)
-      .select("studentId installmentId amountPaid paymentMode status paymentDate receiptNo createdAt")
+      .select("studentId installmentId amountPaid refundedAmount paymentMode status paymentDate receiptNo createdAt")
       .populate({ path: "studentId", select: "userId", populate: { path: "userId", select: "name email" } })
       .populate("installmentId", "amount dueDate")
       .sort({ createdAt: -1 })
@@ -301,6 +298,170 @@ export const getPayments = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Refunds all or part of a successful payment. Reverses the linked FeeInstallment and/or
+ * StudentFee ledgers so the student's outstanding balance is correct again, and records an
+ * append-only Refund doc for the audit trail — the original Payment is never edited beyond its
+ * own refundedAmount/status bookkeeping.
+ */
+export const refundPayment = asyncHandler(async (req, res) => {
+  const { id: paymentId } = req.params;
+  const { amount, reason, refundMode, transactionId } = req.body;
+
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    throw new ApiError(400, "Invalid refund amount");
+  }
+  if (!reason?.trim()) throw new ApiError(400, "A refund reason is required");
+
+  const mode = String(refundMode || "cash").toLowerCase();
+  if (!REFUND_MODES.includes(mode)) {
+    throw new ApiError(400, `refundMode must be one of: ${REFUND_MODES.join(", ")}`);
+  }
+
+  const schoolId = requireSchoolId(req.user);
+
+  const payment = await Payment.findOne({ _id: paymentId, schoolId });
+  if (!payment) throw new ApiError(404, "Payment not found");
+
+  if (payment.status !== "success") {
+    throw new ApiError(400, `Only successful payments can be refunded (current status: ${payment.status})`);
+  }
+
+  const refundable = payment.amountPaid - (payment.refundedAmount || 0);
+  if (numericAmount > refundable) {
+    throw new ApiError(400, `Refund amount exceeds refundable balance (₹${refundable})`);
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    // Atomic guard re-checked inside the transaction — closes the race window between the read
+    // above and here (e.g. two concurrent refund requests against the same payment).
+    const updatedPayment = await Payment.findOneAndUpdate(
+      {
+        _id: paymentId,
+        schoolId,
+        status: "success",
+        $expr: { $lte: [{ $add: [{ $ifNull: ["$refundedAmount", 0] }, numericAmount] }, "$amountPaid"] },
+      },
+      [{
+        $set: {
+          refundedAmount: { $add: [{ $ifNull: ["$refundedAmount", 0] }, numericAmount] },
+          status: {
+            $cond: [
+              { $gte: [{ $add: [{ $ifNull: ["$refundedAmount", 0] }, numericAmount] }, "$amountPaid"] },
+              "refunded",
+              "success",
+            ],
+          },
+        },
+      }],
+      { new: true, session }
+    );
+    if (!updatedPayment) throw new ApiError(409, "Payment was modified concurrently — please retry");
+
+    const [refund] = await Refund.create([{
+      schoolId,
+      paymentId,
+      studentId: payment.studentId,
+      studentFeeId: payment.studentFeeId,
+      installmentId: payment.installmentId,
+      amount: numericAmount,
+      reason: reason.trim(),
+      refundMode: mode,
+      transactionId: transactionId || null,
+      refundedBy: req.user._id,
+    }], { session });
+
+    // Reverse the installment ledger first (if this payment was installment-linked), then its
+    // parent StudentFee — same $max-clamped floor as payInstallment's forward-direction $inc, so
+    // a refund can never push either balance below zero even under odd historical data.
+    if (payment.installmentId) {
+      const installment = await FeeInstallment.findOneAndUpdate(
+        { _id: payment.installmentId, schoolId },
+        [{ $set: { paidAmount: { $max: [{ $subtract: ["$paidAmount", numericAmount] }, 0] } } }],
+        { new: true, session }
+      );
+      if (installment) {
+        installment.status =
+          installment.paidAmount >= installment.amount ? "paid" :
+          installment.paidAmount > 0 ? "partial" : "pending";
+        await installment.save({ session });
+      }
+    }
+
+    if (payment.studentFeeId) {
+      const studentFee = await StudentFee.findOneAndUpdate(
+        { _id: payment.studentFeeId, schoolId },
+        [{ $set: { paidAmount: { $max: [{ $subtract: ["$paidAmount", numericAmount] }, 0] } } }],
+        { new: true, session }
+      );
+      if (studentFee) {
+        studentFee.dueAmount = Math.max(studentFee.totalAmount - studentFee.paidAmount, 0);
+        studentFee.status =
+          studentFee.paidAmount >= studentFee.totalAmount ? "paid" :
+          studentFee.paidAmount > 0 ? "partial" : "pending";
+        await studentFee.save({ session });
+      }
+    }
+
+    await session.commitTransaction();
+
+    return res.status(201).json(
+      new ApiResponse(201, { refund, payment: updatedPayment }, "Refund processed successfully")
+    );
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
+});
+
+export const getRefunds = asyncHandler(async (req, res) => {
+  const schoolId = requireSchoolId(req.user);
+  const { studentId, paymentId, page = 1, limit = 20 } = req.query;
+
+  const filter = { schoolId };
+
+  // Same User-vs-Student id mismatch guarded elsewhere in this file (getPayments) — Student/Parent
+  // callers only ever see their own (or their linked child's) refund history.
+  const roleName = req.userRole?.name;
+  if (roleName === "Student") {
+    const student = await Student.findOne({ userId: req.user._id, schoolId }).select("_id");
+    filter.studentId = student?._id ?? null;
+  } else if (roleName === "Parent") {
+    const children = await Student.find({
+      schoolId,
+      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+    }).select("_id");
+    filter.studentId = { $in: children.map((c) => c._id) };
+  } else if (studentId) {
+    filter.studentId = studentId;
+  }
+  if (paymentId) filter.paymentId = paymentId;
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const [refunds, total] = await Promise.all([
+    Refund.find(filter)
+      .populate({ path: "studentId", select: "userId", populate: { path: "userId", select: "name email" } })
+      .populate("refundedBy", "name")
+      .populate("paymentId", "amountPaid receiptNo paymentMode")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
+    Refund.countDocuments(filter),
+  ]);
+
+  return sendSuccess(res, {
+    message: "Refunds fetched successfully",
+    data: refunds,
+    meta: { page: Number(page), total },
+  });
+});
+
 export const paymentSummary = asyncHandler(async (req, res) => {
 const schoolId = requireSchoolId(req.user);
 
@@ -309,7 +470,9 @@ const schoolId = requireSchoolId(req.user);
     {
       $group: {
         _id: null,
-        totalAmount: { $sum: "$amountPaid" },
+        // Nets out any refunded amount so a fully- or partially-refunded payment doesn't keep
+        // counting its original amountPaid in full.
+        totalAmount: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } },
         totalTransactions: { $sum: 1 },
       },
     },

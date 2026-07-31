@@ -9,7 +9,7 @@ const TransportSchema = new Schema(
     },
     academicYearId: {
       type: Schema.Types.ObjectId,
-      ref: "AcademicYears",
+      ref: "AcademicYear",
       default: null,
     },
     vehicleType: {
@@ -63,5 +63,7 @@ const TransportSchema = new Schema(
   },
   { timestamps: true }
 );
+
+TransportSchema.index({ schoolId: 1, academicYearId: 1 });
 
 export const Transport = mongoose.model("Transport", TransportSchema);

@@ -11,6 +11,9 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
 import { Section } from "../models/section.model.js";
 import { SchoolClass } from "../models/schoolClass.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { HostelRoom } from "../models/HostelRoom.model.js";
+import { StudentTransportAssignment } from "../models/StudentTransportAssignment.model.js";
+import { School } from "../models/school.model.js";
 import mongoose from "mongoose";
 import crypto from "crypto";
 /* ================= ROLE FETCH ================= */
@@ -56,7 +59,18 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
     }
 
     /* 🔑 PASSWORD */
-    const generatePassword = () => crypto.randomBytes(6).toString("hex");
+    // crypto.randomBytes().toString("hex") alone is always lowercase [0-9a-f] — it can satisfy
+    // the "lowercase + digit" part of the password complexity validator (user.model.js) but can
+    // never contain an uppercase letter, so User.create() below would reject every auto-generated
+    // account. Appending one guaranteed character from each required class keeps the same
+    // effective entropy while always passing validation.
+    const generatePassword = () => {
+      const base = crypto.randomBytes(6).toString("hex");
+      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"[crypto.randomInt(24)];
+      const lower = "abcdefghjkmnpqrstuvwxyz"[crypto.randomInt(23)];
+      const digit = String(crypto.randomInt(10));
+      return `${base}${upper}${lower}${digit}`;
+    };
 
     /* 🎯 ROLE AUTO PICK */
 
@@ -205,22 +219,32 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
     )[0];
 
     /* 📚 REGISTRATION NUMBER */
-    const lastEnrollment = await StudentEnrollment.findOne({
-      schoolId,
-      academicYearId,
-    })
-      .sort({ createdAt: -1 })
-      .session(session);
-
     const academicYear = await AcademicYear.findById(academicYearId).session(
       session
     );
+    const regYear = academicYear?.code || new Date().getFullYear();
+
+    // Finding "most recently created" here (regardless of format) previously broke as soon as
+    // any enrollment existed in a different numbering scheme (e.g. seed data using its own
+    // ad-hoc reg-number format) — generateNextRegNumber would then reset to 0001 and collide with
+    // whatever real "REG..."-formatted record already held that number. Scoping the lookup to
+    // enrollments that actually match this year's expected prefix, and taking the lexicographically
+    // highest one (safe because the numeric suffix is fixed-width zero-padded), finds the real
+    // last-issued number in *this* format specifically.
+    const regNoPrefix = `REG${regYear}`;
+    const lastEnrollment = await StudentEnrollment.findOne({
+      schoolId,
+      academicYearId,
+      registrationNumber: { $regex: `^${escapeRegex(regNoPrefix)}` },
+    })
+      .sort({ registrationNumber: -1 })
+      .session(session);
 
     const nextRegNo = generateNextRegNumber(
       lastEnrollment?.registrationNumber,
       {
         prefix: "REG",
-        year: academicYear?.code || new Date().getFullYear(),
+        year: regYear,
         digits: 4,
       }
     );
@@ -322,9 +346,420 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
     throw error;
   }
 });
+
+/* ================= BULK IMPORT STUDENTS ================= */
+// Onboarding an existing school (hundreds of students) previously had no supported path other
+// than one-by-one admission through the UI. Accepts rows already parsed client-side (same
+// dual-mode convention as bulkCreateQuestionsFromExcel — the frontend parses the .xlsx and posts
+// plain JSON rows, no multer needed here). Validates every row up front and reports failures
+// per-row rather than failing the whole batch; each row that *does* pass validation is then
+// created in its own transaction, so one row's unexpected runtime error can't roll back siblings
+// that already committed successfully — a genuine partial-commit import, not all-or-nothing.
+const bulkImportStudents = asyncHandler(async (req, res) => {
+  const { schoolId, academicYearId, rows } = req.body;
+
+  if (!schoolId || !academicYearId) {
+    throw new ApiError(400, "schoolId and academicYearId are required");
+  }
+  if (!Array.isArray(rows) || !rows.length) {
+    throw new ApiError(400, "rows must be a non-empty array");
+  }
+  if (rows.length > 500) {
+    throw new ApiError(400, "Maximum 500 students per import — split into smaller batches");
+  }
+
+  const academicYear = await AcademicYear.findOne({ _id: academicYearId, schoolId });
+  if (!academicYear) throw new ApiError(404, "Academic year not found for this school");
+
+  const studentRole = await getRoleByName("Student", schoolId);
+  const parentRole = await getRoleByName("Parent", schoolId);
+  if (!studentRole || !parentRole) throw new ApiError(500, "Roles not configured properly");
+
+  // Resolve class/section names -> ids once (case-insensitive), rather than a lookup per row —
+  // admins uploading a spreadsheet know class/section names, not internal ObjectIds.
+  const classes = await SchoolClass.find({ schoolId, academicYearId }).select("_id name").lean();
+  const classByName = new Map(classes.map((c) => [String(c.name).trim().toLowerCase(), c]));
+  const sections = await Section.find({ schoolId, academicYearId }).select("_id name schoolClassId").lean();
+  const sectionByKey = new Map(
+    sections.map((s) => [`${s.schoolClassId}_${String(s.name).trim().toLowerCase()}`, s])
+  );
+
+  // Seeds the running registration number from the latest existing enrollment *in this exact
+  // REG{year}{####} format* — not just "most recently created" regardless of format, which
+  // breaks as soon as any enrollment exists in a different numbering scheme (e.g. seed data using
+  // its own ad-hoc reg-number format): generateNextRegNumber would reset to 0001 and collide with
+  // whatever real record already holds that number. Then advances in memory after each successful
+  // row — re-querying the DB after every single row would be both slower and unnecessary (nothing
+  // else can be enrolling concurrently mid-loop).
+  const regNoPrefix = `REG${academicYear.code || new Date().getFullYear()}`;
+  const lastEnrollment = await StudentEnrollment.findOne({
+    schoolId,
+    academicYearId,
+    registrationNumber: { $regex: `^${escapeRegex(regNoPrefix)}` },
+  }).sort({ registrationNumber: -1 });
+  let runningLastRegNo = lastEnrollment?.registrationNumber || null;
+
+  // Existing emails in this school, fetched once — email uniqueness is scoped to {email,
+  // schoolId} (see user.model.js), so duplicate detection only needs to consider this school.
+  const existingEmails = new Set(
+    (await User.find({ schoolId }).select("email").lean()).map((u) => String(u.email).toLowerCase())
+  );
+  const seenEmailsInBatch = new Set();
+
+  const results = { created: [], errors: [] };
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  for (let i = 0; i < rows.length; i++) {
+    const rowNum = i + 2; // spreadsheet row — row 1 is the header
+    const row = rows[i] || {};
+    const rowErrors = [];
+
+    const name = String(row.name || "").trim();
+    const email = String(row.email || "").trim().toLowerCase();
+    const className = String(row.className || row.class || "").trim();
+    const sectionName = String(row.sectionName || row.section || "").trim();
+
+    if (!name) rowErrors.push("name is required");
+    if (!email) rowErrors.push("email is required");
+    else if (!EMAIL_RE.test(email)) rowErrors.push("email is not a valid email address");
+    if (!className) rowErrors.push("class is required");
+    if (!sectionName) rowErrors.push("section is required");
+
+    let schoolClass = null;
+    let section = null;
+    if (className) {
+      schoolClass = classByName.get(className.toLowerCase());
+      if (!schoolClass) rowErrors.push(`class "${className}" not found`);
+    }
+    if (schoolClass && sectionName) {
+      section = sectionByKey.get(`${schoolClass._id}_${sectionName.toLowerCase()}`);
+      if (!section) rowErrors.push(`section "${sectionName}" not found in class "${className}"`);
+    }
+
+    if (email) {
+      if (existingEmails.has(email)) rowErrors.push(`email "${email}" already exists in this school`);
+      else if (seenEmailsInBatch.has(email)) rowErrors.push(`email "${email}" is duplicated within this file`);
+    }
+
+    if (row.gender && !["Male", "Female", "Other"].includes(row.gender)) {
+      rowErrors.push("gender must be Male, Female, or Other");
+    }
+    if (row.dateOfBirth && Number.isNaN(new Date(row.dateOfBirth).getTime())) {
+      rowErrors.push("dateOfBirth is not a valid date");
+    }
+
+    if (rowErrors.length) {
+      results.errors.push({ row: rowNum, name: name || email || "(unnamed)", reasons: rowErrors });
+      continue;
+    }
+
+    seenEmailsInBatch.add(email);
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      // crypto.randomBytes().toString("hex") alone is always lowercase [0-9a-f] — it can satisfy
+    // the "lowercase + digit" part of the password complexity validator (user.model.js) but can
+    // never contain an uppercase letter, so User.create() below would reject every auto-generated
+    // account. Appending one guaranteed character from each required class keeps the same
+    // effective entropy while always passing validation.
+    const generatePassword = () => {
+      const base = crypto.randomBytes(6).toString("hex");
+      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"[crypto.randomInt(24)];
+      const lower = "abcdefghjkmnpqrstuvwxyz"[crypto.randomInt(23)];
+      const digit = String(crypto.randomInt(10));
+      return `${base}${upper}${lower}${digit}`;
+    };
+      const studentPassword = generatePassword();
+
+      const studentUser = (
+        await User.create(
+          [{ name, email, password: studentPassword, roleId: studentRole._id, schoolId, isEmailVerified: true }],
+          { session }
+        )
+      )[0];
+
+      let fatherUser = null;
+      let fatherPassword = null;
+      const fatherEmail = String(row.fatherEmail || "").trim().toLowerCase();
+      if (fatherEmail) {
+        fatherUser = await User.findOne({ email: fatherEmail, schoolId, isActive: true, isDeleted: { $ne: true } }).session(session);
+        if (!fatherUser) {
+          fatherPassword = generatePassword();
+          fatherUser = (
+            await User.create(
+              [{
+                name: String(row.fatherName || "").trim() || "Parent",
+                email: fatherEmail,
+                password: fatherPassword,
+                roleId: parentRole._id,
+                schoolId,
+                isEmailVerified: true,
+              }],
+              { session }
+            )
+          )[0];
+        }
+      }
+
+      let motherUser = null;
+      let motherPassword = null;
+      const motherEmail = String(row.motherEmail || "").trim().toLowerCase();
+      if (motherEmail) {
+        motherUser = await User.findOne({ email: motherEmail, schoolId, isActive: true, isDeleted: { $ne: true } }).session(session);
+        if (!motherUser) {
+          motherPassword = generatePassword();
+          motherUser = (
+            await User.create(
+              [{
+                name: String(row.motherName || "").trim() || "Parent",
+                email: motherEmail,
+                password: motherPassword,
+                roleId: parentRole._id,
+                schoolId,
+                isEmailVerified: true,
+              }],
+              { session }
+            )
+          )[0];
+        }
+      }
+
+      const student = (
+        await Student.create(
+          [{
+            userId: studentUser._id,
+            fatherId: fatherUser?._id || null,
+            motherId: motherUser?._id || null,
+            schoolId,
+            dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
+            gender: row.gender || undefined,
+            address: row.address || undefined,
+            bloodGroup: row.bloodGroup || undefined,
+            fatherInfo: fatherEmail ? { name: row.fatherName, email: fatherEmail, mobile: row.fatherMobile } : undefined,
+            motherInfo: motherEmail ? { name: row.motherName, email: motherEmail, mobile: row.motherMobile } : undefined,
+          }],
+          { session }
+        )
+      )[0];
+
+      const nextRegNo = generateNextRegNumber(runningLastRegNo, {
+        prefix: "REG",
+        year: academicYear.code || new Date().getFullYear(),
+        digits: 4,
+      });
+
+      const lastRollEnrollment = await StudentEnrollment.findOne({
+        schoolId, academicYearId, schoolClassId: schoolClass._id, sectionId: section._id, rollNumber: { $ne: null },
+      }).sort({ rollNumber: -1 }).session(session);
+      const nextRollNumber = (lastRollEnrollment?.rollNumber || 0) + 1;
+
+      const enrollment = (
+        await StudentEnrollment.create(
+          [{
+            studentId: student._id,
+            schoolId,
+            academicYearId,
+            schoolClassId: schoolClass._id,
+            sectionId: section._id,
+            registrationNumber: nextRegNo,
+            rollNumber: nextRollNumber,
+            mobileNumber: row.fatherMobile || row.motherMobile || row.mobileNumber || null,
+            createdBy: req.user._id,
+          }],
+          { session }
+        )
+      )[0];
+
+      await Section.findOneAndUpdate(
+        { _id: section._id, schoolId, schoolClassId: schoolClass._id },
+        { $addToSet: { StudentEnrollmentId: enrollment._id } },
+        { session }
+      );
+
+      await session.commitTransaction();
+
+      runningLastRegNo = nextRegNo;
+      existingEmails.add(email);
+
+      results.created.push({
+        row: rowNum,
+        name,
+        email,
+        registrationNumber: nextRegNo,
+        rollNumber: nextRollNumber,
+        studentId: student._id,
+        credentials: {
+          student: { loginId: email, password: studentPassword },
+          father: fatherPassword ? { loginId: fatherEmail, password: fatherPassword } : null,
+          mother: motherPassword ? { loginId: motherEmail, password: motherPassword } : null,
+        },
+      });
+    } catch (err) {
+      await session.abortTransaction();
+      results.errors.push({ row: rowNum, name: name || email || "(unnamed)", reasons: [err.message || "Unexpected error"] });
+    } finally {
+      session.endSession();
+    }
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      results,
+      `Imported ${results.created.length} of ${rows.length} students (${results.errors.length} failed)`
+    )
+  );
+});
+
+/* ================= TRANSFER STUDENT (INTER-SCHOOL) ================= */
+// There was previously no supported path to move a student to a different school on the
+// platform at all. Student.userId is unique (one User = one Student profile, enforced by the
+// schema), so a transfer can't create a second Student/User pair for the same person — it moves
+// the existing User/Student's schoolId to the destination and opens a fresh enrollment there,
+// closing out the old one. Historical records at the origin school (attendance, fees, exam
+// results, payments) are deliberately left untouched under the origin schoolId — they're that
+// school's own record of the time the student spent there, not data to be silently rewritten to
+// belong to a different tenant.
+const transferStudent = asyncHandler(async (req, res) => {
+  const {
+    studentId,
+    userId,
+    targetSchoolId,
+    targetAcademicYearId,
+    targetSchoolClassId,
+    targetSectionId,
+  } = req.body;
+
+  if (!(studentId || userId) || !targetSchoolId || !targetAcademicYearId || !targetSchoolClassId || !targetSectionId) {
+    throw new ApiError(400, "studentId (or userId), targetSchoolId, targetAcademicYearId, targetSchoolClassId and targetSectionId are required");
+  }
+
+  // Accepts either id — the platform-wide Super Admin user list (UserRoleList.jsx) only has each
+  // person's User._id on hand, not their separate Student._id.
+  const student = studentId
+    ? await Student.findById(studentId)
+    : await Student.findOne({ userId });
+  if (!student) throw new ApiError(404, "Student not found");
+
+  if (String(student.schoolId) === String(targetSchoolId)) {
+    throw new ApiError(400, "Student is already enrolled at this school — use promotion/section-change instead of transfer");
+  }
+
+  const [targetSchool, targetAcademicYear, targetSchoolClass, targetSection] = await Promise.all([
+    School.findById(targetSchoolId),
+    AcademicYear.findOne({ _id: targetAcademicYearId, schoolId: targetSchoolId }),
+    SchoolClass.findOne({ _id: targetSchoolClassId, schoolId: targetSchoolId }),
+    Section.findOne({ _id: targetSectionId, schoolId: targetSchoolId, schoolClassId: targetSchoolClassId }),
+  ]);
+  if (!targetSchool) throw new ApiError(404, "Target school not found");
+  if (!targetAcademicYear) throw new ApiError(404, "Target academic year not found for that school");
+  if (!targetSchoolClass) throw new ApiError(404, "Target class not found for that school");
+  if (!targetSection) throw new ApiError(404, "Target section not found for that class");
+
+  const sourceSchoolId = student.schoolId;
+  const studentUser = await User.findById(student.userId);
+  if (!studentUser) throw new ApiError(404, "Linked user account not found for this student");
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    // Close out every currently-active enrollment at the origin school.
+    await StudentEnrollment.updateMany(
+      { studentId: student._id, schoolId: sourceSchoolId, status: "Active" },
+      { $set: { status: "Transferred" } },
+      { session }
+    );
+
+    // Free up capacity-limited resources at the origin school — same reasoning as deactivating a
+    // student (see deleteStudent): a departed student shouldn't keep "holding" a hostel bed or
+    // transport seat that could otherwise be reassigned.
+    await HostelRoom.updateMany(
+      { schoolId: sourceSchoolId, "students.studentId": studentUser._id },
+      { $pull: { students: { studentId: studentUser._id } } },
+      { session }
+    );
+    const sourceEnrollmentIds = (
+      await StudentEnrollment.find({ studentId: student._id, schoolId: sourceSchoolId }).select("_id").session(session)
+    ).map((e) => e._id);
+    await StudentTransportAssignment.updateMany(
+      { schoolId: sourceSchoolId, studentEnrollmentId: { $in: sourceEnrollmentIds }, isActive: true },
+      { $set: { isActive: false } },
+      { session }
+    );
+
+    // Move the student's identity to the destination school.
+    student.schoolId = targetSchoolId;
+    await student.save({ session });
+    studentUser.schoolId = targetSchoolId;
+    await studentUser.save({ session });
+
+    // Registration number, scoped to the destination school's own numbering (see
+    // bulkImportStudents for why this specifically matches on format, not just "most recent").
+    const regNoPrefix = `REG${targetAcademicYear.code || new Date().getFullYear()}`;
+    const lastEnrollment = await StudentEnrollment.findOne({
+      schoolId: targetSchoolId,
+      academicYearId: targetAcademicYearId,
+      registrationNumber: { $regex: `^${escapeRegex(regNoPrefix)}` },
+    }).sort({ registrationNumber: -1 }).session(session);
+    const nextRegNo = generateNextRegNumber(lastEnrollment?.registrationNumber, {
+      prefix: "REG",
+      year: targetAcademicYear.code || new Date().getFullYear(),
+      digits: 4,
+    });
+
+    const lastRollEnrollment = await StudentEnrollment.findOne({
+      schoolId: targetSchoolId,
+      academicYearId: targetAcademicYearId,
+      schoolClassId: targetSchoolClassId,
+      sectionId: targetSectionId,
+      rollNumber: { $ne: null },
+    }).sort({ rollNumber: -1 }).session(session);
+    const nextRollNumber = (lastRollEnrollment?.rollNumber || 0) + 1;
+
+    const newEnrollment = (
+      await StudentEnrollment.create(
+        [{
+          studentId: student._id,
+          schoolId: targetSchoolId,
+          academicYearId: targetAcademicYearId,
+          schoolClassId: targetSchoolClassId,
+          sectionId: targetSectionId,
+          registrationNumber: nextRegNo,
+          rollNumber: nextRollNumber,
+          mobileNumber: student.fatherInfo?.mobile || student.motherInfo?.mobile || null,
+          createdBy: req.user._id,
+        }],
+        { session }
+      )
+    )[0];
+
+    await Section.findOneAndUpdate(
+      { _id: targetSectionId, schoolId: targetSchoolId, schoolClassId: targetSchoolClassId },
+      { $addToSet: { StudentEnrollmentId: newEnrollment._id } },
+      { session }
+    );
+
+    await session.commitTransaction();
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        { student, studentUser, enrollment: newEnrollment, targetSchool: { _id: targetSchool._id, name: targetSchool.name } },
+        `Student transferred to ${targetSchool.name} successfully`
+      )
+    );
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
+});
+
 // ✅ Get Students (with aggregation)
 export const getStudentsByRole = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId, schoolClassId } = req.query;
+  const { schoolId, academicYearId, schoolClassId, page = 1, limit = 500 } = req.query;
   if (!schoolId || !academicYearId) {
     throw new ApiError(400, "schoolId and academicYearId are required");
   }
@@ -332,14 +767,29 @@ export const getStudentsByRole = asyncHandler(async (req, res) => {
   const filter = { schoolId, academicYearId, status: "Active" };
   if (schoolClassId) filter.schoolClassId = schoolClassId;
 
-  const enrollments = await StudentEnrollment.find(filter)
-    .populate({ path: "studentId", populate: { path: "userId", select: "name email phone" } })
-    .populate("schoolClassId", "name")
-    .populate("sectionId", "name")
-    .lean();
+  // The frontend thunk (fetchAllStudentByRole) already sends page/limit — this was silently
+  // discarding both and always returning the whole active roster for the school/year regardless.
+  const pageNumber = Math.max(Number(page) || 1, 1);
+  const limitNumber = Math.min(Math.max(Number(limit) || 500, 1), 2000);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const [enrollments, total] = await Promise.all([
+    StudentEnrollment.find(filter)
+      .populate({ path: "studentId", populate: { path: "userId", select: "name email phone" } })
+      .populate("schoolClassId", "name")
+      .populate("sectionId", "name")
+      .skip(skip)
+      .limit(limitNumber)
+      .lean(),
+    StudentEnrollment.countDocuments(filter),
+  ]);
 
   return res.status(200).json(
-    new ApiResponse(200, { students: enrollments }, "Students Retrieved Successfully")
+    new ApiResponse(
+      200,
+      { students: enrollments, pagination: { total, page: pageNumber, limit: limitNumber, totalPages: Math.ceil(total / limitNumber) } },
+      "Students Retrieved Successfully"
+    )
   );
 });
 export const getStudentsSuperAdmin = asyncHandler(async (req, res) => {
@@ -682,14 +1132,42 @@ const deleteStudent = asyncHandler(async (req, res) => {
       throw new ApiError(403, "Forbidden access outside your school");
     }
 
-    const student = await Student.findByIdAndDelete(id);
-    if (!student) {
-      throw new ApiError(404, "Student not found!");
+    // Soft delete — this was the only hard delete of a student record anywhere in the app
+    // (deleteUser in user.controllers.js already uses isActive/isDeleted for every other role).
+    // A hard delete here orphaned every StudentEnrollment/StudentFee/Payment/IssuedBook/
+    // hostel-room/transport-assignment record that referenced this student, with no way back
+    // from an accidental click.
+    existing.isActive = false;
+    existing.status = "inactive";
+    await existing.save();
+
+    await User.findByIdAndUpdate(existing.userId, { isActive: false, isDeleted: true });
+
+    // Also drop them out of their current class roster — otherwise they'd keep showing up in
+    // attendance-marking, class lists, etc. despite being deactivated.
+    const activeEnrollments = await StudentEnrollment.find(
+      { studentId: existing._id, status: "Active" },
+      "_id"
+    ).lean();
+    await StudentEnrollment.updateMany(
+      { studentId: existing._id, status: "Active" },
+      { $set: { status: "Inactive" } }
+    );
+
+    // Free up capacity-limited resources they were occupying — otherwise a deactivated student
+    // keeps "holding" a hostel bed/transport seat that can never be reassigned to anyone else.
+    await HostelRoom.updateMany(
+      { "students.studentId": existing.userId },
+      { $pull: { students: { studentId: existing.userId } } }
+    );
+    if (activeEnrollments.length) {
+      await StudentTransportAssignment.updateMany(
+        { studentEnrollmentId: { $in: activeEnrollments.map((e) => e._id) }, isActive: true },
+        { $set: { isActive: false } }
+      );
     }
 
-    await User.findByIdAndDelete(student.userId);
-
-    return res.status(200).json(new ApiResponse(200, {}, "Student deleted successfully!"));
+    return res.status(200).json(new ApiResponse(200, {}, "Student deactivated successfully!"));
   } catch (error) {
     throw new ApiError(500, error.message || "Something went wrong!");
   }
@@ -1450,6 +1928,8 @@ const bulkAutoAssignRollNumbers = asyncHandler(async (req, res) => {
 
 export {
   createStudentAdmission,
+  bulkImportStudents,
+  transferStudent,
   getStudentById,
   updateStudent,
   deleteStudent,

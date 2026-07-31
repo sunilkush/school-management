@@ -5,9 +5,7 @@ import { HostelComplaint } from "../models/HostelComplaint.model.js";
 import { HostelAttendance } from "../models/HostelAttendance.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
-const resolveSchoolId = (req) =>
-  req.user?.schoolId?._id || req.user?.schoolId || req.user?.school?._id;
+import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
 
 export const getHostelWardenDashboard = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);

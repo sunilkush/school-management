@@ -100,7 +100,6 @@ const StudentAttendance = () => {
   /* ── Fetch ── */
   useEffect(() => {
     if (!schoolId || !academicYearId || !user?._id) return;
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
     dispatch(
       fetchAssignedClasses({ schoolId, academicYearId, teacherId: user._id })
     );
@@ -157,21 +156,20 @@ const StudentAttendance = () => {
     [classSections, selectedKey]
   );
 
-  /* ── Filter students to selected class-section ── */
-  const classStudents = useMemo(() => {
-    if (!selectedClassObj || !students.length) return [];
-    return students.filter((s) => {
-      const cid =
-        getId(s?.class) ||
-        getId(s?.schoolClass) ||
-        getId(s?.schoolClassId);
-      const sid = getId(s?.section) || getId(s?.sectionId);
-      return (
-        cid === selectedClassObj.classId &&
-        sid === selectedClassObj.sectionId
-      );
-    });
-  }, [students, selectedClassObj]);
+  // Scoped to just the selected class-section — this used to fetch every student in the school
+  // on every visit just to filter it down to one section's worth afterward.
+  useEffect(() => {
+    if (!schoolId || !academicYearId || !selectedClassObj) return;
+    dispatch(fetchStudentsBySchoolId({
+      schoolId,
+      academicYearId,
+      schoolClassId: selectedClassObj.classId,
+      sectionId: selectedClassObj.sectionId,
+      limit: 200,
+    }));
+  }, [dispatch, schoolId, academicYearId, selectedClassObj]);
+
+  const classStudents = students;
 
   /* ── Seed default status ── */
   useEffect(() => {

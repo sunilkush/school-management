@@ -94,6 +94,16 @@ const employeeSchema = new Schema(
       type: Date,
       required: [true, "Join date is required"],
     },
+    // Set when the employee is deactivated (see deleteEmployee in employee.controllers.js).
+    // Payroll uses [joinDate, relievingDate || cycleEnd] to pro-rate a mid-cycle joiner/leaver —
+    // without a real date to intersect against, a leaver's last cycle either paid them for the
+    // whole month regardless of when they actually left, or (before this field existed) got
+    // excluded from that cycle's payroll entirely since generatePayrollCycle only queried
+    // isActive:true employees.
+    relievingDate: {
+      type: Date,
+      default: null,
+    },
     shift: {
       name: { type: String, trim: true },
       startTime: { type: String, trim: true },

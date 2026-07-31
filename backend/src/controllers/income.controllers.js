@@ -4,9 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
-
-const resolveSchoolId = (user) =>
-  user?.schoolId?._id || user?.schoolId || user?.school?._id || null;
+import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 
 /* ── CREATE ──────────────────────────────────────────────────────── */
 export const createIncome = asyncHandler(async (req, res) => {

@@ -47,7 +47,10 @@ const getCurrentMonthRange = () => {
 export const getDashboardSummary = asyncHandler(async (req, res) => {
   const roleName = req.userRole?.name || req.query.role;
   const userSchoolId = req.user?.schoolId?._id || req.user?.schoolId;
-  const schoolId = req.query.schoolId || userSchoolId;
+  // The schoolId query param is only trusted for Super Admin (who isn't tied to one school) —
+  // otherwise any School Admin/Accountant could read another school's dashboard figures just by
+  // passing a different schoolId, since nothing else here checks tenancy.
+  const schoolId = roleName === "Super Admin" ? (req.query.schoolId || userSchoolId) : userSchoolId;
 
   if (!roleName) {
     throw new ApiError(400, "Role is required to fetch dashboard summary");
@@ -164,7 +167,7 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
     const [monthCollection, pendingDues, successfulTransactions] = await Promise.all([
       Payment.aggregate([
         { $match: { schoolId: schoolObjectId, paymentDate: { $gte: startDate, $lt: endDate }, status: "success" } },
-        { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+        { $group: { _id: null, total: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } } } },
       ]),
       StudentFee.aggregate([
         { $match: { schoolId: schoolObjectId } },
@@ -188,7 +191,11 @@ export const getDashboardSummary = asyncHandler(async (req, res) => {
 });
 
 export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) => {
-  const schoolId = req.query.schoolId || req.user?.schoolId?._id || req.user?.schoolId;
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const userSchoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  // Same tenant-trust rule as getDashboardSummary above — the query param only wins for Super
+  // Admin, otherwise a School Admin could read another school's analytics by passing its id.
+  const schoolId = isSuperAdmin ? (req.query.schoolId || userSchoolId) : userSchoolId;
 
   if (!schoolId || !ObjectId.isValid(schoolId)) {
     throw new ApiError(400, "Valid schoolId is required for School Admin analytics dashboard");
@@ -234,7 +241,7 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
           status: "success",
         },
       },
-      { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+      { $group: { _id: null, total: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } } } },
     ]),
     Payment.aggregate([
       {
@@ -244,7 +251,7 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
           status: "success",
         },
       },
-      { $group: { _id: "$paymentMode", value: { $sum: "$amountPaid" } } },
+      { $group: { _id: "$paymentMode", value: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } } } },
     ]),
     Payment.aggregate([
       {
@@ -254,7 +261,7 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
           status: "success",
         },
       },
-      { $group: { _id: "$paymentMode", value: { $sum: "$amountPaid" } } },
+      { $group: { _id: "$paymentMode", value: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } } } },
       { $sort: { value: -1 } },
     ]),
     PayrollEntry.aggregate([
@@ -628,7 +635,7 @@ export const getRoleDashboardOverview = asyncHandler(async (req, res) => {
             status: "success",
           },
         },
-        { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+        { $group: { _id: null, total: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } } } },
       ]),
       StudentFee.aggregate([
         { $match: schoolFilter },

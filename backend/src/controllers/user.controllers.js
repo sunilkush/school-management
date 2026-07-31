@@ -696,7 +696,16 @@ const getAllUsers = asyncHandler(async (req, res) => {
     roleName,
     academicYearId,
     schoolClassId,
+    page = 1,
+    // UserRoleList.jsx (Super Admin's Teachers/Staff/Students/Parents/Accountants/Librarians
+    // pages) intentionally loads the whole role-scoped result set for client-side search/stats,
+    // so this stays generous rather than a tight page size — the cap exists purely so this query
+    // can never return the *entire* platform's users unbounded as school count grows.
+    limit = 2000,
   } = req.query;
+  const pageNumber = Math.max(Number(page) || 1, 1);
+  const limitNumber = Math.min(Math.max(Number(limit) || 2000, 1), 5000);
+  const skip = (pageNumber - 1) * limitNumber;
 
   /* -------------------- MATCH (BASE) -------------------- */
   const matchStage = {};
@@ -871,14 +880,23 @@ const getAllUsers = asyncHandler(async (req, res) => {
     },
 
     { $sort: sortStage },
+    {
+      $facet: {
+        data: [{ $skip: skip }, { $limit: limitNumber }],
+        totalCount: [{ $count: "count" }],
+      },
+    },
   ];
 
-  const data = await User.aggregate(pipeline);
+  const [result] = await User.aggregate(pipeline);
+  const data = result?.data || [];
+  const total = result?.totalCount?.[0]?.count || 0;
 
   return res.status(200).json({
     success: true,
-    total: data.length,
+    total,
     data,
+    pagination: { total, page: pageNumber, limit: limitNumber, totalPages: Math.ceil(total / limitNumber) },
   });
 });
 
@@ -918,8 +936,16 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Valid User ID is required');
   }
 
-  const user = await User.findByIdAndUpdate(
-    id,
+  // Scope to the caller's own school unless they're Super Admin — otherwise a School Admin could
+  // deactivate a user in a different tenant just by knowing/guessing their ObjectId.
+  const isSuperAdmin = (req.userRole?.name || req.user?.roleId?.name) === 'Super Admin';
+  const match = { _id: id };
+  if (!isSuperAdmin) {
+    match.schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  }
+
+  const user = await User.findOneAndUpdate(
+    match,
     { isActive: false, isDeleted: true },
     { new: true }
   ).select('-password -refreshToken -emailVerificationToken -resetPasswordToken');
@@ -1007,8 +1033,16 @@ const activeUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Valid User ID is required');
   }
 
-  const user = await User.findByIdAndUpdate(
-    id,
+  // Scope to the caller's own school unless they're Super Admin — same tenant-isolation gap as
+  // deleteUser above, applied to reactivation.
+  const isSuperAdmin = (req.userRole?.name || req.user?.roleId?.name) === 'Super Admin';
+  const match = { _id: id };
+  if (!isSuperAdmin) {
+    match.schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  }
+
+  const user = await User.findOneAndUpdate(
+    match,
     { isActive: true, isDeleted: false },
     { new: true }
   ).select('-password -refreshToken -emailVerificationToken -resetPasswordToken');
@@ -1200,8 +1234,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) throw new ApiError(400, 'Email is required');
 
+  // Always return the same generic response whether or not this email is registered — a 404 for
+  // "unknown" vs 200 for "known" lets an attacker enumerate real accounts by trying addresses.
+  const genericResponse = () =>
+    res.status(200).json(new ApiResponse(200, {}, 'If an account exists for this email, a password reset link has been sent'));
+
   const user = await User.findOne({ email, isActive: true, isDeleted: { $ne: true } });
-  if (!user) throw new ApiError(404, 'User not found');
+  if (!user) return genericResponse();
 
   const token = user.generateResetPasswordToken();
   await user.save({ validateBeforeSave: false });
@@ -1213,7 +1252,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     `Hi ${user.name},\n\nYou requested a password reset. Click the link below to set a new password:\n\n${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you did not request this, please ignore this email.`
   );
 
-  return res.status(200).json(new ApiResponse(200, {}, 'Password reset link sent successfully'));
+  return genericResponse();
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
@@ -1315,15 +1354,37 @@ const assignAdditionalRoles = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid user ID");
   }
 
-  const user = await User.findOne({ _id: id, isActive: true, isDeleted: { $ne: true } });
+  const isSuperAdmin = (req.userRole?.name || req.user?.roleId?.name) === "Super Admin";
+
+  // A School Admin has no business touching a user outside their own tenant — scope the lookup
+  // unless the caller is already Super Admin.
+  const userQuery = { _id: id, isActive: true, isDeleted: { $ne: true } };
+  if (!isSuperAdmin) {
+    userQuery.schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  }
+  const user = await User.findOne(userQuery);
   if (!user) throw new ApiError(404, "User not found");
 
   // Validate every supplied role ID actually exists
   if (additionalRoleIds.length > 0) {
-    const validRoles = await Role.find({ _id: { $in: additionalRoleIds } }).select("_id name").lean();
+    const validRoles = await Role.find({ _id: { $in: additionalRoleIds } }).select("_id name type level").lean();
     if (validRoles.length !== additionalRoleIds.length) {
       throw new ApiError(400, "One or more role IDs are invalid");
     }
+
+    // Only Super Admin may grant a system role (currently just "Super Admin" itself) or any role
+    // at a more senior tier than their own — otherwise a School Admin could hand themselves (or
+    // anyone) platform-admin access through this endpoint.
+    if (!isSuperAdmin) {
+      const callerRoleId = req.user?.roleId?._id || req.user?.roleId;
+      const callerRole = await Role.findById(callerRoleId).select("level").lean();
+      const callerLevel = callerRole?.level ?? 4;
+      const forbidden = validRoles.find((r) => r.type === "system" || (r.level ?? 4) < callerLevel);
+      if (forbidden) {
+        throw new ApiError(403, `Not allowed to assign role "${forbidden.name}"`);
+      }
+    }
+
     // Prevent assigning primary role as additional role
     const primaryId = user.roleId.toString();
     if (additionalRoleIds.map(String).includes(primaryId)) {

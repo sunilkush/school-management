@@ -12,8 +12,9 @@ import {
   createLibraryBook, deleteLibraryBook, fetchLibraryBooks, updateLibraryBook,
 } from "../../../features/librarySlice";
 import PageHeader from "../../../components/layout/PageHeader";
+import ListToolbar from "../../../components/layout/ListToolbar";
 import {
-  pageWrapper, pageCard, toolbarRow, tableHeadCss, statCard, statLabel, statValue, statGrid,
+  pageWrapper, pageCard, tableHeadCss, statCard, statLabel, statValue, statGrid,
   pill, emptyState, iconWell,
 } from "../../../styles/pageStyles";
 
@@ -252,7 +253,7 @@ const Books = () => {
             </div>
 
             {/* Toolbar */}
-            <div className="page-toolbar" style={toolbarRow}>
+            <ListToolbar className="page-toolbar">
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Books
               </span>
@@ -286,7 +287,7 @@ const Books = () => {
                 <Option value="Available">Available</Option>
                 <Option value="Issued">Issued</Option>
               </Select>
-            </div>
+            </ListToolbar>
           </div>
 
           {!booksLoading && filteredBooks.length === 0 ? (

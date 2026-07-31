@@ -101,7 +101,11 @@ export const updateAcademicYear = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Archived academic years cannot be edited");
   }
 
-  const updatedAcademicYear = await AcademicYear.findByIdAndUpdate(id, req.body, {
+  // schoolId/_id must not be attacker-settable via the body — otherwise a caller could reassign
+  // this academic year into another school's namespace despite the read-scope check above.
+  const { schoolId: _schoolId, _id, ...updates } = req.body;
+
+  const updatedAcademicYear = await AcademicYear.findByIdAndUpdate(id, updates, {
     new: true,
     runValidators: true,
   });

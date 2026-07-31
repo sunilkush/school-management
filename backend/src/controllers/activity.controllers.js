@@ -29,7 +29,7 @@ export const createActivityLog = async (req, res) => {
 // Get all logs with optional filters: school, user, role, date range
 export const getActivityLogs = async (req, res) => {
   try {
-    const { school, user, role, startDate, endDate } = req.query;
+    const { school, user, role, startDate, endDate, page = 1, limit = 100 } = req.query;
 
     let query = {};
 
@@ -54,14 +54,26 @@ export const getActivityLogs = async (req, res) => {
       if (endDate) query.createdAt.$lte = new Date(endDate);
     }
 
-    const logs = await ActivityLog.find(query)
-      .populate("user", "name email")
-      .populate("role", "name")
-      .populate("school", "name")
-      .sort({ createdAt: -1 })
-      .limit(1000); // future: add pagination
+    const pageNumber = Math.max(Number(page) || 1, 1);
+    const limitNumber = Math.min(Math.max(Number(limit) || 100, 1), 1000);
+    const skip = (pageNumber - 1) * limitNumber;
 
-    res.json({ success: true, data: logs });
+    const [logs, total] = await Promise.all([
+      ActivityLog.find(query)
+        .populate("user", "name email")
+        .populate("role", "name")
+        .populate("school", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber),
+      ActivityLog.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      data: logs,
+      pagination: { total, page: pageNumber, limit: limitNumber, totalPages: Math.ceil(total / limitNumber) },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Failed to fetch activity logs" });

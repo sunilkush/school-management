@@ -59,10 +59,10 @@ export async function notifyUser({ schoolId, userId, title, message, channels = 
     await applyDelivery(await sendEmailToUsers(targetUserIds, { title, body: message }));
   }
   if (normalizedChannels.sms) {
-    await applyDelivery(await sendSmsToUsers(targetUserIds, { title, body: message }));
+    await applyDelivery(await sendSmsToUsers(targetUserIds, { title, body: message, schoolId }));
   }
   if (normalizedChannels.whatsapp) {
-    await applyDelivery(await sendWhatsAppToUsers(targetUserIds, { title, body: message }));
+    await applyDelivery(await sendWhatsAppToUsers(targetUserIds, { title, body: message, schoolId }));
   }
 
   return notification;

@@ -58,7 +58,12 @@ export const confirm2FA = asyncHandler(async (req, res) => {
 
   if (!record) throw new ApiError(400, "OTP not found or already used");
   if (new Date() > record.expiresAt) throw new ApiError(400, "OTP has expired");
-  if (record.code !== otp) throw new ApiError(400, "Invalid OTP");
+  if (record.attempts >= 5) throw new ApiError(429, "Too many incorrect attempts. Request a new OTP.");
+  if (record.code !== otp) {
+    record.attempts += 1;
+    await record.save();
+    throw new ApiError(400, "Invalid OTP");
+  }
 
   record.verifiedAt = new Date();
   await record.save();
@@ -87,7 +92,12 @@ export const disable2FA = asyncHandler(async (req, res) => {
 
   if (!record) throw new ApiError(400, "OTP not found or already used. Please request a new one.");
   if (new Date() > record.expiresAt) throw new ApiError(400, "OTP has expired. Please request a new one.");
-  if (record.code !== otp) throw new ApiError(400, "Invalid OTP");
+  if (record.attempts >= 5) throw new ApiError(429, "Too many incorrect attempts. Request a new OTP.");
+  if (record.code !== otp) {
+    record.attempts += 1;
+    await record.save();
+    throw new ApiError(400, "Invalid OTP");
+  }
 
   record.verifiedAt = new Date();
   await record.save();
@@ -136,7 +146,12 @@ export const verifyLogin2FA = asyncHandler(async (req, res) => {
 
   if (!record) throw new ApiError(400, "OTP not found or already used");
   if (new Date() > record.expiresAt) throw new ApiError(400, "OTP has expired");
-  if (record.code !== otp) throw new ApiError(400, "Invalid OTP");
+  if (record.attempts >= 5) throw new ApiError(429, "Too many incorrect attempts. Request a new OTP.");
+  if (record.code !== otp) {
+    record.attempts += 1;
+    await record.save();
+    throw new ApiError(400, "Invalid OTP");
+  }
 
   record.verifiedAt = new Date();
   await record.save();

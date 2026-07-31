@@ -248,6 +248,7 @@ export const sidebarMenu = {
         { title: "Admit Card",    path: "schooladmin/exams/admit-card"    },
         { title: "Seat Plan",     path: "schooladmin/exams/seat-plan"     },
         { title: "Grade Entry",   path: "schooladmin/exams/grades"        },
+        { title: "Grading Scale", path: "schooladmin/exams/grading-scale" },
         { title: "Analytics",     path: "schooladmin/exams/analytics"     },
         { title: "Exam Reports",  path: "schooladmin/exams/reports"       },
       ],

@@ -96,4 +96,13 @@ const leaveRequestSchema = new Schema(
 leaveRequestSchema.index({ schoolId: 1, userId: 1, status: 1 });
 leaveRequestSchema.index({ schoolId: 1, startDate: 1, endDate: 1 });
 
+// A single-day leave has startDate === endDate (valid), so this only rejects startDate AFTER
+// endDate — unlike AcademicYear's stricter "must be before" rule, which doesn't apply here.
+leaveRequestSchema.pre("validate", function (next) {
+  if (this.startDate && this.endDate && this.startDate > this.endDate) {
+    return next(new Error("Leave startDate must be on or before endDate"));
+  }
+  next();
+});
+
 export const LeaveRequest = mongoose.model("LeaveRequest", leaveRequestSchema);

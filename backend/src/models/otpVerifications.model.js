@@ -31,6 +31,14 @@ const otpSchema = new Schema(
       type: Date,
       default: null,
     },
+
+    // Failed verification attempts against this specific code — once it hits the cap enforced in
+    // the controller, the code is treated as burned even though it hasn't expired yet, so a
+    // 6-digit OTP can't just be brute-forced within its validity window.
+    attempts: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

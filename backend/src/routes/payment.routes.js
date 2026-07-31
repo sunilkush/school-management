@@ -3,6 +3,8 @@ import {
   createPayment,
   getPayments,
   paymentSummary,
+  refundPayment,
+  getRefunds,
   verifyRazorpayPayment,
   createRazorpayOrder,
   getRazorpayConfig,
@@ -14,6 +16,8 @@ import {
   createPaymentSchema,
   createRazorpayOrderSchema,
   paymentListQuerySchema,
+  refundListQuerySchema,
+  refundPaymentSchema,
   razorpayConfigUpdateSchema,
   verifyRazorpayPaymentSchema,
 } from "../validators/payment.validator.js";
@@ -27,6 +31,8 @@ const PAYMENT_CREATE_ROLES = ["Super Admin", "School Admin", "Accountant", "Stud
 router.post("/", requireRoles(PAYMENT_CREATE_ROLES), validateRequest(createPaymentSchema), createPayment);
 router.get("/", requireRoles(PAYMENT_READ_ROLES), validateRequest(paymentListQuerySchema), getPayments);
 router.get("/summary", requireRoles(PAYMENT_ADMIN_ROLES), paymentSummary);
+router.get("/refunds", requireRoles(PAYMENT_READ_ROLES), validateRequest(refundListQuerySchema), getRefunds);
+router.post("/:id/refund", requireRoles(PAYMENT_ADMIN_ROLES), validateRequest(refundPaymentSchema), refundPayment);
 router.get("/:id", requireRoles(PAYMENT_READ_ROLES), validateRequest(paymentListQuerySchema), getPayments);
 
 router.post(

@@ -48,6 +48,30 @@ export const createStudent = createAsyncThunk(
   }
 );
 
+export const bulkImportStudents = createAsyncThunk(
+  "student/bulkImport",
+  async ({ schoolId, academicYearId, rows }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("/student/bulk-import", { schoolId, academicYearId, rows });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Bulk import failed");
+    }
+  }
+);
+
+export const transferStudent = createAsyncThunk(
+  "student/transfer",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("/student/transfer", payload);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Transfer failed");
+    }
+  }
+);
+
 // fetch all students
 export const fetchAllStudent = createAsyncThunk(
   "student/fetchAllStudent",
@@ -242,6 +266,9 @@ const initialState = {
   student: null, // single student
   studentList: [], // list of students
   schoolStudents: [],
+  schoolStudentsPagination: null, // { total, page, limit } from the last fetchStudentsBySchoolId call
+  bulkImportLoading: false,
+  bulkImportResult: null, // { created: [...], errors: [...] } from the last bulkImportStudents call
   rollNumberList: [],   // students with roll numbers for a class-section
   loading: false,
   rollLoading: false,
@@ -260,6 +287,9 @@ const studentSlice = createSlice({
       state.error = null;
       state.lastStudent = null;
       state.registrationNumber = "";
+    },
+    clearBulkImportResult: (state) => {
+      state.bulkImportResult = null;
     },
   },
   extraReducers: (builder) => {
@@ -299,6 +329,34 @@ const studentSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         toast.error(state.error || "Failed to create student");
+      })
+
+      // bulk import students
+      .addCase(bulkImportStudents.pending, (state) => {
+        state.bulkImportLoading = true;
+        state.bulkImportResult = null;
+      })
+      .addCase(bulkImportStudents.fulfilled, (state, action) => {
+        state.bulkImportLoading = false;
+        state.bulkImportResult = action.payload;
+        const created = action.payload?.created?.length || 0;
+        const errors = action.payload?.errors?.length || 0;
+        if (created && !errors) toast.success(`Imported ${created} students successfully`);
+        else if (created) toast.success(`Imported ${created} students — ${errors} rows had errors`);
+        else toast.error(`Import failed for all ${errors} rows`);
+      })
+      .addCase(bulkImportStudents.rejected, (state, action) => {
+        state.bulkImportLoading = false;
+        toast.error(action.payload || "Bulk import failed");
+      })
+
+      // transfer student
+      .addCase(transferStudent.fulfilled, (state, action) => {
+        const schoolName = action.payload?.targetSchool?.name;
+        toast.success(schoolName ? `Student transferred to ${schoolName}` : "Student transferred successfully");
+      })
+      .addCase(transferStudent.rejected, (state, action) => {
+        toast.error(action.payload || "Transfer failed");
       })
 
       // fetch all students
@@ -347,6 +405,9 @@ const studentSlice = createSlice({
           action.payload?.data ||
           action.payload ||
           [];
+        // The backend already computes a real total via $facet — without this, callers have no
+        // way to drive server-side pagination and fall back to fetching everything at once.
+        state.schoolStudentsPagination = action.payload?.pagination || null;
         state.success = true;
       })
       .addCase(fetchStudentsBySchoolId.rejected, (state, action) => {
@@ -452,5 +513,5 @@ const studentSlice = createSlice({
   },
 });
 
-export const { clearStudentState } = studentSlice.actions;
+export const { clearStudentState, clearBulkImportResult } = studentSlice.actions;
 export default studentSlice.reducer;

@@ -7,6 +7,7 @@ import { ExamResult } from "../models/ExamResult.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ExamAttempt } from "../models/ExamAttempts.model.js";
+import { getGradeBands, resolveGrade } from "./gradingScale.service.js";
 
 const OBJECT_ID = mongoose.Types.ObjectId;
 const getActiveEnrollmentForStudentUser = async ({ userId, academicYearId }) => {
@@ -86,13 +87,6 @@ const validateExamPayload = (payload) => {
   if (Number(payload.passingMarks) > Number(payload.totalMarks)) {
     throw new ApiError(400, "Passing marks cannot exceed total marks");
   }
-};
-
-const getGradeFromPercentage = (percentage) => {
-  if (percentage >= 85) return "A";
-  if (percentage >= 70) return "B";
-  if (percentage >= 50) return "C";
-  return "Fail";
 };
 
 const resolveScope = async ({ user, studentId }) => {
@@ -329,6 +323,21 @@ export const enterMarksBulkService = async ({ body, user }) => {
     enrollments.map((row) => `${row.studentId}`)
   );
 
+  // 5b. Block re-entry over marks already finalized — the single-mark PATCH endpoint
+  // (updateMarksService) already refuses to edit a mark once isFinalSubmitted, but this bulk
+  // upload had no equivalent check at all, so a teacher/admin could silently overwrite marks
+  // after publishResultService had already computed and published percentage/grade/rank from the
+  // old values, with no audit trail of the discrepancy and a published result that no longer
+  // matched the underlying marks.
+  const existingFinalized = await Marks.find({
+    examId,
+    subjectId: { $in: [...new Set(marks.map((entry) => `${entry.subjectId || exam.subjectId}`))] },
+    isFinalSubmitted: true,
+  })
+    .select("studentId subjectId")
+    .lean();
+  const finalizedKeys = new Set(existingFinalized.map((m) => `${m.studentId}_${m.subjectId}`));
+
   // 6. VALIDATION + TRANSFORM DATA
   const bulkOps = [];
 
@@ -346,12 +355,20 @@ export const enterMarksBulkService = async ({ body, user }) => {
       );
     }
 
+    const subjectId = entry.subjectId || exam.subjectId;
+    if (finalizedKeys.has(`${resolvedStudent.userId}_${subjectId}`)) {
+      throw new ApiError(
+        400,
+        `Marks for student ${entry.studentId} (subject ${subjectId}) are already finalized and cannot be re-entered via bulk upload`
+      );
+    }
+
     bulkOps.push({
       updateOne: {
         filter: {
           examId,
           studentId: resolvedStudent.userId,
-          subjectId: entry.subjectId || exam.subjectId,
+          subjectId,
         },
         update: {
           $set: {
@@ -367,7 +384,7 @@ export const enterMarksBulkService = async ({ body, user }) => {
           $setOnInsert: {
             examId,
             studentId: resolvedStudent.userId,
-            subjectId: entry.subjectId || exam.subjectId,
+            subjectId,
             enteredBy: user._id,
           },
         },
@@ -562,9 +579,13 @@ export const publishResultService = async ({ body, user }) => {
   const sorted = [...aggregated].sort((a, b) => b.totalObtainedMarks - a.totalObtainedMarks);
   const rankMap = new Map(sorted.map((item, idx) => [`${item._id.studentId}`, idx + 1]));
 
+  // Every row belongs to the same school (baseMatch.schoolId), so the scale is fetched once and
+  // reused for the whole batch rather than re-querying per student.
+  const gradeBands = await getGradeBands(user.schoolId);
+
   const ops = aggregated.map((row) => {
     const percentage = row.percentage || 0;
-    const grade = getGradeFromPercentage(percentage);
+    const grade = resolveGrade(percentage, gradeBands);
     const resultStatus = row.allPassed ? "PASS" : "FAIL";
 
     return {

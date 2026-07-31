@@ -532,7 +532,14 @@ const AdmissionForm = ({ onClose }) => {
                 <Form.Item name="email" label="Email" rules={[{ required: true, type: "email", message: "Valid email required" }]}>
                   <Input placeholder="student@email.com" />
                 </Form.Item>
-                <Form.Item name="mobileNumber" label="Mobile" rules={[{ required: true, message: "Required" }]}>
+                <Form.Item
+                  name="mobileNumber"
+                  label="Mobile"
+                  rules={[
+                    { required: true, message: "Required" },
+                    { pattern: /^[0-9]{10}$/, message: "Enter a valid 10-digit number" },
+                  ]}
+                >
                   <Input placeholder="10-digit number" maxLength={10} />
                 </Form.Item>
               </div>
@@ -585,7 +592,16 @@ const AdmissionForm = ({ onClose }) => {
                 </Form.Item>
               </div>
               <div className="adm-row-2">
-                <Form.Item name="smsMobile" label="SMS Mobile">
+                <Form.Item
+                  name="smsMobile"
+                  label="SMS Mobile"
+                  rules={[{
+                    validator: (_, value) =>
+                      !value || /^[0-9]{10}$/.test(value)
+                        ? Promise.resolve()
+                        : Promise.reject(new Error("Enter a valid 10-digit number")),
+                  }]}
+                >
                   <Input placeholder="For SMS alerts" maxLength={10} />
                 </Form.Item>
                 <Form.Item name="feeDiscount" label="Fee Discount (%)">
@@ -655,7 +671,14 @@ const AdmissionForm = ({ onClose }) => {
                 <Form.Item name="fatherName" label="Father Name" rules={[{ required: true, message: "Required" }]}>
                   <Input placeholder="Full name" />
                 </Form.Item>
-                <Form.Item name="fatherMobile" label="Mobile Number" rules={[{ required: true, message: "Required" }]}>
+                <Form.Item
+                  name="fatherMobile"
+                  label="Mobile Number"
+                  rules={[
+                    { required: true, message: "Required" },
+                    { pattern: /^[0-9]{10}$/, message: "Enter a valid 10-digit number" },
+                  ]}
+                >
                   <Input placeholder="10-digit number" maxLength={10} />
                 </Form.Item>
                 <Form.Item name="fatherEmail" label="Email Address">
@@ -685,7 +708,16 @@ const AdmissionForm = ({ onClose }) => {
                 <Form.Item name="motherName" label="Mother Name">
                   <Input placeholder="Full name" />
                 </Form.Item>
-                <Form.Item name="motherMobile" label="Mobile Number">
+                <Form.Item
+                  name="motherMobile"
+                  label="Mobile Number"
+                  rules={[{
+                    validator: (_, value) =>
+                      !value || /^[0-9]{10}$/.test(value)
+                        ? Promise.resolve()
+                        : Promise.reject(new Error("Enter a valid 10-digit number")),
+                  }]}
+                >
                   <Input placeholder="10-digit number" maxLength={10} />
                 </Form.Item>
                 <Form.Item name="motherEmail" label="Email Address">

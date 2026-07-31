@@ -6,13 +6,15 @@ import {
 } from "antd";
 import {
   PlusOutlined, ReloadOutlined, ExportOutlined, SearchOutlined,
-  TeamOutlined, CheckCircleOutlined, BookOutlined, EyeOutlined,
+  TeamOutlined, BookOutlined, EyeOutlined, UploadOutlined,
   LockOutlined, EditOutlined, DeleteOutlined,
 } from "@ant-design/icons";
 import { Cake } from "lucide-react";
 import dayjs from "dayjs";
 import { fetchStudentsBySchoolId, updateStudent, deleteStudent } from "../../../features/studentSlice";
+import { getClassData } from "../../../features/schoolClassSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
+import BulkImportStudentsSheet from "../../../components/forms/BulkImportStudentsSheet";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, pageCard, toolbarRow, tableContainer,
@@ -32,21 +34,25 @@ const bloodGroupColor = {
 
 const STAT_META = [
   { key: "total",   label: "Total Students", icon: <TeamOutlined />,        color: "#14B8A6" },
-  { key: "active",  label: "Active",          icon: <CheckCircleOutlined />, color: "#10b981" },
   { key: "classes", label: "Classes",         icon: <BookOutlined />,        color: "#2563EB" },
-  { key: "showing", label: "Showing",         icon: <EyeOutlined />,         color: "#F59E0B" },
+  { key: "showing", label: "On This Page",    icon: <EyeOutlined />,         color: "#F59E0B" },
 ];
 
 const StudentList = () => {
   const dispatch = useDispatch();
-  const { schoolStudents, loading } = useSelector((s) => s.students);
+  const { schoolStudents, schoolStudentsPagination, loading } = useSelector((s) => s.students);
+  const { schoolClasses } = useSelector((s) => s.schoolClass);
   const { user } = useSelector((s) => s.auth);
   const { selectedAcademicYear, activeYear } = useSelector((s) => s.academicYear);
 
   const [isModalOpen, setIsModalOpen]     = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [searchInput, setSearchInput]     = useState("");
   const [searchText, setSearchText]       = useState("");
-  const [selectedClass, setSelectedClass] = useState("all");
-  const [selectedSection, setSelectedSection] = useState("all");
+  const [selectedClassId, setSelectedClassId]     = useState("all");
+  const [selectedSectionId, setSelectedSectionId] = useState("all");
+  const [page, setPage]         = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [editingStudent, setEditingStudent] = useState(null);
   const [editForm] = Form.useForm();
   const [savingEdit, setSavingEdit] = useState(false);
@@ -56,10 +62,38 @@ const StudentList = () => {
   const canViewStudents = ["School Admin", "Principal", "Vice Principal"].includes(user?.role?.name);
   const canManageStudents = user?.role?.name === "School Admin";
 
+  // Debounce free-text search before it drives a server request — otherwise every keystroke
+  // fires a new query.
   useEffect(() => {
+    const t = setTimeout(() => { setSearchText(searchInput.trim()); setPage(1); }, 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Class list is fetched independently of the (now paginated) student list, so the Class/Section
+  // filter dropdowns always show every class in the school — not just whatever happens to be on
+  // the current page of students.
+  useEffect(() => {
+    if (!canViewStudents || !schoolId || !academicYearId) return;
+    dispatch(getClassData({ schoolId, academicYearId }));
+  }, [dispatch, canViewStudents, schoolId, academicYearId]);
+
+  useEffect(() => { setSelectedSectionId("all"); }, [selectedClassId]);
+  useEffect(() => { setPage(1); }, [selectedClassId, selectedSectionId]);
+
+  const refetchStudents = () => {
     if (!canViewStudents || !schoolId) return;
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
-  }, [dispatch, canViewStudents, schoolId, academicYearId, isModalOpen]);
+    dispatch(fetchStudentsBySchoolId({
+      schoolId,
+      academicYearId,
+      schoolClassId: selectedClassId !== "all" ? selectedClassId : undefined,
+      sectionId: selectedSectionId !== "all" ? selectedSectionId : undefined,
+      search: searchText || undefined,
+      page,
+      limit: pageSize,
+    }));
+  };
+
+  useEffect(refetchStudents, [dispatch, canViewStudents, schoolId, academicYearId, selectedClassId, selectedSectionId, searchText, page, pageSize, isModalOpen]);
 
   const studentsArray = useMemo(() => {
     if (Array.isArray(schoolStudents)) return schoolStudents;
@@ -88,36 +122,26 @@ const StudentList = () => {
     [studentsArray]
   );
 
-  const classOptions = useMemo(() => {
-    const cls = formatted.map((s) => s.schoolClass).filter(Boolean);
-    return [{ value: "all", label: "All Classes" }, ...([...new Set(cls)].map((c) => ({ value: c, label: c })))];
-  }, [formatted]);
+  const classOptions = useMemo(() => [
+    { value: "all", label: "All Classes" },
+    ...schoolClasses.map((c) => ({ value: c._id, label: c.name })),
+  ], [schoolClasses]);
 
   const sectionOptions = useMemo(() => {
-    const secs = formatted
-      .filter((s) => selectedClass === "all" || s.schoolClass === selectedClass)
-      .map((s) => s.section).filter(Boolean);
-    return [{ value: "all", label: "All Sections" }, ...([...new Set(secs)].map((s) => ({ value: s, label: s })))];
-  }, [formatted, selectedClass]);
+    const cls = schoolClasses.find((c) => String(c._id) === String(selectedClassId));
+    const secs = cls?.sections || [];
+    return [{ value: "all", label: "All Sections" }, ...secs.map((s) => ({ value: s._id, label: s.name }))];
+  }, [schoolClasses, selectedClassId]);
 
-  const filtered = useMemo(() =>
-    formatted.filter((s) => {
-      const q = searchText.toLowerCase();
-      return (
-        (s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q)) &&
-        (selectedClass   === "all" || s.schoolClass === selectedClass) &&
-        (selectedSection === "all" || s.section     === selectedSection)
-      );
-    }),
-    [formatted, searchText, selectedClass, selectedSection]
-  );
+  // Search/class/section filtering now happens server-side (see the fetch effect above) — the
+  // page only ever holds the current page's rows, so there's nothing left to filter client-side.
+  const filtered = formatted;
 
   const stats = useMemo(() => ({
-    total:   formatted.length,
-    active:  formatted.filter((s) => s.status === "Active").length,
-    classes: new Set(formatted.map((s) => s.schoolClass)).size,
-    showing: filtered.length,
-  }), [formatted, filtered]);
+    total:   schoolStudentsPagination?.total ?? formatted.length,
+    classes: schoolClasses.length,
+    showing: formatted.length,
+  }), [schoolStudentsPagination, formatted, schoolClasses]);
 
   const columns = [
     {
@@ -272,7 +296,7 @@ const StudentList = () => {
       ).unwrap();
       message.success("Student updated successfully");
       closeEditModal();
-      dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+      refetchStudents();
     } catch (error) {
       if (error?.errorFields) return; // form validation error, already shown inline
       message.error(typeof error === "string" ? error : "Failed to update student");
@@ -289,7 +313,7 @@ const StudentList = () => {
     try {
       await dispatch(deleteStudent(record.studentId)).unwrap();
       message.success("Student deleted successfully");
-      dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
+      refetchStudents();
     } catch (error) {
       message.error(typeof error === "string" ? error : "Failed to delete student");
     }
@@ -324,14 +348,19 @@ const StudentList = () => {
             <Tooltip title="Refresh">
               <Button
                 icon={<ReloadOutlined />}
-                onClick={() => dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }))}
+                onClick={() => refetchStudents()}
               />
             </Tooltip>
             <Button icon={<ExportOutlined />}>Export</Button>
             {user?.role?.name === "School Admin" && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-                Add Student
-              </Button>
+              <>
+                <Button icon={<UploadOutlined />} onClick={() => setIsBulkImportOpen(true)}>
+                  Bulk Import
+                </Button>
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
+                  Add Student
+                </Button>
+              </>
             )}
           </Space>
         }
@@ -358,6 +387,22 @@ const StudentList = () => {
           }
         >
           <AdmissionForm onClose={() => setIsModalOpen(false)} />
+        </Modal>
+
+        <Modal
+          open={isBulkImportOpen}
+          title="Bulk Import Students"
+          onCancel={() => setIsBulkImportOpen(false)}
+          footer={null}
+          width={800}
+          destroyOnClose
+        >
+          <BulkImportStudentsSheet
+            schoolId={schoolId}
+            academicYearId={academicYearId}
+            classOptions={schoolClasses}
+            onSuccess={refetchStudents}
+          />
         </Modal>
 
         <Modal
@@ -422,21 +467,21 @@ const StudentList = () => {
               <Input.Search
                 placeholder="Search by name or email…"
                 allowClear
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 style={{ width: 240 }}
               />
               <Select
-                value={selectedClass}
+                value={selectedClassId}
                 options={classOptions}
-                onChange={(v) => { setSelectedClass(v); setSelectedSection("all"); }}
+                onChange={(v) => setSelectedClassId(v)}
                 style={{ width: 140 }}
               />
               <Select
-                value={selectedSection}
+                value={selectedSectionId}
                 options={sectionOptions}
-                onChange={(v) => setSelectedSection(v)}
-                disabled={selectedClass === "all"}
+                onChange={(v) => setSelectedSectionId(v)}
+                disabled={selectedClassId === "all"}
                 style={{ width: 130 }}
               />
             </div>
@@ -448,10 +493,10 @@ const StudentList = () => {
               <div style={emptyState}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🎓</div>
                 <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
-                  {searchText || selectedClass !== "all" ? "No students match your filters" : "No students enrolled yet"}
+                  {searchText || selectedClassId !== "all" ? "No students match your filters" : "No students enrolled yet"}
                 </div>
                 <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                  {searchText || selectedClass !== "all"
+                  {searchText || selectedClassId !== "all"
                     ? "Try adjusting your search or filter"
                     : 'Click "Add Student" to enroll the first student'}
                 </div>
@@ -464,9 +509,12 @@ const StudentList = () => {
                 columns={columns}
                 dataSource={filtered}
                 pagination={{
-                  pageSize: 10,
+                  current: page,
+                  pageSize,
+                  total: schoolStudentsPagination?.total ?? formatted.length,
                   size: "small",
                   showSizeChanger: true,
+                  onChange: (p, ps) => { setPage(p); setPageSize(ps); },
                   showTotal: (total, range) => (
                     <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{range[0]}–{range[1]} of {total} students</span>
                   ),

@@ -103,9 +103,22 @@ const AllStudentsAttendance = () => {
   /* ── Fetch ── */
   useEffect(() => {
     if (!schoolId) return;
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId }));
     dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
   }, [schoolId, academicYearId, dispatch]);
+
+  // Scoped to the selected class/section — this page already requires picking a class before
+  // showing anything ("Select a class to view students" empty state below), so there's no reason
+  // to load the entire school's roster up front just to filter it client-side afterward.
+  useEffect(() => {
+    if (!schoolId || !selectedClassId) return;
+    dispatch(fetchStudentsBySchoolId({
+      schoolId,
+      academicYearId,
+      schoolClassId: selectedClassId,
+      sectionId: selectedSectionId || undefined,
+      limit: 200,
+    }));
+  }, [schoolId, academicYearId, selectedClassId, selectedSectionId, dispatch]);
 
   /* ── Derived ── */
   const selectedClassObj = useMemo(
@@ -127,16 +140,10 @@ const AllStudentsAttendance = () => {
     setSelectedSectionId(null);
   };
 
-  /* ── Filtered students ── */
+  /* ── Filtered students (class/section are already server-scoped by the fetch above) ── */
   const filteredStudents = useMemo(() => {
     const q = searchText.toLowerCase();
     return students.filter((s) => {
-      const classId   = s?.schoolClass?._id || s?.schoolClassId;
-      const sectionId = s?.section?._id     || s?.sectionId;
-
-      if (selectedClassId   && classId   !== selectedClassId)   return false;
-      if (selectedSectionId && sectionId !== selectedSectionId) return false;
-
       if (filterStatus) {
         const currentStatus = attendance[s._id] || DEFAULT_STATUS;
         if (currentStatus !== filterStatus) return false;
@@ -147,7 +154,7 @@ const AllStudentsAttendance = () => {
       if (q && !name.includes(q) && !roll.includes(q)) return false;
       return true;
     });
-  }, [students, selectedClassId, selectedSectionId, filterStatus, searchText, attendance]);
+  }, [students, filterStatus, searchText, attendance]);
 
   /* ── Live summary ── */
   const summary = useMemo(() => {
