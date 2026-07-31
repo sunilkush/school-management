@@ -15,6 +15,8 @@ import { useLocation } from "react-router-dom";
 import { getQuestions, deleteQuestion, toggleQuestionStatus } from "../../../features/questionSlice";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import { fetchAllAcademicYears } from "../../../features/academicYearSlice";
+import { fetchSchools } from "../../../features/schoolSlice";
+import { getClassData } from "../../../features/schoolClassSlice";
 import apiClient from "../../../api/httpClient";
 
 import CreateQuestion from "./CreateQuestion";
@@ -163,11 +165,21 @@ const QuestionBank = () => {
 
   const { questions = [], loading }         = useSelector((s) => s.questions || {});
   const { classAssignTeacher = [], loading: classLoading } = useSelector((s) => s.class || {});
+  const { schoolClasses = [], loading: schoolClassLoading } = useSelector((s) => s.schoolClass || {});
+  const { schools = [] }                    = useSelector((s) => s.school || {});
   const { academicYears = [], selectedAcademicYear } = useSelector((s) => s.academicYear || {});
   const { user }                            = useSelector((s) => s.auth || {});
 
   const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
   const userRoleName = (user?.role?.name || user?.roleId?.name || "").toLowerCase();
+  const isSuperAdmin = userRoleName === "super admin";
+
+  // Super Admin isn't tied to one school, so it doesn't have its own schoolId — it picks one via
+  // the School filter below. Everything downstream (classes, subjects, questions, AYs) keys off
+  // this instead of the plain `schoolId` so normal (single-school) users are completely unaffected.
+  const [selectedSchool, setSelectedSchool] = useState("");
+  const effectiveSchoolId = isSuperAdmin ? selectedSchool : schoolId;
+  const classListForFilters = isSuperAdmin ? schoolClasses : classAssignTeacher;
 
   /* ── UI state ── */
   const [modal,          setModal]          = useState(null);   // null | "add" | "edit" | "bulk"
@@ -191,34 +203,51 @@ const QuestionBank = () => {
   const [page,     setPage]     = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  /* ── Sync filterAyId with global AY on first load ── */
+  /* ── Super Admin: load the school list once (School filter options) ── */
   useEffect(() => {
-    if (selectedAcademicYear?._id && !filterAyId) {
+    if (isSuperAdmin && !schools.length) {
+      dispatch(fetchSchools());
+    }
+  }, [dispatch, isSuperAdmin, schools.length]);
+
+  /* ── Sync filterAyId with global AY on first load (non-Super-Admin only — Super Admin picks
+     a school first, and its AY list depends on that choice) ── */
+  useEffect(() => {
+    if (!isSuperAdmin && selectedAcademicYear?._id && !filterAyId) {
       setFilterAyId(selectedAcademicYear._id);
     }
-  }, [selectedAcademicYear?._id]);
+  }, [isSuperAdmin, selectedAcademicYear?._id]);
 
-  /* ── Fetch AY list if not loaded ── */
+  /* ── Fetch AY list whenever the effective school changes ── */
   useEffect(() => {
-    if (!academicYears.length && schoolId) {
-      dispatch(fetchAllAcademicYears(schoolId));
+    if (!effectiveSchoolId) return;
+    dispatch(fetchAllAcademicYears(effectiveSchoolId));
+    if (isSuperAdmin) {
+      // Switching schools invalidates whatever AY/class/subject/chapter was picked for the old one.
+      setFilterAyId("");
+      setClassId(""); setSubjectId(""); setChapterId("");
     }
-  }, [dispatch, schoolId]);
+  }, [dispatch, effectiveSchoolId, isSuperAdmin]);
 
   /* ── Load classes by selected AY filter ── */
   useEffect(() => {
     if (!filterAyId) return;
-    dispatch(fetchAssignedClasses({ academicYearId: filterAyId }));
+    if (isSuperAdmin) {
+      if (!effectiveSchoolId) return;
+      dispatch(getClassData({ schoolId: effectiveSchoolId, academicYearId: filterAyId }));
+    } else {
+      dispatch(fetchAssignedClasses({ academicYearId: filterAyId }));
+    }
     setClassId("");
     setSubjectId("");
     setChapterId("");
-  }, [dispatch, filterAyId]);
+  }, [dispatch, filterAyId, isSuperAdmin, effectiveSchoolId]);
 
   /* ── Load questions ── */
   useEffect(() => {
-    if (!schoolId) return;
-    dispatch(getQuestions({ schoolId, limit: 500 }));
-  }, [dispatch, schoolId]);
+    if (!effectiveSchoolId) return;
+    dispatch(getQuestions({ schoolId: effectiveSchoolId, limit: 500 }));
+  }, [dispatch, effectiveSchoolId]);
 
   /* ── Search debounce ── */
   useEffect(() => {
@@ -244,11 +273,14 @@ const QuestionBank = () => {
   /* ── Helper: get id from populated or plain value ── */
   const getId = (v) => (!v ? "" : typeof v === "object" ? v._id : v);
 
-  /* ── Permission map: only show questions for assigned classes ── */
+  /* ── Permission map: only show questions for assigned classes (Teacher/etc.). Super Admin isn't
+     restricted to "assigned" classes — classListForFilters is already every class in the selected
+     school, and subjectsByClass is deliberately left empty per class below (schoolClasses' subject
+     entries carry no `.subjectId` wrapper), which the filter below reads as "no subject restriction". ── */
   const permissionMap = useMemo(() => {
     const classIds = new Set();
     const subjectsByClass = new Map();
-    classAssignTeacher.forEach((cls) => {
+    classListForFilters.forEach((cls) => {
       const cId = String(getId(cls?._id) || "");
       if (!cId) return;
       classIds.add(cId);
@@ -260,12 +292,12 @@ const QuestionBank = () => {
       subjectsByClass.set(cId, subs);
     });
     return { classIds, subjectsByClass };
-  }, [classAssignTeacher]);
+  }, [classListForFilters]);
 
   /* ── Subject options for selected class ── */
   const selectedClassObj = useMemo(() =>
-    classAssignTeacher.find((c) => String(getId(c?._id)) === String(classId)) || null,
-    [classAssignTeacher, classId]
+    classListForFilters.find((c) => String(getId(c?._id)) === String(classId)) || null,
+    [classListForFilters, classId]
   );
   const subjectOptions = useMemo(() => {
     if (!selectedClassObj) return [];
@@ -474,12 +506,21 @@ const QuestionBank = () => {
         extra={
           <Space size={8}>
             <Tooltip title="Refresh">
-              <Button icon={<ReloadOutlined />} onClick={() => dispatch(getQuestions({ schoolId, limit: 500 }))} />
+              <Button icon={<ReloadOutlined />} onClick={() => effectiveSchoolId && dispatch(getQuestions({ schoolId: effectiveSchoolId, limit: 500 }))} />
             </Tooltip>
-            <Button icon={<UploadOutlined />} onClick={() => setModal("bulk")}>
+            <Button
+              icon={<UploadOutlined />}
+              disabled={isSuperAdmin && !selectedSchool}
+              onClick={() => setModal("bulk")}
+            >
               Bulk Upload
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModal("add")}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              disabled={isSuperAdmin && !selectedSchool}
+              onClick={() => setModal("add")}
+            >
               Add Question
             </Button>
           </Space>
@@ -487,6 +528,14 @@ const QuestionBank = () => {
       />
 
       <div style={{ marginTop: 20 }}>
+        {isSuperAdmin && !selectedSchool && (
+          <div style={{ ...pageCard, padding: 16, marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              Question Bank school-specific hai — pehle neeche <strong>School</strong> select karein.
+            </span>
+          </div>
+        )}
+
         {/* ── Stat cards ── */}
         <div style={{ ...statGrid(170), marginBottom: 20 }}>
           {statMeta.map((s) => (
@@ -503,10 +552,26 @@ const QuestionBank = () => {
         {/* ── Filter toolbar ── */}
         <div style={{ ...pageCard, padding: 16, marginBottom: 16 }}>
           <div style={{ ...toolbarRow, marginBottom: 10 }}>
+            {isSuperAdmin && (
+              <Select
+                placeholder="School"
+                showSearch
+                optionFilterProp="children"
+                value={selectedSchool || undefined}
+                style={{ minWidth: 180 }}
+                onChange={(v) => setSelectedSchool(v || "")}
+              >
+                {schools.map((sc) => (
+                  <Select.Option key={sc._id} value={sc._id}>{sc.name}</Select.Option>
+                ))}
+              </Select>
+            )}
+
             <Select
               placeholder="Academic Year"
               showSearch
               optionFilterProp="children"
+              disabled={isSuperAdmin && !selectedSchool}
               value={filterAyId || undefined}
               style={{ minWidth: 160 }}
               onChange={(v) => { setFilterAyId(v || ""); }}
@@ -521,12 +586,13 @@ const QuestionBank = () => {
               allowClear
               showSearch
               optionFilterProp="children"
-              loading={classLoading}
+              loading={isSuperAdmin ? schoolClassLoading : classLoading}
+              disabled={isSuperAdmin && !selectedSchool}
               value={classId || undefined}
               style={{ minWidth: 130 }}
               onChange={(v) => { setClassId(v || ""); setSubjectId(""); setChapterId(""); }}
             >
-              {classAssignTeacher.map((c) => (
+              {classListForFilters.map((c) => (
                 <Select.Option key={c._id} value={c._id}>{c.name}</Select.Option>
               ))}
             </Select>
@@ -696,6 +762,7 @@ const QuestionBank = () => {
         <CreateQuestion
           initialData={modal === "edit" ? editQuestion : null}
           onSuccess={handleSuccess}
+          schoolId={isSuperAdmin ? selectedSchool : undefined}
         />
       </Modal>
 
@@ -718,7 +785,11 @@ const QuestionBank = () => {
         onCancel={closeModal}
         styles={{ body: { padding: 20 } }}
       >
-        <BulkUploadQuestions onSuccess={handleSuccess} />
+        <BulkUploadQuestions
+          onSuccess={handleSuccess}
+          schoolId={isSuperAdmin ? selectedSchool : undefined}
+          classOptions={isSuperAdmin ? schoolClasses : undefined}
+        />
       </Modal>
 
       {/* ── Preview Drawer ── */}

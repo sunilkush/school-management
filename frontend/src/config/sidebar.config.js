@@ -137,6 +137,7 @@ export const sidebarMenu = {
         { title: "Boards", path: "superadmin/academics/boards" },
         { title: "Board Classes", path: "superadmin/academics/boards-class" },
         { title: "Chapters & Topics", path: "superadmin/academics/chapters-topics" },
+        { title: "Question Bank", path: "superadmin/academics/question-bank" },
       ],
     },
     {

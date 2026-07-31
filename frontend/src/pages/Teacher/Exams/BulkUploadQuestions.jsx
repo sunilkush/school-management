@@ -308,10 +308,20 @@ const downloadTemplate = (classAssignTeacher = []) => {
 /* ══════════════════════════════════════════════════════════════
    Component
 ══════════════════════════════════════════════════════════════ */
-const BulkUploadQuestions = ({ onSuccess }) => {
+/**
+ * Props:
+ *  onSuccess     — callback after a successful upload
+ *  schoolId      — Super Admin only: which school these questions belong to (Super Admin has no
+ *                  school of their own, so the parent page's School filter supplies this)
+ *  classOptions  — Super Admin only: override for the class/subject reference sheet in the
+ *                  downloadable template — classAssignTeacher (this teacher's assigned classes)
+ *                  doesn't apply to Super Admin, who isn't assigned to any class
+ */
+const BulkUploadQuestions = ({ onSuccess, schoolId, classOptions: classOptionsProp }) => {
   const dispatch = useDispatch();
 
   const { classAssignTeacher = [] } = useSelector((s) => s.class || {});
+  const classOptions = classOptionsProp?.length ? classOptionsProp : classAssignTeacher;
 
   const [rows,      setRows]      = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -373,7 +383,7 @@ const BulkUploadQuestions = ({ onSuccess }) => {
     setError(null);
     try {
       const parsed = parseRows(rows);
-      await dispatch(bulkCreateQuestions(parsed)).unwrap();
+      await dispatch(bulkCreateQuestions(schoolId ? { questions: parsed, schoolId } : parsed)).unwrap();
       setDone(true);
       setRows([]);
       onSuccess?.();
@@ -420,7 +430,7 @@ const BulkUploadQuestions = ({ onSuccess }) => {
           <Button
             type="primary"
             icon={<DownloadOutlined />}
-            onClick={() => downloadTemplate(classAssignTeacher)}
+            onClick={() => downloadTemplate(classOptions)}
             style={{ flexShrink: 0 }}
           >
             Template Download

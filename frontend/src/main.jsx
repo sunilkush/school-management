@@ -649,6 +649,7 @@ const router = createBrowserRouter([
               { path: "settings/backup", element: <Backups /> },
               { path: "academics/boards", element: <SchoolBoards /> },
               { path: "academics/chapters-topics", element: <ChaptersTopics /> },
+              { path: "academics/question-bank", element: <QuestionBank /> },
               { path: "academics/boards-class", element: <BoardClassPage /> },
               { path: "payments", element: <PaymentsPage /> },
               { path: "revenue", element: <RevenuePage /> },

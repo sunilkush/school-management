@@ -30,9 +30,13 @@ export const bulkCreateQuestions = createAsyncThunk(
   async (questions, { rejectWithValue }) => {
     try {
       const payload = Array.isArray(questions) ? questions : questions?.questions || [];
+      // schoolId is only set by Super Admin callers (they have no school of their own — the
+      // school they're uploading for comes from whichever one they picked in the UI); every
+      // other role's questions get their schoolId from the logged-in user on the backend.
+      const schoolId = Array.isArray(questions) ? undefined : questions?.schoolId;
       const res = await apiClient.post(
         `/questions/bulk`,
-        { questions: payload },
+        { questions: payload, ...(schoolId ? { schoolId } : {}) },
         {
           headers: {
             "Content-Type": "application/json",

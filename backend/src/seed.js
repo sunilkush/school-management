@@ -38,6 +38,7 @@ import { AssignmentSubmission } from "./models/AssignmentSubmission.model.js";
 import { Marks }               from "./models/Marks.model.js";
 import { ExamResult }          from "./models/ExamResult.model.js";
 import { Question }            from "./models/Questions.model.js";
+import { Chapter }             from "./models/Chapter.model.js";
 import { FeeHead }             from "./models/feeHead.model.js";
 import { FeeStructure }        from "./models/feeStructure.model.js";
 import { StudentFee }          from "./models/studentFee.model.js";
@@ -158,6 +159,24 @@ async function seed() {
   if (!subjects.length) throw new Error("No subjects found. Run app first.");
   ok(`Classes: ${classes.length}, Subjects: ${subjects.length}`);
   const targetClasses = classes.slice(0, 6);
+  // Subject.find() above has no .sort(), so `subjects[N]` reflects whatever order Mongo happens to
+  // return (insertion order in practice) — NOT [Math, Science, English, Social, Hindi] as several
+  // sections below assumed by fixed index. Confirmed wrong for this school (subjects[0] is
+  // "ENGLISH", not "MATHEMATICS"). Resolve the 5 core subjects by name instead, wherever a section
+  // needs to know specifically "the Mathematics subject" rather than just "some subject".
+  const findSubjectByName = (pattern) => subjects.find((s) => pattern.test(s.name || "")) || null;
+  const coreSubjects = {
+    Mathematics: findSubjectByName(/math/i),
+    Science: findSubjectByName(/^science$/i) || findSubjectByName(/science/i),
+    English: findSubjectByName(/english/i),
+    "Social Studies": findSubjectByName(/social/i),
+    Hindi: findSubjectByName(/hindi/i),
+  };
+  // Below, several seed sections use a fixed 0..4 index meaning [Math, Science, English,
+  // Social Studies, Hindi] (titles/content are written to match those specific subjects, e.g.
+  // "Unit Test 1 – Mathematics", "photosynthesis experiment report"). `namedSubjects[i]` resolves
+  // that same convention correctly via name instead of raw fetch-order position.
+  const namedSubjects = [coreSubjects.Mathematics, coreSubjects.Science, coreSubjects.English, coreSubjects["Social Studies"], coreSubjects.Hindi];
 
   // ── 6. Sections ─────────────────────────────────────────────────────────────
   const sectionMap = {};
@@ -660,7 +679,7 @@ async function seed() {
         // Regular period slots
         for (let pi = 0; pi < periodSlots.length; pi++) {
           const rot = subRotation[(pi + DAYS.indexOf(day)) % subRotation.length];
-          const sub = subjects[rot[0]];
+          const sub = namedSubjects[rot[0]];
           const tch = teachers[rot[1]];
           if (!sub || !tch) continue;
           const pSlot = periodSlots[pi];
@@ -694,7 +713,7 @@ async function seed() {
   let asgCount = 0;
   for (const a of asgDefs) {
     const cls = targetClasses[a.cls];
-    const sub = subjects[a.sub];
+    const sub = namedSubjects[a.sub];
     const tch = teachers[a.tch];
     if (!cls || !sub || !tch) continue;
     const secs = sectionMap[String(cls._id)] || [];
@@ -747,7 +766,7 @@ async function seed() {
   let examCount = 0;
   for (const e of examDefs) {
     const cls = classes[e.clsIdx];
-    const sub = subjects[e.subIdx];
+    const sub = namedSubjects[e.subIdx];
     if (!cls || !sub) continue;
     let examDoc = await Exam.findOne({ schoolId, title: e.title, schoolClassId: cls._id });
     if (!examDoc) {
@@ -839,7 +858,7 @@ async function seed() {
   // window so it stays takeable regardless of when this script is actually run relative to seeding.
   const quizClass = targetClasses[0];
   const quizSection = (sectionMap[String(quizClass?._id)] || [])[0];
-  const quizSubject = subjects[0];
+  const quizSubject = namedSubjects[0];
   const quizTeacher = teachers[0];
   if (quizClass && quizSubject && quizTeacher) {
     const questionDefs = [
@@ -892,6 +911,133 @@ async function seed() {
     }
   }
 
+  // ── 19d. Question Bank — real, curriculum-appropriate questions per class × subject ──────────
+  // QuestionBankView.jsx (mobile) and its web equivalent filter by class+subject, so a Question
+  // Bank with everything crammed onto one class/subject (like the quiz above) looks empty for
+  // every other combination. Each subject's generator scales difficulty/content with class index
+  // (targetClasses is already sorted by name — Nursery/LKG/UKG first, then Class 1, 2, 3...) so
+  // this reads as genuine grade-appropriate content, not the same 3 questions repeated 30 times.
+  const qbSubjectGenerators = [
+    // 0: Mathematics
+    (ci) => ([
+      { statement: "What is 3 + 4?", options: [["A", "6"], ["B", "7"], ["C", "8"], ["D", "9"]], correct: "B", diff: "easy" },
+      { statement: "What is 9 − 5?", options: [["A", "3"], ["B", "4"], ["C", "5"], ["D", "6"]], correct: "B", diff: "easy" },
+      { statement: "What is 25 + 17?", options: [["A", "32"], ["B", "40"], ["C", "42"], ["D", "45"]], correct: "C", diff: ci >= 2 ? "medium" : "easy" },
+      { statement: "What is 7 × 6?", options: [["A", "36"], ["B", "40"], ["C", "42"], ["D", "48"]], correct: "C", diff: "medium" },
+      { statement: "What is 48 ÷ 6?", options: [["A", "6"], ["B", "7"], ["C", "8"], ["D", "9"]], correct: "C", diff: "medium" },
+      { statement: "What is 1/2 + 1/4?", options: [["A", "1/4"], ["B", "2/6"], ["C", "3/4"], ["D", "1"]], correct: "C", diff: "hard" },
+      { statement: "What is 20% of 150?", options: [["A", "20"], ["B", "25"], ["C", "30"], ["D", "35"]], correct: "C", diff: "hard" },
+    ]),
+    // 1: Science
+    (ci) => ([
+      { statement: "Which of these is a living thing?", options: [["A", "Plant"], ["B", "Rock"], ["C", "Chair"], ["D", "Table"]], correct: "A", diff: "easy" },
+      { statement: "How many legs does an insect have?", options: [["A", "4"], ["B", "6"], ["C", "8"], ["D", "10"]], correct: "B", diff: "easy" },
+      { statement: "Which planet is known as the Red Planet?", options: [["A", "Venus"], ["B", "Jupiter"], ["C", "Mars"], ["D", "Saturn"]], correct: "C", diff: ci >= 2 ? "medium" : "easy" },
+      { statement: "What gas do plants absorb from the air for photosynthesis?", options: [["A", "Oxygen"], ["B", "Carbon Dioxide"], ["C", "Nitrogen"], ["D", "Hydrogen"]], correct: "B", diff: "medium" },
+      { statement: "What is the powerhouse of the cell?", options: [["A", "Nucleus"], ["B", "Ribosome"], ["C", "Mitochondria"], ["D", "Cytoplasm"]], correct: "C", diff: "hard" },
+      { statement: "What is the chemical symbol for water?", options: [["A", "O2"], ["B", "H2O"], ["C", "CO2"], ["D", "HO2"]], correct: "B", diff: "medium" },
+    ]),
+    // 2: English
+    (ci) => ([
+      { statement: "Which word means the opposite of 'Big'?", options: [["A", "Large"], ["B", "Huge"], ["C", "Small"], ["D", "Tall"]], correct: "C", diff: "easy" },
+      { statement: "Choose the correct plural of 'Child'.", options: [["A", "Childs"], ["B", "Children"], ["C", "Childes"], ["D", "Childrens"]], correct: "B", diff: "easy" },
+      { statement: "Which of these is a verb?", options: [["A", "Quickly"], ["B", "Happy"], ["C", "Run"], ["D", "Table"]], correct: "C", diff: ci >= 2 ? "medium" : "easy" },
+      { statement: "Identify the noun in: 'The dog barked loudly.'", options: [["A", "The"], ["B", "dog"], ["C", "barked"], ["D", "loudly"]], correct: "B", diff: "medium" },
+      { statement: "Choose the correct synonym for 'Happy'.", options: [["A", "Sad"], ["B", "Angry"], ["C", "Joyful"], ["D", "Tired"]], correct: "C", diff: "medium" },
+      { statement: "Choose the correct form: 'She ___ to school every day.'", options: [["A", "go"], ["B", "goes"], ["C", "going"], ["D", "gone"]], correct: "B", diff: "hard" },
+    ]),
+    // 3: Social Studies
+    (ci) => ([
+      { statement: "What is the capital of India?", options: [["A", "Mumbai"], ["B", "Kolkata"], ["C", "New Delhi"], ["D", "Chennai"]], correct: "C", diff: "easy" },
+      { statement: "Which is our national bird?", options: [["A", "Peacock"], ["B", "Sparrow"], ["C", "Crow"], ["D", "Eagle"]], correct: "A", diff: "easy" },
+      { statement: "Who was the first Prime Minister of India?", options: [["A", "Mahatma Gandhi"], ["B", "Jawaharlal Nehru"], ["C", "Sardar Patel"], ["D", "Dr. Rajendra Prasad"]], correct: "B", diff: ci >= 2 ? "medium" : "easy" },
+      { statement: "Which river is known as the Ganga's main tributary in the north?", options: [["A", "Yamuna"], ["B", "Godavari"], ["C", "Kaveri"], ["D", "Narmada"]], correct: "A", diff: "medium" },
+      { statement: "On which continent is India located?", options: [["A", "Africa"], ["B", "Asia"], ["C", "Europe"], ["D", "Australia"]], correct: "B", diff: "medium" },
+      { statement: "Which is the largest state in India by area?", options: [["A", "Uttar Pradesh"], ["B", "Madhya Pradesh"], ["C", "Maharashtra"], ["D", "Rajasthan"]], correct: "D", diff: "hard" },
+    ]),
+    // 4: Hindi
+    (ci) => ([
+      { statement: "'सूरज' का पर्यायवाची शब्द क्या है?", options: [["A", "चाँद"], ["B", "तारा"], ["C", "रवि"], ["D", "आकाश"]], correct: "C", diff: "easy" },
+      { statement: "'बड़ा' का विलोम शब्द क्या है?", options: [["A", "छोटा"], ["B", "लंबा"], ["C", "ऊँचा"], ["D", "मोटा"]], correct: "A", diff: "easy" },
+      { statement: "निम्नलिखित में से कौन सा शब्द संज्ञा है?", options: [["A", "दौड़ना"], ["B", "किताब"], ["C", "सुंदर"], ["D", "धीरे"]], correct: "B", diff: ci >= 2 ? "medium" : "easy" },
+      { statement: "'पानी' का पर्यायवाची शब्द क्या है?", options: [["A", "जल"], ["B", "अग्नि"], ["C", "वायु"], ["D", "मिट्टी"]], correct: "A", diff: "medium" },
+      { statement: "'ईमानदार' शब्द में कौन सा प्रत्यय है?", options: [["A", "ईमान"], ["B", "दार"], ["C", "आर"], ["D", "मान"]], correct: "B", diff: "hard" },
+    ]),
+  ];
+
+  // This school has 2 real SchoolClass documents per grade (created on two separate onboarding
+  // dates — not a seed artifact), so `targetClasses` (used elsewhere for Timetable/Assignments/
+  // Lesson Plans, whose content indices are already calibrated to its exact order) ends up with
+  // duplicate grades. Question Bank doesn't share that calibration, so resolve its own 6 distinct
+  // grades here instead — picked as Class 7–12, which is also where this school's real Chapter
+  // catalog (NCERT-derived, shared/global — see Chapter.model.js) actually has content: Science/
+  // Hindi chapters exist for 7–10, Mathematics for 11–12, English across all six. Social Studies
+  // has no chapter catalog entries for this school's board variant at all, so those questions are
+  // still created (subject-tagged, real content) but simply left without a chapterId.
+  const qbClassByName = new Map();
+  for (const c of classes) if (!qbClassByName.has(c.name)) qbClassByName.set(c.name, c);
+  const qbClasses = [...qbClassByName.values()]
+    .map((c) => ({ c, num: parseInt(String(c.name).replace(/\D/g, ""), 10) }))
+    .filter(({ num }) => Number.isFinite(num) && num >= 7 && num <= 12)
+    .sort((a, b) => a.num - b.num)
+    .map(({ c }) => c);
+
+  // Cache real chapters per (class, subject) so we don't re-query the same combo 3x (once per
+  // picked question). Only ever reads the shared Chapter catalog — never writes to it, since it's
+  // global content shared across every school, not this school's own data to seed.
+  const chapterCache = new Map();
+  async function chaptersFor(cls, sub) {
+    const key = `${cls._id}_${sub._id}`;
+    if (!chapterCache.has(key)) {
+      const found = await Chapter.find({ boardClassId: cls.boardClassId, subjectId: sub._id })
+        .sort({ chapterNo: 1 })
+        .limit(10)
+        .lean();
+      chapterCache.set(key, found);
+    }
+    return chapterCache.get(key);
+  }
+
+  let qbCount = 0;
+  let qbWithChapter = 0;
+  for (let ci = 0; ci < qbClasses.length; ci++) {
+    const cls = qbClasses[ci];
+    const tch = teachers[ci % Math.max(teachers.length, 1)] || adminId;
+    const teacherId = tch?._id || adminId;
+    for (let si = 0; si < qbSubjectGenerators.length; si++) {
+      const sub = namedSubjects[si];
+      if (!sub) continue;
+      const pool = qbSubjectGenerators[si](ci);
+      const chapters = await chaptersFor(cls, sub);
+      // 3 questions per class×subject, picked to vary across classes rather than always the same
+      // 3 — offset the starting point by class index so a school-wide browse of one subject shows
+      // different questions per class instead of an identical repeated set.
+      const picked = [];
+      for (let k = 0; k < 3; k++) picked.push({ q: pool[(ci + k) % pool.length], k });
+
+      for (const { q, k } of picked) {
+        const exists = await Question.findOne({ schoolId, schoolClassId: cls._id, subjectId: sub._id, statement: q.statement });
+        if (exists) continue;
+        const chapterId = chapters.length ? chapters[k % chapters.length]._id : undefined;
+        try {
+          await Question.create({
+            schoolId, schoolClassId: cls._id, subjectId: sub._id, academicYearId: ayId,
+            chapterId,
+            questionType: "mcq_single",
+            statement: q.statement,
+            options: q.options.map(([key, text]) => ({ key, text })),
+            correctAnswers: [q.correct],
+            marks: 4, negativeMarks: 0, difficulty: q.diff,
+            createdBy: teacherId,
+          });
+          qbCount++;
+          if (chapterId) qbWithChapter++;
+        } catch (e) { if (e.code !== 11000) throw e; }
+      }
+    }
+  }
+  ok(`Question Bank: ${qbCount} new questions across ${qbClasses.length} classes × ${qbSubjectGenerators.length} subjects (${qbWithChapter} tagged with a real chapter)`);
+
   // ── 20. Lesson Plans ─────────────────────────────────────────────────────────
   const planDefs = [
     { title: "Introduction to Algebra",         sub: 0, cls: 0, tch: 0, daysOffset: -30, status: "completed", methods: ["Lecture", "Examples"],       resources: ["Textbook", "Whiteboard"] },
@@ -913,7 +1059,7 @@ async function seed() {
   let planCount = 0;
   if (teachers.length > 0) {
     for (const p of planDefs) {
-      const cls = targetClasses[p.cls]; const sub = subjects[p.sub]; const tch = teachers[p.tch];
+      const cls = targetClasses[p.cls]; const sub = namedSubjects[p.sub]; const tch = teachers[p.tch];
       if (!cls || !sub || !tch) continue;
       const secs = sectionMap[String(cls._id)] || []; const sec = secs[0];
       if (!sec) continue;
@@ -941,7 +1087,7 @@ async function seed() {
   ];
   let smCount = 0;
   for (const m of smDefs) {
-    const cls = targetClasses[m.cls]; const sub = subjects[m.sub]; const tch = teachers[m.tch];
+    const cls = targetClasses[m.cls]; const sub = namedSubjects[m.sub]; const tch = teachers[m.tch];
     if (!cls || !sub || !tch) continue;
     const secs = sectionMap[String(cls._id)] || []; const sec = secs[0];
     if (!sec) continue;
@@ -1577,6 +1723,7 @@ MODULES SEEDED:
   ✓ Exam Marks (completed exams)
   ✓ Exam Results (published, ranked — powers Student/Parent "Grades")
   ✓ Question Bank (5 questions) + a live "Practice Quiz" exam, open now
+  ✓ Question Bank — real questions across every class × subject combination
   ✓ Lesson Plans
   ✓ Study Materials
   ✓ Fee Heads + Fee Structures + Student Fees + Installments

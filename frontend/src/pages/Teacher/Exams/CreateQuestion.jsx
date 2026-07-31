@@ -30,8 +30,12 @@ const DIFFICULTY = [
  * Props:
  *  initialData  — existing question object (edit mode)
  *  onSuccess    — callback after save (close modal / refresh list)
+ *  schoolId     — override the school this question belongs to. Needed for Super Admin, who has
+ *                 no schoolId of their own (not tied to one school) — the parent page resolves
+ *                 which school is currently selected and passes it down. Omit for every other role,
+ *                 which falls back to the logged-in user's own school as before.
  */
-const CreateQuestion = ({ initialData = null, onSuccess }) => {
+const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
@@ -42,7 +46,7 @@ const CreateQuestion = ({ initialData = null, onSuccess }) => {
   const { user = {} }            = useSelector((s) => s.auth      || {});
   const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
 
-  const schoolId       = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+  const schoolId       = schoolIdProp || user?.schoolId?._id || user?.schoolId || user?.school?._id;
   const academicYearId = selectedAcademicYear?._id || null;
 
   const [saving,          setSaving]          = useState(false);

@@ -10,11 +10,24 @@ import { escapeRegex } from "../utils/escapeRegex.js";
 // =============================
 export const createQuestion = asyncHandler(async (req, res) => {
   const user = req.user;
-  const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
-  if (!user || !schoolId) {
+  if (!user) {
     return res
       .status(401)
       .json(new ApiResponse(401, null, "Unauthorized user"));
+  }
+
+  // Super Admin has no schoolId of their own (they aren't tied to one school), so the school
+  // they're adding this question for has to come from the request — same pattern getQuestions
+  // already uses for cross-school reads.
+  const isSuperAdmin = (req.userRole?.name || req.user?.role?.name || req.user?.roleId?.name) === "Super Admin";
+  const schoolId = isSuperAdmin
+    ? req.body.schoolId
+    : (user?.schoolId?._id || user?.schoolId || user?.school?._id);
+
+  if (!schoolId) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, isSuperAdmin ? "schoolId is required" : "Unauthorized user"));
   }
 
   const {
@@ -107,9 +120,14 @@ export const createQuestion = asyncHandler(async (req, res) => {
 export const bulkCreateQuestionsFromExcel = asyncHandler(async (req, res) => {
   try {
     const user = req.user;
-    const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+    const isSuperAdmin = (req.userRole?.name || req.user?.role?.name || req.user?.roleId?.name) === "Super Admin";
+    const schoolId = isSuperAdmin
+      ? req.body.schoolId
+      : (user?.schoolId?._id || user?.schoolId || user?.school?._id);
     if (!schoolId) {
-      return res.status(401).json(new ApiResponse(401, null, "Unauthorized user"));
+      return res
+        .status(isSuperAdmin ? 400 : 401)
+        .json(new ApiResponse(isSuperAdmin ? 400 : 401, null, isSuperAdmin ? "schoolId is required" : "Unauthorized user"));
     }
     let rows = [];
 

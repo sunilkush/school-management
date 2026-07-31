@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Chapter } from "../models/Chapter.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -75,9 +76,18 @@ const createChapter = asyncHandler(async (req, res) => {
 
 const getAllChapters = asyncHandler(async (req, res) => {
   const filter = {};
-  console.log(req.query);
-  if (req.query.boardClassId || req.query.schoolClassId) {
-    filter.boardClassId = req.query.boardClassId || req.query.schoolClassId;
+
+  if (req.query.boardClassId) {
+    // Chapter.boardClassId references BoardClass directly — trust the caller.
+    filter.boardClassId = req.query.boardClassId;
+  } else if (req.query.schoolClassId) {
+    // Callers like the Question Bank UI only know a SchoolClass id (a different collection —
+    // SchoolClass._id is not interchangeable with the BoardClass id Chapter is actually keyed
+    // on), so resolve it via SchoolClass.boardClassId first. Without this, the filter compared a
+    // SchoolClass id against Chapter.boardClassId and could never match, silently returning zero
+    // chapters for every class+subject combination.
+    const schoolClass = await SchoolClass.findById(req.query.schoolClassId).select("boardClassId");
+    filter.boardClassId = schoolClass?.boardClassId || new mongoose.Types.ObjectId();
   }
 
   if (req.query.subjectId) {
