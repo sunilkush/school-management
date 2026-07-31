@@ -90,6 +90,7 @@ const Dashboard = lazy(() => import("./components/layout/MainDashboard.jsx"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized.jsx"));
 const NoActiveYear = lazy(() => import("./pages/no-active-year.jsx"));
 const ForgetPasswordPage = lazy(()=>import("./pages/Auth/ForgetPasswordPage.jsx"));
+const ContactSupportPage = lazy(()=>import("./pages/Auth/ContactSupportPage.jsx"));
 const ResetPasswordPage = lazy(()=>import("./pages/Auth/ResetPasswordPage.jsx"));
 const VerifyEmailPage = lazy(()=> import("./pages/Auth/VerifyEmailPage.jsx"));
 const ResendVerificationPage = lazy(()=>import("./pages/Auth/ResendVerificationPage.jsx"));
@@ -410,6 +411,7 @@ const router = createBrowserRouter([
       { path: "/verify/certificate/:certificateNumber", element: <VerifyCertificate /> },
       { path: "/verify/id-card/:cardNumber", element: <VerifyIdCard /> },
       { path: "/forgot-password", element: <PublicOnlyRoute><ForgetPasswordPage /></PublicOnlyRoute> },
+      { path: "/support", element: <ContactSupportPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/verify-email", element: <VerifyEmailPage /> },
       { path: "/resend-verification", element: <ResendVerificationPage /> },

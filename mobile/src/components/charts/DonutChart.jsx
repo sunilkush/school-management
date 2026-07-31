@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, G } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 import { Text } from 'react-native-paper';
 import { useAppTheme } from '../../theme/ThemeProvider';
 
@@ -34,23 +34,26 @@ export function DonutChart({ data = [], centerLabel, centerValueFormatter = (v) 
     <View style={{ alignItems: 'center' }}>
       <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}>
         <Svg width={SIZE} height={SIZE}>
-          <G rotation={-90} originX={SIZE / 2} originY={SIZE / 2}>
-            <Circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} stroke={colors.borderMuted} strokeWidth={STROKE_WIDTH} fill="none" />
-            {segments.map((seg) => (
-              <Circle
-                key={seg.label}
-                cx={SIZE / 2}
-                cy={SIZE / 2}
-                r={RADIUS}
-                stroke={seg.color}
-                strokeWidth={STROKE_WIDTH}
-                strokeDasharray={`${seg.segmentLength} ${CIRCUMFERENCE - seg.segmentLength}`}
-                strokeDashoffset={-seg.offset}
-                strokeLinecap="butt"
-                fill="none"
-              />
-            ))}
-          </G>
+          {/* An SVG <circle>'s path naturally starts at 3 o'clock; adding a quarter-circumference
+              to the dash offset shifts that start to 12 o'clock instead — the same visual result
+              as the `<G rotation={-90}>` wrapper this replaced, without it (react-native-svg's
+              web build translates G's rotation/origin props into a CSS `transform-origin` style
+              using a raw hyphenated key, which React's DOM renderer warns is invalid). */}
+          <Circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} stroke={colors.borderMuted} strokeWidth={STROKE_WIDTH} fill="none" />
+          {segments.map((seg) => (
+            <Circle
+              key={seg.label}
+              cx={SIZE / 2}
+              cy={SIZE / 2}
+              r={RADIUS}
+              stroke={seg.color}
+              strokeWidth={STROKE_WIDTH}
+              strokeDasharray={`${seg.segmentLength} ${CIRCUMFERENCE - seg.segmentLength}`}
+              strokeDashoffset={CIRCUMFERENCE / 4 - seg.offset}
+              strokeLinecap="butt"
+              fill="none"
+            />
+          ))}
         </Svg>
         <View style={{ position: 'absolute', alignItems: 'center' }}>
           <Text style={[typography.h3, { color: colors.text }]}>{centerValueFormatter(total)}</Text>
