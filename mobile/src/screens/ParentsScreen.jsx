@@ -12,15 +12,19 @@ import { pillStyle, STATUS_SEMANTICS } from '../theme/patterns';
 import { roleColor } from '../utils/roleColors';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
-import { useGetAllUsersQuery } from '../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetAllUsersQuery } from '../store/api/apiSlice';
 
 export function ParentsScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [search, setSearch] = useState('');
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetAllUsersQuery({ roleName: 'Parent', academicYearId });
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetAllUsersQuery({ roleName: 'Parent', academicYearId }, { skip: !academicYearId });
   const parents = data ?? [];
 
   const filtered = useMemo(() => {
@@ -43,7 +47,7 @@ export function ParentsScreen() {
           <Text style={[typography.h2, { color: colors.text }]}>Parents Directory</Text>
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
             {user?.school?.name ?? 'School'}
-            {user?.academicYear?.name ? ` · ${user.academicYear.name}` : ''}
+            {activeYearQuery.data?.name ? ` · ${activeYearQuery.data.name}` : ''}
           </Text>
         </View>
       </View>

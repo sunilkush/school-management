@@ -12,6 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { groupTimetableByDay, timetableRowSubtitle, timetableRowTitle, timetableTypeColor } from '../utils/timetable';
 import {
+  useGetActiveAcademicYearQuery,
   useGetChildTimetableQuery,
   useGetClassDetailsQuery,
   useGetClassSectionTimetableQuery,
@@ -100,7 +101,11 @@ export function TimetableList({ rows }) {
 
 function StudentTimetableView() {
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const { data, isLoading, isFetching, isError, error, refetch } = useGetMyStudentTimetableQuery(academicYearId, {
     skip: !academicYearId,
   });
@@ -118,8 +123,14 @@ function StudentTimetableView() {
 
 function TeacherTimetableView() {
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
-  const { data, isLoading, isFetching, isError, error, refetch } = useGetMyTeacherTimetableQuery(academicYearId);
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
+  const { data, isLoading, isFetching, isError, error, refetch } = useGetMyTeacherTimetableQuery(academicYearId, {
+    skip: !academicYearId,
+  });
 
   return (
     <QueryState isLoading={isLoading || isFetching} isError={isError} error={error} onRetry={refetch} isEmpty={false}>
@@ -131,7 +142,11 @@ function TeacherTimetableView() {
 function ParentTimetableView() {
   const { spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [selectedChild, setSelectedChild] = useState(null);
   const childrenQuery = useGetMyChildrenQuery();
   const children = childrenQuery.data ?? [];
@@ -175,8 +190,11 @@ function ParentTimetableView() {
 function PrincipalTimetableView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [classId, setClassId] = useState(null);
   const [sectionId, setSectionId] = useState(null);
 

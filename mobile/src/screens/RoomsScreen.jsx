@@ -12,16 +12,17 @@ import { useAppTheme } from '../theme/ThemeProvider';
 import { confirmDelete } from '../utils/confirm';
 import { useDeleteHostelRoomMutation, useGetHostelRoomsQuery } from '../store/api/apiSlice';
 
-/** Mirrors frontend/src/pages/School_Admin/Hostel/HostelManagement.jsx (rooms view). Editing a
- * room's number/capacity is deferred (create + delete + assign/unassign covers the core
- * workflow). */
+/** Mirrors frontend/src/pages/School_Admin/Hostel/HostelManagement.jsx (rooms view). */
 export function RoomsScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const [creating, setCreating] = useState(false);
+  const [editingRoom, setEditingRoom] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const { data, isLoading, isFetching, isError, error, refetch } = useGetHostelRoomsQuery();
   const [deleteRoom, deleteState] = useDeleteHostelRoomMutation();
   const rooms = data ?? [];
+  const sheetVisible = creating || Boolean(editingRoom);
+  const closeSheet = () => { setCreating(false); setEditingRoom(null); };
 
   // Keep the detail sheet's data fresh after an assign/unassign invalidates the list.
   const activeRoom = selectedRoom ? rooms.find((r) => r._id === selectedRoom._id) ?? selectedRoom : null;
@@ -88,6 +89,12 @@ export function RoomsScreen() {
                     Manage
                   </Button>
                   <IconButton
+                    icon="pencil-outline"
+                    iconColor={colors.textSecondary}
+                    size={18}
+                    onPress={() => setEditingRoom(r)}
+                  />
+                  <IconButton
                     icon="trash-can-outline"
                     iconColor={colors.danger}
                     size={18}
@@ -101,7 +108,7 @@ export function RoomsScreen() {
         })}
       </QueryState>
 
-      <CreateRoomSheet visible={creating} onDismiss={() => setCreating(false)} onCreated={() => setCreating(false)} />
+      <CreateRoomSheet visible={sheetVisible} room={editingRoom} onDismiss={closeSheet} onCreated={closeSheet} />
       <RoomDetailSheet room={activeRoom} onDismiss={() => setSelectedRoom(null)} />
     </ScreenContainer>
   );

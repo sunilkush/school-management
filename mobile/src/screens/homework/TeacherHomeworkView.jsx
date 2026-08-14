@@ -14,7 +14,7 @@ import { formatDate } from '../../utils/format';
 import { confirmDelete } from '../../utils/confirm';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useDeleteTeacherHomeworkMutation, useGetAssignedClassesQuery, useGetTeacherHomeworkQuery } from '../../store/api/apiSlice';
+import { useDeleteTeacherHomeworkMutation, useGetActiveAcademicYearQuery, useGetAssignedClassesQuery, useGetTeacherHomeworkQuery } from '../../store/api/apiSlice';
 
 const STATUS_COLOR = { active: '#22C55E', overdue: '#EF4444' };
 
@@ -25,7 +25,11 @@ const STATUS_COLOR = { active: '#22C55E', overdue: '#EF4444' };
 export function TeacherHomeworkView({ navigation }) {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [creating, setCreating] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [classId, setClassId] = useState(null);

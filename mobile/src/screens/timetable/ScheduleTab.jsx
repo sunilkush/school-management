@@ -11,6 +11,7 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { confirmDelete } from '../../utils/confirm';
 import {
   useDeleteTimetableEntryMutation,
+  useGetActiveAcademicYearQuery,
   useGetAllUsersQuery,
   useGetClassDetailsQuery,
   useGetClassSectionTimetableQuery,
@@ -23,7 +24,10 @@ export function ScheduleTab() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [classId, setClassId] = useState(null);
   const [sectionId, setSectionId] = useState(null);

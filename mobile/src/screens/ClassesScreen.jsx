@@ -9,7 +9,7 @@ import { StatCard, StatGrid } from '../components/ui/StatCard';
 import { pillStyle } from '../theme/patterns';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
-import { useGetClassDetailsQuery } from '../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetClassDetailsQuery } from '../store/api/apiSlice';
 
 /** Read-only class/section/subject-teacher overview — mirrors the web app's Classes page
  * (frontend/src/pages/School_Admin/Academic_Management/Classes.jsx) minus the assign-teacher
@@ -18,11 +18,14 @@ export function ClassesScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetClassDetailsQuery(
     { schoolId, academicYearId },
-    { skip: !schoolId }
+    { skip: !schoolId || !academicYearId }
   );
   const classes = data ?? [];
 

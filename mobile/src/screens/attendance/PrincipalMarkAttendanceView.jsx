@@ -9,7 +9,7 @@ import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { avatarColorFor } from '../../theme/patterns';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetClassDetailsQuery, useGetStudentsByRoleQuery, useMarkBulkAttendanceMutation } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetClassDetailsQuery, useGetStudentsByRoleQuery, useMarkBulkAttendanceMutation } from '../../store/api/apiSlice';
 import { formatDateOnly } from '../../utils/format';
 
 /** School-wide "Mark Attendance" — Principal (and other admin-attendance roles server-side) can
@@ -19,8 +19,11 @@ import { formatDateOnly } from '../../utils/format';
 export function PrincipalMarkAttendanceView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
   const schoolId = user?.school?._id;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [selectedSectionId, setSelectedSectionId] = useState(null);

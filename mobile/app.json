@@ -13,9 +13,6 @@
       "bundleIdentifier": "com.eduos.school",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Used to verify you are on school premises when marking attendance."
-      },
-      "entitlements": {
-        "aps-environment": "development"
       }
     },
     "android": {

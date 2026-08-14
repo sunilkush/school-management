@@ -10,7 +10,7 @@ import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { avatarColorFor } from '../../theme/patterns';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useEnterExamMarksBulkMutation, useGetExamsQuery, useGetStudentsByRoleQuery } from '../../store/api/apiSlice';
+import { useEnterExamMarksBulkMutation, useGetActiveAcademicYearQuery, useGetExamsQuery, useGetStudentsByRoleQuery } from '../../store/api/apiSlice';
 
 /** Marks entry for one exam at a time — pick the exam, then enter each enrolled student's
  * obtainedMarks (totalMarks/passingMarks come from the exam itself, not re-entered per student).
@@ -19,8 +19,11 @@ import { useEnterExamMarksBulkMutation, useGetExamsQuery, useGetStudentsByRoleQu
 export function EvaluationView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
   const schoolId = user?.school?._id;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [examId, setExamId] = useState(null);
   const [marksByStudent, setMarksByStudent] = useState({});

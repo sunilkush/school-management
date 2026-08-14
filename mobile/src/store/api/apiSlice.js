@@ -528,11 +528,19 @@ export const apiSlice = createApi({
       providesTags: ['SelfAttendance'],
     }),
 
-    // Question Bank — read-only browse (create needs a full MCQ options/correct-answers editor,
-    // a separate, larger feature not built here).
     getQuestions: builder.query({
       query: (params) => ({ url: '/questions/getQuestions', params }),
       providesTags: ['Question'],
+    }),
+    // Create/edit scoped to MCQ Single + True/False only — the other 3 question types
+    // (mcq_multi, fill_blank, match) each need a materially different answer-editor UI, deferred.
+    createQuestion: builder.mutation({
+      query: (payload) => ({ url: '/questions/create', method: 'post', data: payload }),
+      invalidatesTags: ['Question'],
+    }),
+    updateQuestion: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/questions/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['Question'],
     }),
 
     // Evaluation (marks entry) — enterMarksBulk upserts one Marks doc per {examId, studentId,
@@ -688,6 +696,10 @@ export const apiSlice = createApi({
       query: (payload) => ({ url: '/transport/routes', method: 'post', data: payload }),
       invalidatesTags: ['TransportRoute'],
     }),
+    updateTransportRoute: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/transport/routes/${id}`, method: 'put', data: payload }),
+      invalidatesTags: ['TransportRoute'],
+    }),
     deleteTransportRoute: builder.mutation({
       query: (id) => ({ url: `/transport/routes/${id}`, method: 'delete' }),
       invalidatesTags: ['TransportRoute'],
@@ -698,6 +710,10 @@ export const apiSlice = createApi({
     }),
     createVehicle: builder.mutation({
       query: (payload) => ({ url: '/transport/vehicles', method: 'post', data: payload }),
+      invalidatesTags: ['Vehicle'],
+    }),
+    updateVehicle: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/transport/vehicles/${id}`, method: 'put', data: payload }),
       invalidatesTags: ['Vehicle'],
     }),
     deleteVehicle: builder.mutation({
@@ -788,6 +804,10 @@ export const apiSlice = createApi({
     }),
     createHostelRoom: builder.mutation({
       query: (payload) => ({ url: '/hostel/rooms', method: 'post', data: payload }),
+      invalidatesTags: ['HostelRoom'],
+    }),
+    updateHostelRoom: builder.mutation({
+      query: ({ id, ...payload }) => ({ url: `/hostel/rooms/${id}`, method: 'put', data: payload }),
       invalidatesTags: ['HostelRoom'],
     }),
     deleteHostelRoom: builder.mutation({
@@ -2109,9 +2129,11 @@ export const {
   useUpdateLibrarySettingsMutation,
   useGetTransportRoutesQuery,
   useCreateTransportRouteMutation,
+  useUpdateTransportRouteMutation,
   useDeleteTransportRouteMutation,
   useGetVehiclesQuery,
   useCreateVehicleMutation,
+  useUpdateVehicleMutation,
   useDeleteVehicleMutation,
   useGetMaintenanceRecordsQuery,
   useGetMaintenanceStatsQuery,
@@ -2127,6 +2149,7 @@ export const {
   useDeleteCallLogMutation,
   useGetHostelRoomsQuery,
   useCreateHostelRoomMutation,
+  useUpdateHostelRoomMutation,
   useDeleteHostelRoomMutation,
   useAssignStudentToRoomMutation,
   useRemoveStudentFromRoomMutation,
@@ -2252,6 +2275,8 @@ export const {
   useCheckOutSelfAttendanceMutation,
   useGetSelfAttendanceHistoryQuery,
   useGetQuestionsQuery,
+  useCreateQuestionMutation,
+  useUpdateQuestionMutation,
   useEnterExamMarksBulkMutation,
   useGetExamPerformanceSummaryQuery,
   useGetExamReportsQuery,

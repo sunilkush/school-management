@@ -15,6 +15,7 @@ import {
 import { persistor, store } from './src/store';
 import { AppThemeProvider, useAppTheme } from './src/theme/ThemeProvider';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -44,17 +45,19 @@ export default function App() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider onLayout={onRootLayout}>
-        <ReduxProvider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
-            <AppThemeProvider>
-              <StatusBarBridge />
-              <RootNavigator />
-            </AppThemeProvider>
-          </PersistGate>
-        </ReduxProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider onLayout={onRootLayout}>
+          <ReduxProvider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+              <AppThemeProvider>
+                <StatusBarBridge />
+                <RootNavigator />
+              </AppThemeProvider>
+            </PersistGate>
+          </ReduxProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }

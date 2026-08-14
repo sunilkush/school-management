@@ -16,16 +16,18 @@ import { useDeleteTransportRouteMutation, useGetTransportRoutesQuery } from '../
 // TRANSPORT_READ only (view routes, no create/delete), so this screen is read-only for them.
 const CAN_MANAGE_ROLES = new Set(['Super Admin', 'School Admin', 'Transport Manager']);
 
-/** Mirrors frontend/src/pages/School_Admin/Transport/RoutesPage.jsx. Editing a route is deferred
- * (create + delete covers the core workflow). */
+/** Mirrors frontend/src/pages/School_Admin/Transport/RoutesPage.jsx. */
 export function RoutesScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const { role } = useAuth();
   const canManage = CAN_MANAGE_ROLES.has(role?.name);
   const [creating, setCreating] = useState(false);
+  const [editingRoute, setEditingRoute] = useState(null);
   const { data, isLoading, isFetching, isError, error, refetch } = useGetTransportRoutesQuery();
   const [deleteRoute, deleteState] = useDeleteTransportRouteMutation();
   const routes = data ?? [];
+  const sheetVisible = creating || Boolean(editingRoute);
+  const closeSheet = () => { setCreating(false); setEditingRoute(null); };
 
   const stats = [
     { key: 'total', label: 'Total Routes', icon: 'map-marker-path', color: colors.primary, value: routes.length },
@@ -80,13 +82,21 @@ export function RoutesScreen() {
             expandable
             actions={
               canManage ? (
-                <IconButton
-                  icon="trash-can-outline"
-                  iconColor={colors.danger}
-                  size={18}
-                  disabled={deleteState.isLoading}
-                  onPress={() => confirmDelete(() => deleteRoute(r._id), 'this route')}
-                />
+                <View style={{ flexDirection: 'row' }}>
+                  <IconButton
+                    icon="pencil-outline"
+                    iconColor={colors.textSecondary}
+                    size={18}
+                    onPress={() => setEditingRoute(r)}
+                  />
+                  <IconButton
+                    icon="trash-can-outline"
+                    iconColor={colors.danger}
+                    size={18}
+                    disabled={deleteState.isLoading}
+                    onPress={() => confirmDelete(() => deleteRoute(r._id), 'this route')}
+                  />
+                </View>
               ) : undefined
             }
           />
@@ -94,7 +104,7 @@ export function RoutesScreen() {
       </QueryState>
 
       {canManage && (
-        <CreateRouteSheet visible={creating} onDismiss={() => setCreating(false)} onCreated={() => setCreating(false)} />
+        <CreateRouteSheet visible={sheetVisible} route={editingRoute} onDismiss={closeSheet} onCreated={closeSheet} />
       )}
     </ScreenContainer>
   );

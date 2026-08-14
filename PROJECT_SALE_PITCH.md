@@ -27,7 +27,7 @@ For a buyer — an EdTech company, IT services firm, or entrepreneur — this as
 | Git history | Full commit history (1,055 commits) proving organic, incremental development |
 | Documentation | `USER_GUIDE.md` (complete role-by-role manual) + `RoleWiseGuide.html` (interactive guide) |
 | Test suite | Jest + Supertest backend tests, `mongodb-memory-server` for isolated test runs |
-| **Add-on (optional):** Mobile app | React Native / Expo (SDK 54) companion app, fully redesigned UI (navy + purple theme), preserved on a separate branch — can be merged in as part of the deal |
+| Mobile app | React Native / Expo (SDK 54) companion app, merged into `main` — fully redesigned UI (navy + purple theme), 23 role-driven navigation trees, 290+ screens, 400 RTK Query endpoint definitions against the same backend |
 
 **Not included by default:** live customer/school data, existing domain/hosting, or third-party service accounts (Razorpay, Twilio, Cloudinary, SMTP) — the buyer provisions their own. Can be negotiated as part of a handover package.
 
@@ -197,7 +197,7 @@ Buying this asset converts that time-and-risk cost into a fixed, immediate acqui
 | Full source code (backend + frontend) + git history | Yes |
 | Documentation (user guide, role-wise guide) | Yes |
 | Full IP transfer, no ongoing royalty | Yes (unless negotiated otherwise) |
-| Mobile app (React Native/Expo, separate branch) | Optional add-on |
+| Mobile app (React Native/Expo, part of the same `main` codebase) | Optional add-on |
 | Deployment / handover support (walkthrough sessions) | Optional add-on, negotiable |
 | Live customer data, hosting, domain, third-party accounts | Not included — buyer provisions their own |
 
@@ -207,7 +207,7 @@ Buying this asset converts that time-and-risk cost into a fixed, immediate acqui
 
 ## 9. Growth Roadmap (Upside for Buyer)
 
-- **Mobile app** — Expo/React Native companion app already built on a separate branch; ready to merge and ship for iOS/Android.
+- **Mobile app store launch** — the Expo/React Native companion app is code-complete and merged into `main`; what remains is release engineering, not development: linking a real EAS project, real backend URLs in `eas.json`, store-ready icon/splash art, a privacy policy, and Apple/Google developer accounts (see `mobile/README.md`'s store-submission checklist).
 - **Online exams / LMS** — groundwork already present (`OnlineExam` model, question bank), can be extended into a full LMS module.
 - **White-label rollout** — multi-tenant architecture supports reselling under different school-group brands with minimal changes.
 - **International payments** — Razorpay currently covers India; Stripe/PayPal integration would open international markets.

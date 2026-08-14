@@ -9,7 +9,7 @@ import { avatarColorFor } from '../../theme/patterns';
 import { FeesContent } from './FeesContent';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetStudentsListQuery } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetStudentsListQuery } from '../../store/api/apiSlice';
 
 /** Mirrors frontend/src/pages/Accountant/Fees_Management/CollectFees.jsx: search for a student,
  * then reuse the same fee-summary/installments/pay plumbing already built for Student/Parent
@@ -18,7 +18,11 @@ import { useGetStudentsListQuery } from '../../store/api/apiSlice';
 export function AccountantFeesView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [search, setSearch] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
 

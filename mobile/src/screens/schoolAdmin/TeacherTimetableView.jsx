@@ -8,7 +8,7 @@ import { Panel } from '../../components/ui/Panel';
 import { TimetableList } from '../TimetableScreen';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetAllUsersQuery, useGetTeacherTimetableForQuery } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetAllUsersQuery, useGetTeacherTimetableForQuery } from '../../store/api/apiSlice';
 
 /** Read-only view of any teacher's own weekly schedule — mirrors the web app's
  * School_Admin/Timetables/TeacherTimetable.jsx (teacher picker + day-grouped list). Changes still
@@ -18,7 +18,10 @@ export function TeacherTimetableView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [teacherId, setTeacherId] = useState(null);
 

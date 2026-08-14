@@ -10,7 +10,7 @@ import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { Panel } from '../../components/ui/Panel';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetExamsQuery, useUpdateExamMutation } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetExamsQuery, useUpdateExamMutation } from '../../store/api/apiSlice';
 
 const C = { primary: '#2563EB', accent: '#14B8A6', success: '#22C55E', warning: '#F59E0B', danger: '#EF4444', purple: '#8B5CF6' };
 
@@ -92,7 +92,11 @@ function SectionCard({ sec, totalMarks, onChange, onDelete }) {
 export function PaperBuilderView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [selectedExamId, setSelectedExamId] = useState(null);
   const [sections, setSections] = useState(DEFAULT_SECTIONS);

@@ -9,10 +9,18 @@ import {
   useGetClassRollNumbersQuery,
   useGenerateIdCardMutation,
   useGetActiveAcademicYearQuery,
+  useGetEmployeesQuery,
 } from '../../store/api/apiSlice';
 
-/** Same class → section → student picker as GenerateCertificateSheet. Employee ID cards
- * (holderType: "Employee") are out of scope — see apiSlice.js's ID Cards comment. */
+const HOLDER_TYPES = [
+  { key: 'Student', label: 'Student' },
+  { key: 'Employee', label: 'Employee' },
+];
+
+/** Same class → section → student picker as GenerateCertificateSheet, plus an Employee picker
+ * (holderType: "Employee", holderId is the Employee document's own _id — see
+ * backend/src/controllers/idCard.controllers.js's generateIdCard, which looks it up via
+ * Employee.findById, not the linked User). */
 export function GenerateIdCardSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();
@@ -22,34 +30,44 @@ export function GenerateIdCardSheet({ visible, onDismiss, onCreated }) {
   const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
   const academicYearId = activeYearQuery.data?._id;
 
+  const [holderType, setHolderType] = useState('Student');
   const [schoolClassId, setSchoolClassId] = useState(null);
   const [sectionId, setSectionId] = useState(null);
   const [studentId, setStudentId] = useState(null);
   const [studentName, setStudentName] = useState('');
+  const [employeeId, setEmployeeId] = useState(null);
+  const [employeeName, setEmployeeName] = useState('');
   const [error, setError] = useState(null);
 
-  const classesQuery = useGetSchoolClassDetailsQuery({ schoolId, academicYearId }, { skip: !visible || !schoolId || !academicYearId });
+  const classesQuery = useGetSchoolClassDetailsQuery({ schoolId, academicYearId }, { skip: !visible || holderType !== 'Student' || !schoolId || !academicYearId });
   const classes = classesQuery.data ?? [];
   const sections = useMemo(() => classes.find((c) => c._id === schoolClassId)?.sections ?? [], [classes, schoolClassId]);
 
   const rollQuery = useGetClassRollNumbersQuery(
     { schoolId, academicYearId, schoolClassId, sectionId },
-    { skip: !visible || !schoolClassId || !sectionId }
+    { skip: !visible || holderType !== 'Student' || !schoolClassId || !sectionId }
   );
   const students = rollQuery.data?.students ?? [];
+
+  const employeesQuery = useGetEmployeesQuery(undefined, { skip: !visible || holderType !== 'Employee' });
+  const employees = employeesQuery.data ?? [];
 
   const [generateIdCard, genState] = useGenerateIdCardMutation();
 
   useEffect(() => {
     if (visible) {
-      setSchoolClassId(null); setSectionId(null); setStudentId(null); setStudentName(''); setError(null);
+      setHolderType('Student');
+      setSchoolClassId(null); setSectionId(null); setStudentId(null); setStudentName('');
+      setEmployeeId(null); setEmployeeName('');
+      setError(null);
     }
   }, [visible]);
 
   const handleGenerate = async () => {
-    if (!studentId) { setError('Select a student'); return; }
+    const holderId = holderType === 'Student' ? studentId : employeeId;
+    if (!holderId) { setError(`Select ${holderType === 'Student' ? 'a student' : 'an employee'}`); return; }
     try {
-      await generateIdCard({ holderType: 'Student', holderId: studentId }).unwrap();
+      await generateIdCard({ holderType, holderId }).unwrap();
       onCreated?.();
     } catch (err) {
       setError(err?.message || 'Failed to generate ID card');
@@ -61,8 +79,54 @@ export function GenerateIdCardSheet({ visible, onDismiss, onCreated }) {
       <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={{ backgroundColor: colors.surface, margin: spacing.lg, borderRadius: radii.lg, padding: spacing.lg, maxHeight: '85%' }}>
         <IconButton icon="close" size={18} onPress={onDismiss} style={{ position: 'absolute', top: 4, right: 4, zIndex: 1 }} />
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Generate Student ID Card</Text>
+          <Text style={[typography.h3, { color: colors.text, marginBottom: spacing.md }]}>Generate ID Card</Text>
 
+          <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>HOLDER TYPE</Text>
+          <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md }}>
+            {HOLDER_TYPES.map((t) => (
+              <Chip
+                key={t.key}
+                selected={t.key === holderType}
+                onPress={() => { setHolderType(t.key); setError(null); }}
+              >
+                {t.label}
+              </Chip>
+            ))}
+          </View>
+
+          {holderType === 'Employee' ? (
+            <QueryState
+              isLoading={employeesQuery.isLoading}
+              isError={employeesQuery.isError}
+              error={employeesQuery.error}
+              onRetry={employeesQuery.refetch}
+              isEmpty={employees.length === 0}
+              emptyIcon="account-off-outline"
+              emptyLabel="No employees found"
+            >
+              {!employeeId ? (
+                <>
+                  <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>EMPLOYEE</Text>
+                  <View style={{ gap: spacing.xs, marginBottom: spacing.md }}>
+                    {employees.map((e) => (
+                      <Chip
+                        key={e._id}
+                        icon="account-outline"
+                        onPress={() => { setEmployeeId(e._id); setEmployeeName(e.userId?.name ?? 'Employee'); }}
+                      >
+                        {e.userId?.name ?? 'Employee'}
+                      </Chip>
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <View style={{ marginBottom: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={[typography.bodyStrong, { color: colors.text }]}>{employeeName}</Text>
+                  <Button compact onPress={() => setEmployeeId(null)}>Change</Button>
+                </View>
+              )}
+            </QueryState>
+          ) : (
           <QueryState
             isLoading={classesQuery.isLoading}
             isError={classesQuery.isError}
@@ -122,12 +186,13 @@ export function GenerateIdCardSheet({ visible, onDismiss, onCreated }) {
               </View>
             )}
           </QueryState>
+          )}
 
           {error && <Text style={[typography.caption, { color: colors.danger, marginTop: spacing.sm, marginBottom: spacing.sm }]}>{error}</Text>}
 
           <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
             <Button mode="outlined" onPress={onDismiss} style={{ flex: 1 }} disabled={genState.isLoading}>Cancel</Button>
-            <Button mode="contained" onPress={handleGenerate} loading={genState.isLoading} disabled={genState.isLoading || !studentId} style={{ flex: 1 }}>
+            <Button mode="contained" onPress={handleGenerate} loading={genState.isLoading} disabled={genState.isLoading || !(holderType === 'Student' ? studentId : employeeId)} style={{ flex: 1 }}>
               Generate
             </Button>
           </View>

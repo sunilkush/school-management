@@ -11,7 +11,7 @@ import { formatCurrency } from '../../utils/format';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { confirmDelete } from '../../utils/confirm';
-import { useDeleteFeeStructureMutation, useGetClassDetailsQuery, useGetFeeStructuresQuery } from '../../store/api/apiSlice';
+import { useDeleteFeeStructureMutation, useGetActiveAcademicYearQuery, useGetClassDetailsQuery, useGetFeeStructuresQuery } from '../../store/api/apiSlice';
 
 const FREQUENCY_COLOR = { monthly: '#2563EB', quarterly: '#F59E0B', yearly: '#22C55E' };
 
@@ -21,7 +21,10 @@ export function FeeStructuresView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [creating, setCreating] = useState(false);
 
   const classesQuery = useGetClassDetailsQuery({ schoolId, academicYearId }, { skip: !schoolId });

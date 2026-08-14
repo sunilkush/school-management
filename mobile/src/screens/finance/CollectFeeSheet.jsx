@@ -7,7 +7,7 @@ import { StatusPill } from '../../components/ui/StatusPill';
 import { formatCurrency } from '../../utils/format';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetMyFeesSummaryQuery, usePayStudentFeeMutation } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetMyFeesSummaryQuery, usePayStudentFeeMutation } from '../../store/api/apiSlice';
 
 const PAYMENT_MODES = ['cash', 'online', 'bank_transfer', 'upi', 'cheque'];
 const STATUS_COLOR = { pending: '#F59E0B', partial: '#2563EB', paid: '#22C55E' };
@@ -68,11 +68,15 @@ function FeeRow({ fee, onCollected }) {
 export function CollectFeeSheet({ visible, onDismiss, student }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetMyFeesSummaryQuery(
     { studentId: student?.studentId, academicYearId },
-    { skip: !visible || !student?.studentId }
+    { skip: !visible || !student?.studentId || !academicYearId }
   );
   const fees = data ?? [];
 

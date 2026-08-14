@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { setThemeMode } from '../store/slices/uiSlice';
-import { useGetNotificationsQuery } from '../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetNotificationsQuery } from '../store/api/apiSlice';
 import { navigateToNavItem } from './navigateToNavItem';
 
 const THEME_CYCLE = ['system', 'light', 'dark'];
@@ -43,11 +43,15 @@ export function AppHeader({ navigation, route, options, back }) {
   const { user, role, permissions } = useAuth();
   const themeMode = useSelector((state) => state.ui.themeMode);
   const { data: notifications } = useGetNotificationsQuery();
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const { data: activeYear } = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
 
   const unreadCount = (notifications ?? []).filter((n) => !n.isRead).length;
   const icon = route.params?.icon ?? FALLBACK_ICONS[route.name] ?? 'circle-outline';
   const title = options.title ?? route.name;
-  const academicYearLabel = user?.academicYear?.name;
+  const academicYearLabel = activeYear?.name;
 
   const cycleTheme = () => {
     const next = THEME_CYCLE[(THEME_CYCLE.indexOf(themeMode) + 1) % THEME_CYCLE.length];

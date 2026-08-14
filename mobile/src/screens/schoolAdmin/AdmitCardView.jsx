@@ -8,7 +8,7 @@ import { Panel } from '../../components/ui/Panel';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { formatDate } from '../../utils/format';
-import { useGenerateExamAdmitCardsMutation, useGetExamAdmitCardsQuery, useGetExamsQuery } from '../../store/api/apiSlice';
+import { useGenerateExamAdmitCardsMutation, useGetActiveAcademicYearQuery, useGetExamAdmitCardsQuery, useGetExamsQuery } from '../../store/api/apiSlice';
 
 function AdmitCardPreview({ card }) {
   const { colors, typography, spacing, radii } = useAppTheme();
@@ -48,7 +48,11 @@ function AdmitCardPreview({ card }) {
 export function AdmitCardView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [examId, setExamId] = useState(null);
 
   const examsQuery = useGetExamsQuery({ academicYearId }, { skip: !academicYearId });

@@ -10,14 +10,18 @@ import { CreateLessonPlanSheet } from './CreateLessonPlanSheet';
 import { formatDate } from '../../utils/format';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetAssignedClassesQuery, useGetLessonPlansQuery } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetAssignedClassesQuery, useGetLessonPlansQuery } from '../../store/api/apiSlice';
 
 const STATUS_COLOR = { draft: '#94A3B8', approved: '#2563EB', completed: '#22C55E' };
 
 export function LessonPlansView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [creating, setCreating] = useState(false);
 
   const classesQuery = useGetAssignedClassesQuery(academicYearId, { skip: !academicYearId });

@@ -18,7 +18,7 @@ import { LibraryReportsView } from './librarian/LibraryReportsView';
 import { HostelWardenDashboard } from './HostelScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
-import { useGetSchoolReportQuery } from '../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetSchoolReportQuery } from '../store/api/apiSlice';
 
 const GENDER_COLORS = { male: '#2563EB', female: '#EC4899', other: '#F59E0B' };
 
@@ -95,7 +95,10 @@ function SchoolOverviewReport() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const { data, isLoading, isFetching, isError, error, refetch } = useGetSchoolReportQuery(
     { schoolId, academicYearId },
@@ -127,7 +130,7 @@ function SchoolOverviewReport() {
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={[typography.h2, { color: colors.text }]}>Reports</Text>
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
-            {data?.academicYear ?? user?.academicYear?.name ?? 'Current'} Academic Year overview
+            {data?.academicYear ?? activeYearQuery.data?.name ?? 'Current'} Academic Year overview
           </Text>
         </View>
       </View>

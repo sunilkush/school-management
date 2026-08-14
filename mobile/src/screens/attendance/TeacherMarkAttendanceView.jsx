@@ -9,14 +9,17 @@ import { AvatarInitials } from '../../components/ui/AvatarInitials';
 import { avatarColorFor } from '../../theme/patterns';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetAssignedClassesQuery, useGetStudentsByRoleQuery, useMarkBulkAttendanceMutation } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetAssignedClassesQuery, useGetStudentsByRoleQuery, useMarkBulkAttendanceMutation } from '../../store/api/apiSlice';
 import { formatDateOnly } from '../../utils/format';
 
 export function TeacherMarkAttendanceView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
-  const schoolId = user?.schoolId;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [selectedSectionId, setSelectedSectionId] = useState(null);

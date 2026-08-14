@@ -16,14 +16,16 @@ import { useDeleteVehicleMutation, useGetVehiclesQuery } from '../store/api/apiS
 const STATUS_COLORS = { Available: '#22C55E', 'In Use': '#2563EB', Maintenance: '#F59E0B' };
 const TYPE_ICONS = { Bus: 'bus-school', Van: 'van-passenger', Car: 'car-outline' };
 
-/** Mirrors frontend/src/pages/School_Admin/Transport/Vehicles.jsx. Editing a vehicle is deferred
- * (create + delete covers the core workflow). */
+/** Mirrors frontend/src/pages/School_Admin/Transport/Vehicles.jsx. */
 export function VehiclesScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const [creating, setCreating] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(null);
   const { data, isLoading, isFetching, isError, error, refetch } = useGetVehiclesQuery();
   const [deleteVehicle, deleteState] = useDeleteVehicleMutation();
   const vehicles = data ?? [];
+  const sheetVisible = creating || Boolean(editingVehicle);
+  const closeSheet = () => { setCreating(false); setEditingVehicle(null); };
 
   const stats = [
     { key: 'total', label: 'Total Vehicles', icon: 'bus-multiple', color: colors.primary, value: vehicles.length },
@@ -83,20 +85,28 @@ export function VehiclesScreen() {
               ]}
               expandable
               actions={
-                <IconButton
-                  icon="trash-can-outline"
-                  iconColor={colors.danger}
-                  size={18}
-                  disabled={deleteState.isLoading}
-                  onPress={() => confirmDelete(() => deleteVehicle(v._id), 'this vehicle')}
-                />
+                <View style={{ flexDirection: 'row' }}>
+                  <IconButton
+                    icon="pencil-outline"
+                    iconColor={colors.textSecondary}
+                    size={18}
+                    onPress={() => setEditingVehicle(v)}
+                  />
+                  <IconButton
+                    icon="trash-can-outline"
+                    iconColor={colors.danger}
+                    size={18}
+                    disabled={deleteState.isLoading}
+                    onPress={() => confirmDelete(() => deleteVehicle(v._id), 'this vehicle')}
+                  />
+                </View>
               }
             />
           );
         })}
       </QueryState>
 
-      <CreateVehicleSheet visible={creating} onDismiss={() => setCreating(false)} onCreated={() => setCreating(false)} />
+      <CreateVehicleSheet visible={sheetVisible} vehicle={editingVehicle} onDismiss={closeSheet} onCreated={closeSheet} />
     </ScreenContainer>
   );
 }

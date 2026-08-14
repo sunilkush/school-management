@@ -6,7 +6,7 @@ import { QueryState } from '../../components/ui/QueryState';
 import { Panel } from '../../components/ui/Panel';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetExamPerformanceSummaryQuery, useGetExamsQuery } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetExamPerformanceSummaryQuery, useGetExamsQuery } from '../../store/api/apiSlice';
 
 /** Performance summary over ExamAttempt records (the online exam-attempt track) — an exam with
  * no online attempts taken returns 404 server-side, shown here as an honest empty state rather
@@ -15,7 +15,11 @@ import { useGetExamPerformanceSummaryQuery, useGetExamsQuery } from '../../store
 export function ExamReportsView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [examId, setExamId] = useState(null);
 

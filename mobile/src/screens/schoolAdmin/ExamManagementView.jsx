@@ -14,6 +14,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import {
   useDeleteExamMutation,
+  useGetActiveAcademicYearQuery,
   useGetClassDetailsQuery,
   useGetExamsQuery,
   usePublishExamMutation,
@@ -31,7 +32,10 @@ export function ExamManagementView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
   const schoolId = user?.school?._id;
-  const academicYearId = user?.academicYear?._id;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [sheetVisible, setSheetVisible] = useState(false);
   const [editingExam, setEditingExam] = useState(null);
 

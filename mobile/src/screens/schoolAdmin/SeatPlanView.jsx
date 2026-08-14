@@ -8,7 +8,7 @@ import { IconWell } from '../../components/ui/IconWell';
 import { FormField } from '../../components/ui/FormField';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetExamSeatPlanQuery, useGetExamsQuery } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetExamSeatPlanQuery, useGetExamsQuery } from '../../store/api/apiSlice';
 
 /** Room/seat assignment for an exam — computed on the fly server-side (round-robin over the
  * enrolled roster in registrationNumber order), not persisted, so changing Room Capacity just
@@ -16,7 +16,11 @@ import { useGetExamSeatPlanQuery, useGetExamsQuery } from '../../store/api/apiSl
 export function SeatPlanView() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [examId, setExamId] = useState(null);
   const [roomCapacity, setRoomCapacity] = useState('30');
 

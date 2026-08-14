@@ -1,24 +1,42 @@
 import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Chip, Text } from 'react-native-paper';
+import { Button, Chip, IconButton, Text } from 'react-native-paper';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { AccentListCard } from '../../components/ui/AccentListCard';
 import { IconWell } from '../../components/ui/IconWell';
 import { StatusPill } from '../../components/ui/StatusPill';
+import { CreateQuestionSheet } from './CreateQuestionSheet';
+import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetQuestionsQuery, useGetSubjectsQuery } from '../../store/api/apiSlice';
+import {
+  useGetActiveAcademicYearQuery,
+  useGetAssignedClassesQuery,
+  useGetQuestionsQuery,
+  useGetSubjectsQuery,
+} from '../../store/api/apiSlice';
 
 const DIFFICULTY_COLOR = { easy: '#22C55E', medium: '#F59E0B', hard: '#EF4444' };
+// Scoped to just MCQ Single + True/False for now — see CreateQuestionSheet's own comment.
+const EDITABLE_TYPES = new Set(['mcq_single', 'true_false']);
 
-/** Read-only question bank browse — creating a question needs a full MCQ options/correct-answers
- * editor per question type, a separate, larger feature not built here (matches how
- * TeacherExamsView.jsx already defers marks entry/evaluation). */
 export function QuestionBankView() {
   const { colors, typography, spacing } = useAppTheme();
+  const { user } = useAuth();
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [subjectId, setSubjectId] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const sheetVisible = creating || Boolean(editingQuestion);
+  const closeSheet = () => { setCreating(false); setEditingQuestion(null); };
 
   const { data: subjects = [] } = useGetSubjectsQuery();
+  const classesQuery = useGetAssignedClassesQuery(academicYearId, { skip: !academicYearId });
+  const classes = classesQuery.data ?? [];
   // Backend default limit=10 (the lowest of any list endpoint in the app) with no override meant
   // any subject with more than 10 questions silently hid the rest.
   const { data, isLoading, isFetching, isError, error, refetch } = useGetQuestionsQuery({ subjectId: subjectId || undefined, limit: 500 });
@@ -34,6 +52,12 @@ export function QuestionBankView() {
             Browse questions by subject and difficulty
           </Text>
         </View>
+      </View>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md }}>
+        <Button mode="contained" icon="plus" onPress={() => setCreating(true)} disabled={!academicYearId}>
+          New Question
+        </Button>
       </View>
 
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.xs }]}>SUBJECT</Text>
@@ -69,9 +93,28 @@ export function QuestionBankView() {
               ...(q.correctAnswers?.length ? [{ label: 'Correct Answer', value: q.correctAnswers.join(', ') }] : []),
             ]}
             expandable
+            actions={
+              EDITABLE_TYPES.has(q.questionType) ? (
+                <IconButton
+                  icon="pencil-outline"
+                  iconColor={colors.textSecondary}
+                  size={18}
+                  onPress={() => setEditingQuestion(q)}
+                />
+              ) : null
+            }
           />
         ))}
       </QueryState>
+
+      <CreateQuestionSheet
+        visible={sheetVisible}
+        question={editingQuestion}
+        onDismiss={closeSheet}
+        onCreated={closeSheet}
+        classes={classes}
+        academicYearId={academicYearId}
+      />
     </ScreenContainer>
   );
 }

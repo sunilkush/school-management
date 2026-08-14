@@ -10,7 +10,7 @@ import { StatusPill } from '../components/ui/StatusPill';
 import { formatDate } from '../utils/format';
 import { useAuth } from '../hooks/useAuth';
 import { useAppTheme } from '../theme/ThemeProvider';
-import { useGetExamReportsQuery, useGetExamsQuery } from '../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetExamReportsQuery, useGetExamsQuery } from '../store/api/apiSlice';
 
 const STATUS_COLOR = { Pass: '#22C55E', Fail: '#EF4444' };
 const TYPE_OPTIONS = [null, 'pass', 'fail'];
@@ -21,7 +21,11 @@ const TYPE_OPTIONS = [null, 'pass', 'fail'];
 export function AcademicReportsScreen() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [examId, setExamId] = useState(null);
   const [type, setType] = useState(null);
 

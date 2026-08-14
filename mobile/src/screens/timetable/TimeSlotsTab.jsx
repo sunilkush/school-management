@@ -8,12 +8,16 @@ import { CreateTimeSlotSheet } from './CreateTimeSlotSheet';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { confirmDelete } from '../../utils/confirm';
-import { useDeleteTimeSlotMutation, useGetTimeSlotsQuery } from '../../store/api/apiSlice';
+import { useDeleteTimeSlotMutation, useGetActiveAcademicYearQuery, useGetTimeSlotsQuery } from '../../store/api/apiSlice';
 
 export function TimeSlotsTab() {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
   const [creating, setCreating] = useState(false);
 
   const { data: timeSlots = [], isLoading, isFetching, isError, error, refetch } = useGetTimeSlotsQuery({ academicYearId }, { skip: !academicYearId });

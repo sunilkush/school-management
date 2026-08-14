@@ -4,7 +4,7 @@ import { Button, Chip, IconButton, Modal, Portal, Text } from 'react-native-pape
 import { FormField } from '../../components/ui/FormField';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useCreateReimbursementMutation, useGetEmployeesQuery } from '../../store/api/apiSlice';
+import { useCreateReimbursementMutation, useGetActiveAcademicYearQuery, useGetEmployeesQuery } from '../../store/api/apiSlice';
 
 const TYPES = [
   { value: 'travel', label: 'Travel' }, { value: 'fuel', label: 'Fuel' },
@@ -15,7 +15,11 @@ const TYPES = [
 export function CreateReimbursementSheet({ visible, onDismiss, onCreated }) {
   const { colors, typography, spacing, radii } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [createReimbursement, createState] = useCreateReimbursementMutation();
   const employeesQuery = useGetEmployeesQuery(undefined, { skip: !visible });

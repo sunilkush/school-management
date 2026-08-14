@@ -12,7 +12,7 @@ import { pillStyle } from '../../theme/patterns';
 import { studentStatusColor } from '../../utils/studentStatus';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { useGetAssignedClassesQuery, useGetStudentsListQuery } from '../../store/api/apiSlice';
+import { useGetActiveAcademicYearQuery, useGetAssignedClassesQuery, useGetStudentsListQuery } from '../../store/api/apiSlice';
 
 const PAGE_SIZE = 20;
 
@@ -43,7 +43,11 @@ function InlinePill({ color, label }) {
 export function AdminStudentListView({ navigation }) {
   const { colors, typography, spacing } = useAppTheme();
   const { user } = useAuth();
-  const academicYearId = user?.academicYear?._id;
+  const schoolId = user?.school?._id ?? user?.schoolId;
+  // user.academicYear is never populated by the backend (User has no academicYearId field) —
+  // fetch the real active year instead.
+  const activeYearQuery = useGetActiveAcademicYearQuery(schoolId, { skip: !schoolId });
+  const academicYearId = activeYearQuery.data?._id;
 
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [selectedSectionId, setSelectedSectionId] = useState(null);
@@ -112,7 +116,7 @@ export function AdminStudentListView({ navigation }) {
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={[typography.h2, { color: colors.text }]}>Students</Text>
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: 2 }]} numberOfLines={1}>
-            {(user?.academicYear?.name ?? 'Current')} Academic Year · {user?.school?.name ?? 'School'}
+            {(activeYearQuery.data?.name ?? 'Current')} Academic Year · {user?.school?.name ?? 'School'}
           </Text>
         </View>
       </View>
