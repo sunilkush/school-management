@@ -194,7 +194,10 @@ const StaffAttendance = () => {
           dispatch(
             markBulkAttendance({
               schoolId,
-              date: selectedDate.startOf("day").toISOString(),
+              // Local calendar-date string, not .toISOString() — avoids the day-shift toISOString()
+              // causes near midnight for positive-UTC-offset zones (IST included); mirrors mobile's
+              // formatDateOnly() fix for the same bug.
+              date: selectedDate.format("YYYY-MM-DD"),
               role,
               records,
             })

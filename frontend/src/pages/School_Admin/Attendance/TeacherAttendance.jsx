@@ -101,7 +101,10 @@ const TeacherAttendance = () => {
     dispatch(
       fetchAttendance({
         schoolId,
-        date: selectedDate.startOf("day").toISOString(),
+        // Local calendar-date string, not .toISOString() — avoids the day-shift toISOString()
+        // causes near midnight for positive-UTC-offset zones (IST included); mirrors mobile's
+        // formatDateOnly() fix for the same bug.
+        date: selectedDate.format("YYYY-MM-DD"),
         role: "teacher",
         limit: 500,
         page: 1,
@@ -196,7 +199,10 @@ const TeacherAttendance = () => {
       await dispatch(
         markBulkAttendance({
           schoolId,
-          date: selectedDate.startOf("day").toISOString(),
+          // Local calendar-date string, not .toISOString() — avoids the day-shift toISOString()
+        // causes near midnight for positive-UTC-offset zones (IST included); mirrors mobile's
+        // formatDateOnly() fix for the same bug.
+        date: selectedDate.format("YYYY-MM-DD"),
           role: "teacher",
           records,
         })

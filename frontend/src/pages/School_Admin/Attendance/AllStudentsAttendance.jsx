@@ -200,7 +200,11 @@ const AllStudentsAttendance = () => {
         role: "student",
         classId:   selectedClassId,
         sectionId: selectedSectionId,
-        date: attendanceDate.startOf("day").toISOString(),
+        // A plain local calendar-date string, not .toISOString() — for any positive-UTC-offset
+        // timezone (IST included), startOf("day").toISOString() shifts local midnight back into
+        // the previous UTC calendar day, so the backend (which truncates by UTC date) stores and
+        // reports attendance one day early. Mirrors mobile's formatDateOnly() fix for the same bug.
+        date: attendanceDate.format("YYYY-MM-DD"),
         records,
       })
     );

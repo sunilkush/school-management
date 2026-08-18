@@ -119,8 +119,10 @@ const AttendanceReports = () => {
     };
     if (selectedClass)   params.classId   = selectedClass;
     if (selectedSection) params.sectionId = selectedSection;
-    if (dateRange?.[0])  params.startDate = dateRange[0].startOf("day").toISOString();
-    if (dateRange?.[1])  params.endDate   = dateRange[1].endOf("day").toISOString();
+    // Local calendar-date strings, not .toISOString() — avoids the day-shift toISOString() causes
+    // near midnight for positive-UTC-offset zones (IST included).
+    if (dateRange?.[0])  params.startDate = dateRange[0].format("YYYY-MM-DD");
+    if (dateRange?.[1])  params.endDate   = dateRange[1].format("YYYY-MM-DD");
     dispatch(fetchAttendance(params));
   }, [schoolId, reportType, selectedClass, selectedSection, dateRange, dispatch]);
 

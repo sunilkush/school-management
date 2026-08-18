@@ -241,7 +241,10 @@ const StudentAttendance = () => {
           schoolId,
           records,
           role: "student",
-          date: attendanceDate.startOf("day").toISOString(),
+          // Local calendar-date string, not .toISOString() — avoids the day-shift toISOString()
+          // causes near midnight for positive-UTC-offset zones (IST included); mirrors mobile's
+          // formatDateOnly() fix for the same bug.
+          date: attendanceDate.format("YYYY-MM-DD"),
           classId:   selectedClassObj.classId,
           sectionId: selectedClassObj.sectionId,
           academicYearId,

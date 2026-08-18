@@ -227,8 +227,10 @@ const LeaveManagement = () => {
     try {
       const vals = await form.validateFields();
       const { startDate, endDate, ...rest } = vals;
-      const start = startDate ? startDate.startOf("day").toISOString() : null;
-      const end   = endDate   ? endDate.startOf("day").toISOString()   : null;
+      // Local calendar-date strings, not .toISOString() — avoids the day-shift toISOString()
+      // causes near midnight for positive-UTC-offset zones (IST included).
+      const start = startDate ? startDate.format("YYYY-MM-DD") : null;
+      const end   = endDate   ? endDate.format("YYYY-MM-DD")   : null;
       const totalDays =
         startDate && endDate ? endDate.diff(startDate, "day") + 1 : 1;
 
