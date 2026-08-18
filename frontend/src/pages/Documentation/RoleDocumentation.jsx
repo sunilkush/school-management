@@ -20,7 +20,7 @@ const StepBlock = ({ steps }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
     {steps.map((step, i) => (
       <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-        <div style={{ ...iconWell("#2563EB", 26), borderRadius: 8, fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>
+        <div style={{ ...iconWell("var(--primary)", 26), borderRadius: 8, fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>
           {i + 1}
         </div>
         <div style={{ fontSize: 13.5, color: "var(--text-primary)", lineHeight: 1.6, paddingTop: 2 }}>{step}</div>
@@ -40,7 +40,7 @@ const BulletList = ({ items }) => (
 /* ─── Role documentation data ───────────────────────────────── */
 const SCHOOL_ADMIN_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Dashboard Overview", subtitle: "Your school management control centre",
     badge: "Start Here",
     overview: "As a School Admin / Principal, your dashboard gives you a real-time summary of your school — active students, staff, attendance today, upcoming exams, fee collection status, and quick-action buttons.",
@@ -60,7 +60,7 @@ const SCHOOL_ADMIN_DOCS = [
     tips: ["Pin frequently visited pages to your browser bookmarks for faster access.", "Check the dashboard daily for attendance alerts and fee overdue notifications."],
   },
   {
-    id: "users", group: "Administration", icon: <TeamOutlined />, color: "#059669",
+    id: "users", group: "Administration", icon: <TeamOutlined />, color: "var(--success-hover)",
     title: "User Management", subtitle: "Add and manage all school staff and students",
     badge: "Users",
     overview: "Manage all users in your school from one place. You can register new teachers, students, parents, and support staff, and activate or deactivate accounts.",
@@ -81,7 +81,7 @@ const SCHOOL_ADMIN_DOCS = [
     tips: ["Deactivating a user blocks login immediately without deleting records.", "Use bulk import (CSV) for enrolling large batches of students at term start."],
   },
   {
-    id: "attendance", group: "Operations", icon: <CheckSquareOutlined />, color: "#D97706",
+    id: "attendance", group: "Operations", icon: <CheckSquareOutlined />, color: "var(--warning-hover)",
     title: "Attendance Management", subtitle: "Monitor daily attendance across the school",
     badge: "Daily Ops",
     overview: "View and manage student and staff attendance. School Admins can see attendance across all classes, correct submitted records, and generate compliance reports.",
@@ -101,7 +101,7 @@ const SCHOOL_ADMIN_DOCS = [
     tips: ["Set the attendance edit cut-off in Settings → Attendance Policy.", "Monthly reports are auto-archived at month end for record keeping."],
   },
   {
-    id: "exams", group: "Operations", icon: <FileTextOutlined />, color: "#7C3AED",
+    id: "exams", group: "Operations", icon: <FileTextOutlined />, color: "var(--purple)",
     title: "Exams & Results", subtitle: "Schedule exams, enter marks, issue report cards",
     badge: "Exams",
     overview: "The exam module lets you create exam schedules, assign subjects and invigilators, collect marks from teachers, and generate rank lists and report cards.",
@@ -127,7 +127,7 @@ const SCHOOL_ADMIN_DOCS = [
     tips: ["Exam Coordinator role can manage exams independently if set up."],
   },
   {
-    id: "fees", group: "Finance", icon: <DollarOutlined />, color: "#DC2626",
+    id: "fees", group: "Finance", icon: <DollarOutlined />, color: "var(--danger-hover)",
     title: "Fee Management", subtitle: "Structure, collect, and track school fees",
     badge: "Finance",
     overview: "Configure fee structures per class, track collections, generate receipts, and monitor defaulters. Accountants handle day-to-day collection; you set the structures.",
@@ -147,7 +147,7 @@ const SCHOOL_ADMIN_DOCS = [
     tips: ["Partial payments are supported — remaining balance auto-carries forward.", "Send fee reminder SMS from Communication → Send Notifications → Fee Reminders."],
   },
   {
-    id: "reports", group: "Analytics", icon: <BarChartOutlined />, color: "#0891B2",
+    id: "reports", group: "Analytics", icon: <BarChartOutlined />, color: "var(--cyan)",
     title: "Reports & Analytics", subtitle: "School performance at a glance",
     badge: "Analytics",
     overview: "Access comprehensive reports on attendance trends, exam performance, fee collection, and staff metrics. All reports support export to PDF and CSV.",
@@ -166,7 +166,7 @@ const SCHOOL_ADMIN_DOCS = [
 
 const TEACHER_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Dashboard Overview", subtitle: "Your teaching workspace at a glance",
     badge: "Start Here",
     overview: "Your Teacher dashboard shows today's class schedule, pending attendance, upcoming exams, and recent student activity across your assigned classes and subjects.",
@@ -182,7 +182,7 @@ const TEACHER_DOCS = [
     tips: ["Attendance must be marked before the school's daily cut-off time.", "Your dashboard reloads data automatically — no need to refresh manually."],
   },
   {
-    id: "classes", group: "Teaching", icon: <ApartmentOutlined />, color: "#7C3AED",
+    id: "classes", group: "Teaching", icon: <ApartmentOutlined />, color: "var(--purple)",
     title: "My Assigned Classes", subtitle: "Manage your classes, subjects and students",
     badge: "Teaching",
     overview: "All classes and subjects assigned to you appear in My Classes. You can view student lists, take attendance, and access each class's timetable from here.",
@@ -197,7 +197,7 @@ const TEACHER_DOCS = [
     tips: ["Use the search bar on the My Classes page to filter by class name or subject."],
   },
   {
-    id: "attendance", group: "Teaching", icon: <CheckSquareOutlined />, color: "#059669",
+    id: "attendance", group: "Teaching", icon: <CheckSquareOutlined />, color: "var(--success-hover)",
     title: "Marking Attendance", subtitle: "Daily student attendance workflow",
     badge: "Daily Ops",
     overview: "Mark attendance for your assigned classes each day. The system records Present, Absent, Late, and Half-Day status for each student.",
@@ -214,7 +214,7 @@ const TEACHER_DOCS = [
     tips: ["Attendance cannot be submitted for a future date.", "Once submitted, changes require School Admin approval."],
   },
   {
-    id: "marks", group: "Teaching", icon: <FileTextOutlined />, color: "#B45309",
+    id: "marks", group: "Teaching", icon: <FileTextOutlined />, color: "var(--warning-hover)",
     title: "Entering Marks", subtitle: "Submit exam scores for your subjects",
     badge: "Exams",
     overview: "After an exam is published, you can enter marks for the subjects assigned to you. Marks entry is open until the Exam Coordinator closes the window.",
@@ -235,7 +235,7 @@ const TEACHER_DOCS = [
     tips: ["You can only enter marks for subjects assigned to you.", "Drafts are auto-saved every 30 seconds."],
   },
   {
-    id: "reports", group: "Analytics", icon: <BarChartOutlined />, color: "#0891B2",
+    id: "reports", group: "Analytics", icon: <BarChartOutlined />, color: "var(--cyan)",
     title: "Reports", subtitle: "Your attendance and class performance reports",
     badge: "Reports",
     overview: "Access your generated reports from the Reports section. You can view attendance summaries, subject performance data, and download class-level analytics.",
@@ -253,7 +253,7 @@ const TEACHER_DOCS = [
 
 const ACCOUNTANT_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Dashboard Overview", subtitle: "Your financial operations hub",
     badge: "Start Here",
     overview: "As Accountant, your dashboard shows today's fee collection, pending dues, payroll cycle status, and quick links to receipts and expense reports.",
@@ -271,7 +271,7 @@ const ACCOUNTANT_DOCS = [
     tips: ["Reconcile fee collection daily before closing accounts.", "Keep payslip archives for a minimum of 3 years for audit compliance."],
   },
   {
-    id: "fees", group: "Finance", icon: <DollarOutlined />, color: "#DC2626",
+    id: "fees", group: "Finance", icon: <DollarOutlined />, color: "var(--danger-hover)",
     title: "Fee Collection", subtitle: "Collect, receipt, and track student fees",
     badge: "Finance",
     overview: "Day-to-day fee collection is your core responsibility. Every payment must be recorded and receipted immediately.",
@@ -298,7 +298,7 @@ const ACCOUNTANT_DOCS = [
     tips: ["Partial payments are allowed — remaining balance auto-carries forward.", "For fee waivers, get written approval from the School Admin before applying."],
   },
   {
-    id: "payroll", group: "Payroll", icon: <SolutionOutlined />, color: "#7C3AED",
+    id: "payroll", group: "Payroll", icon: <SolutionOutlined />, color: "var(--purple)",
     title: "Payroll Operations", subtitle: "Monthly salary cycle management",
     badge: "Payroll",
     overview: "Payroll runs monthly. You set up salary structures, generate the monthly cycle, verify, lock, mark as paid, and issue payslips.",
@@ -322,7 +322,7 @@ const ACCOUNTANT_DOCS = [
     tips: ["The re-run process creates a correction entry preserving the original audit trail.", "Use the Salary Advance module to track and deduct advances automatically."],
   },
   {
-    id: "reports", group: "Analytics", icon: <BarChartOutlined />, color: "#059669",
+    id: "reports", group: "Analytics", icon: <BarChartOutlined />, color: "var(--success-hover)",
     title: "Financial Reports", subtitle: "Collection summaries, expense analysis, and salary registers",
     badge: "Reports",
     overview: "Generate and export detailed financial reports for internal records and audit purposes.",
@@ -342,7 +342,7 @@ const ACCOUNTANT_DOCS = [
 
 const LIBRARIAN_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Library Dashboard", subtitle: "Your library management workspace",
     badge: "Start Here",
     overview: "As Librarian, you manage the school's book catalog, issue and return books, track overdue items, and generate library reports.",
@@ -358,7 +358,7 @@ const LIBRARIAN_DOCS = [
     tips: ["Add ISBN, author, and publisher when cataloguing books for better searchability."],
   },
   {
-    id: "books", group: "Catalog", icon: <BookOutlined />, color: "#7C3AED",
+    id: "books", group: "Catalog", icon: <BookOutlined />, color: "var(--purple)",
     title: "Book Catalog", subtitle: "Add and manage library books",
     badge: "Catalog",
     overview: "Maintain a complete catalog of all books in the library. Each book entry includes title, author, ISBN, category, quantity, and shelf location.",
@@ -374,7 +374,7 @@ const LIBRARIAN_DOCS = [
     tips: ["Mark Reference books as non-issuable so they stay in the library.", "Duplicate ISBN entries are blocked automatically."],
   },
   {
-    id: "issue-return", group: "Operations", icon: <CheckSquareOutlined />, color: "#059669",
+    id: "issue-return", group: "Operations", icon: <CheckSquareOutlined />, color: "var(--success-hover)",
     title: "Issue & Return", subtitle: "Track book borrowing and returns",
     badge: "Daily Ops",
     overview: "Issue books to students and staff, track due dates, and process returns with any applicable fines.",
@@ -405,7 +405,7 @@ const LIBRARIAN_DOCS = [
 
 const HOSTEL_WARDEN_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Hostel Dashboard", subtitle: "Your hostel management workspace",
     badge: "Start Here",
     overview: "As Hostel Warden, you manage hostel room allocations, student attendance, visitor logs, leave requests, complaints, and hostel reports.",
@@ -422,7 +422,7 @@ const HOSTEL_WARDEN_DOCS = [
     tips: ["Update room allocations at the start of each term.", "All visitor entries must be logged with ID proof for security."],
   },
   {
-    id: "rooms", group: "Operations", icon: <BankOutlined />, color: "#0891B2",
+    id: "rooms", group: "Operations", icon: <BankOutlined />, color: "var(--cyan)",
     title: "Room Management", subtitle: "Allocate and manage hostel rooms",
     badge: "Rooms",
     overview: "Manage hostel rooms, bed allocations, and student assignments. Track occupancy levels per floor and room.",
@@ -438,7 +438,7 @@ const HOSTEL_WARDEN_DOCS = [
     tips: ["Mark rooms as 'Under Maintenance' to prevent allocation during repairs.", "Vacate rooms when students leave at term end to keep occupancy data accurate."],
   },
   {
-    id: "attendance", group: "Operations", icon: <CheckSquareOutlined />, color: "#059669",
+    id: "attendance", group: "Operations", icon: <CheckSquareOutlined />, color: "var(--success-hover)",
     title: "Hostel Attendance", subtitle: "Daily student check-in and check-out",
     badge: "Daily Ops",
     overview: "Take morning and evening attendance for hostel students. Track who is on campus and who is on approved leave.",
@@ -454,7 +454,7 @@ const HOSTEL_WARDEN_DOCS = [
     tips: ["Coordinate with class attendance for students who are absent from both hostel and class.", "Night attendance (post-lights-out) can be marked separately if enabled."],
   },
   {
-    id: "leave", group: "Operations", icon: <CalendarOutlined />, color: "#D97706",
+    id: "leave", group: "Operations", icon: <CalendarOutlined />, color: "var(--warning-hover)",
     title: "Leave & Visitor Management", subtitle: "Approve leaves and log visitors",
     badge: "Leave",
     overview: "Process student leave requests and maintain a visitor log for campus security and parent coordination.",
@@ -478,7 +478,7 @@ const HOSTEL_WARDEN_DOCS = [
 
 const TRANSPORT_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Transport Dashboard", subtitle: "Your transport operations workspace",
     badge: "Start Here",
     overview: "As Transport Manager, you manage school vehicles, routes, driver assignments, student transport allocations, and fuel/maintenance records.",
@@ -494,7 +494,7 @@ const TRANSPORT_DOCS = [
     tips: ["Update vehicle fitness/insurance expiry dates to receive renewal alerts.", "GPS tracking data is visible on the Transport Map page (if enabled)."],
   },
   {
-    id: "vehicles", group: "Fleet", icon: <CarOutlined />, color: "#0891B2",
+    id: "vehicles", group: "Fleet", icon: <CarOutlined />, color: "var(--cyan)",
     title: "Vehicle Management", subtitle: "Fleet registration and maintenance",
     badge: "Fleet",
     overview: "Maintain records of all school vehicles — registration, capacity, insurance, fitness, and assigned driver.",
@@ -514,7 +514,7 @@ const TRANSPORT_DOCS = [
     tips: ["Set expiry alerts 30 days before insurance/fitness renewal due dates."],
   },
   {
-    id: "routes", group: "Operations", icon: <ApartmentOutlined />, color: "#7C3AED",
+    id: "routes", group: "Operations", icon: <ApartmentOutlined />, color: "var(--purple)",
     title: "Routes & Assignments", subtitle: "Define routes and assign students",
     badge: "Routes",
     overview: "Create transport routes with stops, assign vehicles, and allocate students to routes. Students and parents can view route details from their portal.",
@@ -537,7 +537,7 @@ const TRANSPORT_DOCS = [
 
 const EXAM_COORDINATOR_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Exam Coordinator Hub", subtitle: "Manage all exam operations",
     badge: "Start Here",
     overview: "As Exam Coordinator, you own the full exam lifecycle — scheduling, seating plans, admit cards, marks collection, rank lists, and result publishing.",
@@ -555,7 +555,7 @@ const EXAM_COORDINATOR_DOCS = [
     tips: ["Coordinate with class teachers before opening marks entry — data quality is critical.", "Lock marks entry as soon as all teachers have submitted to prevent changes."],
   },
   {
-    id: "schedule", group: "Planning", icon: <CalendarOutlined />, color: "#D97706",
+    id: "schedule", group: "Planning", icon: <CalendarOutlined />, color: "var(--warning-hover)",
     title: "Exam Schedule", subtitle: "Create and publish exam timetables",
     badge: "Planning",
     overview: "Build exam schedules that students, parents, and teachers can view. Define dates, subjects, timings, and halls per exam.",
@@ -575,7 +575,7 @@ const EXAM_COORDINATOR_DOCS = [
     tips: ["Admit cards can be bulk-generated and printed after the schedule is published.", "Seating plans can be auto-generated based on class strength and hall capacity."],
   },
   {
-    id: "results", group: "Results", icon: <FileTextOutlined />, color: "#7C3AED",
+    id: "results", group: "Results", icon: <FileTextOutlined />, color: "var(--purple)",
     title: "Marks & Results", subtitle: "Collect marks, generate rank lists and report cards",
     badge: "Results",
     overview: "Open the marks entry window for teachers after each exam, verify submissions, and then generate rank lists and downloadable report cards.",
@@ -600,7 +600,7 @@ const EXAM_COORDINATOR_DOCS = [
 
 const SUBJECT_COORDINATOR_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Subject Coordinator Hub", subtitle: "Curriculum and subject management",
     badge: "Start Here",
     overview: "As Subject Coordinator, you manage curriculum structure — subjects, chapters, topics — and coordinate teacher assignments for your subject area across classes.",
@@ -616,7 +616,7 @@ const SUBJECT_COORDINATOR_DOCS = [
     tips: ["Keep the chapter/topic list updated before each exam cycle.", "Co-ordinate with teachers to ensure curriculum coverage before exams."],
   },
   {
-    id: "curriculum", group: "Curriculum", icon: <BookOutlined />, color: "#7C3AED",
+    id: "curriculum", group: "Curriculum", icon: <BookOutlined />, color: "var(--purple)",
     title: "Chapters & Topics", subtitle: "Build and maintain curriculum structure",
     badge: "Curriculum",
     overview: "The curriculum hierarchy is: Subject → Chapter → Topic. This structure is used for lesson planning, exam scoping, and performance analytics.",
@@ -634,7 +634,7 @@ const SUBJECT_COORDINATOR_DOCS = [
 
 const RECEPTIONIST_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Receptionist Workspace", subtitle: "Front-desk operations guide",
     badge: "Start Here",
     overview: "As Receptionist, you handle visitor management, admission inquiries, phone calls, parcel tracking, and front-desk communications.",
@@ -650,7 +650,7 @@ const RECEPTIONIST_DOCS = [
     tips: ["All visitors must sign in with a valid ID before entering campus.", "Log admission inquiries in real-time to avoid losing leads."],
   },
   {
-    id: "visitors", group: "Operations", icon: <UserOutlined />, color: "#059669",
+    id: "visitors", group: "Operations", icon: <UserOutlined />, color: "var(--success-hover)",
     title: "Visitor Management", subtitle: "Log and track all campus visitors",
     badge: "Daily Ops",
     overview: "Every person entering the campus (other than staff and students) must be logged. The visitor log is searchable and printable for security audits.",
@@ -669,7 +669,7 @@ const RECEPTIONIST_DOCS = [
 
 const IT_SUPPORT_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "IT Support Workspace", subtitle: "Technical support operations guide",
     badge: "Start Here",
     overview: "As IT Support, you handle internal technical issues, device management, network access, and system requests from staff.",
@@ -685,7 +685,7 @@ const IT_SUPPORT_DOCS = [
     tips: ["Escalate hardware issues that cannot be resolved in-house to your vendor within 24 hours.", "Document every resolved ticket with the solution for future reference."],
   },
   {
-    id: "tickets", group: "Operations", icon: <SolutionOutlined />, color: "#7C3AED",
+    id: "tickets", group: "Operations", icon: <SolutionOutlined />, color: "var(--purple)",
     title: "Support Ticket Management", subtitle: "Handle and resolve IT requests",
     badge: "Tickets",
     overview: "Internal users submit support tickets for IT issues. You receive, triage, assign, and resolve these tickets.",
@@ -705,7 +705,7 @@ const IT_SUPPORT_DOCS = [
 
 const COUNSELOR_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Counselor Workspace", subtitle: "Student support and guidance operations",
     badge: "Start Here",
     overview: "As Counselor, you support student well-being, handle referrals, track counseling sessions, and coordinate with parents and teachers for student support plans.",
@@ -721,7 +721,7 @@ const COUNSELOR_DOCS = [
     tips: ["All session notes are confidential and visible only to you and the School Admin.", "Follow your school's safeguarding policy for disclosures during sessions."],
   },
   {
-    id: "referrals", group: "Operations", icon: <TeamOutlined />, color: "#059669",
+    id: "referrals", group: "Operations", icon: <TeamOutlined />, color: "var(--success-hover)",
     title: "Student Referrals", subtitle: "Manage counseling referrals and sessions",
     badge: "Counseling",
     overview: "Teachers and parents can refer students for counseling. You receive, accept, schedule, and close referrals from your workspace.",
@@ -741,7 +741,7 @@ const COUNSELOR_DOCS = [
 
 const SECURITY_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <SafetyCertificateOutlined />, color: "#DC2626",
+    id: "overview", group: "Getting Started", icon: <SafetyCertificateOutlined />, color: "var(--danger-hover)",
     title: "Security Dashboard", subtitle: "Campus security operations guide",
     badge: "Start Here",
     overview: "As Security Officer, you manage campus access control, incident logging, visitor verification, and daily security reports.",
@@ -757,7 +757,7 @@ const SECURITY_DOCS = [
     tips: ["Any unverified person attempting campus entry must be denied and reported immediately.", "Incident reports should be filed within 2 hours of the event."],
   },
   {
-    id: "access", group: "Operations", icon: <SafetyCertificateOutlined />, color: "#B45309",
+    id: "access", group: "Operations", icon: <SafetyCertificateOutlined />, color: "var(--warning-hover)",
     title: "Gate & Access Control", subtitle: "Manage campus entry and exit",
     badge: "Access",
     overview: "Every person entering or leaving campus must be logged. Use the gate log for staff, students (late arrivals), and visitors.",
@@ -777,7 +777,7 @@ const SECURITY_DOCS = [
 
 const STUDENT_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Student Portal Guide", subtitle: "Your student dashboard explained",
     badge: "Start Here",
     overview: "Your student portal gives you access to your attendance, exam results, timetable, fee status, library account, and school announcements — all in one place.",
@@ -795,7 +795,7 @@ const STUDENT_DOCS = [
     tips: ["Log in daily to stay updated on exam schedules and school notices.", "If you spot an error in your attendance or marks, inform your class teacher immediately."],
   },
   {
-    id: "attendance", group: "Academics", icon: <CheckSquareOutlined />, color: "#059669",
+    id: "attendance", group: "Academics", icon: <CheckSquareOutlined />, color: "var(--success-hover)",
     title: "My Attendance", subtitle: "Track your attendance record",
     badge: "Attendance",
     overview: "View your day-by-day attendance for the current academic year. Check your overall attendance percentage and identify which dates you were absent.",
@@ -811,7 +811,7 @@ const STUDENT_DOCS = [
     tips: ["Minimum attendance is typically 75%. Contact your counselor if you're at risk.", "Medical leave with a valid certificate may be counted differently — check with your class teacher."],
   },
   {
-    id: "results", group: "Academics", icon: <FileTextOutlined />, color: "#7C3AED",
+    id: "results", group: "Academics", icon: <FileTextOutlined />, color: "var(--purple)",
     title: "Exam Results", subtitle: "View marks, rank, and report cards",
     badge: "Results",
     overview: "Access your exam results as soon as they are published by the Exam Coordinator. Download your report card as a PDF.",
@@ -826,7 +826,7 @@ const STUDENT_DOCS = [
     tips: ["Results are only visible after the Exam Coordinator officially publishes them.", "Contact your teacher if you believe there is an error in your marks."],
   },
   {
-    id: "fees", group: "Finance", icon: <DollarOutlined />, color: "#DC2626",
+    id: "fees", group: "Finance", icon: <DollarOutlined />, color: "var(--danger-hover)",
     title: "Fee Statement", subtitle: "View and download fee records",
     badge: "Fees",
     overview: "View your complete fee statement — what has been collected, what is pending, and download receipts for paid installments.",
@@ -845,7 +845,7 @@ const STUDENT_DOCS = [
 
 const PARENT_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Parent Portal Guide", subtitle: "Stay connected with your child's school life",
     badge: "Start Here",
     overview: "Your Parent portal gives you real-time visibility into your child's attendance, exam results, fee payments, timetable, and school announcements.",
@@ -862,7 +862,7 @@ const PARENT_DOCS = [
     tips: ["Enable browser notifications to receive real-time alerts for absent days and fee dues.", "If you have multiple children in the same school, switch between them from the top profile selector."],
   },
   {
-    id: "attendance", group: "Monitoring", icon: <CheckSquareOutlined />, color: "#059669",
+    id: "attendance", group: "Monitoring", icon: <CheckSquareOutlined />, color: "var(--success-hover)",
     title: "Child's Attendance", subtitle: "Monitor daily attendance in real time",
     badge: "Attendance",
     overview: "View your child's attendance day by day and receive alerts when they are marked absent.",
@@ -878,7 +878,7 @@ const PARENT_DOCS = [
     tips: ["Attendance is marked by the class teacher daily — usually by 10 AM.", "If your child is sick, inform the class teacher by phone the same day to avoid an unexplained absence."],
   },
   {
-    id: "results", group: "Monitoring", icon: <FileTextOutlined />, color: "#7C3AED",
+    id: "results", group: "Monitoring", icon: <FileTextOutlined />, color: "var(--purple)",
     title: "Exam Results", subtitle: "View marks and download report cards",
     badge: "Results",
     overview: "Access your child's exam results as soon as the school publishes them. Download printable report cards.",
@@ -893,7 +893,7 @@ const PARENT_DOCS = [
     tips: ["Results appear only after the school officially publishes them — no preview before publishing.", "For result queries, contact the class teacher or exam coordinator."],
   },
   {
-    id: "fees", group: "Finance", icon: <DollarOutlined />, color: "#DC2626",
+    id: "fees", group: "Finance", icon: <DollarOutlined />, color: "var(--danger-hover)",
     title: "Fee Payments", subtitle: "Track fee dues and payment history",
     badge: "Fees",
     overview: "View your child's fee statement, track overdue payments, and download receipts for your records.",
@@ -912,7 +912,7 @@ const PARENT_DOCS = [
 
 const STAFF_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Staff Portal Guide", subtitle: "Your staff workspace at a glance",
     badge: "Start Here",
     overview: "Your Staff portal gives you access to your attendance, leave management, salary information, task assignments, and school notices.",
@@ -930,7 +930,7 @@ const STAFF_DOCS = [
     tips: ["Use GPS check-in on the school premises to avoid attendance discrepancies.", "Apply for leave at least 24 hours in advance wherever possible."],
   },
   {
-    id: "attendance", group: "Operations", icon: <CheckSquareOutlined />, color: "#059669",
+    id: "attendance", group: "Operations", icon: <CheckSquareOutlined />, color: "var(--success-hover)",
     title: "My Attendance", subtitle: "Track your daily attendance",
     badge: "Attendance",
     overview: "Your attendance is recorded via GPS check-in/check-out. View your history and apply for leave corrections if there are discrepancies.",
@@ -946,7 +946,7 @@ const STAFF_DOCS = [
     tips: ["GPS check-in only works when you are physically within the school boundary.", "Check 'My Attendance' monthly to verify your records before payroll is processed."],
   },
   {
-    id: "leave", group: "Operations", icon: <CalendarOutlined />, color: "#D97706",
+    id: "leave", group: "Operations", icon: <CalendarOutlined />, color: "var(--warning-hover)",
     title: "Leave Management", subtitle: "Apply and track leave requests",
     badge: "Leave",
     overview: "Apply for various leave types (Casual, Sick, Earned, LOP) and track approval status from your leave history.",
@@ -962,7 +962,7 @@ const STAFF_DOCS = [
     tips: ["Sick leave applied after the absence must include a medical certificate.", "Your available leave balance is shown before you apply."],
   },
   {
-    id: "payslip", group: "Finance", icon: <DollarOutlined />, color: "#7C3AED",
+    id: "payslip", group: "Finance", icon: <DollarOutlined />, color: "var(--purple)",
     title: "My Payslips", subtitle: "View and download monthly salary slips",
     badge: "Finance",
     overview: "Access your payslips for every month where the Accountant has completed the payroll cycle.",
@@ -980,7 +980,7 @@ const STAFF_DOCS = [
 
 const MEDICAL_OFFICER_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "#2563EB",
+    id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Medical Officer Workspace", subtitle: "School health management guide",
     badge: "Start Here",
     overview: "As Medical Officer, you manage student and staff health records, medical room visits, health screenings, emergency responses, and health reports.",
@@ -996,7 +996,7 @@ const MEDICAL_OFFICER_DOCS = [
     tips: ["Any student visit involving medication administration must be logged with parent notification.", "Emergency protocols must be followed for all serious cases — always call 108 and inform School Admin simultaneously."],
   },
   {
-    id: "records", group: "Operations", icon: <HeartOutlined />, color: "#DC2626",
+    id: "records", group: "Operations", icon: <HeartOutlined />, color: "var(--danger-hover)",
     title: "Health Records", subtitle: "Manage student medical histories",
     badge: "Health",
     overview: "Maintain confidential medical records for all students including allergies, chronic conditions, emergency contacts, and vaccination history.",
@@ -1016,7 +1016,7 @@ const MEDICAL_OFFICER_DOCS = [
 
 const LAB_TECHNICIAN_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <ExperimentOutlined />, color: "#0891B2",
+    id: "overview", group: "Getting Started", icon: <ExperimentOutlined />, color: "var(--cyan)",
     title: "Lab Technician Workspace", subtitle: "Laboratory management guide",
     badge: "Start Here",
     overview: "As Lab Technician, you manage lab equipment inventory, consumables, experiment schedules, safety compliance, and lab booking.",
@@ -1032,7 +1032,7 @@ const LAB_TECHNICIAN_DOCS = [
     tips: ["Complete a safety checklist before every lab session.", "Log all chemical usage for compliance and resupply planning."],
   },
   {
-    id: "equipment", group: "Inventory", icon: <SettingOutlined />, color: "#7C3AED",
+    id: "equipment", group: "Inventory", icon: <SettingOutlined />, color: "var(--purple)",
     title: "Equipment Management", subtitle: "Track lab instruments and devices",
     badge: "Inventory",
     overview: "Maintain a complete register of all lab equipment including microscopes, chemical cabinets, computer systems, and specialised instruments.",
@@ -1050,7 +1050,7 @@ const LAB_TECHNICIAN_DOCS = [
 
 const SPORTS_TEACHER_DOCS = [
   {
-    id: "overview", group: "Getting Started", icon: <StarOutlined />, color: "#D97706",
+    id: "overview", group: "Getting Started", icon: <StarOutlined />, color: "var(--warning-hover)",
     title: "Sports Teacher Workspace", subtitle: "Physical education and sports management",
     badge: "Start Here",
     overview: "As Sports Teacher, you manage PE classes, sports activities, team registrations, tournament participation, and sports equipment inventory.",
@@ -1067,7 +1067,7 @@ const SPORTS_TEACHER_DOCS = [
     tips: ["Attendance for PE classes should be marked the same as regular subjects.", "Update tournament results promptly for accurate school achievement records."],
   },
   {
-    id: "classes", group: "Teaching", icon: <CheckSquareOutlined />, color: "#059669",
+    id: "classes", group: "Teaching", icon: <CheckSquareOutlined />, color: "var(--success-hover)",
     title: "PE Classes & Attendance", subtitle: "Manage physical education sessions",
     badge: "Teaching",
     overview: "Your PE class schedule appears in My Classes alongside regular teachers. Mark attendance, plan activities, and record student performance.",
@@ -1111,14 +1111,14 @@ const ROLE_DOC_MAP = {
 };
 
 const ROLE_COLORS = {
-  "school admin": "#2563EB", "principal": "#2563EB", "vice principal": "#0891B2",
-  "teacher": "#7C3AED", "class teacher": "#7C3AED", "sports teacher": "#D97706",
-  "lab technician": "#0891B2", "medical officer": "#DC2626",
-  "subject coordinator": "#059669", "exam coordinator": "#B45309",
-  "accountant": "#DC2626", "librarian": "#7C3AED", "hostel warden": "#059669",
-  "transport manager": "#0891B2", "receptionist": "#64748B", "it support": "#2563EB",
-  "counselor": "#D97706", "security": "#DC2626", "student": "#059669",
-  "parent": "#2563EB", "staff": "#64748B", "support staff": "#64748B",
+  "school admin": "var(--primary)", "principal": "var(--primary)", "vice principal": "var(--cyan)",
+  "teacher": "var(--purple)", "class teacher": "var(--purple)", "sports teacher": "var(--warning-hover)",
+  "lab technician": "var(--cyan)", "medical officer": "var(--danger-hover)",
+  "subject coordinator": "var(--success-hover)", "exam coordinator": "var(--warning-hover)",
+  "accountant": "var(--danger-hover)", "librarian": "var(--purple)", "hostel warden": "var(--success-hover)",
+  "transport manager": "var(--cyan)", "receptionist": "var(--text-secondary)", "it support": "var(--primary)",
+  "counselor": "var(--warning-hover)", "security": "var(--danger-hover)", "student": "var(--success-hover)",
+  "parent": "var(--primary)", "staff": "var(--text-secondary)", "support staff": "var(--text-secondary)",
 };
 
 const GROUP_ORDER = ["Getting Started", "Administration", "Academic", "Teaching", "Curriculum", "Planning", "Operations", "Finance", "Payroll", "Catalog", "Fleet", "Routes", "Counseling", "Access", "Inventory", "Academics", "Monitoring", "Analytics", "Reports"];
@@ -1130,7 +1130,7 @@ const RoleDocumentation = () => {
   const roleKey = roleName.toLowerCase();
 
   const sections = ROLE_DOC_MAP[roleKey] || STAFF_DOCS;
-  const accentColor = ROLE_COLORS[roleKey] || "#2563EB";
+  const accentColor = ROLE_COLORS[roleKey] || "var(--primary)";
 
   const [activeId, setActiveId] = useState(sections[0]?.id || "overview");
   const [search, setSearch] = useState("");
@@ -1209,7 +1209,7 @@ const RoleDocumentation = () => {
                         gap: 10,
                         padding: "9px 16px",
                         border: "none",
-                        background: isActive ? `${s.color}12` : "transparent",
+                        background: isActive ? `color-mix(in srgb, ${s.color} 7%, transparent)` : "transparent",
                         borderRight: isActive ? `3px solid ${s.color}` : "3px solid transparent",
                         cursor: "pointer",
                         transition: "background 0.15s",
@@ -1258,7 +1258,7 @@ const RoleDocumentation = () => {
           </div>
 
           {/* Overview */}
-          <div style={{ ...sectionPanel, background: `${activeSection.color}08`, border: `1px solid ${activeSection.color}20`, marginBottom: 20 }}>
+          <div style={{ ...sectionPanel, background: `color-mix(in srgb, ${activeSection.color} 3%, transparent)`, border: `1px solid color-mix(in srgb, ${activeSection.color} 12%, transparent)`, marginBottom: 20 }}>
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
               <InfoCircleOutlined style={{ color: activeSection.color, fontSize: 15, marginTop: 2 }} />
               <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-primary)", lineHeight: 1.7 }}>
@@ -1289,7 +1289,7 @@ const RoleDocumentation = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {activeSection.checklist.map((item, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                    <CheckCircleOutlined style={{ color: "#22C55E", fontSize: 14, marginTop: 2, flexShrink: 0 }} />
+                    <CheckCircleOutlined style={{ color: "var(--success)", fontSize: 14, marginTop: 2, flexShrink: 0 }} />
                     <span style={{ fontSize: 13.5, color: "var(--text-primary)", lineHeight: 1.6 }}>{item}</span>
                   </div>
                 ))}
@@ -1299,13 +1299,13 @@ const RoleDocumentation = () => {
 
           {/* Tips */}
           {activeSection.tips?.length > 0 && (
-            <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+            <div style={{ background: "rgba(var(--warning-rgb), 0.06)", border: "1px solid rgba(var(--warning-rgb), 0.2)", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <BulbOutlined style={{ color: "#B45309", fontSize: 15 }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#B45309" }}>Tips</span>
+                <BulbOutlined style={{ color: "var(--warning-hover)", fontSize: 15 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--warning-hover)" }}>Tips</span>
               </div>
               {activeSection.tips.map((tip, i) => (
-                <div key={i} style={{ fontSize: 13, color: "#92400E", lineHeight: 1.6 }}>• {tip}</div>
+                <div key={i} style={{ fontSize: 13, color: "var(--warning-hover)", lineHeight: 1.6 }}>• {tip}</div>
               ))}
             </div>
           )}
@@ -1329,7 +1329,7 @@ const RoleDocumentation = () => {
                       </button>
                     )}
                     {next && (
-                      <button onClick={() => setActiveId(next.id)} style={{ ...pill(accentColor, `${accentColor}10`), cursor: "pointer", border: `1px solid ${accentColor}30`, padding: "6px 14px", fontSize: 12, fontWeight: 600 }}>
+                      <button onClick={() => setActiveId(next.id)} style={{ ...pill(accentColor, `color-mix(in srgb, ${accentColor} 6%, transparent)`), cursor: "pointer", border: `1px solid color-mix(in srgb, ${accentColor} 18%, transparent)`, padding: "6px 14px", fontSize: 12, fontWeight: 600 }}>
                         {next.title} →
                       </button>
                     )}

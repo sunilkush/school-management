@@ -12,7 +12,7 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#14B8A6", "#2563EB", "#F59E0B", "#22C55E"];
+const STAT_COLORS = ["var(--accent)", "var(--primary)", "var(--warning)", "var(--success)"];
 
 const statusTag = (hw) => {
   if (!hw.submission) return <Tag color="orange">Pending</Tag>;
@@ -87,7 +87,7 @@ const ChildHomework = () => {
         if (!v) return "—";
         const d = dayjs(v);
         const overdue = d.isBefore(dayjs(), "day");
-        return <span style={{ color: overdue ? "#EF4444" : "inherit" }}>{d.format("DD MMM YYYY")}</span>;
+        return <span style={{ color: overdue ? "var(--danger)" : "inherit" }}>{d.format("DD MMM YYYY")}</span>;
       },
     },
     {
@@ -98,7 +98,7 @@ const ChildHomework = () => {
       title: "Grade",
       render: (_, r) =>
         r.submission?.grade !== null && r.submission?.grade !== undefined
-          ? <span style={pill("#22C55E", "rgba(220,252,231,0.2)")}>{r.submission.grade}/100</span>
+          ? <span style={pill("var(--success)", "rgba(var(--success-rgb), 0.2)")}>{r.submission.grade}/100</span>
           : "—",
     },
     {
@@ -198,7 +198,7 @@ const ChildHomework = () => {
               {detailHw.submission?.grade !== null && detailHw.submission?.grade !== undefined && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 4 }}>Grade</div>
-                  <span style={pill("#22C55E", "rgba(220,252,231,0.2)")}>{detailHw.submission.grade}/100</span>
+                  <span style={pill("var(--success)", "rgba(var(--success-rgb), 0.2)")}>{detailHw.submission.grade}/100</span>
                 </div>
               )}
               {detailHw.submission?.feedback && (

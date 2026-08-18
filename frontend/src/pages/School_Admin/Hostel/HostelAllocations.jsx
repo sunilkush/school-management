@@ -10,14 +10,16 @@ import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
+// Shared design tokens (frontend/src/index.css) — replaces a local hardcoded
+// hex palette that never adapted to dark mode.
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
 };
 
 const studentName = (s) => s?.user?.name || s?.name || s?.fullName || "Unnamed Student";
@@ -165,7 +167,7 @@ const HostelAllocations = () => {
             <HomeOutlined style={{ marginRight: 4 }} />{r.room.roomNumber}
           </Tag>
         ) : (
-          <Tag style={{ borderRadius: 20, background: C.warningLight, color: "#92400E", border: "1px solid #FDE68A" }}>
+          <Tag style={{ borderRadius: 20, background: C.warningLight, color: "var(--warning-hover)", border: "1px solid var(--warning-light)" }}>
             Not Assigned
           </Tag>
         ),
@@ -221,9 +223,12 @@ const HostelAllocations = () => {
 
       <div style={{ ...statGrid(160), margin: "20px 0 20px" }}>
         {[
-          { icon: <TeamOutlined />, label: "Total Students", value: stats.total, color: C.primary },
-          { icon: <CheckCircleOutlined />, label: "Allocated", value: stats.allocated, color: C.success },
-          { icon: <ClockCircleOutlined />, label: "Unallocated", value: stats.unallocated, color: C.warning },
+          // Raw hex here (not C.primary/etc): feeds the shared iconWell() helper
+          // (frontend/src/styles/pageStyles.js), which builds its background as
+          // `${color}22` — breaks with a var() string.
+          { icon: <TeamOutlined />, label: "Total Students", value: stats.total, color: "#2563EB" },
+          { icon: <CheckCircleOutlined />, label: "Allocated", value: stats.allocated, color: "#22C55E" },
+          { icon: <ClockCircleOutlined />, label: "Unallocated", value: stats.unallocated, color: "#F59E0B" },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14, border: "1px solid " + C.border,

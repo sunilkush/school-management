@@ -115,7 +115,7 @@ const TeacherLeave = () => {
     {
       title: "Rejection Note",
       dataIndex: "rejectionReason",
-      render: (v) => v ? <span style={{ color: "#EF4444", fontSize: 12 }}>{v}</span> : "—",
+      render: (v) => v ? <span style={{ color: "var(--danger)", fontSize: 12 }}>{v}</span> : "—",
     },
     {
       title: "Submitted",
@@ -146,10 +146,10 @@ const TeacherLeave = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<CalendarOutlined />} label="Total"    value={stats.total}    color="#14B8A6" />
-        <StatCard icon={<CalendarOutlined />} label="Pending"  value={stats.pending}  color="#F59E0B" />
-        <StatCard icon={<CalendarOutlined />} label="Approved" value={stats.approved} color="#22C55E" />
-        <StatCard icon={<CalendarOutlined />} label="Rejected" value={stats.rejected} color="#EF4444" />
+        <StatCard icon={<CalendarOutlined />} label="Total"    value={stats.total}    color="var(--accent)" />
+        <StatCard icon={<CalendarOutlined />} label="Pending"  value={stats.pending}  color="var(--warning)" />
+        <StatCard icon={<CalendarOutlined />} label="Approved" value={stats.approved} color="var(--success)" />
+        <StatCard icon={<CalendarOutlined />} label="Rejected" value={stats.rejected} color="var(--danger)" />
       </div>
 
       <div style={{ ...sectionPanel, marginTop: 0 }}>

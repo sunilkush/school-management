@@ -12,29 +12,39 @@ import {
   pageWrapper, sectionPanel, pill, emptyState,
   statGrid, statCard, statLabel, statValue, iconWell,
 } from "../../../styles/pageStyles.js";
+import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-// Mirrors the app's theme tokens in index.css (--primary/--accent/--success/…) —
-// kept as literal hex here (not var()) so the existing `${color}NN` alpha-suffix
-// trick used throughout this file and styles/pageStyles.js keeps working; these
-// values are identical in light and dark mode, so nothing is lost by inlining them.
-const COLORS = ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B", "#8B5CF6", "#06B6D4", "#3B82F6", "#F97316"];
-const PRIMARY = "#2563EB";
-const SUCCESS = "#22C55E";
-const INFO = "#3B82F6";
+// Shared design tokens (see index.css). PRIMARY/SUCCESS/INFO are the fixed accent
+// colors used outside the per-subject categorical palette below.
+const PRIMARY = "var(--primary)";
+const SUCCESS = "var(--success)";
+const INFO = "var(--info)";
 
-function pickColor(name = "") {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-  return COLORS[Math.abs(h) % COLORS.length];
-}
+// RGB triples for the categorical palette + the fixed tokens above, keyed by their
+// var(--x) string. Used by tint() to build alpha-tinted backgrounds/shadows from a
+// CSS custom property — `${"var(--x)"}NN` hex-alpha-suffix concatenation (the old
+// approach here) doesn't work with var() values, so we go through rgba() instead.
+const CATEGORICAL_RGB = {
+  "var(--primary)": "var(--primary-rgb)",
+  "var(--accent)":  "var(--accent-rgb)",
+  "var(--purple)":  "var(--purple-rgb)",
+  "var(--success)": "var(--success-rgb)",
+  "var(--warning)": "var(--warning-rgb)",
+  "var(--danger)":  "var(--danger-rgb)",
+  "var(--pink)":    "236,72,153",
+  "var(--cyan)":    "6,182,212",
+  "var(--info)":    "59,130,246",
+  "var(--orange)":  "249,115,22",
+};
+const tint = (colorVar, alpha) => `rgba(${CATEGORICAL_RGB[colorVar] || "100,116,139"}, ${alpha})`;
 
 /* ── Period card ─────────────────────────────────────────────────── */
 function PeriodCard({ entry, isActive }) {
   const subject = entry.subjectId?.name || "Subject";
   const teacher = entry.teacherId?.name || "TBA";
-  const color = pickColor(subject);
+  const color = categoricalColorFor(subject);
 
   return (
     <div
@@ -45,17 +55,17 @@ function PeriodCard({ entry, isActive }) {
         border: `1.5px solid ${isActive ? color : "var(--border-muted)"}`,
         borderRadius: 14,
         overflow: "hidden",
-        boxShadow: isActive ? `0 4px 20px ${color}22` : "none",
+        boxShadow: isActive ? `0 4px 20px ${tint(color, 0.13)}` : "none",
         transition: "box-shadow 0.2s, transform 0.2s",
         cursor: "default",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = `0 6px 24px ${color}20`;
+        e.currentTarget.style.boxShadow = `0 6px 24px ${tint(color, 0.125)}`;
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = isActive ? `0 4px 20px ${color}22` : "none";
+        e.currentTarget.style.boxShadow = isActive ? `0 4px 20px ${tint(color, 0.13)}` : "none";
       }}
     >
       {/* Time column */}
@@ -63,7 +73,7 @@ function PeriodCard({ entry, isActive }) {
         style={{
           width: 88,
           flexShrink: 0,
-          background: `${color}12`,
+          background: tint(color, 0.07),
           borderRight: `3px solid ${color}`,
           display: "flex",
           flexDirection: "column",
@@ -77,7 +87,7 @@ function PeriodCard({ entry, isActive }) {
         <span style={{ fontSize: 13, fontWeight: 800, color, lineHeight: 1.3, textAlign: "center" }}>
           {entry.startTime}
         </span>
-        <span style={{ fontSize: 10, color: `${color}80`, fontWeight: 600 }}>—</span>
+        <span style={{ fontSize: 10, color: tint(color, 0.5), fontWeight: 600 }}>—</span>
         <span style={{ fontSize: 13, fontWeight: 800, color, lineHeight: 1.3, textAlign: "center" }}>
           {entry.endTime}
         </span>
@@ -95,7 +105,7 @@ function PeriodCard({ entry, isActive }) {
         }}
       >
         {/* Avatar */}
-        <div style={iconWell(color, 44, { fontSize: 18, fontWeight: 800 })}>
+        <div style={iconWell(color, 44, { fontSize: 18, fontWeight: 800, background: tint(color, 0.13) })}>
           {subject[0].toUpperCase()}
         </div>
 
@@ -122,7 +132,7 @@ function PeriodCard({ entry, isActive }) {
             {isActive && (
               <span
                 style={{
-                  ...pill(SUCCESS, `${SUCCESS}15`),
+                  ...pill(SUCCESS, tint(SUCCESS, 0.08)),
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 3,
@@ -165,7 +175,7 @@ function PeriodCard({ entry, isActive }) {
         </div>
 
         {/* Status pill */}
-        <span style={{ ...pill(color, `${color}15`), flexShrink: 0, fontSize: 11 }}>
+        <span style={{ ...pill(color, tint(color, 0.08)), flexShrink: 0, fontSize: 11 }}>
           Scheduled
         </span>
       </div>
@@ -180,7 +190,7 @@ const StatTile = ({ icon, label, value, color }) => (
       <div style={statLabel(color)}>{label}</div>
       <div style={statValue(color)}>{value}</div>
     </div>
-    <div style={iconWell(color, 40)}>{icon}</div>
+    <div style={iconWell(color, 40, { background: tint(color, 0.13) })}>{icon}</div>
   </div>
 );
 
@@ -293,8 +303,8 @@ export default function StudentTimeTable() {
       <div style={{ ...statGrid(160), marginTop: 20 }}>
         <StatTile icon={<BookOpen size={18} />}    label="Periods This Week" value={stats.total}       color={PRIMARY} />
         <StatTile icon={<ListChecks size={18} />}  label="Today's Classes"   value={stats.todayCount}  color={SUCCESS} />
-        <StatTile icon={<TrendingUp size={18} />}  label="Busiest Day"       value={stats.busiestDay}  color="#8B5CF6" />
-        <StatTile icon={<Coffee size={18} />}      label="Free Days"         value={stats.freeDays}    color="#F59E0B" />
+        <StatTile icon={<TrendingUp size={18} />}  label="Busiest Day"       value={stats.busiestDay}  color="var(--purple)" />
+        <StatTile icon={<Coffee size={18} />}      label="Free Days"         value={stats.freeDays}    color="var(--warning)" />
       </div>
 
       {/* Next class banner */}
@@ -304,14 +314,14 @@ export default function StudentTimeTable() {
             marginBottom: 20,
             padding: "14px 18px",
             borderRadius: 14,
-            background: nextClass ? `${SUCCESS}10` : `${INFO}10`,
-            border: `1px solid ${nextClass ? `${SUCCESS}30` : `${INFO}30`}`,
+            background: nextClass ? tint(SUCCESS, 0.06) : tint(INFO, 0.06),
+            border: `1px solid ${nextClass ? tint(SUCCESS, 0.19) : tint(INFO, 0.19)}`,
             display: "flex",
             alignItems: "center",
             gap: 12,
           }}
         >
-          <div style={iconWell(nextClass ? SUCCESS : INFO, 36)}>
+          <div style={iconWell(nextClass ? SUCCESS : INFO, 36, { background: tint(nextClass ? SUCCESS : INFO, 0.13) })}>
             <ChevronRight size={18} strokeWidth={2.5} />
           </div>
           <div>
@@ -372,7 +382,7 @@ export default function StudentTimeTable() {
                     padding: "1px 5px",
                     borderRadius: 99,
                     lineHeight: "16px",
-                    background: active ? "rgba(255,255,255,0.22)" : `${PRIMARY}15`,
+                    background: active ? "rgba(255,255,255,0.22)" : tint(PRIMARY, 0.08),
                     color: active ? "#fff" : PRIMARY,
                   }}
                 >

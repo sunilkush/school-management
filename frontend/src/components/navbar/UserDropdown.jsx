@@ -133,7 +133,7 @@ const UserDropdown = () => {
           <Avatar
             size={32}
             style={{
-              background: "linear-gradient(135deg, #7c3aed, #06b6d4)",
+              background: "linear-gradient(135deg, var(--purple), var(--cyan))",
               color: "#fff",
               fontSize: 12,
               fontWeight: 700,

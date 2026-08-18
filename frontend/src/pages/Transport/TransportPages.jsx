@@ -48,10 +48,10 @@ export const TransportManagerDashboard = () => {
   }, [dispatch]);
 
   const statCards = [
-    { title: "Total Vehicles",       value: vehicles.length,               color: "#2563EB", icon: <CarOutlined /> },
-    { title: "Active Routes",        value: routes.length,                 color: "#7C3AED", icon: <EnvironmentOutlined /> },
-    { title: "Pending Maintenance",  value: stats.scheduled ?? 0,          color: "#EF4444", icon: <ToolOutlined /> },
-    { title: "Completed This Month", value: stats.completedThisMonth ?? 0, color: "#10B981", icon: <TeamOutlined /> },
+    { title: "Total Vehicles",       value: vehicles.length,               color: "var(--primary)", icon: <CarOutlined /> },
+    { title: "Active Routes",        value: routes.length,                 color: "var(--purple)", icon: <EnvironmentOutlined /> },
+    { title: "Pending Maintenance",  value: stats.scheduled ?? 0,          color: "var(--danger)", icon: <ToolOutlined /> },
+    { title: "Completed This Month", value: stats.completedThisMonth ?? 0, color: "var(--success)", icon: <TeamOutlined /> },
   ];
 
   const upcoming = records
@@ -210,7 +210,7 @@ export const DriversPage = () => {
             <div style={{ textAlign: "center", marginBottom: 20 }}>
               <div style={{
                 width: 64, height: 64, borderRadius: "50%",
-                background: "linear-gradient(135deg, #2563EB, #7C3AED)",
+                background: "linear-gradient(135deg, var(--primary), var(--purple))",
                 color: "#fff", fontSize: 24, fontWeight: 700,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 margin: "0 auto 10px",
@@ -351,14 +351,14 @@ export const VehicleMaintenance = () => {
     <PageWrap title="Vehicle Maintenance" icon={<ToolOutlined />}>
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         {[
-          { label: "Completed This Month", value: stats.completedThisMonth ?? 0,                              color: "#10B981" },
-          { label: "Scheduled",            value: stats.scheduled ?? 0,                                        color: "#2563EB" },
-          { label: "Total Cost (Month)",   value: `₹${(stats.totalCostThisMonth ?? 0).toLocaleString()}`,     color: "#7C3AED" },
+          { label: "Completed This Month", value: stats.completedThisMonth ?? 0,                              color: "var(--success)" },
+          { label: "Scheduled",            value: stats.scheduled ?? 0,                                        color: "var(--primary)" },
+          { label: "Total Cost (Month)",   value: `₹${(stats.totalCostThisMonth ?? 0).toLocaleString()}`,     color: "var(--purple)" },
         ].map((s) => (
           <Col xs={24} sm={8} key={s.label}>
             <Card style={{ textAlign: "center", borderTop: `4px solid ${s.color}` }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
-              <div style={{ color: "#6B7280", fontSize: 13 }}>{s.label}</div>
+              <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>{s.label}</div>
             </Card>
           </Col>
         ))}

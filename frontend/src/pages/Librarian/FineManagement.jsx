@@ -135,7 +135,7 @@ const FineManagement = () => {
       width: 120,
       render: (_, r) => (
         <div>
-          <div style={{ fontSize: 12 }}>Due: <span style={{ color: "#EF4444", fontWeight: 600 }}>{r.dueDate}</span></div>
+          <div style={{ fontSize: 12 }}>Due: <span style={{ color: "var(--danger)", fontWeight: 600 }}>{r.dueDate}</span></div>
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Returned: {r.returnDate}</div>
         </div>
       ),
@@ -154,7 +154,7 @@ const FineManagement = () => {
       dataIndex: "fine",
       width: 110,
       sorter: (a, b) => a.fine - b.fine,
-      render: (f) => <span style={{ fontWeight: 700, fontSize: 15, color: "#EF4444" }}>₹{f}</span>,
+      render: (f) => <span style={{ fontWeight: 700, fontSize: 15, color: "var(--danger)" }}>₹{f}</span>,
     },
     {
       title: "Fine Status",
@@ -204,10 +204,10 @@ const FineManagement = () => {
       {/* ── Summary KPIs ──────────────────────────────────────────── */}
       <div style={statGrid(150)}>
         {[
-          { label: "Total Records",    value: summary.totalRecords,   color: "#0891b2", icon: <FilterOutlined /> },
-          { label: "Pending Fines",    value: `₹${summary.totalPending}`,   color: "#EF4444", icon: <RupeeIcon /> },
-          { label: "Collected",        value: `₹${summary.totalCollected}`, color: "#22C55E", icon: <CheckCircleOutlined /> },
-          { label: "Waived",           value: `₹${summary.totalWaived}`,    color: "#64748B", icon: <CloseCircleOutlined /> },
+          { label: "Total Records",    value: summary.totalRecords,   color: "var(--cyan)", icon: <FilterOutlined /> },
+          { label: "Pending Fines",    value: `₹${summary.totalPending}`,   color: "var(--danger)", icon: <RupeeIcon /> },
+          { label: "Collected",        value: `₹${summary.totalCollected}`, color: "var(--success)", icon: <CheckCircleOutlined /> },
+          { label: "Waived",           value: `₹${summary.totalWaived}`,    color: "var(--text-secondary)", icon: <CloseCircleOutlined /> },
         ].map(({ label, value, color, icon }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>
@@ -273,7 +273,7 @@ const FineManagement = () => {
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
                 Borrower: <strong>{selectedRecord.borrowerName}</strong>
               </div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: "#EF4444", marginTop: 8 }}>₹{selectedRecord.fine}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "var(--danger)", marginTop: 8 }}>₹{selectedRecord.fine}</div>
             </div>
             <div>
               <div style={{ fontWeight: 600, marginBottom: 6, fontSize: 13 }}>Reason for waiver (optional)</div>

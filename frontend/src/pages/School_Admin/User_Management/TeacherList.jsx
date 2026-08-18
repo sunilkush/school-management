@@ -19,23 +19,23 @@ import {
 } from "../../../styles/pageStyles";
 
 const ROLE_COLORS = {
-  teacher:            { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
-  "school admin":     { color: "#2563EB", bg: "rgba(219,234,254,0.2)" },
-  principal:          { color: "#22C55E", bg: "#d1fae5" },
-  accountant:         { color: "#2563EB", bg: "#e0f2fe" },
-  staff:              { color: "#64748B", bg: "#f1f5f9" },
-  librarian:          { color: "#be123c", bg: "#fff1f2" },
-  "hostel warden":    { color: "#7c2d12", bg: "#fff7ed" },
+  teacher:            { color: "var(--accent)", bg: "rgba(var(--accent-rgb), 0.2)" },
+  "school admin":     { color: "var(--primary)", bg: "rgba(219,234,254,0.2)" },
+  principal:          { color: "var(--success)", bg: "var(--success-light)" },
+  accountant:         { color: "var(--primary)", bg: "#e0f2fe" },
+  staff:              { color: "var(--text-secondary)", bg: "var(--surface-soft)" },
+  librarian:          { color: "#be123c", bg: "var(--danger-light)" },
+  "hostel warden":    { color: "#7c2d12", bg: "rgba(var(--warning-rgb), 0.08)" },
   "transport manager":{ color: "#0e7490", bg: "#ecfeff" },
-  receptionist:       { color: "#6d28d9", bg: "#f5f3ff" },
+  receptionist:       { color: "var(--purple-hover)", bg: "rgba(var(--purple-rgb), 0.08)" },
 };
 
-const getRoleStyle = (name = "") => ROLE_COLORS[name.toLowerCase()] || { color: "#64748B", bg: "#f1f5f9" };
+const getRoleStyle = (name = "") => ROLE_COLORS[name.toLowerCase()] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" };
 
 const STAT_META = [
-  { key: "total",  label: "Total Staff", icon: <TeamOutlined />,         color: "#14B8A6" },
-  { key: "active", label: "Active",       icon: <CheckCircleOutlined />,  color: "#10b981" },
-  { key: "roles",  label: "Roles",        icon: <TagOutlined />,          color: "#F59E0B" },
+  { key: "total",  label: "Total Staff", icon: <TeamOutlined />,         color: "var(--accent)" },
+  { key: "active", label: "Active",       icon: <CheckCircleOutlined />,  color: "var(--success)" },
+  { key: "roles",  label: "Roles",        icon: <TagOutlined />,          color: "var(--warning)" },
 ];
 
 const TeacherList = () => {
@@ -170,11 +170,12 @@ const TeacherList = () => {
       key: "status",
       render: (_, r) => {
         const active = r?.isActive;
-        const color  = active ? "#15803d" : "#991b1b";
-        const dot    = active ? "#22c55e" : "#ef4444";
+        const color  = active ? "var(--success-hover)" : "#991b1b";
+        const dot    = active ? "var(--success)" : "var(--danger)";
+        const dotRing = active ? "rgba(var(--success-rgb), 0.19)" : "rgba(var(--danger-rgb), 0.19)";
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, boxShadow: `0 0 0 2px ${dot}30` }} />
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, boxShadow: `0 0 0 2px ${dotRing}` }} />
             <span style={{ fontSize: 12, fontWeight: 600, color }}>{active ? "Active" : "Inactive"}</span>
           </div>
         );
@@ -196,14 +197,14 @@ const TeacherList = () => {
           <Tooltip title="Edit">
             <Button
               type="text" size="small" icon={<EditOutlined />}
-              style={{ color: "#f59e0b" }}
+              style={{ color: "var(--warning)" }}
               onClick={() => navigate(`/dashboard/schooladmin/users/employee-form?id=${r._id}`)}
             />
           </Tooltip>
           <Tooltip title="Assign Additional Roles">
             <Button
               type="text" size="small" icon={<KeyOutlined />}
-              style={{ color: "#8b5cf6" }}
+              style={{ color: "var(--purple)" }}
               onClick={() => openRoleModal(r)}
             />
           </Tooltip>

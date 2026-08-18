@@ -14,24 +14,27 @@ import { fetchSchoolReports } from "../../../features/reportSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
 import { iconWell, pageWrapper, sectionPanel, statGrid } from "../../../styles/pageStyles.js";
 import { useTheme } from "../../../context/ThemeContext";
+import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 
-const PALETTE = ["#7C3AED", "#2563EB", "#10B981", "#F59E0B", "#EF4444", "#06B6D4", "#EC4899", "#8B5CF6"];
+// Note: GENDER_HEX values are left as raw hex (not var(--token)) because they're
+// consumed both as a direct color AND via `${hex}18` string-concatenation to derive
+// a translucent background below — that trick breaks if the value is a CSS var().
 const GENDER_HEX = { Male: "#2563EB", Female: "#EC4899", Other: "#94A3B8" };
 
 /* ── Custom Tooltip ─────────────────────────────────────────────────── */
-const ChartTip = ({ active, payload, isDark }) => {
+const ChartTip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const { name, value, fill } = payload[0];
   return (
     <div style={{
-      background: isDark ? "#1e293b" : "#fff",
+      background: "var(--surface)",
       border: "1px solid var(--border-muted)", borderRadius: 10,
       padding: "10px 14px", boxShadow: "0 4px 20px rgba(0,0,0,0.14)",
     }}>
       <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 2 }}>{name}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: fill || "#2563EB", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: fill || "var(--primary)", lineHeight: 1 }}>{value}</div>
     </div>
   );
 };
@@ -125,18 +128,20 @@ const SchoolAdminReport = () => {
   const genderStats = (schoolReports?.genderStats || []).map((r) => ({ name: r._id || "Unknown", count: r.count }));
 
   const KPI = [
-    { label: "School Admins", value: summary.adminCount   || 0, color: "#7C3AED", icon: <BankOutlined /> },
-    { label: "Teachers",      value: summary.teacherCount || 0, color: "#2563EB", icon: <SolutionOutlined /> },
-    { label: "Students",      value: summary.studentCount || 0, color: "#10B981", icon: <TeamOutlined /> },
-    { label: "Parents",       value: summary.parentCount  || 0, color: "#F59E0B", icon: <UserOutlined /> },
+    { label: "School Admins", value: summary.adminCount   || 0, color: "var(--purple)", icon: <BankOutlined /> },
+    { label: "Teachers",      value: summary.teacherCount || 0, color: "var(--primary)", icon: <SolutionOutlined /> },
+    { label: "Students",      value: summary.studentCount || 0, color: "var(--success)", icon: <TeamOutlined /> },
+    { label: "Parents",       value: summary.parentCount  || 0, color: "var(--warning)", icon: <UserOutlined /> },
   ];
 
   const hasData  = !accessError && !loading && !error && schoolReports?.academicYear;
-  const axisClr  = isDark ? "#64748B" : "#94A3B8";
-  const gridClr  = isDark ? "#334155" : "#E2E8F0";
+  const axisClr  = "var(--text-muted)";
+  const gridClr  = "var(--border)";
+  // No single token cleanly covers both the light (#F1F5F9) and dark (#334155)
+  // values this cursor highlight used — left as an isDark ternary (see report).
   const cursorBg = isDark ? "#334155" : "#F1F5F9";
 
-  const tipContent = (props) => <ChartTip {...props} isDark={isDark} />;
+  const tipContent = (props) => <ChartTip {...props} />;
   const legendFmt  = (value) => <span style={{ fontSize: 11, color: "var(--text-primary)" }}>{value}</span>;
 
   return (
@@ -215,7 +220,7 @@ const SchoolAdminReport = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 16 }}>
               {/* Role Distribution — Donut */}
               <div style={sectionPanel}>
-                <SectionHd icon={<PieChartOutlined />} title="Role Distribution" color="#7C3AED"
+                <SectionHd icon={<PieChartOutlined />} title="Role Distribution" color="var(--purple)"
                   extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{roleWise.length} roles</Text>}
                 />
                 {roleWise.length === 0 ? <NoData /> : (
@@ -226,7 +231,7 @@ const SchoolAdminReport = () => {
                         innerRadius={68} outerRadius={100} paddingAngle={2}
                       >
                         {roleWise.map((_, i) => (
-                          <Cell key={i} fill={PALETTE[i % PALETTE.length]} stroke="none" />
+                          <Cell key={i} fill={CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]} stroke="none" />
                         ))}
                       </Pie>
                       <Tooltip content={tipContent} />
@@ -238,14 +243,17 @@ const SchoolAdminReport = () => {
 
               {/* Gender Distribution — Donut */}
               <div style={sectionPanel}>
-                <SectionHd icon={<PieChartOutlined />} title="Gender Distribution" color="#2563EB"
+                <SectionHd icon={<PieChartOutlined />} title="Gender Distribution" color="var(--primary)"
                   extra={
                     <Flex gap={6}>
                       {genderStats.map((g, i) => (
                         <span key={i} style={{
                           fontSize: 11, fontWeight: 700, borderRadius: 99, padding: "2px 10px",
-                          background: `${GENDER_HEX[g.name] || PALETTE[i]}18`,
-                          color: GENDER_HEX[g.name] || PALETTE[i],
+                          // GENDER_HEX values stay raw hex specifically so this alpha-suffix trick
+                          // keeps working; the CATEGORICAL_COLORS fallback (var() strings) can't be
+                          // suffixed the same way, so it gets a safe themed background instead.
+                          background: GENDER_HEX[g.name] ? `${GENDER_HEX[g.name]}18` : "var(--surface-soft)",
+                          color: GENDER_HEX[g.name] || CATEGORICAL_COLORS[i],
                         }}>
                           {g.name}: {g.count}
                         </span>
@@ -261,7 +269,7 @@ const SchoolAdminReport = () => {
                         innerRadius={68} outerRadius={100} paddingAngle={2}
                       >
                         {genderStats.map((entry, i) => (
-                          <Cell key={i} fill={GENDER_HEX[entry.name] || PALETTE[i % PALETTE.length]} stroke="none" />
+                          <Cell key={i} fill={GENDER_HEX[entry.name] || CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]} stroke="none" />
                         ))}
                       </Pie>
                       <Tooltip content={tipContent} />
@@ -276,7 +284,7 @@ const SchoolAdminReport = () => {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
               {/* Class-wise — Horizontal Bar */}
               <div style={sectionPanel}>
-                <SectionHd icon={<BarChartOutlined />} title="Class-wise Enrollment" color="#10B981"
+                <SectionHd icon={<BarChartOutlined />} title="Class-wise Enrollment" color="var(--success)"
                   extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{classWise.length} classes · {classWise.reduce((s, c) => s + c.count, 0)} students</Text>}
                 />
                 {classWise.length === 0 ? <NoData /> : (
@@ -295,9 +303,9 @@ const SchoolAdminReport = () => {
                         tick={{ fontSize: 11, fill: axisClr }} axisLine={false} tickLine={false}
                       />
                       <Tooltip content={tipContent} cursor={{ fill: cursorBg }} />
-                      <Bar dataKey="count" name="Students" fill="#10B981" radius={[0, 6, 6, 0]} maxBarSize={20}>
+                      <Bar dataKey="count" name="Students" fill="var(--success)" radius={[0, 6, 6, 0]} maxBarSize={20}>
                         {classWise.map((_, i) => (
-                          <Cell key={i} fill={`${["#10B981", "#0EA5E9", "#06B6D4", "#14B8A6"][i % 4]}`} />
+                          <Cell key={i} fill={`${["var(--success)", "var(--info)", "var(--cyan)", "var(--accent)"][i % 4]}`} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -307,7 +315,7 @@ const SchoolAdminReport = () => {
 
               {/* Section-wise — Horizontal Bar */}
               <div style={sectionPanel}>
-                <SectionHd icon={<BarChartOutlined />} title="Section-wise Enrollment" color="#F59E0B"
+                <SectionHd icon={<BarChartOutlined />} title="Section-wise Enrollment" color="var(--warning)"
                   extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{sectionWise.length} sections · {sectionWise.reduce((s, c) => s + c.count, 0)} students</Text>}
                 />
                 {sectionWise.length === 0 ? <NoData /> : (
@@ -326,9 +334,9 @@ const SchoolAdminReport = () => {
                         tick={{ fontSize: 11, fill: axisClr }} axisLine={false} tickLine={false}
                       />
                       <Tooltip content={tipContent} cursor={{ fill: cursorBg }} />
-                      <Bar dataKey="count" name="Students" fill="#F59E0B" radius={[0, 6, 6, 0]} maxBarSize={20}>
+                      <Bar dataKey="count" name="Students" fill="var(--warning)" radius={[0, 6, 6, 0]} maxBarSize={20}>
                         {sectionWise.map((_, i) => (
-                          <Cell key={i} fill={`${["#F59E0B", "#FB923C", "#FBBF24", "#FCD34D"][i % 4]}`} />
+                          <Cell key={i} fill={`${["var(--warning)", "#FB923C", "#FBBF24", "var(--warning)"][i % 4]}`} />
                         ))}
                       </Bar>
                     </BarChart>

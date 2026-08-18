@@ -13,32 +13,32 @@ import PageHeader from "../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  purple: "var(--purple)", purpleLight: "rgba(var(--purple-rgb), 0.08)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
 };
 
 const TYPE_CFG = {
   period:   { color: C.primary,  bg: C.primaryLighter, label: "Period" },
-  break:    { color: "#F97316",  bg: "#FFF7ED",         label: "Break" },
+  break:    { color: "var(--orange)",  bg: "rgba(var(--warning-rgb), 0.08)", label: "Break" },
   lunch:    { color: C.accent,   bg: C.accentLight,     label: "Lunch" },
-  assembly: { color: "#0EA5E9",  bg: "#F0F9FF",         label: "Assembly" },
+  assembly: { color: "var(--info)",  bg: "var(--info-light)", label: "Assembly" },
   activity: { color: C.success,  bg: C.successLight,    label: "Activity" },
 };
 
 const TypeBadge = ({ type }) => {
-  const cfg = TYPE_CFG[type] || { color: C.textSub, bg: "#F1F5F9", label: type };
+  const cfg = TYPE_CFG[type] || { color: C.textSub, bg: "var(--surface-soft)", label: type };
   return (
     <span style={{
       display: "inline-block", padding: "3px 12px", borderRadius: 20,
       background: cfg.bg, color: cfg.color,
       fontSize: 12, fontWeight: 700,
-      border: `1px solid ${cfg.color}33`,
+      border: `1px solid color-mix(in srgb, ${cfg.color} 20%, transparent)`,
     }}>
       {cfg.label}
     </span>
@@ -118,7 +118,7 @@ export default function TimeSlotManager() {
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 6,
           padding: "4px 14px", borderRadius: 20,
-          background: "#F8FAFC", border: "1px solid " + C.border,
+          background: "var(--background)", border: "1px solid " + C.border,
           fontSize: 13, color: C.textSub, fontWeight: 600,
         }}>
           <ClockCircleOutlined style={{ fontSize: 12, color: C.accent }} />
@@ -178,7 +178,7 @@ export default function TimeSlotManager() {
         {[
           { icon: <ClockCircleOutlined />, label: "Total Slots",    value: stats.total,   color: C.primary },
           { icon: <CalendarOutlined />,    label: "Periods",        value: stats.periods,  color: C.accent },
-          { icon: <CoffeeOutlined />,      label: "Breaks / Lunch", value: stats.breaks,   color: "#F97316" },
+          { icon: <CoffeeOutlined />,      label: "Breaks / Lunch", value: stats.breaks,   color: "var(--orange)" },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14,

@@ -13,6 +13,24 @@ import {
   pageWrapper, sectionPanel, statGrid, statCard, statLabel, statValue,
   pill, tableHeadCss, emptyState,
 } from "../../../styles/pageStyles.js";
+import { categoricalColorFor } from "../../../utils/colorPalette";
+
+// RGB triples for the shared categorical palette, keyed by var(--x) string — used to
+// build an alpha-tinted background from a CSS custom property (rgba() rather than the
+// hex-alpha-suffix trick, which doesn't work once the base color is a var()).
+const CATEGORICAL_RGB = {
+  "var(--primary)": "var(--primary-rgb)",
+  "var(--accent)":  "var(--accent-rgb)",
+  "var(--purple)":  "var(--purple-rgb)",
+  "var(--success)": "var(--success-rgb)",
+  "var(--warning)": "var(--warning-rgb)",
+  "var(--danger)":  "var(--danger-rgb)",
+  "var(--pink)":    "236,72,153",
+  "var(--cyan)":    "6,182,212",
+  "var(--info)":    "59,130,246",
+  "var(--orange)":  "249,115,22",
+};
+const tint = (colorVar, alpha) => `rgba(${CATEGORICAL_RGB[colorVar] || "100,116,139"}, ${alpha})`;
 
 const normalizeUserContext = (rawUser) => {
   const roleName =
@@ -25,16 +43,12 @@ const normalizeUserContext = (rawUser) => {
   };
 };
 
+// Report-type badge colors, sourced from the shared categorical palette (see
+// utils/colorPalette.js) so each type gets a distinct, stable hue like everywhere else.
 const typeColor = (type = "") => {
-  const map = {
-    attendance: { color: "#6366f1", bg: "#6366f115" },
-    exam:       { color: "#0ea5e9", bg: "#0ea5e915" },
-    result:     { color: "#10b981", bg: "#10b98115" },
-    academic:   { color: "#f59e0b", bg: "#f59e0b15" },
-    behaviour:  { color: "#ec4899", bg: "#ec489915" },
-  };
-  const key = type.toLowerCase();
-  return map[key] || { color: "#8b5cf6", bg: "#8b5cf615" };
+  const key = type.toLowerCase() || "other";
+  const color = categoricalColorFor(key);
+  return { color, bg: tint(color, 0.08) };
 };
 
 /* ── Stat card ───────────────────────────────────────────────────── */
@@ -114,10 +128,10 @@ const TeacherReports = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-            background: "#6366f115",
+            background: "rgba(var(--purple-rgb),0.08)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <FileText size={14} color="#6366f1" strokeWidth={1.8} />
+            <FileText size={14} color="var(--purple)" strokeWidth={1.8} />
           </div>
           <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>
             {v || "Untitled Report"}
@@ -175,9 +189,9 @@ const TeacherReports = () => {
 
       {/* ── Stat cards ── */}
       <div style={{ ...statGrid(150), marginTop: 20 }}>
-        <Stat icon={Users}         label="Linked Students"   value={studentCount}    color="#6366f1" loading={summaryLoading} />
-        <Stat icon={CalendarCheck} label="Attendance Marked" value={attendanceCount} color="#0ea5e9" loading={summaryLoading} />
-        <Stat icon={FolderOpen}    label="Reports Available" value={items.length}    color="#10b981" loading={reportsLoading} />
+        <Stat icon={Users}         label="Linked Students"   value={studentCount}    color="var(--purple)" loading={summaryLoading} />
+        <Stat icon={CalendarCheck} label="Attendance Marked" value={attendanceCount} color="var(--info)" loading={summaryLoading} />
+        <Stat icon={FolderOpen}    label="Reports Available" value={items.length}    color="var(--success)" loading={reportsLoading} />
       </div>
 
       {/* ── Reports table ── */}

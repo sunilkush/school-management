@@ -341,7 +341,7 @@ const ClassTeacherAssignmentPage = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 16 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 6 }}>
-              Teacher <span style={{ color: "#ef4444" }}>*</span>
+              Teacher <span style={{ color: "var(--danger)" }}>*</span>
             </div>
             <Select
               showSearch
@@ -356,7 +356,7 @@ const ClassTeacherAssignmentPage = () => {
 
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 6 }}>
-              Class <span style={{ color: "#ef4444" }}>*</span>
+              Class <span style={{ color: "var(--danger)" }}>*</span>
             </div>
             <Select
               style={{ width: "100%" }}

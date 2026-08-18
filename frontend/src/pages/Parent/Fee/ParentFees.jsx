@@ -18,7 +18,7 @@ import { createPayment } from "../../../features/paymentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, sectionPanel,
-  statCard, statLabel, statValue, statGrid,
+  statCard, statLabel, statValue,
 } from "../../../styles/pageStyles";
 
 const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
@@ -39,13 +39,13 @@ const loadRazorpay = () =>
     document.body.appendChild(script);
   });
 
-const STAT_COLORS = ["#6366F1", "#22C55E", "#EF4444"];
+const STAT_COLORS = ["var(--purple)", "var(--success)", "var(--danger)"];
 
 const INST_STATUS = {
-  paid:    { color: "#22C55E", bg: "#DCFCE7", border: "#86EFAC", label: "Paid"    },
-  partial: { color: "#F59E0B", bg: "#FEF3C7", border: "#FCD34D", label: "Partial" },
-  pending: { color: "#64748B", bg: "#F1F5F9", border: "#CBD5E1", label: "Pending" },
-  overdue: { color: "#DC2626", bg: "#FEE2E2", border: "#FCA5A5", label: "Overdue" },
+  paid:    { color: "var(--success)", bg: "var(--success-light)", border: "var(--success-light)", label: "Paid"    },
+  partial: { color: "var(--warning)", bg: "var(--warning-light)", border: "var(--warning)",        label: "Partial" },
+  pending: { color: "var(--text-secondary)", bg: "var(--surface-soft)", border: "var(--border)",   label: "Pending" },
+  overdue: { color: "var(--danger-hover)", bg: "var(--danger-light)", border: "var(--danger-light)", label: "Overdue" },
 };
 
 /* ── Single installment card ── */
@@ -60,9 +60,9 @@ const InstCard = ({ inst, onPay, onPrint }) => {
   return (
     <div style={{
       padding: "14px 16px",
-      border: `1.5px solid ${isOverdue ? "#FCA5A5" : "var(--border-muted)"}`,
+      border: `1.5px solid ${isOverdue ? "var(--danger-light)" : "var(--border-muted)"}`,
       borderRadius: 12,
-      background: isOverdue ? "#FFF5F5" : "var(--surface)",
+      background: isOverdue ? "var(--danger-light)" : "var(--surface)",
       display: "flex",
       alignItems: "center",
       gap: 12,
@@ -89,8 +89,8 @@ const InstCard = ({ inst, onPay, onPrint }) => {
           {inst.installmentName || "Installment"}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12 }}>
-          <CalendarOutlined style={{ color: isOverdue ? "#EF4444" : "var(--text-muted)", fontSize: 11 }} />
-          <span style={{ color: isOverdue ? "#EF4444" : "var(--text-muted)", fontWeight: 500 }}>
+          <CalendarOutlined style={{ color: isOverdue ? "var(--danger)" : "var(--text-muted)", fontSize: 11 }} />
+          <span style={{ color: isOverdue ? "var(--danger)" : "var(--text-muted)", fontWeight: 500 }}>
             {inst.dueDate ? dayjs(inst.dueDate).format("DD MMM YYYY") : "—"}
             {isOverdue && <span style={{ fontWeight: 700 }}> · Overdue</span>}
           </span>
@@ -101,8 +101,8 @@ const InstCard = ({ inst, onPay, onPrint }) => {
       <div style={{ display: "flex", gap: 16, flex: "1 1 220px", flexWrap: "wrap" }}>
         {[
           { label: "Total", value: money(inst.amount),     color: "var(--text-primary)" },
-          { label: "Paid",  value: money(inst.paidAmount), color: "#22C55E"             },
-          { label: "Due",   value: money(due),             color: due > 0 ? "#EF4444" : "#22C55E" },
+          { label: "Paid",  value: money(inst.paidAmount), color: "var(--success)"             },
+          { label: "Due",   value: money(due),             color: due > 0 ? "var(--danger)" : "var(--success)" },
         ].map(({ label, value, color }) => (
           <div key={label}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
@@ -120,7 +120,7 @@ const InstCard = ({ inst, onPay, onPrint }) => {
             {paidPct}% paid
           </div>
           <div style={{ height: 4, borderRadius: 2, background: "var(--border-muted)", overflow: "hidden" }}>
-            <div style={{ width: `${paidPct}%`, height: "100%", background: "#F59E0B", borderRadius: 2 }} />
+            <div style={{ width: `${paidPct}%`, height: "100%", background: "var(--warning)", borderRadius: 2 }} />
           </div>
         </div>
       )}
@@ -171,7 +171,7 @@ const ParentFees = () => {
 
   const { children = [], loading: childrenLoading }          = useSelector((s) => s.studentPortal || {});
   const { myFees = [], loading: feeLoading }                 = useSelector((s) => s.studentFee || {});
-  const { installments = [], loading: installmentLoading }   = useSelector((s) => s.feeInstallment || {});
+  const { installments = [] }                                = useSelector((s) => s.feeInstallment || {});
   const { selectedAcademicYear }                             = useSelector((s) => s.academicYear || {});
 
   const [selectedChildId,     setSelectedChildId]     = useState(null);
@@ -330,7 +330,7 @@ const ParentFees = () => {
           closePayModal();
           refreshFeeData();
         },
-        theme: { color: "#2563EB" },
+        theme: { color: "#2563EB" }, // Razorpay checkout runs in its own iframe/window without our CSS vars — must stay a literal hex
       };
       new window.Razorpay(options).open();
     } catch (err) {
@@ -353,8 +353,8 @@ const ParentFees = () => {
       ),
     },
     { title: "Total", dataIndex: "totalAmount", render: money },
-    { title: "Paid",  dataIndex: "paidAmount",  render: (v) => <span style={{ color: "#22C55E", fontWeight: 600 }}>{money(v)}</span> },
-    { title: "Due",   dataIndex: "dueAmount",   render: (v) => <span style={{ color: "#EF4444", fontWeight: 600 }}>{money(v)}</span> },
+    { title: "Paid",  dataIndex: "paidAmount",  render: (v) => <span style={{ color: "var(--success)", fontWeight: 600 }}>{money(v)}</span> },
+    { title: "Due",   dataIndex: "dueAmount",   render: (v) => <span style={{ color: "var(--danger)", fontWeight: 600 }}>{money(v)}</span> },
     {
       title: "Status",
       dataIndex: "status",
@@ -407,9 +407,9 @@ const ParentFees = () => {
         {/* ── Stat Cards ── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 20 }}>
           {[
-            { label: "Total Fees", value: totalFees, color: "#6366F1", icon: <WalletOutlined />        },
-            { label: "Paid",       value: paidFees,  color: "#22C55E", icon: <CheckCircleOutlined />   },
-            { label: "Pending",    value: dueFees,   color: "#EF4444", icon: <ClockCircleOutlined />   },
+            { label: "Total Fees", value: totalFees, color: "var(--purple)", icon: <WalletOutlined />        },
+            { label: "Paid",       value: paidFees,  color: "var(--success)", icon: <CheckCircleOutlined />   },
+            { label: "Pending",    value: dueFees,   color: "var(--danger)", icon: <ClockCircleOutlined />   },
           ].map(({ label, value, color, icon }) => (
             <div key={label} style={statCard({ color })}>
               <div>
@@ -431,7 +431,7 @@ const ParentFees = () => {
             <Progress
               percent={paidPercent}
               status={paidPercent === 100 ? "success" : "active"}
-              strokeColor="#22C55E"
+              strokeColor="var(--success)"
               trailColor="var(--border-muted)"
               format={(p) => <span style={{ fontWeight: 700 }}>{p}%</span>}
             />
@@ -515,8 +515,8 @@ const ParentFees = () => {
                       {overdueCount > 0 && (
                         <span style={{
                           fontSize: 11, fontWeight: 700,
-                          color: "#DC2626", background: "#FEE2E2",
-                          border: "1px solid #FCA5A5",
+                          color: "var(--danger-hover)", background: "var(--danger-light)",
+                          border: "1px solid var(--danger-light)",
                           padding: "2px 8px", borderRadius: 20,
                         }}>
                           {overdueCount} Overdue
@@ -526,9 +526,9 @@ const ParentFees = () => {
                       {/* Amount pills */}
                       <div style={{ display: "flex", gap: 8, flex: 1, flexWrap: "wrap", justifyContent: "flex-end" }}>
                         {[
-                          { label: "Total", value: group.totalAmount, color: "#6366F1", bg: "#EEF2FF" },
-                          { label: "Paid",  value: group.paidAmount,  color: "#22C55E", bg: "#DCFCE7" },
-                          { label: "Due",   value: group.dueAmount,   color: "#EF4444", bg: "#FEE2E2" },
+                          { label: "Total", value: group.totalAmount, color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.12)" },
+                          { label: "Paid",  value: group.paidAmount,  color: "var(--success)", bg: "var(--success-light)" },
+                          { label: "Due",   value: group.dueAmount,   color: "var(--danger)", bg: "var(--danger-light)" },
                         ].map(({ label, value, color, bg }) => (
                           <div key={label} style={{
                             display: "flex", alignItems: "center", gap: 5,
@@ -554,7 +554,7 @@ const ParentFees = () => {
                         <div style={{ flex: 1 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                             <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Payment Progress</span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: groupPct === 100 ? "#22C55E" : "var(--text-primary)" }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: groupPct === 100 ? "var(--success)" : "var(--text-primary)" }}>
                               {groupPct}%
                             </span>
                           </div>
@@ -562,7 +562,7 @@ const ParentFees = () => {
                             <div style={{
                               width: `${groupPct}%`,
                               height: "100%",
-                              background: groupPct === 100 ? "#22C55E" : groupPct > 50 ? "#F59E0B" : "#EF4444",
+                              background: groupPct === 100 ? "var(--success)" : groupPct > 50 ? "var(--warning)" : "var(--danger)",
                               borderRadius: 3,
                               transition: "width 0.4s ease",
                             }} />
@@ -623,7 +623,7 @@ const ParentFees = () => {
                     <span style={{ fontWeight: 700 }}>{selectedInstallment.installmentName}</span>
                   </Descriptions.Item>
                   <Descriptions.Item label="Due Amount">
-                    <span style={{ color: "#EF4444", fontSize: 16, fontWeight: 700 }}>
+                    <span style={{ color: "var(--danger)", fontSize: 16, fontWeight: 700 }}>
                       {money(Number(selectedInstallment.amount || 0) - Number(selectedInstallment.paidAmount || 0))}
                     </span>
                   </Descriptions.Item>
@@ -661,12 +661,12 @@ const ParentFees = () => {
                       onClick={() => { setPaymentMethod(opt.value); setChequeNo(""); }}
                       style={{
                         padding: "10px 14px", borderRadius: 12,
-                        border: `2px solid ${paymentMethod === opt.value ? "#2563EB" : "var(--border-muted)"}`,
-                        background: paymentMethod === opt.value ? "#EFF6FF" : "var(--surface)",
+                        border: `2px solid ${paymentMethod === opt.value ? "var(--primary)" : "var(--border-muted)"}`,
+                        background: paymentMethod === opt.value ? "var(--primary-light)" : "var(--surface)",
                         cursor: "pointer", transition: "all 0.15s",
                       }}
                     >
-                      <div style={{ fontWeight: 600, color: paymentMethod === opt.value ? "#2563EB" : "var(--text-primary)" }}>
+                      <div style={{ fontWeight: 600, color: paymentMethod === opt.value ? "var(--primary)" : "var(--text-primary)" }}>
                         {opt.label}
                       </div>
                       <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{opt.desc}</div>

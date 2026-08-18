@@ -6,12 +6,12 @@ import { useTheme } from "../../../../context/ThemeContext";
 const { Text } = Typography;
 
 const colorMap = {
-  blue:   { accent: "#2563EB", bg: "rgba(219,234,254,0.20)", glow: "rgba(219,234,254,0.25)", bar: "#DBEAFE" },
-  purple: { accent: "#14B8A6", bg: "rgba(20,184,166,0.20)", glow: "rgba(20,184,166,0.25)", bar: "rgba(20,184,166,0.15)" },
-  green:  { accent: "#22C55E", bg: "rgba(220,252,231,0.22)", glow: "rgba(220,252,231,0.28)", bar: "#DCFCE7" },
-  orange: { accent: "#F59E0B", bg: "rgba(254,243,199,0.30)", glow: "rgba(254,243,199,0.38)", bar: "#FEF3C7" },
-  teal:   { accent: "#22C55E", bg: "rgba(220,252,231,0.22)", glow: "rgba(220,252,231,0.28)", bar: "#DCFCE7" },
-  pink:   { accent: "#EF4444", bg: "rgba(254,226,226,0.22)", glow: "rgba(254,226,226,0.28)", bar: "#FEE2E2" },
+  blue:   { accent: "var(--primary)", bg: "rgba(var(--primary-rgb), 0.20)", glow: "rgba(var(--primary-rgb), 0.25)", bar: "var(--primary-light)" },
+  purple: { accent: "var(--accent)", bg: "rgba(var(--accent-rgb), 0.20)", glow: "rgba(var(--accent-rgb), 0.25)", bar: "rgba(var(--accent-rgb), 0.15)" },
+  green:  { accent: "var(--success)", bg: "rgba(var(--success-rgb), 0.22)", glow: "rgba(var(--success-rgb), 0.28)", bar: "var(--success-light)" },
+  orange: { accent: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.30)", glow: "rgba(var(--warning-rgb), 0.38)", bar: "var(--warning-light)" },
+  teal:   { accent: "var(--success)", bg: "rgba(var(--success-rgb), 0.22)", glow: "rgba(var(--success-rgb), 0.28)", bar: "var(--success-light)" },
+  pink:   { accent: "var(--danger)", bg: "rgba(var(--danger-rgb), 0.22)", glow: "rgba(var(--danger-rgb), 0.28)", bar: "var(--danger-light)" },
 };
 
 const SummaryCard = ({
@@ -26,14 +26,14 @@ const SummaryCard = ({
   const c = colorMap[color] ?? colorMap.blue;
   const isDecrease = trend.toLowerCase().includes("decrease");
 
-  const cardBg  = isDark ? "#1A2235" : "#ffffff";
-  const border  = isDark ? "#2A3550" : "#E2E8F0";
-  const textPri = isDark ? "#E8EDF7" : "#0F172A";
-  const textSec = isDark ? "#64748B" : "#94A3B8";
-  const trackBg = isDark ? "#243047" : "#F1F5F9";
+  const cardBg  = "var(--surface)";
+  const border  = "var(--border)";
+  const textPri = "var(--text)";
+  const textSec = "var(--text-muted)";
+  const trackBg = "var(--surface-soft)";
 
-  const trendColor = isDecrease ? "#EF4444" : "#22C55E";
-  const trendBg    = isDecrease ? "rgba(254,226,226,0.20)" : "rgba(220,252,231,0.22)";
+  const trendColor = isDecrease ? "var(--danger)" : "var(--success)";
+  const trendBg    = isDecrease ? "rgba(var(--danger-rgb), 0.20)" : "rgba(var(--success-rgb), 0.22)";
 
   return (
     <div style={{
@@ -92,7 +92,7 @@ const SummaryCard = ({
         {/* Circular ring indicator */}
         <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
           <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-            <circle cx="26" cy="26" r="22" stroke={isDark ? "#2a2a2a" : "#f3f4f6"} strokeWidth="4" />
+            <circle cx="26" cy="26" r="22" stroke="var(--border-muted)" strokeWidth="4" />
             <circle
               cx="26" cy="26" r="22"
               stroke={c.accent}

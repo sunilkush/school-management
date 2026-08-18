@@ -1,27 +1,25 @@
 import React, { useState } from "react";
 import { Select, Typography } from "antd";
-import { useTheme } from "../../../../context/ThemeContext";
 
 const { Text } = Typography;
 const { Option } = Select;
 
 const SalaryStatistics = ({ stats = [] }) => {
-  const { isDark } = useTheme();
   const [period, setPeriod] = useState("lastMonth");
 
   const dynamicStats = stats.length
     ? stats
     : [
-        { title: "Teaching", value: 0, color: "#1677ff" },
-        { title: "Administration", value: 0, color: "#14B8A6" },
+        { title: "Teaching", value: 0, color: "var(--primary)" },
+        { title: "Administration", value: 0, color: "var(--accent)" },
       ];
 
   const maxValue = Math.max(...dynamicStats.map((s) => s.value), 1);
-  const cardBg = isDark ? "#141414" : "#ffffff";
-  const border = isDark ? "#1f1f1f" : "#f0f0f0";
-  const textPri = isDark ? "#e8e8e8" : "#111827";
-  const textSec = isDark ? "#6b7280" : "#9ca3af";
-  const trackBg = isDark ? "#1f1f1f" : "#f3f4f6";
+  const cardBg = "var(--surface)";
+  const border = "var(--border)";
+  const textPri = "var(--text)";
+  const textSec = "var(--text-muted)";
+  const trackBg = "var(--border-muted)";
 
   return (
     <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 14, padding: "20px 20px 16px", height: "100%" }}>
@@ -43,7 +41,7 @@ const SalaryStatistics = ({ stats = [] }) => {
             <div key={item.title} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
               <Text style={{ fontSize: 13, fontWeight: 700, color: item.color }}>₹{Math.round(item.value).toLocaleString("en-IN")}</Text>
               <div style={{ width: "100%", height: 120, background: trackBg, borderRadius: 8, display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
-                <div style={{ width: "100%", height: `${pct}%`, background: `linear-gradient(180deg, ${item.color}cc 0%, ${item.color} 100%)` }} />
+                <div style={{ width: "100%", height: `${pct}%`, background: item.color }} />
               </div>
               <Text style={{ fontSize: 11.5, color: textSec, fontWeight: 500 }}>{item.title}</Text>
             </div>

@@ -23,13 +23,13 @@ const ALERT_TYPE_OPTIONS = ["Fire", "Medical Emergency", "Security Breach", "Nat
 
 const SeverityBadge = ({ severity }) => {
   const color = severityColor(severity);
-  return <span style={pill(color, `${color}14`)}>{severity}</span>;
+  return <span style={pill(color, `color-mix(in srgb, ${color} 8%, transparent)`)}>{severity}</span>;
 };
 
 const AlertStatusBadge = ({ isResolved }) =>
   isResolved
-    ? <span style={pill("#16A34A", "rgba(220,252,231,0.5)")}>Resolved</span>
-    : <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>Open</span>;
+    ? <span style={pill("var(--success)", "rgba(var(--success-rgb), 0.5)")}>Resolved</span>
+    : <span style={pill("var(--danger-hover)", "rgba(var(--danger-rgb), 0.5)")}>Open</span>;
 
 const EmergencyAlerts = () => {
   const dispatch = useDispatch();
@@ -120,9 +120,9 @@ const EmergencyAlerts = () => {
       {summary.highOpen > 0 && (
         <div style={{
           borderRadius: 16,
-          background: "linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 50%, #FFF1F2 100%)",
-          border: "1px solid #FECDD3",
-          borderLeft: "5px solid #DC2626",
+          background: "linear-gradient(135deg, var(--danger-light) 0%, rgba(var(--danger-rgb), 0.18) 50%, var(--danger-light) 100%)",
+          border: "1px solid var(--danger-light)",
+          borderLeft: "5px solid var(--danger-hover)",
           padding: "16px 22px",
           marginBottom: 20,
           display: "flex",
@@ -131,13 +131,13 @@ const EmergencyAlerts = () => {
         }}>
           <div style={{
             width: 44, height: 44, borderRadius: 14, flexShrink: 0,
-            background: "#DC262622", color: "#DC2626",
+            background: "rgba(var(--danger-rgb), 0.13)", color: "var(--danger-hover)",
             display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
           }}>
             <AlertOutlined />
           </div>
           <div>
-            <Text strong style={{ fontSize: 14, color: "#DC2626", display: "block" }}>
+            <Text strong style={{ fontSize: 14, color: "var(--danger-hover)", display: "block" }}>
               {summary.highOpen} high-severity {summary.highOpen === 1 ? "alert needs" : "alerts need"} immediate attention
             </Text>
             <Text style={{ fontSize: 12, color: "#9F1239" }}>Review and resolve open high-severity alerts below</Text>
@@ -148,10 +148,10 @@ const EmergencyAlerts = () => {
       {/* ── KPI summary ───────────────────────────────────────────── */}
       <div style={statGrid(160)}>
         {[
-          { label: "Total Alerts",   value: summary.total,    icon: <FileTextOutlined />,   color: "#0891b2" },
-          { label: "Open",           value: summary.open,     icon: <AlertOutlined />,       color: "#DC2626" },
-          { label: "Resolved",       value: summary.resolved, icon: <CheckCircleOutlined />, color: "#16A34A" },
-          { label: "High Severity",  value: summary.highOpen, icon: <ThunderboltOutlined />, color: "#D97706" },
+          { label: "Total Alerts",   value: summary.total,    icon: <FileTextOutlined />,   color: "var(--cyan)" },
+          { label: "Open",           value: summary.open,     icon: <AlertOutlined />,       color: "var(--danger-hover)" },
+          { label: "Resolved",       value: summary.resolved, icon: <CheckCircleOutlined />, color: "var(--success)" },
+          { label: "High Severity",  value: summary.highOpen, icon: <ThunderboltOutlined />, color: "var(--warning-hover)" },
         ].map(({ label, value, icon, color }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>

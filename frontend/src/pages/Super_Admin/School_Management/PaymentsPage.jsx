@@ -290,7 +290,7 @@ export default function PaymentsPage() {
                 {
                   title: "Amount",
                   dataIndex: "totalAmount",
-                  render: (amount) => <span style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(amount)}</span>,
+                  render: (amount) => <span style={{ fontWeight: 700, color: "var(--success-hover)" }}>{formatCurrency(amount)}</span>,
                 },
                 {
                   title: "Due Date",
@@ -359,7 +359,7 @@ export default function PaymentsPage() {
 
         <div style={{ ...sectionPanel, marginTop: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-            <CreditCardOutlined style={{ color: "#14B8A6" }} />
+            <CreditCardOutlined style={{ color: "var(--accent)" }} />
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Payment History</span>
             <span style={pill("#14B8A6")}>{filteredPayments.length}</span>
 
@@ -395,7 +395,7 @@ export default function PaymentsPage() {
                 {
                   title: "Amount",
                   dataIndex: "amount",
-                  render: (amount) => <span style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(amount)}</span>,
+                  render: (amount) => <span style={{ fontWeight: 700, color: "var(--success-hover)" }}>{formatCurrency(amount)}</span>,
                 },
                 {
                   title: "Transaction ID",
@@ -453,7 +453,7 @@ export default function PaymentsPage() {
               <div style={{ borderTop: "1px dashed var(--border-muted)", paddingTop: 10 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Total Amount</span>
-                  <span style={{ fontWeight: 700, color: "#15803D", fontSize: 18 }}>{formatCurrency(selectedInvoice.totalAmount)}</span>
+                  <span style={{ fontWeight: 700, color: "var(--success-hover)", fontSize: 18 }}>{formatCurrency(selectedInvoice.totalAmount)}</span>
                 </div>
               </div>
             </Space>

@@ -20,26 +20,32 @@ import {
 
 const { RangePicker } = DatePicker;
 
+// NOTE: `color` fields here are passed into the shared `pill()` helper
+// (frontend/src/styles/pageStyles.js), which builds its border as
+// `1px solid ${color}25` — a raw-hex alpha-suffix trick that breaks with a
+// var() string (produces invalid CSS like "var(--accent)25"). Since that
+// helper is outside this task's scope, `color` is left as hex; `bg` (used
+// directly, no suffix) is safely converted to shared tokens.
 const TYPE_STYLE = {
-  Event:    { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
-  Holiday:  { color: "#22C55E", bg: "#d1fae5" },
-  Meeting:  { color: "#2563EB", bg: "#e0f2fe" },
-  Exam:     { color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
-  Activity: { color: "#F59E0B", bg: "#fff7ed" },
+  Event:    { color: "#14B8A6", bg: "rgba(var(--accent-rgb), 0.2)" },
+  Holiday:  { color: "#22C55E", bg: "var(--success-light)" },
+  Meeting:  { color: "#2563EB", bg: "var(--primary-light)" },
+  Exam:     { color: "#EF4444", bg: "var(--danger-light)" },
+  Activity: { color: "#F59E0B", bg: "rgba(var(--warning-rgb), 0.08)" },
   Reminder: { color: "#0e7490", bg: "#ecfeff" },
 };
 
 const STATUS_STYLE = {
-  scheduled: { color: "#2563EB", bg: "#e0f2fe" },
-  cancelled:  { color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
-  completed:  { color: "#22C55E", bg: "#d1fae5" },
+  scheduled: { color: "#2563EB", bg: "var(--primary-light)" },
+  cancelled:  { color: "#EF4444", bg: "var(--danger-light)" },
+  completed:  { color: "#22C55E", bg: "var(--success-light)" },
 };
 
 const STAT_META = [
-  { key: "total",    label: "Total Events", color: "#14B8A6" },
-  { key: "upcoming", label: "Upcoming",     color: "#2563EB" },
-  { key: "past",     label: "Past",         color: "#64748B" },
-  { key: "cancelled",label: "Cancelled",    color: "#EF4444" },
+  { key: "total",    label: "Total Events", color: "var(--accent)" },
+  { key: "upcoming", label: "Upcoming",     color: "var(--primary)" },
+  { key: "past",     label: "Past",         color: "var(--text-secondary)" },
+  { key: "cancelled",label: "Cancelled",    color: "var(--danger)" },
 ];
 
 const toDate = (value) => (value ? dayjs(value).format("YYYY-MM-DD") : "-");
@@ -170,7 +176,7 @@ const Events = () => {
       dataIndex: "type",
       key: "type",
       render: (type) => {
-        const s = TYPE_STYLE[type] || { color: "#64748B", bg: "#f1f5f9" };
+        const s = TYPE_STYLE[type] || { color: "#64748B", bg: "var(--surface-soft)" };
         return <span style={pill(s.color, s.bg)}>{type}</span>;
       },
     },
@@ -185,7 +191,7 @@ const Events = () => {
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        const s = STATUS_STYLE[status] || { color: "#64748B", bg: "#f1f5f9" };
+        const s = STATUS_STYLE[status] || { color: "#64748B", bg: "var(--surface-soft)" };
         return <span style={pill(s.color, s.bg)}>{status}</span>;
       },
     },
@@ -203,7 +209,7 @@ const Events = () => {
       render: (_, record) => (
         <Space size={4}>
           <Tooltip title="Edit">
-            <Button type="text" size="small" icon={<EditOutlined />} style={{ color: "#f59e0b" }} onClick={() => openModal(record)} />
+            <Button type="text" size="small" icon={<EditOutlined />} style={{ color: "var(--warning)" }} onClick={() => openModal(record)} />
           </Tooltip>
           <Popconfirm
             title={`Delete "${record.title}"?`}

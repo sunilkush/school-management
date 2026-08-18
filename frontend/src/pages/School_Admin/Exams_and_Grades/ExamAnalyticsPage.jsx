@@ -19,7 +19,7 @@ const { Text } = Typography;
 
 const ExamAnalyticsPage = () => {
   const dispatch = useDispatch();
-  const { exams = [], analytics, loading, error } = useSelector((state) => state.exams || {});
+  const { exams = [], analytics, error } = useSelector((state) => state.exams || {});
   const [examId, setExamId] = useState();
 
   React.useEffect(() => {
@@ -80,8 +80,8 @@ const ExamAnalyticsPage = () => {
             <div className="stat-grid" style={statGrid(200)}>
               {[
                 { key: "attempts", title: "Total Attempts", value: stats.totalAttempts, color: "var(--primary)", icon: <TeamOutlined /> },
-                { key: "avg", title: "Average Score", value: `${stats.averageScore.toFixed(2)}%`, color: "#2563EB", icon: <TrophyOutlined /> },
-                { key: "pass", title: "Pass Rate", value: `${stats.passRate.toFixed(2)}%`, color: "#22C55E", icon: <BarChartOutlined /> },
+                { key: "avg", title: "Average Score", value: `${stats.averageScore.toFixed(2)}%`, color: "var(--primary)", icon: <TrophyOutlined /> },
+                { key: "pass", title: "Pass Rate", value: `${stats.passRate.toFixed(2)}%`, color: "var(--success)", icon: <BarChartOutlined /> },
               ].map((item) => (
                 <div key={item.key} style={statCard({ color: item.color })}>
                   <div>

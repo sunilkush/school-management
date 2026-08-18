@@ -86,8 +86,8 @@ const KpiCard = ({ icon, label, value, accent, change }) => (
       </div>
       {change && (
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-          <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
-          <span style={{ color: "#22C55E", fontSize: 12 }}>{change}</span>
+          <ArrowUpOutlined style={{ color: "var(--success)", fontSize: 11 }} />
+          <span style={{ color: "var(--success)", fontSize: 12 }}>{change}</span>
         </div>
       )}
     </div>
@@ -188,7 +188,7 @@ const PlatformUsage = () => {
         title: `${row.school} updated`,
         desc: `${row.users.toLocaleString()} users onboarded on ${row.plan} plan`,
         icon: <BankOutlined />,
-        color: idx % 2 === 0 ? "#2563EB" : "#13c2c2",
+        color: idx % 2 === 0 ? "var(--primary)" : "#13c2c2",
         time: new Date(row.createdAt).toLocaleDateString(),
       }));
 
@@ -247,7 +247,7 @@ const PlatformUsage = () => {
           <Avatar
             size={28}
             icon={<BankOutlined />}
-            style={{ background: "rgba(37,99,235,0.15)", color: "#2563EB" }}
+            style={{ background: "rgba(37,99,235,0.15)", color: "var(--primary)" }}
           />
           <Text strong style={{ fontSize: 13 }}>
             {name}
@@ -288,7 +288,7 @@ const PlatformUsage = () => {
             percent={val}
             size="small"
             strokeColor={
-              val >= 75 ? "#22C55E" : val >= 40 ? "#2563EB" : "#F59E0B"
+              val >= 75 ? "var(--success)" : val >= 40 ? "var(--primary)" : "var(--warning)"
             }
             showInfo={false}
           />
@@ -377,28 +377,28 @@ const PlatformUsage = () => {
             label="Total Schools"
             value={stats.schools}
             change="+8 this month"
-            accent="#2563EB"
+            accent="var(--primary)"
           />
           <KpiCard
             icon={<TeamOutlined />}
             label="Total Users"
             value={stats.users.toLocaleString()}
             change="+320 this week"
-            accent="#722ed1"
+            accent="var(--purple)"
           />
           <KpiCard
             icon={<UserOutlined />}
             label="Active Users"
             value={stats.active.toLocaleString()}
             change="59% of total"
-            accent="#22C55E"
+            accent="var(--success)"
           />
           <KpiCard
             icon={<RupeeIcon />}
             label="Revenue"
             value={`₹${stats.revenue.toLocaleString()}`}
             change="+18% growth"
-            accent="#fa8c16"
+            accent="var(--orange)"
           />
         </div>
 
@@ -415,12 +415,12 @@ const PlatformUsage = () => {
             >
               <defs>
                 <linearGradient id="gradUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradActive" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22C55E" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--success)" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="var(--success)" stopOpacity={0} />
                 </linearGradient>
               </defs>
 
@@ -440,20 +440,20 @@ const PlatformUsage = () => {
               <Area
                 type="monotone"
                 dataKey="users"
-                stroke="#2563EB"
+                stroke="var(--primary)"
                 strokeWidth={2.5}
                 fill="url(#gradUsers)"
                 name="Total Users"
-                dot={{ r: 4, fill: "#2563EB" }}
+                dot={{ r: 4, fill: "var(--primary)" }}
               />
               <Area
                 type="monotone"
                 dataKey="active"
-                stroke="#22C55E"
+                stroke="var(--success)"
                 strokeWidth={2}
                 fill="url(#gradActive)"
                 name="Active Users"
-                dot={{ r: 3, fill: "#22C55E" }}
+                dot={{ r: 3, fill: "var(--success)" }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -485,7 +485,7 @@ const PlatformUsage = () => {
 
           <div style={sectionPanel}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <BellOutlined style={{ color: "#fa8c16" }} />
+              <BellOutlined style={{ color: "var(--orange)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Recent Activity</span>
             </div>
             <Timeline
@@ -496,7 +496,7 @@ const PlatformUsage = () => {
                       title: "No recent activity",
                       desc: "No school onboarding activity found yet.",
                       icon: <BellOutlined />,
-                      color: "#94A3B8",
+                      color: "var(--text-muted)",
                       time: "—",
                     },
                   ]

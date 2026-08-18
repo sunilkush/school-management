@@ -9,6 +9,17 @@ import { fetchMyClassTeacherAssignment } from "../../../features/classTeacherSli
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper } from "../../../styles/pageStyles";
 
+// RGB triples for the design tokens used on this page, keyed by var(--x) string — used
+// to build alpha-tinted backgrounds/shadows from a CSS custom property (rgba() rather
+// than the hex-alpha-suffix trick, which doesn't work once the base color is a var()).
+const RGB = {
+  "var(--purple)":  "var(--purple-rgb)",
+  "var(--success)": "var(--success-rgb)",
+  "var(--warning)": "var(--warning-rgb)",
+  "var(--cyan)":    "6,182,212",
+};
+const tint = (colorVar, alpha) => `rgba(${RGB[colorVar] || "100,116,139"}, ${alpha})`;
+
 const QuickCard = ({ icon: Icon, label, color, onClick }) => (
   <button
     onClick={onClick}
@@ -26,12 +37,12 @@ const QuickCard = ({ icon: Icon, label, color, onClick }) => (
       textAlign: "left",
       width: "100%",
     }}
-    onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 4px 18px ${color}30`)}
+    onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 4px 18px ${tint(color, 0.19)}`)}
     onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
   >
     <div style={{
       width: 42, height: 42, borderRadius: 12,
-      background: `${color}18`,
+      background: tint(color, 0.09),
       display: "flex", alignItems: "center", justifyContent: "center",
     }}>
       <Icon size={20} color={color} strokeWidth={1.8} />
@@ -102,7 +113,7 @@ const MyClassPage = () => {
 
       {/* ── Class info card ── */}
       <div style={{
-        background: "linear-gradient(135deg, #7c3aed18, #06b6d418)",
+        background: "linear-gradient(135deg, rgba(var(--purple-rgb),0.09), rgba(6,182,212,0.09))",
         border: "1px solid var(--border-muted)",
         borderRadius: 16,
         padding: "24px 28px",
@@ -114,7 +125,7 @@ const MyClassPage = () => {
       }}>
         <div style={{
           width: 64, height: 64, borderRadius: 16,
-          background: "#7c3aed22",
+          background: "rgba(var(--purple-rgb),0.13)",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 30,
         }}>
@@ -154,25 +165,25 @@ const MyClassPage = () => {
           <QuickCard
             icon={ClipboardCheck}
             label="Mark Attendance"
-            color="#22C55E"
+            color="var(--success)"
             onClick={() => navigate(`/dashboard/${rolePath}/attendance/students`)}
           />
           <QuickCard
             icon={Users}
             label="My Students"
-            color="#7c3aed"
+            color="var(--purple)"
             onClick={() => navigate(`/dashboard/${rolePath}/students`)}
           />
           <QuickCard
             icon={CalendarCheck}
             label="Timetable"
-            color="#06B6D4"
+            color="var(--cyan)"
             onClick={() => navigate(`/dashboard/${rolePath}/timetable`)}
           />
           <QuickCard
             icon={MapPinned}
             label="GPS Check-In"
-            color="#F59E0B"
+            color="var(--warning)"
             onClick={() => navigate(`/dashboard/${rolePath}/attendance/self`)}
           />
         </div>

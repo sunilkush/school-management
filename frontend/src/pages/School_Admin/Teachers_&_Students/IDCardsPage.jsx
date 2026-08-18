@@ -245,7 +245,7 @@ export default function IDCardsPage() {
       render: (v, row) => (
         v
           ? <Avatar src={v} size={38} />
-          : <Avatar size={38} style={{ background: "#2563EB" }}>{(row.fullName || "?")[0]?.toUpperCase()}</Avatar>
+          : <Avatar size={38} style={{ background: "var(--primary)" }}>{(row.fullName || "?")[0]?.toUpperCase()}</Avatar>
       ),
     },
     {
@@ -339,7 +339,7 @@ export default function IDCardsPage() {
         {/* ── Generate panel ─────────────────────────────────── */}
         <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-            <div style={iconWell("#2563EB", 38)}>
+            <div style={iconWell("var(--primary)", 38)}>
               <IdcardOutlined style={{ fontSize: 17 }} />
             </div>
             <div>
@@ -544,7 +544,7 @@ export default function IDCardsPage() {
             <Flex align="center" gap={12} style={{ marginBottom: 12 }}>
               {previewCard.photoUrl
                 ? <Avatar src={previewCard.photoUrl} size={56} />
-                : <Avatar size={56} style={{ background: "#2563EB" }}>{(previewCard.fullName || "?")[0]?.toUpperCase()}</Avatar>}
+                : <Avatar size={56} style={{ background: "var(--primary)" }}>{(previewCard.fullName || "?")[0]?.toUpperCase()}</Avatar>}
               <div>
                 <Text strong style={{ fontSize: 15 }}>{previewCard.fullName}</Text><br />
                 <Text type="secondary" style={{ fontSize: 12 }}>

@@ -26,17 +26,17 @@ const { Option } = Select;
 const { useBreakpoint } = Grid;
 
 const tokens = (isDark) => ({
-  cardBg: isDark ? "#141414" : "#ffffff",
-  innerBg: isDark ? "#0f0f0f" : "#f8faff",
-  border: isDark ? "#1f1f1f" : "#f0f0f0",
-  textPri: isDark ? "#e8e8e8" : "#111827",
-  textSec: isDark ? "#6b7280" : "#9ca3af",
+  cardBg: "var(--surface)",
+  innerBg: "var(--background)",
+  border: "var(--border-muted)",
+  textPri: "var(--text)",
+  textSec: "var(--text-secondary)",
   accent: "#1677ff",
   accentBg: isDark ? "rgba(22,119,255,0.08)" : "rgba(22,119,255,0.06)",
-  success: "#0ea472",
-  successBg: isDark ? "rgba(14,164,114,0.08)" : "rgba(14,164,114,0.06)",
-  thBg: isDark ? "#0f0f0f" : "#f9fafb",
-  thBorder: isDark ? "#1f1f1f" : "#f0f0f0",
+  success: "var(--success)",
+  successBg: isDark ? "rgba(var(--success-rgb),0.08)" : "rgba(var(--success-rgb),0.06)",
+  thBg: "var(--background)",
+  thBorder: "var(--border-muted)",
 });
 
 // Class names are plain strings like "Class 10", "Nursery", "UKG" — a plain alphabetical sort
@@ -176,7 +176,7 @@ const SchoolClassSectionTeacher = ({ next }) => {
             {selectedTeacher.name}
           </Tag>
         ) : (
-          <span style={{ fontSize: 11, color: t.textSec, background: isDark ? "#1a1a1a" : "#f3f4f6", padding: "2px 8px", borderRadius: 99, width: "fit-content" }}>
+          <span style={{ fontSize: 11, color: t.textSec, background: "var(--surface-soft)", padding: "2px 8px", borderRadius: 99, width: "fit-content" }}>
             Not assigned
           </span>
         )}

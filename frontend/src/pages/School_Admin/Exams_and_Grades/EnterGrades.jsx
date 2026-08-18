@@ -23,7 +23,6 @@ import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper,
-  pageCard,
   sectionPanel,
   toolbarRow,
   tableHeadCss,
@@ -450,6 +449,8 @@ const EnterGrades = () => {
             )}
           </div>
 
+          {/* pill()'s color arg is baked into its border as `${color}25` — a raw-hex
+              alpha-suffix trick that breaks with a var() string, so these stay hex. */}
           {summary && (
             <Space style={{ marginBottom: 12 }}>
               <span style={pill("#2563EB")}>Marks Entered: {summary.entered}</span>

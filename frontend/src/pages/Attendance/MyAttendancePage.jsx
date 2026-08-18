@@ -17,16 +17,16 @@ import { pageWrapper } from "../../styles/pageStyles";
 
 /* ── theme ── */
 const C = {
-  primary:    "#2563EB", primaryLight:  "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent:     "#14B8A6", accentLight:   "#CCFBF1",
-  success:    "#22C55E", successLight:  "#DCFCE7",
-  warning:    "#F59E0B", warningLight:  "#FEF3C7",
-  danger:     "#EF4444", dangerLight:   "#FEE2E2",
-  purple:     "#8B5CF6", purpleLight:   "#EDE9FE",
-  cyan:       "#06B6D4", cyanLight:     "#CFFAFE",
-  border:     "#E2E8F0", text:          "#0F172A",
-  textSub:    "#64748B", textMuted:     "#94A3B8",
-  surface:    "#FFFFFF", surfaceSoft:   "#F8FAFC",
+  primary:    "var(--primary)", primaryLight:  "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent:     "var(--accent)", accentLight:   "var(--accent-light)",
+  success:    "var(--success)", successLight:  "var(--success-light)",
+  warning:    "var(--warning)", warningLight:  "var(--warning-light)",
+  danger:     "var(--danger)", dangerLight:   "var(--danger-light)",
+  purple:     "var(--purple)", purpleLight:   "rgba(var(--purple-rgb), 0.12)",
+  cyan:       "var(--cyan)", cyanLight:     "#CFFAFE", // no design token exists for this cyan-100 tint; left as-is
+  border:     "var(--border)", text:          "var(--text)",
+  textSub:    "var(--text-secondary)", textMuted:     "var(--text-muted)",
+  surface:    "var(--surface)", surfaceSoft:   "var(--surface-soft)",
 };
 
 const PANEL = {
@@ -36,11 +36,11 @@ const PANEL = {
 };
 
 const STATUS = {
-  present: { color: C.success, bg: C.successLight, border: "#86EFAC", label: "Present",  icon: <CheckCircleOutlined /> },
-  absent:  { color: C.danger,  bg: C.dangerLight,  border: "#FCA5A5", label: "Absent",   icon: <CloseCircleOutlined /> },
-  late:    { color: C.warning, bg: C.warningLight, border: "#FCD34D", label: "Late",     icon: <ClockCircleOutlined /> },
-  halfday: { color: C.purple,  bg: C.purpleLight,  border: "#C4B5FD", label: "Half Day", icon: <MinusCircleOutlined /> },
-  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "#67E8F9", label: "On Leave", icon: <QuestionCircleOutlined /> },
+  present: { color: C.success, bg: C.successLight, border: "var(--success-light)", label: "Present",  icon: <CheckCircleOutlined /> },
+  absent:  { color: C.danger,  bg: C.dangerLight,  border: "var(--danger-light)", label: "Absent",   icon: <CloseCircleOutlined /> },
+  late:    { color: C.warning, bg: C.warningLight, border: "var(--warning)", label: "Late",     icon: <ClockCircleOutlined /> },
+  halfday: { color: C.purple,  bg: C.purpleLight,  border: "rgba(var(--purple-rgb), 0.5)", label: "Half Day", icon: <MinusCircleOutlined /> },
+  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "#67E8F9", label: "On Leave", icon: <QuestionCircleOutlined /> }, // no cyan-rgb token exists to build a tint; left as-is
 };
 
 /* ── helpers ── */
@@ -72,12 +72,12 @@ const StatusBadge = ({ status }) => {
 const StatCard = ({ label, value, color, bg, icon, suffix }) => (
   <div style={{
     background: bg, borderRadius: 12, padding: "14px 16px",
-    border: `1px solid ${color}30`,
+    border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`,
     display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 100,
   }}>
     <div style={{
       width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-      background: color + "22", display: "flex", alignItems: "center",
+      background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "flex", alignItems: "center",
       justifyContent: "center", fontSize: 16, color,
     }}>
       {icon}
@@ -197,7 +197,7 @@ const MyAttendancePage = () => {
           {/* icon */}
           <div style={{
             width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-            background: todayBannerColor + "22",
+            background: `color-mix(in srgb, ${todayBannerColor} 13%, transparent)`,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 24, color: todayBannerColor,
           }}>
@@ -221,7 +221,7 @@ const MyAttendancePage = () => {
                   <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13 }}>
                     <div style={{
                       width: 26, height: 26, borderRadius: 6,
-                      background: C.success + "22",
+                      background: `color-mix(in srgb, ${C.success} 13%, transparent)`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       <LoginOutlined style={{ color: C.success, fontSize: 12 }} />
@@ -237,7 +237,7 @@ const MyAttendancePage = () => {
                   <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13 }}>
                     <div style={{
                       width: 26, height: 26, borderRadius: 6,
-                      background: C.danger + "22",
+                      background: `color-mix(in srgb, ${C.danger} 13%, transparent)`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       <LogoutOutlined style={{ color: C.danger, fontSize: 12 }} />
@@ -254,7 +254,7 @@ const MyAttendancePage = () => {
                     <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13 }}>
                       <div style={{
                         width: 26, height: 26, borderRadius: 6,
-                        background: C.accent + "22",
+                        background: `color-mix(in srgb, ${C.accent} 13%, transparent)`,
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
                         <ClockCircleOutlined style={{ color: C.accent, fontSize: 12 }} />
@@ -293,7 +293,7 @@ const MyAttendancePage = () => {
                   style={{
                     background: C.success, borderColor: C.success,
                     borderRadius: 10, fontWeight: 700, height: 42, paddingInline: 20,
-                    boxShadow: `0 2px 8px ${C.success}44`,
+                    boxShadow: `0 2px 8px color-mix(in srgb, ${C.success} 27%, transparent)`,
                   }}
                 >
                   Punch In  <ArrowRightOutlined />
@@ -306,7 +306,7 @@ const MyAttendancePage = () => {
                   style={{
                     background: C.danger, borderColor: C.danger,
                     borderRadius: 10, fontWeight: 700, height: 42, paddingInline: 20,
-                    boxShadow: `0 2px 8px ${C.danger}44`,
+                    boxShadow: `0 2px 8px color-mix(in srgb, ${C.danger} 27%, transparent)`,
                   }}
                 >
                   Punch Out  <ArrowRightOutlined />
@@ -355,7 +355,7 @@ const MyAttendancePage = () => {
           </div>
           <div style={{
             width: 48, height: 48, borderRadius: "50%",
-            background: pctColor + "15", border: `2px solid ${pctColor}`,
+            background: `color-mix(in srgb, ${pctColor} 8%, transparent)`, border: `2px solid ${pctColor}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 13, fontWeight: 800, color: pctColor, flexShrink: 0,
           }}>

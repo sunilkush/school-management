@@ -295,7 +295,7 @@ export default function HealthRecordsPage() {
         {/* ── Student picker ─────────────────────────────────── */}
         <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-            <div style={iconWell("#2563EB", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
+            <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Select Student</Text>
               <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>View/edit a health profile and record visits</Text>

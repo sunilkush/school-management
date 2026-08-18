@@ -242,7 +242,7 @@ export default function DisciplinePage() {
         {/* ── Student picker ─────────────────────────────────── */}
         <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-            <div style={iconWell("#2563EB", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
+            <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Select Student</Text>
               <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>View discipline history and report new incidents</Text>
@@ -279,9 +279,9 @@ export default function DisciplinePage() {
         {studentId && summary && (
           <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
             {[
-              { label: "Total Incidents", value: summary.totalIncidents || 0, color: "#2563EB" },
-              { label: "Total Demerit Points", value: summary.totalDemeritPoints || 0, color: "#DC2626" },
-              { label: "Open Cases", value: summary.openIncidents || 0, color: "#D97706" },
+              { label: "Total Incidents", value: summary.totalIncidents || 0, color: "var(--primary)" },
+              { label: "Total Demerit Points", value: summary.totalDemeritPoints || 0, color: "var(--danger-hover)" },
+              { label: "Open Cases", value: summary.openIncidents || 0, color: "var(--warning-hover)" },
             ].map((s) => (
               <Col xs={8} key={s.label}>
                 <div style={{ background: "var(--surface)", border: "1px solid var(--border-muted)", borderTop: `4px solid ${s.color}`, borderRadius: 14, padding: "14px 18px" }}>
@@ -370,7 +370,7 @@ export default function DisciplinePage() {
         onOk={handleReport}
         confirmLoading={saving}
         okText="Report Incident"
-        title={<Space><ExclamationCircleOutlined style={{ color: "#DC2626" }} />Report Discipline Incident</Space>}
+        title={<Space><ExclamationCircleOutlined style={{ color: "var(--danger-hover)" }} />Report Discipline Incident</Space>}
       >
         <Space direction="vertical" style={{ width: "100%" }} size={12}>
           <Row gutter={12}>

@@ -70,7 +70,7 @@ const ClassCard = ({ cls, onView, onAttendance }) => {
           </div>
         </div>
         <span style={pill(
-          isClassTeacher ? "#15803D" : "#2E6A9A",
+          isClassTeacher ? "var(--success-hover)" : "var(--primary-hover)",
           isClassTeacher ? "rgba(220,252,231,0.5)" : "rgba(219,234,254,0.4)"
         )}>
           {roleLabel}
@@ -87,7 +87,7 @@ const ClassCard = ({ cls, onView, onAttendance }) => {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {cls?.subjects?.length ? (
             cls.subjects.map((sub, i) => (
-              <span key={i} style={pill("#2563EB", "rgba(219,234,254,0.4)")}>
+              <span key={i} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>
                 {sub?.subjectId?.name || "Subject"}
               </span>
             ))
@@ -103,7 +103,7 @@ const ClassCard = ({ cls, onView, onAttendance }) => {
           <TeamOutlined style={{ color: "var(--text-muted)" }} />
           <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{cls?.studentCount ?? 0} Students</span>
         </div>
-        <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Active</span>
+        <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Active</span>
       </div>
 
       {/* Actions */}
@@ -220,10 +220,10 @@ const AssignedClasses = () => {
       />
 
       <div style={{ ...statGrid(170), marginTop: 20 }}>
-        <StatCard icon={<AppstoreOutlined />} label="Classes"  value={stats.totalClasses}  color="#2563EB" />
-        <StatCard icon={<TeamOutlined />}      label="Students" value={stats.totalStudents} color="#14B8A6" />
-        <StatCard icon={<BookOutlined />}      label="Sections" value={stats.totalSections} color="#F59E0B" />
-        <StatCard icon={<ReadOutlined />}      label="Subjects" value={stats.totalSubjects} color="#8B5CF6" />
+        <StatCard icon={<AppstoreOutlined />} label="Classes"  value={stats.totalClasses}  color="var(--primary)" />
+        <StatCard icon={<TeamOutlined />}      label="Students" value={stats.totalStudents} color="var(--accent)" />
+        <StatCard icon={<BookOutlined />}      label="Sections" value={stats.totalSections} color="var(--warning)" />
+        <StatCard icon={<ReadOutlined />}      label="Subjects" value={stats.totalSubjects} color="var(--purple)" />
       </div>
 
       {/* ── Cards ── */}

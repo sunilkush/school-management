@@ -250,10 +250,10 @@ const SubjectResources = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<BookOutlined />} label="Total"  value={stats.total}  color="#14B8A6" />
-        <StatCard icon={<BookOutlined />} label="Notes"  value={stats.notes}  color="#0891b2" />
-        <StatCard icon={<BookOutlined />} label="Videos" value={stats.videos} color="#22C55E" />
-        <StatCard icon={<BookOutlined />} label="Books"  value={stats.books}  color="#F59E0B" />
+        <StatCard icon={<BookOutlined />} label="Total"  value={stats.total}  color="var(--accent)" />
+        <StatCard icon={<BookOutlined />} label="Notes"  value={stats.notes}  color="var(--cyan)" />
+        <StatCard icon={<BookOutlined />} label="Videos" value={stats.videos} color="var(--success)" />
+        <StatCard icon={<BookOutlined />} label="Books"  value={stats.books}  color="var(--warning)" />
       </div>
 
       <div style={{ ...sectionPanel, marginTop: 0 }}>

@@ -106,7 +106,7 @@ const SchoolClassSectionFilter = () => {
     {
       title: "Section",
       dataIndex: "name",
-      render: (name) => <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{name}</span>,
+      render: (name) => <span style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>{name}</span>,
     },
     {
       title: "Class Teacher",
@@ -122,7 +122,7 @@ const SchoolClassSectionFilter = () => {
         const enrolled = enrolledCount(sec);
         const capacity = sec.capacity || 0;
         const ratio = capacity ? enrolled / capacity : 0;
-        const color = ratio >= 1 ? "#DC2626" : ratio >= 0.8 ? "#B45309" : "#15803D";
+        const color = ratio >= 1 ? "var(--danger-hover)" : ratio >= 0.8 ? "var(--warning-hover)" : "var(--success-hover)";
         const bg = ratio >= 1 ? "rgba(254,226,226,0.5)" : ratio >= 0.8 ? "rgba(254,243,199,0.5)" : "rgba(220,252,231,0.5)";
         return <span style={pill(color, bg)}>{enrolled} / {capacity || "—"}</span>;
       },
@@ -133,8 +133,8 @@ const SchoolClassSectionFilter = () => {
       render: (status, sec) => {
         const isActive = status ? status === "active" : sec.isActive;
         return isActive
-          ? <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Active</span>
-          : <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>Inactive</span>;
+          ? <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Active</span>
+          : <span style={pill("var(--danger-hover)", "rgba(254,226,226,0.5)")}>Inactive</span>;
       },
     },
   ];
@@ -203,10 +203,10 @@ const SchoolClassSectionFilter = () => {
 
       {selectedSchool && (
         <div style={{ ...statGrid(170), marginTop: 20 }}>
-          <StatCard icon={<BookOutlined />} label="Classes" value={stats.totalClasses} color="#2563EB" />
-          <StatCard icon={<ApartmentOutlined />} label="Sections" value={stats.totalSections} color="#7C3AED" />
-          <StatCard icon={<TeamOutlined />} label="Total Capacity" value={stats.totalCapacity} color="#14B8A6" />
-          <StatCard icon={<SolutionOutlined />} label="Enrolled Students" value={stats.totalEnrolled} color="#F59E0B" />
+          <StatCard icon={<BookOutlined />} label="Classes" value={stats.totalClasses} color="var(--primary)" />
+          <StatCard icon={<ApartmentOutlined />} label="Sections" value={stats.totalSections} color="var(--purple)" />
+          <StatCard icon={<TeamOutlined />} label="Total Capacity" value={stats.totalCapacity} color="var(--accent)" />
+          <StatCard icon={<SolutionOutlined />} label="Enrolled Students" value={stats.totalEnrolled} color="var(--warning)" />
         </div>
       )}
 
@@ -219,12 +219,12 @@ const SchoolClassSectionFilter = () => {
             yearLoading ? (
               <Spin size="small" />
             ) : activeYearForSchool ? (
-              <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>
+              <span style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>
                 <CalendarOutlined style={{ marginRight: 5 }} />
                 Active Year: {activeYearForSchool.name || activeYearForSchool.code}
               </span>
             ) : (
-              <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>No active academic year set for this school</span>
+              <span style={pill("var(--danger-hover)", "rgba(254,226,226,0.5)")}>No active academic year set for this school</span>
             )
           )}
         </div>

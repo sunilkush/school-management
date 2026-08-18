@@ -53,11 +53,11 @@ const SectionCard = ({ section, onAttendance }) => {
           </div>
         </div>
         {section?.isClassTeacher ? (
-          <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>
+          <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>
             <CrownOutlined style={{ marginRight: 4 }} /> Class Teacher
           </span>
         ) : (
-          <span style={pill("#2E6A9A", "rgba(219,234,254,0.4)")}>Subject Teacher</span>
+          <span style={pill("var(--primary-hover)", "rgba(219,234,254,0.4)")}>Subject Teacher</span>
         )}
       </div>
 
@@ -70,7 +70,7 @@ const SectionCard = ({ section, onAttendance }) => {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {subjects.length ? (
             subjects.map((sub, i) => (
-              <span key={sub?.subjectId?._id || i} style={pill("#2563EB", "rgba(219,234,254,0.4)")}>
+              <span key={sub?.subjectId?._id || i} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>
                 {sub?.subjectId?.name || "Subject"}
               </span>
             ))
@@ -180,15 +180,15 @@ const ClassDetails = () => {
 
       <Spin spinning={loading}>
         <div style={{ ...statGrid(170), marginTop: 20 }}>
-          <StatCard icon={<TeamOutlined />} label="Students" value={classData?.studentCount || 0} color="#14B8A6" />
-          <StatCard icon={<AppstoreOutlined />} label="Sections" value={classData?.sections?.length || 0} color="#F59E0B" />
-          <StatCard icon={<BookOutlined />} label="Subjects" value={classData?.subjects?.length || 0} color="#8B5CF6" />
-          <StatCard icon={<CrownOutlined />} label="Class Teacher Of" value={classTeacherSectionCount} color="#2563EB" />
+          <StatCard icon={<TeamOutlined />} label="Students" value={classData?.studentCount || 0} color="var(--accent)" />
+          <StatCard icon={<AppstoreOutlined />} label="Sections" value={classData?.sections?.length || 0} color="var(--warning)" />
+          <StatCard icon={<BookOutlined />} label="Subjects" value={classData?.subjects?.length || 0} color="var(--purple)" />
+          <StatCard icon={<CrownOutlined />} label="Class Teacher Of" value={classTeacherSectionCount} color="var(--primary)" />
         </div>
 
         <div style={sectionPanel}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <div style={iconWell("#8B5CF6", 34)}>
+            <div style={iconWell("var(--purple)", 34)}>
               <BookOutlined />
             </div>
             <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>All Subjects</div>
@@ -196,7 +196,7 @@ const ClassDetails = () => {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {classData?.subjects?.length ? (
               classData.subjects.map((sub, i) => (
-                <span key={sub?.subjectId?._id || i} style={pill("#2563EB", "rgba(219,234,254,0.4)")}>
+                <span key={sub?.subjectId?._id || i} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>
                   {sub?.subjectId?.name || "Subject"}
                 </span>
               ))

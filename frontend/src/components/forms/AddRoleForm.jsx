@@ -94,7 +94,7 @@ const AddRoleForm = () => {
     <Card style={{ maxWidth: 1000, margin: "0 auto" }}>
       {/* HEADER */}
       <Space align="center">
-        <SafetyOutlined style={{ fontSize: 28, color: "#1677ff" }} />
+        <SafetyOutlined style={{ fontSize: 28, color: "var(--primary)" }} />
         <div>
           <Title level={4}>Create Role & Permissions</Title>
           <Text type="secondary">Define access control</Text>

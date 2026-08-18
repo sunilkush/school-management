@@ -423,11 +423,11 @@ const PaperBuilder = () => {
                   ⚠ Blueprint exceeds total marks by {Math.abs(remaining)}
                 </div>
               ) : isBalanced ? (
-                <div style={{ background: `${C.success}15`, border: `1px solid ${C.success}25`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#15803D", fontWeight: 600 }}>
+                <div style={{ background: `${C.success}15`, border: `1px solid ${C.success}25`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--success-hover)", fontWeight: 600 }}>
                   <CheckCircleOutlined /> Blueprint is perfectly balanced
                 </div>
               ) : (
-                <div style={{ background: `${C.warning}15`, border: `1px solid ${C.warning}25`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#B45309", fontWeight: 600 }}>
+                <div style={{ background: `${C.warning}15`, border: `1px solid ${C.warning}25`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--warning-hover)", fontWeight: 600 }}>
                   <InfoCircleOutlined /> {remaining} marks unallocated
                 </div>
               )}

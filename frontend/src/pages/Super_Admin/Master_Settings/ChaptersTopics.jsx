@@ -60,7 +60,7 @@ const DEPTH_COLORS = {
   board: { bg: "#e8f4ff", border: "#91caff", text: "#0958d9", icon: <AppstoreOutlined /> },
   class: { bg: "#f6ffed", border: "#b7eb8f", text: "#389e0d", icon: <FolderOpenOutlined /> },
   subject: { bg: "#fff7e6", border: "#ffd591", text: "#d46b08", icon: <ReadOutlined /> },
-  chapter: { bg: "#fff", border: "#f0f0f0", text: "#595959", icon: <BookOutlined /> },
+  chapter: { bg: "#fff", border: "var(--border-muted)", text: "#595959", icon: <BookOutlined /> },
 };
 
 const rowStyle = (type) => {
@@ -362,7 +362,7 @@ const ChaptersTopics = () => {
         r._type === "chapter" ? (
           r.isGlobal ? (
             <Badge
-              count={<GlobalOutlined style={{ color: "#1677ff" }} />}
+              count={<GlobalOutlined style={{ color: "var(--primary)" }} />}
               style={{ background: "transparent" }}
             >
               <Tag color="geekblue">Global</Tag>
@@ -384,7 +384,7 @@ const ChaptersTopics = () => {
                 icon={<EditOutlined />}
                 size="small"
                 type="text"
-                style={{ color: "#1677ff" }}
+                style={{ color: "var(--primary)" }}
                 onClick={() => handleEdit(r)}
               />
             </Tooltip>
@@ -584,7 +584,7 @@ const ChaptersTopics = () => {
             <Form.Item name="isGlobal" valuePropName="checked">
               <Checkbox>
                 <Space>
-                  <GlobalOutlined style={{ color: "#1677ff" }} />
+                  <GlobalOutlined style={{ color: "var(--primary)" }} />
                   <span>Mark as <b>Global</b> (visible to all schools)</span>
                 </Space>
               </Checkbox>

@@ -153,16 +153,16 @@ const RoutesPage = () => {
               <div style={statValue("var(--primary)")}>{totalRoutes}</div>
             </div>
           </div>
-          <div style={statCard({ color: "#22C55E" })}>
+          <div style={statCard({ color: "var(--success)" })}>
             <div>
-              <div style={statLabel("#22C55E")}>Total Buses</div>
-              <div style={statValue("#22C55E")}>{totalBuses}</div>
+              <div style={statLabel("var(--success)")}>Total Buses</div>
+              <div style={statValue("var(--success)")}>{totalBuses}</div>
             </div>
           </div>
-          <div style={statCard({ color: "#F59E0B" })}>
+          <div style={statCard({ color: "var(--warning)" })}>
             <div>
-              <div style={statLabel("#F59E0B")}>Total Students</div>
-              <div style={statValue("#F59E0B")}>{totalStudents}</div>
+              <div style={statLabel("var(--warning)")}>Total Students</div>
+              <div style={statValue("var(--warning)")}>{totalStudents}</div>
             </div>
           </div>
         </div>

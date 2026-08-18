@@ -87,8 +87,8 @@ const EmployeeSalaries = () => {
         {cycle && (cycle.status === "paid" || cycle.status === "locked") && (
           <div style={{
             marginBottom: 16,
-            background: cycle.status === "paid" ? "#f0fdf4" : "#EFF6FF",
-            border: `1px solid ${cycle.status === "paid" ? "#86EFAC" : "#93C5FD"}`,
+            background: cycle.status === "paid" ? "var(--success-light)" : "var(--primary-light)",
+            border: `1px solid ${cycle.status === "paid" ? "var(--success-light)" : "#93C5FD"}`,
             borderRadius: 12,
             padding: "14px 20px",
             display: "flex",
@@ -99,10 +99,10 @@ const EmployeeSalaries = () => {
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {cycle.status === "paid"
-                ? <CheckCircleOutlined style={{ fontSize: 18, color: "#16A34A" }} />
-                : <LockOutlined style={{ fontSize: 18, color: "#2563EB" }} />}
+                ? <CheckCircleOutlined style={{ fontSize: 18, color: "var(--success)" }} />
+                : <LockOutlined style={{ fontSize: 18, color: "var(--primary)" }} />}
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: cycle.status === "paid" ? "#15803D" : "#1D4ED8" }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: cycle.status === "paid" ? "var(--success-hover)" : "var(--primary-hover)" }}>
                   {selectedMonth.format("MMMM YYYY")} payroll is {cycle.status === "paid" ? "paid ✓" : "locked"}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
@@ -130,11 +130,11 @@ const EmployeeSalaries = () => {
             padding: "32px 24px",
             textAlign: "center",
           }}>
-            <CalendarOutlined style={{ fontSize: 40, color: "#94a3b8", marginBottom: 12 }} />
+            <CalendarOutlined style={{ fontSize: 40, color: "var(--text-muted)", marginBottom: 12 }} />
             <div style={{ fontWeight: 700, fontSize: 16, color: "var(--text-primary)", marginBottom: 6 }}>
               No Payroll Cycle for {selectedMonth.format("MMMM YYYY")}
             </div>
-            <div style={{ color: "#64748b", fontSize: 13, marginBottom: 20, maxWidth: 420, margin: "0 auto 20px" }}>
+            <div style={{ color: "var(--text-secondary)", fontSize: 13, marginBottom: 20, maxWidth: 420, margin: "0 auto 20px" }}>
               No cycle has been generated for this month yet. Click <strong>Generate / Refresh</strong> above to create one,
               or use the month picker to view an existing cycle.
             </div>

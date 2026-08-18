@@ -62,19 +62,29 @@ export default {
         /* ── Semantic ── */
         success: {
           DEFAULT: "#22C55E",
+          hover:   "#15803D",
           light:   "#DCFCE7",
         },
         warning: {
           DEFAULT: "#F59E0B",
+          hover:   "#B45309",
           light:   "#FEF3C7",
         },
         danger: {
           DEFAULT: "#EF4444",
+          hover:   "#DC2626",
           light:   "#FEE2E2",
         },
         info: {
           DEFAULT: "#3B82F6",
           light:   "#DBEAFE",
+        },
+        purple: {
+          DEFAULT: "#8B5CF6",
+          hover:   "#6D28D9",
+        },
+        pink: {
+          DEFAULT: "#EC4899",
         },
         /* ── Border ── */
         border: {

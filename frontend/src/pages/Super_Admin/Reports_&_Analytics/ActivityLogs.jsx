@@ -30,33 +30,27 @@ import {
   tableContainer,
   tableHeadCss,
 } from "../../../styles/pageStyles";
+import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 const { Option } = Select;
-
-const AVATAR_PALETTES = [
-  { bg: "#EEEDFE", color: "#534AB7" },
-  { bg: "rgba(220,252,231,0.2)", color: "#22C55E" },
-  { bg: "#FAECE7", color: "#993C1D" },
-  { bg: "#E6F1FB", color: "#185FA5" },
-  { bg: "#FAEEDA", color: "#854F0B" },
-];
-
-const ROLE_STYLES = {
-  Parent:   { bg: "#EEEDFE", color: "#534AB7" },
-  Teacher: { bg: "rgba(220,252,231,0.2)", color: "#22C55E" },
-  Student: { bg: "#E6F1FB", color: "#185FA5" },
-  "Super Admin": { bg: "#FDECF7", color: "#9B2C6A" },
-  "School Admin": { bg: "#E8F0FE", color: "#1F4E8C" },
-};
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function getInitials(name = "") {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
 }
 
+// Deterministic color per name/role, drawn from the shared categorical palette
+// (used to be a local hardcoded 5-color array duplicated across pages).
 function getPalette(name = "") {
-  return AVATAR_PALETTES[(name.charCodeAt(0) || 0) % AVATAR_PALETTES.length];
+  const color = categoricalColorFor(name);
+  return { bg: `${color}22`, color };
+}
+
+function getRoleStyle(name = "") {
+  if (!name || name === "—") return { bg: "var(--surface-soft)", color: "var(--text-muted)" };
+  const color = categoricalColorFor(name);
+  return { bg: `${color}22`, color };
 }
 
 function formatDate(d) {
@@ -240,7 +234,7 @@ const normalizedLogs = useMemo(() => {
       key: "role",
       render: (role) => {
         const name = typeof role === "string" ? role : role?.name || "—";
-        const style = ROLE_STYLES[name] || { bg: "var(--surface-soft)", color: "var(--text-muted)" };
+        const style = getRoleStyle(name);
         return (
           <Tag
             style={{

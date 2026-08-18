@@ -124,11 +124,11 @@ const PayrollEntriesTable = ({ entries, loading }) => {
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
         {[
-          { label: "Showing",    value: filteredEntries.length,                      color: "#2563EB" },
-          { label: "Paid",       value: filteredSummary.paidCount,                   color: "#22C55E" },
-          { label: "Gross",      value: formatCurrencyINR(filteredSummary.gross),     color: "#7C3AED" },
-          { label: "Deduction",  value: formatCurrencyINR(filteredSummary.deduction), color: "#EF4444" },
-          { label: "Net Payout", value: formatCurrencyINR(filteredSummary.netPay),    color: "#10B981" },
+          { label: "Showing",    value: filteredEntries.length,                      color: "var(--primary)" },
+          { label: "Paid",       value: filteredSummary.paidCount,                   color: "var(--success)" },
+          { label: "Gross",      value: formatCurrencyINR(filteredSummary.gross),     color: "var(--purple)" },
+          { label: "Deduction",  value: formatCurrencyINR(filteredSummary.deduction), color: "var(--danger)" },
+          { label: "Net Payout", value: formatCurrencyINR(filteredSummary.netPay),    color: "var(--success)" },
         ].map((s) => (
           <div key={s.label} style={{
             display: "flex", flexDirection: "column", alignItems: "center",

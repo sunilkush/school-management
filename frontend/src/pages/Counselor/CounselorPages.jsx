@@ -42,10 +42,10 @@ export const CounselorDashboard = () => {
   const uniqueStudents = new Set(sessions.map((s) => s.studentId || s.studentName).filter(Boolean)).size;
 
   const statCards = [
-    { title: "Students in Counseling", value: uniqueStudents, color: "#7C3AED", icon: <TeamOutlined /> },
-    { title: "Sessions Today",          value: scheduled,     color: "#2563EB", icon: <CalendarOutlined /> },
-    { title: "Pending Appointments",    value: appointments,  color: "#F59E0B", icon: <ClockCircleOutlined /> },
-    { title: "Completed Sessions",      value: completed,     color: "#10B981", icon: <CheckCircleOutlined /> },
+    { title: "Students in Counseling", value: uniqueStudents, color: "var(--purple)", icon: <TeamOutlined /> },
+    { title: "Sessions Today",          value: scheduled,     color: "var(--primary)", icon: <CalendarOutlined /> },
+    { title: "Pending Appointments",    value: appointments,  color: "var(--warning)", icon: <ClockCircleOutlined /> },
+    { title: "Completed Sessions",      value: completed,     color: "var(--success)", icon: <CheckCircleOutlined /> },
   ];
 
   const upcoming = sessions.filter((s) => s.status === "Scheduled").slice(0, 5);
@@ -292,15 +292,15 @@ export const CounselorReports = () => {
       <Spin spinning={loading}>
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           {[
-            { label: "Total Sessions",  value: total,                     color: "#7C3AED" },
-            { label: "Completed",       value: byStatus.Completed ?? 0,   color: "#10B981" },
-            { label: "Scheduled",       value: byStatus.Scheduled ?? 0,   color: "#2563EB" },
-            { label: "Cancelled/No Show",value: (byStatus.Cancelled ?? 0) + (byStatus["No Show"] ?? 0), color: "#EF4444" },
+            { label: "Total Sessions",  value: total,                     color: "var(--purple)" },
+            { label: "Completed",       value: byStatus.Completed ?? 0,   color: "var(--success)" },
+            { label: "Scheduled",       value: byStatus.Scheduled ?? 0,   color: "var(--primary)" },
+            { label: "Cancelled/No Show",value: (byStatus.Cancelled ?? 0) + (byStatus["No Show"] ?? 0), color: "var(--danger)" },
           ].map((s) => (
             <Col xs={24} sm={12} md={6} key={s.label}>
               <Card style={{ textAlign: "center", borderTop: `4px solid ${s.color}` }}>
                 <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
-                <div style={{ color: "#6B7280", fontSize: 13 }}>{s.label}</div>
+                <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>{s.label}</div>
               </Card>
             </Col>
           ))}
@@ -312,10 +312,10 @@ export const CounselorReports = () => {
               <div key={i}>
                 <div style={{ marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
                   <span>{issue._id}</span>
-                  <span style={{ color: "#6B7280" }}>{issue.count} sessions</span>
+                  <span style={{ color: "var(--text-secondary)" }}>{issue.count} sessions</span>
                 </div>
                 <Progress percent={total ? Math.round((issue.count / total) * 100) : 0} size="small"
-                  strokeColor="#7C3AED" showInfo={false} />
+                  strokeColor="var(--purple)" showInfo={false} />
               </div>
             ))}
             {topIssues.length === 0 && (

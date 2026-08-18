@@ -121,9 +121,9 @@ const ExamReports = () => {
         <div className="stat-grid" style={statGrid(160)}>
           {[
             { key: "total", title: "Total Records", value: stats.total, color: "var(--primary)" },
-            { key: "passed", title: "Pass", value: stats.passed, color: "#389e0d" },
-            { key: "failed", title: "Fail", value: stats.failed, color: "#cf1322" },
-            { key: "avg", title: "Average %", value: `${stats.avg}%`, color: "#0284c7" },
+            { key: "passed", title: "Pass", value: stats.passed, color: "var(--success)" },
+            { key: "failed", title: "Fail", value: stats.failed, color: "var(--danger)" },
+            { key: "avg", title: "Average %", value: `${stats.avg}%`, color: "var(--cyan)" },
           ].map((item) => (
             <div key={item.key} style={statCard({ color: item.color })}>
               <div>
@@ -165,15 +165,15 @@ const ExamReports = () => {
           <div style={{
             margin: "12px 16px 0",
             padding: "14px 16px",
-            background: "var(--surface, #F8FAFC)",
-            border: "1px solid var(--border, #E2E8F0)",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
             borderRadius: 10,
             display: "flex",
             alignItems: "center",
             gap: 10,
             flexWrap: "wrap",
           }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-sub, #64748B)", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
               Download Marksheet:
             </span>
             <Select
@@ -190,7 +190,7 @@ const ExamReports = () => {
               icon={<FileExcelOutlined />}
               loading={downloading === "excel"}
               onClick={() => handleDownloadMarksheet("excel")}
-              style={{ borderColor: "#22C55E", color: "#16A34A" }}
+              style={{ borderColor: "var(--success)", color: "var(--success)" }}
             >
               Excel
             </Button>
@@ -203,7 +203,7 @@ const ExamReports = () => {
             >
               PDF
             </Button>
-            <span style={{ fontSize: 11, color: "var(--text-muted, #94A3B8)" }}>
+            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
               (select exam + class above)
             </span>
           </div>
@@ -248,9 +248,12 @@ const ExamReports = () => {
                 key: "status",
                 align: "center",
                 render: (status) => (
+                  // pill()'s first arg (color) is baked into its border as `${color}25` —
+                  // a raw-hex alpha-suffix trick that breaks with a var() string, so it
+                  // stays hex; the bg arg (used directly) is safely tokenized.
                   <span style={pill(
                     status === "Pass" ? "#389e0d" : status === "Fail" ? "#cf1322" : "#0284c7",
-                    status === "Pass" ? "#f0fdf4" : status === "Fail" ? "#fff1f2" : "#e0f2fe"
+                    status === "Pass" ? "var(--success-light)" : status === "Fail" ? "var(--danger-light)" : "var(--info-light)"
                   )}>
                     {status || "Pending"}
                   </span>

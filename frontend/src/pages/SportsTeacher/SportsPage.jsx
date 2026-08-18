@@ -345,7 +345,7 @@ export default function SportsPage() {
         {rosterTeam && (
           <>
             <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-              <div style={iconWell("#2563EB", 34)}><UserOutlined /></div>
+              <div style={iconWell("var(--primary)", 34)}><UserOutlined /></div>
               <Text strong style={{ fontSize: 13 }}>Add Member</Text>
             </Flex>
             <Row gutter={[8, 8]} style={{ marginBottom: 16 }}>

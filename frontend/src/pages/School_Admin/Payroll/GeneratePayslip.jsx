@@ -14,20 +14,20 @@ import PageHeader from "../../../components/layout/PageHeader";
 import {
   iconWell, pageCard, pageWrapper, sectionPanel, tableHeadCss,
 } from "../../../styles/pageStyles";
+import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
-const AVATAR_COLORS = ["#7C3AED", "#2563EB", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
-const avatarBg  = (name = "") => AVATAR_COLORS[(name?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+const avatarBg  = (name = "") => categoricalColorFor(name);
 const getInitials = (name = "") => {
   const p = name.trim().split(/\s+/);
   return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase();
 };
 
 const STATUS_BADGE = {
-  paid:    { bg: "#DCFCE7", color: "#15803D", border: "#86EFAC", label: "Paid" },
-  pending: { bg: "#FEF3C7", color: "#B45309", border: "#FDE68A", label: "Pending" },
+  paid:    { bg: "var(--success-light)", color: "var(--success-hover)", border: "var(--success-light)", label: "Paid" },
+  pending: { bg: "var(--warning-light)", color: "var(--warning-hover)", border: "var(--warning-light)", label: "Pending" },
   default: { bg: "var(--surface-soft)", color: "var(--text-muted)", border: "var(--border-muted)", label: "—" },
 };
 
@@ -109,7 +109,7 @@ const GeneratePayslip = () => {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
               width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-              background: isSelected ? "#2563EB" : avatarBg(name),
+              background: isSelected ? "var(--primary)" : avatarBg(name),
               color: "#fff", fontSize: 11, fontWeight: 800,
               display: "flex", alignItems: "center", justifyContent: "center",
               transition: "background 0.2s",
@@ -129,7 +129,7 @@ const GeneratePayslip = () => {
       dataIndex: "netPay",
       width: 130,
       render: (v) => (
-        <span style={{ fontWeight: 800, fontSize: 14, color: "#22C55E" }}>
+        <span style={{ fontWeight: 800, fontSize: 14, color: "var(--success)" }}>
           {formatCurrencyINR(v)}
         </span>
       ),
@@ -164,8 +164,8 @@ const GeneratePayslip = () => {
             onClick={() => handleSelectEmployee(r)}
             style={{
               borderRadius: 8, fontWeight: 600, fontSize: 12,
-              background: isSelected ? "#2563EB" : undefined,
-              borderColor: isSelected ? "#2563EB" : undefined,
+              background: isSelected ? "var(--primary)" : undefined,
+              borderColor: isSelected ? "var(--primary)" : undefined,
               color: isSelected ? "#fff" : undefined,
             }}
           >
@@ -179,7 +179,7 @@ const GeneratePayslip = () => {
   return (
     <div style={pageWrapper}>
       <style>{tableHeadCss("payslip-tbl")}</style>
-      <style>{`.payslip-tbl .ant-table-row.selected-row td { background: #EFF6FF !important; }`}</style>
+      <style>{`.payslip-tbl .ant-table-row.selected-row td { background: var(--primary-light) !important; }`}</style>
 
       <PageHeader
         title="Payslip Center"

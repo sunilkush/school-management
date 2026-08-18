@@ -36,8 +36,8 @@ const ExamTimer = ({ initialSeconds = 1800, onTimeUp, inline = false }) => {
   const isWarning  = timeLeft <= 300;   // < 5 min – amber
   const isDanger   = timeLeft <= 60;    // < 1 min – red pulse
 
-  const color = isDanger ? "#DC2626" : isWarning ? "#B45309" : "#15803D";
-  const bg    = isDanger ? "#FEE2E2" : isWarning ? "#FEF3C7" : "#DCFCE7";
+  const color = isDanger ? "var(--danger-hover)" : isWarning ? "var(--warning-hover)" : "var(--success-hover)";
+  const bg    = isDanger ? "var(--danger-light)" : isWarning ? "var(--warning-light)" : "var(--success-light)";
 
   /* ── Inline (header) variant ── */
   if (inline) {

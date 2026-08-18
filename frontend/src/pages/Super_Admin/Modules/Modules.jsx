@@ -8,12 +8,12 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, pill } from "../../../styles/pageStyles";
 
 const PALETTES = [
-  { bg: "rgba(219,234,254,0.2)", text: "#2563EB" },
-  { bg: "rgba(220,252,231,0.2)", text: "#22C55E" },
-  { bg: "rgba(20,184,166,0.2)", text: "#14B8A6" },
-  { bg: "rgba(219,234,254,0.15)", text: "#2563EB" },
-  { bg: "rgba(254,243,199,0.25)", text: "#F59E0B" },
-  { bg: "rgba(254,226,226,0.2)", text: "#EF4444" },
+  { bg: "rgba(219,234,254,0.2)", text: "var(--primary)" },
+  { bg: "rgba(220,252,231,0.2)", text: "var(--success)" },
+  { bg: "rgba(20,184,166,0.2)", text: "var(--accent)" },
+  { bg: "rgba(219,234,254,0.15)", text: "var(--primary)" },
+  { bg: "rgba(254,243,199,0.25)", text: "var(--warning)" },
+  { bg: "rgba(254,226,226,0.2)", text: "var(--danger)" },
 ];
 
 const StatCard = ({ icon, label, value, color }) => (
@@ -75,9 +75,9 @@ const ModuleCard = ({ title, parent, path, Icon, hasAccess, palette }) => {
         </div>
 
         {hasAccess ? (
-          <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Access</span>
+          <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Access</span>
         ) : (
-          <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}><Lock size={11} /> Locked</span>
+          <span style={pill("var(--danger-hover)", "rgba(254,226,226,0.5)")}><Lock size={11} /> Locked</span>
         )}
       </div>
 
@@ -204,9 +204,9 @@ const AllModules = () => {
       />
 
       <div style={{ ...statGrid(170), marginTop: 20 }}>
-        <StatCard icon={<LayoutDashboard size={20} />} label="Total Modules" value={enhancedModules.length} color="#2563EB" />
-        <StatCard icon={<ShieldCheck size={20} />} label="Access Granted" value={accessCount} color="#22C55E" />
-        <StatCard icon={<Lock size={20} />} label="Locked Modules" value={lockedCount} color="#EF4444" />
+        <StatCard icon={<LayoutDashboard size={20} />} label="Total Modules" value={enhancedModules.length} color="var(--primary)" />
+        <StatCard icon={<ShieldCheck size={20} />} label="Access Granted" value={accessCount} color="var(--success)" />
+        <StatCard icon={<Lock size={20} />} label="Locked Modules" value={lockedCount} color="var(--danger)" />
       </div>
 
       {filteredModules.length === 0 ? (

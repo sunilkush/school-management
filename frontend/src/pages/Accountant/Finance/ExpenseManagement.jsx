@@ -36,13 +36,13 @@ const PAYMENT_MODES = ["cash", "cheque", "bank_transfer", "upi", "online", "dd"]
 const EXPENSE_STATUSES = ["paid", "pending", "approved", "rejected"];
 
 const CAT_COLORS = {
-  "Staff Salary": "#14B8A6", "Teacher Salary": "#14B8A6",
-  "Utility Bills": "#F59E0B", "Rent": "#0891b2",
-  "Maintenance": "#F59E0B", "Stationery": "#64748B", "Miscellaneous": "#94A3B8",
+  "Staff Salary": "var(--accent)", "Teacher Salary": "var(--accent)",
+  "Utility Bills": "var(--warning)", "Rent": "var(--cyan)",
+  "Maintenance": "var(--warning)", "Stationery": "var(--text-secondary)", "Miscellaneous": "var(--text-muted)",
 };
-const catColor = (cat) => CAT_COLORS[cat] || "#EF4444";
+const catColor = (cat) => CAT_COLORS[cat] || "var(--danger)";
 
-const statusColor = { paid: "#22C55E", pending: "#F59E0B", approved: "#0891b2", rejected: "#EF4444" };
+const statusColor = { paid: "var(--success)", pending: "var(--warning)", approved: "var(--cyan)", rejected: "var(--danger)" };
 
 const ExpenseManagement = () => {
   const dispatch = useDispatch();
@@ -160,13 +160,13 @@ const ExpenseManagement = () => {
     {
       title: "Category",
       dataIndex: "category",
-      render: (c) => <span style={pill(catColor(c), `${catColor(c)}15`)}>{c}</span>,
+      render: (c) => <span style={pill(catColor(c), `color-mix(in srgb, ${catColor(c)} 15%, transparent)`)}>{c}</span>,
     },
     {
       title: "Amount",
       dataIndex: "amount",
       sorter: (a, b) => a.amount - b.amount,
-      render: (v) => <span style={{ fontWeight: 700, fontSize: 14, color: "#EF4444" }}>{money(v)}</span>,
+      render: (v) => <span style={{ fontWeight: 700, fontSize: 14, color: "var(--danger)" }}>{money(v)}</span>,
     },
     {
       title: "Date",
@@ -181,11 +181,14 @@ const ExpenseManagement = () => {
     {
       title: "Status",
       dataIndex: "status",
-      render: (s) => (
-        <span style={pill(statusColor[s] || "#64748B", `${statusColor[s] || "#64748B"}15`)}>
-          {s}
-        </span>
-      ),
+      render: (s) => {
+        const c = statusColor[s] || "var(--text-secondary)";
+        return (
+          <span style={pill(c, `color-mix(in srgb, ${c} 15%, transparent)`)}>
+            {s}
+          </span>
+        );
+      },
     },
     {
       title: "Invoice",
@@ -229,12 +232,12 @@ const ExpenseManagement = () => {
       <StatCardsRow
         style={{ marginTop: 0 }}
         items={[
-          { label: "Total Expenses", value: money(expenseTotalAmount) ?? "—", color: "#EF4444", icon: <FileTextOutlined /> },
-          { label: "Total Records",  value: expenseTotal ?? "—",              color: "#0891b2", icon: <FilterOutlined /> },
+          { label: "Total Expenses", value: money(expenseTotalAmount) ?? "—", color: "var(--danger)", icon: <FileTextOutlined /> },
+          { label: "Total Records",  value: expenseTotal ?? "—",              color: "var(--cyan)", icon: <FilterOutlined /> },
           {
             label: "Pending",
             value: money(expenseSummary?.byStatus?.find((s) => s._id === "pending")?.total) ?? "—",
-            color: "#F59E0B", icon: <FileTextOutlined />,
+            color: "var(--warning)", icon: <FileTextOutlined />,
           },
         ]}
       />
@@ -245,7 +248,7 @@ const ExpenseManagement = () => {
           <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>By Category</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {byCategory.map((c) => (
-              <div key={c._id} style={{ display: "flex", alignItems: "center", gap: 8, background: `${catColor(c._id)}12`, borderRadius: 8, padding: "6px 12px", border: `1px solid ${catColor(c._id)}25` }}>
+              <div key={c._id} style={{ display: "flex", alignItems: "center", gap: 8, background: `color-mix(in srgb, ${catColor(c._id)} 12%, transparent)`, borderRadius: 8, padding: "6px 12px", border: `1px solid color-mix(in srgb, ${catColor(c._id)} 25%, transparent)` }}>
                 <span style={{ fontWeight: 700, color: catColor(c._id), fontSize: 13 }}>{money(c.total)}</span>
                 <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{c._id} ({c.count})</span>
               </div>

@@ -210,7 +210,7 @@ export default function AlumniPage() {
         {/* ── Mark as Alumni panel ─────────────────────────────── */}
         <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-            <div style={iconWell("#2563EB", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
+            <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Mark Student as Alumni</Text>
               <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>This is a one-way action — the student will move out of active class rolls</Text>

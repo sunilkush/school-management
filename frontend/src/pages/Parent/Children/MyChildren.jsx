@@ -6,8 +6,9 @@ import dayjs from "dayjs";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, iconWell } from "../../../styles/pageStyles";
+import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
-const COLORS = ["#14B8A6", "#2563EB", "#F59E0B", "#22C55E", "#8B5CF6", "#EF4444"];
+const COLORS = CATEGORICAL_COLORS;
 
 const MyChildren = () => {
   const dispatch = useDispatch();

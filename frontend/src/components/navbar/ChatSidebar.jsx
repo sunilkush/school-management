@@ -114,9 +114,9 @@ const statusColors = {
 
 const ChatSidebar = () => {
   return (
-    <Sider width={300} style={{ background: "#fff", borderRight: "1px solid #f0f0f0", height: "100vh" }}>
+    <Sider width={300} style={{ background: "#fff", borderRight: "1px solid var(--border-muted)", height: "100vh" }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottom: "1px solid #f0f0f0", backgroundColor: "#e6f7ff" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottom: "1px solid var(--border-muted)", backgroundColor: "#e6f7ff" }}>
         <div style={{ display: "flex", gap: 24 }}>
           <Text type="secondary">NOTES</Text>
           <Text type="secondary">ALERTS</Text>
@@ -126,7 +126,7 @@ const ChatSidebar = () => {
       </div>
 
       {/* Chat List Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottom: "1px solid #f0f0f0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottom: "1px solid var(--border-muted)" }}>
         <Text strong>Chat List</Text>
         <Button shape="circle" icon={<PlusOutlined />} size="small" />
       </div>

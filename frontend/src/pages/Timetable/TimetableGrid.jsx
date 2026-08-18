@@ -7,22 +7,22 @@ import {
 import { buildGrid, dayLabel, DAYS, getName } from "./timetableUi";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
 };
 
 const TYPE_PALETTE = {
   regular:      { color: C.primary,  bg: C.primaryLighter, border: C.primaryLight },
-  activity:     { color: "#7C3AED",  bg: "#F5F3FF",         border: "#DDD6FE" },
-  substitution: { color: C.warning,  bg: C.warningLight,    border: "#FDE68A" },
-  break:        { color: "#F97316",  bg: "#FFF7ED",         border: "#FED7AA" },
-  lunch:        { color: C.accent,   bg: C.accentLight,     border: "#99F6E4" },
-  assembly:     { color: "#0EA5E9",  bg: "#F0F9FF",         border: "#BAE6FD" },
+  activity:     { color: "var(--purple)",  bg: "rgba(var(--purple-rgb), 0.08)", border: "rgba(var(--purple-rgb), 0.3)" },
+  substitution: { color: C.warning,  bg: C.warningLight,    border: "var(--warning-light)" },
+  break:        { color: "var(--orange)",  bg: "rgba(var(--warning-rgb), 0.08)", border: "color-mix(in srgb, var(--orange) 30%, transparent)" },
+  lunch:        { color: C.accent,   bg: C.accentLight,     border: "rgba(var(--accent-rgb), 0.5)" },
+  assembly:     { color: "var(--info)",  bg: "var(--info-light)", border: "color-mix(in srgb, var(--info) 35%, transparent)" },
 };
 
 const TimetableCell = ({ entry, readOnly, showClass, onAdd, onEdit, onDelete }) => {
@@ -124,7 +124,7 @@ const TimetableCell = ({ entry, readOnly, showClass, onAdd, onEdit, onDelete }) 
               size="small" icon={<DeleteOutlined />} onClick={onDelete}
               style={{
                 borderRadius: 6, padding: "0 6px", height: 22, fontSize: 11,
-                borderColor: "#FECACA", color: C.danger, background: "#FEF2F2",
+                borderColor: "var(--danger-light)", color: C.danger, background: "var(--danger-light)",
               }}
             />
           </Tooltip>
@@ -165,7 +165,7 @@ export default function TimetableGrid({
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 4, marginTop: 4,
             padding: "2px 9px", borderRadius: 20,
-            background: "#F8FAFC", border: "1px solid " + C.border,
+            background: "var(--background)", border: "1px solid " + C.border,
             fontSize: 11, color: C.textSub, fontWeight: 500,
           }}>
             {slot.startTime} – {slot.endTime}

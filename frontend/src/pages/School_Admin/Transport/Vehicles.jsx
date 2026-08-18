@@ -17,14 +17,14 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  purple: "var(--purple)", purpleLight: "rgba(var(--purple-rgb), 0.08)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
 };
 
 const VEHICLE_TYPE_CFG = {
@@ -34,9 +34,9 @@ const VEHICLE_TYPE_CFG = {
 };
 
 const STATUS_CFG = {
-  "Available":   { color: "#15803D", bg: C.successLight, border: "#86EFAC", dot: C.success },
-  "In Use":      { color: "#B45309", bg: C.warningLight,  border: "#FDE68A", dot: C.warning },
-  "Maintenance": { color: C.textSub, bg: "#F1F5F9",       border: C.border,  dot: C.textMuted },
+  "Available":   { color: "var(--success-hover)", bg: C.successLight, border: "#86EFAC", dot: C.success },
+  "In Use":      { color: "var(--warning-hover)", bg: C.warningLight,  border: "var(--warning-light)", dot: C.warning },
+  "Maintenance": { color: C.textSub, bg: "var(--surface-soft)",       border: C.border,  dot: C.textMuted },
 };
 
 const StatusBadge = ({ status }) => {
@@ -176,7 +176,7 @@ const Vehicles = () => {
     {
       title: "Vehicle",
       render: (_, r) => {
-        const cfg = VEHICLE_TYPE_CFG[r.type] || { color: C.textSub, bg: "#F1F5F9", border: C.border, icon: "🚗" };
+        const cfg = VEHICLE_TYPE_CFG[r.type] || { color: C.textSub, bg: "var(--surface-soft)", border: C.border, icon: "🚗" };
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{
@@ -240,7 +240,7 @@ const Vehicles = () => {
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           padding: "3px 11px", borderRadius: 20,
-          background: "#F8FAFC", border: "1px solid " + C.border,
+          background: "var(--background)", border: "1px solid " + C.border,
           fontSize: 12, fontWeight: 700, color: C.textSub,
         }}>
           <TeamOutlined style={{ fontSize: 10 }} />

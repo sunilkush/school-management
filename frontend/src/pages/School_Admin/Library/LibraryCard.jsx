@@ -10,13 +10,13 @@ import { pageWrapper, pageCard, tableHeadCss } from "../../../styles/pageStyles"
 const { Option } = Select;
 
 const C = {
-  primary:   "#2563EB",
+  primary:   "var(--primary)",
   primaryBg: "#EFF6FF",
   primaryBd: "#BFDBFE",
-  danger:    "#EF4444",
-  dangerBg:  "#FEF2F2",
-  border:    "#E2E8F0",
-  textSub:   "#64748B",
+  danger:    "var(--danger)",
+  dangerBg:  "var(--danger-light)",
+  border:    "var(--border)",
+  textSub:   "var(--text-secondary)",
 };
 
 const LibraryCard = () => {
@@ -118,7 +118,7 @@ const LibraryCard = () => {
       <Modal
         title={
           <Space>
-            <CreditCardOutlined style={{ color: "#2563EB" }} />
+            <CreditCardOutlined style={{ color: "var(--primary)" }} />
             <span style={{ fontWeight: 700 }}>Issue Library Card</span>
           </Space>
         }

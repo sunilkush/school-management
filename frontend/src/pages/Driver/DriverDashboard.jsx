@@ -11,9 +11,9 @@ import PageHeader from "../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, iconWell, pill } from "../../styles/pageStyles";
 
 const STATUS_COLOR = {
-  Available: ["#15803D", "rgba(220,252,231,0.5)"],
-  "In Use": ["#B45309", "rgba(254,243,199,0.5)"],
-  Maintenance: ["#64748B", "rgba(241,245,249,0.6)"],
+  Available: ["var(--success-hover)", "rgba(var(--success-rgb), 0.5)"],
+  "In Use": ["var(--warning-hover)", "rgba(var(--warning-rgb), 0.5)"],
+  Maintenance: ["var(--text-secondary)", "var(--border-muted)"],
 };
 
 const VehicleCard = ({ vehicle }) => {
@@ -22,7 +22,7 @@ const VehicleCard = ({ vehicle }) => {
     <div style={{ ...sectionPanel, marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={iconWell("#2563EB", 48)}><CarOutlined style={{ fontSize: 20 }} /></div>
+          <div style={iconWell("var(--primary)", 48)}><CarOutlined style={{ fontSize: 20 }} /></div>
           <div>
             <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>{vehicle.busNumber}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{vehicle.vehicleType} · {vehicle.capacity || 0} seats</div>

@@ -20,10 +20,14 @@ import {
 
 const { Option } = Select;
 
+// `color` is passed into the shared `pill()` helper (frontend/src/styles/pageStyles.js),
+// which builds its border as `1px solid ${color}25` — a raw-hex alpha-suffix trick that
+// breaks with a var() string. That helper is outside this task's scope, so `color` stays
+// hex; `bg` (used directly, no suffix) is safely converted to shared tokens.
 const FREQ_STYLE = {
-  monthly:   { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
-  quarterly: { color: "#2563EB", bg: "#e0f2fe" },
-  yearly:    { color: "#22C55E", bg: "#d1fae5" },
+  monthly:   { color: "#14B8A6", bg: "rgba(var(--accent-rgb), 0.2)" },
+  quarterly: { color: "#2563EB", bg: "var(--primary-light)" },
+  yearly:    { color: "#22C55E", bg: "var(--success-light)" },
 };
 
 const FeeStructure = () => {
@@ -107,7 +111,7 @@ const FeeStructure = () => {
     {
       title: "Class",
       render: (r) => r.schoolClassId?.name
-        ? <span style={pill("#14B8A6", "rgba(20,184,166,0.2)")}>{r.schoolClassId.name}</span>
+        ? <span style={pill("#14B8A6", "rgba(var(--accent-rgb), 0.2)")}>{r.schoolClassId.name}</span>
         : <span style={{ color: "var(--text-muted)" }}>—</span>,
     },
     {
@@ -122,7 +126,7 @@ const FeeStructure = () => {
       title: "Amount",
       dataIndex: "amount",
       render: (value) => (
-        <span style={{ fontWeight: 700, fontSize: 14, color: "#22C55E" }}>
+        <span style={{ fontWeight: 700, fontSize: 14, color: "var(--success)" }}>
           ₹{Number(value || 0).toLocaleString("en-IN")}
         </span>
       ),
@@ -132,7 +136,7 @@ const FeeStructure = () => {
       dataIndex: "frequency",
       render: (v) => {
         if (!v) return <span style={{ color: "var(--text-muted)" }}>—</span>;
-        const s = FREQ_STYLE[v.toLowerCase()] || { color: "#64748B", bg: "#f1f5f9" };
+        const s = FREQ_STYLE[v.toLowerCase()] || { color: "#64748B", bg: "var(--surface-soft)" };
         return <span style={pill(s.color, s.bg)}>{v.toUpperCase()}</span>;
       },
     },
@@ -143,7 +147,7 @@ const FeeStructure = () => {
       render: (_, record) => (
         <Space size={4}>
           <Tooltip title="Edit">
-            <Button type="text" size="small" icon={<EditOutlined />} style={{ color: "#f59e0b" }} onClick={() => handleEdit(record)} />
+            <Button type="text" size="small" icon={<EditOutlined />} style={{ color: "var(--warning)" }} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Popconfirm
             title="Delete this fee structure?"

@@ -22,11 +22,11 @@ import {
 
 /* ── Status helpers ───────────────────────────────────────────────── */
 const examStatus = (examDate) => {
-  if (!examDate) return { label: "No Date", color: "#64748b", bg: "#f1f5f9" };
+  if (!examDate) return { label: "No Date", color: "var(--text-secondary)", bg: "var(--surface-soft)" };
   const d = dayjs(examDate);
-  if (d.isBefore(dayjs(), "day")) return { label: "Completed", color: "#10b981", bg: "#10b98115" };
-  if (d.isSame(dayjs(), "day"))   return { label: "Today",     color: "#3b82f6", bg: "#3b82f615" };
-  return                                 { label: "Upcoming",  color: "#f59e0b", bg: "#f59e0b15" };
+  if (d.isBefore(dayjs(), "day")) return { label: "Completed", color: "var(--success)", bg: "rgba(var(--success-rgb),0.08)" };
+  if (d.isSame(dayjs(), "day"))   return { label: "Today",     color: "var(--info)", bg: "rgba(59,130,246,0.08)" };
+  return                                 { label: "Upcoming",  color: "var(--warning)", bg: "rgba(var(--warning-rgb),0.08)" };
 };
 
 /* ── Mini stat box ────────────────────────────────────────────────── */
@@ -199,7 +199,7 @@ const TeacherExamsPage = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             width: 32, height: 32, borderRadius: "50%",
-            background: "#6366f118", color: "#6366f1",
+            background: "rgba(var(--purple-rgb),0.09)", color: "var(--purple)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontWeight: 700, fontSize: 13, flexShrink: 0,
           }}>{(name || "S")[0].toUpperCase()}</div>
@@ -230,7 +230,7 @@ const TeacherExamsPage = () => {
       render: (_, r) => {
         const pass = r.obtainedMarks >= r.passingMarks;
         return (
-          <span style={pill(pass ? "#10b981" : "#ef4444", pass ? "#10b98118" : "#ef444418")}>
+          <span style={pill(pass ? "var(--success)" : "var(--danger)", pass ? "rgba(var(--success-rgb),0.09)" : "rgba(var(--danger-rgb),0.09)")}>
             {pass ? "PASS" : "FAIL"}
           </span>
         );
@@ -240,7 +240,7 @@ const TeacherExamsPage = () => {
       title: "Progress", width: 120,
       render: (_, r) => {
         const pct = Math.min(100, Math.round((r.obtainedMarks / (r.totalMarks || 1)) * 100));
-        const color = pct >= 60 ? "#10b981" : pct >= 33 ? "#f59e0b" : "#ef4444";
+        const color = pct >= 60 ? "var(--success)" : pct >= 33 ? "var(--warning)" : "var(--danger)";
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ flex: 1, height: 6, background: "var(--border-muted)", borderRadius: 99, overflow: "hidden" }}>
@@ -310,7 +310,7 @@ const TeacherExamsPage = () => {
                 </div>
               </div>
               <span style={pill(status.color, status.bg)}>{status.label}</span>
-              <span style={pill("#6366f1", "#6366f115")}>
+              <span style={pill("var(--purple)", "rgba(var(--purple-rgb),0.08)")}>
                 Total: {selectedExam?.totalMarks || 100} · Pass: {selectedExam?.passingMarks || 33}
               </span>
             </div>
@@ -321,10 +321,10 @@ const TeacherExamsPage = () => {
       {/* ── Stats (only when rows loaded) ── */}
       {summary && (
         <div style={statGrid(150)}>
-          <Stat icon={Users}       label="Total Students" value={summary.total}       color="#6366f1" />
-          <Stat icon={TrendingUp}  label="Class Average"  value={`${summary.avg}/${selectedExam?.totalMarks || 100}`} color="#0ea5e9" />
-          <Stat icon={Trophy}      label="Passed"         value={summary.passCount}   color="#10b981" />
-          <Stat icon={AlertCircle} label="Failed"         value={summary.failCount}   color="#ef4444" />
+          <Stat icon={Users}       label="Total Students" value={summary.total}       color="var(--purple)" />
+          <Stat icon={TrendingUp}  label="Class Average"  value={`${summary.avg}/${selectedExam?.totalMarks || 100}`} color="var(--info)" />
+          <Stat icon={Trophy}      label="Passed"         value={summary.passCount}   color="var(--success)" />
+          <Stat icon={AlertCircle} label="Failed"         value={summary.failCount}   color="var(--danger)" />
         </div>
       )}
 
@@ -358,7 +358,7 @@ const TeacherExamsPage = () => {
               {summary && (
                 <Tooltip title={`${summary.passPercent}% passed`}>
                   <Progress type="circle" size={40} percent={summary.passPercent}
-                    strokeColor="#10b981"
+                    strokeColor="var(--success)"
                     format={(p) => <span style={{ fontSize: 10, fontWeight: 700 }}>{p}%</span>}
                   />
                 </Tooltip>
@@ -374,7 +374,7 @@ const TeacherExamsPage = () => {
                 icon={<SaveOutlined />}
                 loading={saving}
                 onClick={saveBulk}
-                style={{ background: "#6366f1", borderColor: "#6366f1", color: "#fff" }}
+                style={{ background: "var(--purple)", borderColor: "var(--purple)", color: "#fff" }}
               >
                 Save Marks
               </Button>

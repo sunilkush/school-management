@@ -20,9 +20,9 @@ import PageHeader from "../../components/layout/PageHeader";
 import {
   iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss,
 } from "../../styles/pageStyles";
+import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
 const { Text } = Typography;
-const PIE_COLORS = ["#14B8A6", "#0891b2", "#22C55E", "#F59E0B", "#EF4444", "#14B8A6", "#F59E0B", "#14b8a6"];
 
 const LibraryReports = () => {
   const dispatch = useDispatch();
@@ -169,13 +169,13 @@ const LibraryReports = () => {
           {/* ── KPI row ─────────────────────────────────────────────── */}
           <div style={statGrid(150)}>
             {[
-              { label: "Book Titles",     value: summary.totalTitles,     color: "#14B8A6", icon: <BookOutlined /> },
-              { label: "Total Copies",    value: summary.totalCopies,     color: "#0891b2", icon: <FileTextOutlined /> },
-              { label: "Available",       value: summary.availableCopies, color: "#22C55E", icon: <CheckCircleOutlined /> },
-              { label: "Issued",          value: summary.issuedActive,    color: "#F59E0B", icon: <BookOutlined /> },
-              { label: "Overdue",         value: summary.overdueCount,    color: "#EF4444", icon: <AlertOutlined /> },
-              { label: "Lost",            value: summary.lostCount,       color: "#14B8A6", icon: <AlertOutlined /> },
-              { label: "Pending Fines",   value: `₹${summary.pendingFines}`, color: "#F59E0B", icon: <RupeeIcon /> },
+              { label: "Book Titles",     value: summary.totalTitles,     color: "var(--accent)", icon: <BookOutlined /> },
+              { label: "Total Copies",    value: summary.totalCopies,     color: "var(--cyan)", icon: <FileTextOutlined /> },
+              { label: "Available",       value: summary.availableCopies, color: "var(--success)", icon: <CheckCircleOutlined /> },
+              { label: "Issued",          value: summary.issuedActive,    color: "var(--warning)", icon: <BookOutlined /> },
+              { label: "Overdue",         value: summary.overdueCount,    color: "var(--danger)", icon: <AlertOutlined /> },
+              { label: "Lost",            value: summary.lostCount,       color: "var(--accent)", icon: <AlertOutlined /> },
+              { label: "Pending Fines",   value: `₹${summary.pendingFines}`, color: "var(--warning)", icon: <RupeeIcon /> },
             ].map(({ label, value, color, icon }) => (
               <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
                 <div style={iconWell(color, 38)}>{icon}</div>
@@ -196,7 +196,7 @@ const LibraryReports = () => {
               </Text>
               <Text strong style={{ fontSize: 12 }}>{summary.utilization}%</Text>
             </div>
-            <Progress percent={summary.utilization} strokeColor="#14B8A6" status="active" showInfo={false} />
+            <Progress percent={summary.utilization} strokeColor="var(--accent)" status="active" showInfo={false} />
           </div>
 
           {/* ── Charts row ───────────────────────────────────────────── */}
@@ -213,8 +213,8 @@ const LibraryReports = () => {
                       <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="issued"   fill="#14B8A6" radius={[4, 4, 0, 0]} name="Issued" />
-                      <Bar dataKey="returned" fill="#22C55E" radius={[4, 4, 0, 0]} name="Returned" />
+                      <Bar dataKey="issued"   fill="var(--accent)" radius={[4, 4, 0, 0]} name="Issued" />
+                      <Bar dataKey="returned" fill="var(--success)" radius={[4, 4, 0, 0]} name="Returned" />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -230,7 +230,7 @@ const LibraryReports = () => {
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
                       <Pie data={memberTypeData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                        {memberTypeData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                        {memberTypeData.map((_, i) => <Cell key={i} fill={CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(v) => [`${v} issues`, ""]} />
                     </PieChart>
@@ -249,13 +249,13 @@ const LibraryReports = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {categoryData.map(({ name, value }, i) => (
                   <div key={name} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 3, background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length], flexShrink: 0 }} />
                     <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{name}</div>
                     <div style={{ width: 160 }}>
                       <Progress
                         percent={Math.round((value / books.length) * 100)}
                         size="small"
-                        strokeColor={PIE_COLORS[i % PIE_COLORS.length]}
+                        strokeColor={CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]}
                         format={() => `${value}`}
                         showInfo
                       />
@@ -274,7 +274,7 @@ const LibraryReports = () => {
               className="report-tbl"
               rowKey="key"
               columns={[
-                { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#14B8A6" }}>{i + 1}</span>, width: 40 },
+                { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "var(--accent)" }}>{i + 1}</span>, width: 40 },
                 { title: "Book Title", dataIndex: "title", render: (t) => <Text strong>{t}</Text> },
                 {
                   title: "Times Issued",
@@ -285,7 +285,7 @@ const LibraryReports = () => {
                   render: (c) => (
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <Tag color="blue">{c}</Tag>
-                      <Progress percent={topBorrowed.length > 0 ? Math.round((c / topBorrowed[0]?.count) * 100) : 0} size="small" showInfo={false} style={{ width: 80 }} strokeColor="#14B8A6" />
+                      <Progress percent={topBorrowed.length > 0 ? Math.round((c / topBorrowed[0]?.count) * 100) : 0} size="small" showInfo={false} style={{ width: 80 }} strokeColor="var(--accent)" />
                     </div>
                   ),
                 },
@@ -300,10 +300,10 @@ const LibraryReports = () => {
           {/* ── Status breakdown summary ──────────────────────────────── */}
           <Row gutter={[12, 12]}>
             {[
-              { label: "Issued",   count: summary.issuedActive,    color: "#F59E0B", bg: "rgba(254,243,199,0.25)" },
-              { label: "Returned", count: summary.returnedCount,   color: "#22C55E", bg: "rgba(220,252,231,0.2)" },
-              { label: "Overdue",  count: summary.overdueCount,    color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
-              { label: "Lost",     count: summary.lostCount,       color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
+              { label: "Issued",   count: summary.issuedActive,    color: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.25)" },
+              { label: "Returned", count: summary.returnedCount,   color: "var(--success)", bg: "rgba(var(--success-rgb), 0.2)" },
+              { label: "Overdue",  count: summary.overdueCount,    color: "var(--danger)", bg: "rgba(var(--danger-rgb), 0.2)" },
+              { label: "Lost",     count: summary.lostCount,       color: "var(--accent)", bg: "rgba(var(--accent-rgb), 0.2)" },
             ].map(({ label, count, color, bg }) => (
               <Col xs={12} sm={6} key={label}>
                 <div style={{ background: bg, borderRadius: 12, padding: "16px 12px", textAlign: "center" }}>

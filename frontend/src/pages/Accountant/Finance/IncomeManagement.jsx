@@ -35,11 +35,11 @@ const INCOME_CATEGORIES = [
 const PAYMENT_MODES = ["cash", "cheque", "bank_transfer", "upi", "online", "dd"];
 
 const CAT_COLORS = {
-  "Tuition Fee": "#14B8A6", "Admission Fee": "#0891b2", "Donation": "#22C55E",
-  "Grant": "#22C55E", "Transport Income": "#F59E0B", "Hostel Income": "#14B8A6",
-  "Miscellaneous": "#64748B",
+  "Tuition Fee": "var(--accent)", "Admission Fee": "var(--cyan)", "Donation": "var(--success)",
+  "Grant": "var(--success)", "Transport Income": "var(--warning)", "Hostel Income": "var(--accent)",
+  "Miscellaneous": "var(--text-secondary)",
 };
-const catColor = (cat) => CAT_COLORS[cat] || "#0891b2";
+const catColor = (cat) => CAT_COLORS[cat] || "var(--cyan)";
 
 const IncomeManagement = () => {
   const dispatch = useDispatch();
@@ -161,14 +161,14 @@ const IncomeManagement = () => {
       title: "Category",
       dataIndex: "category",
       render: (c) => (
-        <span style={pill(catColor(c), `${catColor(c)}15`)}>{c}</span>
+        <span style={pill(catColor(c), `color-mix(in srgb, ${catColor(c)} 15%, transparent)`)}>{c}</span>
       ),
     },
     {
       title: "Amount",
       dataIndex: "amount",
       sorter: (a, b) => a.amount - b.amount,
-      render: (v) => <span style={{ fontWeight: 700, fontSize: 14, color: "#22C55E" }}>{money(v)}</span>,
+      render: (v) => <span style={{ fontWeight: 700, fontSize: 14, color: "var(--success)" }}>{money(v)}</span>,
     },
     {
       title: "Date",
@@ -222,9 +222,9 @@ const IncomeManagement = () => {
       <StatCardsRow
         style={{ marginTop: 0 }}
         items={[
-          { label: "Total Income",   value: money(incomeTotalAmount) ?? "—", color: "#22C55E", icon: <RupeeIcon /> },
-          { label: "Total Records",  value: incomeTotal ?? "—",              color: "#0891b2", icon: <FilterOutlined /> },
-          { label: "This Month",     value: money(incomeSummary?.total) ?? "—", color: "#14B8A6", icon: <RupeeIcon /> },
+          { label: "Total Income",   value: money(incomeTotalAmount) ?? "—", color: "var(--success)", icon: <RupeeIcon /> },
+          { label: "Total Records",  value: incomeTotal ?? "—",              color: "var(--cyan)", icon: <FilterOutlined /> },
+          { label: "This Month",     value: money(incomeSummary?.total) ?? "—", color: "var(--accent)", icon: <RupeeIcon /> },
         ]}
       />
 
@@ -234,7 +234,7 @@ const IncomeManagement = () => {
           <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>By Category</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {byCategory.map((c) => (
-              <div key={c._id} style={{ display: "flex", alignItems: "center", gap: 8, background: `${catColor(c._id)}12`, borderRadius: 8, padding: "6px 12px", border: `1px solid ${catColor(c._id)}25` }}>
+              <div key={c._id} style={{ display: "flex", alignItems: "center", gap: 8, background: `color-mix(in srgb, ${catColor(c._id)} 12%, transparent)`, borderRadius: 8, padding: "6px 12px", border: `1px solid color-mix(in srgb, ${catColor(c._id)} 25%, transparent)` }}>
                 <span style={{ fontWeight: 700, color: catColor(c._id), fontSize: 13 }}>{money(c.total)}</span>
                 <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{c._id} ({c.count})</span>
               </div>

@@ -196,7 +196,7 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
             </Tooltip>
           ))}
         </div>
-        <div style={{ marginTop: 10, padding: "8px 12px", background: "#FFF7ED", borderRadius: 8, border: "1px solid #FED7AA", fontSize: 12, color: "#92400E", lineHeight: 1.7 }}>
+        <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(var(--warning-rgb), 0.08)", borderRadius: 8, border: "1px solid #FED7AA", fontSize: 12, color: "var(--warning-hover)", lineHeight: 1.7 }}>
           <InfoCircleOutlined style={{ marginRight: 6 }} />
           <strong>className</strong> aur <strong>sectionName</strong> ke liye — template ki <em>Sheet 2</em> se sahi naam copy karein, spelling bilkul match honi chahiye.
         </div>
@@ -237,7 +237,7 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
             {created.length > 0 && (
               <>
                 <Divider style={{ margin: "4px 0" }} orientation="left" orientationMargin={0}>
-                  <CheckCircleOutlined style={{ color: "#22C55E", marginRight: 6 }} />Successfully Imported
+                  <CheckCircleOutlined style={{ color: "var(--success)", marginRight: 6 }} />Successfully Imported
                 </Divider>
                 <Table
                   size="small" bordered pagination={false}
@@ -278,7 +278,7 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
             {errors.length > 0 && (
               <>
                 <Divider style={{ margin: "4px 0" }} orientation="left" orientationMargin={0}>
-                  <CloseCircleOutlined style={{ color: "#EF4444", marginRight: 6 }} />Failed Rows
+                  <CloseCircleOutlined style={{ color: "var(--danger)", marginRight: 6 }} />Failed Rows
                 </Divider>
                 <Table
                   size="small" bordered pagination={false}

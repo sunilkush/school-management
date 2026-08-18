@@ -18,20 +18,20 @@ import { createSection, deleteSection, fetchSections } from "../../../features/s
 import { useTheme } from "../../../context/ThemeContext";
 
 const tokens = (isDark) => ({
-  cardBg: isDark ? "#141414" : "#ffffff",
-  innerBg: isDark ? "#0f0f0f" : "#f8faff",
-  rowBg: isDark ? "#141414" : "#ffffff",
+  cardBg: "var(--surface)",
+  innerBg: "var(--background)",
+  rowBg: "var(--surface)",
   rowAlt: isDark ? "#111111" : "#fafafa",
   rowHover: isDark ? "#1a1a1a" : "#f0f7ff",
-  border: isDark ? "#1f1f1f" : "#f0f0f0",
-  textPri: isDark ? "#e8e8e8" : "#111827",
-  textSec: isDark ? "#6b7280" : "#9ca3af",
+  border: "var(--border-muted)",
+  textPri: "var(--text)",
+  textSec: "var(--text-secondary)",
   accent: "#1677ff",
   accentBg: isDark ? "rgba(22,119,255,0.08)" : "rgba(22,119,255,0.06)",
-  success: "#0ea472",
-  successBg: isDark ? "rgba(14,164,114,0.08)" : "rgba(14,164,114,0.06)",
-  thBg: isDark ? "#0f0f0f" : "#f9fafb",
-  thBorder: isDark ? "#1f1f1f" : "#f0f0f0",
+  success: "var(--success)",
+  successBg: isDark ? "rgba(var(--success-rgb),0.08)" : "rgba(var(--success-rgb),0.06)",
+  thBg: "var(--background)",
+  thBorder: "var(--border-muted)",
 });
 
 const safeArray = (val) => {
@@ -436,7 +436,7 @@ const SchoolClass = ({ next }) => {
                               style={{
                                 fontSize: 11,
                                 color: t.textSec,
-                                background: "#f3f4f6",
+                                background: "var(--surface-soft)",
                                 padding: "3px 8px",
                                 borderRadius: 99,
                               }}

@@ -151,37 +151,37 @@ const QUICK_ACTIONS = [
   {
     label: "Add New School",
     icon: <BankOutlined />,
-    color: "#2563EB",
+    color: "var(--primary)",
     route: "/dashboard/superadmin/schools",
   },
   {
     label: "Manage Subscriptions",
     icon: <SafetyCertificateOutlined />,
-    color: "#14B8A6",
+    color: "var(--accent)",
     route: "/dashboard/superadmin/subscriptions",
   },
   {
     label: "View All Users",
     icon: <TeamOutlined />,
-    color: "#22C55E",
+    color: "var(--success)",
     route: "/dashboard/superadmin/users",
   },
   {
     label: "Financial Reports",
     icon: <RupeeIcon />,
-    color: "#22C55E",
+    color: "var(--success)",
     route: "/dashboard/superadmin/reports/revenue",
   },
   {
     label: "System Logs",
     icon: <ThunderboltFilled />,
-    color: "#F59E0B",
+    color: "var(--warning)",
     route: "/dashboard/superadmin/settings/audit",
   },
   {
     label: "Send Notification",
     icon: <BellOutlined />,
-    color: "#EF4444",
+    color: "var(--danger)",
     route: "/dashboard/superadmin/notifications",
   },
 ];
@@ -293,7 +293,7 @@ const SuperAdminDashboard = () => {
       .slice(0, 4)
       .map((school, index) => ({
         ...school,
-        color: ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B"][index],
+        color: ["var(--primary)", "var(--accent)", "var(--success)", "var(--warning)"][index],
       }));
   }, [schoolsData]);
 
@@ -304,7 +304,7 @@ const SuperAdminDashboard = () => {
       {
         label: "Premium Plans",
         count: schoolsData.filter((s) => s.subscription === "Premium").length,
-        color: "#2563EB",
+        color: "var(--primary)",
         textColor: "#2E6A9A",
         bg: "rgba(219,234,254,0.18)",
         border: "rgba(219,234,254,0.4)",
@@ -312,24 +312,24 @@ const SuperAdminDashboard = () => {
       {
         label: "Standard Plans",
         count: schoolsData.filter((s) => s.subscription === "Standard").length,
-        color: "#14B8A6",
-        textColor: "#6D28D9",
+        color: "var(--accent)",
+        textColor: "var(--purple-hover)",
         bg: "rgba(20,184,166,0.18)",
         border: "rgba(20,184,166,0.4)",
       },
       {
         label: "Trial Active",
         count: schoolsData.filter((s) => s.subscription === "Trial").length,
-        color: "#22C55E",
-        textColor: "#15803D",
+        color: "var(--success)",
+        textColor: "var(--success-hover)",
         bg: "rgba(220,252,231,0.18)",
         border: "rgba(220,252,231,0.4)",
       },
       {
         label: "Suspended",
         count: schoolsData.filter((s) => s.status === "suspended").length,
-        color: "#EF4444",
-        textColor: "#DC2626",
+        color: "var(--danger)",
+        textColor: "var(--danger-hover)",
         bg: "rgba(254,226,226,0.18)",
         border: "rgba(254,226,226,0.4)",
       },
@@ -573,7 +573,7 @@ const SuperAdminDashboard = () => {
             title="Total Schools"
             value={metrics.totalSchools}
             icon={<BankOutlined />}
-            color="#2563EB"
+            color="var(--primary)"
             delta="Live"
             deltaType="up"
           />
@@ -581,7 +581,7 @@ const SuperAdminDashboard = () => {
             title="Active Schools"
             value={metrics.activeSchools}
             icon={<CheckCircleFilled />}
-            color="#22C55E"
+            color="var(--success)"
             delta={`${Math.round((metrics.activeSchools / Math.max(metrics.totalSchools, 1)) * 100)}% active`}
             deltaType="up"
           />
@@ -589,7 +589,7 @@ const SuperAdminDashboard = () => {
             title="Total Students"
             value={metrics.totalStudents}
             icon={<TeamOutlined />}
-            color="#14B8A6"
+            color="var(--accent)"
             delta="Live count"
             deltaType="up"
           />
@@ -597,7 +597,7 @@ const SuperAdminDashboard = () => {
             title="Revenue (YTD)"
             value={formatMoney(metrics.totalRevenue)}
             icon={<RupeeIcon />}
-            color="#22C55E"
+            color="var(--success)"
             delta="Collected"
             deltaType="up"
           />
@@ -605,7 +605,7 @@ const SuperAdminDashboard = () => {
             title="Expiring Soon"
             value={Math.max(metrics.expiringSoon, 0)}
             icon={<WarningOutlined />}
-            color="#F59E0B"
+            color="var(--warning)"
             delta="Needs follow-up"
             deltaType="down"
           />
@@ -614,7 +614,7 @@ const SuperAdminDashboard = () => {
             value={metrics.avgHealth}
             suffix="%"
             icon={<ThunderboltFilled />}
-            color="#2563EB"
+            color="var(--primary)"
             delta="Live average"
             deltaType="up"
           />
@@ -803,7 +803,7 @@ const SuperAdminDashboard = () => {
                 <Space size={8}>
                   <BankOutlined style={{ color: "var(--primary)" }} />
                   <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Schools</span>
-                  <span style={pill("#2563EB")}>{filteredSchools.length} shown</span>
+                  <span style={pill("var(--primary)")}>{filteredSchools.length} shown</span>
                 </Space>
                 <Space wrap>
                   <Segmented

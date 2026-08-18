@@ -28,6 +28,9 @@ import {
 
 const { Option } = Select;
 
+// `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
+// builds its background as `${color}22` — breaks with a var() string, so call sites pass
+// raw hex.
 const StatCard = ({ icon, label, value, color }) => (
   <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
     <div style={iconWell(color, 42)}>{icon}</div>

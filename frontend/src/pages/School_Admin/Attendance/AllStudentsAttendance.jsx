@@ -32,6 +32,9 @@ import {
 } from "../../../styles/pageStyles";
 
 /* ── Status config ───────────────────────────────────────────────── */
+// `color` feeds StatusBtn's `${opt.color}18` alpha-suffix trick and the shared iconWell()
+// helper (frontend/src/styles/pageStyles.js) elsewhere in this file — both break with a
+// var() string, so these stay raw hex.
 const STATUS_OPTIONS = [
   { value: "present", label: "P",  fullLabel: "Present",  color: "#22C55E" },
   { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#EF4444" },
@@ -388,6 +391,7 @@ const AllStudentsAttendance = () => {
       </div>
 
       {/* ── Stats ── */}
+      {/* `color` feeds the shared iconWell() helper below — see STATUS_OPTIONS note above. */}
       <div style={statGrid(130)}>
         {[
           { key: "total",   label: "Total",    color: "var(--primary)" },
@@ -455,11 +459,11 @@ const AllStudentsAttendance = () => {
           </div>
           <Progress
             percent={summary.rate}
-            strokeColor="#22C55E"
+            strokeColor="var(--success)"
             trailColor="var(--border-muted)"
             size="small"
             format={(p) => (
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#22C55E" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--success)" }}>
                 {p}%
               </span>
             )}

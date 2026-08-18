@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { Layout, Drawer, Skeleton } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate, Outlet } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import Loader from "../Loader/Loader";
 import BottomNav from "../mobile/BottomNav";
 
@@ -18,12 +17,12 @@ const getWindowWidth = () =>
   typeof window !== "undefined" ? window.innerWidth : 1280;
 
 /* ── Skeleton fallbacks ─────────────────────────────────────────── */
-const SidebarFallback = ({ isDark, collapsed }) => (
+const SidebarFallback = ({ collapsed }) => (
   <div style={{
     width: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
     height: "100vh",
-    background: isDark ? "#111827" : "#ffffff",
-    borderRight: `1px solid ${isDark ? "#1f2937" : "#e2e8f0"}`,
+    background: "var(--surface)",
+    borderRight: "1px solid var(--border)",
     display: "flex",
     flexDirection: "column",
     gap: 8,
@@ -44,15 +43,15 @@ const SidebarFallback = ({ isDark, collapsed }) => (
   </div>
 );
 
-const TopbarFallback = ({ isDark }) => (
+const TopbarFallback = () => (
   <div style={{
     height: 60,
     display: "flex",
     alignItems: "center",
     padding: "0 20px",
     gap: 14,
-    background: isDark ? "#111827" : "#ffffff",
-    borderBottom: `1px solid ${isDark ? "#1f2937" : "#e2e8f0"}`,
+    background: "var(--surface)",
+    borderBottom: "1px solid var(--border)",
   }}>
     <Skeleton.Button active size="small" style={{ width: 32, borderRadius: 8 }} />
     <Skeleton.Input active size="small" style={{ width: 200, borderRadius: 10 }} />
@@ -69,7 +68,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthInitialized, isLoggingOut } = useSelector((s) => s.auth);
   const { activeYear }  = useSelector((s) => s.academicYear);
-  const { isDark }      = useTheme();
 
   const role = user?.role?.name;
   const resizeRef = useRef(null);
@@ -138,7 +136,7 @@ const Dashboard = () => {
             position: "relative",
             zIndex: 100,
           }}>
-            <Suspense fallback={<SidebarFallback isDark={isDark} collapsed={sidebarCollapsed} />}>
+            <Suspense fallback={<SidebarFallback collapsed={sidebarCollapsed} />}>
               <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
             </Suspense>
           </div>
@@ -155,7 +153,7 @@ const Dashboard = () => {
             width={SIDEBAR_EXPANDED}
             styles={{ body: { padding: 0, overflow: "hidden" } }}
           >
-            <Suspense fallback={<SidebarFallback isDark={isDark} collapsed={false} />}>
+            <Suspense fallback={<SidebarFallback collapsed={false} />}>
               <Sidebar collapsed={false} onToggle={() => setDrawerOpen(false)} />
             </Suspense>
           </Drawer>
@@ -178,7 +176,7 @@ const Dashboard = () => {
             zIndex: 99,
             flexShrink: 0,
           }}>
-            <Suspense fallback={<TopbarFallback isDark={isDark} />}>
+            <Suspense fallback={<TopbarFallback />}>
               <Topbar
                 toggleSidebar={toggleSidebar}
                 sidebarCollapsed={sidebarCollapsed}

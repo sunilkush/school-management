@@ -21,9 +21,9 @@ const QUESTION_TYPES = [
 ];
 
 const DIFFICULTY = [
-  { value: "easy",   label: "Easy",   color: "#15803D" },
-  { value: "medium", label: "Medium", color: "#B45309" },
-  { value: "hard",   label: "Hard",   color: "#DC2626" },
+  { value: "easy",   label: "Easy",   color: "var(--success-hover)" },
+  { value: "medium", label: "Medium", color: "var(--warning-hover)" },
+  { value: "hard",   label: "Hard",   color: "var(--danger-hover)" },
 ];
 
 /**
@@ -202,8 +202,8 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp 
     return (
       <div style={{
         padding: "32px 24px", textAlign: "center",
-        background: "#FEF3C7", borderRadius: 12,
-        border: "1px solid #F59E0B40", color: "#B45309",
+        background: "var(--warning-light)", borderRadius: 12,
+        border: "1px solid rgba(var(--warning-rgb),0.25)", color: "var(--warning-hover)",
       }}>
         <div style={{ fontSize: 20, marginBottom: 8 }}>⚠️</div>
         <div style={{ fontWeight: 700 }}>Academic Year select karein</div>
@@ -219,9 +219,9 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp 
       {/* Academic year badge */}
       <div style={{
         marginBottom: 16, padding: "7px 14px", borderRadius: 8,
-        background: isEditMode ? "#EDE9FE" : "#DBEAFE",
-        border: `1px solid ${isEditMode ? "#7C3AED22" : "#2563EB22"}`,
-        color: isEditMode ? "#6D28D9" : "#1D4ED8",
+        background: isEditMode ? "rgba(var(--purple-rgb),0.12)" : "var(--primary-light)",
+        border: `1px solid ${isEditMode ? "rgba(var(--purple-rgb),0.13)" : "rgba(var(--primary-rgb),0.13)"}`,
+        color: isEditMode ? "var(--purple-hover)" : "var(--primary-hover)",
         fontSize: 12, fontWeight: 600,
         display: "flex", alignItems: "center", gap: 8,
       }}>
@@ -402,7 +402,7 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp 
               <Select>
                 {DIFFICULTY.map((d) => (
                   <Option key={d.value} value={d.value}>
-                    <Tag color={d.color === "#15803D" ? "green" : d.color === "#B45309" ? "gold" : "red"} style={{ margin: 0 }}>
+                    <Tag color={d.color === "var(--success-hover)" ? "green" : d.color === "var(--warning-hover)" ? "gold" : "red"} style={{ margin: 0 }}>
                       {d.label}
                     </Tag>
                   </Option>

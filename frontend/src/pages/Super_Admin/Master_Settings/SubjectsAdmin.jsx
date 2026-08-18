@@ -47,13 +47,13 @@ function StatusBadge({ isActive }) {
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
       background: isActive ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)",
-      color: isActive ? "#22C55E" : "#EF4444",
+      color: isActive ? "var(--success)" : "var(--danger)",
       border: `1px solid ${isActive ? "rgba(220,252,231,0.5)" : "rgba(254,226,226,0.5)"}`,
       borderRadius: 20, padding: "3px 11px", fontSize: 12, fontWeight: 500,
     }}>
       <span style={{
         width: 6, height: 6, borderRadius: "50%",
-        background: isActive ? "#22C55E" : "#EF4444",
+        background: isActive ? "var(--success)" : "var(--danger)",
         display: "inline-block",
       }} />
       {isActive ? "Active" : "Inactive"}
@@ -84,7 +84,7 @@ function SubjectCell({ name }) {
         display: "flex", alignItems: "center", justifyContent: "center",
         flexShrink: 0,
       }}>
-        <BookOutlined style={{ color: "#14B8A6", fontSize: 13 }} />
+        <BookOutlined style={{ color: "var(--accent)", fontSize: 13 }} />
       </div>
       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{name}</span>
     </div>
@@ -132,7 +132,7 @@ function MarksCell({ max, pass }) {
     <div>
       <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{max ?? "—"}</span>
       <span style={{ color: "var(--text-muted)", fontSize: 11, margin: "0 4px" }}>/</span>
-      <span style={{ fontFamily: "monospace", fontSize: 12, color: "#22C55E", fontWeight: 600 }}>{pass ?? "—"}</span>
+      <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--success)", fontWeight: 600 }}>{pass ?? "—"}</span>
     </div>
   );
 }
@@ -319,7 +319,7 @@ const SubjectsAdmin = () => {
             onClick={() => handleEdit(record)}
             style={{
               borderRadius: 8, fontWeight: 600, fontSize: 12,
-              background: "rgba(20,184,166,0.2)", borderColor: "rgba(20,184,166,0.5)", color: "#14B8A6",
+              background: "rgba(20,184,166,0.2)", borderColor: "rgba(20,184,166,0.5)", color: "var(--accent)",
             }}
           >
             Edit
@@ -337,7 +337,7 @@ const SubjectsAdmin = () => {
               size="small"
               style={{
                 borderRadius: 8, fontWeight: 600, fontSize: 12,
-                background: "rgba(254,226,226,0.2)", borderColor: "rgba(254,226,226,0.5)", color: "#EF4444",
+                background: "rgba(254,226,226,0.2)", borderColor: "rgba(254,226,226,0.5)", color: "var(--danger)",
               }}
             >
               Delete
@@ -368,7 +368,7 @@ const SubjectsAdmin = () => {
 
       {/* ── Stats ── */}
       <div style={{ ...statGrid(180), marginTop: 20 }}>
-        <StatCard label="Total Subjects"    value={total}         icon={<ReadOutlined />}         accentColor="#14B8A6" />
+        <StatCard label="Total Subjects"    value={total}         icon={<ReadOutlined />}         accentColor="var(--accent)" />
         <StatCard label="Active Subjects"   value={activeCount}   icon={<CheckCircleOutlined />}  accentColor="#00b894" />
         <StatCard label="Global Subjects"   value={globalCount}   icon={<GlobalOutlined />}       accentColor="#0984e3" />
         <StatCard label="Teacher Assigned"  value={assignedCount} icon={<TeamOutlined />}         accentColor="#e17055" />

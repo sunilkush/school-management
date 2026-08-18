@@ -37,12 +37,12 @@ const timeAgo = (dateStr) => {
 
 /* ── icon config by notification level ─────────────────────── */
 const levelConfig = {
-  all:        { icon: <BellOutlined />,       bg: "#EDE9FE", color: "#7C3AED" },
-  role:       { icon: <TeamOutlined />,       bg: "#DCFCE7", color: "#16A34A" },
-  "user-level": { icon: <InfoCircleOutlined />, bg: "#DBEAFE", color: "#2563EB" },
-  user:       { icon: <UserOutlined />,       bg: "#FEF3C7", color: "#D97706" },
-  warning:    { icon: <WarningOutlined />,    bg: "#FEE2E2", color: "#DC2626" },
-  achievement:{ icon: <TrophyOutlined />,     bg: "#FEF3C7", color: "#CA8A04" },
+  all:        { icon: <BellOutlined />,       bg: "rgba(var(--purple-rgb), 0.12)", color: "var(--purple)" },
+  role:       { icon: <TeamOutlined />,       bg: "var(--success-light)", color: "var(--success)" },
+  "user-level": { icon: <InfoCircleOutlined />, bg: "var(--primary-light)", color: "var(--primary)" },
+  user:       { icon: <UserOutlined />,       bg: "var(--warning-light)", color: "var(--warning-hover)" },
+  warning:    { icon: <WarningOutlined />,    bg: "var(--danger-light)", color: "var(--danger-hover)" },
+  achievement:{ icon: <TrophyOutlined />,     bg: "var(--warning-light)", color: "#CA8A04" },
 };
 const getLevel = (item) => levelConfig[item?.level] || levelConfig.all;
 
@@ -60,13 +60,13 @@ const NotifItem = ({ item, onClick }) => {
         padding: "12px 14px",
         borderRadius: 12,
         cursor: "pointer",
-        background: unread ? "rgba(124,58,237,0.04)" : "transparent",
+        background: unread ? "rgba(var(--purple-rgb), 0.04)" : "transparent",
         borderLeft: unread ? "3px solid var(--primary,#7c3aed)" : "3px solid transparent",
         transition: "background 0.15s",
         position: "relative",
       }}
       onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-soft,#f8fafc)")}
-      onMouseLeave={(e) => (e.currentTarget.style.background = unread ? "rgba(124,58,237,0.04)" : "transparent")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = unread ? "rgba(var(--purple-rgb), 0.04)" : "transparent")}
     >
       {/* icon circle */}
       <div style={{
@@ -198,7 +198,7 @@ const NotificationDropdown = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{
             width: 32, height: 32, borderRadius: 8,
-            background: "linear-gradient(135deg,#7c3aed,#6d28d9)",
+            background: "linear-gradient(135deg,var(--purple),var(--purple-hover))",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <BellOutlined style={{ color: "#fff", fontSize: 15 }} />
@@ -228,7 +228,7 @@ const NotificationDropdown = () => {
                 opacity: markingAll ? 0.5 : 1,
                 transition: "all 0.15s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(124,58,237,0.06)")}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(var(--purple-rgb), 0.06)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               <CheckOutlined style={{ fontSize: 10 }} />
@@ -262,7 +262,7 @@ const NotificationDropdown = () => {
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 12px",
             }}>
-              <BellOutlined style={{ fontSize: 24, color: "#9CA3AF" }} />
+              <BellOutlined style={{ fontSize: 24, color: "var(--text-muted)" }} />
             </div>
             <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary,#374151)", marginBottom: 4 }}>
               No notifications yet

@@ -15,10 +15,10 @@ import { pageWrapper, statGrid, iconWell, tableHeadCss } from "../../../styles/p
 import { formatCurrencyINR } from "../../../utils/payroll";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  success: "#22C55E", successLight: "#DCFCE7",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
 };
 
 const SalaryStructures = () => {
@@ -135,10 +135,10 @@ const SalaryStructures = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <TeamOutlined />,        label: "Employees",         value: stats.employees,                    color: C.primary },
-          { icon: <CheckCircleOutlined />, label: "Active Structures", value: stats.active,                       color: C.success },
-          { icon: <RupeeIcon />,           label: "Total Structures",  value: stats.total,                        color: C.accent  },
-          { icon: <BarChartOutlined />,    label: "Monthly Payroll",   value: formatCurrencyINR(stats.totalGross), color: C.warning, small: true },
+          { icon: <TeamOutlined />,        label: "Employees",         value: stats.employees,                    color: "#2563EB" },
+          { icon: <CheckCircleOutlined />, label: "Active Structures", value: stats.active,                       color: "#22C55E" },
+          { icon: <RupeeIcon />,           label: "Total Structures",  value: stats.total,                        color: "#14B8A6"  },
+          { icon: <BarChartOutlined />,    label: "Monthly Payroll",   value: formatCurrencyINR(stats.totalGross), color: "#F59E0B", small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: "var(--surface)", borderRadius: 14,

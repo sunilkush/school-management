@@ -200,14 +200,14 @@ export default function ClassPage() {
       title: "Status",
       dataIndex: "status",
       render: (value) => value === "active"
-        ? <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Active</span>
-        : <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>Inactive</span>,
+        ? <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Active</span>
+        : <span style={pill("var(--danger-hover)", "rgba(254,226,226,0.5)")}>Inactive</span>,
     },
     {
       title: "Scope",
       dataIndex: "isGlobal",
       render: (value) => value
-        ? <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}><GlobalOutlined /> Global</span>
+        ? <span style={pill("var(--primary)", "rgba(219,234,254,0.4)")}><GlobalOutlined /> Global</span>
         : <span style={pill("var(--text-muted)")}><HomeOutlined /> Local</span>,
     },
     {
@@ -253,10 +253,10 @@ export default function ClassPage() {
       />
 
       <div style={{ ...statGrid(170), marginTop: 20 }}>
-        <StatCard icon={<BookOutlined />} label="Total Classes" value={stats.total} color="#2563EB" />
-        <StatCard icon={<CheckCircleOutlined />} label="Active Classes" value={stats.active} color="#22C55E" />
-        <StatCard icon={<CloseCircleOutlined />} label="Inactive Classes" value={stats.inactive} color="#EF4444" />
-        <StatCard icon={<GlobalOutlined />} label="Global Classes" value={stats.global} color="#14B8A6" />
+        <StatCard icon={<BookOutlined />} label="Total Classes" value={stats.total} color="var(--primary)" />
+        <StatCard icon={<CheckCircleOutlined />} label="Active Classes" value={stats.active} color="var(--success)" />
+        <StatCard icon={<CloseCircleOutlined />} label="Inactive Classes" value={stats.inactive} color="var(--danger)" />
+        <StatCard icon={<GlobalOutlined />} label="Global Classes" value={stats.global} color="var(--accent)" />
       </div>
 
       <style>{tableHeadCss("class-page-tbl")}</style>

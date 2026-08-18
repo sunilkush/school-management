@@ -42,16 +42,16 @@ const loadRazorpay = () =>
 
 /* ── Quarter meta ── */
 const Q_MONTHS = {
-  1: { label: "Q1", months: "Jan · Feb · Mar", color: "#6366F1", bg: "#EEF2FF" },
-  2: { label: "Q2", months: "Apr · May · Jun", color: "#0891B2", bg: "#ECFEFF" },
-  3: { label: "Q3", months: "Jul · Aug · Sep", color: "#D97706", bg: "#FFFBEB" },
-  4: { label: "Q4", months: "Oct · Nov · Dec", color: "#16A34A", bg: "#F0FDF4" },
+  1: { label: "Q1", months: "Jan · Feb · Mar", color: "var(--purple)", bg: "rgba(var(--purple-rgb),0.12)" },
+  2: { label: "Q2", months: "Apr · May · Jun", color: "var(--cyan)", bg: "rgba(6,182,212,0.12)" },
+  3: { label: "Q3", months: "Jul · Aug · Sep", color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  4: { label: "Q4", months: "Oct · Nov · Dec", color: "var(--success)", bg: "var(--success-light)" },
 };
 
 const STATUS_CFG = {
-  paid:    { color: "#22C55E", bg: "#DCFCE7", icon: <CheckCircleOutlined />,      label: "Paid"    },
-  pending: { color: "#F59E0B", bg: "#FEF3C7", icon: <ClockCircleOutlined />,      label: "Pending" },
-  partial: { color: "#0891B2", bg: "#CFFAFE", icon: <ExclamationCircleOutlined />, label: "Partial" },
+  paid:    { color: "var(--success)", bg: "var(--success-light)", icon: <CheckCircleOutlined />,      label: "Paid"    },
+  pending: { color: "var(--warning)", bg: "var(--warning-light)", icon: <ClockCircleOutlined />,      label: "Pending" },
+  partial: { color: "var(--cyan)", bg: "rgba(6,182,212,0.15)", icon: <ExclamationCircleOutlined />, label: "Partial" },
 };
 
 const StatusPill = ({ status }) => {
@@ -62,7 +62,7 @@ const StatusPill = ({ status }) => {
       padding: "3px 10px", borderRadius: 20, fontWeight: 700,
       fontSize: 11, whiteSpace: "nowrap",
       color: cfg.color, background: cfg.bg,
-      border: `1px solid ${cfg.color}40`,
+      border: `1px solid ${cfg.bg}`,
     }}>
       {cfg.icon} {cfg.label}
     </span>
@@ -70,11 +70,11 @@ const StatusPill = ({ status }) => {
 };
 
 /* ── Stat chip ── */
-const Chip = ({ label, value, color }) => (
+const Chip = ({ label, value, color, bg }) => (
   <div style={{
     display: "flex", flexDirection: "column", alignItems: "center",
     padding: "6px 14px", borderRadius: 10,
-    background: `${color}12`, border: `1px solid ${color}30`, minWidth: 80,
+    background: bg || "var(--surface-soft)", border: `1px solid ${bg || "var(--border)"}`, minWidth: 80,
   }}>
     <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</div>
     <div style={{ fontSize: 15, fontWeight: 800, color }}>{value}</div>
@@ -143,7 +143,7 @@ const FeeStudent = () => {
     const rows = [];
     sortedKeys.forEach((key) => {
       const { qNum, year, items } = groups[key];
-      const meta  = Q_MONTHS[qNum] || { label: "Other", months: "", color: "#64748B", bg: "#F8FAFC" };
+      const meta  = Q_MONTHS[qNum] || { label: "Other", months: "", color: "var(--text-secondary)", bg: "var(--background)" };
       const total = items.reduce((s, i) => s + (i.amount || 0), 0);
       const paid  = items.reduce((s, i) => s + (i.paidAmount || 0), 0);
       const due   = total - paid;
@@ -263,8 +263,8 @@ const FeeStudent = () => {
   const feeColumns = [
     { title: "Fee Head", render: (_, r) => r.feeStructureId?.feeHeadId?.name || "-" },
     { title: "Total",  dataIndex: "totalAmount",  render: (v) => `₹${(v || 0).toLocaleString("en-IN")}` },
-    { title: "Paid",   dataIndex: "paidAmount",   render: (v) => <span style={{ color: "#22C55E", fontWeight: 600 }}>₹{(v || 0).toLocaleString("en-IN")}</span> },
-    { title: "Due",    dataIndex: "dueAmount",    render: (v) => <span style={{ color: v > 0 ? "#EF4444" : "#64748B", fontWeight: 600 }}>₹{(v || 0).toLocaleString("en-IN")}</span> },
+    { title: "Paid",   dataIndex: "paidAmount",   render: (v) => <span style={{ color: "var(--success)", fontWeight: 600 }}>₹{(v || 0).toLocaleString("en-IN")}</span> },
+    { title: "Due",    dataIndex: "dueAmount",    render: (v) => <span style={{ color: v > 0 ? "var(--danger)" : "var(--text-secondary)", fontWeight: 600 }}>₹{(v || 0).toLocaleString("en-IN")}</span> },
     {
       title: "Status",
       dataIndex: "status",
@@ -290,7 +290,7 @@ const FeeStudent = () => {
             <div style={{
               display: "flex", alignItems: "center", gap: 8,
               background: row.groupBg,
-              border: `1.5px solid ${row.groupColor}50`,
+              border: `1.5px solid ${row.groupBg}`,
               borderRadius: 10, padding: "6px 14px",
             }}>
               <div style={{
@@ -300,16 +300,16 @@ const FeeStudent = () => {
               <span style={{ fontWeight: 800, fontSize: 14, color: row.groupColor }}>
                 {row.groupLabel}
               </span>
-              <span style={{ fontSize: 12, color: row.groupColor + "99", fontWeight: 500 }}>
+              <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500 }}>
                 {row.groupMonths}
               </span>
             </div>
 
             {/* Summary chips */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginLeft: 4 }}>
-              <Chip label="Total"  value={`₹${row.groupTotal.toLocaleString("en-IN")}`}  color="#64748B" />
-              <Chip label="Paid"   value={`₹${row.groupPaid.toLocaleString("en-IN")}`}   color="#22C55E" />
-              <Chip label="Due"    value={`₹${row.groupDue.toLocaleString("en-IN")}`}    color="#EF4444" />
+              <Chip label="Total"  value={`₹${row.groupTotal.toLocaleString("en-IN")}`}  color="var(--text-secondary)" bg="var(--surface-soft)" />
+              <Chip label="Paid"   value={`₹${row.groupPaid.toLocaleString("en-IN")}`}   color="var(--success)" bg="var(--success-light)" />
+              <Chip label="Due"    value={`₹${row.groupDue.toLocaleString("en-IN")}`}    color="var(--danger)" bg="var(--danger-light)" />
             </div>
 
             {/* Count badges */}
@@ -342,14 +342,14 @@ const FeeStudent = () => {
       dataIndex: "paidAmount",
       onCell: (row) => row.isGroupHeader ? { colSpan: 0 } : {},
       render: (v, row) => row.isGroupHeader ? null : (
-        <span style={{ color: "#22C55E", fontWeight: 600 }}>₹{(v || 0).toLocaleString("en-IN")}</span>
+        <span style={{ color: "var(--success)", fontWeight: 600 }}>₹{(v || 0).toLocaleString("en-IN")}</span>
       ),
     },
     {
       title: "Due",
       onCell: (row) => row.isGroupHeader ? { colSpan: 0 } : {},
       render: (_, row) => row.isGroupHeader ? null : (
-        <span style={{ color: (row.amount - row.paidAmount) > 0 ? "#EF4444" : "#64748B", fontWeight: 600 }}>
+        <span style={{ color: (row.amount - row.paidAmount) > 0 ? "var(--danger)" : "var(--text-secondary)", fontWeight: 600 }}>
           ₹{((row.amount || 0) - (row.paidAmount || 0)).toLocaleString("en-IN")}
         </span>
       ),
@@ -417,14 +417,14 @@ const FeeStudent = () => {
         {myFees.length > 0 && (
           <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
             {[
-              { label: "Total Fees",  value: feeTotals.total, color: "#6366F1", bg: "#EEF2FF", icon: "📋" },
-              { label: "Total Paid",  value: feeTotals.paid,  color: "#22C55E", bg: "#DCFCE7", icon: "✅" },
-              { label: "Total Due",   value: feeTotals.due,   color: feeTotals.due > 0 ? "#EF4444" : "#22C55E", bg: feeTotals.due > 0 ? "#FEE2E2" : "#DCFCE7", icon: feeTotals.due > 0 ? "⚠️" : "✓"  },
+              { label: "Total Fees",  value: feeTotals.total, color: "var(--purple)", bg: "rgba(var(--purple-rgb),0.12)", icon: "📋" },
+              { label: "Total Paid",  value: feeTotals.paid,  color: "var(--success)", bg: "var(--success-light)", icon: "✅" },
+              { label: "Total Due",   value: feeTotals.due,   color: feeTotals.due > 0 ? "var(--danger)" : "var(--success)", bg: feeTotals.due > 0 ? "var(--danger-light)" : "var(--success-light)", icon: feeTotals.due > 0 ? "⚠️" : "✓"  },
             ].map(({ label, value, color, bg, icon }) => (
               <div key={label} style={{
                 flex: 1, minWidth: 140,
                 background: bg,
-                border: `1.5px solid ${color}30`,
+                border: `1.5px solid ${bg}`,
                 borderRadius: 12,
                 padding: "14px 18px",
                 display: "flex", alignItems: "center", gap: 12,
@@ -459,17 +459,17 @@ const FeeStudent = () => {
                 </span>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={1}>
-                <span style={{ fontWeight: 800, fontSize: 13, color: "#6366F1" }}>
+                <span style={{ fontWeight: 800, fontSize: 13, color: "var(--purple)" }}>
                   ₹{feeTotals.total.toLocaleString("en-IN")}
                 </span>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={2}>
-                <span style={{ fontWeight: 800, fontSize: 13, color: "#22C55E" }}>
+                <span style={{ fontWeight: 800, fontSize: 13, color: "var(--success)" }}>
                   ₹{feeTotals.paid.toLocaleString("en-IN")}
                 </span>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={3}>
-                <span style={{ fontWeight: 800, fontSize: 13, color: feeTotals.due > 0 ? "#EF4444" : "#22C55E" }}>
+                <span style={{ fontWeight: 800, fontSize: 13, color: feeTotals.due > 0 ? "var(--danger)" : "var(--success)" }}>
                   ₹{feeTotals.due.toLocaleString("en-IN")}
                 </span>
               </Table.Summary.Cell>
@@ -559,7 +559,7 @@ const FeeStudent = () => {
                 {selectedInstallment.installmentName}
               </Descriptions.Item>
               <Descriptions.Item label="Due Amount">
-                <span style={{ fontWeight: 700, color: "#EF4444" }}>
+                <span style={{ fontWeight: 700, color: "var(--danger)" }}>
                   ₹{(selectedInstallment.amount - selectedInstallment.paidAmount).toLocaleString("en-IN")}
                 </span>
               </Descriptions.Item>

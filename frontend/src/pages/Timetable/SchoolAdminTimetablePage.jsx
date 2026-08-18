@@ -17,10 +17,10 @@ import PageHeader from "../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", warning: "#F59E0B",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)", warning: "var(--warning)",
 };
 
 const teachingTypes = ["regular", "activity", "substitution"];
@@ -271,14 +271,14 @@ export default function SchoolAdminTimetablePage() {
           }}>
             <span style={{
               padding: "5px 14px", borderRadius: 20,
-              background: C.accentLight, color: "#0F766E",
-              fontSize: 12, fontWeight: 700, border: "1px solid #99F6E4",
+              background: C.accentLight, color: "var(--accent-hover)",
+              fontSize: 12, fontWeight: 700, border: "1px solid rgba(var(--accent-rgb), 0.5)",
             }}>
               {getName(selectedClass)} · {getName(selectedSection)}
             </span>
             <span style={{
               padding: "5px 12px", borderRadius: 20,
-              background: "#F8FAFC", color: C.textSub,
+              background: "var(--background)", color: C.textSub,
               fontSize: 12, fontWeight: 600, border: "1px solid " + C.border,
             }}>
               {timeSlots.length} time slot{timeSlots.length !== 1 ? "s" : ""}

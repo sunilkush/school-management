@@ -183,7 +183,7 @@ const MyAttendanceMonthlyReport = () => {
   return (
     <div
       style={{
-        background: "linear-gradient(180deg, #f7faff 0%, #ffffff 100%)",
+        background: "linear-gradient(180deg, var(--background) 0%, var(--surface) 100%)",
         minHeight: "100%",
       }}
     >
@@ -192,9 +192,9 @@ const MyAttendanceMonthlyReport = () => {
         style={{
           borderRadius: 20,
           boxShadow: "0 12px 28px rgba(37, 99, 235, 0.06)",
-          border: "1px solid #edf2f7",
+          border: "1px solid var(--border-muted)",
           background:
-            "linear-gradient(135deg, #ffffff 0%, #f8fbff 45%, #eef5ff 100%)",
+            "linear-gradient(135deg, var(--surface) 0%, var(--background) 45%, var(--surface-soft) 100%)",
         }}
       >
         <Row justify="space-between" align="middle" gutter={[16, 16]}>
@@ -204,7 +204,7 @@ const MyAttendanceMonthlyReport = () => {
                 size={54}
                 icon={<CalendarOutlined />}
                 style={{
-                  background: "linear-gradient(135deg, #2563EB 0%, #4f46e5 100%)",
+                  background: "linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%)",
                 }}
               />
               <div>
@@ -263,13 +263,13 @@ const MyAttendanceMonthlyReport = () => {
             marginTop: 16,
             borderRadius: 18,
             boxShadow: "0 10px 24px rgba(37, 99, 235, 0.05)",
-            border: "1px solid #edf2f7",
+            border: "1px solid var(--border-muted)",
           }}
         >
           <Row justify="space-between" align="middle" gutter={[12, 12]}>
             <Col xs={24} lg={14}>
               <Space align="center">
-                <DashboardOutlined style={{ fontSize: 18, color: "#2563EB" }} />
+                <DashboardOutlined style={{ fontSize: 18, color: "var(--primary)" }} />
                 <div>
                   <Text strong style={{ display: "block" }}>
                     Quick Daily Attendance
@@ -405,7 +405,7 @@ const MyAttendanceMonthlyReport = () => {
             style={{
               borderRadius: 18,
               boxShadow: "0 10px 24px rgba(37, 99, 235, 0.05)",
-              border: "1px solid #edf2f7",
+              border: "1px solid var(--border-muted)",
             }}
             bodyStyle={{ padding: 16 }}
           >
@@ -428,7 +428,7 @@ const MyAttendanceMonthlyReport = () => {
             style={{
               borderRadius: 18,
               boxShadow: "0 10px 24px rgba(37, 99, 235, 0.05)",
-              border: "1px solid #edf2f7",
+              border: "1px solid var(--border-muted)",
               height: "100%",
             }}
           >
@@ -450,8 +450,8 @@ const MyAttendanceMonthlyReport = () => {
                     size="small"
                     style={{
                       borderRadius: 14,
-                      background: "#fafcff",
-                      border: "1px solid #edf2f7",
+                      background: "var(--surface-soft)",
+                      border: "1px solid var(--border-muted)",
                     }}
                   >
                     <Space direction="vertical" size={8}>
@@ -469,8 +469,8 @@ const MyAttendanceMonthlyReport = () => {
                     size="small"
                     style={{
                       borderRadius: 14,
-                      background: "#fafcff",
-                      border: "1px solid #edf2f7",
+                      background: "var(--surface-soft)",
+                      border: "1px solid var(--border-muted)",
                     }}
                   >
                     <Space direction="vertical" size={8}>

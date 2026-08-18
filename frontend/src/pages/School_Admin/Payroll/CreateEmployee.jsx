@@ -17,22 +17,22 @@ import {
 } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  purple: "var(--purple)", purpleLight: "rgba(var(--purple-rgb), 0.08)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)", surfaceSoft: "var(--background)",
 };
 
 const AVATAR_GRADIENTS = [
-  "linear-gradient(135deg, #2563EB, #14B8A6)",
-  "linear-gradient(135deg, #7C3AED, #EC4899)",
-  "linear-gradient(135deg, #F59E0B, #EF4444)",
-  "linear-gradient(135deg, #22C55E, #14B8A6)",
-  "linear-gradient(135deg, #0EA5E9, #2563EB)",
+  "linear-gradient(135deg, var(--primary), var(--accent))",
+  "linear-gradient(135deg, var(--purple), var(--pink))",
+  "linear-gradient(135deg, var(--warning), var(--danger))",
+  "linear-gradient(135deg, var(--success), var(--accent))",
+  "linear-gradient(135deg, var(--info), var(--primary))",
 ];
 
 const getInitials = (name = "") => {
@@ -47,9 +47,9 @@ const StatusBadge = ({ active }) => (
   <span style={{
     display: "inline-flex", alignItems: "center", gap: 5,
     padding: "3px 11px", borderRadius: 20, fontSize: 12, fontWeight: 700,
-    background: active ? C.successLight : "#F1F5F9",
-    color: active ? "#15803D" : C.textSub,
-    border: `1px solid ${active ? "#86EFAC" : C.border}`,
+    background: active ? C.successLight : "var(--surface-soft)",
+    color: active ? "var(--success-hover)" : C.textSub,
+    border: `1px solid ${active ? "var(--success-light)" : C.border}`,
   }}>
     <span style={{
       width: 6, height: 6, borderRadius: "50%",
@@ -199,8 +199,8 @@ const CreateEmployee = () => {
       render: (v) => (
         <span style={{
           padding: "2px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-          background: C.warningLight, color: "#92400E",
-          border: "1px solid #FDE68A",
+          background: C.warningLight, color: "var(--warning-hover)",
+          border: "1px solid var(--warning-light)",
         }}>
           {v}
         </span>
@@ -282,10 +282,10 @@ const CreateEmployee = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <TeamOutlined />,      label: "Total Employees", value: stats.total,    color: C.primary },
-          { icon: <UserOutlined />,      label: "Active",          value: stats.active,   color: C.success },
-          { icon: <BookOutlined />,      label: "Teachers",        value: stats.teachers, color: C.accent },
-          { icon: <ApartmentOutlined />, label: "Other Staff",     value: stats.staff,    color: C.purple },
+          { icon: <TeamOutlined />,      label: "Total Employees", value: stats.total,    color: "#2563EB" },
+          { icon: <UserOutlined />,      label: "Active",          value: stats.active,   color: "#22C55E" },
+          { icon: <BookOutlined />,      label: "Teachers",        value: stats.teachers, color: "#14B8A6" },
+          { icon: <ApartmentOutlined />, label: "Other Staff",     value: stats.staff,    color: "#7C3AED" },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14,

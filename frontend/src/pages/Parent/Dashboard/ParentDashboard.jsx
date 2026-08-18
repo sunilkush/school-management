@@ -12,13 +12,13 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#2563EB", "#22C55E", "#14B8A6", "#F59E0B"];
-const STAT_BARS   = ["#DBEAFE", "#DCFCE7", "rgba(20,184,166,0.15)", "#FEF3C7"];
+const STAT_COLORS = ["var(--primary)", "var(--success)", "var(--accent)", "var(--warning)"];
+const STAT_BARS   = ["var(--primary-light)", "var(--success-light)", "var(--accent-light)", "var(--warning-light)"];
 const STAT_BG     = [
-  "rgba(219,234,254,0.14)",
-  "rgba(220,252,231,0.14)",
-  "rgba(20,184,166,0.14)",
-  "rgba(254,243,199,0.18)",
+  "rgba(var(--primary-rgb), 0.14)",
+  "rgba(var(--success-rgb), 0.14)",
+  "rgba(var(--accent-rgb), 0.14)",
+  "rgba(var(--warning-rgb), 0.18)",
 ];
 
 const ParentDashboard = () => {
@@ -125,7 +125,7 @@ const ParentDashboard = () => {
         {/* KPI stats */}
         <div className="stat-grid" style={statGrid(175)}>
           {statMeta.map(({ key, label, icon, value }, i) => (
-            <div key={key} style={statCard({ color: STAT_COLORS[i], bg: "#ffffff", accentBar: STAT_BARS[i] })}>
+            <div key={key} style={statCard({ color: STAT_COLORS[i], bg: "var(--surface)", accentBar: STAT_BARS[i] })}>
               <div>
                 <div style={statLabel(STAT_COLORS[i])}>{label}</div>
                 <div style={statValue(STAT_COLORS[i])}>{isLoading ? "…" : value}</div>
@@ -173,10 +173,10 @@ const ParentDashboard = () => {
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                       <div style={{
                         width: 46, height: 46, borderRadius: "50%",
-                        background: "linear-gradient(135deg, #DBEAFE, rgba(20,184,166,0.15))",
+                        background: "linear-gradient(135deg, var(--primary-light), var(--accent-light))",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         color: "#fff", fontSize: 18, fontWeight: 700, flexShrink: 0,
-                        boxShadow: "0 2px 10px rgba(37,99,235,0.25)",
+                        boxShadow: "0 2px 10px rgba(var(--primary-rgb), 0.25)",
                       }}>
                         {(child.name || "?")[0].toUpperCase()}
                       </div>
@@ -194,9 +194,9 @@ const ParentDashboard = () => {
                       {cs.attPct !== undefined && cs.attPct !== null && (
                         <span style={{
                           padding: "3px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600,
-                          background: cs.attPct >= 75 ? "rgba(220,252,231,0.25)" : cs.attPct >= 60 ? "rgba(254,243,199,0.35)" : "rgba(254,226,226,0.3)",
-                          color: cs.attPct >= 75 ? "#15803D" : cs.attPct >= 60 ? "#B45309" : "#DC2626",
-                          border: `1px solid ${cs.attPct >= 75 ? "rgba(220,252,231,0.5)" : cs.attPct >= 60 ? "rgba(254,243,199,0.6)" : "rgba(254,226,226,0.5)"}`,
+                          background: cs.attPct >= 75 ? "var(--success-light)" : cs.attPct >= 60 ? "var(--warning-light)" : "var(--danger-light)",
+                          color: cs.attPct >= 75 ? "var(--success-hover)" : cs.attPct >= 60 ? "var(--warning-hover)" : "var(--danger-hover)",
+                          border: `1px solid ${cs.attPct >= 75 ? "var(--success-light)" : cs.attPct >= 60 ? "var(--warning-light)" : "var(--danger-light)"}`,
                         }}>
                           Attendance: {cs.attPct}%
                         </span>
@@ -204,9 +204,9 @@ const ParentDashboard = () => {
                       {cs.pending !== undefined && (
                         <span style={{
                           padding: "3px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600,
-                          background: cs.pending > 0 ? "rgba(254,243,199,0.35)" : "rgba(220,252,231,0.25)",
-                          color: cs.pending > 0 ? "#B45309" : "#15803D",
-                          border: `1px solid ${cs.pending > 0 ? "rgba(254,243,199,0.6)" : "rgba(220,252,231,0.5)"}`,
+                          background: cs.pending > 0 ? "var(--warning-light)" : "var(--success-light)",
+                          color: cs.pending > 0 ? "var(--warning-hover)" : "var(--success-hover)",
+                          border: `1px solid ${cs.pending > 0 ? "var(--warning-light)" : "var(--success-light)"}`,
                         }}>
                           {cs.pending > 0 ? `${cs.pending} Pending HW` : "All HW Done"}
                         </span>

@@ -205,7 +205,7 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
               return (
                 <div key={mod} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
                   {included ? (
-                    <PlusCircleFilled style={{ color: "#22C55E", fontSize: 13, marginTop: 2, flexShrink: 0 }} />
+                    <PlusCircleFilled style={{ color: "var(--success)", fontSize: 13, marginTop: 2, flexShrink: 0 }} />
                   ) : (
                     <MinusCircleFilled style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 2, flexShrink: 0, opacity: 0.6 }} />
                   )}

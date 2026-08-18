@@ -14,14 +14,14 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  purple: "var(--purple)", purpleLight: "rgba(var(--purple-rgb), 0.08)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
 };
 
 const getInitials = (name = "") => {
@@ -34,8 +34,8 @@ const StatusBadge = ({ active }) => (
   <span style={{
     display: "inline-flex", alignItems: "center", gap: 5,
     padding: "3px 11px", borderRadius: 20, fontSize: 12, fontWeight: 700,
-    background: active ? C.successLight : "#F1F5F9",
-    color: active ? "#15803D" : C.textSub,
+    background: active ? C.successLight : "var(--surface-soft)",
+    color: active ? "var(--success-hover)" : C.textSub,
     border: `1px solid ${active ? "#86EFAC" : C.border}`,
   }}>
     <span style={{
@@ -301,7 +301,7 @@ const Assignments = () => {
           { icon: <SwapOutlined />,     label: "Total Assignments", value: stats.assignments, color: C.primary },
           { icon: <TeamOutlined />,     label: "Students",          value: stats.students,    color: C.accent },
           { icon: <NodeIndexOutlined />, label: "Routes",           value: stats.routes,      color: C.purple },
-          { icon: <CarOutlined />,      label: "Vehicles",          value: stats.vehicles,    color: "#F97316" },
+          { icon: <CarOutlined />,      label: "Vehicles",          value: stats.vehicles,    color: "var(--orange)" },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14,

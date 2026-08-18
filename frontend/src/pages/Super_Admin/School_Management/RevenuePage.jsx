@@ -226,7 +226,7 @@ export default function RevenuePage() {
     {
       title: "Amount",
       dataIndex: "amount",
-      render: (amount) => <span style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(amount)}</span>,
+      render: (amount) => <span style={{ fontWeight: 700, color: "var(--success-hover)" }}>{formatCurrency(amount)}</span>,
       sorter: (a, b) => a.amount - b.amount,
     },
     {

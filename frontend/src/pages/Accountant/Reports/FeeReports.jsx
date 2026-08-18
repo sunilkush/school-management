@@ -17,13 +17,13 @@ import PageHeader from "../../../components/layout/PageHeader";
 import {
   iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss,
 } from "../../../styles/pageStyles";
+import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
-const PIE_COLORS = ["#14B8A6", "#22C55E", "#F59E0B", "#EF4444", "#0891b2"];
 
 const PAYMENT_MODES = ["cash", "online", "cheque", "bank_transfer", "upi", "razorpay"];
 
@@ -95,9 +95,9 @@ const FeeReports = () => {
 
   // Fee status pie data
   const feeStatusPie = useMemo(() => [
-    { name: "Paid",    value: feeStats.paid,    color: "#22C55E" },
-    { name: "Partial", value: feeStats.partial, color: "#F59E0B" },
-    { name: "Pending", value: feeStats.pending, color: "#EF4444" },
+    { name: "Paid",    value: feeStats.paid,    color: "var(--success)" },
+    { name: "Partial", value: feeStats.partial, color: "var(--warning)" },
+    { name: "Pending", value: feeStats.pending, color: "var(--danger)" },
   ].filter((d) => d.value > 0), [feeStats]);
 
   const handleExport = () => {
@@ -157,15 +157,15 @@ const FeeReports = () => {
   };
 
   const STATUS_STYLE = {
-    success:  ["#22C55E", "rgba(220,252,231,0.2)"],
-    pending:  ["#F59E0B", "rgba(254,243,199,0.2)"],
-    failed:   ["#EF4444", "rgba(254,226,226,0.2)"],
-    refunded: ["#7C3AED", "rgba(237,233,254,0.3)"],
+    success:  ["var(--success)", "rgba(var(--success-rgb), 0.2)"],
+    pending:  ["var(--warning)", "rgba(var(--warning-rgb), 0.2)"],
+    failed:   ["var(--danger)", "rgba(var(--danger-rgb), 0.2)"],
+    refunded: ["var(--purple)", "rgba(var(--purple-rgb), 0.3)"],
   };
 
   const paymentColumns = [
     { title: "Student",    render: (_, r) => r.studentId?.userId?.name || "—" },
-    { title: "Amount",     dataIndex: "amountPaid",  render: (v) => <span style={{ fontWeight: 700, color: "#22C55E" }}>{money(v)}</span> },
+    { title: "Amount",     dataIndex: "amountPaid",  render: (v) => <span style={{ fontWeight: 700, color: "var(--success)" }}>{money(v)}</span> },
     { title: "Mode",       dataIndex: "paymentMode", render: (m) => <Tag style={{ textTransform: "capitalize" }}>{m}</Tag> },
     { title: "Receipt No", dataIndex: "receiptNo",   render: (r) => r || "—" },
     { title: "Date",       dataIndex: "paymentDate", render: (d) => dayjs(d).format("DD MMM YYYY") },
@@ -177,7 +177,7 @@ const FeeReports = () => {
           <span style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
             <span style={pill(color, bg)}>{s}</span>
             {r.refundedAmount > 0 && s === "success" && (
-              <span style={{ fontSize: 10, color: "#7C3AED" }}>{money(r.refundedAmount)} refunded</span>
+              <span style={{ fontSize: 10, color: "var(--purple)" }}>{money(r.refundedAmount)} refunded</span>
             )}
           </span>
         );
@@ -226,11 +226,11 @@ const FeeReports = () => {
         {/* ── Summary KPIs ─────────────────────────────────────────── */}
         <div style={statGrid(155)}>
           {[
-            { label: "Total Collected",    value: money(feeStats.totalPaid),    color: "#22C55E", icon: <CheckCircleOutlined /> },
-            { label: "Total Pending",      value: money(feeStats.totalPending), color: "#EF4444", icon: <ClockCircleOutlined /> },
-            { label: "Paid Students",      value: feeStats.paid,                color: "#22C55E", icon: <CheckCircleOutlined /> },
-            { label: "Partial Payments",   value: feeStats.partial,             color: "#F59E0B", icon: <WalletOutlined /> },
-            { label: "Pending Students",   value: feeStats.pending,             color: "#EF4444", icon: <ClockCircleOutlined /> },
+            { label: "Total Collected",    value: money(feeStats.totalPaid),    color: "var(--success)", icon: <CheckCircleOutlined /> },
+            { label: "Total Pending",      value: money(feeStats.totalPending), color: "var(--danger)", icon: <ClockCircleOutlined /> },
+            { label: "Paid Students",      value: feeStats.paid,                color: "var(--success)", icon: <CheckCircleOutlined /> },
+            { label: "Partial Payments",   value: feeStats.partial,             color: "var(--warning)", icon: <WalletOutlined /> },
+            { label: "Pending Students",   value: feeStats.pending,             color: "var(--danger)", icon: <ClockCircleOutlined /> },
           ].map(({ label, value, color, icon }) => (
             <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
               <div style={iconWell(color, 40)}>{icon}</div>
@@ -251,7 +251,7 @@ const FeeReports = () => {
             </Text>
             <Text strong style={{ fontSize: 12 }}>{collectUtilization}%</Text>
           </div>
-          <Progress percent={collectUtilization} strokeColor="#14B8A6" showInfo={false} />
+          <Progress percent={collectUtilization} strokeColor="var(--accent)" showInfo={false} />
         </div>
 
         {/* ── Charts ────────────────────────────────────────────────── */}
@@ -268,7 +268,7 @@ const FeeReports = () => {
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                     <Tooltip formatter={(v) => [money(v), "Collected"]} />
-                    <Bar dataKey="total" fill="#14B8A6" radius={[5, 5, 0, 0]} name="Collected" />
+                    <Bar dataKey="total" fill="var(--accent)" radius={[5, 5, 0, 0]} name="Collected" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -301,14 +301,17 @@ const FeeReports = () => {
           <div style={{ ...sectionPanel, marginBottom: 20 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>By Payment Mode</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              {modeBreakdown.map((m, i) => (
-                <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 8, background: `${PIE_COLORS[i % PIE_COLORS.length]}12`, borderRadius: 8, padding: "8px 14px", border: `1px solid ${PIE_COLORS[i % PIE_COLORS.length]}25` }}>
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
-                  <span style={{ fontWeight: 700, color: PIE_COLORS[i % PIE_COLORS.length], fontSize: 13, textTransform: "capitalize" }}>{m.name}</span>
-                  <span style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>{money(m.total)}</span>
-                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>({m.count} txns)</span>
-                </div>
-              ))}
+              {modeBreakdown.map((m, i) => {
+                const c = CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length];
+                return (
+                  <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 8, background: `color-mix(in srgb, ${c} 12%, transparent)`, borderRadius: 8, padding: "8px 14px", border: `1px solid color-mix(in srgb, ${c} 25%, transparent)` }}>
+                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: c, flexShrink: 0 }} />
+                    <span style={{ fontWeight: 700, color: c, fontSize: 13, textTransform: "capitalize" }}>{m.name}</span>
+                    <span style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>{money(m.total)}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>({m.count} txns)</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -3,10 +3,10 @@ import { Spin } from "antd";
 import { CheckCircleOutlined, EditOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 
 const CONFIG = {
-  saving: { icon: null,                      color: "#B45309", text: "Saving…",          bg: "#FEF3C7" },
-  saved:  { icon: <CheckCircleOutlined />,    color: "#15803D", text: "Saved",            bg: "#DCFCE7" },
-  error:  { icon: <ExclamationCircleOutlined />, color: "#DC2626", text: "Save failed", bg: "#FEE2E2" },
-  idle:   { icon: <EditOutlined />,           color: "#64748B", text: "All changes saved", bg: "transparent" },
+  saving: { icon: null,                      color: "var(--warning-hover)", text: "Saving…",          bg: "var(--warning-light)" },
+  saved:  { icon: <CheckCircleOutlined />,    color: "var(--success-hover)", text: "Saved",            bg: "var(--success-light)" },
+  error:  { icon: <ExclamationCircleOutlined />, color: "var(--danger-hover)", text: "Save failed", bg: "var(--danger-light)" },
+  idle:   { icon: <EditOutlined />,           color: "var(--text-secondary)", text: "All changes saved", bg: "transparent" },
 };
 
 const AutosaveIndicator = ({ status = "idle" }) => {

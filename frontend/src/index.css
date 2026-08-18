@@ -21,16 +21,30 @@
 
   /* ── Semantic ── */
   --success:        #22C55E;
+  --success-hover:  #15803D;
   --success-light:  rgba(220, 252, 231, 0.6);
   --warning:        #F59E0B;
+  --warning-hover:  #B45309;
   --warning-light:  rgba(254, 243, 199, 0.6);
   --danger:         #EF4444;
+  --danger-hover:   #DC2626;
   --danger-light:   rgba(254, 226, 226, 0.6);
   --info:           #3B82F6;
   --info-light:     rgba(59, 130, 246, 0.1);
   --orange:         #F97316;
   --purple:         #8B5CF6;
+  --purple-hover:   #6D28D9;
   --cyan:           #06B6D4;
+  --pink:           #EC4899;
+
+  /* ── RGB triplets (no rgba() wrapper) — for custom-alpha tints:
+       background: rgba(var(--primary-rgb), 0.08) ── */
+  --primary-rgb:    37, 99, 235;
+  --accent-rgb:     20, 184, 166;
+  --success-rgb:    34, 197, 94;
+  --warning-rgb:    245, 158, 11;
+  --danger-rgb:     239, 68, 68;
+  --purple-rgb:     139, 92, 246;
 
   /* ── Surfaces ── */
   --dark-bg:        #020617;

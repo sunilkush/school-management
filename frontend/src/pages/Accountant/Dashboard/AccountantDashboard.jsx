@@ -17,7 +17,6 @@ import {
 import { fetchAccountantDashboard } from "../../../features/financeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
 
 const { Text } = Typography;
 
@@ -30,11 +29,11 @@ const moneyK = (v) => {
 };
 
 /* ── Custom chart tooltip ─────────────────────────────────────────── */
-const ChartTip = ({ active, payload, label, isDark }) => {
+const ChartTip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: isDark ? "#1e293b" : "#fff",
+      background: "var(--surface)",
       border: "1px solid var(--border-muted)", borderRadius: 10,
       padding: "10px 14px", boxShadow: "0 4px 20px rgba(0,0,0,0.14)",
       minWidth: 140,
@@ -67,7 +66,7 @@ const KpiCard = ({ label, value, icon, color, sub, onClick, accent }) => (
     }}
     onMouseEnter={(e) => {
       if (!onClick) return;
-      e.currentTarget.style.boxShadow = `0 4px 18px ${color}20`;
+      e.currentTarget.style.boxShadow = `0 4px 18px color-mix(in srgb, ${color} 12%, transparent)`;
       e.currentTarget.style.transform = "translateY(-2px)";
     }}
     onMouseLeave={(e) => {
@@ -90,7 +89,7 @@ const KpiCard = ({ label, value, icon, color, sub, onClick, accent }) => (
     {onClick && (
       <div style={{
         width: 24, height: 24, borderRadius: 7, flexShrink: 0,
-        background: `${color}14`, color,
+        background: `color-mix(in srgb, ${color} 8%, transparent)`, color,
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 11, fontWeight: 700,
       }}>→</div>
@@ -112,8 +111,8 @@ const ActionPill = ({ icon, label, path, color, navigate }) => (
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.borderColor = color;
-      e.currentTarget.style.background = `${color}0E`;
-      e.currentTarget.style.boxShadow = `0 2px 10px ${color}18`;
+      e.currentTarget.style.background = `color-mix(in srgb, ${color} 5%, transparent)`;
+      e.currentTarget.style.boxShadow = `0 2px 10px color-mix(in srgb, ${color} 9%, transparent)`;
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.borderColor = "var(--border-muted)";
@@ -129,9 +128,9 @@ const ActionPill = ({ icon, label, path, color, navigate }) => (
 /* ── Transaction type badge ───────────────────────────────────────── */
 const TxBadge = ({ type }) => {
   const cfg = {
-    fee_payment: { label: "Fee",     color: "#15803D", bg: "#DCFCE7" },
-    income:      { label: "Income",  color: "#1D4ED8", bg: "#DBEAFE" },
-    expense:     { label: "Expense", color: "#DC2626", bg: "#FEE2E2" },
+    fee_payment: { label: "Fee",     color: "var(--success-hover)", bg: "var(--success-light)" },
+    income:      { label: "Income",  color: "var(--primary-hover)", bg: "var(--primary-light)" },
+    expense:     { label: "Expense", color: "var(--danger-hover)", bg: "var(--danger-light)" },
   }[type] || { label: "Other", color: "var(--text-muted)", bg: "var(--surface-soft)" };
   return (
     <span style={{
@@ -169,7 +168,6 @@ const DashboardSkeleton = () => (
 const AccountantDashboard = () => {
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
-  const { isDark } = useTheme();
   const { dashboard, dashboardLoading } = useSelector((s) => s.finance || {});
 
   useEffect(() => { dispatch(fetchAccountantDashboard()); }, [dispatch]);
@@ -179,7 +177,7 @@ const AccountantDashboard = () => {
   const recentActivity = dashboard?.recentActivity || [];
 
   const isProfit  = (kpis.netProfitLoss || 0) >= 0;
-  const netColor  = isProfit ? "#16A34A" : "#DC2626";
+  const netColor  = isProfit ? "var(--success)" : "var(--danger-hover)";
   const netLabel  = isProfit ? "Net Profit" : "Net Loss";
 
   const expenseRatio = useMemo(() => {
@@ -189,9 +187,9 @@ const AccountantDashboard = () => {
     return Math.min(100, Math.round((exp / rev) * 100));
   }, [kpis]);
 
-  const axisClr  = isDark ? "#64748B" : "#94A3B8";
-  const gridClr  = isDark ? "#334155" : "#E2E8F0";
-  const tipContent = (props) => <ChartTip {...props} isDark={isDark} />;
+  const axisClr  = "var(--text-muted)";
+  const gridClr  = "var(--border)";
+  const tipContent = (props) => <ChartTip {...props} />;
 
   const txColumns = useMemo(() => [
     { title: "Type",        width: 82,  render: (_, r) => <TxBadge type={r.type} /> },
@@ -206,7 +204,7 @@ const AccountantDashboard = () => {
     {
       title: "Amount", width: 130, align: "right",
       render: (_, r) => (
-        <span style={{ fontWeight: 800, fontSize: 14, color: r.amount < 0 ? "#DC2626" : "#16A34A" }}>
+        <span style={{ fontWeight: 800, fontSize: 14, color: r.amount < 0 ? "var(--danger-hover)" : "var(--success)" }}>
           {r.amount < 0 ? "−" : "+"}{money(Math.abs(r.amount))}
         </span>
       ),
@@ -248,9 +246,9 @@ const AccountantDashboard = () => {
       <div style={{
         borderRadius: 16,
         background: isProfit
-          ? `linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 50%, #F0FDF4 100%)`
-          : `linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 50%, #FFF1F2 100%)`,
-        border: `1px solid ${isProfit ? "#86EFAC" : "#FECDD3"}`,
+          ? `linear-gradient(135deg, var(--success-light) 0%, rgba(var(--success-rgb), 0.18) 50%, var(--success-light) 100%)`
+          : `linear-gradient(135deg, var(--danger-light) 0%, rgba(var(--danger-rgb), 0.18) 50%, var(--danger-light) 100%)`,
+        border: `1px solid ${isProfit ? "var(--success-light)" : "var(--danger-light)"}`,
         borderLeft: `5px solid ${netColor}`,
         padding: "22px 28px",
         marginBottom: 20,
@@ -263,7 +261,7 @@ const AccountantDashboard = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{
             width: 56, height: 56, borderRadius: 16, flexShrink: 0,
-            background: `${netColor}20`, color: netColor,
+            background: `color-mix(in srgb, ${netColor} 12%, transparent)`, color: netColor,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 26,
           }}>
@@ -280,43 +278,43 @@ const AccountantDashboard = () => {
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 52, background: `${netColor}30`, flexShrink: 0 }} />
+        <div style={{ width: 1, height: 52, background: `color-mix(in srgb, ${netColor} 18%, transparent)`, flexShrink: 0 }} />
 
         {/* Expense ratio */}
         <div style={{ flex: 1, minWidth: 200 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-            <Text style={{ fontSize: 12, color: "#64748B", fontWeight: 600 }}>Expense Ratio</Text>
-            <Text style={{ fontSize: 12, fontWeight: 800, color: expenseRatio > 80 ? "#DC2626" : "#16A34A" }}>
+            <Text style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>Expense Ratio</Text>
+            <Text style={{ fontSize: 12, fontWeight: 800, color: expenseRatio > 80 ? "var(--danger-hover)" : "var(--success)" }}>
               {expenseRatio}%
             </Text>
           </div>
-          <div style={{ height: 8, borderRadius: 8, background: "#E2E8F0", overflow: "hidden" }}>
+          <div style={{ height: 8, borderRadius: 8, background: "var(--border)", overflow: "hidden" }}>
             <div style={{
               height: "100%",
               width: `${expenseRatio}%`,
               borderRadius: 8,
               background: expenseRatio > 80
-                ? "linear-gradient(90deg, #F59E0B, #EF4444)"
-                : "linear-gradient(90deg, #22C55E, #10B981)",
+                ? "linear-gradient(90deg, var(--warning), var(--danger))"
+                : "linear-gradient(90deg, var(--success), var(--success-hover))",
               transition: "width 0.6s ease",
             }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-            <Text style={{ fontSize: 11, color: "#64748B" }}>Revenue: {moneyK(kpis.totalRevenue)}</Text>
-            <Text style={{ fontSize: 11, color: "#64748B" }}>Expenses: {moneyK(kpis.totalExpenses)}</Text>
+            <Text style={{ fontSize: 11, color: "var(--text-secondary)" }}>Revenue: {moneyK(kpis.totalRevenue)}</Text>
+            <Text style={{ fontSize: 11, color: "var(--text-secondary)" }}>Expenses: {moneyK(kpis.totalExpenses)}</Text>
           </div>
         </div>
 
         {/* Month stats */}
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {[
-            { label: "This Month Income",  value: moneyK(kpis.thisMonthIncome),  color: "#16A34A" },
-            { label: "This Month Expense", value: moneyK(kpis.thisMonthExpense), color: "#DC2626" },
-            { label: "Payroll",            value: moneyK(kpis.payrollThisMonth), color: "#2563EB" },
+            { label: "This Month Income",  value: moneyK(kpis.thisMonthIncome),  color: "var(--success)" },
+            { label: "This Month Expense", value: moneyK(kpis.thisMonthExpense), color: "var(--danger-hover)" },
+            { label: "Payroll",            value: moneyK(kpis.payrollThisMonth), color: "var(--primary)" },
           ].map((s) => (
             <div key={s.label} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 18, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 3 }}>{s.label}</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 3 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -326,21 +324,21 @@ const AccountantDashboard = () => {
       <div style={{ ...statGrid(180), marginBottom: 16 }}>
         <KpiCard
           label="Total Revenue" value={money(kpis.totalRevenue)}
-          icon={<RiseOutlined />} color="#16A34A"
+          icon={<RiseOutlined />} color="var(--success)"
           sub="Fee + manual income"
         />
         <KpiCard
           label="Total Expenses" value={money(kpis.totalExpenses)}
-          icon={<ArrowDownOutlined />} color="#DC2626"
+          icon={<ArrowDownOutlined />} color="var(--danger-hover)"
         />
         <KpiCard
           label="Fee Collected" value={money(kpis.totalFeeCollected)}
-          icon={<WalletOutlined />} color="#2563EB"
+          icon={<WalletOutlined />} color="var(--primary)"
           onClick={() => navigate("/dashboard/accountant/fees/collect")}
         />
         <KpiCard
           label="Pending Fees" value={money(kpis.pendingFees)}
-          icon={<AlertOutlined />} color="#F59E0B"
+          icon={<AlertOutlined />} color="var(--warning)"
           sub={`${kpis.pendingFeeCount || 0} students pending`}
           onClick={() => navigate("/dashboard/accountant/fees/reports")}
         />
@@ -357,18 +355,18 @@ const AccountantDashboard = () => {
         flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginRight: 6, flexShrink: 0 }}>
-          <div style={iconWell("#7C3AED", 28)}><ThunderboltOutlined style={{ fontSize: 12 }} /></div>
+          <div style={iconWell("var(--purple)", 28)}><ThunderboltOutlined style={{ fontSize: 12 }} /></div>
           <Text style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Quick Actions
           </Text>
         </div>
         <div style={{ width: 1, height: 24, background: "var(--border-muted)", flexShrink: 0 }} />
-        <ActionPill icon={<WalletOutlined />}    label="Collect Fee"   path="/dashboard/accountant/fees/collect"  color="#2563EB" navigate={navigate} />
-        <ActionPill icon={<ArrowUpOutlined />}   label="Add Income"    path="/dashboard/accountant/income"        color="#16A34A" navigate={navigate} />
-        <ActionPill icon={<FileTextOutlined />}  label="Add Expense"   path="/dashboard/accountant/expenses"      color="#DC2626" navigate={navigate} />
-        <ActionPill icon={<BarChartOutlined />}  label="Reports"       path="/dashboard/accountant/reports"       color="#14B8A6" navigate={navigate} />
-        <ActionPill icon={<AlertOutlined />}     label="Fee Reports"   path="/dashboard/accountant/fees/reports"  color="#F59E0B" navigate={navigate} />
-        <ActionPill icon={<TeamOutlined />}      label="Payroll"       path="/dashboard/accountant/salary"        color="#7C3AED" navigate={navigate} />
+        <ActionPill icon={<WalletOutlined />}    label="Collect Fee"   path="/dashboard/accountant/fees/collect"  color="var(--primary)" navigate={navigate} />
+        <ActionPill icon={<ArrowUpOutlined />}   label="Add Income"    path="/dashboard/accountant/income"        color="var(--success)" navigate={navigate} />
+        <ActionPill icon={<FileTextOutlined />}  label="Add Expense"   path="/dashboard/accountant/expenses"      color="var(--danger-hover)" navigate={navigate} />
+        <ActionPill icon={<BarChartOutlined />}  label="Reports"       path="/dashboard/accountant/reports"       color="var(--accent)" navigate={navigate} />
+        <ActionPill icon={<AlertOutlined />}     label="Fee Reports"   path="/dashboard/accountant/fees/reports"  color="var(--warning)" navigate={navigate} />
+        <ActionPill icon={<TeamOutlined />}      label="Payroll"       path="/dashboard/accountant/salary"        color="var(--purple)" navigate={navigate} />
       </div>
 
       {/* ── Charts ───────────────────────────────────────────────── */}
@@ -377,7 +375,7 @@ const AccountantDashboard = () => {
         <Col xs={24} lg={14}>
           <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <div style={iconWell("#7C3AED", 32)}><LineChartOutlined style={{ fontSize: 14 }} /></div>
+              <div style={iconWell("var(--purple)", 32)}><LineChartOutlined style={{ fontSize: 14 }} /></div>
               <div>
                 <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                   Income vs Expense
@@ -395,12 +393,12 @@ const AccountantDashboard = () => {
                 <AreaChart data={monthlyChart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="incGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#22C55E" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                      <stop offset="5%"  stopColor="var(--success)" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="var(--success)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#EF4444" stopOpacity={0.22} />
-                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                      <stop offset="5%"  stopColor="var(--danger)" stopOpacity={0.22} />
+                      <stop offset="95%" stopColor="var(--danger)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridClr} />
@@ -408,8 +406,8 @@ const AccountantDashboard = () => {
                   <YAxis tick={{ fontSize: 11, fill: axisClr }} axisLine={false} tickLine={false} tickFormatter={moneyK} />
                   <RcTooltip content={tipContent} />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                  <Area type="monotone" dataKey="income"  stroke="#22C55E" strokeWidth={2.5} fill="url(#incGrad)" name="Income"  dot={false} activeDot={{ r: 5 }} />
-                  <Area type="monotone" dataKey="expense" stroke="#EF4444" strokeWidth={2.5} fill="url(#expGrad)" name="Expense" dot={false} activeDot={{ r: 5 }} />
+                  <Area type="monotone" dataKey="income"  stroke="var(--success)" strokeWidth={2.5} fill="url(#incGrad)" name="Income"  dot={false} activeDot={{ r: 5 }} />
+                  <Area type="monotone" dataKey="expense" stroke="var(--danger)" strokeWidth={2.5} fill="url(#expGrad)" name="Expense" dot={false} activeDot={{ r: 5 }} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -420,7 +418,7 @@ const AccountantDashboard = () => {
         <Col xs={24} lg={10}>
           <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <div style={iconWell("#2563EB", 32)}><WalletOutlined style={{ fontSize: 14 }} /></div>
+              <div style={iconWell("var(--primary)", 32)}><WalletOutlined style={{ fontSize: 14 }} /></div>
               <div>
                 <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                   Fee Collection
@@ -439,12 +437,10 @@ const AccountantDashboard = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke={gridClr} />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: axisClr }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: axisClr }} axisLine={false} tickLine={false} tickFormatter={moneyK} />
-                  <RcTooltip content={(props) => (
-                    <ChartTip {...props} isDark={isDark} />
-                  )} />
+                  <RcTooltip content={tipContent} />
                   <Bar dataKey="feeCollection" name="Fee Collected" radius={[6, 6, 0, 0]}>
                     {monthlyChart.map((_, i) => (
-                      <Cell key={i} fill={i === monthlyChart.length - 1 ? "#2563EB" : "#93C5FD"} />
+                      <Cell key={i} fill={i === monthlyChart.length - 1 ? "var(--primary)" : "rgba(var(--primary-rgb), 0.45)"} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -458,7 +454,7 @@ const AccountantDashboard = () => {
       <div style={sectionPanel}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={iconWell("#14B8A6", 32)}><FileTextOutlined style={{ fontSize: 14 }} /></div>
+            <div style={iconWell("var(--accent)", 32)}><FileTextOutlined style={{ fontSize: 14 }} /></div>
             <div>
               <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>Recent Transactions</Text>
               <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>Latest financial activity</Text>
@@ -467,8 +463,8 @@ const AccountantDashboard = () => {
           {recentActivity.length > 0 && (
             <span style={{
               fontSize: 11, fontWeight: 700, padding: "2px 10px",
-              borderRadius: 20, background: "#EFF6FF", color: "#2563EB",
-              border: "1px solid #DBEAFE",
+              borderRadius: 20, background: "var(--primary-light)", color: "var(--primary)",
+              border: "1px solid var(--primary-light)",
             }}>
               {recentActivity.length} entries
             </span>

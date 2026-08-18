@@ -135,19 +135,19 @@ export default function PrincipalTimetableOverview() {
         <div style={statGrid(180)}>
           <KpiCard
             label="Scheduled Periods" value={entries.length}
-            icon={<ScheduleOutlined />} color="#2563EB"
+            icon={<ScheduleOutlined />} color="var(--primary)"
           />
           <KpiCard
             label="Classes" value={masters.classes.length}
-            icon={<BookOutlined />} color="#14B8A6"
+            icon={<BookOutlined />} color="var(--accent)"
           />
           <KpiCard
             label="Sections" value={masters.sections.length}
-            icon={<ApartmentOutlined />} color="#F59E0B"
+            icon={<ApartmentOutlined />} color="var(--warning)"
           />
           <KpiCard
             label="Teachers Scheduled" value={Object.keys(workload).length}
-            icon={<TeamOutlined />} color="#7C3AED"
+            icon={<TeamOutlined />} color="var(--purple)"
             sub={`of ${masters.teachers.length} total`}
           />
         </div>
@@ -155,7 +155,7 @@ export default function PrincipalTimetableOverview() {
         {/* ── Filters ────────────────────────────────────────────── */}
         <div style={{ ...sectionPanel, padding: "14px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-            <div style={iconWell("#2563EB", 28)}><FilterOutlined style={{ fontSize: 12 }} /></div>
+            <div style={iconWell("var(--primary)", 28)}><FilterOutlined style={{ fontSize: 12 }} /></div>
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Filter Schedule</span>
             {hasFilters && (
               <Button
@@ -209,7 +209,7 @@ export default function PrincipalTimetableOverview() {
         {/* ── Weekly Grid ────────────────────────────────────────── */}
         <div style={sectionPanel}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div style={iconWell("#14B8A6", 28)}><ScheduleOutlined style={{ fontSize: 12 }} /></div>
+            <div style={iconWell("var(--accent)", 28)}><ScheduleOutlined style={{ fontSize: 12 }} /></div>
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Weekly Schedule</span>
           </div>
           {!academicYearId ? (

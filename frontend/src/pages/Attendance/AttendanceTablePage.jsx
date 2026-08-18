@@ -28,24 +28,24 @@ const TABLE_CLS = "sa-att-tbl";
 
 /* ── theme ── */
 const C = {
-  primary:    "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  success:    "#22C55E", successLight: "#DCFCE7",
-  warning:    "#F59E0B", warningLight: "#FEF3C7",
-  danger:     "#EF4444", dangerLight:  "#FEE2E2",
-  purple:     "#8B5CF6", purpleLight:  "#EDE9FE",
-  cyan:       "#06B6D4", cyanLight:    "#CFFAFE",
-  accent:     "#14B8A6", accentLight:  "#CCFBF1",
-  border:     "#E2E8F0", text:         "#0F172A",
-  textSub:    "#64748B", textMuted:    "#94A3B8",
-  surface:    "#FFFFFF", surfaceSoft:  "#F8FAFC",
+  primary:    "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  success:    "var(--success)", successLight: "var(--success-light)",
+  warning:    "var(--warning)", warningLight: "var(--warning-light)",
+  danger:     "var(--danger)", dangerLight:  "var(--danger-light)",
+  purple:     "var(--purple)", purpleLight:  "rgba(var(--purple-rgb), 0.12)",
+  cyan:       "var(--cyan)", cyanLight:    "#CFFAFE", // no design token exists for this cyan-100 tint; left as-is
+  accent:     "var(--accent)", accentLight:  "var(--accent-light)",
+  border:     "var(--border)", text:         "var(--text)",
+  textSub:    "var(--text-secondary)", textMuted:    "var(--text-muted)",
+  surface:    "var(--surface)", surfaceSoft:  "var(--surface-soft)",
 };
 
 const STATUS_CFG = {
-  present: { color: C.success,  bg: C.successLight, border: "#86EFAC", label: "Present"  },
-  absent:  { color: C.danger,   bg: C.dangerLight,  border: "#FCA5A5", label: "Absent"   },
-  late:    { color: C.warning,  bg: C.warningLight, border: "#FCD34D", label: "Late"     },
-  halfday: { color: C.purple,   bg: C.purpleLight,  border: "#C4B5FD", label: "Half Day" },
-  leave:   { color: C.cyan,     bg: C.cyanLight,    border: "#67E8F9", label: "On Leave" },
+  present: { color: C.success,  bg: C.successLight, border: "var(--success-light)", label: "Present"  },
+  absent:  { color: C.danger,   bg: C.dangerLight,  border: "var(--danger-light)", label: "Absent"   },
+  late:    { color: C.warning,  bg: C.warningLight, border: "var(--warning)", label: "Late"     },
+  halfday: { color: C.purple,   bg: C.purpleLight,  border: "rgba(var(--purple-rgb), 0.5)", label: "Half Day" },
+  leave:   { color: C.cyan,     bg: C.cyanLight,    border: "#67E8F9", label: "On Leave" }, // no cyan-rgb token exists to build a tint; left as-is
 };
 
 const ROLE_OPTIONS = [
@@ -429,9 +429,9 @@ const AttendanceTablePage = () => {
           ].map(({ key, label, color, bg, icon }) => (
             <div key={key} style={{
               background: bg, borderRadius: 10, padding: "10px 16px", flex: 1, minWidth: 100,
-              border: `1px solid ${color}30`, display: "flex", alignItems: "center", gap: 10,
+              border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`, display: "flex", alignItems: "center", gap: 10,
             }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: color + "22", display: "flex", alignItems: "center", justifyContent: "center", color, fontSize: 14 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "flex", alignItems: "center", justifyContent: "center", color, fontSize: 14 }}>
                 {icon}
               </div>
               <div>
@@ -610,7 +610,7 @@ const AttendanceTablePage = () => {
                   background: C.accentLight, borderRadius: 8, padding: "8px 12px",
                   marginBottom: 16, display: "flex", alignItems: "center", gap: 8,
                   color: C.accent, fontWeight: 700, fontSize: 13,
-                  border: `1px solid ${C.accent}30`,
+                  border: `1px solid color-mix(in srgb, ${C.accent} 19%, transparent)`,
                 }}>
                   <ClockCircleOutlined /> Working Hours: {wh}
                 </div>

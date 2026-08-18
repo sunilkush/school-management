@@ -68,7 +68,7 @@ const ChildHostel = () => {
             <Col xs={24} md={14}>
               <div style={sectionPanel}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-                  <div style={iconWell("#14B8A6", 40)}><HomeOutlined /></div>
+                  <div style={iconWell("var(--accent)", 40)}><HomeOutlined /></div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Hostel Allocation</div>
                 </div>
                 <Descriptions column={1} size="small" bordered>

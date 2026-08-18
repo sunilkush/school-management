@@ -17,7 +17,7 @@ import {
   statCard, statLabel, statValue, statGrid,
 } from "../../styles/pageStyles";
 
-const STAT_COLORS = ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B"];
+const STAT_COLORS = ["var(--primary)", "var(--accent)", "var(--success)", "var(--warning)"];
 
 const today = DAYS[new Date().getDay() - 1] || "";
 
@@ -169,9 +169,9 @@ export default function ParentChildTimetablePage() {
               <span style={{
                 marginLeft: "auto",
                 fontSize: 11, fontWeight: 700,
-                color: "#2563EB",
-                background: "#EFF6FF",
-                border: "1px solid #BFDBFE",
+                color: "var(--primary)",
+                background: "var(--primary-light)",
+                border: "1px solid var(--primary-light)",
                 borderRadius: 20,
                 padding: "2px 10px",
               }}>

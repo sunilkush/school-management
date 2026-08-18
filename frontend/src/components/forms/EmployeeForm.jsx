@@ -24,11 +24,11 @@ dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  success: "#22C55E", border: "#E2E8F0",
-  text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  success: "var(--success)", border: "var(--border)",
+  text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)", surfaceSoft: "var(--background)",
 };
 
 const qualifications = [

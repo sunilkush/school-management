@@ -52,7 +52,7 @@ const FORM_CSS = `
     display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;
   }
   .reg-alert.success { background: #f0fdf8; color: #1d9e75; border: 1px solid #bbf7d0; }
-  .reg-alert.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .reg-alert.error   { background: var(--danger-light); color: var(--danger-hover); border: 1px solid #fecaca; }
 
   .reg-btn {
     height: 30px; border-radius: 10px; font-size: 12px; font-weight: 600;
@@ -60,7 +60,7 @@ const FORM_CSS = `
     display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .reg-btn-primary {
-    background: linear-gradient(135deg, #1677ff 0%, #5a50c9 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #5a50c9 100%);
     color: #fff; box-shadow: 0 4px 14px rgba(124,111,247,0.35); padding: 0 20px;
   }
   .reg-btn-primary:hover:not(:disabled) {
@@ -85,9 +85,9 @@ const FORM_CSS = `
     border-radius: 10px; font-size: 12px; font-weight: 500;
   }
   .step-status-item.done    { background: #f0fdf8; color: #1d9e75; }
-  .step-status-item.loading { background: #f5f3ff; color: #7c3aed; }
-  .step-status-item.error   { background: #fef2f2; color: #dc2626; }
-  .step-status-item.idle    { background: #f8fafc; color: #94a3b8; }
+  .step-status-item.loading { background: rgba(var(--purple-rgb), 0.08); color: var(--purple); }
+  .step-status-item.error   { background: var(--danger-light); color: var(--danger-hover); }
+  .step-status-item.idle    { background: var(--background); color: var(--text-muted); }
 
   .reg-grid-2 {
     display: grid;
@@ -107,7 +107,7 @@ const StatusIcon = ({ status }) => {
   if (status === "done")    return <CheckCircle size={14} />;
   if (status === "loading") return <Loader2 size={14} className="spin" />;
   if (status === "error")   return <span>✕</span>;
-  return <span style={{ width: 14, height: 14, borderRadius: "50%", border: "1.5px solid #cbd5e1", display: "inline-block" }} />;
+  return <span style={{ width: 14, height: 14, borderRadius: "50%", border: "1.5px solid var(--border)", display: "inline-block" }} />;
 };
 
 /* ─── main component ───
@@ -403,8 +403,8 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
                   <Camera size={18} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1677ff" }}>{avatarName || "Click to upload avatar"}</div>
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>PNG, JPG · Max 1 MB</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)" }}>{avatarName || "Click to upload avatar"}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>PNG, JPG · Max 1 MB</div>
                 </div>
               </div>
             </Upload>
@@ -487,7 +487,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
             />
           </Form.Item>
 
-          <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 14, background: "#f8fafc", padding: "8px 12px", borderRadius: 8 }}>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14, background: "var(--background)", padding: "8px 12px", borderRadius: 8 }}>
             HRA will be auto-calculated as 40% of basic. You can update the full salary structure later from <strong>Payroll → Salary Structures</strong>.
           </div>
 

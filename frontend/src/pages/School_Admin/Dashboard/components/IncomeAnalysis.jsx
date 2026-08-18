@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Typography } from "antd";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useTheme } from "../../../../context/ThemeContext";
+import { CATEGORICAL_COLORS } from "../../../../utils/colorPalette";
 
 const { Text } = Typography;
 
 const RADIAN = Math.PI / 180;
 
-const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, isDark }) => {
+const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
   if (percent < 0.05) return null;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -19,20 +19,20 @@ const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, isDa
   );
 };
 
-const CustomTooltip = ({ active, payload, isDark }) => {
+const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
     <div style={{
-      background: isDark ? "#1f2937" : "#ffffff",
-      border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+      background: "var(--surface)",
+      border: "1px solid var(--border)",
       borderRadius: 10,
       padding: "10px 14px",
       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <span style={{ width: 10, height: 10, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
-        <Text style={{ fontSize: 12, color: isDark ? "#9ca3af" : "#6b7280", fontWeight: 600 }}>{d.label}</Text>
+        <Text style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>{d.label}</Text>
       </div>
       <Text style={{ fontSize: 18, fontWeight: 800, color: d.color, display: "block" }}>
         ₹{Number(d.value || 0).toLocaleString("en-IN")}
@@ -41,38 +41,35 @@ const CustomTooltip = ({ active, payload, isDark }) => {
   );
 };
 
-const renderLegend = ({ payload, isDark }) => (
+const renderLegend = ({ payload }) => (
   <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "6px 14px", marginTop: 8 }}>
     {payload.map((entry) => (
       <div key={entry.value} style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <span style={{ width: 10, height: 10, borderRadius: "50%", background: entry.color, flexShrink: 0 }} />
-        <Text style={{ fontSize: 11, color: isDark ? "#9ca3af" : "#6b7280" }}>{entry.value}</Text>
+        <Text style={{ fontSize: 11, color: "var(--text-secondary)" }}>{entry.value}</Text>
       </div>
     ))}
   </div>
 );
 
 const IncomeAnalysis = ({ data = [] }) => {
-  const { isDark } = useTheme();
   const [activeIndex, setActiveIndex] = useState(null);
 
-  const DEFAULT_COLORS = ["#1677ff", "#52c41a", "#faad14", "#f5222d", "#722ed1", "#13c2c2"];
-
   const incomeData = (data.length ? data : [
-    { label: "Cash", value: 0, color: "#1677ff" },
-    { label: "Online", value: 0, color: "#52c41a" },
+    { label: "Cash", value: 0, color: "var(--primary)" },
+    { label: "Online", value: 0, color: "var(--success)" },
   ]).map((d, i) => ({
     ...d,
-    color: d.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length],
+    color: d.color || CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length],
     name: d.label,
   }));
 
   const total = incomeData.reduce((sum, d) => sum + (d.value || 0), 0);
 
-  const cardBg = isDark ? "#141414" : "#ffffff";
-  const border  = isDark ? "#1f1f1f" : "#f0f0f0";
-  const textPri = isDark ? "#e8e8e8" : "#111827";
-  const textSec = isDark ? "#6b7280" : "#9ca3af";
+  const cardBg = "var(--surface)";
+  const border  = "var(--border)";
+  const textPri = "var(--text)";
+  const textSec = "var(--text-muted)";
 
   return (
     <div style={{
@@ -103,7 +100,7 @@ const IncomeAnalysis = ({ data = [] }) => {
               dataKey="value"
               nameKey="label"
               labelLine={false}
-              label={<CustomLabel isDark={isDark} />}
+              label={<CustomLabel />}
               onMouseEnter={(_, i) => setActiveIndex(i)}
               onMouseLeave={() => setActiveIndex(null)}
               stroke="none"
@@ -117,8 +114,8 @@ const IncomeAnalysis = ({ data = [] }) => {
                 />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip isDark={isDark} />} />
-            <Legend content={(props) => renderLegend({ ...props, isDark })} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend content={renderLegend} />
           </PieChart>
         </ResponsiveContainer>
 

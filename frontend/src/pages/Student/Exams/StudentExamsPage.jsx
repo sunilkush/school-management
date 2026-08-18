@@ -21,21 +21,32 @@ import { iconWell, pageWrapper, sectionPanel, statGrid } from "../../../styles/p
 /* ── helpers ── */
 const getExamWindow = (exam, now = dayjs()) => {
   if (exam?.status !== "published")
-    return { canStart: false, label: "Not Published", color: "#64748B", bg: "#F1F5F9" };
+    return { canStart: false, label: "Not Published", color: "var(--text-secondary)", bg: "var(--surface-soft)" };
   const s = exam.startTime ? dayjs(exam.startTime) : null;
   const e = exam.endTime   ? dayjs(exam.endTime)   : null;
   if (!s?.isValid() || !e?.isValid())
-    return { canStart: false, label: "No Time Set", color: "#64748B", bg: "#F1F5F9" };
+    return { canStart: false, label: "No Time Set", color: "var(--text-secondary)", bg: "var(--surface-soft)" };
   if (now.isBefore(s))
-    return { canStart: false, label: `Opens ${s.format("hh:mm A")}`, color: "#B45309", bg: "#FEF3C7" };
+    return { canStart: false, label: `Opens ${s.format("hh:mm A")}`, color: "var(--warning-hover)", bg: "var(--warning-light)" };
   if (now.isAfter(e))
-    return { canStart: false, label: "Closed", color: "#DC2626", bg: "#FEE2E2" };
-  return { canStart: true, label: "Live Now", color: "#15803D", bg: "#DCFCE7" };
+    return { canStart: false, label: "Closed", color: "var(--danger-hover)", bg: "var(--danger-light)" };
+  return { canStart: true, label: "Live Now", color: "var(--success-hover)", bg: "var(--success-light)" };
 };
 
 const GRADE_COLOR = {
-  "A+": "#7C3AED", A: "#0891B2", B: "#15803D",
-  C: "#B45309",   D: "#DC2626", F: "#7F1D1D",
+  "A+": "var(--purple)", A: "var(--cyan)", B: "var(--success-hover)",
+  C: "var(--warning-hover)",   D: "var(--danger-hover)", F: "#7F1D1D",
+};
+
+// Companion tint backgrounds for GRADE_COLOR (kept in sync manually since the
+// `${color}22` hex-alpha trick used elsewhere doesn't work with CSS var() values).
+const GRADE_BG = {
+  "A+": "rgba(var(--purple-rgb),0.15)",
+  A: "rgba(8,145,178,0.15)",
+  B: "var(--success-light)",
+  C: "var(--warning-light)",
+  D: "var(--danger-light)",
+  F: "rgba(127,29,29,0.15)",
 };
 
 /* ── Sub-components ── */
@@ -67,7 +78,7 @@ const ExamCard = ({ exam, attempt, onStart, onResume, onReview, starting }) => {
     }}>
       <div style={{
         height: 4,
-        background: win.canStart ? "#22C55E" : exam.status === "published" ? "#F59E0B" : "#94A3B8",
+        background: win.canStart ? "var(--success)" : exam.status === "published" ? "var(--warning)" : "var(--text-muted)",
       }} />
       <div style={{ padding: "16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
         {/* title + status */}
@@ -89,8 +100,8 @@ const ExamCard = ({ exam, attempt, onStart, onResume, onReview, starting }) => {
           </div>
           <span style={{
             fontSize: 11, fontWeight: 700, flexShrink: 0, padding: "3px 10px", borderRadius: 99,
-            background: exam.status === "published" ? "#DCFCE7" : "#F1F5F9",
-            color:      exam.status === "published" ? "#15803D" : "#64748B",
+            background: exam.status === "published" ? "var(--success-light)" : "var(--surface-soft)",
+            color:      exam.status === "published" ? "var(--success-hover)" : "var(--text-secondary)",
           }}>
             {exam.status || "draft"}
           </span>
@@ -142,7 +153,7 @@ const ResultCard = ({ result }) => {
   const pct  = Number(result.percentage || 0);
   const pass = result.resultStatus === "PASS";
   const grade = result.grade || "N/A";
-  const gc  = GRADE_COLOR[grade] || "#64748B";
+  const gc  = GRADE_COLOR[grade] || "var(--text-secondary)";
 
   return (
     <div style={{ border: "1px solid var(--border-muted)", borderRadius: 12, overflow: "hidden" }}>
@@ -158,7 +169,7 @@ const ResultCard = ({ result }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{
             width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-            background: gc + "22", color: gc,
+            background: GRADE_BG[grade] || "transparent", color: gc,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontWeight: 800, fontSize: 14,
           }}>
@@ -174,8 +185,8 @@ const ResultCard = ({ result }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 5,
-            background: pass ? "#DCFCE7" : "#FEE2E2",
-            color:      pass ? "#15803D" : "#DC2626",
+            background: pass ? "var(--success-light)" : "var(--danger-light)",
+            color:      pass ? "var(--success-hover)" : "var(--danger-hover)",
             padding: "3px 10px", borderRadius: 99, fontWeight: 700, fontSize: 12,
           }}>
             {pass ? <CheckCircleOutlined /> : <CloseCircleOutlined />} {result.resultStatus}
@@ -187,7 +198,7 @@ const ResultCard = ({ result }) => {
       <div style={{ padding: "0 16px" }}>
         <Progress
           percent={pct} size="small" showInfo={false}
-          strokeColor={pass ? "#22C55E" : "#EF4444"}
+          strokeColor={pass ? "var(--success)" : "var(--danger)"}
           trailColor="var(--border-muted)"
         />
       </div>
@@ -207,7 +218,7 @@ const ResultCard = ({ result }) => {
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>
                   {sub.obtainedMarks} / {sub.totalMarks} · Pass: {sub.passingMarks}
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: sub.isPassed ? "#15803D" : "#DC2626" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: sub.isPassed ? "var(--success-hover)" : "var(--danger-hover)" }}>
                   {sub.isPassed ? "✓ PASS" : "✗ FAIL"}
                 </span>
               </div>
@@ -312,10 +323,10 @@ const StudentExamsPage = () => {
 
       {/* ── Stat cards ── */}
       <div style={{ ...statGrid(140), marginTop: 20 }}>
-        <StatCard icon={<FileTextOutlined />}    label="Total Exams" value={stats.total}    color="#7C3AED" />
-        <StatCard icon={<CalendarOutlined />}    label="Upcoming"    value={stats.upcoming} color="#B45309" />
-        <StatCard icon={<TrophyOutlined />}      label="Avg. Score"  value={`${stats.avg}%`} color="#0891B2" />
-        <StatCard icon={<CheckCircleOutlined />} label="Passed"      value={stats.passed}   color="#15803D" sub={`${stats.failed} failed`} />
+        <StatCard icon={<FileTextOutlined />}    label="Total Exams" value={stats.total}    color="var(--purple)" />
+        <StatCard icon={<CalendarOutlined />}    label="Upcoming"    value={stats.upcoming} color="var(--warning-hover)" />
+        <StatCard icon={<TrophyOutlined />}      label="Avg. Score"  value={`${stats.avg}%`} color="var(--cyan)" />
+        <StatCard icon={<CheckCircleOutlined />} label="Passed"      value={stats.passed}   color="var(--success-hover)" sub={`${stats.failed} failed`} />
       </div>
 
       {/* ── Next exam banner ── */}
@@ -353,7 +364,7 @@ const StudentExamsPage = () => {
       <div style={sectionPanel}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={iconWell("#B45309", 34)}><CalendarOutlined /></div>
+            <div style={iconWell("var(--warning-hover)", 34)}><CalendarOutlined /></div>
             <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Exam Schedule</span>
           </div>
           <Segmented
@@ -394,7 +405,7 @@ const StudentExamsPage = () => {
       {/* ── Published Results ── */}
       <div style={sectionPanel}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div style={iconWell("#15803D", 34)}><TrophyOutlined /></div>
+          <div style={iconWell("var(--success-hover)", 34)}><TrophyOutlined /></div>
           <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Published Results</span>
         </div>
 

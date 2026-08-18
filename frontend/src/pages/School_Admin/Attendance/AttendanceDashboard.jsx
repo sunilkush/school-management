@@ -205,6 +205,9 @@ const AttendanceDashboard = () => {
   }, [monthlyReport]);
 
   /* ── Quick actions ── */
+  // `color` feeds a `${color}08` hover-alpha-suffix trick and the shared iconWell() helper
+  // (frontend/src/styles/pageStyles.js) below — both break with a var() string, so these
+  // stay raw hex (except the one entry that was already var(--primary), left as pre-existing).
   const QUICK_ACTIONS = [
     { icon: <EditOutlined />,    label: "Mark Students",  color: "var(--primary)", path: "/dashboard/schooladmin/attendance/students" },
     { icon: <TeamOutlined />,    label: "Mark Teachers",  color: "#0891b2",        path: "/dashboard/schooladmin/attendance/teachers" },
@@ -235,7 +238,7 @@ const AttendanceDashboard = () => {
             <Progress
               percent={pct}
               size="small"
-              strokeColor={pct < 60 ? "#EF4444" : "#F59E0B"}
+              strokeColor={pct < 60 ? "var(--danger)" : "var(--warning)"}
               trailColor="var(--border-muted)"
               showInfo={false}
               style={{ flex: 1, minWidth: 60 }}
@@ -244,7 +247,7 @@ const AttendanceDashboard = () => {
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: pct < 60 ? "#EF4444" : "#F59E0B",
+                color: pct < 60 ? "var(--danger)" : "var(--warning)",
                 minWidth: 36,
               }}
             >
@@ -257,7 +260,7 @@ const AttendanceDashboard = () => {
     {
       title: "Absences",
       render: (_, r) => (
-        <span style={{ color: "#EF4444", fontWeight: 600 }}>
+        <span style={{ color: "var(--danger)", fontWeight: 600 }}>
           {r.statusBreakdown?.absent ?? "—"}
         </span>
       ),
@@ -323,6 +326,7 @@ const AttendanceDashboard = () => {
             value={totalStudents}
             color="var(--primary)"
           />
+          {/* `color` on KpiCard feeds the shared iconWell() helper — see QUICK_ACTIONS note above. */}
           <KpiCard
             icon={<CheckCircleOutlined />}
             label="Present Today"
@@ -461,19 +465,19 @@ const AttendanceDashboard = () => {
                   <Bar
                     dataKey="present"
                     name="Present"
-                    fill="#22C55E"
+                    fill="var(--success)"
                     radius={[3, 3, 0, 0]}
                   />
                   <Bar
                     dataKey="absent"
                     name="Absent"
-                    fill="#EF4444"
+                    fill="var(--danger)"
                     radius={[3, 3, 0, 0]}
                   />
                   <Bar
                     dataKey="late"
                     name="Late"
-                    fill="#F59E0B"
+                    fill="var(--warning)"
                     radius={[3, 3, 0, 0]}
                   />
                 </BarChart>
@@ -520,7 +524,7 @@ const AttendanceDashboard = () => {
                 gap: 6,
               }}
             >
-              <WarningOutlined style={{ color: "#F59E0B" }} />
+              <WarningOutlined style={{ color: "var(--warning)" }} />
               Low Attendance
             </div>
             <Button
@@ -549,7 +553,7 @@ const AttendanceDashboard = () => {
           ) : (
             <div style={{ padding: "24px 0", textAlign: "center" }}>
               <CheckCircleOutlined
-                style={{ fontSize: 32, color: "#22C55E", marginBottom: 8 }}
+                style={{ fontSize: 32, color: "var(--success)", marginBottom: 8 }}
               />
               <div
                 style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}

@@ -185,7 +185,7 @@ export default function PTMSessionsPage() {
         {/* ── Create Session panel ─────────────────────────────── */}
         <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-            <div style={iconWell("#2563EB", 38)}><CalendarOutlined style={{ fontSize: 17 }} /></div>
+            <div style={iconWell("var(--primary)", 38)}><CalendarOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Create PTM Session</Text>
               <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>Bookable slots are auto-generated across the time window</Text>

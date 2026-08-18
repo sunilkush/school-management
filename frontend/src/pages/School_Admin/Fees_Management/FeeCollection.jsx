@@ -11,7 +11,6 @@ import {
   CalendarOutlined, FileTextOutlined,
 } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
-import { useTheme } from "../../../context/ThemeContext";
 import dayjs from "dayjs";
 
 import { fetchStudentsBySchoolId }   from "../../../features/studentSlice";
@@ -31,18 +30,18 @@ const METHOD_OPTIONS = [
 ];
 
 const STATUS_META = {
-  paid:    { color: "#22C55E", bg: "#f0fdf4", border: "#bbf7d0", label: "Paid",    icon: <CheckCircleOutlined /> },
-  unpaid:  { color: "#EF4444", bg: "#fff1f2", border: "#fecdd3", label: "Unpaid",  icon: <ExclamationCircleOutlined /> },
-  partial: { color: "#F59E0B", bg: "#fffbeb", border: "#fde68a", label: "Partial", icon: <ClockCircleOutlined /> },
+  paid:    { color: "var(--success)", bg: "var(--success-light)", border: "rgba(var(--success-rgb), 0.35)", label: "Paid",    icon: <CheckCircleOutlined /> },
+  unpaid:  { color: "var(--danger)", bg: "var(--danger-light)", border: "rgba(var(--danger-rgb), 0.35)", label: "Unpaid",  icon: <ExclamationCircleOutlined /> },
+  partial: { color: "var(--warning)", bg: "var(--warning-light)", border: "rgba(var(--warning-rgb), 0.35)", label: "Partial", icon: <ClockCircleOutlined /> },
 };
 
 const fmtCurrency = (n) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
 
-const FL = ({ children, isDark }) => (
+const FL = ({ children }) => (
   <div style={{
     fontSize: 11, fontWeight: 700,
-    color: isDark ? "#64748B" : "#94A3B8",
+    color: "var(--text-muted)",
     textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6,
   }}>
     {children}
@@ -65,6 +64,11 @@ const StatusBadge = ({ status }) => {
 };
 
 /* ─── Receipt print component ──────────────────────────────────── */
+// NOTE: this markup is rendered into a blank popup window via handlePrint()'s
+// `document.write()` (see below), which has no <link> to index.css — CSS
+// custom properties like var(--text) would not resolve there. It also should
+// always print on white paper regardless of the app's active theme. So the
+// hex colors here are intentionally left as literal, not tokens.
 const Receipt = React.forwardRef(({ fee, student, payment, school }, ref) => (
   <div ref={ref} style={{ padding: 32, fontFamily: "Georgia, serif", maxWidth: 480, margin: "0 auto" }}>
     <div style={{ textAlign: "center", borderBottom: "2px solid #1a1a2e", paddingBottom: 16, marginBottom: 20 }}>
@@ -130,27 +134,27 @@ const Receipt = React.forwardRef(({ fee, student, payment, school }, ref) => (
 ));
 
 /* ─── Mobile fee card ──────────────────────────────────────────── */
-const FeeMobileCard = ({ fee, onPay, isDark }) => {
+const FeeMobileCard = ({ fee, onPay }) => {
   const balance = (fee.totalAmount || 0) - (fee.paidAmount || 0);
   const pct     = fee.totalAmount ? Math.round(((fee.paidAmount || 0) / fee.totalAmount) * 100) : 0;
   const isPaid  = fee.status === "paid";
-  const bg      = isDark ? "#1a2235" : "#fff";
-  const border  = isDark ? "#2a3550" : "#e2e8f0";
+  const bg      = "var(--surface)";
+  const border  = "var(--border)";
 
   return (
     <div style={{
       background: bg, border: `1px solid ${border}`,
       borderRadius: 14, padding: "14px 16px",
-      borderLeft: `4px solid ${STATUS_META[fee.status]?.color || "#EF4444"}`,
+      borderLeft: `4px solid ${STATUS_META[fee.status]?.color || "var(--danger)"}`,
     }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: isDark ? "#e2e8f0" : "#111827",
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {fee.headName || fee.feeHeadId?.name || "—"}
           </div>
           {fee.dueDate && (
-            <div style={{ fontSize: 11, color: isDark ? "#64748B" : "#94A3B8", marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
               <CalendarOutlined style={{ marginRight: 4 }} />
               Due: {dayjs(fee.dueDate).format("DD MMM YYYY")}
             </div>
@@ -161,16 +165,16 @@ const FeeMobileCard = ({ fee, onPay, isDark }) => {
 
       <div style={{ display: "flex", gap: 12, marginBottom: 10 }}>
         {[
-          { label: "Total",   value: fee.totalAmount,      color: isDark ? "#94A3B8" : "#374151" },
-          { label: "Paid",    value: fee.paidAmount,  color: "#22C55E" },
-          { label: "Balance", value: balance,         color: balance > 0 ? "#EF4444" : "#22C55E" },
+          { label: "Total",   value: fee.totalAmount,      color: "var(--text-secondary)" },
+          { label: "Paid",    value: fee.paidAmount,  color: "var(--success)" },
+          { label: "Balance", value: balance,         color: balance > 0 ? "var(--danger)" : "var(--success)" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ flex: 1, textAlign: "center",
-            background: isDark ? "#0f172a" : "#f8fafc",
+            background: "var(--background)",
             borderRadius: 10, padding: "8px 4px",
             border: `1px solid ${border}`,
           }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: isDark ? "#64748B" : "#94A3B8",
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)",
               textTransform: "uppercase", letterSpacing: "0.05em" }}>
               {label}
             </div>
@@ -182,14 +186,14 @@ const FeeMobileCard = ({ fee, onPay, isDark }) => {
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <div style={{ height: 6, background: isDark ? "#1e293b" : "#f1f5f9", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ height: 6, background: "var(--border-muted)", borderRadius: 99, overflow: "hidden" }}>
           <div style={{
             height: "100%", width: `${pct}%`,
-            background: isPaid ? "#22C55E" : pct > 0 ? "#F59E0B" : "#EF4444",
+            background: isPaid ? "var(--success)" : pct > 0 ? "var(--warning)" : "var(--danger)",
             borderRadius: 99, transition: "width 0.4s ease",
           }} />
         </div>
-        <div style={{ fontSize: 11, color: isDark ? "#64748B" : "#94A3B8", textAlign: "right", marginTop: 3 }}>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "right", marginTop: 3 }}>
           {pct}% paid
         </div>
       </div>
@@ -223,7 +227,6 @@ const FeeCollection = () => {
   const receiptRef = useRef(null);
   const screens    = useBreakpoint();
   const isMobile   = !screens.md;
-  const { isDark } = useTheme();
 
   const { user }                                                   = useSelector((s) => s.auth || {});
   const { schoolStudents = [], loading: studentsLoading }          = useSelector((s) => s.students || {});
@@ -368,11 +371,11 @@ const FeeCollection = () => {
   };
 
   /* ── Design tokens ── */
-  const cardBg  = isDark ? "#1a2235" : "#ffffff";
-  const panelBg = isDark ? "#111827" : "#f8fafc";
-  const border  = isDark ? "#2a3550" : "#e2e8f0";
-  const txtPri  = isDark ? "#e2e8f0" : "#111827";
-  const txtMut  = isDark ? "#64748B" : "#94A3B8";
+  const cardBg  = "var(--surface)";
+  const panelBg = "var(--background)";
+  const border  = "var(--border)";
+  const txtPri  = "var(--text)";
+  const txtMut  = "var(--text-muted)";
 
   /* ── Table columns (desktop) ── */
   const columns = [
@@ -391,13 +394,13 @@ const FeeCollection = () => {
     },
     {
       title: "Paid", dataIndex: "paidAmount", align: "right",
-      render: (v) => <span style={{ color: "#22C55E", fontWeight: 700 }}>{fmtCurrency(v)}</span>,
+      render: (v) => <span style={{ color: "var(--success)", fontWeight: 700 }}>{fmtCurrency(v)}</span>,
     },
     {
       title: "Balance", align: "right",
       render: (_, r) => {
         const bal = (r.totalAmount || 0) - (r.paidAmount || 0);
-        return <span style={{ color: bal > 0 ? "#EF4444" : "#22C55E", fontWeight: 700 }}>{fmtCurrency(bal)}</span>;
+        return <span style={{ color: bal > 0 ? "var(--danger)" : "var(--success)", fontWeight: 700 }}>{fmtCurrency(bal)}</span>;
       },
     },
     {
@@ -410,10 +413,10 @@ const FeeCollection = () => {
         const pct = r.totalAmount ? Math.round(((r.paidAmount || 0) / r.totalAmount) * 100) : 0;
         return (
           <div>
-            <div style={{ height: 5, background: isDark ? "#1e293b" : "#f1f5f9", borderRadius: 99, overflow: "hidden" }}>
+            <div style={{ height: 5, background: "var(--border-muted)", borderRadius: 99, overflow: "hidden" }}>
               <div style={{
                 height: "100%", width: `${pct}%`,
-                background: r.status === "paid" ? "#22C55E" : pct > 0 ? "#F59E0B" : "#EF4444",
+                background: r.status === "paid" ? "var(--success)" : pct > 0 ? "var(--warning)" : "var(--danger)",
                 borderRadius: 99,
               }} />
             </div>
@@ -482,7 +485,7 @@ const FeeCollection = () => {
         }}>
           {/* Class filter */}
           <div>
-            <FL isDark={isDark}>Class</FL>
+            <FL>Class</FL>
             <Select
               style={{ width: "100%" }}
               placeholder="Select class"
@@ -503,7 +506,7 @@ const FeeCollection = () => {
 
           {/* Student search */}
           <div>
-            <FL isDark={isDark}>Student</FL>
+            <FL>Student</FL>
             <Select
               showSearch
               style={{ width: "100%" }}
@@ -581,7 +584,7 @@ const FeeCollection = () => {
               <div style={{ fontSize: 11, color: txtMut, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Paid
               </div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: "#22C55E" }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "var(--success)" }}>
                 {summary.pct}%
               </div>
             </div>
@@ -598,13 +601,13 @@ const FeeCollection = () => {
           marginBottom: 16,
         }}>
           {[
-            { label: "Total Fees",  value: summary.total,   color: isDark ? "#818cf8" : "#4f46e5", bg: isDark ? "rgba(79,70,229,0.12)" : "#eef2ff" },
-            { label: "Amount Paid", value: summary.paid,    color: "#22C55E", bg: isDark ? "rgba(34,197,94,0.1)" : "#f0fdf4" },
-            { label: "Balance Due", value: summary.pending, color: "#EF4444", bg: isDark ? "rgba(239,68,68,0.1)" : "#fff1f2" },
-          ].map(({ label, value, color, bg }) => (
+            { label: "Total Fees",  value: summary.total,   color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.12)", borderColor: "rgba(var(--purple-rgb), 0.3)" },
+            { label: "Amount Paid", value: summary.paid,    color: "var(--success)", bg: "var(--success-light)", borderColor: "rgba(var(--success-rgb), 0.3)" },
+            { label: "Balance Due", value: summary.pending, color: "var(--danger)", bg: "var(--danger-light)", borderColor: "rgba(var(--danger-rgb), 0.3)" },
+          ].map(({ label, value, color, bg, borderColor }) => (
             <div key={label} style={{
               background: bg, borderRadius: 12,
-              border: `1px solid ${color}30`,
+              border: `1px solid ${borderColor}`,
               padding: isMobile ? "12px 10px" : "16px 18px",
               textAlign: isMobile ? "center" : "left",
             }}>
@@ -638,19 +641,19 @@ const FeeCollection = () => {
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: txtPri }}>Overall Payment Progress</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: summary.pct === 100 ? "#22C55E" : "#F59E0B" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: summary.pct === 100 ? "var(--success)" : "var(--warning)" }}>
               {summary.pct}%
             </span>
           </div>
-          <div style={{ height: 8, background: isDark ? "#1e293b" : "#f1f5f9", borderRadius: 99, overflow: "hidden" }}>
+          <div style={{ height: 8, background: "var(--border-muted)", borderRadius: 99, overflow: "hidden" }}>
             <div style={{
               height: "100%",
               width: `${summary.pct}%`,
               background: summary.pct === 100
-                ? "linear-gradient(90deg, #22C55E, #16a34a)"
+                ? "linear-gradient(90deg, var(--success), var(--success-hover))"
                 : summary.pct > 0
-                  ? "linear-gradient(90deg, #F59E0B, #ea580c)"
-                  : "#EF4444",
+                  ? "linear-gradient(90deg, var(--warning), var(--warning-hover))"
+                  : "var(--danger)",
               borderRadius: 99,
               transition: "width 0.6s ease",
             }} />
@@ -701,7 +704,7 @@ const FeeCollection = () => {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {myFees.map((fee) => (
-                    <FeeMobileCard key={fee._id} fee={fee} onPay={openPay} isDark={isDark} />
+                    <FeeMobileCard key={fee._id} fee={fee} onPay={openPay} />
                   ))}
                 </div>
               )
@@ -748,23 +751,23 @@ const FeeCollection = () => {
           </div>
 
           <div style={{
-            background: isDark ? "rgba(239,68,68,0.1)" : "#fff1f2",
-            border: `1px solid ${isDark ? "rgba(239,68,68,0.2)" : "#fecdd3"}`,
+            background: "var(--danger-light)",
+            border: "1px solid rgba(var(--danger-rgb), 0.3)",
             borderRadius: 12, padding: "14px 18px", marginBottom: 20,
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#EF4444",
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--danger)",
                 textTransform: "uppercase", letterSpacing: "0.07em" }}>
                 Balance Due
               </div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: "#EF4444", letterSpacing: "-0.02em" }}>
+              <div style={{ fontSize: 26, fontWeight: 800, color: "var(--danger)", letterSpacing: "-0.02em" }}>
                 {fmtCurrency((payModal.fee?.totalAmount || 0) - (payModal.fee?.paidAmount || 0))}
               </div>
             </div>
             <div style={{
               width: 48, height: 48, borderRadius: "50%",
-              background: "rgba(239,68,68,0.1)",
+              background: "rgba(var(--danger-rgb), 0.1)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <RupeeIcon size={22} />
@@ -787,8 +790,8 @@ const FeeCollection = () => {
                         gap: 6, padding: "12px 8px", borderRadius: 10,
                         border: `2px solid ${active ? "var(--primary)" : border}`,
                         background: active
-                          ? isDark ? "rgba(124,58,237,0.15)" : "#f5f3ff"
-                          : isDark ? "#1a2235" : "#f8fafc",
+                          ? "rgba(var(--purple-rgb), 0.12)"
+                          : "var(--surface-soft)",
                         cursor: "pointer", transition: "all 0.15s",
                         color: active ? "var(--primary)" : txtMut,
                         fontSize: 20,

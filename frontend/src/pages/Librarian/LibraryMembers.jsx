@@ -22,9 +22,9 @@ const { Text } = Typography;
 const { Option } = Select;
 
 const MEMBER_TYPE_COLORS = {
-  Student: "#14B8A6",
-  Teacher: "#0891b2",
-  Staff:   "#22C55E",
+  Student: "var(--accent)",
+  Teacher: "var(--cyan)",
+  Staff:   "var(--success)",
 };
 
 const LibraryMembers = () => {
@@ -139,7 +139,7 @@ const LibraryMembers = () => {
   const historyColumns = [
     { title: "Book", dataIndex: "bookTitle", render: (t) => <Text strong>{t}</Text> },
     { title: "Issue Date", dataIndex: "issueDate", width: 110 },
-    { title: "Due Date", dataIndex: "dueDate", width: 110, render: (d, r) => <span style={{ color: r.status === "Overdue" ? "#EF4444" : "inherit" }}>{d}</span> },
+    { title: "Due Date", dataIndex: "dueDate", width: 110, render: (d, r) => <span style={{ color: r.status === "Overdue" ? "var(--danger)" : "inherit" }}>{d}</span> },
     { title: "Return Date", dataIndex: "returnDate", width: 110 },
     {
       title: "Status",
@@ -168,7 +168,7 @@ const LibraryMembers = () => {
       render: (_, r) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Avatar
-            style={{ background: MEMBER_TYPE_COLORS[r.type] || "#64748B", flexShrink: 0 }}
+            style={{ background: MEMBER_TYPE_COLORS[r.type] || "var(--text-secondary)", flexShrink: 0 }}
             size={34}
             icon={<UserOutlined />}
           />
@@ -184,7 +184,7 @@ const LibraryMembers = () => {
       dataIndex: "type",
       width: 90,
       render: (t) => (
-        <span style={{ ...pill(MEMBER_TYPE_COLORS[t] || "#64748B", `${MEMBER_TYPE_COLORS[t] || "#64748B"}18`) }}>
+        <span style={{ ...pill(MEMBER_TYPE_COLORS[t] || "var(--text-secondary)", `color-mix(in srgb, ${MEMBER_TYPE_COLORS[t] || "var(--text-secondary)"} 9%, transparent)`) }}>
           {t}
         </span>
       ),
@@ -218,7 +218,7 @@ const LibraryMembers = () => {
       title: "Status",
       width: 120,
       render: (_, r) => {
-        if (r.overdueCount > 0) return <Badge status="error" text={<span style={{ fontSize: 12, color: "#EF4444", fontWeight: 600 }}>Overdue</span>} />;
+        if (r.overdueCount > 0) return <Badge status="error" text={<span style={{ fontSize: 12, color: "var(--danger)", fontWeight: 600 }}>Overdue</span>} />;
         if (r.activeIssued > 0) return <Badge status="warning" text={<span style={{ fontSize: 12 }}>Active</span>} />;
         return <Badge status="default" text={<span style={{ fontSize: 12, color: "var(--text-muted)" }}>No Books</span>} />;
       },
@@ -255,10 +255,10 @@ const LibraryMembers = () => {
       {/* ── KPI row ───────────────────────────────────────────────── */}
       <div style={statGrid(150)}>
         {[
-          { label: "Total Members",   value: stats.total,   icon: <TeamOutlined />,      color: "#0891b2" },
-          { label: "Active Borrowers", value: stats.active,  icon: <BookOutlined />,       color: "#14B8A6" },
-          { label: "With Overdues",   value: stats.overdue, icon: <ClockCircleOutlined />, color: "#EF4444" },
-          { label: "Pending Fines",   value: `₹${stats.fines}`, icon: <BookOutlined />,   color: "#F59E0B" },
+          { label: "Total Members",   value: stats.total,   icon: <TeamOutlined />,      color: "var(--cyan)" },
+          { label: "Active Borrowers", value: stats.active,  icon: <BookOutlined />,       color: "var(--accent)" },
+          { label: "With Overdues",   value: stats.overdue, icon: <ClockCircleOutlined />, color: "var(--danger)" },
+          { label: "Pending Fines",   value: `₹${stats.fines}`, icon: <BookOutlined />,   color: "var(--warning)" },
         ].map(({ label, value, icon, color }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>
@@ -315,7 +315,7 @@ const LibraryMembers = () => {
       <Modal
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Avatar style={{ background: MEMBER_TYPE_COLORS[historyMember?.type] || "#64748B" }} icon={<UserOutlined />} />
+            <Avatar style={{ background: MEMBER_TYPE_COLORS[historyMember?.type] || "var(--text-secondary)" }} icon={<UserOutlined />} />
             <div>
               <div style={{ fontWeight: 700 }}>{historyMember?.name}</div>
               <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>{historyMember?.type} · {historyMember?.regNo}</div>

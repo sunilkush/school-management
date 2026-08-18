@@ -11,12 +11,14 @@ import {
   toolbarRow, tableContainer, tableHeadCss,
   statGrid, iconWell, modalTitle, pill,
 } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
 import dayjs from "dayjs";
 
 const { Option } = Select;
 const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
 
+// `color` feeds the shared pill()/iconWell() helpers (frontend/src/styles/pageStyles.js),
+// which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
+// so these stay hex. Same applies to the KPI array below.
 const STATUS_META = {
   issued:   { color: "#1677ff", label: "Issued" },
   returned: { color: "#0ea472", label: "Returned" },
@@ -26,7 +28,6 @@ const STATUS_META = {
 
 export default function IssuePage() {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const { issues, loading, actionLoading } = useSelector((s) => s.stockIssue);
   const { items } = useSelector((s) => s.inventory);
   const [open, setOpen]             = useState(false);
@@ -101,7 +102,7 @@ export default function IssuePage() {
     {
       title: "Return By", key: "returnBy", responsive: ["md"],
       render: (_, r) => r.expectedReturnDate
-        ? <span style={{ fontSize: 12, color: r.isOverdue ? "#EF4444" : "inherit", fontWeight: r.isOverdue ? 600 : 400 }}>{dayjs(r.expectedReturnDate).format("DD MMM YYYY")}</span>
+        ? <span style={{ fontSize: 12, color: r.isOverdue ? "var(--danger)" : "inherit", fontWeight: r.isOverdue ? 600 : 400 }}>{dayjs(r.expectedReturnDate).format("DD MMM YYYY")}</span>
         : "—",
     },
     {
@@ -182,7 +183,7 @@ export default function IssuePage() {
                 const avail = Math.max((i.quantity || 0) - (i.allocated || 0), 0);
                 return (
                   <Option key={i._id} value={i._id}>
-                    {i.name} — <span style={{ color: "#0ea472", fontWeight: 600 }}>{avail} {i.unit}</span> available
+                    {i.name} — <span style={{ color: "var(--success)", fontWeight: 600 }}>{avail} {i.unit}</span> available
                   </Option>
                 );
               })}

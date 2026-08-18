@@ -82,7 +82,7 @@ const StatusTag = ({ record, activeYear }) => {
         icon={<CheckCircleFilled />}
         style={{
           background: "rgba(220,252,231,0.2)",
-          color: "#22C55E",
+          color: "var(--success)",
           border: "1px solid rgba(220,252,231,0.5)",
           borderRadius: 20,
           fontWeight: 600,
@@ -240,7 +240,7 @@ const AcademicYearPage = () => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: activeYear?._id === record._id ? "#22C55E" : "var(--primary)",
+              color: activeYear?._id === record._id ? "var(--success)" : "var(--primary)",
               fontSize: 16,
             }}
           >
@@ -251,7 +251,7 @@ const AcademicYearPage = () => {
               {name}
             </span>
             {activeYear?._id === record._id && (
-              <span style={{ fontSize: 11, color: "#22C55E" }}>Currently active</span>
+              <span style={{ fontSize: 11, color: "var(--success)" }}>Currently active</span>
             )}
           </div>
         </Space>
@@ -295,7 +295,7 @@ const AcademicYearPage = () => {
                   type="text"
                   size="small"
                   icon={<SafetyCertificateOutlined />}
-                  style={{ color: "#22C55E", fontWeight: 600 }}
+                  style={{ color: "var(--success)", fontWeight: 600 }}
                   onClick={() => handleSetActive(record._id)}
                 >
                   Set Active
@@ -377,10 +377,10 @@ const AcademicYearPage = () => {
         <Alert
           type="success"
           showIcon
-          icon={<CheckCircleFilled style={{ color: "#22C55E" }} />}
+          icon={<CheckCircleFilled style={{ color: "var(--success)" }} />}
           message={
             <span>
-              Active Year: <strong style={{ color: "#22C55E" }}>{activeYear.name}</strong>
+              Active Year: <strong style={{ color: "var(--success)" }}>{activeYear.name}</strong>
               {"  "}
               <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
                 {dayjs(activeYear.startDate).format("DD MMM YYYY")} → {dayjs(activeYear.endDate).format("DD MMM YYYY")}
@@ -400,21 +400,21 @@ const AcademicYearPage = () => {
           </div>
           <CalendarOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#22C55E" })}>
+        <div style={statCard({ color: "var(--success)" })}>
           <div>
-            <div style={statLabel("#22C55E")}>Active Year</div>
-            <div style={{ ...statValue("#22C55E"), fontSize: 18 }}>{activeYear?.name || "—"}</div>
+            <div style={statLabel("var(--success)")}>Active Year</div>
+            <div style={{ ...statValue("var(--success)"), fontSize: 18 }}>{activeYear?.name || "—"}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>{activeYear ? "Currently running" : "None set"}</div>
           </div>
-          <CheckCircleFilled style={{ fontSize: 26, color: "#22C55E", opacity: 0.4 }} />
+          <CheckCircleFilled style={{ fontSize: 26, color: "var(--success)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#F59E0B" })}>
+        <div style={statCard({ color: "var(--warning)" })}>
           <div>
-            <div style={statLabel("#F59E0B")}>Archived</div>
-            <div style={statValue("#F59E0B")}>{archivedTotal}</div>
+            <div style={statLabel("var(--warning)")}>Archived</div>
+            <div style={statValue("var(--warning)")}>{archivedTotal}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>Historical records</div>
           </div>
-          <InboxOutlined style={{ fontSize: 26, color: "#F59E0B", opacity: 0.4 }} />
+          <InboxOutlined style={{ fontSize: 26, color: "var(--warning)", opacity: 0.4 }} />
         </div>
       </div>
 
@@ -471,7 +471,7 @@ const AcademicYearPage = () => {
               ),
             }}
             onRow={(record) => ({
-              style: { background: activeYear?._id === record._id ? "#F0FDF4" : undefined, transition: "background 0.15s" },
+              style: { background: activeYear?._id === record._id ? "var(--success-light)" : undefined, transition: "background 0.15s" },
             })}
           />
         )}

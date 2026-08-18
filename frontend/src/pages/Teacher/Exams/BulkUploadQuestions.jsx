@@ -440,7 +440,7 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, classOptions: classOptionsPr
         {/* Column quick-reference */}
         <div style={{ marginTop: 10 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Required columns <span style={{ color: "#DC2626" }}>(red header)</span> &nbsp;·&nbsp; Optional columns <span style={{ color: "#2563EB" }}>(blue header)</span>
+            Required columns <span style={{ color: "var(--danger-hover)" }}>(red header)</span> &nbsp;·&nbsp; Optional columns <span style={{ color: "var(--primary)" }}>(blue header)</span>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {COLUMNS.map((c) => (
@@ -458,9 +458,9 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, classOptions: classOptionsPr
 
         <div style={{
           marginTop: 10, padding: "8px 12px",
-          background: "#FFF7ED", borderRadius: 8,
-          border: "1px solid #FED7AA",
-          fontSize: 12, color: "#92400E", lineHeight: 1.7,
+          background: "rgba(var(--warning-rgb),0.08)", borderRadius: 8,
+          border: "1px solid var(--warning-light)",
+          fontSize: 12, color: "var(--warning-hover)", lineHeight: 1.7,
         }}>
           <InfoCircleOutlined style={{ marginRight: 6 }} />
           <strong>schoolClassId</strong> aur <strong>subjectId</strong> ke liye — template ki <em>Sheet 2</em> kholein,
@@ -472,7 +472,7 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, classOptions: classOptionsPr
       <div style={{ ...pageCard, padding: 20 }}>
         {done ? (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <CheckCircleOutlined style={{ fontSize: 40, color: "#22C55E", display: "block", marginBottom: 10 }} />
+            <CheckCircleOutlined style={{ fontSize: 40, color: "var(--success)", display: "block", marginBottom: 10 }} />
             <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
               Upload successful!
             </div>

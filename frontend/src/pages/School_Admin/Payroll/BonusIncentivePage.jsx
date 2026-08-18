@@ -16,18 +16,18 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
-  orange: "#F97316", orangeLight: "#FFF7ED",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  purple: "var(--purple)", purpleLight: "rgba(var(--purple-rgb), 0.08)",
+  orange: "var(--orange)", orangeLight: "rgba(var(--warning-rgb), 0.08)",
 };
 
 const TYPE_CFG = {
-  festival_bonus:    { label: "Festival Bonus",    emoji: "🪔", color: C.warning, bg: C.warningLight,   border: "#FDE68A" },
-  performance_bonus: { label: "Performance Bonus", emoji: "🏆", color: C.success, bg: C.successLight,   border: "#86EFAC" },
+  festival_bonus:    { label: "Festival Bonus",    emoji: "🪔", color: C.warning, bg: C.warningLight,   border: "var(--warning-light)" },
+  performance_bonus: { label: "Performance Bonus", emoji: "🏆", color: C.success, bg: C.successLight,   border: "var(--success-light)" },
   incentive:         { label: "Incentive",         emoji: "⭐", color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
   target_bonus:      { label: "Target Bonus",      emoji: "🎯", color: C.purple,  bg: C.purpleLight,    border: "#DDD6FE" },
   one_time_payout:   { label: "One-Time Payout",   emoji: "💰", color: C.orange,  bg: C.orangeLight,    border: "#FED7AA" },
@@ -35,9 +35,9 @@ const TYPE_CFG = {
 
 const STATUS_CFG = {
   draft:     { color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)", label: "Draft"     },
-  approved:  { color: "#15803D", bg: C.successLight,   border: "#86EFAC",        label: "Approved"  },
+  approved:  { color: "var(--success-hover)", bg: C.successLight,   border: "var(--success-light)",  label: "Approved"  },
   paid:      { color: C.primary, bg: C.primaryLighter, border: C.primaryLight,   label: "Paid"      },
-  cancelled: { color: "#991B1B", bg: C.dangerLight,    border: "#FCA5A5",        label: "Cancelled" },
+  cancelled: { color: "#991B1B", bg: C.dangerLight,    border: "var(--danger-light)",  label: "Cancelled" },
 };
 
 const MONTHS = [
@@ -183,7 +183,7 @@ const BonusIncentivePage = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-            background: `linear-gradient(135deg, ${C.warning}, #EF4444)`,
+            background: `linear-gradient(135deg, ${C.warning}, var(--danger))`,
             color: "#fff", fontSize: 12, fontWeight: 800,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
@@ -254,10 +254,10 @@ const BonusIncentivePage = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <GiftOutlined />,   label: "Total Bonuses",    value: stats.total,        color: C.primary },
-          { icon: <GiftOutlined />,   label: "Festival Bonuses", value: stats.festival,     color: C.warning },
-          { icon: <TrophyOutlined />, label: "Performance",      value: stats.perf,         color: C.success },
-          { icon: <StarOutlined />,   label: "Total Value",      value: fmt(stats.totalAmt), color: C.purple, small: true },
+          { icon: <GiftOutlined />,   label: "Total Bonuses",    value: stats.total,        color: "#2563EB" },
+          { icon: <GiftOutlined />,   label: "Festival Bonuses", value: stats.festival,     color: "#F59E0B" },
+          { icon: <TrophyOutlined />, label: "Performance",      value: stats.perf,         color: "#22C55E" },
+          { icon: <StarOutlined />,   label: "Total Value",      value: fmt(stats.totalAmt), color: "#7C3AED", small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: "var(--surface)", borderRadius: 14,
@@ -284,7 +284,7 @@ const BonusIncentivePage = () => {
           <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Bonuses & Incentives</span>
           <span style={{
             fontSize: 12, padding: "2px 9px", borderRadius: 20,
-            background: C.warningLight, color: "#92400E", border: "1px solid #FDE68A", fontWeight: 600,
+            background: C.warningLight, color: "var(--warning-hover)", border: "1px solid var(--warning-light)", fontWeight: 600,
           }}>
             {bonuses.length}
           </span>

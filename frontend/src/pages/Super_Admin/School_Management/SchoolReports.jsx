@@ -31,20 +31,25 @@ const { Option } = Select;
 
 /* ─── Accent palette (category color-coding, kept as brand accents) ───── */
 const t = {
-  purple:       "#14B8A6",
-  purpleLight:  "rgba(20,184,166,0.2)",
-  purpleMid:    "rgba(20,184,166,0.5)",
+  purple:       "var(--accent)",
+  purpleRgb:    "var(--accent-rgb)",
+  purpleLight:  "rgba(var(--accent-rgb), 0.2)",
+  purpleMid:    "rgba(var(--accent-rgb), 0.5)",
 
-  blue:         "#2563EB",
+  blue:         "var(--primary)",
+  blueRgb:      "var(--primary-rgb)",
   blueLight:    "rgba(219,234,254,0.2)",
 
-  green:        "#22C55E",
+  green:        "var(--success)",
+  greenRgb:     "var(--success-rgb)",
   greenLight:   "rgba(220,252,231,0.2)",
 
-  pink:         "#EF4444",
+  pink:         "var(--danger)",
+  pinkRgb:      "var(--danger-rgb)",
   pinkLight:    "rgba(254,226,226,0.2)",
 
-  amber:        "#F59E0B",
+  amber:        "var(--warning)",
+  amberRgb:     "var(--warning-rgb)",
   amberLight:   "rgba(254,243,199,0.25)",
 };
 
@@ -66,13 +71,13 @@ const StatCard = ({ icon, label, value, color, lightColor }) => (
 );
 
 /* ─── Stat Pill (table) ───────────────────────────────────────── */
-const StatPill = ({ value, color, lightColor }) => (
+const StatPill = ({ value, color, colorRgb, lightColor }) => (
   <span
     style={{
       display: "inline-block",
       background: lightColor,
       color,
-      border: `1px solid ${color}55`,
+      border: `1px solid rgba(${colorRgb}, 0.33)`,
       borderRadius: 6,
       padding: "3px 14px",
       fontWeight: 700,
@@ -150,28 +155,28 @@ const SchoolReports = () => {
       title: "Admins",
       align: "center",
       render: (_, record) => (
-        <StatPill value={record.summary?.adminCount} color={t.purple} lightColor={t.purpleLight} />
+        <StatPill value={record.summary?.adminCount} color={t.purple} colorRgb={t.purpleRgb} lightColor={t.purpleLight} />
       ),
     },
     {
       title: "Teachers",
       align: "center",
       render: (_, record) => (
-        <StatPill value={record.summary?.teacherCount} color={t.blue} lightColor={t.blueLight} />
+        <StatPill value={record.summary?.teacherCount} color={t.blue} colorRgb={t.blueRgb} lightColor={t.blueLight} />
       ),
     },
     {
       title: "Students",
       align: "center",
       render: (_, record) => (
-        <StatPill value={record.summary?.studentCount} color={t.green} lightColor={t.greenLight} />
+        <StatPill value={record.summary?.studentCount} color={t.green} colorRgb={t.greenRgb} lightColor={t.greenLight} />
       ),
     },
     {
       title: "Parents",
       align: "center",
       render: (_, record) => (
-        <StatPill value={record.summary?.parentCount} color={t.pink} lightColor={t.pinkLight} />
+        <StatPill value={record.summary?.parentCount} color={t.pink} colorRgb={t.pinkRgb} lightColor={t.pinkLight} />
       ),
     },
     {
@@ -250,7 +255,7 @@ const SchoolReports = () => {
         <div
           style={{
             background: t.amberLight,
-            border: `1px solid ${t.amber}55`,
+            border: `1px solid rgba(${t.amberRgb}, 0.33)`,
             borderRadius: 8,
             padding: "11px 16px",
             color: t.amber,
@@ -392,7 +397,7 @@ const SchoolReports = () => {
               <div
                 style={{
                   background: t.blueLight,
-                  border: `1px solid ${t.blue}55`,
+                  border: `1px solid rgba(${t.blueRgb}, 0.33)`,
                   borderRadius: 10,
                   padding: "16px 14px",
                   textAlign: "center",
@@ -410,7 +415,7 @@ const SchoolReports = () => {
               <div
                 style={{
                   background: t.greenLight,
-                  border: `1px solid ${t.green}55`,
+                  border: `1px solid rgba(${t.greenRgb}, 0.33)`,
                   borderRadius: 10,
                   padding: "16px 14px",
                   textAlign: "center",
@@ -428,7 +433,7 @@ const SchoolReports = () => {
               <div
                 style={{
                   background: t.pinkLight,
-                  border: `1px solid ${t.pink}55`,
+                  border: `1px solid rgba(${t.pinkRgb}, 0.33)`,
                   borderRadius: 10,
                   padding: "16px 14px",
                   textAlign: "center",

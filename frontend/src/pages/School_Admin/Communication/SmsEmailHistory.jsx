@@ -62,6 +62,10 @@ const SmsEmailHistory = () => {
   const totalSMS = history.filter((h) => h.channels?.sms).length;
   const totalEmail = history.filter((h) => h.channels?.email).length;
 
+  // `color` feeds the shared `iconWell()` helper (frontend/src/styles/pageStyles.js),
+  // which builds its background as `${color}22` — a raw-hex alpha-suffix trick that
+  // breaks with a var() string. That helper is outside this task's scope, so these
+  // stay as raw hex.
   const statCards = [
     { label: "In-App Notifications", value: totalApp, color: "#10B981", icon: <AppstoreOutlined /> },
     { label: "SMS Sent", value: totalSMS, color: "#2563EB", icon: <MessageOutlined /> },

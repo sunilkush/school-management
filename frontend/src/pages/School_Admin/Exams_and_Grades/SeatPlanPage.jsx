@@ -9,23 +9,27 @@ import { getExams, getSeatPlan } from "../../../features/examSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
+// Shared design tokens (frontend/src/index.css) — replaces a local hardcoded
+// hex palette that never adapted to dark mode.
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  success: "#22C55E", successLight: "#DCFCE7",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  purple: "var(--purple)", purpleLight: "rgba(var(--purple-rgb), 0.08)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
 };
 
+// Categorical palette differentiating rooms in the seat plan — consumed directly
+// (no alpha-suffix tricks), so these are safe as tokens/rgba.
 const ROOM_COLORS = [
   { color: C.primary,  bg: C.primaryLighter, border: C.primaryLight },
-  { color: C.accent,   bg: C.accentLight,     border: "#99F6E4" },
-  { color: C.purple,   bg: C.purpleLight,     border: "#DDD6FE" },
-  { color: "#F97316",  bg: "#FFF7ED",         border: "#FED7AA" },
-  { color: C.success,  bg: C.successLight,    border: "#86EFAC" },
-  { color: "#0EA5E9",  bg: "#F0F9FF",         border: "#BAE6FD" },
+  { color: C.accent,   bg: C.accentLight,     border: "rgba(var(--accent-rgb), 0.35)" },
+  { color: C.purple,   bg: C.purpleLight,     border: "rgba(var(--purple-rgb), 0.35)" },
+  { color: "var(--orange)",  bg: "rgba(var(--warning-rgb), 0.08)", border: "rgba(var(--warning-rgb), 0.35)" },
+  { color: C.success,  bg: C.successLight,    border: "rgba(var(--success-rgb), 0.35)" },
+  { color: "var(--info)",    bg: "var(--info-light)", border: "rgba(59, 130, 246, 0.35)" },
 ];
 
 const getInitials = (name = "") => {
@@ -82,6 +86,11 @@ const SeatPlanPage = () => {
       room,
       seats: seats.filter((s) => s.roomNumber === room).sort((a, b) => a.seatNumber - b.seatNumber),
     }));
+    // NOTE: this HTML string is rendered into a blank popup window via
+    // `window.open()` + `document.write()` below, which has no <link> to
+    // index.css — CSS custom properties would not resolve there. It should
+    // also always print on white paper regardless of the app's active
+    // theme, so the hex colors below are intentionally literal.
     const html = `<!DOCTYPE html><html><head>
       <meta charset="utf-8"/>
       <title>Seat Plan — ${selectedExam?.title || "Exam"}</title>
@@ -188,7 +197,7 @@ const SeatPlanPage = () => {
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           padding: "3px 12px", borderRadius: 20,
-          background: "#F8FAFC", border: "1px solid " + C.border,
+          background: "var(--background)", border: "1px solid " + C.border,
           fontSize: 12, fontWeight: 700, color: C.textSub,
         }}>
           <NumberOutlined style={{ fontSize: 10 }} />
@@ -326,7 +335,7 @@ const SeatPlanPage = () => {
             )}
             <span style={{
               padding: "4px 12px", borderRadius: 20,
-              background: "#F8FAFC", color: C.textSub,
+              background: "var(--background)", color: C.textSub,
               border: "1px solid " + C.border,
               fontSize: 12, fontWeight: 600,
             }}>
@@ -335,8 +344,8 @@ const SeatPlanPage = () => {
             {seats.length > 0 && (
               <span style={{
                 padding: "4px 12px", borderRadius: 20,
-                background: C.successLight, color: "#15803D",
-                border: "1px solid #86EFAC",
+                background: C.successLight, color: "var(--success-hover)",
+                border: "1px solid rgba(var(--success-rgb), 0.35)",
                 fontSize: 12, fontWeight: 600,
               }}>
                 {seats.length} students seated
@@ -349,10 +358,13 @@ const SeatPlanPage = () => {
       {/* ── Stats (shown after generation) ── */}
       {seats.length > 0 && (
         <div style={{ ...statGrid(160), marginBottom: 16 }}>
+          {/* Raw hex here (not C.primary/etc): feeds the shared iconWell() helper
+              (frontend/src/styles/pageStyles.js), which builds its background as
+              `${color}22` — breaks with a var() string. */}
           {[
-            { icon: <TeamOutlined />,   label: "Total Students", value: seats.length,      color: C.primary },
-            { icon: <HomeOutlined />,   label: "Rooms Used",     value: rooms.length,       color: C.accent },
-            { icon: <NumberOutlined />, label: "Max Per Room",   value: capacity,            color: C.purple },
+            { icon: <TeamOutlined />,   label: "Total Students", value: seats.length,      color: "#2563EB" },
+            { icon: <HomeOutlined />,   label: "Rooms Used",     value: rooms.length,       color: "#14B8A6" },
+            { icon: <NumberOutlined />, label: "Max Per Room",   value: capacity,            color: "#7C3AED" },
           ].map((s) => (
             <div key={s.label} style={{
               background: C.surface, borderRadius: 14,

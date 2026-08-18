@@ -21,8 +21,8 @@ const { Option } = Select;
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 
-const STATUS_COLORS = { pending: "#F59E0B", approved: "#22C55E", rejected: "#EF4444", cancelled: "#64748B" };
-const TYPE_COLORS   = { home: "#14B8A6", emergency: "#EF4444", medical: "#0891b2", personal: "#22C55E", other: "#64748B" };
+const STATUS_COLORS = { pending: "var(--warning)", approved: "var(--success)", rejected: "var(--danger)", cancelled: "var(--text-secondary)" };
+const TYPE_COLORS   = { home: "var(--accent)", emergency: "var(--danger)", medical: "var(--cyan)", personal: "var(--success)", other: "var(--text-secondary)" };
 
 const money = (v) => v ? dayjs(v).format("DD MMM YYYY, hh:mm A") : "—";
 
@@ -121,7 +121,10 @@ const LeaveManagement = () => {
   const columns = [
     { title: "Student", render: (_, r) => (<div><div style={{ fontWeight: 600, fontSize: 13 }}>{r.studentId?.name || "—"}</div><div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.studentId?.admissionNo}</div></div>) },
     { title: "Room", dataIndex: "roomNumber", render: (v) => v || "—" },
-    { title: "Type", dataIndex: "leaveType", render: (v) => <span style={pill(TYPE_COLORS[v] || "#64748B", `${TYPE_COLORS[v] || "#64748B"}18`)}>{v}</span> },
+    { title: "Type", dataIndex: "leaveType", render: (v) => {
+      const c = TYPE_COLORS[v] || "var(--text-secondary)";
+      return <span style={pill(c, `color-mix(in srgb, ${c} 9%, transparent)`)}>{v}</span>;
+    } },
     { title: "From", dataIndex: "fromDate", render: (d) => dayjs(d).format("DD MMM") },
     { title: "To",   dataIndex: "toDate",   render: (d) => dayjs(d).format("DD MMM") },
     { title: "Status", dataIndex: "status", render: (s) => <Badge status={s === "approved" ? "success" : s === "pending" ? "warning" : "error"} text={<span style={{ fontWeight: 600 }}>{s}</span>} /> },

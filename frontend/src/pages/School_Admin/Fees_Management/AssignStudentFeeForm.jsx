@@ -31,7 +31,6 @@ import {
 } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useDispatch, useSelector } from "react-redux";
-import { useTheme } from "../../../context/ThemeContext";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { currentUser } from "../../../features/authSlice";
@@ -88,9 +87,9 @@ const getApiMessage = (err, fallback = "Something went wrong") => {
 };
 
 /* ── Fee card (mobile) ── */
-const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange, isDark }) => {
-  const borderColor = isDark ? "#2a3550" : "#e2e8f0";
-  const bg = isDark ? "#1a2235" : "#fff";
+const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange }) => {
+  const borderColor = "var(--border)";
+  const bg = "var(--surface)";
   const accentColor = isSelected ? "var(--primary)" : borderColor;
 
   return (
@@ -135,7 +134,7 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
       <div style={{ display: "flex", gap: 10, marginBottom: isSelected ? 12 : 0 }}>
         <div style={{
           flex: 1, textAlign: "center",
-          background: isDark ? "#0f172a" : "#f8fafc",
+          background: "var(--background)",
           borderRadius: 10, padding: "8px 4px",
           border: `1px solid ${borderColor}`,
         }}>
@@ -144,12 +143,12 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
         </div>
         <div style={{
           flex: 1, textAlign: "center",
-          background: isDark ? "#0f172a" : "#f0fdf4",
+          background: "var(--success-light)",
           borderRadius: 10, padding: "8px 4px",
-          border: `1px solid ${isDark ? "#2a3550" : "#bbf7d0"}`,
+          border: "1px solid rgba(var(--success-rgb), 0.35)",
         }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Final</div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#22C55E", marginTop: 2 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "var(--success)", marginTop: 2 }}>
             {money(customAmount ?? fee.amount)}
           </div>
         </div>
@@ -173,9 +172,12 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
 };
 
 /* ── KPI stat card ── */
-const StatCard = ({ icon, label, value, color, isDark }) => (
+// `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
+// builds its background as `${color}22` — breaks with a var() string, so call sites below
+// pass raw hex for `color`.
+const StatCard = ({ icon, label, value, color }) => (
   <div style={{
-    background: isDark ? "#1a2235" : "#fff",
+    background: "var(--surface)",
     borderRadius: 14,
     padding: "16px 18px",
     border: "1px solid var(--border-muted)",
@@ -203,7 +205,6 @@ const AssignStudentFee = () => {
   const dispatch = useDispatch();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
-  const { isDark } = useTheme();
 
   const [mode, setMode] = useState("bulk");
   const [selectedFeeIds, setSelectedFeeIds] = useState([]);
@@ -540,7 +541,7 @@ const AssignStudentFee = () => {
     { title: "Section", render: (_, s) => s.section?.name || "—" },
   ];
 
-  const cardBg = isDark ? "#141c2e" : "#fff";
+  const cardBg = "var(--surface)";
 
   return (
     <div style={pageWrapper}>
@@ -599,10 +600,10 @@ const AssignStudentFee = () => {
         gap: 14,
         marginBottom: 20,
       }}>
-        <StatCard icon={<TeamOutlined />} label="Target Students" value={targetStudentCount} color="#6D28D9" isDark={isDark} />
-        <StatCard icon={<WalletOutlined />} label="Selected Fees" value={selectedFeeIds.length} color="#0891B2" isDark={isDark} />
-        <StatCard icon={<TagOutlined />} label="Default Total" value={money(totalDefaultAmount)} color="#D97706" isDark={isDark} />
-        <StatCard icon={<RupeeIcon />} label="Final Total" value={money(totalFinalAmount)} color="#16A34A" isDark={isDark} />
+        <StatCard icon={<TeamOutlined />} label="Target Students" value={targetStudentCount} color="#6D28D9" />
+        <StatCard icon={<WalletOutlined />} label="Selected Fees" value={selectedFeeIds.length} color="#0891B2" />
+        <StatCard icon={<TagOutlined />} label="Default Total" value={money(totalDefaultAmount)} color="#D97706" />
+        <StatCard icon={<RupeeIcon />} label="Final Total" value={money(totalFinalAmount)} color="#16A34A" />
       </div>
 
       <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -710,13 +711,13 @@ const AssignStudentFee = () => {
                 padding: "10px 14px",
                 borderRadius: 10,
                 background: effectiveClassId
-                  ? (isDark ? "rgba(34,197,94,0.08)" : "#f0fdf4")
-                  : (isDark ? "rgba(99,102,241,0.08)" : "#EEF2FF"),
+                  ? "var(--success-light)"
+                  : "rgba(var(--purple-rgb), 0.08)",
                 border: `1px solid ${effectiveClassId
-                  ? (isDark ? "rgba(34,197,94,0.25)" : "#bbf7d0")
-                  : (isDark ? "rgba(99,102,241,0.25)" : "#C7D2FE")}`,
+                  ? "rgba(var(--success-rgb), 0.3)"
+                  : "rgba(var(--purple-rgb), 0.25)"}`,
               }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: effectiveClassId ? "#16A34A" : "#6D28D9" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: effectiveClassId ? "var(--success)" : "var(--purple-hover)" }}>
                   {effectiveClassId
                     ? `Selected: ${selectedClass?.name || "Class selected"}`
                     : "Select class or student to load fee structures"}
@@ -798,7 +799,6 @@ const AssignStudentFee = () => {
                         onToggle={toggleFee}
                         customAmount={customAmounts[fee._id]}
                         onCustomChange={(id, val) => setCustomAmounts((prev) => ({ ...prev, [id]: val }))}
-                        isDark={isDark}
                       />
                     ))
                   )}
@@ -843,7 +843,7 @@ const AssignStudentFee = () => {
         height={isMobile ? "85vh" : undefined}
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        styles={{ body: { padding: 20, background: isDark ? "#0f172a" : "#f8fafc" } }}
+        styles={{ body: { padding: 20, background: "var(--background)" } }}
         extra={
           <Button
             type="primary"
@@ -860,14 +860,14 @@ const AssignStudentFee = () => {
           {/* Summary banner */}
           <div style={{
             padding: "14px 16px", borderRadius: 12,
-            background: isDark ? "rgba(99,102,241,0.1)" : "#EEF2FF",
-            border: "1px solid rgba(99,102,241,0.25)",
+            background: "rgba(var(--purple-rgb), 0.1)",
+            border: "1px solid rgba(var(--purple-rgb), 0.25)",
           }}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: "#6D28D9", marginBottom: 4 }}>Assignment Summary</div>
+            <div style={{ fontWeight: 700, fontSize: 13, color: "var(--purple-hover)", marginBottom: 4 }}>Assignment Summary</div>
             <div style={{ fontSize: 13, color: "var(--text-primary)" }}>
               Assigning <strong>{selectedFeeIds.length}</strong> fee structure{selectedFeeIds.length !== 1 ? "s" : ""} to{" "}
               <strong>{targetStudentCount}</strong> student{targetStudentCount !== 1 ? "s" : ""} ·{" "}
-              Total: <strong style={{ color: "#16A34A" }}>{money(totalFinalAmount)}</strong>
+              Total: <strong style={{ color: "var(--success)" }}>{money(totalFinalAmount)}</strong>
             </div>
           </div>
 
@@ -880,7 +880,7 @@ const AssignStudentFee = () => {
               <div key={fee._id} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "10px 12px", borderRadius: 10,
-                background: isDark ? "#1a2235" : "var(--surface-soft)",
+                background: "var(--surface-soft)",
                 border: "1px solid var(--border-muted)",
                 marginBottom: 8,
               }}>
@@ -893,7 +893,7 @@ const AssignStudentFee = () => {
                   </Tag>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: "#16A34A" }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: "var(--success)" }}>
                     {money(customAmounts[fee._id] ?? fee.amount)}
                   </div>
                   {customAmounts[fee._id] && (
@@ -915,8 +915,8 @@ const AssignStudentFee = () => {
               <div style={{
                 display: "flex", alignItems: "center", gap: 14,
                 padding: "12px 14px", borderRadius: 10,
-                background: isDark ? "#1a2235" : "#f0fdf4",
-                border: "1px solid #bbf7d0",
+                background: "var(--success-light)",
+                border: "1px solid rgba(var(--success-rgb), 0.35)",
               }}>
                 <div style={avatarStyle(selectedStudent?.user?.name || selectedStudent?.name || "S", 40)}>
                   {(selectedStudent?.user?.name || selectedStudent?.name || "S")[0].toUpperCase()}

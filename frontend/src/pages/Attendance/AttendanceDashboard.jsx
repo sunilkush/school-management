@@ -49,7 +49,7 @@ const QuickBtn = ({ icon, label, color, onClick }) => (
     onClick={onClick}
     style={{
       flex: "1 1 160px", padding: "14px 18px",
-      background: "var(--surface)", border: `1.5px solid ${color}28`,
+      background: "var(--surface)", border: `1.5px solid color-mix(in srgb, ${color} 16%, transparent)`,
       borderRadius: 12, cursor: "pointer", display: "flex",
       alignItems: "center", gap: 10, fontWeight: 600, fontSize: 13,
       color: "var(--text-primary)", transition: "border-color 0.15s, background 0.15s",
@@ -57,10 +57,10 @@ const QuickBtn = ({ icon, label, color, onClick }) => (
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.borderColor = color;
-      e.currentTarget.style.background  = `${color}09`;
+      e.currentTarget.style.background  = `color-mix(in srgb, ${color} 4%, transparent)`;
     }}
     onMouseLeave={(e) => {
-      e.currentTarget.style.borderColor = `${color}28`;
+      e.currentTarget.style.borderColor = `color-mix(in srgb, ${color} 16%, transparent)`;
       e.currentTarget.style.background  = "var(--surface)";
     }}
   >
@@ -125,13 +125,13 @@ const AttendanceDashboard = () => {
     {
       label: "Attendance Table",
       icon:  <UnorderedListOutlined />,
-      color: "#0891b2",
+      color: "var(--cyan)",
       path:  "dashboard/superadmin/attendance/table",
     },
     {
       label: "Monthly Report",
       icon:  <FileTextOutlined />,
-      color: "#22C55E",
+      color: "var(--success)",
       path:  "dashboard/superadmin/attendance/monthly",
     },
   ];
@@ -150,21 +150,21 @@ const AttendanceDashboard = () => {
       dataIndex: "present",
       align:  "right",
       width:  80,
-      render: (v) => <span style={{ color: "#22C55E", fontWeight: 600 }}>{v ?? "—"}</span>,
+      render: (v) => <span style={{ color: "var(--success)", fontWeight: 600 }}>{v ?? "—"}</span>,
     },
     {
       title:  "Absent",
       dataIndex: "absent",
       align:  "right",
       width:  80,
-      render: (v) => <span style={{ color: "#EF4444", fontWeight: 600 }}>{v ?? "—"}</span>,
+      render: (v) => <span style={{ color: "var(--danger)", fontWeight: 600 }}>{v ?? "—"}</span>,
     },
     {
       title:  "Late",
       dataIndex: "late",
       align:  "right",
       width:  80,
-      render: (v) => <span style={{ color: "#F59E0B", fontWeight: 600 }}>{v ?? "—"}</span>,
+      render: (v) => <span style={{ color: "var(--warning)", fontWeight: 600 }}>{v ?? "—"}</span>,
     },
     {
       title:     "Attendance Rate",
@@ -179,14 +179,14 @@ const AttendanceDashboard = () => {
             <Progress
               percent={Number(pct)}
               size="small"
-              strokeColor={low ? "#EF4444" : "#22C55E"}
+              strokeColor={low ? "var(--danger)" : "var(--success)"}
               trailColor="var(--border-muted)"
               showInfo={false}
               style={{ flex: 1, minWidth: 80 }}
             />
             <span style={{
               fontWeight: 700, fontSize: 13,
-              color: low ? "#EF4444" : "#22C55E",
+              color: low ? "var(--danger)" : "var(--success)",
               minWidth: 44, textAlign: "right",
             }}>
               {pct}%
@@ -251,8 +251,8 @@ const AttendanceDashboard = () => {
       {error && (
         <div style={{
           padding: "13px 18px",
-          background: "#EF444410", border: "1px solid #EF444430",
-          borderRadius: 10, color: "#EF4444", marginBottom: 16,
+          background: "color-mix(in srgb, var(--danger) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--danger) 19%, transparent)",
+          borderRadius: 10, color: "var(--danger)", marginBottom: 16,
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           <span>{error}</span>
@@ -266,9 +266,9 @@ const AttendanceDashboard = () => {
         {/* ── KPI cards ── */}
         <div style={statGrid(155)}>
           <KpiCard icon={<TeamOutlined />}          label="Total Students"  value={stats.totalStudents} color="var(--primary)" />
-          <KpiCard icon={<UserOutlined />}           label="Present Today"   value={stats.presentToday}  color="#22C55E" />
-          <KpiCard icon={<UserOutlined />}           label="Absent Today"    value={stats.absentToday}   color="#EF4444" />
-          <KpiCard icon={<ClockCircleOutlined />}    label="Late Today"      value={stats.lateToday}     color="#F59E0B" />
+          <KpiCard icon={<UserOutlined />}           label="Present Today"   value={stats.presentToday}  color="var(--success)" />
+          <KpiCard icon={<UserOutlined />}           label="Absent Today"    value={stats.absentToday}   color="var(--danger)" />
+          <KpiCard icon={<ClockCircleOutlined />}    label="Late Today"      value={stats.lateToday}     color="var(--warning)" />
           <KpiCard icon={<PercentageOutlined />}     label="Attendance Rate" value={avgRate}             color="var(--primary)" suffix="%" />
         </div>
 
@@ -300,7 +300,7 @@ const AttendanceDashboard = () => {
             description={
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
                 {lowSchools.map((s) => (
-                  <span key={s.schoolId || s.schoolName} style={pill("#EF4444")}>
+                  <span key={s.schoolId || s.schoolName} style={pill("var(--danger)")}>
                     {s.schoolName} — {Number(s.attendanceRate).toFixed(1)}%
                   </span>
                 ))}

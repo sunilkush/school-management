@@ -162,22 +162,22 @@ const SchoolWiseReports = () => {
       title: "Boards",
       dataIndex: "boards",
       render: (boards) => boards.length
-        ? <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{boards.map((b) => <span key={b} style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{b}</span>)}</div>
+        ? <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{boards.map((b) => <span key={b} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>{b}</span>)}</div>
         : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
     },
     {
       title: "Plan",
       dataIndex: "plan",
       render: (plan) => plan
-        ? <span style={pill("#14B8A6", "rgba(20,184,166,0.15)")}>{plan.name}</span>
+        ? <span style={pill("var(--accent)", "rgba(20,184,166,0.15)")}>{plan.name}</span>
         : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>No plan</span>,
     },
     {
       title: "Status",
       dataIndex: "isActive",
       render: (isActive) => isActive
-        ? <span style={pill("#15803D", "rgba(220,252,231,0.5)")}><CheckCircleOutlined /> Active</span>
-        : <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}><StopOutlined /> Inactive</span>,
+        ? <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}><CheckCircleOutlined /> Active</span>
+        : <span style={pill("var(--danger-hover)", "rgba(254,226,226,0.5)")}><StopOutlined /> Inactive</span>,
     },
     {
       title: "Today's Attendance",
@@ -186,7 +186,7 @@ const SchoolWiseReports = () => {
       sorter: (a, b) => (a.attendanceRate ?? -1) - (b.attendanceRate ?? -1),
       render: (rate) => {
         if (rate === null) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>No data</span>;
-        const color = rate >= 85 ? "#15803D" : rate >= 60 ? "#B45309" : "#DC2626";
+        const color = rate >= 85 ? "var(--success-hover)" : rate >= 60 ? "var(--warning-hover)" : "var(--danger-hover)";
         const bg = rate >= 85 ? "rgba(220,252,231,0.5)" : rate >= 60 ? "rgba(254,243,199,0.5)" : "rgba(254,226,226,0.5)";
         return <span style={pill(color, bg)}>{rate}%</span>;
       },
@@ -199,7 +199,7 @@ const SchoolWiseReports = () => {
       defaultSortOrder: "descend",
       render: (revenue, row) => (
         <div>
-          <div style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(revenue)}</div>
+          <div style={{ fontWeight: 700, color: "var(--success-hover)" }}>{formatCurrency(revenue)}</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{row.paymentCount} payment{row.paymentCount === 1 ? "" : "s"}</div>
         </div>
       ),
@@ -234,10 +234,10 @@ const SchoolWiseReports = () => {
       />
 
       <div style={{ ...statGrid(190), marginTop: 20 }}>
-        <StatCard icon={<BankOutlined />} label="Total Schools" value={stats.totalSchools} color="#2563EB" />
-        <StatCard icon={<CheckCircleOutlined />} label="Active Schools" value={stats.activeSchools} color="#22C55E" />
-        <StatCard icon={<RiseOutlined />} label="Revenue Collected" value={formatCurrency(stats.totalRevenue)} color="#F59E0B" />
-        <StatCard icon={<ScheduleOutlined />} label="Avg. Attendance Today" value={`${stats.avgAttendance}%`} color="#14B8A6" />
+        <StatCard icon={<BankOutlined />} label="Total Schools" value={stats.totalSchools} color="var(--primary)" />
+        <StatCard icon={<CheckCircleOutlined />} label="Active Schools" value={stats.activeSchools} color="var(--success)" />
+        <StatCard icon={<RiseOutlined />} label="Revenue Collected" value={formatCurrency(stats.totalRevenue)} color="var(--warning)" />
+        <StatCard icon={<ScheduleOutlined />} label="Avg. Attendance Today" value={`${stats.avgAttendance}%`} color="var(--accent)" />
       </div>
 
       <style>{tableHeadCss("school-wise-tbl")}</style>
@@ -297,11 +297,11 @@ const SchoolWiseReports = () => {
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {reportSchool?.isActive
-                  ? <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Active</span>
-                  : <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>Inactive</span>}
-                {(reportSchool?.boards || []).map((b) => <span key={b} style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{b}</span>)}
+                  ? <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Active</span>
+                  : <span style={pill("var(--danger-hover)", "rgba(254,226,226,0.5)")}>Inactive</span>}
+                {(reportSchool?.boards || []).map((b) => <span key={b} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>{b}</span>)}
                 {reportSchool?.plan && (
-                  <span style={pill("#14B8A6", "rgba(20,184,166,0.15)")}>
+                  <span style={pill("var(--accent)", "rgba(20,184,166,0.15)")}>
                     {reportSchool.plan.name} · ₹{reportSchool.plan.price}/{reportSchool.plan.durationInDays}d
                   </span>
                 )}
@@ -311,13 +311,13 @@ const SchoolWiseReports = () => {
             {/* Headcounts for the active academic year */}
             {summary ? (
               <div style={statGrid(120)}>
-                <StatCard icon={<UserOutlined />} label="Admins" value={summary.adminCount ?? 0} color="#7C3AED" />
-                <StatCard icon={<SolutionOutlined />} label="Teachers" value={summary.teacherCount ?? 0} color="#2563EB" />
-                <StatCard icon={<BookOutlined />} label="Students" value={summary.studentCount ?? 0} color="#22C55E" />
-                <StatCard icon={<TeamOutlined />} label="Parents" value={summary.parentCount ?? 0} color="#EF4444" />
+                <StatCard icon={<UserOutlined />} label="Admins" value={summary.adminCount ?? 0} color="var(--purple)" />
+                <StatCard icon={<SolutionOutlined />} label="Teachers" value={summary.teacherCount ?? 0} color="var(--primary)" />
+                <StatCard icon={<BookOutlined />} label="Students" value={summary.studentCount ?? 0} color="var(--success)" />
+                <StatCard icon={<TeamOutlined />} label="Parents" value={summary.parentCount ?? 0} color="var(--danger)" />
               </div>
             ) : (
-              <div style={{ ...pill("#B45309", "rgba(254,243,199,0.5)"), display: "block", padding: "10px 14px" }}>
+              <div style={{ ...pill("var(--warning-hover)", "rgba(254,243,199,0.5)"), display: "block", padding: "10px 14px" }}>
                 No active academic year set for this school — headcounts unavailable.
               </div>
             )}
@@ -327,10 +327,10 @@ const SchoolWiseReports = () => {
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>Today's Attendance</div>
               {reportAttendance ? (
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Present: {reportAttendance.presentToday}</span>
-                  <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>Absent: {reportAttendance.absentToday}</span>
-                  <span style={pill("#B45309", "rgba(254,243,199,0.5)")}>Late: {reportAttendance.lateToday}</span>
-                  <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>Rate: {reportAttendance.attendanceRate}%</span>
+                  <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Present: {reportAttendance.presentToday}</span>
+                  <span style={pill("var(--danger-hover)", "rgba(254,226,226,0.5)")}>Absent: {reportAttendance.absentToday}</span>
+                  <span style={pill("var(--warning-hover)", "rgba(254,243,199,0.5)")}>Late: {reportAttendance.lateToday}</span>
+                  <span style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>Rate: {reportAttendance.attendanceRate}%</span>
                 </div>
               ) : (
                 <span style={{ color: "var(--text-muted)", fontSize: 12 }}>No attendance marked today</span>
@@ -341,7 +341,7 @@ const SchoolWiseReports = () => {
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>
                 Revenue — FY {reportYear}-{String((reportYear || 0) + 1).slice(-2)}
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#15803D" }}>{formatCurrency(reportFinance?.totalIncome)}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "var(--success-hover)" }}>{formatCurrency(reportFinance?.totalIncome)}</div>
               <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{reportFinance?.paymentCount ?? 0} payments collected</div>
             </div>
           </div>

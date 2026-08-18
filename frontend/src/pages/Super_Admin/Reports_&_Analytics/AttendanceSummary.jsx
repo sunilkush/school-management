@@ -175,7 +175,7 @@ const AttendanceSummary = () => {
       align: "right",
       width: 80,
       render: (v) => (
-        <span style={{ color: "#22C55E", fontWeight: 600 }}>
+        <span style={{ color: "var(--success)", fontWeight: 600 }}>
           {v ?? "—"}
         </span>
       ),
@@ -186,7 +186,7 @@ const AttendanceSummary = () => {
       align: "right",
       width: 80,
       render: (v) => (
-        <span style={{ color: "#EF4444", fontWeight: 600 }}>
+        <span style={{ color: "var(--danger)", fontWeight: 600 }}>
           {v ?? "—"}
         </span>
       ),
@@ -197,7 +197,7 @@ const AttendanceSummary = () => {
       align: "right",
       width: 80,
       render: (v) => (
-        <span style={{ color: "#F59E0B", fontWeight: 600 }}>
+        <span style={{ color: "var(--warning)", fontWeight: 600 }}>
           {v ?? "—"}
         </span>
       ),
@@ -215,7 +215,7 @@ const AttendanceSummary = () => {
             <Progress
               percent={Number(pct)}
               size="small"
-              strokeColor={low ? "#EF4444" : "#22C55E"}
+              strokeColor={low ? "var(--danger)" : "var(--success)"}
               trailColor="var(--border-muted)"
               showInfo={false}
               style={{ flex: 1, minWidth: 80 }}
@@ -224,7 +224,7 @@ const AttendanceSummary = () => {
               style={{
                 fontWeight: 700,
                 fontSize: 13,
-                color: low ? "#EF4444" : "#22C55E",
+                color: low ? "var(--danger)" : "var(--success)",
                 minWidth: 44,
                 textAlign: "right",
               }}
@@ -289,10 +289,10 @@ const AttendanceSummary = () => {
         <div
           style={{
             padding: "14px 18px",
-            background: "#EF444410",
-            border: "1px solid #EF444430",
+            background: "rgba(var(--danger-rgb), 0.06)",
+            border: "1px solid rgba(var(--danger-rgb), 0.19)",
             borderRadius: 10,
-            color: "#EF4444",
+            color: "var(--danger)",
             marginBottom: 16,
             display: "flex",
             justifyContent: "space-between",
@@ -319,19 +319,19 @@ const AttendanceSummary = () => {
             icon={<UserOutlined />}
             label="Present Today"
             value={presentToday}
-            color="#22C55E"
+            color="var(--success)"
           />
           <StatCard
             icon={<UserOutlined />}
             label="Absent Today"
             value={absentToday}
-            color="#EF4444"
+            color="var(--danger)"
           />
           <StatCard
             icon={<ClockCircleOutlined />}
             label="Late Today"
             value={lateToday}
-            color="#F59E0B"
+            color="var(--warning)"
           />
           <StatCard
             icon={<PercentageOutlined />}
@@ -370,12 +370,12 @@ const AttendanceSummary = () => {
                     key={s.schoolId || s.schoolName}
                     style={{
                       padding: "2px 10px",
-                      background: "#EF444410",
-                      color: "#EF4444",
+                      background: "rgba(var(--danger-rgb), 0.06)",
+                      color: "var(--danger)",
                       borderRadius: 99,
                       fontSize: 12,
                       fontWeight: 600,
-                      border: "1px solid #EF444425",
+                      border: "1px solid rgba(var(--danger-rgb), 0.15)",
                     }}
                   >
                     {s.schoolName} — {Number(s.attendanceRate).toFixed(1)}%

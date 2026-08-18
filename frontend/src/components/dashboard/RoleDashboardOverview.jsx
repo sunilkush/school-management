@@ -10,8 +10,9 @@ import PageHeader from "../layout/PageHeader";
 import {
   pageWrapper, sectionPanel, statGrid, iconWell, emptyState,
 } from "../../styles/pageStyles";
+import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
-const STAT_COLORS = ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B", "#7C3AED", "#EF4444"];
+const STAT_COLORS = CATEGORICAL_COLORS;
 
 const formatMetricValue = (metric = {}) => {
   if (metric.format === "currency") {
@@ -78,13 +79,13 @@ const RoleDashboardOverview = ({ titlePrefix = "Dashboard" }) => {
         {isError ? (
           <div style={{
             ...sectionPanel,
-            borderColor: "rgba(254,226,226,0.6)",
-            background: "rgba(254,226,226,0.12)",
+            borderColor: "rgba(var(--danger-rgb), 0.6)",
+            background: "rgba(var(--danger-rgb), 0.12)",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             flexWrap: "wrap", gap: 12,
           }}>
             <div>
-              <div style={{ fontWeight: 700, color: "#DC2626", marginBottom: 4 }}>Failed to load dashboard</div>
+              <div style={{ fontWeight: 700, color: "var(--danger-hover)", marginBottom: 4 }}>Failed to load dashboard</div>
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
                 {error?.data?.message || error?.message || "An unexpected error occurred. Please try again."}
               </div>

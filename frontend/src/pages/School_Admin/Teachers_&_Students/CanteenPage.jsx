@@ -267,7 +267,7 @@ export default function CanteenPage() {
   const StudentPicker = (
     <div style={{ ...sectionPanel, marginBottom: 16 }}>
       <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-        <div style={iconWell("#2563EB", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
+        <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
         <div>
           <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Select Student</Text>
           <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>Used for wallet top-up and placing orders</Text>
@@ -339,10 +339,10 @@ export default function CanteenPage() {
         <>
           <div style={{ ...sectionPanel, marginBottom: 16 }}>
             <Flex align="center" gap={16} wrap="wrap">
-              <div style={iconWell("#16A34A", 44)}><WalletOutlined style={{ fontSize: 20 }} /></div>
+              <div style={iconWell("var(--success)", 44)}><WalletOutlined style={{ fontSize: 20 }} /></div>
               <div>
                 <Text style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase" }}>Current Balance</Text>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "#16A34A" }}>₹{wallet?.balance ?? 0}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--success)" }}>₹{wallet?.balance ?? 0}</div>
               </div>
               <div style={{ flex: 1 }} />
               <InputNumber min={1} placeholder="Amount" value={topUpAmount} onChange={setTopUpAmount} size="large" style={{ width: 140 }} />
@@ -386,7 +386,7 @@ export default function CanteenPage() {
                     >
                       <div style={{ fontWeight: 600, fontSize: 13 }}>{item.name}</div>
                       <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{item.category}</div>
-                      <div style={{ fontWeight: 700, color: "#2563EB", marginTop: 4 }}>₹{item.price}</div>
+                      <div style={{ fontWeight: 700, color: "var(--primary)", marginTop: 4 }}>₹{item.price}</div>
                     </div>
                   </Col>
                 ))}
@@ -418,7 +418,7 @@ export default function CanteenPage() {
                   ))}
                   <Flex align="center" justify="space-between" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px dashed var(--border-muted)" }}>
                     <Text strong>Total</Text>
-                    <Text strong style={{ fontSize: 18, color: "#2563EB" }}>₹{cartTotal}</Text>
+                    <Text strong style={{ fontSize: 18, color: "var(--primary)" }}>₹{cartTotal}</Text>
                   </Flex>
                   {wallet && cartTotal > wallet.balance && (
                     <Alert type="warning" showIcon message="Insufficient wallet balance" style={{ marginTop: 10, borderRadius: 8 }} />

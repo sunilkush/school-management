@@ -89,10 +89,10 @@ const SubjectCoordinatorDashboard = () => {
   }, [plans]);
 
   const stats = [
-    { title: "Assigned Subjects",       value: subjectList.length,   color: "#7C3AED", icon: <BookOutlined /> },
-    { title: "Teachers (Active Plans)", value: totalTeachers,         color: "#2563EB", icon: <TeamOutlined /> },
-    { title: "Assessments This Month",  value: thisMonthExams.length, color: "#F59E0B", icon: <FileTextOutlined /> },
-    { title: "Lesson Plans (Total)",    value: plans.length,          color: "#10B981", icon: <ScheduleOutlined /> },
+    { title: "Assigned Subjects",       value: subjectList.length,   color: "var(--purple)", icon: <BookOutlined /> },
+    { title: "Teachers (Active Plans)", value: totalTeachers,         color: "var(--primary)", icon: <TeamOutlined /> },
+    { title: "Assessments This Month",  value: thisMonthExams.length, color: "var(--warning)", icon: <FileTextOutlined /> },
+    { title: "Lesson Plans (Total)",    value: plans.length,          color: "var(--success)", icon: <ScheduleOutlined /> },
   ];
 
   const columns = [
@@ -108,7 +108,7 @@ const SubjectCoordinatorDashboard = () => {
         <Progress
           percent={v}
           size="small"
-          strokeColor={v >= 75 ? "#10B981" : v >= 40 ? "#F59E0B" : "#EF4444"}
+          strokeColor={v >= 75 ? "var(--success)" : v >= 40 ? "var(--warning)" : "var(--danger)"}
         />
       ),
     },

@@ -65,7 +65,7 @@ const QuestionNav = ({ questions, answers, onNavigate }) => {
           Questions
         </span>
         <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-          <span style={{ color: "#22C55E", fontWeight: 700 }}>{answeredCount}</span>
+          <span style={{ color: "var(--success)", fontWeight: 700 }}>{answeredCount}</span>
           {" / "}
           {questions.length} answered
         </span>
@@ -80,7 +80,7 @@ const QuestionNav = ({ questions, answers, onNavigate }) => {
               style={{
                 width: 36, height: 36, borderRadius: 8, cursor: "pointer",
                 fontWeight: 700, fontSize: 13, border: "none", outline: "none",
-                background: answered ? "#22C55E" : "var(--surface-soft, #f8fafc)",
+                background: answered ? "var(--success)" : "var(--surface-soft, #f8fafc)",
                 color:      answered ? "#fff" : "var(--text-muted)",
                 boxShadow:  answered ? "0 2px 6px rgba(34,197,94,0.3)" : "inset 0 0 0 1px var(--border-muted)",
                 transition: "all 0.15s",
@@ -190,7 +190,7 @@ const ExamLive = () => {
     const unanswered  = questions.length - answeredCount;
     Modal.confirm({
       title:   "Submit Exam?",
-      icon:    <WarningOutlined style={{ color: "#F59E0B" }} />,
+      icon:    <WarningOutlined style={{ color: "var(--warning)" }} />,
       content: unanswered > 0
         ? `You have ${unanswered} unanswered question(s). Are you sure you want to submit?`
         : "All questions answered. Ready to submit?",
@@ -241,7 +241,7 @@ const ExamLive = () => {
           <div>
             <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{examTitle}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-              <span style={{ color: "#22C55E", fontWeight: 700 }}>{answeredCount}</span>
+              <span style={{ color: "var(--success)", fontWeight: 700 }}>{answeredCount}</span>
               {" / "}{questions.length} answered
             </div>
           </div>

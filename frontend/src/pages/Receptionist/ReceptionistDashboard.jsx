@@ -43,7 +43,7 @@ const ReceptionistDashboard = () => {
       title: "Visitor",
       render: (_, r) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Avatar name={r.name || "?"} color={VISITOR_COLORS[r.type] || "#6366f1"} />
+          <Avatar name={r.name || "?"} color={VISITOR_COLORS[r.type] || "var(--purple)"} />
           <div>
             <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.name || "—"}</div>
             <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.phone || ""}</div>
@@ -54,8 +54,8 @@ const ReceptionistDashboard = () => {
     {
       title: "Type", dataIndex: "type", width: 110,
       render: (v) => {
-        const c = VISITOR_COLORS[v] || "#8b5cf6";
-        return <span style={pill(c, `${c}15`)}>{v || "Visitor"}</span>;
+        const c = VISITOR_COLORS[v] || "var(--purple)";
+        return <span style={pill(c, `color-mix(in srgb, ${c} 8%, transparent)`)}>{v || "Visitor"}</span>;
       },
     },
     {
@@ -66,7 +66,7 @@ const ReceptionistDashboard = () => {
       title: "Status", dataIndex: "status", width: 100,
       render: (v) => {
         const inside = v === "Inside";
-        return <span style={pill(inside ? "#10b981" : "#94a3b8", inside ? "#10b98115" : "#94a3b815")}>
+        return <span style={pill(inside ? "var(--success)" : "var(--text-muted)", inside ? "color-mix(in srgb, var(--success) 8%, transparent)" : "color-mix(in srgb, var(--text-muted) 8%, transparent)")}>
           {v || "—"}
         </span>;
       },
@@ -84,10 +84,10 @@ const ReceptionistDashboard = () => {
       />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={Users}       label="Today's Visitors"   value={stats?.todayEntries ?? 0} color="#6366f1" loading={loading} />
-        <StatCard icon={HelpCircle}  label="Pending Enquiries"  value={pending}                  color="#f59e0b" loading={loading} />
-        <StatCard icon={Phone}       label="Calls Today"        value={todayCalls}               color="#10b981" loading={loading} />
-        <StatCard icon={CheckCircle} label="Currently Inside"   value={stats?.inside ?? 0}       color="#0ea5e9" loading={loading} />
+        <StatCard icon={Users}       label="Today's Visitors"   value={stats?.todayEntries ?? 0} color="var(--purple)" loading={loading} />
+        <StatCard icon={HelpCircle}  label="Pending Enquiries"  value={pending}                  color="var(--warning)" loading={loading} />
+        <StatCard icon={Phone}       label="Calls Today"        value={todayCalls}               color="var(--success)" loading={loading} />
+        <StatCard icon={CheckCircle} label="Currently Inside"   value={stats?.inside ?? 0}       color="var(--info)" loading={loading} />
       </div>
 
       <div style={sectionPanel}>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Typography } from "antd";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useTheme } from "../../../../context/ThemeContext";
+import { CATEGORICAL_COLORS } from "../../../../utils/colorPalette";
 
 const { Text } = Typography;
 
@@ -19,39 +19,39 @@ const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) =>
   );
 };
 
-const CustomTooltip = ({ active, payload, isDark }) => {
+const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
     <div style={{
-      background: isDark ? "#1f2937" : "#ffffff",
-      border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+      background: "var(--surface)",
+      border: "1px solid var(--border)",
       borderRadius: 10,
       padding: "10px 14px",
       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <span style={{ width: 10, height: 10, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
-        <Text style={{ fontSize: 12, color: isDark ? "#9ca3af" : "#6b7280", fontWeight: 600 }}>{d.label}</Text>
+        <Text style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>{d.label}</Text>
       </div>
       <Text style={{ fontSize: 18, fontWeight: 800, color: d.color, display: "block" }}>
         {Number(d.count || 0).toLocaleString("en-IN")}
       </Text>
-      <Text style={{ fontSize: 11, color: isDark ? "#6b7280" : "#9ca3af" }}>{d.percent}% of total</Text>
+      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{d.percent}% of total</Text>
     </div>
   );
 };
 
-const renderLegend = ({ payload, isDark, data }) => (
+const renderLegend = ({ payload, data }) => (
   <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "6px 14px", marginTop: 4 }}>
     {payload.map((entry) => {
       const item = data.find((d) => d.label === entry.value);
       return (
         <div key={entry.value} style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ width: 10, height: 10, borderRadius: "50%", background: entry.color, flexShrink: 0 }} />
-          <Text style={{ fontSize: 11, color: isDark ? "#9ca3af" : "#6b7280" }}>
+          <Text style={{ fontSize: 11, color: "var(--text-secondary)" }}>
             {entry.value}
-            {item ? <span style={{ fontWeight: 700, marginLeft: 4, color: isDark ? "#e8e8e8" : "#111827" }}>{item.count}</span> : null}
+            {item ? <span style={{ fontWeight: 700, marginLeft: 4, color: "var(--text)" }}>{item.count}</span> : null}
           </Text>
         </div>
       );
@@ -60,18 +60,15 @@ const renderLegend = ({ payload, isDark, data }) => (
 );
 
 const EmployeeStructure = ({ data = [] }) => {
-  const { isDark } = useTheme();
   const [activeIndex, setActiveIndex] = useState(null);
 
-  const DEFAULT_COLORS = ["#1677ff", "#52c41a", "#faad14", "#f5222d", "#722ed1", "#13c2c2", "#fa8c16", "#eb2f96"];
-
   const structureData = (data.length ? data : [
-    { label: "Students", count: 0, color: "#1677ff" },
-    { label: "Teachers", count: 0, color: "#52c41a" },
-    { label: "Staff",    count: 0, color: "#faad14" },
+    { label: "Students", count: 0, color: "var(--primary)" },
+    { label: "Teachers", count: 0, color: "var(--success)" },
+    { label: "Staff",    count: 0, color: "var(--warning)" },
   ]).map((d, i) => ({
     ...d,
-    color: d.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length],
+    color: d.color || CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length],
     name:  d.label,
     value: d.count || 0,
   }));
@@ -82,10 +79,10 @@ const EmployeeStructure = ({ data = [] }) => {
     percent: total ? Math.round((d.value / total) * 100) : 0,
   }));
 
-  const cardBg = isDark ? "#141414" : "#ffffff";
-  const border  = isDark ? "#1f1f1f" : "#f0f0f0";
-  const textPri = isDark ? "#e8e8e8" : "#111827";
-  const textSec = isDark ? "#6b7280" : "#9ca3af";
+  const cardBg = "var(--surface)";
+  const border  = "var(--border)";
+  const textPri = "var(--text)";
+  const textSec = "var(--text-muted)";
 
   return (
     <div style={{
@@ -130,8 +127,8 @@ const EmployeeStructure = ({ data = [] }) => {
                 />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip isDark={isDark} />} />
-            <Legend content={(props) => renderLegend({ ...props, isDark, data: withPercent })} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend content={(props) => renderLegend({ ...props, data: withPercent })} />
           </PieChart>
         </ResponsiveContainer>
 

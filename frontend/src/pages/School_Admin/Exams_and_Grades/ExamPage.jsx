@@ -43,8 +43,6 @@ import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper,
   pageCard,
-  sectionPanel,
-  toolbarRow,
   tableHeadCss,
   statCard,
   statLabel,
@@ -326,9 +324,9 @@ const ExamsPage = () => {
         <div className="stat-grid" style={statGrid(180)}>
           {[
             { key: "total", title: "Total Exams", value: summary.total, color: "var(--primary)", icon: <FileDoneOutlined /> },
-            { key: "published", title: "Published", value: summary.published, color: "#389e0d", icon: <CheckCircleOutlined /> },
-            { key: "draft", title: "Draft", value: summary.draft, color: "#d48806", icon: <ClockCircleOutlined /> },
-            { key: "completed", title: "Completed", value: summary.completed, color: "#531dab", icon: <BarChartOutlined /> },
+            { key: "published", title: "Published", value: summary.published, color: "var(--success)", icon: <CheckCircleOutlined /> },
+            { key: "draft", title: "Draft", value: summary.draft, color: "var(--warning)", icon: <ClockCircleOutlined /> },
+            { key: "completed", title: "Completed", value: summary.completed, color: "var(--purple)", icon: <BarChartOutlined /> },
           ].map((item) => (
             <div key={item.key} style={statCard({ color: item.color })}>
               <div>

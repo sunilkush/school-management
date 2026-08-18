@@ -54,6 +54,9 @@ const ROLE_TO_ATT_ROLE = {
 };
 
 /* ── Status config ───────────────────────────────────────────────── */
+// `color` feeds StatusBtn's `${opt.color}18` alpha-suffix trick and the shared iconWell()
+// helper (frontend/src/styles/pageStyles.js) elsewhere in this file — both break with a
+// var() string, so these stay raw hex.
 const STATUS_OPTIONS = [
   { value: "present", label: "P",  fullLabel: "Present",  color: "#22C55E" },
   { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#EF4444" },
@@ -309,7 +312,7 @@ const StaffAttendance = () => {
               />
             </div>
             {working && (
-              <div style={{ fontSize: 11, color: "#22C55E", fontWeight: 600 }}>
+              <div style={{ fontSize: 11, color: "var(--success)", fontWeight: 600 }}>
                 {working} worked
               </div>
             )}
@@ -421,6 +424,7 @@ const StaffAttendance = () => {
       </div>
 
       {/* ── Stats ── */}
+      {/* `color` feeds the shared iconWell() helper below — see STATUS_OPTIONS note above. */}
       <div style={statGrid(120)}>
         {[
           { key: "total",   label: "Total",    color: "var(--primary)" },
@@ -493,11 +497,11 @@ const StaffAttendance = () => {
                 ? Math.round((summary.present / summary.total) * 100)
                 : 0
             }
-            strokeColor="#22C55E"
+            strokeColor="var(--success)"
             trailColor="var(--border-muted)"
             size="small"
             format={(p) => (
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#22C55E" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--success)" }}>
                 {p}%
               </span>
             )}

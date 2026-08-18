@@ -68,16 +68,16 @@ const MODULE_OPTIONS = [
 ];
 
 const STATUS_META = {
-  queued:           { color: "#94A3B8", bg: "#F1F5F9",  label: "Queued"           },
-  running:          { color: "#2563EB", bg: "#EFF6FF",  label: "Running"          },
-  success:          { color: "#16A34A", bg: "#F0FDF4",  label: "Success"          },
-  failed:           { color: "#DC2626", bg: "#FEF2F2",  label: "Failed"           },
-  cancelled:        { color: "#D97706", bg: "#FFFBEB",  label: "Cancelled"        },
-  pending_approval: { color: "#7C3AED", bg: "#F5F3FF",  label: "Pending Approval" },
+  queued:           { color: "#94A3B8", bg: "var(--surface-soft)",              label: "Queued"           },
+  running:          { color: "#2563EB", bg: "var(--primary-light)",             label: "Running"          },
+  success:          { color: "#16A34A", bg: "var(--success-light)",             label: "Success"          },
+  failed:           { color: "#DC2626", bg: "var(--danger-light)",              label: "Failed"           },
+  cancelled:        { color: "#D97706", bg: "var(--warning-light)",             label: "Cancelled"        },
+  pending_approval: { color: "#7C3AED", bg: "rgba(var(--purple-rgb), 0.08)",    label: "Pending Approval" },
 };
 
 const StatusTag = ({ status }) => {
-  const m = STATUS_META[status] || { color: "#94A3B8", bg: "#F1F5F9", label: status || "--" };
+  const m = STATUS_META[status] || { color: "#94A3B8", bg: "var(--surface-soft)", label: status || "--" };
   return (
     <span style={{
       fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99,
@@ -201,17 +201,17 @@ export default function Backups() {
 
   /* ── Stat cards ─────────────────────────────────────────────────── */
   const statCards = useMemo(() => [
-    { label: "Total Backups",   value: summary.totalBackups     || 0,                         color: "#2563EB", icon: <DatabaseOutlined />,        emoji: "🗄️" },
-    { label: "Successful",      value: summary.successfulBackups || 0,                         color: "#16A34A", icon: <CheckCircleOutlined />,      emoji: "✅" },
-    { label: "Failed",          value: summary.failedBackups     || 0,                         color: "#DC2626", icon: <ExclamationCircleOutlined />, emoji: "❌" },
-    { label: "Storage Used",    value: bytesToReadable(summary.storageUsed),                   color: "#7C3AED", icon: <CloudDownloadOutlined />,     emoji: "💾" },
-    { label: "Last Backup",     value: summary.lastBackupTime    ? dayjs(summary.lastBackupTime).fromNow() : "--",    color: "#0EA5E9", icon: <HistoryOutlined />,          emoji: "🕐" },
-    { label: "Next Scheduled",  value: summary.nextScheduledBackup ? fmtDate(summary.nextScheduledBackup) : "--",     color: "#F59E0B", icon: <ScheduleOutlined />,         emoji: "📅" },
-    { label: "Pending Restores",value: summary.pendingRestores   || 0,                         color: "#D97706", icon: <ClockCircleOutlined />,      emoji: "⏳" },
+    { label: "Total Backups",   value: summary.totalBackups     || 0,                         color: "var(--primary)", icon: <DatabaseOutlined />,        emoji: "🗄️" },
+    { label: "Successful",      value: summary.successfulBackups || 0,                         color: "var(--success)", icon: <CheckCircleOutlined />,      emoji: "✅" },
+    { label: "Failed",          value: summary.failedBackups     || 0,                         color: "var(--danger-hover)", icon: <ExclamationCircleOutlined />, emoji: "❌" },
+    { label: "Storage Used",    value: bytesToReadable(summary.storageUsed),                   color: "var(--purple)", icon: <CloudDownloadOutlined />,     emoji: "💾" },
+    { label: "Last Backup",     value: summary.lastBackupTime    ? dayjs(summary.lastBackupTime).fromNow() : "--",    color: "var(--info)", icon: <HistoryOutlined />,          emoji: "🕐" },
+    { label: "Next Scheduled",  value: summary.nextScheduledBackup ? fmtDate(summary.nextScheduledBackup) : "--",     color: "var(--warning)", icon: <ScheduleOutlined />,         emoji: "📅" },
+    { label: "Pending Restores",value: summary.pendingRestores   || 0,                         color: "var(--warning-hover)", icon: <ClockCircleOutlined />,      emoji: "⏳" },
     {
       label: "Backup Health",
       value: (summary.backupHealthStatus || "unknown").toUpperCase(),
-      color: summary.backupHealthStatus === "healthy" ? "#16A34A" : "#D97706",
+      color: summary.backupHealthStatus === "healthy" ? "var(--success)" : "var(--warning-hover)",
       icon: <SafetyCertificateOutlined />,
       emoji: summary.backupHealthStatus === "healthy" ? "🟢" : "🟡",
     },
@@ -396,7 +396,7 @@ export default function Backups() {
                 children: (
                   <div style={{ paddingTop: 16 }}>
                     <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
-                      <div style={iconWell("#2563EB", 38)}>
+                      <div style={iconWell("var(--primary)", 38)}>
                         <DatabaseOutlined style={{ fontSize: 17 }} />
                       </div>
                       <div>
@@ -473,7 +473,7 @@ export default function Backups() {
                   <span>
                     <HistoryOutlined /> History
                     {backups.length > 0 && (
-                      <span style={{ marginLeft: 6, background: "#2563EB", color: "#fff", fontSize: 10, borderRadius: 99, padding: "1px 6px" }}>
+                      <span style={{ marginLeft: 6, background: "var(--primary)", color: "#fff", fontSize: 10, borderRadius: 99, padding: "1px 6px" }}>
                         {backups.length}
                       </span>
                     )}
@@ -506,7 +506,7 @@ export default function Backups() {
                 children: (
                   <div style={{ paddingTop: 16 }}>
                     <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
-                      <div style={iconWell("#7C3AED", 38)}>
+                      <div style={iconWell("var(--purple)", 38)}>
                         <CalendarOutlined style={{ fontSize: 17 }} />
                       </div>
                       <div>
@@ -587,7 +587,7 @@ export default function Backups() {
                   <span>
                     <SafetyCertificateOutlined /> Restore
                     {restoreJobs.filter((j) => j.status === "pending_approval").length > 0 && (
-                      <span style={{ marginLeft: 6, background: "#D97706", color: "#fff", fontSize: 10, borderRadius: 99, padding: "1px 6px" }}>
+                      <span style={{ marginLeft: 6, background: "var(--warning-hover)", color: "#fff", fontSize: 10, borderRadius: 99, padding: "1px 6px" }}>
                         {restoreJobs.filter((j) => j.status === "pending_approval").length}
                       </span>
                     )}
@@ -596,12 +596,12 @@ export default function Backups() {
                 children: (
                   <div style={{ paddingTop: 16 }}>
                     {/* Security notice */}
-                    <div style={{ background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 12, padding: "12px 16px", marginBottom: 20 }}>
+                    <div style={{ background: "var(--warning-light)", border: "1px solid var(--warning-light)", borderRadius: 12, padding: "12px 16px", marginBottom: 20 }}>
                       <Flex align="flex-start" gap={10}>
-                        <WarningOutlined style={{ color: "#D97706", fontSize: 18, marginTop: 2 }} />
+                        <WarningOutlined style={{ color: "var(--warning-hover)", fontSize: 18, marginTop: 2 }} />
                         <div>
-                          <Text strong style={{ color: "#92400E", display: "block", marginBottom: 4 }}>Restore Security Policy</Text>
-                          <Text style={{ fontSize: 12, color: "#92400E" }}>
+                          <Text strong style={{ color: "var(--warning-hover)", display: "block", marginBottom: 4 }}>Restore Security Policy</Text>
+                          <Text style={{ fontSize: 12, color: "var(--warning-hover)" }}>
                             Only Super Admins can restore backups. Each restore requires MFA approval before execution. All operations are logged.
                           </Text>
                         </div>
@@ -610,7 +610,7 @@ export default function Backups() {
 
                     {/* Request form */}
                     <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-                      <div style={iconWell("#DC2626", 38)}>
+                      <div style={iconWell("var(--danger-hover)", 38)}>
                         <PlayCircleOutlined style={{ fontSize: 17 }} />
                       </div>
                       <div>
@@ -716,7 +716,7 @@ export default function Backups() {
         open={approveModalOpen}
         title={
           <Flex align="center" gap={10}>
-            <div style={iconWell("#D97706", 36)}>
+            <div style={iconWell("var(--warning-hover)", 36)}>
               <SafetyCertificateOutlined style={{ fontSize: 16 }} />
             </div>
             <div>

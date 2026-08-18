@@ -17,7 +17,14 @@ import PageHeader from "../../../components/layout/PageHeader.jsx";
 
 const { Text } = Typography;
 
-const C = { primary: "#7c3aed", success: "#10b981", warning: "#f59e0b", danger: "#ef4444", info: "#06b6d4" };
+const C = {
+  primary: "var(--purple)",  primaryBg: "rgba(var(--purple-rgb), 0.08)",
+  success: "var(--success)", successBg: "rgba(var(--success-rgb), 0.08)",
+  warning: "var(--warning)",
+  danger:  "var(--danger)",  dangerBg: "rgba(var(--danger-rgb), 0.08)",
+  // --cyan-rgb has no token in index.css; decimal rgba keeps the exact hue for alpha tints
+  info:    "var(--cyan)",    infoBg: "rgba(6, 182, 212, 0.08)",
+};
 
 /* ─── Pastel palette — one per subject card ──────────────────── */
 const PASTEL = [
@@ -46,10 +53,10 @@ const StatRow = ({ total, active, inactive, global: glob }) => (
     marginBottom: 16,
   }}>
     {[
-      { icon: <BookOutlined />,         label: "Total",    value: total,    color: C.primary },
-      { icon: <CheckCircleOutlined />,  label: "Active",   value: active,   color: C.success },
-      { icon: <GlobalOutlined />,       label: "Global",   value: glob,     color: C.info    },
-      { icon: <CloseCircleOutlined />,  label: "Inactive", value: inactive, color: C.danger  },
+      { icon: <BookOutlined />,         label: "Total",    value: total,    color: C.primary, bg: C.primaryBg },
+      { icon: <CheckCircleOutlined />,  label: "Active",   value: active,   color: C.success, bg: C.successBg },
+      { icon: <GlobalOutlined />,       label: "Global",   value: glob,     color: C.info,    bg: C.infoBg    },
+      { icon: <CloseCircleOutlined />,  label: "Inactive", value: inactive, color: C.danger,  bg: C.dangerBg  },
     ].map((s) => (
       <div key={s.label} style={{
         flex: 1, background: "var(--surface)", padding: "12px 16px",
@@ -57,7 +64,7 @@ const StatRow = ({ total, active, inactive, global: glob }) => (
       }}>
         <div style={{
           width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-          background: `${s.color}15`,
+          background: s.bg,
           display: "flex", alignItems: "center", justifyContent: "center",
           color: s.color, fontSize: 14,
         }}>
@@ -108,9 +115,9 @@ const SubjectCard = ({ item, index, onEdit, onDelete }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           <span style={{
             fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99,
-            background: item?.isActive ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.1)",
+            background: item?.isActive ? "rgba(var(--success-rgb), 0.12)" : "rgba(var(--danger-rgb), 0.1)",
             color: item?.isActive ? C.success : C.danger,
-            border: `1px solid ${item?.isActive ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.2)"}`,
+            border: `1px solid ${item?.isActive ? "rgba(var(--success-rgb), 0.25)" : "rgba(var(--danger-rgb), 0.2)"}`,
             display: "flex", alignItems: "center", gap: 4,
           }}>
             {item?.isActive
@@ -170,9 +177,9 @@ const SubjectCard = ({ item, index, onEdit, onDelete }) => {
           <span style={{
             fontSize: 11, padding: "2px 8px", borderRadius: 99,
             display: "inline-flex", alignItems: "center", gap: 4,
-            background: item?.isGlobal ? "rgba(6,182,212,0.1)" : "rgba(124,58,237,0.08)",
+            background: item?.isGlobal ? "rgba(6, 182, 212, 0.1)" : "rgba(var(--purple-rgb), 0.08)",
             color: item?.isGlobal ? C.info : C.primary,
-            border: `1px solid ${item?.isGlobal ? "rgba(6,182,212,0.2)" : "rgba(124,58,237,0.2)"}`,
+            border: `1px solid ${item?.isGlobal ? "rgba(6, 182, 212, 0.2)" : "rgba(var(--purple-rgb), 0.2)"}`,
           }}>
             {item?.isGlobal
               ? <><GlobalOutlined style={{ fontSize: 10 }} /> Global</>

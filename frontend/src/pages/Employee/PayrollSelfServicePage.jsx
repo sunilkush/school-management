@@ -126,8 +126,8 @@ function BreakdownTable({ title, icon: Icon, color, rows, emptyText }) {
             justifyContent:"space-between",
             alignItems:    "center",
             padding:       "13px 20px",
-            background:    `${color}10`,
-            borderTop:     `2px solid ${color}30`,
+            background:    `color-mix(in srgb, ${color} 6%, transparent)`,
+            borderTop:     `2px solid color-mix(in srgb, ${color} 19%, transparent)`,
           }}>
             <span style={{ fontSize: 13, fontWeight: 700, color }}>Total</span>
             <span style={{ fontSize: 14, fontWeight: 800, color }}>
@@ -232,13 +232,13 @@ export default function PayrollSelfServicePage() {
       title:  "Gross",
       dataIndex: "grossEarnings",
       align:  "right",
-      render: (v) => <span style={{ color: "#15803D", fontWeight: 600 }}>{formatCurrencyINR(v)}</span>,
+      render: (v) => <span style={{ color: "var(--success-hover)", fontWeight: 600 }}>{formatCurrencyINR(v)}</span>,
     },
     {
       title:  "Deductions",
       dataIndex: "totalDeductions",
       align:  "right",
-      render: (v) => <span style={{ color: "#DC2626", fontWeight: 600 }}>{formatCurrencyINR(v)}</span>,
+      render: (v) => <span style={{ color: "var(--danger-hover)", fontWeight: 600 }}>{formatCurrencyINR(v)}</span>,
     },
     {
       title:  "Net Pay",
@@ -259,10 +259,10 @@ export default function PayrollSelfServicePage() {
           <span style={{
             display:    "inline-flex", alignItems: "center", gap: 5,
             padding:    "3px 10px",
-            background: paid ? "#DCFCE7" : "#FEF3C7",
-            color:      paid ? "#15803D" : "#B45309",
+            background: paid ? "var(--success-light)" : "var(--warning-light)",
+            color:      paid ? "var(--success-hover)" : "var(--warning-hover)",
             borderRadius: 99, fontSize: 11, fontWeight: 700,
-            border:     `1px solid ${paid ? "#15803D25" : "#B4530925"}`,
+            border:     `1px solid ${paid ? "color-mix(in srgb, var(--success-hover) 15%, transparent)" : "color-mix(in srgb, var(--warning-hover) 15%, transparent)"}`,
           }}>
             {paid ? <BadgeCheck size={11} /> : <Clock size={11} />}
             {String(status || "pending").toUpperCase()}
@@ -332,28 +332,28 @@ export default function PayrollSelfServicePage() {
               icon={Wallet}
               label="Gross Monthly"
               value={formatCurrencyINR(grossMonthly)}
-              color="#2563EB"
+              color="var(--primary)"
               sub="From active salary structure"
             />
             <StatCard
               icon={TrendingUp}
               label="Latest Gross"
               value={formatCurrencyINR(latestGross)}
-              color="#15803D"
+              color="var(--success-hover)"
               sub={latestPayslip ? fmtMonth(latestPayslip.month, latestPayslip.year) : "No payslip yet"}
             />
             <StatCard
               icon={TrendingDown}
               label="Latest Deductions"
               value={formatCurrencyINR(latestDeduct)}
-              color="#DC2626"
+              color="var(--danger-hover)"
               sub="PF, TDS & other deductions"
             />
             <StatCard
               icon={CreditCard}
               label="Latest Net Pay"
               value={formatCurrencyINR(latestNet)}
-              color="#7C3AED"
+              color="var(--purple)"
               sub="Take-home amount"
             />
           </div>
@@ -388,7 +388,7 @@ export default function PayrollSelfServicePage() {
                     background:    active ? "var(--primary)" : "transparent",
                     color:         active ? "#fff" : "var(--text-muted)",
                     transition:    "all 0.18s ease",
-                    boxShadow:     active ? "0 2px 8px rgba(37,99,235,0.25)" : "none",
+                    boxShadow:     active ? "0 2px 8px rgba(var(--primary-rgb), 0.25)" : "none",
                   }}
                 >
                   <Icon size={14} />
@@ -410,7 +410,7 @@ export default function PayrollSelfServicePage() {
                 borderBottom: "1px solid var(--border-muted)",
                 background:   "var(--surface-soft)",
               }}>
-                <div style={{ ...iconWell("#2563EB", 32), borderRadius: 9 }}>
+                <div style={{ ...iconWell("var(--primary)", 32), borderRadius: 9 }}>
                   <FileText size={15} />
                 </div>
                 <div>
@@ -419,7 +419,7 @@ export default function PayrollSelfServicePage() {
                   </span>
                   <span style={{
                     marginLeft: 10, fontSize: 11, fontWeight: 600,
-                    background: "#DBEAFE", color: "#1D4ED8",
+                    background: "var(--primary-light)", color: "var(--primary-hover)",
                     padding: "2px 8px", borderRadius: 99,
                   }}>
                     {payslips.length} records
@@ -460,7 +460,7 @@ export default function PayrollSelfServicePage() {
                   borderBottom: "1px solid var(--border-muted)",
                   background:   "var(--surface-soft)",
                 }}>
-                  <div style={{ ...iconWell("#2563EB", 32), borderRadius: 9, flexShrink: 0 }}>
+                  <div style={{ ...iconWell("var(--primary)", 32), borderRadius: 9, flexShrink: 0 }}>
                     <BarChart3 size={15} />
                   </div>
                   <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
@@ -495,11 +495,11 @@ export default function PayrollSelfServicePage() {
                       justifyContent:"space-between",
                       alignItems:    "center",
                       padding:       "14px 20px",
-                      background:    "#2563EB10",
-                      borderTop:     "2px solid #2563EB30",
+                      background:    "var(--primary)10",
+                      borderTop:     "2px solid var(--primary)30",
                     }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#2563EB" }}>Gross Monthly</span>
-                      <span style={{ fontSize: 15, fontWeight: 800, color: "#2563EB" }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)" }}>Gross Monthly</span>
+                      <span style={{ fontSize: 15, fontWeight: 800, color: "var(--primary)" }}>
                         {formatCurrencyINR(summary.structure.grossMonthly)}
                       </span>
                     </div>
@@ -520,7 +520,7 @@ export default function PayrollSelfServicePage() {
               <BreakdownTable
                 title="Latest Earnings"
                 icon={TrendingUp}
-                color="#15803D"
+                color="var(--success-hover)"
                 rows={toRows(latestPayslip?.earningsBreakdown)}
                 emptyText="No earnings data for latest payslip"
               />
@@ -529,7 +529,7 @@ export default function PayrollSelfServicePage() {
               <BreakdownTable
                 title="Latest Deductions"
                 icon={TrendingDown}
-                color="#DC2626"
+                color="var(--danger-hover)"
                 rows={toRows(latestPayslip?.deductionsBreakdown)}
                 emptyText="No deductions data for latest payslip"
               />
@@ -563,12 +563,12 @@ export default function PayrollSelfServicePage() {
 
                 {/* Attendance chips */}
                 <div style={{ ...statGrid(150), gap: 14 }}>
-                  <AttendChip icon={CalendarDays}  label="Working Days"    value={latestPayslip.workingDays}          color="#2563EB" />
-                  <AttendChip icon={CalendarCheck} label="Present Days"    value={latestPayslip.presentDays}          color="#15803D" />
-                  <AttendChip icon={BadgeCheck}    label="Paid Leaves"     value={latestPayslip.paidLeaves}           color="#0D9488" />
-                  <AttendChip icon={CalendarX}     label="LOP Days"        value={latestPayslip.lopDays}              color="#DC2626" />
-                  <AttendChip icon={AlertTriangle} label="Late Marks"      value={latestPayslip.lateCount    ?? 0}    color="#F59E0B" />
-                  <AttendChip icon={Clock}         label="Overtime Hours"  value={latestPayslip.overtimeHours ?? 0}   color="#7C3AED" />
+                  <AttendChip icon={CalendarDays}  label="Working Days"    value={latestPayslip.workingDays}          color="var(--primary)" />
+                  <AttendChip icon={CalendarCheck} label="Present Days"    value={latestPayslip.presentDays}          color="var(--success-hover)" />
+                  <AttendChip icon={BadgeCheck}    label="Paid Leaves"     value={latestPayslip.paidLeaves}           color="var(--accent-hover)" />
+                  <AttendChip icon={CalendarX}     label="LOP Days"        value={latestPayslip.lopDays}              color="var(--danger-hover)" />
+                  <AttendChip icon={AlertTriangle} label="Late Marks"      value={latestPayslip.lateCount    ?? 0}    color="var(--warning)" />
+                  <AttendChip icon={Clock}         label="Overtime Hours"  value={latestPayslip.overtimeHours ?? 0}   color="var(--purple)" />
                 </div>
 
                 {/* Attendance % bar */}
@@ -582,7 +582,7 @@ export default function PayrollSelfServicePage() {
                       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
                         Attendance Rate
                       </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: "#15803D" }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: "var(--success-hover)" }}>
                         {Math.round(((latestPayslip.presentDays ?? 0) / latestPayslip.workingDays) * 100)}%
                       </span>
                     </div>
@@ -595,7 +595,7 @@ export default function PayrollSelfServicePage() {
                         height:     "100%",
                         borderRadius: 99,
                         width:      `${Math.min(Math.round(((latestPayslip.presentDays ?? 0) / latestPayslip.workingDays) * 100), 100)}%`,
-                        background: "linear-gradient(90deg, #15803D, #22C55E)",
+                        background: "linear-gradient(90deg, var(--success-hover), var(--success))",
                         transition: "width 0.6s ease",
                       }} />
                     </div>

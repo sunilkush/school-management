@@ -46,9 +46,9 @@ const normalizeStatus = (status, dueDate) => {
 };
 
 const statusColor = (status) => {
-  if (status === "Submitted") return { color: "#22C55E", bg: "rgba(220,252,231,0.15)" };
-  if (status === "Late") return { color: "#EF4444", bg: "#fff1f2" };
-  return { color: "#F59E0B", bg: "#fffbeb" };
+  if (status === "Submitted") return { color: "var(--success)", bg: "rgba(220,252,231,0.15)" };
+  if (status === "Late") return { color: "var(--danger)", bg: "var(--danger-light)" };
+  return { color: "var(--warning)", bg: "var(--warning-light)" };
 };
 
 const StudentHomework = () => {
@@ -184,9 +184,9 @@ const StudentHomework = () => {
 
   const STAT_ITEMS = [
     { label: "Total", value: stats.total, color: "var(--primary)" },
-    { label: "Submitted", value: stats.submitted, color: "#22C55E" },
-    { label: "Pending", value: stats.pending, color: "#F59E0B" },
-    { label: "Late", value: stats.late, color: "#EF4444" },
+    { label: "Submitted", value: stats.submitted, color: "var(--success)" },
+    { label: "Pending", value: stats.pending, color: "var(--warning)" },
+    { label: "Late", value: stats.late, color: "var(--danger)" },
   ];
 
   return (
@@ -268,7 +268,7 @@ const StudentHomework = () => {
                       </span>
                       <span style={pill(sc.color, sc.bg)}>{item.status}</span>
                       {item.grade !== null && item.grade !== undefined && (
-                        <span style={pill("#22C55E", "rgba(220,252,231,0.15)")}>Grade: {item.grade}/100</span>
+                        <span style={pill("var(--success)", "rgba(220,252,231,0.15)")}>Grade: {item.grade}/100</span>
                       )}
                     </Space>
                   </div>
@@ -339,8 +339,8 @@ const StudentHomework = () => {
               <Space direction="vertical" style={{ width: "100%" }} size={8}>
                 <Tag color="green">Already Submitted</Tag>
                 {selectedHomework.grade !== null && selectedHomework.grade !== undefined && (
-                  <div style={{ ...sectionPanel, padding: "12px 16px", background: "rgba(220,252,231,0.15)", border: "1px solid #bbf7d0" }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: "#22C55E", marginBottom: 6 }}>Teacher Feedback</div>
+                  <div style={{ ...sectionPanel, padding: "12px 16px", background: "rgba(220,252,231,0.15)", border: "1px solid var(--success-light)" }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "var(--success)", marginBottom: 6 }}>Teacher Feedback</div>
                     <Space wrap>
                       <Tag color="blue" style={{ fontSize: 14, padding: "2px 12px" }}>
                         Grade: {selectedHomework.grade}/100

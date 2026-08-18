@@ -11,9 +11,9 @@ import {
 } from "../../../styles/pageStyles";
 
 const STAT_META = [
-  { key: "total",   label: "Total Parents", color: "#14B8A6", icon: <TeamOutlined /> },
-  { key: "active",  label: "Active",        color: "#22C55E", icon: <CheckCircleOutlined /> },
-  { key: "showing", label: "Showing",       color: "#2563EB", icon: <EyeOutlined /> },
+  { key: "total",   label: "Total Parents", color: "var(--accent)", icon: <TeamOutlined /> },
+  { key: "active",  label: "Active",        color: "var(--success)", icon: <CheckCircleOutlined /> },
+  { key: "showing", label: "Showing",       color: "var(--primary)", icon: <EyeOutlined /> },
 ];
 
 const ParentsList = () => {
@@ -104,15 +104,15 @@ const ParentsList = () => {
       key: "status",
       render: () => (
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 0 2px #d1fae5" }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#15803d" }}>Active</span>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--success)", boxShadow: "0 0 0 2px var(--success-light)" }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--success-hover)" }}>Active</span>
         </div>
       ),
     },
     {
       title: "Role",
       key: "role",
-      render: () => <span style={pill("#14B8A6", "rgba(20,184,166,0.2)")}>Parent</span>,
+      render: () => <span style={pill("var(--accent)", "rgba(var(--accent-rgb), 0.2)")}>Parent</span>,
     },
   ];
 

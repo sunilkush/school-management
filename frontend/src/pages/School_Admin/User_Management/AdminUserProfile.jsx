@@ -23,11 +23,11 @@ const GENDER_OPTS = [
   { value: "Other",  label: "Other"  },
 ];
 
-const InfoRow = ({ icon: Icon, label, value, color = "var(--primary)" }) => (
+const InfoRow = ({ icon: Icon, label, value, color = "var(--primary)", tint = "rgba(var(--primary-rgb), 0.1)" }) => (
   <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border-muted)" }}>
     <div style={{
       width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-      background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center",
+      background: tint, display: "flex", alignItems: "center", justifyContent: "center",
     }}>
       <Icon size={16} color={color} strokeWidth={1.8} />
     </div>
@@ -263,9 +263,9 @@ const AdminUserProfile = () => {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             Contact Information
           </div>
-          <InfoRow icon={Mail}  label="Email"   value={profile?.email}   color="#6366f1" />
-          <InfoRow icon={Phone} label="Phone"   value={profile?.phone}   color="#0ea5e9" />
-          <InfoRow icon={MapPin}        label="Address" value={profile?.address}  color="#f59e0b" />
+          <InfoRow icon={Mail}  label="Email"   value={profile?.email}   color="var(--purple)" tint="rgba(var(--purple-rgb), 0.1)" />
+          <InfoRow icon={Phone} label="Phone"   value={profile?.phone}   color="var(--info)" tint="var(--info-light)" />
+          <InfoRow icon={MapPin}        label="Address" value={profile?.address}  color="var(--warning)" tint="rgba(var(--warning-rgb), 0.1)" />
         </div>
 
         {/* Personal Info */}
@@ -273,9 +273,9 @@ const AdminUserProfile = () => {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             Personal Details
           </div>
-          <InfoRow icon={Users}        label="Gender"        value={profile?.gender}                                          color="#8b5cf6" />
-          <InfoRow icon={CalendarDays} label="Date of Birth" value={profile?.dateOfBirth ? dayjs(profile.dateOfBirth).format("DD MMM YYYY") : null} color="#ec4899" />
-          <InfoRow icon={BookOpen}     label="Qualification" value={profile?.qualification}                                   color="#10b981" />
+          <InfoRow icon={Users}        label="Gender"        value={profile?.gender}                                          color="var(--purple)" tint="rgba(var(--purple-rgb), 0.1)" />
+          <InfoRow icon={CalendarDays} label="Date of Birth" value={profile?.dateOfBirth ? dayjs(profile.dateOfBirth).format("DD MMM YYYY") : null} color="var(--pink)" tint="rgba(236, 72, 153, 0.1)" />
+          <InfoRow icon={BookOpen}     label="Qualification" value={profile?.qualification}                                   color="var(--success)" tint="rgba(var(--success-rgb), 0.1)" />
         </div>
 
         {/* Professional Info */}
@@ -283,9 +283,9 @@ const AdminUserProfile = () => {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             Professional Details
           </div>
-          <InfoRow icon={Briefcase}    label="Department"  value={profile?.department?.name}         color="#f59e0b" />
-          <InfoRow icon={Briefcase}    label="Designation" value={profile?.designation?.title}       color="#14b8a6" />
-          <InfoRow icon={CalendarDays} label="Joining Date" value={profile?.joiningDate ? dayjs(profile.joiningDate).format("DD MMM YYYY") : null} color="#3b82f6" />
+          <InfoRow icon={Briefcase}    label="Department"  value={profile?.department?.name}         color="var(--warning)" tint="rgba(var(--warning-rgb), 0.1)" />
+          <InfoRow icon={Briefcase}    label="Designation" value={profile?.designation?.title}       color="var(--accent)" tint="rgba(var(--accent-rgb), 0.1)" />
+          <InfoRow icon={CalendarDays} label="Joining Date" value={profile?.joiningDate ? dayjs(profile.joiningDate).format("DD MMM YYYY") : null} color="var(--info)" tint="var(--info-light)" />
         </div>
 
         {/* Emergency Contact */}
@@ -293,8 +293,8 @@ const AdminUserProfile = () => {
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             Emergency Contact
           </div>
-          <InfoRow icon={Users} label="Contact Name"  value={profile?.emergencyContactName}  color="#ef4444" />
-          <InfoRow icon={Phone} label="Contact Phone" value={profile?.emergencyContactPhone} color="#ef4444" />
+          <InfoRow icon={Users} label="Contact Name"  value={profile?.emergencyContactName}  color="var(--danger)" tint="rgba(var(--danger-rgb), 0.1)" />
+          <InfoRow icon={Phone} label="Contact Phone" value={profile?.emergencyContactPhone} color="var(--danger)" tint="rgba(var(--danger-rgb), 0.1)" />
         </div>
       </div>
 

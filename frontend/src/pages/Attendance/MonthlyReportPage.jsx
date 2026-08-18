@@ -13,19 +13,20 @@ import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 import { fetchSchools }       from "../../features/schoolSlice";
 import PageHeader             from "../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
+import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
 /* ── theme ── */
 const C = {
-  primary:      "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  success:      "#22C55E", successLight: "#DCFCE7",
-  warning:      "#F59E0B", warningLight: "#FEF3C7",
-  danger:       "#EF4444", dangerLight:  "#FEE2E2",
-  purple:       "#8B5CF6", purpleLight:  "#EDE9FE",
-  cyan:         "#06B6D4", cyanLight:    "#CFFAFE",
-  accent:       "#14B8A6", accentLight:  "#CCFBF1",
-  border:       "#E2E8F0", text:         "#0F172A",
-  textSub:      "#64748B", textMuted:    "#94A3B8",
-  surface:      "#FFFFFF", surfaceSoft:  "#F8FAFC",
+  primary:      "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  success:      "var(--success)", successLight: "var(--success-light)",
+  warning:      "var(--warning)", warningLight: "var(--warning-light)",
+  danger:       "var(--danger)", dangerLight:  "var(--danger-light)",
+  purple:       "var(--purple)", purpleLight:  "rgba(var(--purple-rgb), 0.12)",
+  cyan:         "var(--cyan)", cyanLight:    "#CFFAFE", // no design token exists for this cyan-100 tint; left as-is
+  accent:       "var(--accent)", accentLight:  "var(--accent-light)",
+  border:       "var(--border)", text:         "var(--text)",
+  textSub:      "var(--text-secondary)", textMuted:    "var(--text-muted)",
+  surface:      "var(--surface)", surfaceSoft:  "var(--surface-soft)",
 };
 
 const ROLE_OPTIONS = [
@@ -44,15 +45,8 @@ const FL = ({ children }) => (
 );
 
 const avatarColor = (name = "") => {
-  const PALETTE = [
-    { bg: C.primaryLighter, color: C.primary },
-    { bg: C.accentLight,    color: C.accent  },
-    { bg: C.successLight,   color: C.success },
-    { bg: C.purpleLight,    color: C.purple  },
-    { bg: C.warningLight,   color: C.warning },
-    { bg: C.cyanLight,      color: C.cyan    },
-  ];
-  return PALETTE[(name.charCodeAt(0) || 65) % PALETTE.length];
+  const color = CATEGORICAL_COLORS[(name.charCodeAt(0) || 65) % CATEGORICAL_COLORS.length];
+  return { bg: `color-mix(in srgb, ${color} 15%, transparent)`, color };
 };
 
 const pctColor = (n) => {
@@ -68,9 +62,9 @@ const pctBg = (n) => {
 };
 
 const pctBorder = (n) => {
-  if (n >= 90) return "#86EFAC";
-  if (n >= 75) return "#FCD34D";
-  return "#FCA5A5";
+  if (n >= 90) return "var(--success-light)";
+  if (n >= 75) return "var(--warning)";
+  return "var(--danger-light)";
 };
 
 /* ── CSV export ── */
@@ -98,14 +92,14 @@ const exportCSV = (data, filename) => {
 const StatCard = ({ label, value, subtext, color, bg, icon }) => (
   <div style={{
     background: bg, borderRadius: 14, padding: "18px 20px",
-    border: `1px solid ${color}30`,
+    border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`,
     display: "flex", alignItems: "center", gap: 14,
     boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
     flex: 1, minWidth: 130,
   }}>
     <div style={{
       width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-      background: color + "22", display: "flex", alignItems: "center",
+      background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "flex", alignItems: "center",
       justifyContent: "center", fontSize: 20, color,
     }}>
       {icon}
@@ -405,7 +399,7 @@ const MonthlyReportPage = () => {
                   ].map(({ label, color, count }) => (
                     <span key={label} style={{
                       fontSize: 11, padding: "2px 8px", borderRadius: 99,
-                      background: color + "18", color, fontWeight: 700, border: `1px solid ${color}30`,
+                      background: `color-mix(in srgb, ${color} 9%, transparent)`, color, fontWeight: 700, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`,
                     }}>
                       {label} · {count}
                     </span>
@@ -473,7 +467,7 @@ const MonthlyReportPage = () => {
                     const n          = Number(row.attendancePercentage || 0);
                     const isLow      = n < 75;
                     const isHigh     = n >= 90;
-                    const rowBg      = isLow ? `${C.danger}06` : isHigh ? `${C.success}06` : "transparent";
+                    const rowBg      = isLow ? `color-mix(in srgb, ${C.danger} 2%, transparent)` : isHigh ? `color-mix(in srgb, ${C.success} 2%, transparent)` : "transparent";
                     const { bg, color } = avatarColor(row.name || "?");
                     const initial    = (row.name || "?")[0].toUpperCase();
                     const globalIdx  = (page - 1) * PAGE_SIZE + idx + 1;

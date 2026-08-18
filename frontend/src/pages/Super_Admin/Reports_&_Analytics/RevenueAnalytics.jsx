@@ -64,10 +64,10 @@ const getPeriodKey = (date, mode) => {
 };
 
 const statusStyles = {
-  Paid: { badge: "success", color: "#15803D", bg: "rgba(220,252,231,0.5)" },
-  Partial: { badge: "warning", color: "#B45309", bg: "rgba(254,243,199,0.5)" },
-  Pending: { badge: "error", color: "#DC2626", bg: "rgba(254,226,226,0.5)" },
-  "No Invoices": { badge: "default", color: "#64748B", bg: "rgba(241,245,249,0.6)" },
+  Paid: { badge: "success", color: "var(--success-hover)", bg: "rgba(220,252,231,0.5)" },
+  Partial: { badge: "warning", color: "var(--warning-hover)", bg: "rgba(254,243,199,0.5)" },
+  Pending: { badge: "error", color: "var(--danger-hover)", bg: "rgba(254,226,226,0.5)" },
+  "No Invoices": { badge: "default", color: "var(--text-secondary)", bg: "rgba(241,245,249,0.6)" },
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -105,8 +105,8 @@ const KpiCard = ({ icon, label, value, sub, color }) => (
       </div>
       {sub && (
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-          <ArrowUpOutlined style={{ color: "#22C55E", fontSize: 11 }} />
-          <span style={{ color: "#22C55E", fontSize: 12 }}>{sub}</span>
+          <ArrowUpOutlined style={{ color: "var(--success)", fontSize: 11 }} />
+          <span style={{ color: "var(--success)", fontSize: 12 }}>{sub}</span>
         </div>
       )}
     </div>
@@ -257,12 +257,12 @@ const RevenueAnalytics = () => {
     {
       title: "Total Paid",
       dataIndex: "totalPaid",
-      render: (v) => <span style={{ fontWeight: 700, color: "#15803D" }}>{formatCurrency(v)}</span>,
+      render: (v) => <span style={{ fontWeight: 700, color: "var(--success-hover)" }}>{formatCurrency(v)}</span>,
     },
     {
       title: "Outstanding",
       dataIndex: "outstanding",
-      render: (v) => <span style={{ fontWeight: 600, color: v > 0 ? "#DC2626" : "var(--text-muted)" }}>{formatCurrency(v)}</span>,
+      render: (v) => <span style={{ fontWeight: 600, color: v > 0 ? "var(--danger-hover)" : "var(--text-muted)" }}>{formatCurrency(v)}</span>,
     },
     {
       title: "Invoices",
@@ -306,28 +306,28 @@ const RevenueAnalytics = () => {
       />
 
       <div style={{ ...statGrid(200), marginTop: 20 }}>
-        <KpiCard icon={<FileTextOutlined />} label="Total Invoiced" value={formatCurrency(revenueSummary.totalInvoiced)} sub="all generated invoices" color="#2563EB" />
-        <KpiCard icon={<CheckCircleOutlined />} label="Total Paid" value={formatCurrency(revenueSummary.totalPaid)} sub="received payments" color="#22C55E" />
-        <KpiCard icon={<ClockCircleOutlined />} label="Outstanding" value={formatCurrency(revenueSummary.totalOutstanding)} sub="pending collection" color="#F59E0B" />
-        <KpiCard icon={<FundOutlined />} label={`${periodLabel} Paid`} value={formatCurrency(stats.currentPeriodRevenue)} sub={`${stats.growth >= 0 ? "+" : ""}${stats.growth.toFixed(1)}% vs prior period`} color="#7C3AED" />
+        <KpiCard icon={<FileTextOutlined />} label="Total Invoiced" value={formatCurrency(revenueSummary.totalInvoiced)} sub="all generated invoices" color="var(--primary)" />
+        <KpiCard icon={<CheckCircleOutlined />} label="Total Paid" value={formatCurrency(revenueSummary.totalPaid)} sub="received payments" color="var(--success)" />
+        <KpiCard icon={<ClockCircleOutlined />} label="Outstanding" value={formatCurrency(revenueSummary.totalOutstanding)} sub="pending collection" color="var(--warning)" />
+        <KpiCard icon={<FundOutlined />} label={`${periodLabel} Paid`} value={formatCurrency(stats.currentPeriodRevenue)} sub={`${stats.growth >= 0 ? "+" : ""}${stats.growth.toFixed(1)}% vs prior period`} color="var(--purple)" />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginBottom: 20 }} className="revenue-charts-grid">
         <div style={sectionPanel}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Revenue Trend</span>
-            <span style={pill("#2563EB")}>Invoiced vs Paid</span>
+            <span style={pill("var(--primary)")}>Invoiced vs Paid</span>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradPaid" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradInvoiced" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.1} />
-                  <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--purple)" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="var(--purple)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
@@ -335,8 +335,8 @@ const RevenueAnalytics = () => {
               <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Area type="monotone" dataKey="paid" stroke="#2563EB" strokeWidth={2.5} fill="url(#gradPaid)" name="Paid" dot={{ r: 4, fill: "#2563EB" }} />
-              <Area type="monotone" dataKey="invoiced" stroke="#7C3AED" strokeWidth={2} strokeDasharray="5 4" fill="url(#gradInvoiced)" name="Invoiced" dot={false} />
+              <Area type="monotone" dataKey="paid" stroke="var(--primary)" strokeWidth={2.5} fill="url(#gradPaid)" name="Paid" dot={{ r: 4, fill: "var(--primary)" }} />
+              <Area type="monotone" dataKey="invoiced" stroke="var(--purple)" strokeWidth={2} strokeDasharray="5 4" fill="url(#gradInvoiced)" name="Invoiced" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -349,7 +349,7 @@ const RevenueAnalytics = () => {
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "var(--text-muted)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="paid" fill="#2563EB" radius={[6, 6, 0, 0]} name="Paid" />
+              <Bar dataKey="paid" fill="var(--primary)" radius={[6, 6, 0, 0]} name="Paid" />
             </BarChart>
           </ResponsiveContainer>
         </div>

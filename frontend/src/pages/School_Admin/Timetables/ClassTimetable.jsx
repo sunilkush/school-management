@@ -407,8 +407,8 @@ const ClassTimetable = () => {
       <div style={pageWrapper}>
         <Spin spinning={!!loading}>
           <div style={statGrid(200)}>
-            <StatCard icon={<CalendarOutlined />} label="Total Slots" value={stats.totalSlots} color="#2563EB" />
-            <StatCard icon={<TeamOutlined />} label="Teachers Assigned" value={stats.totalTeachers} color="#22C55E" />
+            <StatCard icon={<CalendarOutlined />} label="Total Slots" value={stats.totalSlots} color="var(--primary)" />
+            <StatCard icon={<TeamOutlined />} label="Teachers Assigned" value={stats.totalTeachers} color="var(--success)" />
             <StatCard icon={<BookOutlined />} label="Subjects Planned" value={stats.totalSubjects} color="#722ED1" />
           </div>
 

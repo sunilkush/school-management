@@ -19,13 +19,13 @@ import PageHeader from "../../../components/layout/PageHeader";
 import {
   iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss,
 } from "../../../styles/pageStyles";
+import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
-const PIE_COLORS = ["#14B8A6", "#0891b2", "#22C55E", "#F59E0B", "#EF4444", "#14B8A6", "#F59E0B", "#14b8a6"];
 
 const FinancialReports = () => {
   const dispatch = useDispatch();
@@ -132,23 +132,23 @@ const FinancialReports = () => {
   // P&L table
   const plColumns = [
     { title: "Month",    dataIndex: "month" },
-    { title: "Income",   dataIndex: "income",  render: (v) => <Text style={{ color: "#22C55E", fontWeight: 600 }}>{money(v)}</Text> },
-    { title: "Expense",  dataIndex: "expense", render: (v) => <Text style={{ color: "#EF4444", fontWeight: 600 }}>{money(v)}</Text> },
-    { title: "Net P/L",  dataIndex: "profit",  render: (v) => <Text style={{ color: v >= 0 ? "#22C55E" : "#EF4444", fontWeight: 700 }}>{v >= 0 ? "+" : "-"}{money(Math.abs(v))}</Text> },
+    { title: "Income",   dataIndex: "income",  render: (v) => <Text style={{ color: "var(--success)", fontWeight: 600 }}>{money(v)}</Text> },
+    { title: "Expense",  dataIndex: "expense", render: (v) => <Text style={{ color: "var(--danger)", fontWeight: 600 }}>{money(v)}</Text> },
+    { title: "Net P/L",  dataIndex: "profit",  render: (v) => <Text style={{ color: v >= 0 ? "var(--success)" : "var(--danger)", fontWeight: 700 }}>{v >= 0 ? "+" : "-"}{money(Math.abs(v))}</Text> },
   ];
 
   const incColumns = [
-    { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#14B8A6" }}>{i + 1}</span>, width: 40 },
+    { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "var(--accent)" }}>{i + 1}</span>, width: 40 },
     { title: "Category",  dataIndex: "_id" },
     { title: "Records",   dataIndex: "count",  width: 80 },
-    { title: "Total",     dataIndex: "total",  render: (v) => <Text style={{ fontWeight: 700, color: "#22C55E" }}>{money(v)}</Text> },
+    { title: "Total",     dataIndex: "total",  render: (v) => <Text style={{ fontWeight: 700, color: "var(--success)" }}>{money(v)}</Text> },
   ];
 
   const expColumns = [
-    { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "#EF4444" }}>{i + 1}</span>, width: 40 },
+    { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "var(--danger)" }}>{i + 1}</span>, width: 40 },
     { title: "Category",  dataIndex: "_id" },
     { title: "Records",   dataIndex: "count",  width: 80 },
-    { title: "Total",     dataIndex: "total",  render: (v) => <Text style={{ fontWeight: 700, color: "#EF4444" }}>{money(v)}</Text> },
+    { title: "Total",     dataIndex: "total",  render: (v) => <Text style={{ fontWeight: 700, color: "var(--danger)" }}>{money(v)}</Text> },
   ];
 
   return (
@@ -182,12 +182,12 @@ const FinancialReports = () => {
           {/* ── Summary KPIs ──────────────────────────────────────── */}
           <div style={statGrid(150)}>
             {[
-              { label: "Total Revenue",  value: money(kpis.totalRevenue),    color: "#22C55E", icon: <RiseOutlined /> },
-              { label: "Total Expenses", value: money(kpis.totalExpenses),   color: "#EF4444", icon: <FileTextOutlined /> },
+              { label: "Total Revenue",  value: money(kpis.totalRevenue),    color: "var(--success)", icon: <RiseOutlined /> },
+              { label: "Total Expenses", value: money(kpis.totalExpenses),   color: "var(--danger)", icon: <FileTextOutlined /> },
               { label: "Net Profit",     value: money(Math.abs(kpis.netProfitLoss)),
-                color: (kpis.netProfitLoss || 0) >= 0 ? "#22C55E" : "#EF4444",
+                color: (kpis.netProfitLoss || 0) >= 0 ? "var(--success)" : "var(--danger)",
                 icon: <BarChartOutlined /> },
-              { label: "Pending Fees",   value: money(kpis.pendingFees),     color: "#F59E0B", icon: <FileTextOutlined /> },
+              { label: "Pending Fees",   value: money(kpis.pendingFees),     color: "var(--warning)", icon: <FileTextOutlined /> },
             ].map(({ label, value, color, icon }) => (
               <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
                 <div style={iconWell(color, 40)}>{icon}</div>
@@ -209,8 +209,8 @@ const FinancialReports = () => {
                 <ComposedChart data={profitLossData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#22C55E" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0.02} />
+                      <stop offset="5%"  stopColor="var(--success)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--success)" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-muted)" />
@@ -218,9 +218,9 @@ const FinancialReports = () => {
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v, n) => [money(v), n]} />
                   <Legend />
-                  <Area type="monotone" dataKey="income"  stroke="#22C55E" fill="url(#profitGrad)" name="Income"  strokeWidth={2} />
-                  <Area type="monotone" dataKey="expense" stroke="#EF4444" fill="none" name="Expense" strokeWidth={2} strokeDasharray="4 2" />
-                  <Bar dataKey="profit"  fill="#14B8A6" name="Net P/L" barSize={16} radius={[4,4,0,0]} />
+                  <Area type="monotone" dataKey="income"  stroke="var(--success)" fill="url(#profitGrad)" name="Income"  strokeWidth={2} />
+                  <Area type="monotone" dataKey="expense" stroke="var(--danger)" fill="none" name="Expense" strokeWidth={2} strokeDasharray="4 2" />
+                  <Bar dataKey="profit"  fill="var(--accent)" name="Net P/L" barSize={16} radius={[4,4,0,0]} />
                 </ComposedChart>
               </ResponsiveContainer>
             )}
@@ -244,9 +244,9 @@ const FinancialReports = () => {
                 return (
                   <Table.Summary.Row style={{ fontWeight: 700, background: "var(--surface-soft)" }}>
                     <Table.Summary.Cell>Total</Table.Summary.Cell>
-                    <Table.Summary.Cell><Text style={{ color: "#22C55E", fontWeight: 700 }}>{money(totInc)}</Text></Table.Summary.Cell>
-                    <Table.Summary.Cell><Text style={{ color: "#EF4444", fontWeight: 700 }}>{money(totExp)}</Text></Table.Summary.Cell>
-                    <Table.Summary.Cell><Text style={{ color: net >= 0 ? "#22C55E" : "#EF4444", fontWeight: 700 }}>{net >= 0 ? "+" : "-"}{money(Math.abs(net))}</Text></Table.Summary.Cell>
+                    <Table.Summary.Cell><Text style={{ color: "var(--success)", fontWeight: 700 }}>{money(totInc)}</Text></Table.Summary.Cell>
+                    <Table.Summary.Cell><Text style={{ color: "var(--danger)", fontWeight: 700 }}>{money(totExp)}</Text></Table.Summary.Cell>
+                    <Table.Summary.Cell><Text style={{ color: net >= 0 ? "var(--success)" : "var(--danger)", fontWeight: 700 }}>{net >= 0 ? "+" : "-"}{money(Math.abs(net))}</Text></Table.Summary.Cell>
                   </Table.Summary.Row>
                 );
               }}
@@ -267,7 +267,7 @@ const FinancialReports = () => {
                         <Pie data={incomeByCategory.map((r) => ({ name: r._id, value: r.total }))}
                           cx="50%" cy="50%" outerRadius={80} dataKey="value"
                           label={({ name, percent }) => `${name.split(" ")[0]} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                          {incomeByCategory.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                          {incomeByCategory.map((_, i) => <Cell key={i} fill={CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]} />)}
                         </Pie>
                         <Tooltip formatter={(v) => money(v)} />
                       </PieChart>
@@ -290,7 +290,7 @@ const FinancialReports = () => {
                         <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                         <Tooltip formatter={(v) => money(v)} />
-                        <Bar dataKey="total" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="total" fill="var(--danger)" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                     <Table className="rep-tbl" rowKey="_id" columns={expColumns} dataSource={expenseByCategory} pagination={false} size="small" style={{ marginTop: 12 }} />
@@ -303,12 +303,12 @@ const FinancialReports = () => {
           {/* ── Financial summary grid ────────────────────────────── */}
           <Row gutter={[12, 12]}>
             {[
-              { label: "Total Revenue",  v: money(kpis.totalRevenue),  color: "#22C55E", bg: "rgba(220,252,231,0.2)" },
-              { label: "Total Expenses", v: money(kpis.totalExpenses), color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
+              { label: "Total Revenue",  v: money(kpis.totalRevenue),  color: "var(--success)", bg: "rgba(var(--success-rgb), 0.2)" },
+              { label: "Total Expenses", v: money(kpis.totalExpenses), color: "var(--danger)", bg: "rgba(var(--danger-rgb), 0.2)" },
               { label: "Net Profit",     v: money(Math.abs(kpis.netProfitLoss || 0)),
-                color: (kpis.netProfitLoss || 0) >= 0 ? "#22C55E" : "#EF4444",
-                bg: (kpis.netProfitLoss || 0) >= 0 ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)" },
-              { label: "Fee Pending",    v: money(kpis.pendingFees),   color: "#F59E0B", bg: "rgba(254,243,199,0.25)" },
+                color: (kpis.netProfitLoss || 0) >= 0 ? "var(--success)" : "var(--danger)",
+                bg: (kpis.netProfitLoss || 0) >= 0 ? "rgba(var(--success-rgb), 0.2)" : "rgba(var(--danger-rgb), 0.2)" },
+              { label: "Fee Pending",    v: money(kpis.pendingFees),   color: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.25)" },
             ].map(({ label, v, color, bg }) => (
               <Col xs={12} sm={6} key={label}>
                 <div style={{ background: bg, borderRadius: 12, padding: "14px 16px", textAlign: "center" }}>

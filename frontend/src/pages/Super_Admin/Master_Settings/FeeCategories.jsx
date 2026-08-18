@@ -61,9 +61,9 @@ const StatCard = ({ icon, label, value, color }) => (
 
 const TYPE_LABEL = { recurring: "Recurring", "one-time": "One Time", penalty: "Penalty" };
 const TYPE_COLOR = {
-  recurring: ["#2563EB", "rgba(219,234,254,0.4)"],
-  "one-time": ["#14B8A6", "rgba(20,184,166,0.15)"],
-  penalty: ["#DC2626", "rgba(254,226,226,0.5)"],
+  recurring: ["var(--primary)", "rgba(219,234,254,0.4)"],
+  "one-time": ["var(--accent)", "rgba(20,184,166,0.15)"],
+  penalty: ["var(--danger-hover)", "rgba(254,226,226,0.5)"],
 };
 
 const FeeCategories = () => {
@@ -201,8 +201,8 @@ const FeeCategories = () => {
     {
       title: "Editable",
       render: (_, r) => r.isEditable
-        ? <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Yes</span>
-        : <span style={pill("#64748B", "rgba(241,245,249,0.6)")}>No</span>,
+        ? <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Yes</span>
+        : <span style={pill("var(--text-secondary)", "rgba(241,245,249,0.6)")}>No</span>,
     },
     {
       title: "Actions",
@@ -263,10 +263,10 @@ const FeeCategories = () => {
       />
 
       <div style={{ ...statGrid(170), marginTop: 20 }}>
-        <StatCard icon={<TagsOutlined />} label="Total Fee Heads" value={stats.total} color="#2563EB" />
-        <StatCard icon={<SyncOutlined />} label="Recurring" value={stats.recurring} color="#14B8A6" />
-        <StatCard icon={<ThunderboltOutlined />} label="One Time" value={stats.oneTime} color="#F59E0B" />
-        <StatCard icon={<WarningOutlined />} label="Penalty" value={stats.penalty} color="#DC2626" />
+        <StatCard icon={<TagsOutlined />} label="Total Fee Heads" value={stats.total} color="var(--primary)" />
+        <StatCard icon={<SyncOutlined />} label="Recurring" value={stats.recurring} color="var(--accent)" />
+        <StatCard icon={<ThunderboltOutlined />} label="One Time" value={stats.oneTime} color="var(--warning)" />
+        <StatCard icon={<WarningOutlined />} label="Penalty" value={stats.penalty} color="var(--danger-hover)" />
       </div>
 
       <style>{tableHeadCss("fee-categories-tbl")}</style>

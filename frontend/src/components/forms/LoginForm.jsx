@@ -240,7 +240,7 @@ const LoginForm = () => {
                 <form onSubmit={handleOtpSubmit} style={{ padding: "8px 0" }}>
                   <div style={{ textAlign: "center", marginBottom: 16 }}>
                     <div style={{ fontSize: 40, marginBottom: 8 }}>🔐</div>
-                    <p style={{ fontSize: 13, color: "#6b7280" }}>A one-time code was sent to your registered email address.</p>
+                    <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>A one-time code was sent to your registered email address.</p>
                   </div>
                   <div style={{ marginBottom: 12 }}>
                     <input
@@ -253,11 +253,11 @@ const LoginForm = () => {
                       autoFocus
                       style={{
                         width: "100%", textAlign: "center", fontSize: 28, letterSpacing: "0.4em",
-                        padding: "12px", border: `1.5px solid ${otpError ? "#ef4444" : "#d1d5db"}`,
+                        padding: "12px", border: `1.5px solid ${otpError ? "var(--danger)" : "#d1d5db"}`,
                         borderRadius: 8, fontFamily: "monospace", outline: "none",
                       }}
                     />
-                    {otpError && <p style={{ color: "#ef4444", fontSize: 12, marginTop: 4 }}>{otpError}</p>}
+                    {otpError && <p style={{ color: "var(--danger)", fontSize: 12, marginTop: 4 }}>{otpError}</p>}
                   </div>
                   <Button
                     type="primary"
@@ -411,38 +411,38 @@ const LoginForm = () => {
           <div style={{ padding: "28px 28px 24px", textAlign: "center" }}>
             <div style={{
               width: 56, height: 56, borderRadius: "50%",
-              background: subWarning.daysLeft <= 7 ? "#FEF2F2" : "#FFFBEB",
+              background: subWarning.daysLeft <= 7 ? "var(--danger-light)" : "var(--warning-light)",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 16px",
-              border: `2px solid ${subWarning.daysLeft <= 7 ? "#FECACA" : "#FDE68A"}`,
+              border: `2px solid ${subWarning.daysLeft <= 7 ? "#FECACA" : "var(--warning-light)"}`,
             }}>
               <ExclamationCircleFilled style={{
                 fontSize: 28,
-                color: subWarning.daysLeft <= 7 ? "#EF4444" : "#F59E0B",
+                color: subWarning.daysLeft <= 7 ? "var(--danger)" : "var(--warning)",
               }} />
             </div>
 
-            <div style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", marginBottom: 8 }}>
               Subscription Expiring Soon
             </div>
 
             <div style={{
               display: "inline-block",
-              background: subWarning.daysLeft <= 7 ? "#FEF2F2" : "#FFFBEB",
-              border: `1px solid ${subWarning.daysLeft <= 7 ? "#FECACA" : "#FDE68A"}`,
+              background: subWarning.daysLeft <= 7 ? "var(--danger-light)" : "var(--warning-light)",
+              border: `1px solid ${subWarning.daysLeft <= 7 ? "#FECACA" : "var(--warning-light)"}`,
               borderRadius: 99,
               padding: "4px 16px",
               fontSize: 13,
               fontWeight: 700,
-              color: subWarning.daysLeft <= 7 ? "#DC2626" : "#B45309",
+              color: subWarning.daysLeft <= 7 ? "var(--danger-hover)" : "var(--warning-hover)",
               marginBottom: 14,
             }}>
               {subWarning.daysLeft} {subWarning.daysLeft === 1 ? "day" : "days"} remaining
             </div>
 
-            <p style={{ fontSize: 13.5, color: "#64748B", lineHeight: 1.65, margin: "0 0 20px" }}>
+            <p style={{ fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.65, margin: "0 0 20px" }}>
               Your school's subscription will expire on{" "}
-              <strong style={{ color: "#0F172A" }}>
+              <strong style={{ color: "var(--text)" }}>
                 {new Date(subWarning.endDate).toLocaleDateString("en-IN", {
                   day: "numeric", month: "long", year: "numeric",
                 })}
@@ -456,7 +456,7 @@ const LoginForm = () => {
               size="large"
               style={{
                 borderRadius: 10, height: 44, fontWeight: 700,
-                background: "linear-gradient(135deg, var(--primary) 0%, #3B82F6 100%)",
+                background: "linear-gradient(135deg, var(--primary) 0%, var(--info) 100%)",
                 border: "none",
                 boxShadow: "var(--shadow-primary)",
               }}
@@ -556,7 +556,7 @@ const CSS = `
     color: #F1F5F9; line-height: 1.18; margin: 0 0 10px; letter-spacing: -0.8px;
   }
   .lf-hl-grad {
-    background: linear-gradient(100deg, #60A5FA 0%, #34D399 55%, #14B8A6 100%);
+    background: linear-gradient(100deg, #60A5FA 0%, #34D399 55%, var(--accent) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
   .lf-tagline { color: #94A3B8; font-size: 13.5px; line-height: 1.7; margin: 0; }
@@ -581,7 +581,7 @@ const CSS = `
     margin-bottom: 9px; flex-shrink: 0;
   }
   .lf-feat-title { font-size: 12.5px; font-weight: 700; color: #E2E8F0; margin-bottom: 3px; }
-  .lf-feat-desc  { font-size: 11px; color: #64748B; line-height: 1.5; }
+  .lf-feat-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
 
   /* stats bar */
   .lf-stats {
@@ -592,7 +592,7 @@ const CSS = `
   .lf-stat { flex: 1; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; position: relative; }
   .lf-stat-sep { position: absolute; left: 0; top: 20%; height: 60%; width: 1px; background: rgba(255,255,255,0.08); }
   .lf-stat-v { font-size: 18px; font-weight: 800; color: #F8FAFC; line-height: 1; }
-  .lf-stat-l { font-size: 9px; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; }
+  .lf-stat-l { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; }
 
   /* testimonial */
   .lf-quote {
@@ -609,13 +609,13 @@ const CSS = `
   .lf-quote-footer { display: flex; align-items: center; gap: 10px; }
   .lf-quote-avatar {
     width: 32px; height: 32px; border-radius: 50%;
-    background: linear-gradient(135deg, #6366F1, #14B8A6);
+    background: linear-gradient(135deg, var(--purple), var(--accent));
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
   }
   .lf-quote-meta { flex: 1; }
   .lf-quote-author { font-size: 12px; font-weight: 600; color: #94A3B8; }
-  .lf-quote-stars  { font-size: 11px; color: #F59E0B; letter-spacing: 1px; margin-top: 2px; }
+  .lf-quote-stars  { font-size: 11px; color: var(--warning); letter-spacing: 1px; margin-top: 2px; }
 
   /* ── Right panel ── */
   .lf-right {
@@ -760,7 +760,7 @@ const CSS = `
     height: 48px !important; border-radius: var(--radius-md) !important;
     font-weight: 700 !important; font-size: 15px !important;
     border: none !important; letter-spacing: 0.1px !important;
-    background: linear-gradient(135deg, var(--primary) 0%, #3B82F6 100%) !important;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%) !important;
     box-shadow: var(--shadow-primary) !important;
     transition: transform 0.18s ease, box-shadow 0.18s ease !important;
   }

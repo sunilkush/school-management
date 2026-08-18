@@ -194,8 +194,8 @@ const TeacherTimetable = () => {
       />
       <div style={pageWrapper}>
         <div style={statGrid(200)}>
-          <StatCard icon={<ClockCircleOutlined />} label="Daily Periods" value={stats.periods} color="#2563EB" />
-          <StatCard icon={<TeamOutlined />} label="Classes Handled" value={stats.classes} color="#22C55E" />
+          <StatCard icon={<ClockCircleOutlined />} label="Daily Periods" value={stats.periods} color="var(--primary)" />
+          <StatCard icon={<TeamOutlined />} label="Classes Handled" value={stats.classes} color="var(--success)" />
           <StatCard icon={<BookOutlined />} label="Subjects" value={stats.subjects} color="#722ED1" />
         </div>
 

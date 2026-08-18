@@ -50,10 +50,10 @@ const StudentHostel = () => {
       <PageHeader title="Hostel" subtitle="Your hostel room details and allocation" icon={<HomeOutlined />} />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<BankOutlined />}    label="Room Number"  value={allocation.roomNumber}  color="#14B8A6" />
-        <StatCard icon={<TeamOutlined />}    label="Capacity"     value={allocation.capacity}    color="#22C55E" />
-        <StatCard icon={<UserOutlined />}    label="Status"       value={allocation.status === "occupied" ? "Occupied" : "Vacant"} color="#F59E0B" />
-        <StatCard icon={<HomeOutlined />}    label="Academic Year" value={allocation.academicYear?.name || "N/A"} color="#0891b2" />
+        <StatCard icon={<BankOutlined />}    label="Room Number"  value={allocation.roomNumber}  color="var(--accent)" />
+        <StatCard icon={<TeamOutlined />}    label="Capacity"     value={allocation.capacity}    color="var(--success)" />
+        <StatCard icon={<UserOutlined />}    label="Status"       value={allocation.status === "occupied" ? "Occupied" : "Vacant"} color="var(--warning)" />
+        <StatCard icon={<HomeOutlined />}    label="Academic Year" value={allocation.academicYear?.name || "N/A"} color="var(--cyan)" />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 0 }}>

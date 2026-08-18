@@ -18,6 +18,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import {
   iconWell, modalTitle, pageWrapper, sectionPanel, statGrid, tableHeadCss,
 } from "../../../styles/pageStyles";
+import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 
@@ -40,8 +41,7 @@ const getApiMessage = (err, fallback = "Something went wrong") => {
   return typeof msg === "string" ? msg : fallback;
 };
 
-const AVATAR_COLORS = ["#7C3AED", "#2563EB", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
-const avatarBg  = (name = "") => AVATAR_COLORS[(name?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+const avatarBg  = (name = "") => categoricalColorFor(name);
 const getInitials = (name = "") => {
   const p = name.trim().split(/\s+/);
   return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase();
@@ -87,8 +87,8 @@ const FeeStatusBadge = ({ loading, due }) => {
     return (
       <span style={{
         fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99,
-        background: "#FEF3C7", color: "#B45309",
-        border: "1px solid #FDE68A",
+        background: "var(--warning-light)", color: "var(--warning-hover)",
+        border: "1px solid var(--warning-light)",
       }}>
         Due {money(due)}
       </span>
@@ -97,8 +97,8 @@ const FeeStatusBadge = ({ loading, due }) => {
   return (
     <span style={{
       fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99,
-      background: "#DCFCE7", color: "#15803D",
-      border: "1px solid #86EFAC",
+      background: "var(--success-light)", color: "var(--success-hover)",
+      border: "1px solid var(--success-light)",
     }}>
       ✓ No Due
     </span>
@@ -306,7 +306,7 @@ const CollectFees = () => {
       render: (_, r) => (
         <span style={{
           fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 99,
-          background: "#EFF6FF", color: "#2563EB", border: "1px solid #DBEAFE",
+          background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--primary-light)",
         }}>
           {r.className} — {r.section}
         </span>
@@ -337,8 +337,8 @@ const CollectFees = () => {
             disabled={isLoading || due <= 0}
             style={{
               borderRadius: 8, fontWeight: 600, fontSize: 12,
-              background: due > 0 && !isLoading ? "#2563EB" : undefined,
-              borderColor: due > 0 && !isLoading ? "#2563EB" : undefined,
+              background: due > 0 && !isLoading ? "var(--primary)" : undefined,
+              borderColor: due > 0 && !isLoading ? "var(--primary)" : undefined,
               color: due > 0 && !isLoading ? "#fff" : undefined,
             }}
           >
@@ -383,28 +383,28 @@ const CollectFees = () => {
           label="Total Students"
           value={filteredStudents.length}
           icon={<TeamOutlined />}
-          color="#2563EB"
+          color="var(--primary)"
           sub="In current filter"
         />
         <StatCard
           label="Due Students"
           value={dueStudentsCount}
           icon={<WalletOutlined />}
-          color="#F59E0B"
+          color="var(--warning)"
           sub={dueStudentsCount > 0 ? "Need to collect" : "All clear"}
         />
         <StatCard
           label="Total Pending"
           value={money(totalPendingAmount)}
           icon={<BankOutlined />}
-          color="#EF4444"
+          color="var(--danger)"
           sub="Across filtered list"
         />
         <StatCard
           label="Academic Year"
           value={selectedAcademicYear?.name || "—"}
           icon={<CalendarOutlined />}
-          color="#7C3AED"
+          color="var(--purple)"
           sub="Current session"
         />
       </div>
@@ -419,7 +419,7 @@ const CollectFees = () => {
           flexWrap: "wrap", gap: 12,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={iconWell("#2563EB", 32)}><TeamOutlined style={{ fontSize: 14 }} /></div>
+            <div style={iconWell("var(--primary)", 32)}><TeamOutlined style={{ fontSize: 14 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                 Student Fee List
@@ -431,7 +431,7 @@ const CollectFees = () => {
           </div>
           <span style={{
             fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20,
-            background: "#EFF6FF", color: "#2563EB", border: "1px solid #DBEAFE",
+            background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--primary-light)",
           }}>
             {filteredStudents.length} students
           </span>
@@ -528,13 +528,13 @@ const CollectFees = () => {
             {selectedFeeDueAmount > 0 && (
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                background: "#EFF6FF", border: "1px solid #DBEAFE",
+                background: "var(--primary-light)", border: "1px solid var(--primary-light)",
                 borderRadius: 10, padding: "10px 16px", marginBottom: 16,
               }}>
-                <Text style={{ fontSize: 12, color: "#1D4ED8", fontWeight: 600 }}>
+                <Text style={{ fontSize: 12, color: "var(--primary-hover)", fontWeight: 600 }}>
                   Total Due for selected fee
                 </Text>
-                <Text style={{ fontSize: 18, fontWeight: 800, color: "#1D4ED8" }}>
+                <Text style={{ fontSize: 18, fontWeight: 800, color: "var(--primary-hover)" }}>
                   {money(selectedFeeDueAmount)}
                 </Text>
               </div>
@@ -563,7 +563,7 @@ const CollectFees = () => {
                         <span>
                           {fee.feeStructureId?.feeHeadId?.name || fee.feeStructureId?.name || "Fee"}
                         </span>
-                        <span style={{ fontWeight: 700, color: "#B45309", marginLeft: 8 }}>
+                        <span style={{ fontWeight: 700, color: "var(--warning-hover)", marginLeft: 8 }}>
                           Due {money(fee.dueAmount)}
                         </span>
                       </div>
@@ -640,7 +640,7 @@ const CollectFees = () => {
                 htmlType="submit"
                 loading={submitting}
                 icon={<CheckCircleOutlined />}
-                style={{ borderRadius: 8, fontWeight: 600, background: "#2563EB", borderColor: "#2563EB" }}
+                style={{ borderRadius: 8, fontWeight: 600, background: "var(--primary)", borderColor: "var(--primary)" }}
               >
                 Collect Payment
               </Button>

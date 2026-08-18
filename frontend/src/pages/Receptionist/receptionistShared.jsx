@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "antd";
 import { RefreshCw } from "lucide-react";
 import { statCard, statLabel, statValue } from "../../styles/pageStyles";
+import { categoricalColorFor } from "../../utils/colorPalette";
 
 // Shared across ReceptionistDashboard/VisitorManagement (visitor entry-time formatting) and
 // CallLog/Broadcasts (full date+time formatting).
@@ -9,11 +10,11 @@ export const fmt = (d) => d ? new Date(d).toLocaleTimeString([], { hour: "2-digi
 export const fmtFull = (d) => d ? new Date(d).toLocaleString() : "—";
 
 // Shared by ReceptionistDashboard, VisitorManagement, Enquiries, CallLog (avatar initials bubble).
-export function Avatar({ name = "?", color = "#6366f1" }) {
+export function Avatar({ name = "?", color = "var(--purple)" }) {
   return (
     <div style={{
       width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-      background: `${color}18`, color,
+      background: `color-mix(in srgb, ${color} 9%, transparent)`, color,
       display: "flex", alignItems: "center", justifyContent: "center",
       fontWeight: 700, fontSize: 13,
     }}>
@@ -32,7 +33,7 @@ export function StatCard({ icon: Icon, label, value, color, loading }) {
       </div>
       <div style={{
         width: 44, height: 44, borderRadius: 12,
-        background: `${color}18`,
+        background: `color-mix(in srgb, ${color} 9%, transparent)`,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         {Icon && <Icon size={20} color={color} strokeWidth={1.8} />}
@@ -73,6 +74,9 @@ export function PrimaryBtn({ icon: Icon, onClick, loading, children }) {
 
 // Shared by ReceptionistDashboard and VisitorManagement (visitor-type badge colors).
 export const VISITOR_COLORS = {
-  Visitor: "#6366f1", Parent: "#0ea5e9", Vendor: "#f59e0b",
-  Contractor: "#ec4899", Other: "#8b5cf6",
+  Visitor: categoricalColorFor("Visitor"),
+  Parent: categoricalColorFor("Parent"),
+  Vendor: categoricalColorFor("Vendor"),
+  Contractor: categoricalColorFor("Contractor"),
+  Other: categoricalColorFor("Other"),
 };

@@ -247,7 +247,7 @@ const Profile = () => {
   if (portalError) {
     return (
       <div style={{ ...pageWrapper }}>
-        <div style={{ border: "1px solid #fca5a5", background: "#fff1f2", borderRadius: 12, padding: 16, color: "#EF4444" }}>
+        <div style={{ border: "1px solid var(--danger-light)", background: "var(--danger-light)", borderRadius: 12, padding: 16, color: "var(--danger)" }}>
           <p style={{ fontWeight: 600, margin: "0 0 4px" }}>Error</p>
           <p style={{ fontSize: 13, margin: 0 }}>{portalError}</p>
         </div>
@@ -287,7 +287,7 @@ const Profile = () => {
                   <Spin size="small" />
                 </div>
               ) : (
-                <div style={{ position: "absolute", bottom: 0, right: 0, width: 20, height: 20, borderRadius: "50%", background: "var(--primary, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
+                <div style={{ position: "absolute", bottom: 0, right: 0, width: 20, height: 20, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
                   <Camera style={{ width: 10, height: 10, color: "#fff" }} />
                 </div>
               )}
@@ -297,7 +297,7 @@ const Profile = () => {
                 {profileForm.name || "Student Profile"}
               </div>
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{profileForm.email || "No email"}</div>
-              <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "rgba(220,252,231,0.2)", color: "#22C55E", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
+              <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "rgba(220,252,231,0.2)", color: "var(--success)", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
                 Active Student
               </span>
             </div>
@@ -349,7 +349,7 @@ const Profile = () => {
           </Section>
 
           {saveState.message && (
-            <p style={{ fontSize: 13, color: saveState.isError ? "#EF4444" : "#22C55E", margin: "8px 0 0" }}>
+            <p style={{ fontSize: 13, color: saveState.isError ? "var(--danger)" : "var(--success)", margin: "8px 0 0" }}>
               {saveState.message}
             </p>
           )}

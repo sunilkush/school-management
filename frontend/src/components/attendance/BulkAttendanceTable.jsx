@@ -4,9 +4,9 @@ import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import StatusTag from "./StatusTag";
 
 const C = {
-  success: "#22C55E", warning: "#F59E0B", border: "#E2E8F0",
-  text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#F8FAFC",
+  success: "var(--success)", warning: "var(--warning)", border: "var(--border)",
+  text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--background)",
 };
 
 const statusOptions = ["present", "absent", "late", "halfday", "leave"].map((s) => ({
@@ -137,7 +137,7 @@ const BulkAttendanceTable = ({
                         style={{ width: 105 }}
                         value={checkOuts[record.userId] || null}
                         onChange={(v) => onCheckOutChange?.(record.userId, v)}
-                        suffixIcon={<LogoutOutlined style={{ color: "#EF4444", fontSize: 11 }} />}
+                        suffixIcon={<LogoutOutlined style={{ color: "var(--danger)", fontSize: 11 }} />}
                       />
                     ) : (
                       <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>

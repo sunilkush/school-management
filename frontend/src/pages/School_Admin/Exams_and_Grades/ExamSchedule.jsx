@@ -361,9 +361,9 @@ const ExamSchedule = () => {
         <div className="stat-grid" style={statGrid(160)}>
           {[
             { key: "total", title: "Total Exams", value: stats.total, color: "var(--primary)", icon: <AppstoreOutlined /> },
-            { key: "upcoming", title: "Upcoming", value: stats.upcoming, color: "#2563EB", icon: <CalendarOutlined /> },
-            { key: "today", title: "Today", value: stats.today, color: "#F59E0B", icon: <ClockCircleOutlined /> },
-            { key: "completed", title: "Completed", value: stats.completed, color: "#22C55E", icon: <CheckCircleOutlined /> },
+            { key: "upcoming", title: "Upcoming", value: stats.upcoming, color: "var(--primary)", icon: <CalendarOutlined /> },
+            { key: "today", title: "Today", value: stats.today, color: "var(--warning)", icon: <ClockCircleOutlined /> },
+            { key: "completed", title: "Completed", value: stats.completed, color: "var(--success)", icon: <CheckCircleOutlined /> },
           ].map((item) => (
             <div key={item.key} style={statCard({ color: item.color })}>
               <div>

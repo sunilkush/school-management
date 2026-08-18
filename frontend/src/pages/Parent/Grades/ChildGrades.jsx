@@ -13,7 +13,7 @@ import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#14B8A6", "#22C55E", "#EF4444", "#F59E0B"];
+const STAT_COLORS = ["var(--accent)", "var(--success)", "var(--danger)", "var(--warning)"];
 
 const ChildGrades = () => {
   const dispatch = useDispatch();
@@ -127,7 +127,7 @@ const ChildGrades = () => {
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
                     <Tooltip formatter={(v) => [`${v}%`, "Score"]} />
                     <Legend />
-                    <Bar dataKey="percentage" name="Score %" fill="#14B8A6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="percentage" name="Score %" fill="var(--accent)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -161,11 +161,11 @@ const ChildGrades = () => {
                 label: (
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 600 }}>{result.examId?.title || "Exam"}</span>
-                    <span style={pill(result.resultStatus === "PASS" ? "#22C55E" : "#EF4444", result.resultStatus === "PASS" ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
+                    <span style={pill(result.resultStatus === "PASS" ? "var(--success)" : "var(--danger)", result.resultStatus === "PASS" ? "rgba(var(--success-rgb), 0.2)" : "rgba(var(--danger-rgb), 0.2)")}>
                       {result.resultStatus}
                     </span>
-                    <span style={pill("#14B8A6", "rgba(20,184,166,0.2)")}>{result.percentage}%</span>
-                    <span style={pill("#2563EB", "#e0f2fe")}>Grade {result.grade}</span>
+                    <span style={pill("var(--accent)", "rgba(var(--accent-rgb), 0.2)")}>{result.percentage}%</span>
+                    <span style={pill("var(--primary)", "rgba(var(--primary-rgb), 0.2)")}>Grade {result.grade}</span>
                   </div>
                 ),
                 children: (

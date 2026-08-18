@@ -49,11 +49,11 @@ const TABLE_CLS = "analytics-tbl";
 const MONTHS    = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const PIE_COLORS = {
-  present: "#22C55E",
-  absent:  "#EF4444",
-  late:    "#F59E0B",
-  halfday: "#F59E0B",
-  leave:   "#0891b2",
+  present: "var(--success)",
+  absent:  "var(--danger)",
+  late:    "var(--warning)",
+  halfday: "var(--warning)",
+  leave:   "var(--cyan)",
 };
 
 const AttendanceAnalytics = () => {
@@ -202,7 +202,7 @@ const AttendanceAnalytics = () => {
           <Progress
             percent={r.rate}
             size="small"
-            strokeColor={r.rate < 50 ? "#EF4444" : "#F59E0B"}
+            strokeColor={r.rate < 50 ? "var(--danger)" : "var(--warning)"}
             trailColor="var(--border-muted)"
             showInfo={false}
             style={{ flex: 1 }}
@@ -211,7 +211,7 @@ const AttendanceAnalytics = () => {
             style={{
               fontWeight: 700,
               fontSize: 12,
-              color: r.rate < 50 ? "#EF4444" : "#F59E0B",
+              color: r.rate < 50 ? "var(--danger)" : "var(--warning)",
               minWidth: 36,
             }}
           >
@@ -307,6 +307,8 @@ const AttendanceAnalytics = () => {
 
       <Spin spinning={reportLoading}>
         {/* ── Summary stat cards ── */}
+        {/* `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js),
+            which builds its background as `${color}22` — breaks with a var() string. */}
         <div style={statGrid(120)}>
           {[
             { key: "present",  label: "Present",   color: "#22C55E" },
@@ -463,7 +465,7 @@ const AttendanceAnalytics = () => {
                     type="monotone"
                     dataKey="present"
                     name="Present"
-                    stroke="#22C55E"
+                    stroke="var(--success)"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -471,7 +473,7 @@ const AttendanceAnalytics = () => {
                     type="monotone"
                     dataKey="absent"
                     name="Absent"
-                    stroke="#EF4444"
+                    stroke="var(--danger)"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -479,7 +481,7 @@ const AttendanceAnalytics = () => {
                     type="monotone"
                     dataKey="late"
                     name="Late"
-                    stroke="#F59E0B"
+                    stroke="var(--warning)"
                     strokeWidth={2}
                     dot={false}
                     strokeDasharray="4 2"
@@ -535,7 +537,7 @@ const AttendanceAnalytics = () => {
                       {pieData.map((entry) => (
                         <Cell
                           key={entry.key}
-                          fill={PIE_COLORS[entry.key] || "#94A3B8"}
+                          fill={PIE_COLORS[entry.key] || "var(--text-muted)"}
                         />
                       ))}
                     </Pie>
@@ -668,7 +670,7 @@ const AttendanceAnalytics = () => {
                   dataKey="rate"
                   name="Attendance %"
                   radius={[0, 4, 4, 0]}
-                  fill="#14B8A6"
+                  fill="var(--accent)"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -693,7 +695,7 @@ const AttendanceAnalytics = () => {
               gap: 8,
             }}
           >
-            <WarningOutlined style={{ color: "#F59E0B" }} />
+            <WarningOutlined style={{ color: "var(--warning)" }} />
             <span
               style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}
             >
@@ -704,11 +706,11 @@ const AttendanceAnalytics = () => {
                 marginLeft: 8,
                 fontSize: 12,
                 padding: "1px 8px",
-                background: "#EF444415",
-                color: "#EF4444",
+                background: "rgba(var(--danger-rgb), 0.08)",
+                color: "var(--danger)",
                 borderRadius: 99,
                 fontWeight: 600,
-                border: "1px solid #EF444425",
+                border: "1px solid rgba(var(--danger-rgb), 0.15)",
               }}
             >
               {chronicAbsentees.length}

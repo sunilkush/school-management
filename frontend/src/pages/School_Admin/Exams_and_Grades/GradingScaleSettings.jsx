@@ -4,6 +4,9 @@ import { Button, Input, InputNumber, Spin, message, Tooltip } from "antd";
 import { PlusOutlined, DeleteOutlined, SaveOutlined, ReloadOutlined, TrophyOutlined } from "@ant-design/icons";
 import { fetchGradingScale, updateGradingScale } from "../../../features/gradingScaleSlice";
 import PageHeader from "../../../components/layout/PageHeader";
+// NOTE: `pill()`'s `color` argument (used at each call site below) is baked into its
+// border as `1px solid ${color}25` — a raw-hex alpha-suffix trick that breaks with a
+// var() string. That helper is outside this task's scope, so those args stay hex.
 import { pageWrapper, sectionPanel, pill } from "../../../styles/pageStyles";
 
 let rowKeySeq = 0;

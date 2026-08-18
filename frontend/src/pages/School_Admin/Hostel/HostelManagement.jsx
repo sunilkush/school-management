@@ -15,25 +15,20 @@ import {
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
+import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
+// Shared design tokens (frontend/src/index.css) — replaces a local hardcoded
+// hex palette that never adapted to dark mode.
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  purple: "#7C3AED", purpleLight: "#F5F3FF",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  purple: "var(--purple)", purpleLight: "rgba(var(--purple-rgb), 0.08)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
 };
-
-const AVATAR_COLORS = [
-  `linear-gradient(135deg, ${C.primary}, ${C.accent})`,
-  `linear-gradient(135deg, ${C.purple}, #0EA5E9)`,
-  `linear-gradient(135deg, #F97316, ${C.warning})`,
-  `linear-gradient(135deg, ${C.success}, ${C.accent})`,
-  `linear-gradient(135deg, #E11D48, #F97316)`,
-];
 
 const getInitials = (name = "") => {
   const parts = name.trim().split(/\s+/);
@@ -62,8 +57,8 @@ const OccupancyBar = ({ occupied, capacity }) => {
         <span style={{
           padding: "2px 9px", borderRadius: 20, fontSize: 11, fontWeight: 700,
           background: isFull ? C.dangerLight : C.successLight,
-          color: isFull ? C.danger : "#15803D",
-          border: `1px solid ${isFull ? "#FECACA" : "#86EFAC"}`,
+          color: isFull ? C.danger : "var(--success-hover)",
+          border: `1px solid ${isFull ? "rgba(var(--danger-rgb), 0.35)" : "rgba(var(--success-rgb), 0.35)"}`,
         }}>
           {occupied}/{capacity}
         </span>
@@ -244,7 +239,7 @@ const HostelManagement = () => {
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           padding: "3px 11px", borderRadius: 20,
-          background: "#F8FAFC", border: "1px solid " + C.border,
+          background: "var(--background)", border: "1px solid " + C.border,
           fontSize: 12, fontWeight: 700, color: C.textSub,
         }}>
           <TeamOutlined style={{ fontSize: 10 }} />
@@ -277,11 +272,11 @@ const HostelManagement = () => {
                 <div key={s._id || i} style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "3px 10px 3px 4px", borderRadius: 20,
-                  background: "#F8FAFC", border: "1px solid " + C.border,
+                  background: "var(--background)", border: "1px solid " + C.border,
                 }}>
                   <div style={{
                     width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-                    background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                    background: CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length],
                     color: "#fff", fontSize: 8, fontWeight: 800,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
@@ -393,9 +388,12 @@ const HostelManagement = () => {
       {/* Stats */}
       <div style={{ ...statGrid(160), margin: "20px 0 20px" }}>
         {[
-          { icon: <HomeOutlined />,   label: "Total Rooms",       value: stats.totalRooms,    color: C.primary },
-          { icon: <TeamOutlined />,   label: "Students Assigned", value: stats.totalOccupied,  color: C.warning },
-          { icon: <BankOutlined />,   label: "Beds Available",    value: stats.totalAvailable, color: C.success },
+          // Raw hex here (not C.primary/etc): feeds the shared iconWell() helper
+          // (frontend/src/styles/pageStyles.js), which builds its background as
+          // `${color}22` — breaks with a var() string.
+          { icon: <HomeOutlined />,   label: "Total Rooms",       value: stats.totalRooms,    color: "#2563EB" },
+          { icon: <TeamOutlined />,   label: "Students Assigned", value: stats.totalOccupied,  color: "#F59E0B" },
+          { icon: <BankOutlined />,   label: "Beds Available",    value: stats.totalAvailable, color: "#22C55E" },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14,

@@ -9,23 +9,23 @@ const { Text } = Typography;
 /* ─────────────────────────────────────────
    Design tokens — mirrors Sidebar.jsx
 ───────────────────────────────────────── */
-const tokens = (isDark) => ({
+const tokens = () => ({
   bg: "transparent",
-  accent: isDark ? "#a78bfa" : "#7c3aed",
-  accentBg: isDark ? "rgba(167,139,250,0.10)" : "rgba(124,58,237,0.08)",
-  accentBgHover: isDark ? "rgba(167,139,250,0.06)" : "rgba(124,58,237,0.04)",
-  textPrimary: isDark ? "#e2e8f0" : "#0f172a",
-  textSecondary: isDark ? "#64748b" : "#94a3b8",
-  subItemIndent: isDark ? "rgba(167,139,250,0.18)" : "rgba(124,58,237,0.15)",
-  skeletonBase: isDark ? "#1e293b" : "#f1f5f9",
+  accent: "var(--purple)",
+  accentBg: "rgba(var(--purple-rgb), 0.08)",
+  accentBgHover: "rgba(var(--purple-rgb), 0.04)",
+  textPrimary: "var(--text)",
+  textSecondary: "var(--text-muted)",
+  subItemIndent: "rgba(var(--purple-rgb), 0.15)",
+  skeletonBase: "var(--surface-soft)",
 });
 
 /* ─────────────────────────────────────────
    Skeleton loader — shown while the config
    module is being lazy-loaded.
 ───────────────────────────────────────── */
-const MenuSkeleton = ({ isDark }) => {
-  const t = tokens(isDark);
+const MenuSkeleton = () => {
+  const t = tokens();
   const rows = [1, 0.9, 0.95, 0.85, 0.9, 0.8];
   return (
     <div style={{ padding: "8px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -55,8 +55,8 @@ const MenuSkeleton = ({ isDark }) => {
 /* ─────────────────────────────────────────
    Empty state — no menu items for this role
 ───────────────────────────────────────── */
-const EmptyMenuState = ({ isDark }) => {
-  const t = tokens(isDark);
+const EmptyMenuState = () => {
+  const t = tokens();
   return (
     <div
       style={{
@@ -118,7 +118,7 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isDark: isDarkMode } = useTheme();
-  const t = tokens(isDarkMode);
+  const t = tokens();
 
   const [sidebarConfig, setSidebarConfig] = useState(null);
   const [openKeys, setOpenKeys] = useState([]);
@@ -210,8 +210,8 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
   const selectedKey = location.pathname.replace("/dashboard/", "");
 
   /* ── Render ── */
-  if (!sidebarConfig) return <MenuSkeleton isDark={isDarkMode} />;
-  if (antMenuItems.length === 0) return <EmptyMenuState isDark={isDarkMode} />;
+  if (!sidebarConfig) return <MenuSkeleton />;
+  if (antMenuItems.length === 0) return <EmptyMenuState />;
 
   return (
     <>

@@ -48,8 +48,8 @@ const { Option } = Select;
 /* ─── Status Badge ─── */
 function StatusBadge({ isActive }) {
   return (
-    <span style={pill(isActive ? "#16A34A" : "#DC2626", isActive ? "rgba(220,252,231,0.4)" : "rgba(254,226,226,0.4)")}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "#22C55E" : "#EF4444", display: "inline-block", marginRight: 5, verticalAlign: "middle" }} />
+    <span style={pill(isActive ? "var(--success)" : "var(--danger-hover)", isActive ? "rgba(220,252,231,0.4)" : "rgba(254,226,226,0.4)")}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "var(--success)" : "var(--danger)", display: "inline-block", marginRight: 5, verticalAlign: "middle" }} />
       {isActive ? "Active" : "Inactive"}
     </span>
   );
@@ -72,7 +72,7 @@ function StatCard({ label, value, icon, accentColor }) {
 function CodeChip({ code }) {
   if (!code) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
   return (
-    <span style={{ ...pill("#14B8A6", "rgba(20,184,166,0.12)"), fontFamily: "monospace", letterSpacing: 0.5, fontSize: 11 }}>
+    <span style={{ ...pill("var(--accent)", "rgba(20,184,166,0.12)"), fontFamily: "monospace", letterSpacing: 0.5, fontSize: 11 }}>
       {code}
     </span>
   );
@@ -186,7 +186,7 @@ const SchoolBoards = () => {
       dataIndex: "name",
       render: (name) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={iconWell("#14B8A6", 30)}>
+          <div style={iconWell("var(--accent)", 30)}>
             <BookOutlined style={{ fontSize: 14 }} />
           </div>
           <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{name}</span>
@@ -260,10 +260,10 @@ const SchoolBoards = () => {
 
       {/* ── Stats ── */}
       <div style={{ ...statGrid(180), marginTop: 20 }}>
-        <StatCard label="Total Boards"    value={totalBoards}    icon={<ApartmentOutlined />}   accentColor="#14B8A6" />
-        <StatCard label="Active Boards"   value={activeBoards}   icon={<CheckCircleOutlined />} accentColor="#22C55E" />
-        <StatCard label="Inactive Boards" value={inactiveBoards} icon={<StopOutlined />}        accentColor="#EF4444" />
-        <StatCard label="Schools Covered" value={schools.length} icon={<BookOutlined />}        accentColor="#2563EB" />
+        <StatCard label="Total Boards"    value={totalBoards}    icon={<ApartmentOutlined />}   accentColor="var(--accent)" />
+        <StatCard label="Active Boards"   value={activeBoards}   icon={<CheckCircleOutlined />} accentColor="var(--success)" />
+        <StatCard label="Inactive Boards" value={inactiveBoards} icon={<StopOutlined />}        accentColor="var(--danger)" />
+        <StatCard label="Schools Covered" value={schools.length} icon={<BookOutlined />}        accentColor="var(--primary)" />
       </div>
 
       <style>{tableHeadCss("boards-tbl")}</style>
@@ -364,7 +364,7 @@ const SchoolBoards = () => {
             }}>
               <Checkbox />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#22C55E" }}>Mark as Active</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--success)" }}>Mark as Active</div>
                 <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Active boards are visible to schools</div>
               </div>
             </div>

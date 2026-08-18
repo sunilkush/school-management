@@ -5,10 +5,10 @@ import dayjs from "dayjs";
 import { DEFAULT_PAYROLL_SETTINGS, estimatePayrollDeductions, formatCurrencyINR } from "../../utils/payroll";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  success: "#22C55E", successLight: "#DCFCE7",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)", surfaceSoft: "var(--background)",
 };
 
 const StatusBadge = ({ status }) => {
@@ -17,8 +17,8 @@ const StatusBadge = ({ status }) => {
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
       padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-      background: active ? C.successLight : "#F1F5F9",
-      color: active ? "#15803D" : C.textSub,
+      background: active ? C.successLight : "var(--surface-soft)",
+      color: active ? "var(--success-hover)" : C.textSub,
       border: `1px solid ${active ? "#86EFAC" : C.border}`,
     }}>
       {active
@@ -50,7 +50,7 @@ const SalaryStructureTable = ({ data, loading, onEdit, settings }) => {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
               width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-              background: `linear-gradient(135deg, ${C.primary}, #14B8A6)`,
+              background: `linear-gradient(135deg, ${C.primary}, var(--accent))`,
               color: "#fff", fontSize: 12, fontWeight: 800,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
@@ -78,7 +78,7 @@ const SalaryStructureTable = ({ data, loading, onEdit, settings }) => {
         const { total } = estimatePayrollDeductions(r, effectiveSettings);
         return (
           <div>
-            <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "#EF4444" }}>
+            <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "var(--danger)" }}>
               {formatCurrencyINR(total)}
             </div>
             <div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>

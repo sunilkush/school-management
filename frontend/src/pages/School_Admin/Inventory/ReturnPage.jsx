@@ -7,17 +7,15 @@ import {
 } from "@ant-design/icons";
 import { fetchStockIssues, processReturn } from "../../../features/stockIssueSlice";
 import {
-  toolbarRow, tableContainer, tableHeadCss,
+  tableContainer, tableHeadCss,
   statGrid, iconWell, modalTitle, pill,
 } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
 import dayjs from "dayjs";
 
 const { Option } = Select;
 
 export default function ReturnPage() {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const { issues, loading, actionLoading } = useSelector((s) => s.stockIssue);
   const [returnModal, setReturnModal] = useState(null);
   const [form] = Form.useForm();
@@ -30,6 +28,9 @@ export default function ReturnPage() {
     (i) => i.status === "returned" && i.returnDate && dayjs(i.returnDate).isSame(dayjs(), "day")
   ).length;
 
+  // `color` feeds the shared iconWell()/pill() helpers (frontend/src/styles/pageStyles.js),
+  // which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
+  // so these stay hex.
   const KPI = [
     { label: "Pending Returns",  value: returnable.length, color: "#1677ff", icon: <ImportOutlined /> },
     { label: "Overdue",          value: overdueCount,       color: "#EF4444", icon: <WarningOutlined /> },
@@ -78,7 +79,7 @@ export default function ReturnPage() {
       title: "Due Date", key: "due", responsive: ["md"],
       render: (_, r) => r.expectedReturnDate
         ? (
-          <span style={{ fontSize: 12, color: r.isOverdue ? "#EF4444" : "inherit", fontWeight: r.isOverdue ? 700 : 400 }}>
+          <span style={{ fontSize: 12, color: r.isOverdue ? "var(--danger)" : "inherit", fontWeight: r.isOverdue ? 700 : 400 }}>
             {r.isOverdue && <WarningOutlined style={{ marginRight: 4 }} />}
             {dayjs(r.expectedReturnDate).format("DD MMM YYYY")}
           </span>
@@ -175,7 +176,7 @@ export default function ReturnPage() {
               ))}
               <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Pending</span>
-                <span style={{ fontSize: 15, fontWeight: 800, color: "#1677ff" }}>{returnModal.quantity - (returnModal.returnedQuantity || 0)} {returnModal.unit}</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: "var(--primary)" }}>{returnModal.quantity - (returnModal.returnedQuantity || 0)} {returnModal.unit}</span>
               </div>
             </div>
 

@@ -12,30 +12,49 @@ import { fetchMonthlyAttendance } from "../../../features/attendanceSlice";
 import { fetchAssignedClasses }   from "../../../features/classSlice";
 import PageHeader                 from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles";
+import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const TABLE_CLS = "teacher-monthly-tbl";
 
-/* ── theme ── */
+/* ── theme (shared design tokens — see index.css) ── */
 const C = {
-  primary:      "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  success:      "#22C55E", successLight: "#DCFCE7",
-  warning:      "#F59E0B", warningLight: "#FEF3C7",
-  danger:       "#EF4444", dangerLight:  "#FEE2E2",
-  purple:       "#8B5CF6", purpleLight:  "#EDE9FE",
-  cyan:         "#06B6D4", cyanLight:    "#CFFAFE",
-  accent:       "#14B8A6", accentLight:  "#CCFBF1",
-  border:       "#E2E8F0", text:         "#0F172A",
-  textSub:      "#64748B", textMuted:    "#94A3B8",
-  surface:      "#FFFFFF", surfaceSoft:  "#F8FAFC",
+  primary:      "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  success:      "var(--success)", successLight: "var(--success-light)",
+  warning:      "var(--warning)", warningLight: "var(--warning-light)",
+  danger:       "var(--danger)",  dangerLight:  "var(--danger-light)",
+  purple:       "var(--purple)",  purpleLight:  "rgba(var(--purple-rgb),0.12)",
+  cyan:         "var(--cyan)",    cyanLight:    "rgba(6,182,212,0.15)",
+  accent:       "var(--accent)",  accentLight:  "var(--accent-light)",
+  border:       "var(--border)",  text:         "var(--text)",
+  textSub:      "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface:      "var(--surface)", surfaceSoft:  "var(--surface-soft)",
 };
+
+// RGB triples for every token above (+ the shared categorical palette) keyed by their
+// var(--x) string. Used by tint() to build alpha-tinted backgrounds/borders from a CSS
+// custom property — the old `${color}NN` hex-alpha-suffix concatenation used throughout
+// this file doesn't work once these are var() values, so we go through rgba() instead.
+const RGB = {
+  "var(--primary)": "var(--primary-rgb)",
+  "var(--accent)":  "var(--accent-rgb)",
+  "var(--purple)":  "var(--purple-rgb)",
+  "var(--success)": "var(--success-rgb)",
+  "var(--warning)": "var(--warning-rgb)",
+  "var(--danger)":  "var(--danger-rgb)",
+  "var(--pink)":    "236,72,153",
+  "var(--cyan)":    "6,182,212",
+  "var(--info)":    "59,130,246",
+  "var(--orange)":  "249,115,22",
+};
+const tint = (color, alpha) => `rgba(${RGB[color] || "100,116,139"}, ${alpha})`;
 
 /* ── status config ── */
 const STATUS = {
-  present: { color: C.success, bg: C.successLight, border: "#86EFAC", label: "Present",  short: "P"  },
-  absent:  { color: C.danger,  bg: C.dangerLight,  border: "#FCA5A5", label: "Absent",   short: "A"  },
-  late:    { color: C.warning, bg: C.warningLight,  border: "#FCD34D", label: "Late",     short: "L"  },
-  halfday: { color: C.purple,  bg: C.purpleLight,  border: "#C4B5FD", label: "Half Day", short: "H"  },
-  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "#67E8F9", label: "On Leave", short: "Lv" },
+  present: { color: C.success, bg: C.successLight, border: "var(--success-light)", label: "Present",  short: "P"  },
+  absent:  { color: C.danger,  bg: C.dangerLight,  border: "var(--danger-light)", label: "Absent",   short: "A"  },
+  late:    { color: C.warning, bg: C.warningLight,  border: "var(--warning-light)", label: "Late",     short: "L"  },
+  halfday: { color: C.purple,  bg: C.purpleLight,  border: "rgba(var(--purple-rgb),0.35)", label: "Half Day", short: "H"  },
+  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "rgba(6,182,212,0.35)", label: "On Leave", short: "Lv" },
 };
 
 /* ── helpers ── */
@@ -47,30 +66,26 @@ const FL = ({ children }) => (
 
 const pctColor = (n) => n >= 90 ? C.success : n >= 75 ? C.warning : C.danger;
 const pctBg    = (n) => n >= 90 ? C.successLight : n >= 75 ? C.warningLight : C.dangerLight;
-const pctBdr   = (n) => n >= 90 ? "#86EFAC" : n >= 75 ? "#FCD34D" : "#FCA5A5";
+const pctBdr   = (n) => n >= 90 ? "var(--success-light)" : n >= 75 ? "var(--warning-light)" : "var(--danger-light)";
 
+// Per-student avatar color, sourced from the shared categorical palette (see
+// utils/colorPalette.js) instead of a locally-duplicated array, so avatars use the
+// same color sequence as every other page.
 const avatarColor = (name = "") => {
-  const PALETTE = [
-    { bg: C.primaryLighter, color: C.primary },
-    { bg: C.accentLight,    color: C.accent  },
-    { bg: C.successLight,   color: C.success },
-    { bg: C.purpleLight,    color: C.purple  },
-    { bg: C.warningLight,   color: C.warning },
-    { bg: C.cyanLight,      color: C.cyan    },
-  ];
-  return PALETTE[(name.charCodeAt(0) || 65) % PALETTE.length];
+  const color = categoricalColorFor(name);
+  return { bg: tint(color, 0.15), color };
 };
 
 /* ── Stat Card ── */
 const StatCard = ({ label, value, sub, color, bg, icon }) => (
   <div style={{
     background: bg, borderRadius: 14, padding: "16px 18px",
-    border: `1px solid ${color}30`, display: "flex", alignItems: "center", gap: 12,
+    border: `1px solid ${tint(color, 0.19)}`, display: "flex", alignItems: "center", gap: 12,
     flex: 1, minWidth: 120, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
   }}>
     <div style={{
       width: 40, height: 40, borderRadius: 11, flexShrink: 0,
-      background: color + "22", display: "flex", alignItems: "center",
+      background: tint(color, 0.13), display: "flex", alignItems: "center",
       justifyContent: "center", fontSize: 18, color,
     }}>
       {icon}
@@ -366,13 +381,13 @@ const MonthlyAttendanceReport = () => {
         {!loading && classSections.length === 0 && (
           <div style={{
             marginTop: 14, padding: "12px 16px", borderRadius: 10,
-            background: C.warningLight, border: `1px solid #FCD34D`,
+            background: C.warningLight, border: `1px solid var(--warning-light)`,
             display: "flex", alignItems: "flex-start", gap: 10,
           }}>
             <WarningOutlined style={{ color: C.warning, fontSize: 16, marginTop: 1 }} />
             <div>
-              <div style={{ fontWeight: 700, color: "#92400E", fontSize: 13 }}>No assigned classes found</div>
-              <div style={{ fontSize: 12, color: "#A16207", marginTop: 2 }}>
+              <div style={{ fontWeight: 700, color: "var(--warning-hover)", fontSize: 13 }}>No assigned classes found</div>
+              <div style={{ fontSize: 12, color: "var(--warning-hover)", marginTop: 2 }}>
                 You have not been assigned any class/section yet. Please contact the admin to get classes assigned.
               </div>
             </div>
@@ -495,8 +510,8 @@ const MonthlyAttendanceReport = () => {
                   ].map(({ label, color, count }) => (
                     <span key={label} style={{
                       fontSize: 11, padding: "2px 8px", borderRadius: 99,
-                      background: color + "18", color, fontWeight: 700,
-                      border: `1px solid ${color}30`,
+                      background: tint(color, 0.09), color, fontWeight: 700,
+                      border: `1px solid ${tint(color, 0.19)}`,
                     }}>
                       {label} · {count}
                     </span>
@@ -526,18 +541,18 @@ const MonthlyAttendanceReport = () => {
 
       {/* Row tint styles */}
       <style>{`
-        .${TABLE_CLS} .row-at-risk > td { background: ${C.danger}06 !important; }
-        .${TABLE_CLS} .row-at-risk:hover > td { background: ${C.danger}12 !important; }
-        .${TABLE_CLS} .row-excellent > td { background: ${C.success}06 !important; }
-        .${TABLE_CLS} .row-excellent:hover > td { background: ${C.success}12 !important; }
+        .${TABLE_CLS} .row-at-risk > td { background: ${tint(C.danger, 0.024)} !important; }
+        .${TABLE_CLS} .row-at-risk:hover > td { background: ${tint(C.danger, 0.07)} !important; }
+        .${TABLE_CLS} .row-excellent > td { background: ${tint(C.success, 0.024)} !important; }
+        .${TABLE_CLS} .row-excellent:hover > td { background: ${tint(C.success, 0.07)} !important; }
         .${TABLE_CLS} .ant-table-thead > tr > th { padding: 8px 6px !important; }
         .${TABLE_CLS} .ant-table-tbody > tr > td { padding: 8px 6px !important; }
         .${TABLE_CLS} .ant-table-fixed-left .ant-table-cell,
         .${TABLE_CLS} .ant-table-fixed-right .ant-table-cell { background: ${C.surface} !important; }
         .${TABLE_CLS} .ant-table-tbody > tr.row-at-risk .ant-table-cell-fix-left,
-        .${TABLE_CLS} .ant-table-tbody > tr.row-at-risk .ant-table-cell-fix-right { background: #fef2f2 !important; }
+        .${TABLE_CLS} .ant-table-tbody > tr.row-at-risk .ant-table-cell-fix-right { background: var(--danger-light) !important; }
         .${TABLE_CLS} .ant-table-tbody > tr.row-excellent .ant-table-cell-fix-left,
-        .${TABLE_CLS} .ant-table-tbody > tr.row-excellent .ant-table-cell-fix-right { background: #f0fdf4 !important; }
+        .${TABLE_CLS} .ant-table-tbody > tr.row-excellent .ant-table-cell-fix-right { background: var(--success-light) !important; }
       `}</style>
     </div>
   );

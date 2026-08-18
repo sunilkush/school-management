@@ -20,11 +20,11 @@ import AttendanceMap from "./AttendanceMap";
 const GPS_STATE = { IDLE: "idle", LOCATING: "locating", READY: "ready", ERROR: "error" };
 
 const STATUS_CFG = {
-  present: { color: "#22C55E", bg: "#DCFCE7", border: "#86EFAC", label: "Present"  },
-  absent:  { color: "#EF4444", bg: "#FEE2E2", border: "#FCA5A5", label: "Absent"   },
-  late:    { color: "#F59E0B", bg: "#FEF3C7", border: "#FCD34D", label: "Late"     },
-  halfday: { color: "#8B5CF6", bg: "#EDE9FE", border: "#C4B5FD", label: "Half Day" },
-  leave:   { color: "#06B6D4", bg: "#CFFAFE", border: "#67E8F9", label: "On Leave" },
+  present: { color: "var(--success)", bg: "var(--success-light)", border: "var(--success-light)", label: "Present"  },
+  absent:  { color: "var(--danger)", bg: "var(--danger-light)", border: "var(--danger-light)", label: "Absent"   },
+  late:    { color: "var(--warning)", bg: "var(--warning-light)", border: "var(--warning)", label: "Late"     },
+  halfday: { color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.12)", border: "rgba(var(--purple-rgb), 0.5)", label: "Half Day" },
+  leave:   { color: "var(--cyan)", bg: "#CFFAFE", border: "#67E8F9", label: "On Leave" }, // no cyan-tint tokens exist; left as-is
 };
 
 function fmtTime(d) { return d ? dayjs(d).format("hh:mm A") : null; }
@@ -45,7 +45,7 @@ const GpsPill = ({ gpsState, distanceInfo, gpsError, onEnable, onRetry }) => {
   if (gpsState === GPS_STATE.IDLE) return (
     <button onClick={onEnable} style={{
       ...base,
-      background: "#EFF6FF", color: "#2563EB", border: "1px solid #BFDBFE",
+      background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--primary-light)",
       cursor: "pointer",
     }}>
       <EnvironmentOutlined /> Enable GPS
@@ -58,20 +58,20 @@ const GpsPill = ({ gpsState, distanceInfo, gpsError, onEnable, onRetry }) => {
   );
   if (gpsState === GPS_STATE.ERROR) return (
     <Tooltip title={gpsError || "Unable to get location"}>
-      <span style={{ ...base, background: "#FEE2E2", color: "#EF4444", border: "1px solid #FCA5A5", cursor: "default" }}>
+      <span style={{ ...base, background: "var(--danger-light)", color: "var(--danger)", border: "1px solid var(--danger-light)", cursor: "default" }}>
         <WarningOutlined /> GPS Error ·&nbsp;
-        <button onClick={onRetry} style={{ color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontWeight: 800, padding: 0, fontSize: 12 }}>Retry</button>
+        <button onClick={onRetry} style={{ color: "var(--primary)", background: "none", border: "none", cursor: "pointer", fontWeight: 800, padding: 0, fontSize: 12 }}>Retry</button>
       </span>
     </Tooltip>
   );
   if (!distanceInfo) return (
-    <span style={{ ...base, background: "#DCFCE7", color: "#22C55E", border: "1px solid #86EFAC" }}>
+    <span style={{ ...base, background: "var(--success-light)", color: "var(--success)", border: "1px solid var(--success-light)" }}>
       <AimOutlined /> GPS Ready
     </span>
   );
   const ok = distanceInfo.inside;
   return (
-    <span style={{ ...base, background: ok ? "#DCFCE7" : "#FEF9C3", color: ok ? "#16A34A" : "#B45309", border: `1px solid ${ok ? "#86EFAC" : "#FDE68A"}` }}>
+    <span style={{ ...base, background: ok ? "var(--success-light)" : "var(--warning-light)", color: ok ? "var(--success)" : "var(--warning-hover)", border: `1px solid ${ok ? "var(--success-light)" : "var(--warning-light)"}` }}>
       {ok ? <AimOutlined /> : <WarningOutlined />}
       {ok ? "Inside Zone" : "Outside Zone"} · {distanceInfo.dist}m
     </span>
@@ -83,8 +83,8 @@ const DayTrack = ({ checkedIn, checkedOut, checkInAt, checkOutAt }) => {
   const step   = checkedOut ? 2 : checkedIn ? 1 : 0;
   const wh     = calcWorkHours(checkInAt, checkOutAt);
   const nodes  = [
-    { key: "in",  label: "Check In",  time: fmtTime(checkInAt),  color: "#22C55E", icon: <LoginOutlined  style={{ fontSize: 13 }} /> },
-    { key: "out", label: "Check Out", time: fmtTime(checkOutAt), color: "#EF4444", icon: <LogoutOutlined style={{ fontSize: 13 }} /> },
+    { key: "in",  label: "Check In",  time: fmtTime(checkInAt),  color: "var(--success)", icon: <LoginOutlined  style={{ fontSize: 13 }} /> },
+    { key: "out", label: "Check Out", time: fmtTime(checkOutAt), color: "var(--danger)", icon: <LogoutOutlined style={{ fontSize: 13 }} /> },
   ];
   return (
     <div style={{ padding: "2px 0 4px" }}>
@@ -110,13 +110,13 @@ const DayTrack = ({ checkedIn, checkedOut, checkInAt, checkOutAt }) => {
               </div>
             </div>
             {i < nodes.length - 1 && (
-              <div style={{ flex: 1, height: 3, marginTop: 16, background: step >= 2 ? "#22C55E" : "var(--border-muted)", transition: "background 0.4s" }} />
+              <div style={{ flex: 1, height: 3, marginTop: 16, background: step >= 2 ? "var(--success)" : "var(--border-muted)", transition: "background 0.4s" }} />
             )}
           </React.Fragment>
         ))}
       </div>
       {wh && (
-        <div style={{ textAlign: "center", fontSize: 11, color: "#16A34A", fontWeight: 700, marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+        <div style={{ textAlign: "center", fontSize: 11, color: "var(--success)", fontWeight: 700, marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
           <ClockCircleOutlined /> {wh} worked
         </div>
       )}
@@ -127,7 +127,7 @@ const DayTrack = ({ checkedIn, checkedOut, checkInAt, checkOutAt }) => {
 /* ─── Punch Button ──────────────────────────────────────────── */
 const PunchBtn = ({ checkedIn, checkedOut, canAct, loading, onPunch }) => {
   const done = checkedIn && checkedOut;
-  const bg   = done ? "var(--surface-soft)" : checkedIn ? "#EF4444" : "#22C55E";
+  const bg   = done ? "var(--surface-soft)" : checkedIn ? "var(--danger)" : "var(--success)";
   const label = done ? "Done for Today" : checkedIn ? "Punch Out" : "Punch In";
   const Icon  = done ? CheckCircleOutlined : checkedIn ? LogoutOutlined : LoginOutlined;
   const off   = done || !canAct;
@@ -138,7 +138,7 @@ const PunchBtn = ({ checkedIn, checkedOut, canAct, loading, onPunch }) => {
         {!off && (
           <span style={{
             position: "absolute", inset: -10, borderRadius: "50%",
-            background: `${bg}28`,
+            background: `color-mix(in srgb, ${bg} 16%, transparent)`,
             animation: "att-pulse 2s ease-in-out infinite",
             pointerEvents: "none",
           }} />
@@ -153,7 +153,7 @@ const PunchBtn = ({ checkedIn, checkedOut, canAct, loading, onPunch }) => {
             color: off ? "var(--text-muted)" : "#fff",
             fontSize: 14, fontWeight: 800,
             cursor: off ? "not-allowed" : "pointer",
-            boxShadow: off ? "none" : `0 0 36px ${bg}44`,
+            boxShadow: off ? "none" : `0 0 36px color-mix(in srgb, ${bg} 27%, transparent)`,
             transition: "all 0.25s",
             display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 6,
@@ -361,7 +361,7 @@ const EmployeeSelfAttendance = () => {
             />
 
             {selfStatus?.gpsVerified && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 10, fontSize: 11, color: "#0F766E", fontWeight: 700, background: "#CCFBF1", borderRadius: 6, padding: "3px 8px" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 10, fontSize: 11, color: "var(--accent-hover)", fontWeight: 700, background: "var(--accent-light)", borderRadius: 6, padding: "3px 8px" }}>
                 <AimOutlined /> GPS Verified · {selfStatus.distanceFromSchool}m from school
               </div>
             )}
@@ -416,13 +416,13 @@ const EmployeeSelfAttendance = () => {
             {/* Distance bar — only when geofence is configured */}
             {gpsState === GPS_STATE.READY && distanceInfo && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 700, marginBottom: 4, color: distanceInfo.inside ? "#16A34A" : "#B45309" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 700, marginBottom: 4, color: distanceInfo.inside ? "var(--success)" : "var(--warning-hover)" }}>
                   <span>{distanceInfo.inside ? "✓ Within school zone" : "Move closer to school"}</span>
                   <span>{distanceInfo.dist}m / {distanceInfo.radius}m</span>
                 </div>
                 <Progress
                   percent={distanceInfo.pct}
-                  strokeColor={distanceInfo.inside ? "#22C55E" : "#F59E0B"}
+                  strokeColor={distanceInfo.inside ? "var(--success)" : "var(--warning)"}
                   trailColor="var(--border-muted)"
                   showInfo={false}
                   size={[null, 6]}
@@ -538,13 +538,13 @@ const EmployeeSelfAttendance = () => {
                           <span>→</span>
                           <LogoutOutlined style={{ fontSize: 10 }} />
                           <span>{outT || "—"}</span>
-                          {wh && <span style={{ color: "#22C55E", fontWeight: 700 }}>· {wh}</span>}
+                          {wh && <span style={{ color: "var(--success)", fontWeight: 700 }}>· {wh}</span>}
                         </div>
                       </div>
                       {/* GPS badge */}
                       {r.gpsVerified && (
                         <Tooltip title={`${r.distanceFromSchool}m from school`}>
-                          <AimOutlined style={{ color: "#14B8A6", fontSize: 13, flexShrink: 0 }} />
+                          <AimOutlined style={{ color: "var(--accent)", fontSize: 13, flexShrink: 0 }} />
                         </Tooltip>
                       )}
                     </div>

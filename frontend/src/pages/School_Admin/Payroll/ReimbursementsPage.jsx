@@ -22,28 +22,28 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  orange: "#F97316", orangeLight: "#FFF7ED",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  orange: "var(--orange)", orangeLight: "rgba(var(--warning-rgb), 0.08)",
 };
 
 const TYPE_CFG = {
   travel:   { label: "Travel",   icon: <CarOutlined />,         color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
   fuel:     { label: "Fuel",     icon: "⛽",                    color: C.orange,  bg: C.orangeLight,    border: "#FED7AA",     emoji: true },
   internet: { label: "Internet", icon: <WifiOutlined />,        color: C.accent,  bg: C.accentLight,    border: "#99F6E4" },
-  medical:  { label: "Medical",  icon: <MedicineBoxOutlined />, color: "#DC2626", bg: "#FEE2E2",        border: "#FCA5A5" },
-  food:     { label: "Food",     icon: <CoffeeOutlined />,      color: C.warning, bg: C.warningLight,   border: "#FDE68A" },
+  medical:  { label: "Medical",  icon: <MedicineBoxOutlined />, color: "var(--danger-hover)", bg: "var(--danger-light)", border: "var(--danger-light)" },
+  food:     { label: "Food",     icon: <CoffeeOutlined />,      color: C.warning, bg: C.warningLight,   border: "var(--warning-light)" },
   other:    { label: "Other",    icon: <RupeeIcon />,           color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)" },
 };
 
 const STATUS_CFG = {
-  pending_manager:  { label: "Pending Manager",  color: C.warning, bg: C.warningLight,   border: "#FDE68A" },
+  pending_manager:  { label: "Pending Manager",  color: C.warning, bg: C.warningLight,   border: "var(--warning-light)" },
   pending_finance:  { label: "Pending Finance",  color: C.orange,  bg: C.orangeLight,    border: "#FED7AA" },
-  approved:         { label: "Approved",         color: "#15803D", bg: C.successLight,   border: "#86EFAC" },
-  rejected:         { label: "Rejected",         color: "#991B1B", bg: C.dangerLight,    border: "#FCA5A5" },
+  approved:         { label: "Approved",         color: "var(--success-hover)", bg: C.successLight,   border: "var(--success-light)" },
+  rejected:         { label: "Rejected",         color: "#991B1B", bg: C.dangerLight,    border: "var(--danger-light)" },
   added_to_payroll: { label: "Added to Payroll", color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
 };
 
@@ -302,10 +302,10 @@ const ReimbursementsPage = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <FileTextOutlined />, label: "Total Claims",    value: stats.total,          color: C.primary },
-          { icon: <CarOutlined />,      label: "Pending",         value: stats.pending,        color: C.warning },
-          { icon: <CheckOutlined />,    label: "Approved",        value: stats.approved,       color: C.success },
-          { icon: <RupeeIcon />,        label: "Approved Amount", value: fmt(stats.totalAmt),  color: C.accent, small: true },
+          { icon: <FileTextOutlined />, label: "Total Claims",    value: stats.total,          color: "#2563EB" },
+          { icon: <CarOutlined />,      label: "Pending",         value: stats.pending,        color: "#F59E0B" },
+          { icon: <CheckOutlined />,    label: "Approved",        value: stats.approved,       color: "#22C55E" },
+          { icon: <RupeeIcon />,        label: "Approved Amount", value: fmt(stats.totalAmt),  color: "#14B8A6", small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: "var(--surface)", borderRadius: 14,

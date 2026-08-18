@@ -30,28 +30,28 @@ const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"];
 const CATEGORY_OPTIONS = ["General", "Technical", "Academic", "Finance", "Transport", "Hostel", "Library", "Other"];
 
 const STATUS_META = {
-  "Open":        { color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A", timeline: "orange",  icon: <ExclamationCircleOutlined /> },
-  "In Progress": { color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", timeline: "blue",    icon: <ClockCircleOutlined /> },
-  "Resolved":    { color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC", timeline: "green",   icon: <CheckCircleOutlined /> },
-  "Closed":      { color: "#94A3B8", bg: "#F8FAFC", border: "#E2E8F0", timeline: "gray",    icon: <MinusCircleOutlined /> },
+  "Open":        { color: "var(--warning)", bg: "var(--warning-light)", border: "var(--warning-light)", timeline: "orange",  icon: <ExclamationCircleOutlined /> },
+  "In Progress": { color: "var(--primary)", bg: "var(--primary-light)", border: "var(--primary-light)", timeline: "blue",    icon: <ClockCircleOutlined /> },
+  "Resolved":    { color: "var(--success)", bg: "var(--success-light)", border: "var(--success-light)", timeline: "green",   icon: <CheckCircleOutlined /> },
+  "Closed":      { color: "var(--text-muted)", bg: "var(--background)", border: "var(--border)", timeline: "gray",    icon: <MinusCircleOutlined /> },
 };
 
 const PRIORITY_META = {
-  "Low":    { color: "#64748B", bg: "#F1F5F9" },
-  "Medium": { color: "#D97706", bg: "#FEF3C7" },
-  "High":   { color: "#EA580C", bg: "#FFF7ED" },
-  "Urgent": { color: "#DC2626", bg: "#FEF2F2" },
+  "Low":    { color: "var(--text-secondary)", bg: "var(--surface-soft)" },
+  "Medium": { color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  "High":   { color: "var(--orange)", bg: "rgba(var(--warning-rgb), 0.08)" },
+  "Urgent": { color: "var(--danger-hover)", bg: "var(--danger-light)" },
 };
 
 const CATEGORY_META = {
-  General:   { icon: <QuestionCircleOutlined />, color: "#6366F1" },
-  Technical: { icon: <ToolOutlined />,           color: "#0EA5E9" },
-  Academic:  { icon: <BookOutlined />,            color: "#8B5CF6" },
-  Finance:   { icon: <DollarOutlined />,          color: "#16A34A" },
-  Transport: { icon: <CarOutlined />,             color: "#F59E0B" },
-  Hostel:    { icon: <HomeOutlined />,            color: "#EC4899" },
-  Library:   { icon: <ReadOutlined />,            color: "#14B8A6" },
-  Other:     { icon: <CustomerServiceOutlined />, color: "#94A3B8" },
+  General:   { icon: <QuestionCircleOutlined />, color: "var(--purple)" },
+  Technical: { icon: <ToolOutlined />,           color: "var(--info)" },
+  Academic:  { icon: <BookOutlined />,            color: "var(--purple)" },
+  Finance:   { icon: <DollarOutlined />,          color: "var(--success)" },
+  Transport: { icon: <CarOutlined />,             color: "var(--warning)" },
+  Hostel:    { icon: <HomeOutlined />,            color: "var(--pink)" },
+  Library:   { icon: <ReadOutlined />,            color: "var(--accent)" },
+  Other:     { icon: <CustomerServiceOutlined />, color: "var(--text-muted)" },
 };
 
 /* ─── Pill components ───────────────────────────────────────────── */
@@ -88,7 +88,7 @@ const CategoryChip = ({ category }) => {
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
       fontSize: 11, fontWeight: 600, color: m.color,
-      background: `${m.color}18`, border: `1px solid ${m.color}30`,
+      background: `color-mix(in srgb, ${m.color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${m.color} 19%, transparent)`,
       padding: "3px 10px", borderRadius: 99,
     }}>
       {m.icon} {category}
@@ -478,7 +478,7 @@ export default function SupportTicketsPage() {
         width={480}
         title={
           <Flex align="center" gap={10}>
-            <div style={iconWell(catMeta?.color || "#6366F1", 36)}>
+            <div style={iconWell(catMeta?.color || "var(--purple)", 36)}>
               {catMeta?.icon || <CustomerServiceOutlined />}
             </div>
             <div>
@@ -551,10 +551,10 @@ export default function SupportTicketsPage() {
 
             {/* Resolved info */}
             {detail.status === "Resolved" && detail.resolvedBy && (
-              <div style={{ background: "#F0FDF4", border: "1px solid #86EFAC", borderRadius: 10, padding: "10px 14px" }}>
+              <div style={{ background: "var(--success-light)", border: "1px solid var(--success-light)", borderRadius: 10, padding: "10px 14px" }}>
                 <Flex align="center" gap={6}>
-                  <CheckCircleOutlined style={{ color: "#16A34A" }} />
-                  <Text style={{ fontSize: 12, color: "#16A34A", fontWeight: 600 }}>
+                  <CheckCircleOutlined style={{ color: "var(--success)" }} />
+                  <Text style={{ fontSize: 12, color: "var(--success)", fontWeight: 600 }}>
                     Resolved by {detail.resolvedBy?.name || "Admin"} · {dayjs(detail.resolvedAt).format("DD MMM YYYY")}
                   </Text>
                 </Flex>
@@ -600,7 +600,7 @@ export default function SupportTicketsPage() {
             {/* Modal header */}
             <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid var(--border-muted)" }}>
               <Flex align="center" gap={12}>
-                <div style={iconWell("#2563EB", 38)}>
+                <div style={iconWell("var(--primary)", 38)}>
                   <PlusOutlined style={{ fontSize: 16 }} />
                 </div>
                 <div>
@@ -676,7 +676,7 @@ export default function SupportTicketsPage() {
           }}>
             <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid var(--border-muted)" }}>
               <Flex align="center" gap={12}>
-                <div style={iconWell("#7C3AED", 38)}>
+                <div style={iconWell("var(--purple)", 38)}>
                   <CustomerServiceOutlined style={{ fontSize: 16 }} />
                 </div>
                 <div>

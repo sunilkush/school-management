@@ -26,7 +26,7 @@ class ErrorBoundary extends React.Component {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f8fafc",
+          background: "var(--background)",
           padding: 24,
         }}
       >
@@ -37,8 +37,8 @@ class ErrorBoundary extends React.Component {
             background: "#fff",
             borderRadius: 16,
             padding: "48px 32px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-            border: "1px solid #e2e8f0",
+            boxShadow: "var(--shadow-strong)",
+            border: "1px solid var(--border)",
           }}
         >
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
@@ -46,7 +46,7 @@ class ErrorBoundary extends React.Component {
             style={{
               fontSize: 20,
               fontWeight: 700,
-              color: "#0f172a",
+              color: "var(--text)",
               marginBottom: 8,
             }}
           >
@@ -55,7 +55,7 @@ class ErrorBoundary extends React.Component {
           <p
             style={{
               fontSize: 14,
-              color: "#64748b",
+              color: "var(--text-secondary)",
               marginBottom: 24,
               lineHeight: 1.6,
             }}
@@ -66,7 +66,7 @@ class ErrorBoundary extends React.Component {
           <button
             onClick={() => window.location.reload()}
             style={{
-              background: "#7c3aed",
+              background: "var(--purple)",
               color: "#fff",
               border: "none",
               borderRadius: 10,

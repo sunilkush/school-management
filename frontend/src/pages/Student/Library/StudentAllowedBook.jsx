@@ -32,7 +32,7 @@ const StudentAllowedBook = () => {
       title: "Status",
       dataIndex: "status",
       render: (status) => (
-        <span style={pill(status === "Overdue" ? "#EF4444" : "#2563EB", status === "Overdue" ? "#fff1f2" : "#e0f2fe")}>
+        <span style={pill(status === "Overdue" ? "var(--danger)" : "var(--primary)", status === "Overdue" ? "var(--danger-light)" : "var(--primary-light)")}>
           {status}
         </span>
       ),
@@ -42,7 +42,7 @@ const StudentAllowedBook = () => {
       dataIndex: "fineAmount",
       render: (value) =>
         value > 0 ? (
-          <span style={pill("#EF4444", "#fff1f2")}>₹{value}</span>
+          <span style={pill("var(--danger)", "var(--danger-light)")}>₹{value}</span>
         ) : (
           <span style={{ color: "var(--text-muted)" }}>—</span>
         ),

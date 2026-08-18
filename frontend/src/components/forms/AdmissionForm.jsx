@@ -51,9 +51,9 @@ const CredentialBlock = ({ label, creds }) => {
     <div style={{
       marginBottom: 12, padding: "12px 14px",
       background: "rgba(124,58,237,0.06)",
-      borderRadius: 10, borderLeft: "3px solid #7c3aed",
+      borderRadius: 10, borderLeft: "3px solid var(--purple)",
     }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
         {label}
       </div>
       <div style={{ fontSize: 13, color: "#374151", marginBottom: 2 }}>
@@ -85,7 +85,7 @@ const InfoHint = ({ children }) => (
     border: "1px solid rgba(124,58,237,0.15)",
     borderRadius: 10, marginTop: 12,
   }}>
-    <InfoCircleOutlined style={{ color: "#7c3aed", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
+    <InfoCircleOutlined style={{ color: "var(--purple)", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
     <span style={{ fontSize: 13, color: "#5b21b6", lineHeight: 1.55 }}>{children}</span>
   </div>
 );
@@ -220,7 +220,7 @@ const AdmissionForm = ({ onClose }) => {
         const { credentials, enrollment } = res?.payload || {};
         if (credentials) {
           Modal.success({
-            title: <span style={{ fontSize: 17, fontWeight: 700, color: "#7c3aed" }}>Admission Successful</span>,
+            title: <span style={{ fontSize: 17, fontWeight: 700, color: "var(--purple)" }}>Admission Successful</span>,
             width: 480,
             icon: null,
             content: (
@@ -234,13 +234,13 @@ const AdmissionForm = ({ onClose }) => {
                     border: "1px solid rgba(22,163,74,0.2)",
                   }}>
                     <div style={{ flex: 1, textAlign: "center" }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: "#16A34A", textTransform: "uppercase", letterSpacing: "0.08em" }}>Roll Number</div>
-                      <div style={{ fontSize: 24, fontWeight: 800, color: "#15803D" }}>{enrollment.rollNumber ?? "—"}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--success)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Roll Number</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: "var(--success-hover)" }}>{enrollment.rollNumber ?? "—"}</div>
                     </div>
                     <div style={{ width: 1, background: "rgba(22,163,74,0.2)" }} />
                     <div style={{ flex: 1, textAlign: "center" }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: "#16A34A", textTransform: "uppercase", letterSpacing: "0.08em" }}>Reg. Number</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: "#15803D", marginTop: 4 }}>{enrollment.registrationNumber ?? "—"}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--success)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Reg. Number</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "var(--success-hover)", marginTop: 4 }}>{enrollment.registrationNumber ?? "—"}</div>
                     </div>
                   </div>
                 )}
@@ -284,17 +284,17 @@ const AdmissionForm = ({ onClose }) => {
         .adm-form .ant-input-number-input,
         .adm-form .ant-picker {
           border-radius: 8px !important;
-          border: 1.5px solid #e5e7eb !important;
+          border: 1.5px solid var(--border) !important;
           font-size: 13px !important;
           background: #fff !important;
-          color: #111827 !important;
+          color: var(--text) !important;
           transition: border-color 0.18s, box-shadow 0.18s !important;
           height: 38px !important;
         }
         .adm-form .ant-input:focus,
         .adm-form .ant-input-number:focus-within,
         .adm-form .ant-picker:focus-within {
-          border-color: #7c3aed !important;
+          border-color: var(--purple) !important;
           box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
         }
         .adm-form .ant-input:hover,
@@ -309,10 +309,10 @@ const AdmissionForm = ({ onClose }) => {
         }
         .adm-form .ant-select .ant-select-selector {
           border-radius: 8px !important;
-          border: 1.5px solid #e5e7eb !important;
+          border: 1.5px solid var(--border) !important;
           font-size: 13px !important;
           background: #fff !important;
-          color: #111827 !important;
+          color: var(--text) !important;
           height: 38px !important;
           align-items: center !important;
         }
@@ -320,7 +320,7 @@ const AdmissionForm = ({ onClose }) => {
           border-color: #a78bfa !important;
         }
         .adm-form .ant-select-focused .ant-select-selector {
-          border-color: #7c3aed !important;
+          border-color: var(--purple) !important;
           box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
         }
         .adm-form .ant-picker { width: 100% !important; }
@@ -330,22 +330,22 @@ const AdmissionForm = ({ onClose }) => {
           margin-top: 3px !important;
         }
         .adm-form .ant-input[disabled] {
-          background: #f5f3ff !important;
-          color: #7c3aed !important;
+          background: rgba(var(--purple-rgb), 0.08) !important;
+          color: var(--purple) !important;
           font-weight: 700 !important;
           border-color: #ddd6fe !important;
           cursor: default !important;
         }
         .adm-form .roll-preview-assigned .ant-input[disabled] {
-          background: #f0fdf4 !important;
-          color: #15803D !important;
+          background: var(--success-light) !important;
+          color: var(--success-hover) !important;
           border-color: #86efac !important;
           font-size: 15px !important;
         }
         .adm-form .roll-preview-placeholder .ant-input[disabled] {
-          background: #f8fafc !important;
-          color: #94a3b8 !important;
-          border-color: #e2e8f0 !important;
+          background: var(--background) !important;
+          color: var(--text-muted) !important;
+          border-color: var(--border) !important;
           font-weight: 400 !important;
           font-style: italic !important;
         }
@@ -381,38 +381,38 @@ const AdmissionForm = ({ onClose }) => {
           text-transform: uppercase;
         }
         .adm-tab.active .step-num {
-          background: #7c3aed;
+          background: var(--purple);
           color: #fff;
           box-shadow: 0 3px 10px rgba(124,58,237,0.4);
         }
-        .adm-tab.active .step-lbl { color: #7c3aed; }
+        .adm-tab.active .step-lbl { color: var(--purple); }
         .adm-tab.active::after {
           content: '';
           position: absolute;
           bottom: 0; left: 0; right: 0;
           height: 2px;
-          background: #7c3aed;
+          background: var(--purple);
           border-radius: 2px 2px 0 0;
         }
         .adm-tab.done .step-num {
-          background: #d1fae5;
-          color: #059669;
-          border: 2px solid #10b981;
+          background: var(--success-light);
+          color: var(--success-hover);
+          border: 2px solid var(--success);
         }
-        .adm-tab.done .step-lbl { color: #059669; }
+        .adm-tab.done .step-lbl { color: var(--success-hover); }
         .adm-tab.idle .step-num {
           background: #f3f4f6;
-          color: #9ca3af;
-          border: 1.5px solid #e5e7eb;
+          color: var(--text-muted);
+          border: 1.5px solid var(--border);
         }
-        .adm-tab.idle .step-lbl { color: #9ca3af; }
+        .adm-tab.idle .step-lbl { color: var(--text-muted); }
         .adm-connector {
           flex: 1; height: 1.5px;
-          background: #e5e7eb;
+          background: var(--border);
           margin-top: -10px;
           transition: background 0.3s;
         }
-        .adm-connector.done { background: #10b981; }
+        .adm-connector.done { background: var(--success); }
 
         /* Grid layouts */
         .adm-row {
@@ -438,7 +438,7 @@ const AdmissionForm = ({ onClose }) => {
 
       {/* ── Gradient Header ── */}
       <div style={{
-        background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)",
+        background: "linear-gradient(135deg, var(--purple) 0%, #4f46e5 100%)",
         padding: "20px 28px 18px",
         position: "relative",
         overflow: "hidden",
@@ -743,7 +743,7 @@ const AdmissionForm = ({ onClose }) => {
           {activeTab === "documents" && (
             <>
               <SectionHeading>Upload Documents</SectionHeading>
-              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
                 Each document is uploaded separately below · JPG, PNG, PDF, DOC, XLS · max {MAX_DOCUMENT_SIZE_KB}KB each
               </div>
 
@@ -777,8 +777,8 @@ const AdmissionForm = ({ onClose }) => {
                         {name ? (
                           <span style={{ fontSize: 12, color: "#374151" }}>
                             {name}{" "}
-                            <span style={{ color: "#9ca3af" }}>({(row.size / 1024).toFixed(1)} KB)</span>{" "}
-                            <span style={{ color: "#7c3aed", cursor: "pointer", fontWeight: 600 }}>Change</span>
+                            <span style={{ color: "var(--text-muted)" }}>({(row.size / 1024).toFixed(1)} KB)</span>{" "}
+                            <span style={{ color: "var(--purple)", cursor: "pointer", fontWeight: 600 }}>Change</span>
                           </span>
                         ) : (
                           <Button size="small" icon={<UploadOutlined />}>Choose File</Button>
@@ -792,7 +792,7 @@ const AdmissionForm = ({ onClose }) => {
                     width: 40,
                     render: (uid) => (
                       <DeleteOutlined
-                        style={{ color: "#ef4444", cursor: "pointer" }}
+                        style={{ color: "var(--danger)", cursor: "pointer" }}
                         onClick={() => handleDocumentRowRemove(uid)}
                       />
                     ),
@@ -833,7 +833,7 @@ const AdmissionForm = ({ onClose }) => {
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             padding: "0 20px", height: 38, borderRadius: 8,
-            border: "1.5px solid #e5e7eb",
+            border: "1.5px solid var(--border)",
             background: "#fff", color: "#374151",
             fontSize: 13, fontWeight: 600, cursor: currentIndex === 0 ? "not-allowed" : "pointer",
             opacity: currentIndex === 0 ? 0.4 : 1,
@@ -851,9 +851,9 @@ const AdmissionForm = ({ onClose }) => {
                 width:        i === currentIndex ? 24 : 7,
                 height:       7,
                 borderRadius: 4,
-                background:   i === currentIndex ? "#7c3aed"
-                            : i < currentIndex  ? "#10b981"
-                            : "#e5e7eb",
+                background:   i === currentIndex ? "var(--purple)"
+                            : i < currentIndex  ? "var(--success)"
+                            : "var(--border)",
                 transition: "all 0.25s",
               }}
             />
@@ -868,7 +868,7 @@ const AdmissionForm = ({ onClose }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "0 22px", height: 38, borderRadius: 8,
-              background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)",
+              background: "linear-gradient(135deg, var(--purple) 0%, #4f46e5 100%)",
               color: "#fff", border: "none",
               fontSize: 13, fontWeight: 600, cursor: "pointer",
               boxShadow: "0 4px 12px rgba(124,58,237,0.3)",
@@ -884,7 +884,7 @@ const AdmissionForm = ({ onClose }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "0 28px", height: 38, borderRadius: 8,
-              background: submitting ? "#d1fae5" : "linear-gradient(135deg, #10b981 0%, #0d9488 100%)",
+              background: submitting ? "var(--success-light)" : "linear-gradient(135deg, var(--success) 0%, #0d9488 100%)",
               color: "#fff", border: "none",
               fontSize: 13, fontWeight: 600,
               cursor: submitting ? "not-allowed" : "pointer",

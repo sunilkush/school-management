@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { Table, Tag } from "antd";
-import { useTheme } from "../../context/ThemeContext";
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -16,7 +15,6 @@ const STATUS_COLOR = { Open: "orange", "In Progress": "blue", Resolved: "green" 
 
 const ITSupportDashboard = () => {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const { tickets, loading } = useSelector((s) => s.supportTickets || { tickets: [], loading: false });
 
   useEffect(() => { dispatch(fetchTickets()); }, [dispatch]);
@@ -25,18 +23,18 @@ const ITSupportDashboard = () => {
   const resolved = tickets.filter((t) => t.status === "Resolved").length;
   const inProg   = tickets.filter((t) => t.status === "In Progress").length;
 
-  const card       = isDark ? "#141C2E" : "#FFFFFF";
-  const cardBorder = isDark ? "#1E2A3B" : "#E2E8F0";
-  const textPri    = isDark ? "#E8EDF7" : "#0F172A";
-  const textSec    = isDark ? "#64748B" : "#64748B";
-  const shadow     = isDark ? "0 2px 12px rgba(0,0,0,0.4)" : "0 2px 8px rgba(37,99,235,0.07)";
-  const rowHover   = isDark ? "#1E2A3B" : "#F4F7FF";
+  const card       = "var(--surface)";
+  const cardBorder = "var(--border)";
+  const textPri    = "var(--text-primary)";
+  const textSec    = "var(--text-secondary)";
+  const shadow     = "var(--shadow-soft)";
+  const rowHover   = "var(--surface-soft)";
 
   const kpis = [
-    { label: "Open Tickets",  value: open,            color: "#F59E0B", bg: "rgba(245,158,11,0.12)",  icon: <WarningOutlined />     },
-    { label: "In Progress",   value: inProg,          color: "#3B82F6", bg: "rgba(59,130,246,0.12)",  icon: <ClockCircleOutlined /> },
-    { label: "Resolved",      value: resolved,        color: "#10B981", bg: "rgba(16,185,129,0.12)",  icon: <CheckCircleOutlined /> },
-    { label: "Total Tickets", value: tickets.length,  color: "#6366F1", bg: "rgba(99,102,241,0.12)",  icon: <ToolOutlined />        },
+    { label: "Open Tickets",  value: open,            color: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.12)",  icon: <WarningOutlined />     },
+    { label: "In Progress",   value: inProg,          color: "var(--info)", bg: "rgba(59,130,246,0.12)",  icon: <ClockCircleOutlined /> },
+    { label: "Resolved",      value: resolved,        color: "var(--success)", bg: "rgba(var(--success-rgb), 0.12)",  icon: <CheckCircleOutlined /> },
+    { label: "Total Tickets", value: tickets.length,  color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.12)",  icon: <ToolOutlined />        },
   ];
 
   return (

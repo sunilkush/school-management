@@ -24,7 +24,7 @@ const StudentGrades = () => {
       title: "Result",
       key: "isPassed",
       render: (_, row) => (
-        <span style={pill(row.isPassed ? "#22C55E" : "#EF4444", row.isPassed ? "rgba(220,252,231,0.15)" : "#fff1f2")}>
+        <span style={pill(row.isPassed ? "var(--success)" : "var(--danger)", row.isPassed ? "var(--success-light)" : "var(--danger-light)")}>
           {row.isPassed ? "PASS" : "FAIL"}
         </span>
       ),
@@ -80,7 +80,7 @@ const StudentGrades = () => {
                     />
                     <Text>
                       Status:{" "}
-                      <span style={pill(grade.resultStatus === "PASS" ? "#22C55E" : "#EF4444", grade.resultStatus === "PASS" ? "rgba(220,252,231,0.15)" : "#fff1f2")}>
+                      <span style={pill(grade.resultStatus === "PASS" ? "var(--success)" : "var(--danger)", grade.resultStatus === "PASS" ? "var(--success-light)" : "var(--danger-light)")}>
                         {grade.resultStatus}
                       </span>
                     </Text>

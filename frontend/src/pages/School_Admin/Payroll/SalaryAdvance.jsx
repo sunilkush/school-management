@@ -21,18 +21,18 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  success: "#22C55E", successLight: "#DCFCE7",
-  danger: "#EF4444", dangerLight: "#FEE2E2",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  purple: "#7C3AED",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  danger: "var(--danger)", dangerLight: "var(--danger-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  purple: "var(--purple)",
 };
 
 const STATUS_CFG = {
-  pending:  { color: "#B45309", bg: "#FEF3C7", border: "#FDE68A", dot: C.warning,  label: "Pending"  },
-  active:   { color: "#15803D", bg: "#DCFCE7", border: "#86EFAC", dot: C.success,  label: "Active"   },
-  rejected: { color: "#991B1B", bg: "#FEE2E2", border: "#FCA5A5", dot: C.danger,   label: "Rejected" },
+  pending:  { color: "var(--warning-hover)", bg: "var(--warning-light)", border: "var(--warning-light)", dot: C.warning,  label: "Pending"  },
+  active:   { color: "var(--success-hover)", bg: "var(--success-light)", border: "var(--success-light)", dot: C.success,  label: "Active"   },
+  rejected: { color: "#991B1B", bg: "var(--danger-light)", border: "var(--danger-light)", dot: C.danger,   label: "Rejected" },
   closed:   { color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)", dot: "var(--text-muted)", label: "Closed" },
 };
 
@@ -300,10 +300,10 @@ const SalaryAdvance = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <WalletOutlined />,      label: "Total Advances",    value: stats.total,            color: C.primary },
-          { icon: <CheckCircleOutlined />, label: "Active",            value: stats.active,           color: C.success },
-          { icon: <ClockCircleOutlined />, label: "Pending Approval",  value: stats.pending,          color: C.warning },
-          { icon: <FieldTimeOutlined />,   label: "Total Outstanding", value: fmt(stats.outstanding), color: C.purple, small: true },
+          { icon: <WalletOutlined />,      label: "Total Advances",    value: stats.total,            color: "#2563EB" },
+          { icon: <CheckCircleOutlined />, label: "Active",            value: stats.active,           color: "#22C55E" },
+          { icon: <ClockCircleOutlined />, label: "Pending Approval",  value: stats.pending,          color: "#F59E0B" },
+          { icon: <FieldTimeOutlined />,   label: "Total Outstanding", value: fmt(stats.outstanding), color: "#7C3AED", small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: "var(--surface)", borderRadius: 14,

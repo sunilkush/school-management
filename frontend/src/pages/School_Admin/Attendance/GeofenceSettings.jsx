@@ -14,14 +14,16 @@ import {
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper } from "../../../styles/pageStyles";
 
+// Shared design tokens (frontend/src/index.css) — replaces a local hardcoded
+// hex palette that never adapted to dark mode.
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  success: "#22C55E", successLight: "#DCFCE7",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  danger: "#EF4444",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  danger: "var(--danger)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)", surfaceSoft: "var(--surface-soft)",
 };
 
 const PANEL = {
@@ -30,9 +32,9 @@ const PANEL = {
 };
 
 const STATUS_COLOR = {
-  present: { bg: C.successLight, color: C.success, border: "#86EFAC" },
-  absent:  { bg: "#FEE2E2",      color: C.danger,  border: "#FCA5A5" },
-  late:    { bg: C.warningLight, color: C.warning, border: "#FCD34D" },
+  present: { bg: C.successLight, color: C.success, border: "rgba(var(--success-rgb), 0.35)" },
+  absent:  { bg: "var(--danger-light)", color: C.danger,  border: "rgba(var(--danger-rgb), 0.35)" },
+  late:    { bg: C.warningLight, color: C.warning, border: "rgba(var(--warning-rgb), 0.35)" },
 };
 
 const GeofenceSettings = () => {
@@ -184,14 +186,14 @@ const GeofenceSettings = () => {
           <div style={{
             background: C.accentLight, borderRadius: 10, padding: "10px 14px",
             marginBottom: 16, display: "flex", gap: 10, alignItems: "center",
-            border: `1px solid #5EEAD4`,
+            border: "1px solid rgba(var(--accent-rgb), 0.35)",
           }}>
             <AimOutlined style={{ color: C.accent, fontSize: 18 }} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13, color: "#0F766E" }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "var(--accent-hover)" }}>
                 {geofenceSettings.location.lat.toFixed(6)}, {geofenceSettings.location.lng.toFixed(6)}
               </div>
-              <div style={{ fontSize: 12, color: "#0F766E" }}>
+              <div style={{ fontSize: 12, color: "var(--accent-hover)" }}>
                 Radius: {geofenceSettings.location.geofenceRadius || 200}m
                 {geofenceSettings.location.address && ` · ${geofenceSettings.location.address}`}
               </div>

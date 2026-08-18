@@ -19,8 +19,8 @@ const { RangePicker } = DatePicker;
 const { Text } = Typography;
 
 const C = {
-  primary: "#7c3aed", success: "#10b981", warning: "#f59e0b",
-  danger: "#ef4444", info: "#06b6d4",
+  primary: "var(--purple)", success: "var(--success)", warning: "var(--warning)",
+  danger: "var(--danger)", info: "var(--cyan)",
 };
 
 /* ─── Status badge ───────────────────────────────────────────── */
@@ -30,7 +30,7 @@ const StatusBadge = ({ yr }) => {
       <span style={{
         display: "inline-flex", alignItems: "center", gap: 5,
         fontSize: 11, fontWeight: 600, color: C.success,
-        background: "rgba(16,185,129,0.1)", padding: "3px 10px", borderRadius: 99,
+        background: "rgba(var(--success-rgb),0.1)", padding: "3px 10px", borderRadius: 99,
       }}>
         <CheckCircleFilled style={{ fontSize: 10 }} /> Active
       </span>
@@ -151,8 +151,6 @@ const SchoolAcademicYear = ({ next }) => {
   );
 
   const totalCount    = sorted.length;
-  const activeCount   = sorted.filter((y) => y.isActive).length;
-  const archivedCount = sorted.filter((y) => y.status === "archived").length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -165,7 +163,7 @@ const SchoolAcademicYear = ({ next }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
           <div style={{
             width: 28, height: 28, borderRadius: 7,
-            background: "rgba(124,58,237,0.1)",
+            background: "rgba(var(--purple-rgb),0.1)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <PlusOutlined style={{ fontSize: 12, color: C.primary }} />
@@ -211,7 +209,7 @@ const SchoolAcademicYear = ({ next }) => {
           </Text>
           <span style={{
             fontSize: 11, fontWeight: 700, color: C.primary,
-            background: "rgba(124,58,237,0.1)", padding: "2px 10px", borderRadius: 99,
+            background: "rgba(var(--purple-rgb),0.1)", padding: "2px 10px", borderRadius: 99,
           }}>
             {totalCount}
           </span>
@@ -265,7 +263,7 @@ const SchoolAcademicYear = ({ next }) => {
                         onMouseEnter={() => setHovered(i)}
                         onMouseLeave={() => setHovered(null)}
                         style={{
-                          background: hovered === i ? "rgba(124,58,237,0.03)" : "transparent",
+                          background: hovered === i ? "rgba(var(--purple-rgb),0.03)" : "transparent",
                           borderBottom: "1px solid var(--border)",
                           opacity: isArchived ? 0.6 : 1,
                           transition: "background 0.15s ease",
@@ -291,7 +289,7 @@ const SchoolAcademicYear = ({ next }) => {
                         <td style={{ padding: "12px 16px" }}>
                           <span style={{
                             fontSize: 11, fontWeight: 600, color: C.primary,
-                            background: "rgba(124,58,237,0.08)", padding: "3px 10px", borderRadius: 99,
+                            background: "rgba(var(--purple-rgb),0.08)", padding: "3px 10px", borderRadius: 99,
                           }}>
                             {months}mo
                           </span>
@@ -436,7 +434,7 @@ const SchoolAcademicYear = ({ next }) => {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8,
-              background: "rgba(124,58,237,0.1)",
+              background: "rgba(var(--purple-rgb),0.1)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <EditOutlined style={{ color: C.primary, fontSize: 14 }} />
@@ -469,7 +467,7 @@ const SchoolAcademicYear = ({ next }) => {
           />
           <div style={{
             marginTop: 14, padding: "10px 14px",
-            background: "rgba(124,58,237,0.07)", borderRadius: 8,
+            background: "rgba(var(--purple-rgb),0.07)", borderRadius: 8,
             fontSize: 12, color: C.primary,
           }}>
             The year name (e.g. 2025-2026) is auto-generated from the selected dates.

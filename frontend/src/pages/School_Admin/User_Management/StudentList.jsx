@@ -22,20 +22,20 @@ import {
 } from "../../../styles/pageStyles";
 
 const bloodGroupColor = {
-  "A+":  { bg: "rgba(254,226,226,0.2)", color: "#EF4444" },
-  "A-":  { bg: "#fff7ed", color: "#c2410c" },
-  "B+":  { bg: "#fef9ec", color: "#F59E0B" },
+  "A+":  { bg: "rgba(254,226,226,0.2)", color: "var(--danger)" },
+  "A-":  { bg: "rgba(var(--warning-rgb), 0.08)", color: "#c2410c" },
+  "B+":  { bg: "#fef9ec", color: "var(--warning)" },
   "B-":  { bg: "#fefce8", color: "#ca8a04" },
-  "AB+": { bg: "rgba(219,234,254,0.2)", color: "#2563EB" },
+  "AB+": { bg: "rgba(219,234,254,0.2)", color: "var(--primary)" },
   "AB-": { bg: "#eef2ff", color: "#4338ca" },
-  "O+":  { bg: "#f0fdf8", color: "#22C55E" },
-  "O-":  { bg: "rgba(220,252,231,0.2)", color: "#22C55E" },
+  "O+":  { bg: "#f0fdf8", color: "var(--success)" },
+  "O-":  { bg: "rgba(220,252,231,0.2)", color: "var(--success)" },
 };
 
 const STAT_META = [
-  { key: "total",   label: "Total Students", icon: <TeamOutlined />,        color: "#14B8A6" },
-  { key: "classes", label: "Classes",         icon: <BookOutlined />,        color: "#2563EB" },
-  { key: "showing", label: "On This Page",    icon: <EyeOutlined />,         color: "#F59E0B" },
+  { key: "total",   label: "Total Students", icon: <TeamOutlined />,        color: "var(--accent)" },
+  { key: "classes", label: "Classes",         icon: <BookOutlined />,        color: "var(--primary)" },
+  { key: "showing", label: "On This Page",    icon: <EyeOutlined />,         color: "var(--warning)" },
 ];
 
 const StudentList = () => {
@@ -162,13 +162,13 @@ const StudentList = () => {
       title: "Class",
       dataIndex: "schoolClass",
       width: 110,
-      render: (v) => <span style={pill("#14B8A6")}>{v}</span>,
+      render: (v) => <span style={pill("var(--accent)")}>{v}</span>,
     },
     {
       title: "Section",
       dataIndex: "section",
       width: 90,
-      render: (v) => <span style={pill("#22C55E")}>{v}</span>,
+      render: (v) => <span style={pill("var(--success)")}>{v}</span>,
     },
     {
       title: "Blood Group",
@@ -206,7 +206,7 @@ const StudentList = () => {
       title: "Academic Year",
       dataIndex: "academicYear",
       width: 130,
-      render: (v) => <span style={pill("#F59E0B")}>{v}</span>,
+      render: (v) => <span style={pill("var(--warning)")}>{v}</span>,
     },
     {
       title: "Status",
@@ -215,11 +215,12 @@ const StudentList = () => {
       render: (s) => {
         const isActive  = s === "Active";
         const isPending = s === "Pending";
-        const color = isActive ? "#15803d" : isPending ? "#92400e" : "#991b1b";
-        const dot   = isActive ? "#22c55e" : isPending ? "#f59e0b" : "#ef4444";
+        const color = isActive ? "var(--success-hover)" : isPending ? "var(--warning-hover)" : "#991b1b";
+        const dot   = isActive ? "var(--success)" : isPending ? "var(--warning)" : "var(--danger)";
+        const dotRing = isActive ? "rgba(var(--success-rgb), 0.19)" : isPending ? "rgba(var(--warning-rgb), 0.19)" : "rgba(var(--danger-rgb), 0.19)";
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, boxShadow: `0 0 0 2px ${dot}30` }} />
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, boxShadow: `0 0 0 2px ${dotRing}` }} />
             <span style={{ fontSize: 12, fontWeight: 600, color }}>{s}</span>
           </div>
         );

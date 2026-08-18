@@ -16,10 +16,10 @@ import {
 } from "../../../styles/pageStyles";
 
 const PRIORITY_COLOR = {
-  low:    ["#64748B", "rgba(241,245,249,0.6)"],
-  medium: ["#B45309", "rgba(254,243,199,0.5)"],
-  high:   ["#EA580C", "rgba(255,247,237,0.7)"],
-  urgent: ["#DC2626", "rgba(254,226,226,0.5)"],
+  low:    ["var(--text-secondary)", "var(--border-muted)"],
+  medium: ["var(--warning-hover)", "var(--warning-light)"],
+  high:   ["var(--orange)", "rgba(var(--warning-rgb), 0.08)"],
+  urgent: ["var(--danger-hover)", "var(--danger-light)"],
 };
 
 const StatCard = ({ icon, label, value, color }) => (
@@ -82,9 +82,9 @@ const StaffDashboard = () => {
       />
 
       <div style={{ ...statGrid(190), marginTop: 20 }}>
-        <StatCard icon={<ScheduleOutlined />} label="My Attendance (Month)" value={`${metrics.attendance}%`} color="#2563EB" />
-        <StatCard icon={<ClockCircleOutlined />} label="Pending Tasks" value={metrics.pendingTasks} color="#F59E0B" />
-        <StatCard icon={<CheckCircleOutlined />} label="Completed Tasks" value={metrics.completedTasks} color="#22C55E" />
+        <StatCard icon={<ScheduleOutlined />} label="My Attendance (Month)" value={`${metrics.attendance}%`} color="var(--primary)" />
+        <StatCard icon={<ClockCircleOutlined />} label="Pending Tasks" value={metrics.pendingTasks} color="var(--warning)" />
+        <StatCard icon={<CheckCircleOutlined />} label="Completed Tasks" value={metrics.completedTasks} color="var(--success)" />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }} className="staff-dash-grid">
@@ -113,7 +113,7 @@ const StaffDashboard = () => {
                   >
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{task.title}</div>
-                      <div style={{ fontSize: 12, color: overdue ? "#DC2626" : "var(--text-muted)", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: overdue ? "var(--danger-hover)" : "var(--text-muted)", marginTop: 2 }}>
                         {task.dueDate ? `Due ${dayjs(task.dueDate).format("DD MMM YYYY")}${overdue ? " (Overdue)" : ""}` : "No due date"}
                       </div>
                     </div>

@@ -13,15 +13,12 @@ import {
   toolbarRow, tableContainer, tableHeadCss,
   statGrid, iconWell, modalTitle, pill,
 } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
-
 const { Option } = Select;
 const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
 const CATEGORIES = ["Stationery", "Hygiene", "Electronics", "Furniture", "Lab Equipment", "Sports", "Housekeeping", "General"];
 
 export default function StockPage() {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const { items, loading, actionLoading } = useSelector((s) => s.inventory);
   const [open, setOpen]         = useState(false);
   const [editing, setEditing]   = useState(null);
@@ -40,6 +37,9 @@ export default function StockPage() {
   const totalQty      = stock.reduce((s, i) => s + (i.quantity || 0), 0);
   const totalAvail    = stock.reduce((s, i) => s + Math.max((i.quantity || 0) - (i.allocated || 0), 0), 0);
 
+  // `color` feeds the shared iconWell()/pill() helpers (frontend/src/styles/pageStyles.js),
+  // which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
+  // so these stay hex.
   const KPI = [
     { label: "Total Items",   value: stock.length,         color: "#1677ff",  icon: <AppstoreOutlined /> },
     { label: "Low Stock",     value: lowStockCount,        color: "#EF4444",  icon: <WarningOutlined /> },
@@ -93,7 +93,7 @@ export default function StockPage() {
       render: (_, r) => {
         const avail = Math.max((r.quantity || 0) - (r.allocated || 0), 0);
         const pct   = r.quantity ? Math.round((avail / r.quantity) * 100) : 0;
-        const color = pct < 20 ? "#EF4444" : pct < 50 ? "#F59E0B" : "#22c55e";
+        const color = pct < 20 ? "var(--danger)" : pct < 50 ? "var(--warning)" : "var(--success)";
         return (
           <div style={{ minWidth: 130 }}>
             <div style={{ fontSize: 12, color: "var(--text-primary)", marginBottom: 4 }}>

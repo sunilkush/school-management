@@ -28,14 +28,14 @@ import {
 const { Option } = Select;
 
 const STATUS_COLORS = {
-  Issued:   { color: "#F59E0B", bg: "rgba(254,243,199,0.25)" },
-  Returned: { color: "#22C55E", bg: "#d1fae5" },
-  Overdue:  { color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
-  Lost:     { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
+  Issued:   { color: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.25)" },
+  Returned: { color: "var(--success)", bg: "var(--success-light)" },
+  Overdue:  { color: "var(--danger)", bg: "rgba(var(--danger-rgb), 0.2)" },
+  Lost:     { color: "var(--accent)", bg: "rgba(var(--accent-rgb), 0.2)" },
 };
 
 const StatusBadge = ({ status }) => {
-  const s = STATUS_COLORS[status] || { color: "#64748B", bg: "#f1f5f9" };
+  const s = STATUS_COLORS[status] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" };
   return (
     <span style={{ ...pill(s.color, s.bg), whiteSpace: "nowrap" }}>{status}</span>
   );
@@ -44,7 +44,6 @@ const StatusBadge = ({ status }) => {
 const IssueBook = () => {
   const dispatch = useDispatch();
   const [issueForm] = Form.useForm();
-  const [returnForm] = Form.useForm();
 
   const { user } = useSelector((s) => s.auth || {});
   const {
@@ -119,10 +118,6 @@ const IssueBook = () => {
       r.status.toLowerCase().includes(q)
     );
   }, [issuedRows, searchText]);
-
-  const activeIssued = useMemo(() =>
-    issuedRows.filter((r) => r.status === "Issued" || r.status === "Overdue"),
-    [issuedRows]);
 
   /* ── member options based on memberType ─────────────────────────── */
   const memberOptions = useMemo(() => {
@@ -223,7 +218,7 @@ const IssueBook = () => {
       dataIndex: "dueDate",
       width: 110,
       render: (d, r) => (
-        <span style={{ color: (r.status === "Overdue") ? "#EF4444" : "inherit", fontWeight: r.status === "Overdue" ? 700 : 400 }}>
+        <span style={{ color: (r.status === "Overdue") ? "var(--danger)" : "inherit", fontWeight: r.status === "Overdue" ? 700 : 400 }}>
           {d}
         </span>
       ),
@@ -277,10 +272,10 @@ const IssueBook = () => {
       {/* ── KPI summary ───────────────────────────────────────────── */}
       <div style={statGrid(150)}>
         {[
-          { label: "Total Records", value: summaryStats.total,   icon: <FileTextOutlined />, color: "#0891b2" },
-          { label: "Currently Issued", value: summaryStats.issued, icon: <BookOutlined />,   color: "#14B8A6" },
-          { label: "Overdue",          value: summaryStats.overdue, icon: <AlertOutlined />, color: "#EF4444" },
-          { label: "Pending Fines",    value: `₹${summaryStats.fines}`, icon: <RupeeIcon />, color: "#F59E0B" },
+          { label: "Total Records", value: summaryStats.total,   icon: <FileTextOutlined />, color: "var(--cyan)" },
+          { label: "Currently Issued", value: summaryStats.issued, icon: <BookOutlined />,   color: "var(--accent)" },
+          { label: "Overdue",          value: summaryStats.overdue, icon: <AlertOutlined />, color: "var(--danger)" },
+          { label: "Pending Fines",    value: `₹${summaryStats.fines}`, icon: <RupeeIcon />, color: "var(--warning)" },
         ].map(({ label, value, icon, color }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>
@@ -393,10 +388,10 @@ const IssueBook = () => {
               <div style={{ fontWeight: 700, marginBottom: 4 }}>{returningRecord.bookTitle}</div>
               <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
                 Borrower: <strong>{returningRecord.borrowerName}</strong> &nbsp;|&nbsp;
-                Due: <strong style={{ color: returningRecord.status === "Overdue" ? "#EF4444" : "inherit" }}>{returningRecord.dueDate}</strong>
+                Due: <strong style={{ color: returningRecord.status === "Overdue" ? "var(--danger)" : "inherit" }}>{returningRecord.dueDate}</strong>
               </div>
               {returningRecord.status === "Overdue" && (
-                <div style={{ marginTop: 8, padding: "6px 10px", background: "rgba(254,226,226,0.2)", borderRadius: 8, fontSize: 12, color: "#EF4444", fontWeight: 600 }}>
+                <div style={{ marginTop: 8, padding: "6px 10px", background: "rgba(var(--danger-rgb), 0.2)", borderRadius: 8, fontSize: 12, color: "var(--danger)", fontWeight: 600 }}>
                   <AlertOutlined /> This book is overdue. Fine will be calculated on return.
                 </div>
               )}
@@ -406,18 +401,18 @@ const IssueBook = () => {
               <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13 }}>Return Status</div>
               <Select value={returnStatus} onChange={setReturnStatus} style={{ width: "100%" }}>
                 <Option value="Returned">
-                  <CheckCircleOutlined style={{ color: "#22C55E", marginRight: 6 }} />
+                  <CheckCircleOutlined style={{ color: "var(--success)", marginRight: 6 }} />
                   Returned — Book is back in good condition
                 </Option>
                 <Option value="Lost">
-                  <AlertOutlined style={{ color: "#14B8A6", marginRight: 6 }} />
+                  <AlertOutlined style={{ color: "var(--accent)", marginRight: 6 }} />
                   Lost — Borrower reports book is lost
                 </Option>
               </Select>
             </div>
 
             {returnStatus === "Lost" && (
-              <div style={{ padding: "8px 12px", background: "rgba(20,184,166,0.2)", borderRadius: 8, fontSize: 12, color: "#14B8A6", fontWeight: 600 }}>
+              <div style={{ padding: "8px 12px", background: "rgba(var(--accent-rgb), 0.2)", borderRadius: 8, fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>
                 <RupeeIcon /> A lost book fine from library settings will be applied.
               </div>
             )}

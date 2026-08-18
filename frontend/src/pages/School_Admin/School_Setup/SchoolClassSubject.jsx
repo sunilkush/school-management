@@ -28,23 +28,23 @@ const { Title, Text } = Typography;
 
 /* ─── app theme colours ──────────────────────────────────────── */
 const C = {
-  primary: "#7c3aed",
-  success: "#10b981",
-  warning: "#f59e0b",
-  danger:  "#ef4444",
-  info:    "#06b6d4",
+  primary: "var(--purple)",
+  success: "var(--success)",
+  warning: "var(--warning)",
+  danger:  "var(--danger)",
+  info:    "var(--cyan)",
 };
 
 /* ─── class colour palette ───────────────────────────────────── */
 const CLASS_COLORS = [
-  { bg: "rgba(124,58,237,0.08)",  text: "#6d28d9", border: "rgba(124,58,237,0.2)"  },
-  { bg: "rgba(37,99,235,0.08)",   text: "#1d4ed8", border: "rgba(37,99,235,0.2)"   },
-  { bg: "rgba(16,185,129,0.08)",  text: "#065f46", border: "rgba(16,185,129,0.2)"  },
-  { bg: "rgba(245,158,11,0.08)",  text: "#92400e", border: "rgba(245,158,11,0.2)"  },
-  { bg: "rgba(239,68,68,0.08)",   text: "#991b1b", border: "rgba(239,68,68,0.2)"   },
+  { bg: "rgba(var(--purple-rgb),0.08)",  text: "var(--purple-hover)", border: "rgba(var(--purple-rgb),0.2)"  },
+  { bg: "rgba(var(--primary-rgb),0.08)",   text: "var(--primary-hover)", border: "rgba(var(--primary-rgb),0.2)"   },
+  { bg: "rgba(var(--success-rgb),0.08)",  text: "#065f46", border: "rgba(var(--success-rgb),0.2)"  },
+  { bg: "rgba(var(--warning-rgb),0.08)",  text: "var(--warning-hover)", border: "rgba(var(--warning-rgb),0.2)"  },
+  { bg: "rgba(var(--danger-rgb),0.08)",   text: "#991b1b", border: "rgba(var(--danger-rgb),0.2)"   },
   { bg: "rgba(6,182,212,0.08)",   text: "#0e7490", border: "rgba(6,182,212,0.2)"   },
   { bg: "rgba(236,72,153,0.08)",  text: "#9d174d", border: "rgba(236,72,153,0.2)"  },
-  { bg: "rgba(34,197,94,0.08)",   text: "#14532d", border: "rgba(34,197,94,0.2)"   },
+  { bg: "rgba(var(--success-rgb),0.08)",   text: "#14532d", border: "rgba(var(--success-rgb),0.2)"   },
 ];
 const classColor = (idx) => CLASS_COLORS[idx % CLASS_COLORS.length];
 

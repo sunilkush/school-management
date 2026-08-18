@@ -15,7 +15,7 @@ import {
 const { Option } = Select;
 const { Text } = Typography;
 
-const C = { primary: "#7c3aed", success: "#10b981", warning: "#f59e0b", danger: "#ef4444" };
+const C = { primary: "var(--purple)", success: "var(--success)", warning: "var(--warning)", danger: "var(--danger)" };
 
 /* ─── helpers ────────────────────────────────────────────────── */
 const normalizeToArray = (value) => {
@@ -119,7 +119,7 @@ const SchoolBoard = ({ next }) => {
             background: "rgba(6,182,212,0.1)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <ApartmentOutlined style={{ fontSize: 12, color: "#06b6d4" }} />
+            <ApartmentOutlined style={{ fontSize: 12, color: "var(--cyan)" }} />
           </div>
           <div>
             <Text style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", display: "block" }}>
@@ -167,7 +167,7 @@ const SchoolBoard = ({ next }) => {
         {hasAssignedBoard && (
           <div style={{
             marginTop: 10, fontSize: 12, color: C.warning,
-            background: "rgba(245,158,11,0.08)", padding: "8px 12px", borderRadius: 8,
+            background: "rgba(var(--warning-rgb),0.08)", padding: "8px 12px", borderRadius: 8,
           }}>
             This school already has a board assigned. Only one board is allowed.
           </div>
@@ -186,7 +186,7 @@ const SchoolBoard = ({ next }) => {
           <Text style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Assigned Boards</Text>
           <span style={{
             fontSize: 11, fontWeight: 700, color: C.primary,
-            background: "rgba(124,58,237,0.1)", padding: "2px 10px", borderRadius: 99,
+            background: "rgba(var(--purple-rgb),0.1)", padding: "2px 10px", borderRadius: 99,
           }}>
             {schoolBoards.length}
           </span>
@@ -233,7 +233,7 @@ const SchoolBoard = ({ next }) => {
                       onMouseEnter={() => setHovered(i)}
                       onMouseLeave={() => setHovered(null)}
                       style={{
-                        background: hovered === i ? "rgba(124,58,237,0.03)" : "transparent",
+                        background: hovered === i ? "rgba(var(--purple-rgb),0.03)" : "transparent",
                         borderBottom: "1px solid var(--border)",
                         transition: "background 0.15s ease",
                       }}
@@ -245,7 +245,7 @@ const SchoolBoard = ({ next }) => {
                             background: "rgba(6,182,212,0.1)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
-                            <ApartmentOutlined style={{ fontSize: 14, color: "#06b6d4" }} />
+                            <ApartmentOutlined style={{ fontSize: 14, color: "var(--cyan)" }} />
                           </div>
                           <Text style={{ fontWeight: 600, color: "var(--text)" }}>
                             {safeText(item?.boardId?.name || item?.name)}
@@ -257,7 +257,7 @@ const SchoolBoard = ({ next }) => {
                         {item?.isPrimary ? (
                           <span style={{
                             fontSize: 11, fontWeight: 600, color: C.primary,
-                            background: "rgba(124,58,237,0.1)", padding: "2px 8px", borderRadius: 99,
+                            background: "rgba(var(--purple-rgb),0.1)", padding: "2px 8px", borderRadius: 99,
                           }}>Primary</span>
                         ) : (
                           <span style={{ color: "var(--text-muted)" }}>—</span>
@@ -269,7 +269,7 @@ const SchoolBoard = ({ next }) => {
                           <span style={{
                             display: "inline-flex", alignItems: "center", gap: 5,
                             fontSize: 11, fontWeight: 600, color: C.success,
-                            background: "rgba(16,185,129,0.1)", padding: "2px 8px", borderRadius: 99,
+                            background: "rgba(var(--success-rgb),0.1)", padding: "2px 8px", borderRadius: 99,
                           }}>
                             <CheckCircleFilled style={{ fontSize: 9 }} /> Active
                           </span>
@@ -277,7 +277,7 @@ const SchoolBoard = ({ next }) => {
                           <span style={{
                             display: "inline-flex", alignItems: "center", gap: 5,
                             fontSize: 11, color: C.warning,
-                            background: "rgba(245,158,11,0.1)", padding: "2px 8px", borderRadius: 99,
+                            background: "rgba(var(--warning-rgb),0.1)", padding: "2px 8px", borderRadius: 99,
                           }}>
                             <MinusCircleOutlined style={{ fontSize: 9 }} /> Inactive
                           </span>
@@ -332,7 +332,7 @@ const SchoolBoard = ({ next }) => {
                     background: "rgba(6,182,212,0.1)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    <ApartmentOutlined style={{ fontSize: 13, color: "#06b6d4" }} />
+                    <ApartmentOutlined style={{ fontSize: 13, color: "var(--cyan)" }} />
                   </div>
                   <Text style={{ fontWeight: 600, color: "var(--text)" }}>
                     {safeText(item?.boardId?.name || item?.name)}
@@ -342,7 +342,7 @@ const SchoolBoard = ({ next }) => {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", gap: 6 }}>
                     {item?.isPrimary && (
-                      <span style={{ fontSize: 11, color: C.primary, background: "rgba(124,58,237,0.1)", padding: "2px 8px", borderRadius: 99 }}>
+                      <span style={{ fontSize: 11, color: C.primary, background: "rgba(var(--purple-rgb),0.1)", padding: "2px 8px", borderRadius: 99 }}>
                         Primary
                       </span>
                     )}

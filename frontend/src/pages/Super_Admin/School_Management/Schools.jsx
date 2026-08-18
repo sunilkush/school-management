@@ -85,8 +85,8 @@ const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
         style={{
           height: 4,
           background: school.isActive
-            ? "linear-gradient(90deg, #2563EB, #93C5FD)"
-            : "linear-gradient(90deg, #CBD5E1, #E2E8F0)",
+            ? "linear-gradient(90deg, var(--primary), #93C5FD)"
+            : "linear-gradient(90deg, var(--text-disabled), var(--border))",
         }}
       />
 
@@ -204,15 +204,15 @@ const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
       >
         <Space size={6} align="center">
           {school.isActive ? (
-            <CheckCircleFilled style={{ color: "#2563EB", fontSize: 13 }} />
+            <CheckCircleFilled style={{ color: "var(--primary)", fontSize: 13 }} />
           ) : (
-            <CloseCircleFilled style={{ color: "#EF4444", fontSize: 13 }} />
+            <CloseCircleFilled style={{ color: "var(--danger)", fontSize: 13 }} />
           )}
           <Text
             style={{
               fontSize: 12,
               fontWeight: 600,
-              color: school.isActive ? "#2563EB" : "#EF4444",
+              color: school.isActive ? "var(--primary)" : "var(--danger)",
             }}
           >
             {school.isActive ? "Active" : "Inactive"}
@@ -236,11 +236,11 @@ const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
 const PAGE_SIZE = 9;
 
 const STATUS_COLOR = {
-  active:    { color: "#15803D", bg: "#DCFCE7", border: "#86EFAC" },
-  trial:     { color: "#1D4ED8", bg: "#DBEAFE", border: "#93C5FD" },
-  expired:   { color: "#DC2626", bg: "#FEE2E2", border: "#FCA5A5" },
-  suspended: { color: "#D97706", bg: "#FEF3C7", border: "#FCD34D" },
-  cancelled: { color: "#64748B", bg: "#F1F5F9", border: "#CBD5E1" },
+  active:    { color: "var(--success-hover)", bg: "var(--success-light)", border: "#86EFAC" },
+  trial:     { color: "var(--primary-hover)", bg: "var(--primary-light)", border: "#93C5FD" },
+  expired:   { color: "var(--danger-hover)", bg: "var(--danger-light)", border: "var(--danger-light)" },
+  suspended: { color: "var(--warning-hover)", bg: "var(--warning-light)", border: "var(--warning)" },
+  cancelled: { color: "var(--text-secondary)", bg: "var(--surface-soft)", border: "var(--border)" },
 };
 
 const Schools = () => {
@@ -528,7 +528,7 @@ const Schools = () => {
             <div
               style={{
                 background: "var(--danger-light)",
-                border: "1px solid rgba(239,68,68,0.4)",
+                border: "1px solid rgba(var(--danger-rgb), 0.4)",
                 borderRadius: 12,
                 padding: "16px 24px",
                 textAlign: "center",
@@ -782,7 +782,7 @@ const Schools = () => {
                     </div>
                     {["active", "trial"].includes(schoolSubscription.status) && (
                       <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: daysLeft <= 7 ? "#DC2626" : daysLeft <= 30 ? "#D97706" : sc.color }}>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: daysLeft <= 7 ? "var(--danger-hover)" : daysLeft <= 30 ? "var(--warning-hover)" : sc.color }}>
                           {daysLeft > 0 ? daysLeft : 0}
                         </div>
                         <div style={{ fontSize: 10, color: "var(--text-muted)" }}>days left</div>
@@ -844,10 +844,10 @@ const Schools = () => {
                     description="School admins will be blocked from logging in."
                     onConfirm={handleSuspend}
                     okText="Suspend" okButtonProps={{ danger: true }}
-                    icon={<ExclamationCircleOutlined style={{ color: "#D97706" }} />}
+                    icon={<ExclamationCircleOutlined style={{ color: "var(--warning-hover)" }} />}
                   >
                     <Button block danger icon={<PauseCircleOutlined />} loading={actionLoading}
-                      style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "#FEF3C7", borderColor: "#FCD34D", color: "#92400E" }}>
+                      style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "var(--warning-light)", borderColor: "var(--warning)", color: "var(--warning-hover)" }}>
                       Suspend
                     </Button>
                   </Popconfirm>
@@ -856,10 +856,10 @@ const Schools = () => {
                     title="Reactivate subscription?"
                     onConfirm={handleReactivate}
                     okText="Reactivate"
-                    icon={<PlayCircleOutlined style={{ color: "#15803D" }} />}
+                    icon={<PlayCircleOutlined style={{ color: "var(--success-hover)" }} />}
                   >
                     <Button block icon={<PlayCircleOutlined />} loading={actionLoading}
-                      style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "#DCFCE7", borderColor: "#86EFAC", color: "#15803D" }}>
+                      style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "var(--success-light)", borderColor: "#86EFAC", color: "var(--success-hover)" }}>
                       Reactivate
                     </Button>
                   </Popconfirm>
@@ -872,7 +872,7 @@ const Schools = () => {
                     description="This will permanently cancel the school's subscription."
                     onConfirm={handleCancel}
                     okText="Yes, Cancel" okButtonProps={{ danger: true }}
-                    icon={<ExclamationCircleOutlined style={{ color: "#DC2626" }} />}
+                    icon={<ExclamationCircleOutlined style={{ color: "var(--danger-hover)" }} />}
                   >
                     <Button block danger icon={<StopOutlined />} loading={actionLoading}
                       style={{ borderRadius: 8, height: 38, fontWeight: 600 }}>

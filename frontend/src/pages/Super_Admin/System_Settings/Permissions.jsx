@@ -108,7 +108,7 @@ const Permissions = () => {
       width: 230,
       render: (text) => (
         <Space>
-          <div style={iconWell("#2563EB", 34)}>
+          <div style={iconWell("var(--primary)", 34)}>
             <LockOutlined />
           </div>
           <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{text}</span>
@@ -124,13 +124,13 @@ const Permissions = () => {
       render: (value) =>
         value ? (
           <Tooltip title="Permission Granted">
-            <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>
+            <span style={pill("var(--success-hover)", "var(--success-light)")}>
               <CheckCircleOutlined /> Yes
             </span>
           </Tooltip>
         ) : (
           <Tooltip title="No Permission">
-            <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>
+            <span style={pill("var(--danger-hover)", "var(--danger-light)")}>
               <CloseCircleOutlined /> No
             </span>
           </Tooltip>
@@ -246,7 +246,7 @@ const Permissions = () => {
         items.length ? (
           <Space size={4} wrap>
             {items.map((item) => (
-              <span key={item} style={pill("#15803D", "rgba(220,252,231,0.5)")}>+ {item}</span>
+              <span key={item} style={pill("var(--success-hover)", "var(--success-light)")}>+ {item}</span>
             ))}
           </Space>
         ) : (
@@ -261,7 +261,7 @@ const Permissions = () => {
         items.length ? (
           <Space size={4} wrap>
             {items.map((item) => (
-              <span key={item} style={pill("#DC2626", "rgba(254,226,226,0.5)")}>- {item}</span>
+              <span key={item} style={pill("var(--danger-hover)", "var(--danger-light)")}>- {item}</span>
             ))}
           </Space>
         ) : (
@@ -276,7 +276,7 @@ const Permissions = () => {
         <Space wrap>
           {items.length ? (
             items.map((item) => (
-              <span key={item} style={pill("#B45309", "rgba(254,243,199,0.5)")}>{item}</span>
+              <span key={item} style={pill("var(--warning-hover)", "var(--warning-light)")}>{item}</span>
             ))
           ) : (
             <span style={pill("var(--text-muted)")}>None</span>
@@ -311,13 +311,13 @@ const Permissions = () => {
       />
 
       <div style={statGrid(170)}>
-        <StatCard icon={<SafetyCertificateOutlined />} label="Roles" value={roles.length} color="#14B8A6" />
-        <StatCard icon={<ApartmentOutlined />} label="Permission Modules" value={modules.length} color="#2563EB" />
+        <StatCard icon={<SafetyCertificateOutlined />} label="Roles" value={roles.length} color="var(--accent)" />
+        <StatCard icon={<ApartmentOutlined />} label="Permission Modules" value={modules.length} color="var(--primary)" />
         <StatCard
           icon={<WarningOutlined />}
           label="Pending Approvals"
           value={approvalQueue.filter((item) => item.status !== "Approved").length}
-          color="#F59E0B"
+          color="var(--warning)"
         />
       </div>
 
@@ -390,9 +390,9 @@ const Permissions = () => {
         <Col xs={24} lg={12}>
           <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-              <WarningOutlined style={{ color: "#F59E0B" }} />
+              <WarningOutlined style={{ color: "var(--warning)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>High-Risk Approval Queue</span>
-              <span style={pill("#B45309", "rgba(254,243,199,0.5)")}>{approvalQueue.length}</span>
+              <span style={pill("var(--warning-hover)", "var(--warning-light)")}>{approvalQueue.length}</span>
             </div>
 
             <List
@@ -411,7 +411,7 @@ const Permissions = () => {
                         Approve
                       </Button>
                     ) : (
-                      <span key="approved" style={pill("#15803D", "rgba(220,252,231,0.5)")}>Approved</span>
+                      <span key="approved" style={pill("var(--success-hover)", "var(--success-light)")}>Approved</span>
                     ),
                   ]}
                 >
@@ -419,7 +419,7 @@ const Permissions = () => {
                     title={
                       <Space>
                         <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{item.module}</span>
-                        <span style={item.status === "Approved" ? pill("#15803D", "rgba(220,252,231,0.5)") : pill("#B45309", "rgba(254,243,199,0.5)")}>
+                        <span style={item.status === "Approved" ? pill("var(--success-hover)", "var(--success-light)") : pill("var(--warning-hover)", "var(--warning-light)")}>
                           {item.status}
                         </span>
                       </Space>
@@ -439,9 +439,9 @@ const Permissions = () => {
         <Col xs={24} lg={12}>
           <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-              <AuditOutlined style={{ color: "#22C55E" }} />
+              <AuditOutlined style={{ color: "var(--success)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Audit Trail</span>
-              <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>{auditTrail.length}</span>
+              <span style={pill("var(--success-hover)", "var(--success-light)")}>{auditTrail.length}</span>
             </div>
 
             <List

@@ -139,7 +139,7 @@ const QuestionCard = ({ question, index, onAnswerChange, userAnswer }) => {
         </div>
         <span style={{
           fontSize: 12, fontWeight: 700,
-          background: "rgba(8,145,178,0.1)", color: "#0891B2",
+          background: "rgba(8,145,178,0.1)", color: "var(--cyan)",
           padding: "3px 10px", borderRadius: 99,
         }}>
           {question?.marks ?? 0} mark{question?.marks !== 1 ? "s" : ""}

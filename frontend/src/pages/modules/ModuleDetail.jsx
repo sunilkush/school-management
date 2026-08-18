@@ -11,26 +11,29 @@ import { useSelector } from "react-redux";
 import { ERP_MODULES } from "../../utils/moduleRegistry";
 import PageHeader from "../../components/layout/PageHeader.jsx";
 import { pageWrapper, sectionPanel, iconWell } from "../../styles/pageStyles.js";
+import { categoricalColorFor } from "../../utils/colorPalette.js";
 
 const { Text } = Typography;
 
-/* ── Module visual identity (shared with ModuleOverview) ─────────── */
+/* ── Module visual identity (shared with ModuleOverview — same
+   categoricalColorFor(key) source so a module's color matches across
+   both pages) ──────────────────────────────────────────────────── */
 const MODULE_META = {
-  "school-management":    { color: "#2563EB", emoji: "🏫" },
-  "academic-management":  { color: "#7C3AED", emoji: "📚" },
-  "student-management":   { color: "#10B981", emoji: "🎓" },
-  "teacher-management":   { color: "#F59E0B", emoji: "👩‍🏫" },
-  "attendance-system":    { color: "#EF4444", emoji: "✅" },
-  "exam-result":          { color: "#14B8A6", emoji: "📝" },
-  "timetable-management": { color: "#6366F1", emoji: "🗓️" },
-  "fees-management":      { color: "#22C55E", emoji: "💰" },
-  "transport-management": { color: "#F97316", emoji: "🚌" },
-  "hostel-management":    { color: "#8B5CF6", emoji: "🏠" },
-  "library-management":   { color: "#0EA5E9", emoji: "📖" },
-  "inventory":            { color: "#64748B", emoji: "📦" },
-  "communication":        { color: "#EC4899", emoji: "💬" },
-  "learning-management":  { color: "#84CC16", emoji: "🧑‍💻" },
-  "reports-analytics":    { color: "#A855F7", emoji: "📊" },
+  "school-management":    { color: categoricalColorFor("school-management"), emoji: "🏫" },
+  "academic-management":  { color: categoricalColorFor("academic-management"), emoji: "📚" },
+  "student-management":   { color: categoricalColorFor("student-management"), emoji: "🎓" },
+  "teacher-management":   { color: categoricalColorFor("teacher-management"), emoji: "👩‍🏫" },
+  "attendance-system":    { color: categoricalColorFor("attendance-system"), emoji: "✅" },
+  "exam-result":          { color: categoricalColorFor("exam-result"), emoji: "📝" },
+  "timetable-management": { color: categoricalColorFor("timetable-management"), emoji: "🗓️" },
+  "fees-management":      { color: categoricalColorFor("fees-management"), emoji: "💰" },
+  "transport-management": { color: categoricalColorFor("transport-management"), emoji: "🚌" },
+  "hostel-management":    { color: categoricalColorFor("hostel-management"), emoji: "🏠" },
+  "library-management":   { color: categoricalColorFor("library-management"), emoji: "📖" },
+  "inventory":            { color: categoricalColorFor("inventory"), emoji: "📦" },
+  "communication":        { color: categoricalColorFor("communication"), emoji: "💬" },
+  "learning-management":  { color: categoricalColorFor("learning-management"), emoji: "🧑‍💻" },
+  "reports-analytics":    { color: categoricalColorFor("reports-analytics"), emoji: "📊" },
 };
 
 /* ── Per-module feature bullets ──────────────────────────────────── */
@@ -228,8 +231,8 @@ const ActionCard = ({ action, color, onClick, isPrimary }) => (
   <div
     onClick={onClick}
     style={{
-      background: isPrimary ? `${color}10` : "var(--surface-soft)",
-      border: `1px solid ${isPrimary ? `${color}35` : "var(--border-muted)"}`,
+      background: isPrimary ? `color-mix(in srgb, ${color} 6%, transparent)` : "var(--surface-soft)",
+      border: `1px solid ${isPrimary ? `color-mix(in srgb, ${color} 21%, transparent)` : "var(--border-muted)"}`,
       borderRadius: 12,
       padding: "14px 16px",
       cursor: "pointer",
@@ -240,13 +243,13 @@ const ActionCard = ({ action, color, onClick, isPrimary }) => (
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.borderColor = color;
-      e.currentTarget.style.background = `${color}10`;
-      e.currentTarget.style.boxShadow = `0 4px 16px ${color}20`;
+      e.currentTarget.style.background = `color-mix(in srgb, ${color} 6%, transparent)`;
+      e.currentTarget.style.boxShadow = `0 4px 16px color-mix(in srgb, ${color} 12%, transparent)`;
       e.currentTarget.style.transform = "translateY(-1px)";
     }}
     onMouseLeave={(e) => {
-      e.currentTarget.style.borderColor = isPrimary ? `${color}35` : "var(--border-muted)";
-      e.currentTarget.style.background = isPrimary ? `${color}10` : "var(--surface-soft)";
+      e.currentTarget.style.borderColor = isPrimary ? `color-mix(in srgb, ${color} 21%, transparent)` : "var(--border-muted)";
+      e.currentTarget.style.background = isPrimary ? `color-mix(in srgb, ${color} 6%, transparent)` : "var(--surface-soft)";
       e.currentTarget.style.boxShadow = "none";
       e.currentTarget.style.transform = "translateY(0)";
     }}
@@ -277,7 +280,7 @@ const FeatureItem = ({ text, color, index }) => (
   }}>
     <div style={{
       width: 22, height: 22, borderRadius: 7, flexShrink: 0, marginTop: 1,
-      background: `${color}15`, color,
+      background: `color-mix(in srgb, ${color} 8%, transparent)`, color,
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: 11, fontWeight: 700,
     }}>
@@ -299,7 +302,7 @@ const ModuleDetail = () => {
 
   const roleName = typeof user?.role === "string" ? user?.role : user?.role?.name || "";
   const moduleData = ERP_MODULES.find((m) => m.key === moduleKey);
-  const meta = MODULE_META[moduleKey] || { color: "#2563EB", emoji: "📋" };
+  const meta = MODULE_META[moduleKey] || { color: "var(--primary)", emoji: "📋" };
   const features = MODULE_FEATURES[moduleKey] || [];
 
   const quickActions = useMemo(() => {
@@ -345,8 +348,8 @@ const ModuleDetail = () => {
         {/* ── Hero Banner ── */}
         <div style={{
           borderRadius: 16,
-          background: `linear-gradient(135deg, ${meta.color}12 0%, ${meta.color}06 60%, var(--surface) 100%)`,
-          border: `1px solid ${meta.color}30`,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${meta.color} 7%, transparent) 0%, color-mix(in srgb, ${meta.color} 4%, transparent) 60%, var(--surface) 100%)`,
+          border: `1px solid color-mix(in srgb, ${meta.color} 19%, transparent)`,
           borderLeft: `5px solid ${meta.color}`,
           padding: "28px 32px",
           marginBottom: 20,
@@ -358,9 +361,9 @@ const ModuleDetail = () => {
           {/* Big emoji */}
           <div style={{
             width: 80, height: 80, borderRadius: 22, flexShrink: 0,
-            background: `${meta.color}18`, border: `2px solid ${meta.color}30`,
+            background: `color-mix(in srgb, ${meta.color} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${meta.color} 19%, transparent)`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 40, boxShadow: `0 4px 20px ${meta.color}20`,
+            fontSize: 40, boxShadow: `0 4px 20px color-mix(in srgb, ${meta.color} 12%, transparent)`,
           }}>
             {meta.emoji}
           </div>
@@ -377,7 +380,7 @@ const ModuleDetail = () => {
               <Tag
                 style={{
                   borderRadius: 99, padding: "3px 12px", fontSize: 12, fontWeight: 600,
-                  background: `${meta.color}15`, color: meta.color, border: `1px solid ${meta.color}30`,
+                  background: `color-mix(in srgb, ${meta.color} 8%, transparent)`, color: meta.color, border: `1px solid color-mix(in srgb, ${meta.color} 19%, transparent)`,
                 }}
               >
                 {meta.emoji} {moduleData.title}
@@ -392,7 +395,7 @@ const ModuleDetail = () => {
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
             {[
               { label: "Features",     value: features.length,     color: meta.color  },
-              { label: "Quick Actions", value: quickActions.length, color: "#2563EB"   },
+              { label: "Quick Actions", value: quickActions.length, color: "var(--primary)"   },
             ].map((s) => (
               <div key={s.label} style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 32, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
@@ -424,8 +427,8 @@ const ModuleDetail = () => {
                 {quickActions.length > 0 && (
                   <div style={{
                     marginLeft: "auto", fontSize: 11, fontWeight: 700, padding: "2px 10px",
-                    borderRadius: 20, background: `${meta.color}14`, color: meta.color,
-                    border: `1px solid ${meta.color}28`,
+                    borderRadius: 20, background: `color-mix(in srgb, ${meta.color} 8%, transparent)`, color: meta.color,
+                    border: `1px solid color-mix(in srgb, ${meta.color} 16%, transparent)`,
                   }}>
                     {quickActions.length} actions
                   </div>
@@ -507,7 +510,7 @@ const ModuleDetail = () => {
                 {/* "No more features" tail */}
                 <div style={{
                   marginTop: 14, padding: "10px 14px", borderRadius: 10,
-                  background: `${meta.color}08`, border: `1px solid ${meta.color}20`,
+                  background: `color-mix(in srgb, ${meta.color} 5%, transparent)`, border: `1px solid color-mix(in srgb, ${meta.color} 12%, transparent)`,
                   display: "flex", alignItems: "center", gap: 8,
                 }}>
                   <span style={{ fontSize: 16 }}>{meta.emoji}</span>

@@ -16,9 +16,9 @@ import { pageWrapper, sectionPanel, statGrid, iconWell } from "../../../styles/p
 
 /* ── helpers ── */
 const statusColor = {
-  "In Use":      { bg: "#DCFCE7", color: "#15803D", dot: "#22C55E" },
-  "Available":   { bg: "#DBEAFE", color: "#1D4ED8", dot: "#3B82F6" },
-  "Maintenance": { bg: "#FEF3C7", color: "#B45309", dot: "#F59E0B" },
+  "In Use":      { bg: "var(--success-light)", color: "var(--success-hover)", dot: "var(--success)" },
+  "Available":   { bg: "var(--primary-light)", color: "var(--primary-hover)", dot: "var(--info)" },
+  "Maintenance": { bg: "var(--warning-light)", color: "var(--warning-hover)", dot: "var(--warning)" },
 };
 
 const InfoRow = ({ icon, label, value, mono = false }) => (
@@ -117,19 +117,19 @@ const StudentTransport = () => {
               icon={<ApartmentOutlined />}
               label="Route"
               value={t.routeName || route?.name}
-              color="#7C3AED"
+              color="var(--purple)"
             />
             <StatCard
               icon={<CarOutlined />}
               label="Vehicle No."
               value={t.vehicleNumber || veh?.busNumber}
-              color="#0891B2"
+              color="var(--cyan)"
             />
             <StatCard
               icon={<UserOutlined />}
               label="Driver"
               value={veh?.driverName}
-              color="#059669"
+              color="var(--success-hover)"
             />
             <StatCard
               icon={<NodeIndexOutlined />}
@@ -155,7 +155,7 @@ const StudentTransport = () => {
             {/* Vehicle Details */}
             <div style={{ ...sectionPanel }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                <div style={iconWell("#0891B2", 36)}><CarOutlined /></div>
+                <div style={iconWell("var(--cyan)", 36)}><CarOutlined /></div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Vehicle Details</div>
               </div>
               <div>
@@ -184,7 +184,7 @@ const StudentTransport = () => {
             {/* Driver Info */}
             <div style={{ ...sectionPanel }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                <div style={iconWell("#059669", 36)}><UserOutlined /></div>
+                <div style={iconWell("var(--success-hover)", 36)}><UserOutlined /></div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Driver Information</div>
               </div>
 
@@ -208,7 +208,7 @@ const StudentTransport = () => {
           {/* ── Route & Stops ── */}
           <div style={{ ...sectionPanel, marginTop: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <div style={iconWell("#7C3AED", 36)}><ApartmentOutlined /></div>
+              <div style={iconWell("var(--purple)", 36)}><ApartmentOutlined /></div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Route Details</div>
                 {(t.routeName || route?.name) && (
@@ -220,29 +220,29 @@ const StudentTransport = () => {
             {/* Pickup / Drop highlight */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               <div style={{
-                background: "#DCFCE7", borderRadius: 12, padding: "12px 14px",
-                border: "1px solid #BBF7D0",
+                background: "var(--success-light)", borderRadius: 12, padding: "12px 14px",
+                border: "1px solid var(--success-light)",
               }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#15803D", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--success-hover)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Pickup Stop
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <EnvironmentOutlined style={{ color: "#22C55E", fontSize: 15 }} />
-                  <span style={{ fontWeight: 700, fontSize: 14, color: "#15803D" }}>
+                  <EnvironmentOutlined style={{ color: "var(--success)", fontSize: 15 }} />
+                  <span style={{ fontWeight: 700, fontSize: 14, color: "var(--success-hover)" }}>
                     {t.pickupStop || t.stopName || "—"}
                   </span>
                 </div>
               </div>
               <div style={{
-                background: "#FEE2E2", borderRadius: 12, padding: "12px 14px",
-                border: "1px solid #FECACA",
+                background: "var(--danger-light)", borderRadius: 12, padding: "12px 14px",
+                border: "1px solid var(--danger-light)",
               }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#DC2626", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--danger-hover)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Drop Stop
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <EnvironmentOutlined style={{ color: "#EF4444", fontSize: 15 }} />
-                  <span style={{ fontWeight: 700, fontSize: 14, color: "#DC2626" }}>
+                  <EnvironmentOutlined style={{ color: "var(--danger)", fontSize: 15 }} />
+                  <span style={{ fontWeight: 700, fontSize: 14, color: "var(--danger-hover)" }}>
                     {t.dropStop || "—"}
                   </span>
                 </div>
@@ -270,8 +270,8 @@ const StudentTransport = () => {
                             width: isPickup || isDrop || isFirst || isLast ? 14 : 10,
                             height: isPickup || isDrop || isFirst || isLast ? 14 : 10,
                             borderRadius: "50%",
-                            background: isPickup ? "#22C55E" : isDrop ? "#EF4444" : isFirst || isLast ? "var(--primary)" : "var(--border-muted)",
-                            border: `2px solid ${isPickup ? "#15803D" : isDrop ? "#DC2626" : isFirst || isLast ? "var(--primary)" : "var(--border-muted)"}`,
+                            background: isPickup ? "var(--success)" : isDrop ? "var(--danger)" : isFirst || isLast ? "var(--primary)" : "var(--border-muted)",
+                            border: `2px solid ${isPickup ? "var(--success-hover)" : isDrop ? "var(--danger-hover)" : isFirst || isLast ? "var(--primary)" : "var(--border-muted)"}`,
                             flexShrink: 0,
                           }} />
                           {!isLast && <div style={{ width: 2, height: 14, background: "var(--border-muted)" }} />}
@@ -281,14 +281,14 @@ const StudentTransport = () => {
                           padding: "6px 10px",
                           margin: "2px 0",
                           borderRadius: 8,
-                          background: isPickup ? "#DCFCE7" : isDrop ? "#FEE2E2" : "transparent",
+                          background: isPickup ? "var(--success-light)" : isDrop ? "var(--danger-light)" : "transparent",
                           flex: 1,
                           display: "flex", alignItems: "center", justifyContent: "space-between",
                         }}>
                           <span style={{
                             fontSize: 13,
                             fontWeight: isPickup || isDrop ? 700 : 500,
-                            color: isPickup ? "#15803D" : isDrop ? "#DC2626" : "var(--text-primary)",
+                            color: isPickup ? "var(--success-hover)" : isDrop ? "var(--danger-hover)" : "var(--text-primary)",
                           }}>
                             {stop}
                           </span>

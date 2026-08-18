@@ -29,7 +29,7 @@ const StatCard = ({ icon, label, value, color }) => (
 
 const StatusBadge = ({ isActive }) => (
   <span style={pill(isActive ? "#15803D" : "#DC2626", isActive ? "rgba(220,252,231,0.5)" : "rgba(254,226,226,0.5)")}>
-    <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "#22C55E" : "#EF4444", display: "inline-block", marginRight: 5 }} />
+    <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "var(--success)" : "var(--danger)", display: "inline-block", marginRight: 5 }} />
     {isActive ? "Active" : "Inactive"}
   </span>
 );

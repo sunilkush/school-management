@@ -700,7 +700,7 @@ const CodeBlock = ({ lines }) => (
   }}>
     {lines.map((line, i) => (
       <div key={i} style={{ fontFamily: "monospace", fontSize: 12.5, color: "var(--text-primary)", lineHeight: 2, whiteSpace: "nowrap" }}>
-        <span style={{ color: "#2563EB", fontWeight: 700 }}>{line.split("   ")[0]}</span>
+        <span style={{ color: "var(--primary)", fontWeight: 700 }}>{line.split("   ")[0]}</span>
         <span style={{ color: "var(--text-muted)" }}>{"   " + line.split("   ").slice(1).join("   ")}</span>
       </div>
     ))}
@@ -925,7 +925,7 @@ const Documentation = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {activeSection.checklist.map((item, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                    <CheckCircleOutlined style={{ color: "#22C55E", fontSize: 14, marginTop: 2, flexShrink: 0 }} />
+                    <CheckCircleOutlined style={{ color: "var(--success)", fontSize: 14, marginTop: 2, flexShrink: 0 }} />
                     <span style={{ fontSize: 13.5, color: "var(--text-primary)", lineHeight: 1.6 }}>{item}</span>
                   </div>
                 ))}
@@ -943,12 +943,12 @@ const Documentation = () => {
               marginBottom: 20,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <BulbOutlined style={{ color: "#B45309", fontSize: 15 }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#B45309" }}>Tips</span>
+                <BulbOutlined style={{ color: "var(--warning-hover)", fontSize: 15 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--warning-hover)" }}>Tips</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                 {activeSection.tips.map((tip, i) => (
-                  <div key={i} style={{ fontSize: 13, color: "#92400E", lineHeight: 1.6 }}>
+                  <div key={i} style={{ fontSize: 13, color: "var(--warning-hover)", lineHeight: 1.6 }}>
                     • {tip}
                   </div>
                 ))}

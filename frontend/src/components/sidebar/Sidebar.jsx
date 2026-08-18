@@ -3,7 +3,6 @@ import { Typography, Spin, Avatar, Tooltip } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import {
   ChevronLeft, ChevronRight, LogOut, User,
 } from "lucide-react";
@@ -15,49 +14,49 @@ const { Text } = Typography;
 
 /* ── Role accent colors ─────────────────────────────────────────── */
 const ROLE_COLORS = {
-  "super admin":       "#2563EB",
-  "school admin":      "#14B8A6",
-  principal:           "#14B8A6",
-  "vice principal":    "#0891B2",
-  teacher:             "#22C55E",
-  student:             "#8B5CF6",
-  parent:              "#F59E0B",
-  accountant:          "#2563EB",
-  librarian:           "#14B8A6",
-  "hostel warden":     "#22C55E",
-  "transport manager": "#F59E0B",
-  "exam coordinator":  "#EF4444",
-  receptionist:        "#EC4899",
+  "super admin":       "var(--primary)",
+  "school admin":      "var(--accent)",
+  principal:           "var(--accent)",
+  "vice principal":    "var(--cyan)",
+  teacher:             "var(--success)",
+  student:             "var(--purple)",
+  parent:              "var(--warning)",
+  accountant:          "var(--primary)",
+  librarian:           "var(--accent)",
+  "hostel warden":     "var(--success)",
+  "transport manager": "var(--warning)",
+  "exam coordinator":  "var(--danger)",
+  receptionist:        "var(--pink)",
   counselor:           "#A78BFA",
-  security:            "#64748B",
-  staff:               "#6B7280",
+  security:            "var(--text-secondary)",
+  staff:               "var(--text-secondary)",
 };
 const getRoleAccent = (role) =>
-  ROLE_COLORS[role?.toLowerCase()] ?? "#2563EB";
+  ROLE_COLORS[role?.toLowerCase()] ?? "var(--primary)";
 
 /* ── Tokens ─────────────────────────────────────────────────────── */
-const tk = (isDark, accent) => ({
-  bg:          isDark ? "#0F1623" : "#ffffff",
-  border:      isDark ? "#1E2A3B" : "#E8EEF6",
-  headerBg:    isDark ? "#111827" : "#FAFBFF",
+const tk = (accent) => ({
+  bg:          "var(--surface)",
+  border:      "var(--border)",
+  headerBg:    "var(--surface-soft)",
   accent,
   accentBg:    `${accent}16`,
   accentBorder:`${accent}30`,
-  textPrimary: isDark ? "#E8EDF7" : "#0F172A",
-  textMuted:   isDark ? "#6B7A99" : "#94A3B8",
-  hover:       isDark ? "#1A2438" : "#F4F7FF",
-  scrollbar:   isDark ? "#1E2A3B" : "#E2E8F0",
-  userBg:      isDark ? "#111827" : "#F8FAFF",
+  textPrimary: "var(--text)",
+  textMuted:   "var(--text-muted)",
+  hover:       "var(--surface-soft-hover)",
+  scrollbar:   "var(--border)",
+  userBg:      "var(--surface-soft)",
 });
 
 /* ── Menu skeleton ──────────────────────────────────────────────── */
-const MenuSkeleton = ({ isDark, collapsed }) => (
+const MenuSkeleton = ({ collapsed }) => (
   <div style={{ padding: collapsed ? "8px 10px" : "8px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
     {[1, 0.9, 0.95, 0.85, 0.9, 0.88, 0.82].map((op, i) => (
       <div key={i} style={{
         height: 36,
         borderRadius: 9,
-        background: isDark ? "#1E2A3B" : "#F1F5F9",
+        background: "var(--surface-soft)",
         opacity: op,
         width: collapsed ? 44 : "100%",
         margin: collapsed ? "0 auto" : undefined,
@@ -77,7 +76,6 @@ const MenuSkeleton = ({ isDark, collapsed }) => (
 /* ── Sidebar ────────────────────────────────────────────────────── */
 const Sidebar = ({ collapsed, onToggle }) => {
   const { user }  = useSelector((s) => s.auth);
-  const { isDark } = useTheme();
   const navigate   = useNavigate();
   const dispatch   = useDispatch();
 
@@ -87,7 +85,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
     .map((r) => (typeof r === "string" ? r : r?.name))
     .filter(Boolean)
     .map((n) => n.toLowerCase());
-  const t          = tk(isDark, accent);
+  const t          = tk(accent);
 
   const rolePathMap = {
     "super admin": "superadmin", "school admin": "schooladmin",
@@ -192,14 +190,14 @@ const Sidebar = ({ collapsed, onToggle }) => {
           flex-shrink: 0;
         }
         .sb-logout:hover {
-          background: rgba(239,68,68,0.1);
-          color: #EF4444;
+          background: rgba(var(--danger-rgb), 0.1);
+          color: var(--danger);
         }
 
         /* Online pulse */
         @keyframes onlineDot {
-          0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.15); }
-          50%      { box-shadow: 0 0 0 4px rgba(34,197,94,0.06); }
+          0%,100% { box-shadow: 0 0 0 2px rgba(var(--success-rgb), 0.15); }
+          50%      { box-shadow: 0 0 0 4px rgba(var(--success-rgb), 0.06); }
         }
       `}</style>
 
@@ -282,7 +280,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
           overflowX: "hidden",
           padding: collapsed ? "8px 0" : "4px 0 12px",
         }}>
-          <Suspense fallback={<MenuSkeleton isDark={isDark} collapsed={collapsed} />}>
+          <Suspense fallback={<MenuSkeleton collapsed={collapsed} />}>
             <SidebarMenu
               role={roleName?.toLowerCase()}
               additionalRoles={additionalRoleNames}

@@ -10,27 +10,29 @@ import { fetchPurchaseOrders, createPO, updatePO, updatePOStatus, deletePO } fro
 import { fetchVendors } from "../../../features/vendorSlice";
 import {
   toolbarRow, tableContainer, tableHeadCss,
-  statGrid, iconWell, modalTitle, pill,
+  statGrid, iconWell, modalTitle,
 } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
 import dayjs from "dayjs";
 
 const { Option } = Select;
 
+// `color` is baked into this pill's border as `${m.color}30` — a raw-hex alpha-suffix
+// trick that breaks with a var() string, so `color` stays hex. `bg` (used directly, no
+// suffix) is safely converted to shared tokens.
 const STATUS_META = {
-  draft:      { color: "#94A3B8", bg: "#F1F5F9", label: "Draft" },
-  pending:    { color: "#F59E0B", bg: "#FEF3C7", label: "Pending" },
-  approved:   { color: "#1677ff", bg: "#DBEAFE", label: "Approved" },
-  ordered:    { color: "#8B5CF6", bg: "#EDE9FE", label: "Ordered" },
-  partial:    { color: "#F59E0B", bg: "#FEF3C7", label: "Partial" },
-  received:   { color: "#0ea472", bg: "#DCFCE7", label: "Received" },
-  cancelled:  { color: "#EF4444", bg: "#FEE2E2", label: "Cancelled" },
+  draft:      { color: "#94A3B8", bg: "var(--surface-soft)", label: "Draft" },
+  pending:    { color: "#F59E0B", bg: "var(--warning-light)", label: "Pending" },
+  approved:   { color: "#1677ff", bg: "var(--primary-light)", label: "Approved" },
+  ordered:    { color: "#8B5CF6", bg: "rgba(var(--purple-rgb), 0.12)", label: "Ordered" },
+  partial:    { color: "#F59E0B", bg: "var(--warning-light)", label: "Partial" },
+  received:   { color: "#0ea472", bg: "var(--success-light)", label: "Received" },
+  cancelled:  { color: "#EF4444", bg: "var(--danger-light)", label: "Cancelled" },
 };
 
 const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 const StatusPill = ({ status }) => {
-  const m = STATUS_META[status] || { color: "#94A3B8", bg: "#F1F5F9", label: status };
+  const m = STATUS_META[status] || { color: "#94A3B8", bg: "var(--surface-soft)", label: status };
   return (
     <span style={{ display: "inline-block", padding: "2px 10px", background: m.bg, color: m.color, borderRadius: 99, fontSize: 12, fontWeight: 600, border: `1px solid ${m.color}30` }}>
       {m.label}
@@ -40,7 +42,6 @@ const StatusPill = ({ status }) => {
 
 export default function PurchaseOrderPage() {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const { orders, loading, actionLoading } = useSelector((s) => s.purchaseOrder);
   const { vendors } = useSelector((s) => s.vendor);
   const [createOpen, setCreateOpen] = useState(false);
@@ -102,6 +103,8 @@ export default function PurchaseOrderPage() {
 
   const totalValue = orders.reduce((s, o) => s + (o.totalAmount || 0), 0);
 
+  // `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
+  // builds its background as `${color}22` — breaks with a var() string, so these stay hex.
   const KPI = [
     { label: "Draft",      value: orders.filter((o) => o.status === "draft").length,      color: "#94A3B8", icon: <FileTextOutlined /> },
     { label: "Pending",    value: orders.filter((o) => o.status === "pending").length,    color: "#F59E0B", icon: <ClockCircleOutlined /> },

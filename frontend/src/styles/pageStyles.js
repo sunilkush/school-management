@@ -89,7 +89,7 @@ export const tableHeadCss = (cls) => `
 /* ── KPI stat card (pastel design) ──────────────────────────────── */
 export const statCard = ({ color, bg, accentBar }) => ({
   padding: "18px 20px",
-  background: bg || "#ffffff",
+  background: bg || "var(--surface)",
   borderRadius: 16,
   border: "1px solid var(--border)",
   borderLeft: `4px solid ${accentBar || color}`,
@@ -100,7 +100,7 @@ export const statCard = ({ color, bg, accentBar }) => ({
   transition: "transform 0.2s ease, box-shadow 0.2s ease",
 });
 
-export const statLabel = (color) => ({
+export const statLabel = () => ({
   fontSize: 11,
   fontWeight: 700,
   color: "var(--text-muted)",
@@ -109,7 +109,7 @@ export const statLabel = (color) => ({
   marginBottom: 4,
 });
 
-export const statValue = (color) => ({
+export const statValue = () => ({
   fontSize: 26,
   fontWeight: 800,
   color: "var(--text)",
@@ -118,12 +118,12 @@ export const statValue = (color) => ({
 
 /* ── Avatar initials palette ────────────────────────────────────── */
 const PALETTE = [
-  { bg: "#DBEAFE", color: "#1D4ED8" },
-  { bg: "#CCFBF1", color: "#0D9488" },
-  { bg: "#DCFCE7", color: "#15803D" },
-  { bg: "#FEE2E2", color: "#DC2626" },
-  { bg: "#FEF3C7", color: "#B45309" },
-  { bg: "#EDE9FE", color: "#6D28D9" },
+  { bg: "var(--primary-light)", color: "var(--primary-hover)" },
+  { bg: "var(--accent-light)", color: "var(--accent-hover)" },
+  { bg: "var(--success-light)", color: "var(--success-hover)" },
+  { bg: "var(--danger-light)", color: "var(--danger-hover)" },
+  { bg: "var(--warning-light)", color: "var(--warning-hover)" },
+  { bg: "rgba(var(--purple-rgb), 0.15)", color: "var(--purple-hover)" },
 ];
 
 export const avatarColor = (name = "") => {
@@ -138,39 +138,39 @@ export const avatarStyle = (name = "", size = 38) => {
     background: bg, color,
     fontWeight: 700, fontSize: Math.round(size * 0.35),
     display: "flex", alignItems: "center", justifyContent: "center",
-    flexShrink: 0, border: `2px solid ${color}30`,
+    flexShrink: 0, border: `2px solid color-mix(in srgb, ${color} 30%, transparent)`,
   };
 };
 
 /* ── Status dot + text ───────────────────────────────────────────── */
 export const STATUS = {
-  active:    { dot: "#22C55E", text: "#15803D", bg: "rgba(220,252,231,0.5)",  border: "rgba(34,197,94,0.3)"  },
-  inactive:  { dot: "#94A3B8", text: "#64748B", bg: "rgba(241,245,249,0.6)",  border: "rgba(148,163,184,0.4)" },
-  pending:   { dot: "#F59E0B", text: "#B45309", bg: "rgba(254,243,199,0.5)",  border: "rgba(245,158,11,0.3)" },
-  overdue:   { dot: "#EF4444", text: "#DC2626", bg: "rgba(254,226,226,0.5)",  border: "rgba(239,68,68,0.3)"  },
-  suspended: { dot: "#8B5CF6", text: "#6D28D9", bg: "rgba(237,233,254,0.5)",  border: "rgba(139,92,246,0.3)" },
-  paid:      { dot: "#22C55E", text: "#15803D", bg: "rgba(220,252,231,0.5)",  border: "rgba(34,197,94,0.3)"  },
-  unpaid:    { dot: "#EF4444", text: "#DC2626", bg: "rgba(254,226,226,0.5)",  border: "rgba(239,68,68,0.3)"  },
-  partial:   { dot: "#F59E0B", text: "#B45309", bg: "rgba(254,243,199,0.5)",  border: "rgba(245,158,11,0.3)" },
+  active:    { dot: "var(--success)", text: "var(--success-hover)", bg: "var(--success-light)", border: "rgba(var(--success-rgb), 0.3)" },
+  inactive:  { dot: "var(--text-muted)", text: "var(--text-secondary)", bg: "var(--surface-soft)", border: "var(--border)" },
+  pending:   { dot: "var(--warning)", text: "var(--warning-hover)", bg: "var(--warning-light)", border: "rgba(var(--warning-rgb), 0.3)" },
+  overdue:   { dot: "var(--danger)", text: "var(--danger-hover)", bg: "var(--danger-light)", border: "rgba(var(--danger-rgb), 0.3)" },
+  suspended: { dot: "var(--purple)", text: "var(--purple-hover)", bg: "rgba(var(--purple-rgb), 0.12)", border: "rgba(var(--purple-rgb), 0.3)" },
+  paid:      { dot: "var(--success)", text: "var(--success-hover)", bg: "var(--success-light)", border: "rgba(var(--success-rgb), 0.3)" },
+  unpaid:    { dot: "var(--danger)", text: "var(--danger-hover)", bg: "var(--danger-light)", border: "rgba(var(--danger-rgb), 0.3)" },
+  partial:   { dot: "var(--warning)", text: "var(--warning-hover)", bg: "var(--warning-light)", border: "rgba(var(--warning-rgb), 0.3)" },
 };
 
-export const statusDot = (key = "active") => {
-  const s = STATUS[key] || STATUS.active;
-  return {
-    display: "inline-flex", alignItems: "center", gap: 6,
-  };
-};
+export const statusDot = () => ({
+  display: "inline-flex", alignItems: "center", gap: 6,
+});
 
 /* ── Pill tag ────────────────────────────────────────────────────── */
+// color-mix() (not hex-string concatenation like `${color}15`) so this works whether `color` is
+// a literal hex or a `var(--token)` reference — string-concatenating a CSS var reference with hex
+// alpha digits produces invalid CSS that the browser silently drops.
 export const pill = (color, bg) => ({
   display: "inline-block",
   padding: "2px 10px",
-  background: bg || `${color}15`,
+  background: bg || `color-mix(in srgb, ${color} 15%, transparent)`,
   color,
   borderRadius: 99,
   fontSize: 12,
   fontWeight: 600,
-  border: `1px solid ${color}25`,
+  border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
 });
 
 /* ── Empty state ─────────────────────────────────────────────────── */
@@ -183,9 +183,10 @@ export const emptyState = {
 };
 
 /* ── Icon well (pastel-aware) ────────────────────────────────────── */
+// color-mix() here too, same reason as pill() above — works with both hex and var() inputs.
 export const iconWell = (color = "var(--primary)", size = 36, extraStyle = {}) => ({
   width: size, height: size, borderRadius: Math.round(size * 0.28),
-  background: `${color}22`,
+  background: `color-mix(in srgb, ${color} 22%, transparent)`,
   color,
   display: "flex", alignItems: "center", justifyContent: "center",
   fontSize: size * 0.44, flexShrink: 0,

@@ -14,16 +14,17 @@ import {
   toolbarRow, tableContainer, tableHeadCss,
   statGrid, iconWell, modalTitle, pill,
 } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
 import dayjs from "dayjs";
 
 const { Option } = Select;
 const CATEGORIES  = ["Electronics", "Furniture", "Lab Equipment", "Sports Equipment", "Musical Instruments", "Vehicles", "IT Hardware", "General"];
+// `color` feeds the shared iconWell()/pill() helpers (frontend/src/styles/pageStyles.js),
+// which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
+// so these stay hex. Same applies to the KPI array below.
 const COND_COLOR  = { new: "#1677ff", good: "#0ea472", fair: "#F59E0B", poor: "#EF4444", disposed: "#94A3B8" };
 
 export default function AssetManagementPage() {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const { items, loading, actionLoading } = useSelector((s) => s.inventory);
   const { vendors } = useSelector((s) => s.vendor);
   const [open, setOpen]           = useState(false);
@@ -91,11 +92,11 @@ export default function AssetManagementPage() {
     const soon    = days >= 0 && days <= 30;
     return (
       <div>
-        <span style={{ fontSize: 12, color: expired ? "#EF4444" : soon ? "#F59E0B" : "var(--text-primary)", fontWeight: (expired || soon) ? 600 : 400 }}>
+        <span style={{ fontSize: 12, color: expired ? "var(--danger)" : soon ? "var(--warning)" : "var(--text-primary)", fontWeight: (expired || soon) ? 600 : 400 }}>
           {dayjs(a.warrantyExpiry).format("DD MMM YYYY")}
         </span>
-        {expired && <div style={{ fontSize: 10, color: "#EF4444" }}>Expired</div>}
-        {soon    && <div style={{ fontSize: 10, color: "#F59E0B" }}>{days}d left ⚠</div>}
+        {expired && <div style={{ fontSize: 10, color: "var(--danger)" }}>Expired</div>}
+        {soon    && <div style={{ fontSize: 10, color: "var(--warning)" }}>{days}d left ⚠</div>}
       </div>
     );
   };

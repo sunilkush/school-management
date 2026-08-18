@@ -26,9 +26,9 @@ export default function VerifyCertificate() {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#F1F5F9", padding: 24,
+      background: "var(--surface-soft)", padding: 24,
     }}>
-      <div style={{ background: "#fff", borderRadius: 16, padding: "32px 24px", maxWidth: 480, width: "100%", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
+      <div style={{ background: "var(--surface)", borderRadius: 16, padding: "32px 24px", maxWidth: 480, width: "100%", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: "40px 0" }}><Spin size="large" /></div>
         ) : error ? (

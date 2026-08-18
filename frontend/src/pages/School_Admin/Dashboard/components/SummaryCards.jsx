@@ -8,13 +8,10 @@ import {
   SolutionOutlined,
 } from "@ant-design/icons";
 import RupeeIcon from "../../../../components/icons/RupeeIcon";
-import { useTheme } from "../../../../context/ThemeContext";
 
 const { Text } = Typography;
 
 const SummaryCards = ({ summary }) => {
-  const { isDark } = useTheme();
-
   const dynamic = summary || {};
   const cardData = [
     {
@@ -23,8 +20,8 @@ const SummaryCards = ({ summary }) => {
       percentage: Math.abs(Math.round(dynamic?.newAdmissions?.growth || 0)),
       trend: (dynamic?.newAdmissions?.growth || 0) < 0 ? "decrease" : "increase",
       icon: UserAddOutlined,
-      accent: "#1677ff",
-      accentBg: "rgba(22,119,255,0.08)",
+      accent: "var(--primary)",
+      accentBg: "rgba(var(--primary-rgb), 0.08)",
       desc: "vs last month",
     },
     {
@@ -33,8 +30,8 @@ const SummaryCards = ({ summary }) => {
       percentage: Math.abs(Math.round(dynamic?.totalStudents?.growth || 0)),
       trend: (dynamic?.totalStudents?.growth || 0) < 0 ? "decrease" : "increase",
       icon: TeamOutlined,
-      accent: "#0ea472",
-      accentBg: "rgba(14,164,114,0.08)",
+      accent: "var(--success)",
+      accentBg: "rgba(var(--success-rgb), 0.08)",
       desc: "enrolled this year",
     },
     {
@@ -43,8 +40,8 @@ const SummaryCards = ({ summary }) => {
       percentage: Math.abs(Math.round(dynamic?.totalTeachers?.growth || 0)),
       trend: (dynamic?.totalTeachers?.growth || 0) < 0 ? "decrease" : "increase",
       icon: SolutionOutlined,
-      accent: "#14B8A6",
-      accentBg: "rgba(155,135,184,0.08)",
+      accent: "var(--accent)",
+      accentBg: "rgba(var(--accent-rgb), 0.08)",
       desc: "active staff",
     },
     {
@@ -53,16 +50,16 @@ const SummaryCards = ({ summary }) => {
       percentage: Math.abs(Math.round(dynamic?.totalIncome?.growth || 0)),
       trend: (dynamic?.totalIncome?.growth || 0) < 0 ? "decrease" : "increase",
       icon: RupeeIcon,
-      accent: "#EF4444",
-      accentBg: "rgba(217,107,122,0.08)",
+      accent: "var(--danger)",
+      accentBg: "rgba(var(--danger-rgb), 0.08)",
       desc: "revenue this month",
     },
   ];
 
-  const cardBg = isDark ? "#141414" : "#ffffff";
-  const border = isDark ? "#1f1f1f" : "#f0f0f0";
-  const textPri = isDark ? "#e8e8e8" : "#111827";
-  const textSec = isDark ? "#6b7280" : "#9ca3af";
+  const cardBg = "var(--surface)";
+  const border = "var(--border)";
+  const textPri = "var(--text)";
+  const textSec = "var(--text-muted)";
 
   return (
     <>
@@ -70,8 +67,8 @@ const SummaryCards = ({ summary }) => {
         {cardData.map((item, i) => {
           const isDown = item.trend === "decrease";
           const Icon = item.icon;
-          const trendColor = isDown ? "#EF4444" : "#0ea472";
-          const trendBg = isDown ? "rgba(217,107,122,0.08)" : "rgba(14,164,114,0.08)";
+          const trendColor = isDown ? "var(--danger)" : "var(--success)";
+          const trendBg = isDown ? "rgba(var(--danger-rgb), 0.08)" : "rgba(var(--success-rgb), 0.08)";
 
           return (
             <Col xs={24} sm={12} lg={6} key={i}>
@@ -85,7 +82,7 @@ const SummaryCards = ({ summary }) => {
                     <Icon style={{ color: item.accent }} />
                   </div>
                 </div>
-                <div style={{ height: 4, borderRadius: 99, background: isDark ? "#2a2a2a" : "#f3f4f6", marginTop: 16, overflow: "hidden" }}>
+                <div style={{ height: 4, borderRadius: 99, background: "var(--border-muted)", marginTop: 16, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${Math.min(item.percentage, 100)}%`, borderRadius: 99, background: `linear-gradient(90deg, ${item.accent}88, ${item.accent})` }} />
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>

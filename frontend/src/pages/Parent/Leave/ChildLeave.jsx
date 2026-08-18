@@ -13,10 +13,10 @@ import {
 } from "../../../features/leaveRequestSlice";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
+import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const { TextArea } = Input;
-const STAT_COLORS  = ["#14B8A6", "#F59E0B", "#22C55E", "#EF4444"];
+const STAT_COLORS  = ["var(--accent)", "var(--warning)", "var(--success)", "var(--danger)"];
 const LEAVE_TYPES  = ["sick", "casual", "emergency", "other"];
 
 const statusColor = { pending: "orange", approved: "green", rejected: "red" };

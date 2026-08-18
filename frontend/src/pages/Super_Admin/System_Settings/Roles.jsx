@@ -84,7 +84,7 @@ const templateMeta = {
 
 const statusPill = (status) =>
   status === "Active"
-    ? pill("#15803D", "rgba(220,252,231,0.5)")
+    ? pill("var(--success-hover)", "var(--success-light)")
     : pill("var(--text-muted)", "var(--surface-soft)");
 
 const StatCard = ({ icon, label, value, color }) => (
@@ -268,7 +268,7 @@ const Roles = () => {
       title: "Permissions",
       dataIndex: "permissions",
       width: 110,
-      render: (perms) => <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{perms?.length || 0}</span>,
+      render: (perms) => <span style={pill("var(--primary)", "var(--primary-light)")}>{perms?.length || 0}</span>,
     },
     {
       title: "Action",
@@ -317,7 +317,7 @@ const Roles = () => {
     {
       title: "Role",
       dataIndex: "roleId",
-      render: (role) => <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{role?.name || "—"}</span>,
+      render: (role) => <span style={pill("var(--primary)", "var(--primary-light)")}>{role?.name || "—"}</span>,
     },
     {
       title: "Scope",
@@ -328,7 +328,7 @@ const Roles = () => {
       title: "Valid Till",
       dataIndex: "validTill",
       render: (value) => (
-        <span style={pill("#B45309", "rgba(254,243,199,0.5)")}>
+        <span style={pill("var(--warning-hover)", "var(--warning-light)")}>
           <ClockCircleOutlined /> {value ? new Date(value).toLocaleDateString() : "—"}
         </span>
       ),
@@ -408,9 +408,9 @@ const Roles = () => {
       />
 
       <div style={statGrid(170)}>
-        <StatCard icon={<CrownOutlined />} label="Selected Template Roles" value={templateRoles.length} color="#14B8A6" />
-        <StatCard icon={<UserSwitchOutlined />} label="Temporary Grants" value={temporaryAccess.length} color="#2563EB" />
-        <StatCard icon={<LockOutlined />} label="Security Mode" value="RBAC" color="#22C55E" />
+        <StatCard icon={<CrownOutlined />} label="Selected Template Roles" value={templateRoles.length} color="var(--accent)" />
+        <StatCard icon={<UserSwitchOutlined />} label="Temporary Grants" value={temporaryAccess.length} color="var(--primary)" />
+        <StatCard icon={<LockOutlined />} label="Security Mode" value="RBAC" color="var(--success)" />
       </div>
 
       <div style={sectionPanel}>
@@ -451,7 +451,7 @@ const Roles = () => {
                         {meta.desc}
                       </div>
                       <div style={{ marginTop: 10 }}>
-                        <span style={pill("#6D28D9", "rgba(237,233,254,0.5)")}>
+                        <span style={pill("var(--purple-hover)", "rgba(var(--purple-rgb), 0.12)")}>
                           {ROLE_TEMPLATES[key].length} roles
                         </span>
                       </div>
@@ -468,7 +468,7 @@ const Roles = () => {
           <div style={{ marginTop: 10 }}>
             <Space wrap>
               {templateRoles.map((role) => (
-                <span key={role} style={pill("#6D28D9", "rgba(237,233,254,0.5)")}>
+                <span key={role} style={pill("var(--purple-hover)", "rgba(var(--purple-rgb), 0.12)")}>
                   {role}
                 </span>
               ))}
@@ -536,7 +536,7 @@ const Roles = () => {
         <Col xs={24} xl={14}>
           <div style={{ ...sectionPanel, marginBottom: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-              <ClockCircleOutlined style={{ color: "#F59E0B" }} />
+              <ClockCircleOutlined style={{ color: "var(--warning)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Time-bound Temporary Access</span>
               <span style={pill("var(--primary)")}>{temporaryAccess.length}</span>
               <Button

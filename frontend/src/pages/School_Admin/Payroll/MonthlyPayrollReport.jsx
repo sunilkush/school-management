@@ -98,7 +98,7 @@ const MonthlyPayrollReport = () => {
       width: 120,
       render: (v) => (
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <TeamOutlined style={{ color: "#2563EB", fontSize: 13 }} />
+          <TeamOutlined style={{ color: "var(--primary)", fontSize: 13 }} />
           <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{v}</span>
         </div>
       ),
@@ -108,7 +108,7 @@ const MonthlyPayrollReport = () => {
       dataIndex: "netPay",
       width: 160,
       render: (v) => (
-        <span style={{ fontWeight: 800, fontSize: 14, color: "#22C55E" }}>
+        <span style={{ fontWeight: 800, fontSize: 14, color: "var(--success)" }}>
           {formatCurrencyINR(v)}
         </span>
       ),
@@ -126,7 +126,7 @@ const MonthlyPayrollReport = () => {
               flex: 1, height: 6, borderRadius: 3,
               background: "var(--border-muted)", overflow: "hidden",
             }}>
-              <div style={{ width: `${pct}%`, height: "100%", background: "#2563EB", borderRadius: 3 }} />
+              <div style={{ width: `${pct}%`, height: "100%", background: "var(--primary)", borderRadius: 3 }} />
             </div>
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", width: 36 }}>{pct}%</span>
           </div>

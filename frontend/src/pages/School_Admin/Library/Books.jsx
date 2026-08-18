@@ -36,9 +36,9 @@ const normalizeBook = (book) => ({
 });
 
 const STAT_META = [
-  { key: "total",     label: "Total Books", color: "#14B8A6" },
-  { key: "available", label: "Available",   color: "#22C55E" },
-  { key: "issued",    label: "Issued",      color: "#EF4444" },
+  { key: "total",     label: "Total Books", color: "var(--accent)" },
+  { key: "available", label: "Available",   color: "var(--success)" },
+  { key: "issued",    label: "Issued",      color: "var(--danger)" },
 ];
 
 const Books = () => {
@@ -149,7 +149,7 @@ const Books = () => {
       ),
     },
     { title: "Category", dataIndex: "category", key: "category",
-      render: (v) => <span style={pill("#14B8A6", "rgba(20,184,166,0.2)")}>{v}</span>,
+      render: (v) => <span style={pill("var(--accent)", "rgba(var(--accent-rgb), 0.2)")}>{v}</span>,
     },
     { title: "ISBN", dataIndex: "isbn", key: "isbn",
       render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v || "—"}</span>,
@@ -159,16 +159,16 @@ const Books = () => {
       dataIndex: "quantity",
       key: "quantity",
       render: (q) => q > 0
-        ? <span style={pill("#22C55E", "#d1fae5")}>{q} / {books.find((b) => b.quantity === q)?.totalCopies ?? q}</span>
-        : <span style={pill("#EF4444", "rgba(254,226,226,0.2)")}>Out of stock</span>,
+        ? <span style={pill("var(--success)", "var(--success-light)")}>{q} / {books.find((b) => b.quantity === q)?.totalCopies ?? q}</span>
+        : <span style={pill("var(--danger)", "rgba(var(--danger-rgb), 0.2)")}>Out of stock</span>,
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status) => status === "Available"
-        ? <span style={pill("#22C55E", "#d1fae5")}>Available</span>
-        : <span style={pill("#F59E0B", "#fff7ed")}>Issued</span>,
+        ? <span style={pill("var(--success)", "var(--success-light)")}>Available</span>
+        : <span style={pill("var(--warning)", "rgba(var(--warning-rgb), 0.08)")}>Issued</span>,
     },
     {
       title: "Shelf",
@@ -182,7 +182,7 @@ const Books = () => {
         <Space size={4}>
           <Tooltip title="Edit Book">
             <Button
-              type="text" size="small" icon={<EditOutlined />} style={{ color: "#f59e0b" }}
+              type="text" size="small" icon={<EditOutlined />} style={{ color: "var(--warning)" }}
               onClick={() => {
                 setEditingBook(record);
                 form.setFieldsValue({

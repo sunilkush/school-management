@@ -26,13 +26,13 @@ const getGradeScore = (grade = {}) => {
   return Number.isFinite(numeric) ? numeric : null;
 };
 
-const STAT_COLORS     = ["#2563EB", "#14B8A6", "#F59E0B", "#22C55E"];
-const STAT_BARS       = ["#DBEAFE", "rgba(20,184,166,0.15)", "#FEF3C7", "#DCFCE7"];
+const STAT_COLORS     = ["var(--primary)", "var(--accent)", "var(--warning)", "var(--success)"];
+const STAT_BARS       = ["var(--primary-light)", "rgba(var(--accent-rgb),0.15)", "var(--warning-light)", "var(--success-light)"];
 const STAT_BG         = [
-  "rgba(219,234,254,0.12)",
-  "rgba(20,184,166,0.12)",
-  "rgba(254,243,199,0.15)",
-  "rgba(220,252,231,0.12)",
+  "rgba(var(--primary-rgb),0.12)",
+  "rgba(var(--accent-rgb),0.12)",
+  "rgba(var(--warning-rgb),0.15)",
+  "rgba(var(--success-rgb),0.12)",
 ];
 
 const StudentDashboard = () => {
@@ -125,7 +125,7 @@ const StudentDashboard = () => {
         {/* KPI stats */}
         <div className="stat-grid" style={statGrid(180)}>
           {statMeta.map(({ key, label, icon, suffix }, i) => (
-            <div key={key} style={statCard({ color: STAT_COLORS[i], bg: "#ffffff", accentBar: STAT_BARS[i] })}>
+            <div key={key} style={statCard({ color: STAT_COLORS[i], bg: "var(--surface)", accentBar: STAT_BARS[i] })}>
               <div>
                 <div style={statLabel(STAT_COLORS[i])}>{label}</div>
                 <div style={statValue(STAT_COLORS[i])}>
@@ -161,7 +161,7 @@ const StudentDashboard = () => {
                           {grade?.examName || grade?.exam?.title || "Assessment"}
                         </div>
                       </div>
-                      <span style={pill("#14B8A6", "rgba(20,184,166,0.22)")}>{getGradeScore(grade) ?? "NA"}</span>
+                      <span style={pill("var(--accent)", "rgba(var(--accent-rgb),0.22)")}>{getGradeScore(grade) ?? "NA"}</span>
                     </List.Item>
                   )}
                 />
@@ -217,10 +217,10 @@ const StudentDashboard = () => {
                   percent={attendancePercent}
                   strokeColor={
                     attendancePercent >= 75
-                      ? { from: "#DBEAFE", to: "#DCFCE7" }
+                      ? { from: "var(--primary-light)", to: "var(--success-light)" }
                       : attendancePercent >= 60
-                        ? { from: "#FEF3C7", to: "#FEF3C7" }
-                        : { from: "#FEE2E2", to: "#FEE2E2" }
+                        ? { from: "var(--warning-light)", to: "var(--warning-light)" }
+                        : { from: "var(--danger-light)", to: "var(--danger-light)" }
                   }
                   status="active"
                 />

@@ -29,25 +29,25 @@ import {
 
 /* ── colour helpers ────────────────────────────────────────────── */
 const TYPE_STYLE = {
-  mcq_single: { label: "MCQ·Single",   color: "#2563EB", bg: "#DBEAFE" },
-  mcq_multi:  { label: "MCQ·Multi",    color: "#7C3AED", bg: "#EDE9FE" },
-  true_false: { label: "True/False",   color: "#0D9488", bg: "#CCFBF1" },
-  fill_blank: { label: "Fill Blank",   color: "#D97706", bg: "#FEF3C7" },
-  match:      { label: "Match",        color: "#B91C1C", bg: "#FEE2E2" },
+  mcq_single: { label: "MCQ·Single",   color: "var(--primary)", bg: "var(--primary-light)" },
+  mcq_multi:  { label: "MCQ·Multi",    color: "var(--purple)", bg: "rgba(var(--purple-rgb),0.12)" },
+  true_false: { label: "True/False",   color: "var(--accent-hover)", bg: "var(--accent-light)" },
+  fill_blank: { label: "Fill Blank",   color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  match:      { label: "Match",        color: "var(--danger-hover)", bg: "var(--danger-light)" },
 };
 const DIFF_STYLE = {
-  easy:   { color: "#15803D", bg: "#DCFCE7" },
-  medium: { color: "#B45309", bg: "#FEF3C7" },
-  hard:   { color: "#DC2626", bg: "#FEE2E2" },
+  easy:   { color: "var(--success-hover)", bg: "var(--success-light)" },
+  medium: { color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  hard:   { color: "var(--danger-hover)", bg: "var(--danger-light)" },
 };
-const typePill  = (t) => { const s = TYPE_STYLE[t] || { label: t, color: "#64748B", bg: "#F1F5F9" }; return <span style={{ ...pill(s.color, s.bg), fontSize: 11 }}>{s.label}</span>; };
-const diffPill  = (d) => { const s = DIFF_STYLE[(d||"").toLowerCase()] || { color: "#64748B", bg: "#F1F5F9" }; return <span style={{ ...pill(s.color, s.bg), fontSize: 11, textTransform: "capitalize" }}>{d || "—"}</span>; };
+const typePill  = (t) => { const s = TYPE_STYLE[t] || { label: t, color: "var(--text-secondary)", bg: "var(--surface-soft)" }; return <span style={{ ...pill(s.color, s.bg), fontSize: 11 }}>{s.label}</span>; };
+const diffPill  = (d) => { const s = DIFF_STYLE[(d||"").toLowerCase()] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" }; return <span style={{ ...pill(s.color, s.bg), fontSize: 11, textTransform: "capitalize" }}>{d || "—"}</span>; };
 
 /* ── QuestionPreviewDrawer ─────────────────────────────────────── */
 const QuestionPreviewDrawer = ({ question: q, open, onClose }) => {
   if (!q) return null;
-  const typeStyle = TYPE_STYLE[q.questionType] || { label: q.questionType, color: "#64748B", bg: "#F1F5F9" };
-  const diffStyle = DIFF_STYLE[(q.difficulty || "").toLowerCase()] || { color: "#64748B", bg: "#F1F5F9" };
+  const typeStyle = TYPE_STYLE[q.questionType] || { label: q.questionType, color: "var(--text-secondary)", bg: "var(--surface-soft)" };
+  const diffStyle = DIFF_STYLE[(q.difficulty || "").toLowerCase()] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" };
 
   const Field = ({ label, children }) => (
     <div style={{ marginBottom: 14 }}>
@@ -64,7 +64,7 @@ const QuestionPreviewDrawer = ({ question: q, open, onClose }) => {
       onClose={onClose}
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ ...iconWell("#2563EB", 32), borderRadius: 9 }}><EyeOutlined /></div>
+          <div style={{ ...iconWell("var(--primary)", 32), borderRadius: 9 }}><EyeOutlined /></div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 14 }}>Question Preview</div>
             <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>
@@ -80,8 +80,8 @@ const QuestionPreviewDrawer = ({ question: q, open, onClose }) => {
       <Space style={{ marginBottom: 16 }}>
         <span style={{ ...pill(typeStyle.color, typeStyle.bg) }}>{typeStyle.label}</span>
         <span style={{ ...pill(diffStyle.color, diffStyle.bg), textTransform: "capitalize" }}>{q.difficulty || "—"}</span>
-        <span style={{ ...pill("#15803D", "#DCFCE7") }}>+{q.marks ?? 0} marks</span>
-        {(q.negativeMarks > 0) && <span style={{ ...pill("#DC2626", "#FEE2E2") }}>−{q.negativeMarks}</span>}
+        <span style={{ ...pill("var(--success-hover)", "var(--success-light)") }}>+{q.marks ?? 0} marks</span>
+        {(q.negativeMarks > 0) && <span style={{ ...pill("var(--danger-hover)", "var(--danger-light)") }}>−{q.negativeMarks}</span>}
         {q.isActive
           ? <Tag color="green" icon={<CheckCircleOutlined />}>Active</Tag>
           : <Tag color="red"   icon={<CloseCircleOutlined />}>Inactive</Tag>
@@ -112,22 +112,22 @@ const QuestionPreviewDrawer = ({ question: q, open, onClose }) => {
                 <div key={i} style={{
                   display: "flex", alignItems: "center", gap: 10,
                   padding: "8px 12px", borderRadius: 10,
-                  background: isCorrect ? "#DCFCE7" : "var(--surface-soft)",
-                  border: `1px solid ${isCorrect ? "#22C55E44" : "var(--border-muted)"}`,
+                  background: isCorrect ? "var(--success-light)" : "var(--surface-soft)",
+                  border: `1px solid ${isCorrect ? "rgba(var(--success-rgb),0.27)" : "var(--border-muted)"}`,
                 }}>
                   <span style={{
                     width: 26, height: 26, borderRadius: 7, flexShrink: 0,
-                    background: isCorrect ? "#22C55E" : "var(--border)",
+                    background: isCorrect ? "var(--success)" : "var(--border)",
                     color: isCorrect ? "#fff" : "var(--text-muted)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontWeight: 700, fontSize: 12,
                   }}>
                     {opt.key}
                   </span>
-                  <span style={{ fontSize: 13, color: isCorrect ? "#15803D" : "var(--text-primary)", fontWeight: isCorrect ? 600 : 400 }}>
+                  <span style={{ fontSize: 13, color: isCorrect ? "var(--success-hover)" : "var(--text-primary)", fontWeight: isCorrect ? 600 : 400 }}>
                     {opt.text}
                   </span>
-                  {isCorrect && <CheckCircleOutlined style={{ color: "#22C55E", marginLeft: "auto" }} />}
+                  {isCorrect && <CheckCircleOutlined style={{ color: "var(--success)", marginLeft: "auto" }} />}
                 </div>
               );
             })}
@@ -431,7 +431,7 @@ const QuestionBank = () => {
       render: (_, r) => (
         <div style={{ textAlign: "center" }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--primary)" }}>+{r.marks ?? 0}</div>
-          {r.negativeMarks > 0 && <div style={{ fontSize: 11, color: "#DC2626" }}>−{r.negativeMarks}</div>}
+          {r.negativeMarks > 0 && <div style={{ fontSize: 11, color: "var(--danger-hover)" }}>−{r.negativeMarks}</div>}
         </div>
       ),
     },
@@ -467,7 +467,7 @@ const QuestionBank = () => {
           <Tooltip title="Edit">
             <Button
               type="text" size="small" icon={<EditOutlined />}
-              style={{ color: "#D97706" }}
+              style={{ color: "var(--warning-hover)" }}
               onClick={() => handleEdit(r)}
             />
           </Tooltip>
@@ -489,10 +489,10 @@ const QuestionBank = () => {
   ];
 
   const statMeta = [
-    { label: "Total Questions",  value: stats.total, color: "#2563EB", icon: <BookOpen size={18} /> },
-    { label: "MCQ",              value: stats.mcq,   color: "#7C3AED", icon: <CheckSquare size={18} /> },
-    { label: "True / False",     value: stats.tf,    color: "#0D9488", icon: <CheckSquare size={18} /> },
-    { label: "Fill in the Blank",value: stats.fill,  color: "#D97706", icon: <AlignLeft size={18} /> },
+    { label: "Total Questions",  value: stats.total, color: "var(--primary)", icon: <BookOpen size={18} /> },
+    { label: "MCQ",              value: stats.mcq,   color: "var(--purple)", icon: <CheckSquare size={18} /> },
+    { label: "True / False",     value: stats.tf,    color: "var(--accent-hover)", icon: <CheckSquare size={18} /> },
+    { label: "Fill in the Blank",value: stats.fill,  color: "var(--warning-hover)", icon: <AlignLeft size={18} /> },
   ];
 
   return (
@@ -646,9 +646,9 @@ const QuestionBank = () => {
             <div style={{
               display: "flex", alignItems: "center", gap: 12,
               padding: "8px 12px", borderRadius: 8,
-              background: "#FEE2E2", border: "1px solid #DC262630",
+              background: "var(--danger-light)", border: "1px solid rgba(var(--danger-rgb),0.19)",
             }}>
-              <span style={{ fontWeight: 600, color: "#DC2626", fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: "var(--danger-hover)", fontSize: 13 }}>
                 {selectedRowKeys.length} questions selected
               </span>
               <Button danger size="small" icon={<DeleteOutlined />} onClick={handleBulkDelete}>
@@ -666,7 +666,7 @@ const QuestionBank = () => {
               <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>Questions</span>
               <span style={{
                 marginLeft: 10, fontSize: 11, fontWeight: 600,
-                background: "#DBEAFE", color: "#1D4ED8",
+                background: "var(--primary-light)", color: "var(--primary-hover)",
                 padding: "2px 8px", borderRadius: 99,
               }}>
                 {filteredQuestions.length} records
@@ -674,7 +674,7 @@ const QuestionBank = () => {
               {selectedAcademicYear?.name && (
                 <span style={{
                   marginLeft: 8, fontSize: 11, fontWeight: 600,
-                  background: "#EDE9FE", color: "#6D28D9",
+                  background: "rgba(var(--purple-rgb),0.12)", color: "var(--purple-hover)",
                   padding: "2px 8px", borderRadius: 99,
                 }}>
                   {selectedAcademicYear.name}
@@ -743,7 +743,7 @@ const QuestionBank = () => {
         centered
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ ...iconWell(modal === "edit" ? "#D97706" : "#2563EB", 32), borderRadius: 9 }}>
+            <div style={{ ...iconWell(modal === "edit" ? "var(--warning-hover)" : "var(--primary)", 32), borderRadius: 9 }}>
               {modal === "edit" ? <EditOutlined /> : <PlusOutlined />}
             </div>
             <div>
@@ -775,7 +775,7 @@ const QuestionBank = () => {
         centered
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ ...iconWell("#7C3AED", 32), borderRadius: 9 }}><UploadOutlined /></div>
+            <div style={{ ...iconWell("var(--purple)", 32), borderRadius: 9 }}><UploadOutlined /></div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 14 }}>Bulk Upload Questions</div>
               <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>Excel file se multiple questions ek saath add karein</div>

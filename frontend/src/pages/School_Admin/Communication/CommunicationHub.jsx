@@ -28,7 +28,6 @@ import {
   iconWell, pageWrapper, pill, sectionPanel,
   statGrid, tableContainer, tableHeadCss,
 } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
 import { getRoleName, ALL_ROLE_NAMES } from "../../../utils/roles";
 import {
   createNotificationPayload, getNotificationAnalytics, getNotifications,
@@ -60,6 +59,13 @@ const LEVEL_OPTIONS = [
 ];
 const ROLE_OPTIONS = ALL_ROLE_NAMES.map((r) => ({ label: r, value: r }));
 
+// NOTE: the `color` values below are consumed via `${color}NN` alpha-suffix
+// string concatenation (see LevelAvatar, ChannelToggle, and the notification/
+// message row styles) and/or passed into the shared `pill()` / `iconWell()`
+// helpers (frontend/src/styles/pageStyles.js), which do the same suffix trick
+// internally. Both break with a var() string (e.g. "var(--primary)18" is
+// invalid CSS), and that shared helper file is outside this task's scope, so
+// these stay as raw hex.
 const LEVEL_META = {
   all:          { icon: <GlobalOutlined />,    color: "#2563EB", label: "Broadcast" },
   role:         { icon: <SolutionOutlined />,  color: "#7C3AED", label: "Role"      },
@@ -140,7 +146,7 @@ const LevelAvatar = ({ level, size = 36 }) => {
 const BroadcastPanel = ({ user }) => {
   const [form]      = Form.useForm();
   const [notifs,    setNotifs]    = useState([]);
-  const [analytics, setAnalytics] = useState({});
+  const [_analytics, setAnalytics] = useState({});
   const [loading,   setLoading]   = useState(true);
   const [sending,   setSending]   = useState(false);
   const [search,    setSearch]    = useState("");
@@ -171,7 +177,7 @@ const BroadcastPanel = ({ user }) => {
     try {
       const [rows, stats] = await Promise.all([getNotifications(), getNotificationAnalytics()]);
       setNotifs(rows); setAnalytics(stats);
-    } catch (err) { message.error("Failed to load notifications"); }
+    } catch { message.error("Failed to load notifications"); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -206,12 +212,12 @@ const BroadcastPanel = ({ user }) => {
     try {
       const updated = await markNotificationAsRead(n._id);
       setNotifs((prev) => prev.map((x) => (x._id === n._id ? updated : x)));
-    } catch (err) { message.error("Failed to mark as read"); }
+    } catch { message.error("Failed to mark as read"); }
   };
 
   const handleMarkAllRead = async () => {
     try { await markAllNotificationsAsRead(); await load(); message.success("All marked as read"); }
-    catch (err) { message.error("Failed"); }
+    catch { message.error("Failed"); }
   };
 
   /* Conditional target fields */
@@ -237,11 +243,11 @@ const BroadcastPanel = ({ user }) => {
       </Form.Item>
     );
     return (
-      <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-        <GlobalOutlined style={{ color: "#2563EB", fontSize: 15 }} />
+      <div style={{ background: "var(--primary-light)", border: "1px solid #BFDBFE", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+        <GlobalOutlined style={{ color: "var(--primary)", fontSize: 15 }} />
         <div>
-          <Text strong style={{ fontSize: 12, color: "#1D4ED8" }}>Broadcasting to everyone</Text>
-          <Text style={{ fontSize: 11, color: "#3B82F6", display: "block" }}>All roles and users in the portal.</Text>
+          <Text strong style={{ fontSize: 12, color: "var(--primary-hover)" }}>Broadcasting to everyone</Text>
+          <Text style={{ fontSize: 11, color: "var(--info)", display: "block" }}>All roles and users in the portal.</Text>
         </div>
       </div>
     );
@@ -302,7 +308,7 @@ const BroadcastPanel = ({ user }) => {
             <Flex align="center" justify="space-between" wrap="wrap" gap={10}>
               <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "var(--text-muted)" }}>
                 <Form.Item name="saveAsDraft" valuePropName="checked" noStyle>
-                  <input type="checkbox" style={{ width: 14, height: 14, accentColor: "#7C3AED" }} />
+                  <input type="checkbox" style={{ width: 14, height: 14, accentColor: "var(--purple)" }} />
                 </Form.Item>
                 Save as draft
               </label>
@@ -320,7 +326,7 @@ const BroadcastPanel = ({ user }) => {
           <Flex align="center" gap={8}>
             <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>My Notifications</Text>
             {unread > 0 && (
-              <span style={{ background: "#2563EB", color: "#fff", fontSize: 11, fontWeight: 700, borderRadius: 99, padding: "1px 8px" }}>
+              <span style={{ background: "var(--primary)", color: "#fff", fontSize: 11, fontWeight: 700, borderRadius: 99, padding: "1px 8px" }}>
                 {unread}
               </span>
             )}
@@ -796,7 +802,6 @@ const HistoryPanel = () => {
    MAIN HUB
 ══════════════════════════════════════════════════════════════════════ */
 export default function CommunicationHub() {
-  const { isDark } = useTheme();
   const { user }   = useSelector((s) => s.auth);
   const messages   = useSelector((s) => s.messages);
   const notifs     = useSelector((s) => s.notification);

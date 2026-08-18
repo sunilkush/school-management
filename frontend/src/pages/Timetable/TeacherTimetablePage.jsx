@@ -10,13 +10,13 @@ import {
 import TimetableGrid from "./TimetableGrid";
 import { getName, schoolIdFromUser } from "./timetableUi";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell } from "../../styles/pageStyles";
+import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent: "#14B8A6", accentLight: "#CCFBF1",
-  border: "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent: "var(--accent)", accentLight: "var(--accent-light)",
+  border: "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
 };
 
 const getRoleName = (user) => {
@@ -133,7 +133,7 @@ export default function TeacherTimetablePage() {
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "6px 14px", borderRadius: 20,
-                background: C.accentLight, border: "1px solid #99F6E4",
+                background: C.accentLight, border: "1px solid rgba(var(--accent-rgb), 0.5)",
               }}>
                 <div style={{
                   width: 22, height: 22, borderRadius: "50%",
@@ -143,14 +143,14 @@ export default function TeacherTimetablePage() {
                 }}>
                   {getTeacherName(selectedTeacher).charAt(0).toUpperCase()}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#0F766E" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-hover)" }}>
                   {getName(selectedTeacher, getTeacherName(selectedTeacher))}
                 </span>
               </div>
               {periodCount > 0 && (
                 <span style={{
                   fontSize: 12, padding: "5px 12px", borderRadius: 20,
-                  background: "#F8FAFC", border: "1px solid " + C.border,
+                  background: "var(--background)", border: "1px solid " + C.border,
                   color: C.textSub, fontWeight: 600,
                 }}>
                   {periodCount} period{periodCount !== 1 ? "s" : ""} this week

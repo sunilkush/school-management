@@ -17,13 +17,13 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 import { getRoleName, getRolePath } from "../../../utils/roles";
 
-const STAT_COLORS = ["#2563EB", "#14B8A6", "#22C55E", "#F59E0B"];
-const STAT_ACCENT_BARS = ["#DBEAFE", "rgba(20,184,166,0.15)", "#DCFCE7", "#FEF3C7"];
+const STAT_COLORS = ["var(--primary)", "var(--accent)", "var(--success)", "var(--warning)"];
+const STAT_ACCENT_BARS = ["var(--primary-light)", "rgba(var(--accent-rgb),0.15)", "var(--success-light)", "var(--warning-light)"];
 const STAT_BG = [
-  "rgba(219,234,254,0.12)",
-  "rgba(20,184,166,0.12)",
-  "rgba(220,252,231,0.12)",
-  "rgba(254,243,199,0.15)",
+  "rgba(var(--primary-rgb),0.12)",
+  "rgba(var(--accent-rgb),0.12)",
+  "rgba(var(--success-rgb),0.12)",
+  "rgba(var(--warning-rgb),0.15)",
 ];
 
 const TeacherDashboard = () => {
@@ -122,7 +122,7 @@ const TeacherDashboard = () => {
           {/* KPI stats */}
           <div className="stat-grid" style={statGrid(180)}>
             {stats.map((item, i) => (
-              <div key={item.title} style={statCard({ color: STAT_COLORS[i], bg: "#ffffff", accentBar: STAT_ACCENT_BARS[i] })}>
+              <div key={item.title} style={statCard({ color: STAT_COLORS[i], bg: "var(--surface)", accentBar: STAT_ACCENT_BARS[i] })}>
                 <div>
                   <div style={statLabel(STAT_COLORS[i])}>{item.title}</div>
                   <div style={statValue(STAT_COLORS[i])}>{item.value}</div>
@@ -242,8 +242,8 @@ const TeacherDashboard = () => {
                   percent={dashboardData.attendancePercent}
                   status="active"
                   strokeColor={{
-                    from: "#DBEAFE",
-                    to: "#DCFCE7",
+                    from: "var(--primary-light)",
+                    to: "var(--success-light)",
                   }}
                 />
               </div>
@@ -259,7 +259,7 @@ const TeacherDashboard = () => {
                       <List.Item key={`${item.className}-${item.sectionName}-${index}`} style={{ padding: "8px 0", borderBottom: "1px solid var(--border-muted)" }}>
                         <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{item.className} — {item.sectionName}</span>
                         <span style={pill(
-                          item.role === "Class Teacher" ? "#15803D" : "#2E6A9A",
+                          item.role === "Class Teacher" ? "var(--success-hover)" : "var(--primary-hover)",
                           item.role === "Class Teacher" ? "rgba(220,252,231,0.25)" : "rgba(219,234,254,0.22)"
                         )}>
                           {item.role}

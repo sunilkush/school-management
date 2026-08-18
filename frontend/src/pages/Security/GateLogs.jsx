@@ -88,9 +88,9 @@ const GateLogs = () => {
       {/* ── KPI summary ───────────────────────────────────────────── */}
       <div style={statGrid(160)}>
         {[
-          { label: "Currently Inside", value: stats.inside ?? 0,       icon: <TeamOutlined />,   color: "#16A34A" },
-          { label: "Today's Entries",  value: stats.todayEntries ?? 0, icon: <LoginOutlined />,  color: "#2563EB" },
-          { label: "Today's Exits",    value: stats.todayExits ?? 0,   icon: <LogoutOutlined />, color: "#7C3AED" },
+          { label: "Currently Inside", value: stats.inside ?? 0,       icon: <TeamOutlined />,   color: "var(--success)" },
+          { label: "Today's Entries",  value: stats.todayEntries ?? 0, icon: <LoginOutlined />,  color: "var(--primary)" },
+          { label: "Today's Exits",    value: stats.todayExits ?? 0,   icon: <LogoutOutlined />, color: "var(--purple)" },
         ].map(({ label, value, icon, color }) => (
           <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
             <div style={iconWell(color, 40)}>{icon}</div>

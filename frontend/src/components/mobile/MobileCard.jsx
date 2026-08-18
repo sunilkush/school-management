@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
 
 /**
  * MobileCard — replaces a single table row on mobile screens.
@@ -42,14 +41,13 @@ const MobileCard = ({
   style: extraStyle,
   onClick,
 }) => {
-  const { isDark } = useTheme();
   const [open, setOpen] = useState(!expandable);
 
-  const bg     = isDark ? "#111827" : "#ffffff";
-  const border = isDark ? "#1E2A3B" : "#E8EEF6";
-  const txtPri = isDark ? "#E2E8F0" : "#0F172A";
-  const txtMut = isDark ? "#64748B" : "#94A3B8";
-  const metaBg = isDark ? "#0C1118" : "#F8FAFF";
+  const bg     = "var(--surface)";
+  const border = "var(--border)";
+  const txtPri = "var(--text)";
+  const txtMut = "var(--text-muted)";
+  const metaBg = "var(--surface-soft)";
   const accentColor = accent || "var(--primary, #2563EB)";
 
   return (
@@ -61,9 +59,7 @@ const MobileCard = ({
         borderRadius:  14,
         overflow:      "hidden",
         marginBottom:  10,
-        boxShadow:     isDark
-          ? "0 2px 8px rgba(0,0,0,0.2)"
-          : "0 2px 8px rgba(37,99,235,0.06)",
+        boxShadow:     "var(--shadow-soft)",
         ...extraStyle,
       }}
       onClick={onClick}

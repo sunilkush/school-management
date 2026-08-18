@@ -35,14 +35,25 @@ const formatAnswer = (ans) => {
 };
 
 const GRADE_COLOR = {
-  "A+": "#7C3AED", A: "#0891B2", B: "#15803D",
-  C:  "#B45309",   D: "#DC2626", F: "#7F1D1D",
+  "A+": "var(--purple)", A: "var(--cyan)", B: "var(--success-hover)",
+  C:  "var(--warning-hover)", D: "var(--danger-hover)", F: "#7F1D1D",
+};
+
+// Companion tint backgrounds for GRADE_COLOR (kept in sync manually since the
+// `${color}22` hex-alpha trick used elsewhere doesn't work with CSS var() values).
+const GRADE_BG = {
+  "A+": "rgba(var(--purple-rgb),0.15)",
+  A: "rgba(8,145,178,0.15)",
+  B: "var(--success-light)",
+  C: "var(--warning-light)",
+  D: "var(--danger-light)",
+  F: "rgba(127,29,29,0.15)",
 };
 
 const StatusMeta = (status) => {
-  if (status === "evaluated") return { color: "#15803D", bg: "#DCFCE7", label: "Evaluated" };
-  if (status === "submitted") return { color: "#1D4ED8", bg: "#DBEAFE", label: "Submitted" };
-  return { color: "#B45309", bg: "#FEF3C7", label: "In Progress" };
+  if (status === "evaluated") return { color: "var(--success-hover)", bg: "var(--success-light)", label: "Evaluated" };
+  if (status === "submitted") return { color: "var(--primary-hover)", bg: "var(--primary-light)", label: "Submitted" };
+  return { color: "var(--warning-hover)", bg: "var(--warning-light)", label: "In Progress" };
 };
 
 const StatCard = ({ icon, label, value, color, sub }) => (
@@ -113,7 +124,7 @@ const AttemptReview = () => {
   );
 
   const grade = attempt?.grade;
-  const gc    = GRADE_COLOR[grade] || "#64748B";
+  const gc    = GRADE_COLOR[grade] || "var(--text-secondary)";
   const pct   = stats?.pct ?? 0;
 
   return (
@@ -145,7 +156,7 @@ const AttemptReview = () => {
             type="circle"
             percent={pct}
             size={110}
-            strokeColor={pct >= 60 ? "#22C55E" : pct >= 40 ? "#F59E0B" : "#EF4444"}
+            strokeColor={pct >= 60 ? "var(--success)" : pct >= 40 ? "var(--warning)" : "var(--danger)"}
             trailColor="var(--border-muted)"
             format={() => (
               <div style={{ textAlign: "center" }}>
@@ -170,7 +181,7 @@ const AttemptReview = () => {
               {grade && (
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700,
-                  background: gc + "22", color: gc, padding: "3px 10px", borderRadius: 99,
+                  background: GRADE_BG[grade] || "transparent", color: gc, padding: "3px 10px", borderRadius: 99,
                 }}>
                   Grade {grade}
                 </span>
@@ -190,7 +201,7 @@ const AttemptReview = () => {
           </div>
           <Progress
             percent={pct} showInfo={false}
-            strokeColor={pct >= 60 ? "#22C55E" : pct >= 40 ? "#F59E0B" : "#EF4444"}
+            strokeColor={pct >= 60 ? "var(--success)" : pct >= 40 ? "var(--warning)" : "var(--danger)"}
             trailColor="var(--border-muted)"
           />
         </div>
@@ -198,10 +209,10 @@ const AttemptReview = () => {
 
       {/* ── Stat cards ── */}
       <div style={{ ...statGrid(130), marginTop: 0 }}>
-        <StatCard icon={<FileTextOutlined />}    label="Questions"  value={stats?.total ?? 0}    color="#7C3AED" />
-        <StatCard icon={<CheckCircleOutlined />} label="Answered"   value={stats?.answered ?? 0} color="#0891B2" sub={`${(stats?.total ?? 0) - (stats?.answered ?? 0)} skipped`} />
-        <StatCard icon={<TrophyOutlined />}      label="Correct"    value={`${stats?.correct ?? 0}/${stats?.evaled ?? 0}`} color="#15803D" />
-        <StatCard icon={<ClockCircleOutlined />} label="Submitted"  value={attempt?.submittedAt ? dayjs(attempt.submittedAt).format("hh:mm A") : "Pending"} color="#B45309" sub={attempt?.submittedAt ? dayjs(attempt.submittedAt).format("DD MMM YYYY") : ""} />
+        <StatCard icon={<FileTextOutlined />}    label="Questions"  value={stats?.total ?? 0}    color="var(--purple)" />
+        <StatCard icon={<CheckCircleOutlined />} label="Answered"   value={stats?.answered ?? 0} color="var(--cyan)" sub={`${(stats?.total ?? 0) - (stats?.answered ?? 0)} skipped`} />
+        <StatCard icon={<TrophyOutlined />}      label="Correct"    value={`${stats?.correct ?? 0}/${stats?.evaled ?? 0}`} color="var(--success-hover)" />
+        <StatCard icon={<ClockCircleOutlined />} label="Submitted"  value={attempt?.submittedAt ? dayjs(attempt.submittedAt).format("hh:mm A") : "Pending"} color="var(--warning-hover)" sub={attempt?.submittedAt ? dayjs(attempt.submittedAt).format("DD MMM YYYY") : ""} />
       </div>
 
       {/* ── Question-wise Review ── */}
@@ -230,8 +241,8 @@ const AttemptReview = () => {
                 <div
                   key={ans?._id || i}
                   style={{
-                    border: `1px solid ${hasEval ? (correct ? "#BBF7D0" : "#FECACA") : "var(--border-muted)"}`,
-                    borderLeft: `4px solid ${hasEval ? (correct ? "#22C55E" : "#EF4444") : "var(--border-muted)"}`,
+                    border: `1px solid ${hasEval ? (correct ? "var(--success-light)" : "var(--danger-light)") : "var(--border-muted)"}`,
+                    borderLeft: `4px solid ${hasEval ? (correct ? "var(--success)" : "var(--danger)") : "var(--border-muted)"}`,
                     borderRadius: 12, padding: "14px 16px",
                     background: hasEval ? (correct ? "rgba(220,252,231,0.1)" : "rgba(254,226,226,0.1)") : "var(--surface)",
                   }}
@@ -257,8 +268,8 @@ const AttemptReview = () => {
                       {hasEval ? (
                         <span style={{
                           display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 700,
-                          background: correct ? "#DCFCE7" : "#FEE2E2",
-                          color:      correct ? "#15803D" : "#DC2626",
+                          background: correct ? "var(--success-light)" : "var(--danger-light)",
+                          color:      correct ? "var(--success-hover)" : "var(--danger-hover)",
                           padding: "2px 10px", borderRadius: 99,
                         }}>
                           {correct ? <CheckCircleOutlined /> : <CloseCircleOutlined />}

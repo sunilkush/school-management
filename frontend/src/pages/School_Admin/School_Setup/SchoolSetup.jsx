@@ -17,7 +17,7 @@ const SchoolAcademicYear       = lazy(() => import("./SchoolAcademicYear.jsx"));
 const SchoolClassSubject       = lazy(() => import("./SchoolClassSubject.jsx"));
 const SchoolClassSectionTeacher = lazy(() => import("./SchoolClassSectionTeacher.jsx"));
 
-const C = { primary: "#7c3aed", success: "#10b981" };
+const C = { primary: "var(--purple)", success: "var(--success)" };
 
 const STEPS = [
   { key: "1", title: "Academic Year", desc: "Set up the current academic year",   icon: CalendarOutlined  },
@@ -65,10 +65,10 @@ const StepNav = ({ steps, activeKey, completedKeys, onStep }) => (
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 16, transition: "all 0.22s ease",
               ...(isDone ? {
-                background: "rgba(16,185,129,0.12)", border: `2px solid ${C.success}`, color: C.success,
+                background: "rgba(var(--success-rgb),0.12)", border: `2px solid ${C.success}`, color: C.success,
               } : isActive ? {
-                background: "rgba(124,58,237,0.12)", border: `2px solid ${C.primary}`, color: C.primary,
-                boxShadow: "0 0 0 4px rgba(124,58,237,0.08)",
+                background: "rgba(var(--purple-rgb),0.12)", border: `2px solid ${C.primary}`, color: C.primary,
+                boxShadow: "0 0 0 4px rgba(var(--purple-rgb),0.08)",
               } : {
                 background: "var(--surface-soft)", border: "2px solid var(--border)", color: "var(--text-muted)",
               }),
@@ -94,7 +94,7 @@ const StepNav = ({ steps, activeKey, completedKeys, onStep }) => (
             <div style={{
               flex: 1, height: 2, marginBottom: 28, borderRadius: 99,
               background: isDone
-                ? `linear-gradient(90deg,${C.success},${C.success}80)`
+                ? `linear-gradient(90deg,${C.success},rgba(var(--success-rgb),0.5))`
                 : "var(--border)",
               transition: "background 0.4s ease",
             }} />
@@ -183,9 +183,9 @@ const SchoolSetup = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{
                 width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-                background: "linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)",
+                background: "linear-gradient(135deg,var(--purple) 0%,var(--purple-hover) 100%)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(124,58,237,0.35)",
+                boxShadow: "0 4px 12px rgba(var(--purple-rgb),0.35)",
               }}>
                 <AppstoreOutlined style={{ fontSize: 22, color: "#fff" }} />
               </div>
@@ -239,7 +239,7 @@ const SchoolSetup = () => {
           }}>
             <div style={{
               width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-              background: "rgba(124,58,237,0.1)",
+              background: "rgba(var(--purple-rgb),0.1)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <StepIcon style={{ fontSize: 16, color: C.primary }} />

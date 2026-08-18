@@ -44,7 +44,7 @@ const VisitorManagement = () => {
       title: "Visitor",
       render: (_, r) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Avatar name={r.name || "?"} color={VISITOR_COLORS[r.type] || "#6366f1"} />
+          <Avatar name={r.name || "?"} color={VISITOR_COLORS[r.type] || "var(--purple)"} />
           <div>
             <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.name || "—"}</div>
             <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.purpose || ""}</div>
@@ -55,8 +55,8 @@ const VisitorManagement = () => {
     {
       title: "Type", dataIndex: "type", width: 110,
       render: (v) => {
-        const c = VISITOR_COLORS[v] || "#8b5cf6";
-        return <span style={pill(c, `${c}15`)}>{v || "Visitor"}</span>;
+        const c = VISITOR_COLORS[v] || "var(--purple)";
+        return <span style={pill(c, `color-mix(in srgb, ${c} 8%, transparent)`)}>{v || "Visitor"}</span>;
       },
     },
     { title: "Phone", dataIndex: "phone", width: 130, render: (v) => <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{v || "—"}</span> },
@@ -72,7 +72,7 @@ const VisitorManagement = () => {
       title: "Status", dataIndex: "status", width: 100,
       render: (v) => {
         const inside = v === "Inside";
-        return <span style={pill(inside ? "#10b981" : "#94a3b8", inside ? "#10b98115" : "#94a3b815")}>{v || "—"}</span>;
+        return <span style={pill(inside ? "var(--success)" : "var(--text-muted)", inside ? "color-mix(in srgb, var(--success) 8%, transparent)" : "color-mix(in srgb, var(--text-muted) 8%, transparent)")}>{v || "—"}</span>;
       },
     },
     {
@@ -83,14 +83,14 @@ const VisitorManagement = () => {
             <button style={{
               display: "flex", alignItems: "center", gap: 5,
               padding: "5px 10px", borderRadius: 8,
-              border: "1px solid #ef444440", background: "#ef444410",
-              color: "#ef4444", cursor: "pointer", fontSize: 12, fontWeight: 600,
+              border: "1px solid color-mix(in srgb, var(--danger) 25%, transparent)", background: "color-mix(in srgb, var(--danger) 6%, transparent)",
+              color: "var(--danger)", cursor: "pointer", fontSize: 12, fontWeight: 600,
             }}>
               <LogOut size={12} strokeWidth={2.5} /> Exit
             </button>
           </Popconfirm>
         ) : (
-          <span style={{ ...pill("#94a3b8", "#94a3b815"), fontSize: 11 }}>Exited</span>
+          <span style={{ ...pill("var(--text-muted)", "color-mix(in srgb, var(--text-muted) 8%, transparent)"), fontSize: 11 }}>Exited</span>
         ),
     },
   ];
@@ -111,9 +111,9 @@ const VisitorManagement = () => {
       />
 
       <div style={{ ...statGrid(140), marginTop: 20 }}>
-        <StatCard icon={Users}       label="Total Today"      value={entries.length} color="#6366f1" />
-        <StatCard icon={CheckCircle} label="Currently Inside" value={inside}         color="#10b981" />
-        <StatCard icon={LogOut}      label="Exited"           value={exited}         color="#94a3b8" />
+        <StatCard icon={Users}       label="Total Today"      value={entries.length} color="var(--purple)" />
+        <StatCard icon={CheckCircle} label="Currently Inside" value={inside}         color="var(--success)" />
+        <StatCard icon={LogOut}      label="Exited"           value={exited}         color="var(--text-muted)" />
       </div>
 
       <div style={sectionPanel}>

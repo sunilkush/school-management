@@ -1,16 +1,24 @@
 import React from "react";
 
 const C = {
-  primary: "#2563EB",
-  success: "#22C55E",
-  danger:  "#EF4444",
-  accent:  "#14B8A6",
-  warning: "#F59E0B",
-  border:  "#E2E8F0",
-  text:    "#0F172A",
-  textSub: "#64748B",
-  textMuted: "#94A3B8",
-  surface: "#F8FAFC",
+  primary: "var(--primary)",
+  success: "var(--success)",
+  danger:  "var(--danger)",
+  accent:  "var(--accent)",
+  warning: "var(--warning)",
+  border:  "var(--border)",
+  text:    "var(--text)",
+  textSub: "var(--text-secondary)",
+  textMuted: "var(--text-muted)",
+  surface: "var(--surface)",
+};
+
+// rgb triplets for the same tokens, for translucent SVG fills (var() can't take a hex+alpha suffix)
+const CRGB = {
+  primary: "var(--primary-rgb)",
+  success: "var(--success-rgb)",
+  danger:  "var(--danger-rgb)",
+  accent:  "var(--accent-rgb)",
 };
 
 /*
@@ -54,8 +62,10 @@ const AttendanceMap = ({ userPosition, schoolCoords, distanceInfo }) => {
   }
 
   const inside = distanceInfo ? distanceInfo.inside : true;
-  const fenceColor = inside ? C.success : C.danger;
-  const userColor  = inside ? C.primary : C.danger;
+  const fenceColor    = inside ? C.success : C.danger;
+  const fenceColorRgb = inside ? CRGB.success : CRGB.danger;
+  const userColor     = inside ? C.primary : C.danger;
+  const userColorRgb  = inside ? CRGB.primary : CRGB.danger;
 
   return (
     <div style={{
@@ -87,7 +97,7 @@ const AttendanceMap = ({ userPosition, schoolCoords, distanceInfo }) => {
           <>
             <circle
               cx={CX} cy={CY} r={GFENCE}
-              fill={fenceColor + "14"}
+              fill={`rgba(${fenceColorRgb}, 0.08)`}
               stroke={fenceColor}
               strokeWidth={2}
               strokeDasharray="6 3"
@@ -117,7 +127,7 @@ const AttendanceMap = ({ userPosition, schoolCoords, distanceInfo }) => {
         {!schoolCoords && (
           <>
             <circle cx={CX} cy={CY} r={GFENCE}
-              fill={C.accent + "10"} stroke={C.accent} strokeWidth={1.5} strokeDasharray="5 4" />
+              fill={`rgba(${CRGB.accent}, 0.06)`} stroke={C.accent} strokeWidth={1.5} strokeDasharray="5 4" />
             <text x={CX} y={CY - 14} textAnchor="middle" fontSize="11" fill={C.textMuted}>No geofence set</text>
             <text x={CX} y={CY + 4} textAnchor="middle" fontSize="10" fill={C.textMuted}>Check-in allowed</text>
             <text x={CX} y={CY + 18} textAnchor="middle" fontSize="10" fill={C.textMuted}>from anywhere</text>
@@ -139,7 +149,7 @@ const AttendanceMap = ({ userPosition, schoolCoords, distanceInfo }) => {
 
             {/* User dot outer ring */}
             <circle cx={userDotX} cy={userDotY} r={13}
-              fill={userColor + "22"} stroke={userColor} strokeWidth={1.5} />
+              fill={`rgba(${userColorRgb}, 0.13)`} stroke={userColor} strokeWidth={1.5} />
             {/* User dot */}
             <circle cx={userDotX} cy={userDotY} r={7} fill={userColor} />
             <circle cx={userDotX} cy={userDotY} r={3} fill="#fff" />

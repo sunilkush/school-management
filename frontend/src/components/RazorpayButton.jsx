@@ -81,7 +81,7 @@ const RazorpayButton = ({ invoiceId, invoiceNumber, amount, onSuccess }) => {
       loading={loading}
       onClick={handlePay}
       style={{
-        background: "linear-gradient(135deg, #2563EB, #3B82F6)",
+        background: "linear-gradient(135deg, var(--primary), var(--info))",
         border: "none",
         borderRadius: 8,
         fontWeight: 600,

@@ -136,21 +136,21 @@ const SecurityDashboard = () => {
       <div style={{ ...statGrid(180), marginBottom: 16 }}>
         <KpiCard
           label="Currently Inside" value={stats.inside ?? 0}
-          icon={<TeamOutlined />} color="#16A34A" sub="On campus right now"
+          icon={<TeamOutlined />} color="var(--success)" sub="On campus right now"
         />
         <KpiCard
           label="Today's Entries" value={stats.todayEntries ?? 0}
-          icon={<LoginOutlined />} color="#2563EB"
+          icon={<LoginOutlined />} color="var(--primary)"
           onClick={() => navigate("/dashboard/security/entry-register")}
         />
         <KpiCard
           label="Today's Exits" value={stats.todayExits ?? 0}
-          icon={<LogoutOutlined />} color="#7C3AED"
+          icon={<LogoutOutlined />} color="var(--purple)"
           onClick={() => navigate("/dashboard/security/gate-logs")}
         />
         <KpiCard
           label="Active Alerts" value={activeAlerts.length}
-          icon={<AlertOutlined />} color="#DC2626"
+          icon={<AlertOutlined />} color="var(--danger-hover)"
           sub={activeAlerts.length ? "Needs attention" : "All clear"}
           onClick={() => navigate("/dashboard/security/alerts")}
         />
@@ -162,16 +162,16 @@ const SecurityDashboard = () => {
         display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginRight: 6, flexShrink: 0 }}>
-          <div style={iconWell("#7C3AED", 28)}><ThunderboltOutlined style={{ fontSize: 12 }} /></div>
+          <div style={iconWell("var(--purple)", 28)}><ThunderboltOutlined style={{ fontSize: 12 }} /></div>
           <Text style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Quick Actions
           </Text>
         </div>
         <div style={{ width: 1, height: 24, background: "var(--border-muted)", flexShrink: 0 }} />
-        <ActionPill icon={<PlusOutlined />}     label="Log New Entry"    path="/dashboard/security/entry-register"   color="#2563EB" navigate={navigate} />
-        <ActionPill icon={<AuditOutlined />}    label="Gate Logs"        path="/dashboard/security/gate-logs"        color="#7C3AED" navigate={navigate} />
-        <ActionPill icon={<AlertOutlined />}    label="Emergency Alerts" path="/dashboard/security/alerts"           color="#DC2626" navigate={navigate} />
-        <ActionPill icon={<FileTextOutlined />} label="Shift Attendance" path="/dashboard/security/shift-attendance" color="#14B8A6" navigate={navigate} />
+        <ActionPill icon={<PlusOutlined />}     label="Log New Entry"    path="/dashboard/security/entry-register"   color="var(--primary)" navigate={navigate} />
+        <ActionPill icon={<AuditOutlined />}    label="Gate Logs"        path="/dashboard/security/gate-logs"        color="var(--purple)" navigate={navigate} />
+        <ActionPill icon={<AlertOutlined />}    label="Emergency Alerts" path="/dashboard/security/alerts"           color="var(--danger-hover)" navigate={navigate} />
+        <ActionPill icon={<FileTextOutlined />} label="Shift Attendance" path="/dashboard/security/shift-attendance" color="var(--accent)" navigate={navigate} />
       </div>
 
       <Row gutter={[16, 16]}>
@@ -180,7 +180,7 @@ const SecurityDashboard = () => {
           <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={iconWell("#2563EB", 32)}><AuditOutlined style={{ fontSize: 14 }} /></div>
+                <div style={iconWell("var(--primary)", 32)}><AuditOutlined style={{ fontSize: 14 }} /></div>
                 <div>
                   <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                     Recent Gate Activity
@@ -210,7 +210,7 @@ const SecurityDashboard = () => {
           <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={iconWell("#DC2626", 32)}><AlertOutlined style={{ fontSize: 14 }} /></div>
+                <div style={iconWell("var(--danger-hover)", 32)}><AlertOutlined style={{ fontSize: 14 }} /></div>
                 <div>
                   <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                     Active Alerts

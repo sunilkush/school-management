@@ -26,12 +26,18 @@ const BADGE_STATUS = {
   Reminder: "processing",
 };
 
+// NOTE: `color` fields here are passed into the shared `pill()` helper
+// (frontend/src/styles/pageStyles.js), which builds its border as
+// `1px solid ${color}25` — a raw-hex alpha-suffix trick that breaks with a
+// var() string (produces invalid CSS like "var(--accent)25"). Since that
+// helper is outside this task's scope, `color` is left as hex; `bg` (used
+// directly, no suffix) is safely converted to shared tokens.
 const TYPE_STYLE = {
-  Event:    { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
-  Holiday:  { color: "#22C55E", bg: "#d1fae5" },
-  Meeting:  { color: "#2563EB", bg: "#e0f2fe" },
-  Exam:     { color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
-  Activity: { color: "#F59E0B", bg: "#fff7ed" },
+  Event:    { color: "#14B8A6", bg: "rgba(var(--accent-rgb), 0.2)" },
+  Holiday:  { color: "#22C55E", bg: "var(--success-light)" },
+  Meeting:  { color: "#2563EB", bg: "var(--primary-light)" },
+  Exam:     { color: "#EF4444", bg: "var(--danger-light)" },
+  Activity: { color: "#F59E0B", bg: "rgba(var(--warning-rgb), 0.08)" },
   Reminder: { color: "#0e7490", bg: "#ecfeff" },
 };
 
@@ -178,7 +184,7 @@ const CalendarPage = () => {
   };
 
   const EventListItem = ({ event, onEdit, onDelete }) => {
-    const s = TYPE_STYLE[event.type] || { color: "#64748B", bg: "#f1f5f9" };
+    const s = TYPE_STYLE[event.type] || { color: "#64748B", bg: "var(--surface-soft)" };
     return (
       <List.Item
         actions={[

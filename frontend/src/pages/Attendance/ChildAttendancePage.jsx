@@ -19,15 +19,15 @@ import {
 } from "../../styles/pageStyles";
 
 /* ─── constants ─────────────────────────────────────────────────────── */
-const STAT_COLORS = ["#14B8A6", "#22C55E", "#EF4444", "#F59E0B", "#2563EB"];
+const STAT_COLORS = ["var(--accent)", "var(--success)", "var(--danger)", "var(--warning)", "var(--primary)"];
 const TABLE_CLS   = "child-att-tbl";
 
 const STATUS_CFG = {
-  present: { color: "#22C55E", bg: "#DCFCE7", border: "#86EFAC", label: "Present",  tagColor: "success" },
-  absent:  { color: "#EF4444", bg: "#FEE2E2", border: "#FCA5A5", label: "Absent",   tagColor: "error"   },
-  late:    { color: "#F59E0B", bg: "#FEF3C7", border: "#FCD34D", label: "Late",     tagColor: "warning" },
-  halfday: { color: "#F97316", bg: "#FFF7ED", border: "#FDBA74", label: "Half Day", tagColor: "orange"  },
-  leave:   { color: "#0891B2", bg: "#ECFEFF", border: "#67E8F9", label: "Leave",    tagColor: "cyan"    },
+  present: { color: "var(--success)", bg: "var(--success-light)", border: "var(--success-light)", label: "Present",  tagColor: "success" },
+  absent:  { color: "var(--danger)", bg: "var(--danger-light)", border: "var(--danger-light)", label: "Absent",   tagColor: "error"   },
+  late:    { color: "var(--warning)", bg: "var(--warning-light)", border: "var(--warning)", label: "Late",     tagColor: "warning" },
+  halfday: { color: "var(--orange)", bg: "rgba(var(--warning-rgb), 0.08)", border: "var(--orange)", label: "Half Day", tagColor: "orange"  },
+  leave:   { color: "var(--cyan)", bg: "#ECFEFF", border: "#67E8F9", label: "Leave",    tagColor: "cyan"    }, // no cyan-tint tokens exist; left as-is
 };
 
 /* ─── mini calendar ──────────────────────────────────────────────────── */
@@ -54,7 +54,7 @@ const AttendanceCalendar = ({ records, month, year }) => {
         {DAY_LABELS.map((d, i) => (
           <div key={d} style={{
             textAlign: "center", fontSize: 10, fontWeight: 700,
-            color: i === 6 ? "#EF4444" : "var(--text-muted)",
+            color: i === 6 ? "var(--danger)" : "var(--text-muted)",
             textTransform: "uppercase", letterSpacing: "0.05em", padding: "3px 0",
           }}>
             {d}
@@ -89,11 +89,11 @@ const AttendanceCalendar = ({ records, month, year }) => {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 12, fontWeight: isToday ? 800 : 600,
                 background: cfg ? cfg.bg : isSun ? "transparent" : "var(--surface-soft)",
-                color:      cfg ? cfg.color : isSun ? "#CBD5E1" : "var(--text-muted)",
+                color:      cfg ? cfg.color : isSun ? "var(--text-disabled)" : "var(--text-muted)",
                 border: isToday
                   ? `2px solid ${cfg ? cfg.color : "var(--primary)"}`
                   : cfg
-                    ? `1px solid ${cfg.border}60`
+                    ? `1px solid color-mix(in srgb, ${cfg.border} 38%, transparent)`
                     : `1px solid ${isSun ? "transparent" : "var(--border-muted)"}`,
                 cursor: "default",
               }}>
@@ -172,7 +172,7 @@ const ChildAttendancePage = () => {
     return { total, present, absent, late, percent };
   }, [myAttendance]);
 
-  const pctColor = summary.percent >= 75 ? "#22C55E" : summary.percent >= 50 ? "#F59E0B" : "#EF4444";
+  const pctColor = summary.percent >= 75 ? "var(--success)" : summary.percent >= 50 ? "var(--warning)" : "var(--danger)";
 
   const statMeta = [
     { key: "total",   label: "Total Days",   value: summary.total,        icon: <CalendarOutlined />,    color: STAT_COLORS[0] },
@@ -222,7 +222,7 @@ const ChildAttendancePage = () => {
       dataIndex: "checkInAt",
       width: 110,
       render: (v) => v
-        ? <span style={{ fontWeight: 600, color: "#22C55E" }}>{dayjs(v).format("hh:mm A")}</span>
+        ? <span style={{ fontWeight: 600, color: "var(--success)" }}>{dayjs(v).format("hh:mm A")}</span>
         : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
     },
     {
@@ -230,7 +230,7 @@ const ChildAttendancePage = () => {
       dataIndex: "checkOutAt",
       width: 110,
       render: (v) => v
-        ? <span style={{ fontWeight: 600, color: "#2563EB" }}>{dayjs(v).format("hh:mm A")}</span>
+        ? <span style={{ fontWeight: 600, color: "var(--primary)" }}>{dayjs(v).format("hh:mm A")}</span>
         : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
     },
     {
@@ -378,14 +378,14 @@ const ChildAttendancePage = () => {
                   paddingTop: 16, borderTop: "1px solid var(--border-muted)",
                 }}>
                   {[
-                    { label: "Present", value: summary.present, color: "#22C55E", bg: "#DCFCE7" },
-                    { label: "Absent",  value: summary.absent,  color: "#EF4444", bg: "#FEE2E2" },
-                    { label: "Late",    value: summary.late,    color: "#F59E0B", bg: "#FEF3C7" },
+                    { label: "Present", value: summary.present, color: "var(--success)", bg: "var(--success-light)" },
+                    { label: "Absent",  value: summary.absent,  color: "var(--danger)", bg: "var(--danger-light)" },
+                    { label: "Late",    value: summary.late,    color: "var(--warning)", bg: "var(--warning-light)" },
                   ].map(({ label, value, color, bg }) => (
                     <div key={label} style={{
                       display: "flex", alignItems: "center", gap: 6,
                       padding: "4px 12px", borderRadius: 20,
-                      background: bg, border: `1px solid ${color}40`,
+                      background: bg, border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
                     }}>
                       <span style={{ fontWeight: 800, fontSize: 14, color }}>{value}</span>
                       <span style={{ fontSize: 11, fontWeight: 600, color }}>{label}</span>

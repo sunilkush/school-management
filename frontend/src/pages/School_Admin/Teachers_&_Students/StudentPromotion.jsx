@@ -35,11 +35,11 @@ const FL = ({ children }) => (
 );
 
 /* ─── class / section pill ─────────────────────────────────────── */
-const Pill = ({ children, color = "#2563EB", bg = "#EFF6FF" }) => (
+const Pill = ({ children, color = "var(--primary)", bg = "var(--primary-light)", borderTint = "rgba(var(--primary-rgb), 0.15)" }) => (
   <span style={{
     display: "inline-block", padding: "2px 10px", borderRadius: 99,
     fontSize: 12, fontWeight: 700,
-    color, background: bg, border: `1px solid ${color}25`,
+    color, background: bg, border: `1px solid ${borderTint}`,
   }}>
     {children}
   </span>
@@ -163,13 +163,13 @@ export default function StudentPromotion() {
       title: "Current Class",
       dataIndex: "currentClass",
       width: 120,
-      render: (v) => <Pill color="#2563EB" bg="#EFF6FF">{v || "—"}</Pill>,
+      render: (v) => <Pill color="var(--primary)" bg="var(--primary-light)" borderTint="rgba(var(--primary-rgb), 0.15)">{v || "—"}</Pill>,
     },
     {
       title: "Section",
       dataIndex: "currentSection",
       width: 100,
-      render: (v) => <Pill color="#0D9488" bg="#CCFBF1">{v || "—"}</Pill>,
+      render: (v) => <Pill color="var(--accent-hover)" bg="var(--accent-light)" borderTint="rgba(var(--accent-rgb), 0.15)">{v || "—"}</Pill>,
     },
   ], []);
 
@@ -178,7 +178,7 @@ export default function StudentPromotion() {
       <style>{`
         ${tableHeadCss(TBL)}
         .${TBL} .ant-table-tbody > tr.ant-table-row-selected > td {
-          background: var(--primary-tint, #EFF6FF) !important;
+          background: var(--primary-light) !important;
         }
         .${TBL} .ant-checkbox-checked .ant-checkbox-inner {
           background: var(--primary) !important;
@@ -215,7 +215,7 @@ export default function StudentPromotion() {
 
           {/* Panel label */}
           <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
-            <div style={iconWell("#2563EB", 38)}>
+            <div style={iconWell("var(--primary)", 38)}>
               <UsergroupAddOutlined style={{ fontSize: 17 }} />
             </div>
             <div>
@@ -240,10 +240,10 @@ export default function StudentPromotion() {
               }}>
                 <div style={{
                   fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
-                  color: "#2563EB", textTransform: "uppercase", marginBottom: 14,
+                  color: "var(--primary)", textTransform: "uppercase", marginBottom: 14,
                   display: "flex", alignItems: "center", gap: 6,
                 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2563EB" }} />
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--primary)" }} />
                   FROM
                 </div>
                 <Space direction="vertical" style={{ width: "100%" }} size={12}>
@@ -299,10 +299,10 @@ export default function StudentPromotion() {
               }}>
                 <div style={{
                   fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
-                  color: "#0D9488", textTransform: "uppercase", marginBottom: 14,
+                  color: "var(--accent-hover)", textTransform: "uppercase", marginBottom: 14,
                   display: "flex", alignItems: "center", gap: 6,
                 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0D9488" }} />
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-hover)" }} />
                   TO
                 </div>
                 <Space direction="vertical" style={{ width: "100%" }} size={12}>
@@ -372,29 +372,32 @@ export default function StudentPromotion() {
               {
                 label: "Total Students",
                 value: candidates.length,
-                color: "#2563EB",
-                bg: "#EFF6FF",
+                color: "var(--primary)",
+                bg: "var(--primary-light)",
+                borderTint: "rgba(var(--primary-rgb), 0.15)",
                 icon: <TeamOutlined />,
               },
               {
                 label: "Selected",
                 value: selected.length,
-                color: "#15803D",
-                bg: "#F0FDF4",
+                color: "var(--success-hover)",
+                bg: "var(--success-light)",
+                borderTint: "rgba(var(--success-rgb), 0.15)",
                 icon: <CheckOutlined />,
               },
               {
                 label: "Not Selected",
                 value: candidates.length - selected.length,
-                color: "#B45309",
-                bg: "#FFFBEB",
+                color: "var(--warning-hover)",
+                bg: "var(--warning-light)",
+                borderTint: "rgba(var(--warning-rgb), 0.15)",
                 icon: <UserOutlined />,
               },
             ].map((s) => (
               <Col xs={8} key={s.label}>
                 <div style={{
                   background: s.bg,
-                  border: `1px solid ${s.color}25`,
+                  border: `1px solid ${s.borderTint}`,
                   borderTop: `4px solid ${s.color}`,
                   borderRadius: 14, padding: "14px 18px",
                 }}>
@@ -433,7 +436,7 @@ export default function StudentPromotion() {
               width: 64, height: 64, borderRadius: "50%", margin: "0 auto 16px",
               background: "rgba(37,99,235,0.08)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 30, color: "#2563EB",
+              fontSize: 30, color: "var(--primary)",
             }}>
               🎓
             </div>
@@ -519,7 +522,7 @@ export default function StudentPromotion() {
                 </Text>
               )}
               {selected.length > 0 && !canPromote && (
-                <Text style={{ fontSize: 12, color: "#B45309" }}>
+                <Text style={{ fontSize: 12, color: "var(--warning-hover)" }}>
                   Fill target year, class and section to enable promotion
                 </Text>
               )}
@@ -540,7 +543,7 @@ export default function StudentPromotion() {
               okText="Yes, Promote"
               cancelText="Cancel"
               disabled={!canPromote}
-              okButtonProps={{ style: { background: "#15803D", borderColor: "#15803D" } }}
+              okButtonProps={{ style: { background: "var(--success-hover)", borderColor: "var(--success-hover)" } }}
             >
               <Button
                 type="primary"
@@ -549,8 +552,8 @@ export default function StudentPromotion() {
                 loading={promoting}
                 style={{
                   borderRadius: 8, fontWeight: 700, height: 40,
-                  background: canPromote ? "#15803D" : undefined,
-                  borderColor: canPromote ? "#15803D" : undefined,
+                  background: canPromote ? "var(--success-hover)" : undefined,
+                  borderColor: canPromote ? "var(--success-hover)" : undefined,
                 }}
               >
                 {promoting

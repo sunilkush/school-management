@@ -17,15 +17,37 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { GraduationCap } from "lucide-react";
 
 /* ── Grade badge colour ─────────────────────────────────────────── */
-const GRADE_COLORS = { "A+": "#15803D", A: "#16A34A", "B+": "#2563EB", B: "#3B82F6", C: "#D97706", D: "#EA580C", F: "#DC2626" };
-const gradeBadge = (g) => (
-  <span style={{
-    background: `${GRADE_COLORS[g] || "#64748B"}18`,
-    color: GRADE_COLORS[g] || "#64748B",
-    border: `1px solid ${GRADE_COLORS[g] || "#64748B"}33`,
-    padding: "2px 10px", borderRadius: 99, fontWeight: 700, fontSize: 13,
-  }}>{g || "—"}</span>
-);
+const GRADE_COLORS = { "A+": "var(--success-hover)", A: "var(--success)", "B+": "var(--primary)", B: "var(--info)", C: "var(--warning-hover)", D: "var(--orange)", F: "var(--danger-hover)" };
+
+// RGB triples for the tokens above, used to build alpha-tinted backgrounds/borders from
+// a CSS custom property — the old `${color}NN` hex-alpha-suffix concatenation used
+// throughout this file doesn't work once these are var() values, so we go through
+// rgba() instead.
+const RGB = {
+  "var(--primary)": "var(--primary-rgb)",
+  "var(--success)": "var(--success-rgb)",
+  "var(--success-hover)": "var(--success-rgb)",
+  "var(--warning)": "var(--warning-rgb)",
+  "var(--warning-hover)": "var(--warning-rgb)",
+  "var(--danger)": "var(--danger-rgb)",
+  "var(--danger-hover)": "var(--danger-rgb)",
+  "var(--info)": "59,130,246",
+  "var(--orange)": "249,115,22",
+  "var(--text-secondary)": "100,116,139",
+};
+const tint = (color, alpha) => `rgba(${RGB[color] || "100,116,139"}, ${alpha})`;
+
+const gradeBadge = (g) => {
+  const c = GRADE_COLORS[g] || "var(--text-secondary)";
+  return (
+    <span style={{
+      background: tint(c, 0.09),
+      color: c,
+      border: `1px solid ${tint(c, 0.2)}`,
+      padding: "2px 10px", borderRadius: 99, fontWeight: 700, fontSize: 13,
+    }}>{g || "—"}</span>
+  );
+};
 
 /* ── Question type label ────────────────────────────────────────── */
 const AUTO_TYPES = new Set(["mcq_single", "mcq_multi", "true_false", "fill_blank"]);
@@ -34,9 +56,9 @@ const qTypePill = (t) => {
   return (
     <span style={{
       fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 99,
-      background: auto ? "#DCFCE7" : "#FEF3C7",
-      color:      auto ? "#15803D" : "#B45309",
-      border:     `1px solid ${auto ? "#22C55E33" : "#F59E0B33"}`,
+      background: auto ? "var(--success-light)" : "var(--warning-light)",
+      color:      auto ? "var(--success-hover)" : "var(--warning-hover)",
+      border:     `1px solid ${auto ? tint("var(--success)", 0.2) : tint("var(--warning)", 0.2)}`,
     }}>
       {auto ? "Auto" : "Manual"} · {t}
     </span>
@@ -52,8 +74,8 @@ const AnswerRow = ({ ans, idx, marksOverride, onChangeMarks, readOnly }) => {
   return (
     <div style={{
       padding: "14px 16px", marginBottom: 8, borderRadius: 10,
-      background: ans.isCorrect === true ? "#F0FDF4" : ans.isCorrect === false ? "#FEF2F2" : "var(--surface-soft)",
-      border: `1px solid ${ans.isCorrect === true ? "#22C55E33" : ans.isCorrect === false ? "#DC262633" : "var(--border-muted)"}`,
+      background: ans.isCorrect === true ? "var(--success-light)" : ans.isCorrect === false ? "var(--danger-light)" : "var(--surface-soft)",
+      border: `1px solid ${ans.isCorrect === true ? tint("var(--success)", 0.2) : ans.isCorrect === false ? tint("var(--danger)", 0.2) : "var(--border-muted)"}`,
     }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
         <span style={{
@@ -90,7 +112,7 @@ const AnswerRow = ({ ans, idx, marksOverride, onChangeMarks, readOnly }) => {
           {isAuto && snap.correctAnswers != null && (
             <div style={{ fontSize: 12, marginTop: 2 }}>
               <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>Correct Answer: </span>
-              <span style={{ color: "#15803D", fontWeight: 600 }}>
+              <span style={{ color: "var(--success-hover)", fontWeight: 600 }}>
                 {Array.isArray(snap.correctAnswers) ? snap.correctAnswers.join(", ") : String(snap.correctAnswers)}
               </span>
             </div>
@@ -113,7 +135,7 @@ const AnswerRow = ({ ans, idx, marksOverride, onChangeMarks, readOnly }) => {
             <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 3 }}>Marks</div>
             <div style={{
               fontWeight: 700, fontSize: 15,
-              color: isAuto && ans.isCorrect ? "#15803D" : isAuto ? "#DC2626" : "var(--primary)",
+              color: isAuto && ans.isCorrect ? "var(--success-hover)" : isAuto ? "var(--danger-hover)" : "var(--primary)",
             }}>
               {ans.marksObtained ?? 0}
             </div>
@@ -241,8 +263,8 @@ const TeacherEvaluationPage = () => {
         return (
           <div style={{ fontSize: 12, textAlign: "center" }}>
             <div>{(r.answers || []).length} total</div>
-            {auto > 0 && <div style={{ color: "#15803D" }}>{auto} auto</div>}
-            {subj > 0 && <div style={{ color: "#D97706" }}>{subj} manual</div>}
+            {auto > 0 && <div style={{ color: "var(--success-hover)" }}>{auto} auto</div>}
+            {subj > 0 && <div style={{ color: "var(--warning-hover)" }}>{subj} manual</div>}
           </div>
         );
       },
@@ -294,9 +316,9 @@ const TeacherEvaluationPage = () => {
 
   /* ── Stats ── */
   const statsMeta = [
-    { label: "Pending Review", value: pending.length,       color: "#D97706" },
-    { label: "Auto Evaluated", value: evaluated.filter((a) => a.autoEvaluated).length, color: "#15803D" },
-    { label: "Teacher Graded", value: evaluated.filter((a) => !a.autoEvaluated).length, color: "#2563EB" },
+    { label: "Pending Review", value: pending.length,       color: "var(--warning-hover)" },
+    { label: "Auto Evaluated", value: evaluated.filter((a) => a.autoEvaluated).length, color: "var(--success-hover)" },
+    { label: "Teacher Graded", value: evaluated.filter((a) => !a.autoEvaluated).length, color: "var(--primary)" },
   ];
 
   const isReadOnly = drawerAttempt?.status === "evaluated";
@@ -353,7 +375,7 @@ const TeacherEvaluationPage = () => {
               {
                 key: "pending",
                 label: (
-                  <Badge count={pending.length} size="small" color="#D97706">
+                  <Badge count={pending.length} size="small" color="var(--warning-hover)">
                     <span style={{ paddingRight: pending.length ? 10 : 0 }}>
                       Pending Evaluation
                     </span>
@@ -376,9 +398,9 @@ const TeacherEvaluationPage = () => {
                 key: "evaluated",
                 label: (
                   <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <RobotOutlined style={{ color: "#15803D" }} />
+                    <RobotOutlined style={{ color: "var(--success-hover)" }} />
                     Auto / Graded
-                    <Badge count={evaluated.length} size="small" color="#15803D" />
+                    <Badge count={evaluated.length} size="small" color="var(--success-hover)" />
                   </span>
                 ),
                 children: (
@@ -408,8 +430,8 @@ const TeacherEvaluationPage = () => {
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {isReadOnly
-              ? <EyeOutlined style={{ color: "#2563EB" }} />
-              : <ThunderboltOutlined style={{ color: "#D97706" }} />}
+              ? <EyeOutlined style={{ color: "var(--primary)" }} />
+              : <ThunderboltOutlined style={{ color: "var(--warning-hover)" }} />}
             <div>
               <div style={{ fontWeight: 700, fontSize: 14 }}>
                 {isReadOnly ? "Attempt Details" : "Evaluate Attempt"}

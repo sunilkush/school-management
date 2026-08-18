@@ -42,10 +42,10 @@ const ExamCoordinatorDashboard = () => {
   const pending   = useMemo(() => completed.filter((e) => !e.isPublished && !e.resultPublished), [completed]);
 
   const stats = [
-    { title: "Upcoming Exams",     value: upcoming.length,  color: "#7C3AED", icon: <ScheduleOutlined /> },
-    { title: "Questions in Bank",  value: qCount ?? "—",    color: "#2563EB", icon: <QuestionCircleOutlined />, loading: qCount === null },
-    { title: "Pending Evaluation", value: pending.length,   color: "#F59E0B", icon: <ClockCircleOutlined /> },
-    { title: "Exams Completed",    value: completed.length, color: "#10B981", icon: <CheckCircleOutlined /> },
+    { title: "Upcoming Exams",     value: upcoming.length,  color: "var(--purple)", icon: <ScheduleOutlined /> },
+    { title: "Questions in Bank",  value: qCount ?? "—",    color: "var(--primary)", icon: <QuestionCircleOutlined />, loading: qCount === null },
+    { title: "Pending Evaluation", value: pending.length,   color: "var(--warning)", icon: <ClockCircleOutlined /> },
+    { title: "Exams Completed",    value: completed.length, color: "var(--success)", icon: <CheckCircleOutlined /> },
   ];
 
   const upcomingRows = useMemo(

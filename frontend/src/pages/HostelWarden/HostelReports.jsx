@@ -14,11 +14,10 @@ import {
 } from "recharts";
 import { iconWell, pageWrapper, sectionPanel, statGrid } from "../../styles/pageStyles";
 import { BarChartOutlined } from "@ant-design/icons";
+import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-
-const CHART_COLORS = ["#14B8A6", "#EF4444", "#22C55E", "#F59E0B", "#0891b2", "#F59E0B"];
 
 const ReportCard = ({ title, children, extra }) => (
   <div style={{ ...sectionPanel, marginBottom: 0 }}>
@@ -118,12 +117,12 @@ const HostelReports = () => {
       {/* ── Overview KPIs ─────────────────────────────────────── */}
       <div style={statGrid(140)}>
         {[
-          { label: "Total Rooms",     value: kpis.totalRooms,     color: "#14B8A6" },
-          { label: "Total Capacity",  value: kpis.totalCapacity,  color: "#0891b2" },
-          { label: "Occupied Beds",   value: kpis.totalOccupied,  color: "#22C55E" },
-          { label: "Occupancy Rate",  value: `${kpis.occupancyRate || 0}%`, color: "#F59E0B" },
-          { label: "Students",        value: kpis.totalStudents,  color: "#14B8A6" },
-          { label: "Open Complaints", value: kpis.openComplaints, color: "#EF4444" },
+          { label: "Total Rooms",     value: kpis.totalRooms,     color: "var(--accent)" },
+          { label: "Total Capacity",  value: kpis.totalCapacity,  color: "var(--cyan)" },
+          { label: "Occupied Beds",   value: kpis.totalOccupied,  color: "var(--success)" },
+          { label: "Occupancy Rate",  value: `${kpis.occupancyRate || 0}%`, color: "var(--warning)" },
+          { label: "Students",        value: kpis.totalStudents,  color: "var(--accent)" },
+          { label: "Open Complaints", value: kpis.openComplaints, color: "var(--danger)" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ ...sectionPanel, marginBottom: 0, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
             <div style={iconWell(color, 36)}><FileTextOutlined /></div>
@@ -140,12 +139,12 @@ const HostelReports = () => {
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Occupancy Rate</div>
         <Progress
           percent={kpis.occupancyRate || 0}
-          strokeColor={kpis.occupancyRate > 90 ? "#EF4444" : kpis.occupancyRate > 70 ? "#F59E0B" : "#22C55E"}
+          strokeColor={kpis.occupancyRate > 90 ? "var(--danger)" : kpis.occupancyRate > 70 ? "var(--warning)" : "var(--success)"}
         />
         <div style={{ display: "flex", gap: 24, marginTop: 10, fontSize: 12 }}>
-          <span style={{ color: "#22C55E" }}>Occupied: <strong>{kpis.totalOccupied}</strong></span>
-          <span style={{ color: "#64748B" }}>Vacant: <strong>{(kpis.totalCapacity || 0) - (kpis.totalOccupied || 0)}</strong></span>
-          <span style={{ color: "#0891b2" }}>Capacity: <strong>{kpis.totalCapacity}</strong></span>
+          <span style={{ color: "var(--success)" }}>Occupied: <strong>{kpis.totalOccupied}</strong></span>
+          <span style={{ color: "var(--text-secondary)" }}>Vacant: <strong>{(kpis.totalCapacity || 0) - (kpis.totalOccupied || 0)}</strong></span>
+          <span style={{ color: "var(--cyan)" }}>Capacity: <strong>{kpis.totalCapacity}</strong></span>
         </div>
       </div>
 
@@ -162,7 +161,7 @@ const HostelReports = () => {
                   <XAxis dataKey="_id" tick={{ fontSize: 11 }} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#14B8A6" radius={[4, 4, 0, 0]} name="Leaves" />
+                  <Bar dataKey="count" fill="var(--accent)" radius={[4, 4, 0, 0]} name="Leaves" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -176,7 +175,7 @@ const HostelReports = () => {
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie data={leaveByType} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => `${name}(${value})`} labelLine={false}>
-                    {leaveByType.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    {leaveByType.map((_, i) => <Cell key={i} fill={CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
                   <Legend />
@@ -200,7 +199,7 @@ const HostelReports = () => {
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
                   <YAxis dataKey="_id" type="category" tick={{ fontSize: 11 }} width={80} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#EF4444" radius={[0, 4, 4, 0]} name="Complaints" />
+                  <Bar dataKey="count" fill="var(--danger)" radius={[0, 4, 4, 0]} name="Complaints" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -214,7 +213,7 @@ const HostelReports = () => {
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie data={visitorByRelation} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => `${name}(${value})`} labelLine={false}>
-                    {visitorByRelation.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    {visitorByRelation.map((_, i) => <Cell key={i} fill={CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
                   <Legend />
@@ -237,9 +236,9 @@ const HostelReports = () => {
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
               <Legend />
-              <Area type="monotone" dataKey="Present" fill="rgba(220,252,231,0.2)" stroke="#22C55E" strokeWidth={2} />
-              <Area type="monotone" dataKey="Absent"  fill="rgba(254,226,226,0.2)" stroke="#EF4444" strokeWidth={2} />
-              <Area type="monotone" dataKey="Leave"   fill="rgba(254,243,199,0.25)" stroke="#F59E0B" strokeWidth={2} />
+              <Area type="monotone" dataKey="Present" fill="rgba(var(--success-rgb), 0.2)" stroke="var(--success)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Absent"  fill="rgba(var(--danger-rgb), 0.2)" stroke="var(--danger)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Leave"   fill="rgba(var(--warning-rgb), 0.25)" stroke="var(--warning)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         )}

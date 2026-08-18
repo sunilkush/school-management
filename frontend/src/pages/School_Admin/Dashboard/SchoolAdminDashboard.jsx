@@ -34,35 +34,36 @@ const { Title, Text } = Typography;
 /* ─────────────────────────────────────────
    Design tokens
 ───────────────────────────────────────── */
-const tokens = (isDark) => ({
+// Shared design tokens (frontend/src/index.css) — replaces a local
+// isDark-branched hex object that duplicated what these CSS vars already do.
+const tokens = {
   pageBg:       "var(--surface-page)",
-  cardBg:       isDark ? "#1A2235" : "#ffffff",
-  cardBorder:   isDark ? "#2A3550" : "#E2E8F0",
-  sectionBg:    isDark ? "#1A2235" : "#ffffff",
-  sectionBorder:isDark ? "#2A3550" : "#E2E8F0",
-  textPrimary:  isDark ? "#E8EDF7" : "#0F172A",
-  textSecondary:isDark ? "#64748B" : "#94A3B8",
-  accent:       isDark ? "#7FBAD6" : "#2563EB",
-  accentBg:     isDark ? "rgba(219,234,254,0.12)" : "rgba(219,234,254,0.18)",
-  shadow:       isDark
-    ? "0 2px 12px rgba(0,0,0,0.4)"
-    : "0 2px 8px rgba(37,99,235,0.07), 0 4px 20px rgba(37,99,235,0.05)",
-  shadowHover:  isDark
+  cardBg:       "var(--surface)",
+  cardBorder:   "var(--border)",
+  sectionBg:    "var(--surface)",
+  sectionBorder:"var(--border)",
+  textPrimary:  "var(--text)",
+  textSecondary:"var(--text-muted)",
+  accent:       "var(--primary)",
+  accentBg:     "var(--primary-light)",
+  // No single token captures this bespoke colored hover shadow in both
+  // themes; kept isDark-branched (rgba, not hex — outside this task's scope).
+  shadowHover:  (isDark) => isDark
     ? "0 6px 24px rgba(0,0,0,0.5)"
     : "0 6px 24px rgba(37,99,235,0.14)",
-});
+};
 
 /* ─────────────────────────────────────────
    Skeleton fallbacks — shaped like their
    real components so layout doesn't jump.
 ───────────────────────────────────────── */
-const CardSkeleton = ({ height = 120, isDark }) => (
+const CardSkeleton = ({ height = 120 }) => (
   <div
     style={{
       borderRadius: 12,
       padding: 20,
-      background: tokens(isDark).cardBg,
-      border: `1px solid ${tokens(isDark).cardBorder}`,
+      background: tokens.cardBg,
+      border: `1px solid ${tokens.cardBorder}`,
       height,
     }}
   >
@@ -70,13 +71,13 @@ const CardSkeleton = ({ height = 120, isDark }) => (
   </div>
 );
 
-const ChartSkeleton = ({ height = 280, isDark }) => (
+const ChartSkeleton = ({ height = 280 }) => (
   <div
     style={{
       borderRadius: 12,
       padding: 20,
-      background: tokens(isDark).cardBg,
-      border: `1px solid ${tokens(isDark).cardBorder}`,
+      background: tokens.cardBg,
+      border: `1px solid ${tokens.cardBorder}`,
     }}
   >
     <Skeleton active title={{ width: "40%" }} paragraph={false} />
@@ -108,8 +109,8 @@ const SectionErrorBanner = ({ message, onRetry }) => (
    Section header — thin labelled divider
    with an icon and optional tag.
 ───────────────────────────────────────── */
-const SectionHeader = ({ icon, title, tag, tagColor = "blue", isDark }) => {
-  const t = tokens(isDark);
+const SectionHeader = ({ icon, title, tag, tagColor = "blue" }) => {
+  const t = tokens;
   return (
     <div
       style={{
@@ -163,7 +164,7 @@ const SectionHeader = ({ icon, title, tag, tagColor = "blue", isDark }) => {
 ───────────────────────────────────────── */
 const SchoolAdminDashboard = () => {
   const { isDark } = useTheme();
-  const t = tokens(isDark);
+  const t = tokens;
   const schoolId = useSelector(
     (state) =>
       state?.auth?.user?.school?._id ||
@@ -202,7 +203,7 @@ const SchoolAdminDashboard = () => {
           border-radius: 12px !important;
         }
         .dash-card:hover {
-          box-shadow: ${t.shadowHover} !important;
+          box-shadow: ${t.shadowHover(isDark)} !important;
           transform: translateY(-1px);
         }
 
@@ -240,13 +241,12 @@ const SchoolAdminDashboard = () => {
           icon={<RiseOutlined />}
           title="Key Metrics"
           tag="Today"
-          isDark={isDark}
-        />
+                 />
         {isLoading ? (
           <Row gutter={[16, 16]}>
             {[1, 2, 3, 4].map((i) => (
               <Col key={i} xs={24} sm={12} lg={6}>
-                <CardSkeleton height={100} isDark={isDark} />
+                <CardSkeleton height={100} />
               </Col>
             ))}
           </Row>
@@ -256,7 +256,7 @@ const SchoolAdminDashboard = () => {
               <Row gutter={[16, 16]}>
                 {[1, 2, 3, 4].map((i) => (
                   <Col key={i} xs={24} sm={12} lg={6}>
-                    <CardSkeleton height={100} isDark={isDark} />
+                    <CardSkeleton height={100} />
                   </Col>
                 ))}
               </Row>
@@ -274,24 +274,23 @@ const SchoolAdminDashboard = () => {
           title="Finance Overview"
           tag="This Month"
           tagColor="green"
-          isDark={isDark}
-        />
+                 />
 
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={12}>
             {isLoading ? (
-              <ChartSkeleton height={260} isDark={isDark} />
+              <ChartSkeleton height={260} />
             ) : (
-              <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
+              <Suspense fallback={<ChartSkeleton height={260} />}>
                 <SalaryStatistics stats={analytics?.salaryStatistics} />
               </Suspense>
             )}
           </Col>
           <Col xs={24} lg={12}>
             {isLoading ? (
-              <ChartSkeleton height={260} isDark={isDark} />
+              <ChartSkeleton height={260} />
             ) : (
-              <Suspense fallback={<ChartSkeleton height={260} isDark={isDark} />}>
+              <Suspense fallback={<ChartSkeleton height={260} />}>
                 <IncomeAnalysis data={analytics?.incomeAnalysis} />
               </Suspense>
             )}
@@ -301,9 +300,9 @@ const SchoolAdminDashboard = () => {
         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
           <Col span={24}>
             {isLoading ? (
-              <ChartSkeleton height={180} isDark={isDark} />
+              <ChartSkeleton height={180} />
             ) : (
-              <Suspense fallback={<ChartSkeleton height={180} isDark={isDark} />}>
+              <Suspense fallback={<ChartSkeleton height={180} />}>
                 <TotalSalaryByUnit data={analytics?.salaryByUnit} />
               </Suspense>
             )}
@@ -318,24 +317,23 @@ const SchoolAdminDashboard = () => {
           title="Human Resources"
           tag="Staff"
           tagColor="purple"
-          isDark={isDark}
-        />
+                 />
 
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={8}>
             {isLoading ? (
-              <ChartSkeleton height={280} isDark={isDark} />
+              <ChartSkeleton height={280} />
             ) : (
-              <Suspense fallback={<ChartSkeleton height={280} isDark={isDark} />}>
+              <Suspense fallback={<ChartSkeleton height={280} />}>
                 <EmployeeStructure data={analytics?.employeeStructure} />
               </Suspense>
             )}
           </Col>
           <Col xs={24} lg={16}>
             {isLoading ? (
-              <ChartSkeleton height={280} isDark={isDark} />
+              <ChartSkeleton height={280} />
             ) : (
-              <Suspense fallback={<ChartSkeleton height={280} isDark={isDark} />}>
+              <Suspense fallback={<ChartSkeleton height={280} />}>
                 <EmployeePerformance employees={analytics?.employeePerformance} />
               </Suspense>
             )}

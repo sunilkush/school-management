@@ -250,7 +250,7 @@ const AttendanceReports = () => {
         <span
           style={{
             fontSize: 12,
-            color: workingHours(r) !== "—" ? "#22C55E" : "var(--text-muted)",
+            color: workingHours(r) !== "—" ? "var(--success)" : "var(--text-muted)",
             fontWeight: workingHours(r) !== "—" ? 600 : 400,
           }}
         >
@@ -359,6 +359,8 @@ const AttendanceReports = () => {
       </div>
 
       {/* ── Summary stat cards ── */}
+      {/* `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js),
+          which builds its background as `${color}22` — breaks with a var() string. */}
       <div style={statGrid(130)}>
         {[
           { key: "present", label: "Present", color: "#22C55E" },

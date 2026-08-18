@@ -34,11 +34,11 @@ import {
 
 /* ── Status config ───────────────────────────────────────────────── */
 const STATUS_OPTIONS = [
-  { value: "present", label: "P",  fullLabel: "Present",  color: "#22C55E" },
-  { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#EF4444" },
-  { value: "late",    label: "L",  fullLabel: "Late",     color: "#F59E0B" },
-  { value: "halfday", label: "H",  fullLabel: "Half Day", color: "#F59E0B" },
-  { value: "leave",   label: "Lv", fullLabel: "Leave",    color: "#0891b2" },
+  { value: "present", label: "P",  fullLabel: "Present",  color: "var(--success)" },
+  { value: "absent",  label: "A",  fullLabel: "Absent",   color: "var(--danger)" },
+  { value: "late",    label: "L",  fullLabel: "Late",     color: "var(--warning)" },
+  { value: "halfday", label: "H",  fullLabel: "Half Day", color: "var(--warning)" },
+  { value: "leave",   label: "Lv", fullLabel: "Leave",    color: "var(--cyan)" },
 ];
 
 const TABLE_CLS      = "teacher-att-tbl";
@@ -57,7 +57,7 @@ const StatusBtn = ({ opt, active, onClick }) => (
       padding: "4px 10px",
       borderRadius: 6,
       border: `1.5px solid ${active ? opt.color : "var(--border-muted)"}`,
-      background: active ? `${opt.color}18` : "transparent",
+      background: active ? `color-mix(in srgb, ${opt.color} 18%, transparent)` : "transparent",
       color: active ? opt.color : "var(--text-muted)",
       fontWeight: active ? 700 : 500,
       cursor: "pointer",
@@ -425,10 +425,10 @@ const StudentAttendance = () => {
       <div style={statGrid(120)}>
         {[
           { key: "total",   label: "Total",   color: "var(--primary)" },
-          { key: "present", label: "Present", color: "#22C55E"        },
-          { key: "absent",  label: "Absent",  color: "#EF4444"        },
-          { key: "late",    label: "Late",    color: "#F59E0B"        },
-          { key: "leave",   label: "Leave",   color: "#0891b2"        },
+          { key: "present", label: "Present", color: "var(--success)" },
+          { key: "absent",  label: "Absent",  color: "var(--danger)"  },
+          { key: "late",    label: "Late",    color: "var(--warning)" },
+          { key: "leave",   label: "Leave",   color: "var(--cyan)"    },
         ].map(({ key, label, color }) => (
           <div
             key={key}
@@ -488,12 +488,12 @@ const StudentAttendance = () => {
           </div>
           <Progress
             percent={summary.rate}
-            strokeColor="#22C55E"
+            strokeColor="var(--success)"
             trailColor="var(--border-muted)"
             size="small"
             format={(p) => (
               <span
-                style={{ fontSize: 12, fontWeight: 700, color: "#22C55E" }}
+                style={{ fontSize: 12, fontWeight: 700, color: "var(--success)" }}
               >
                 {p}%
               </span>

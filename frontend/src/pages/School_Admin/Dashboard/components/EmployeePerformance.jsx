@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { Select, Typography, Avatar, Grid } from "antd";
-import { useTheme } from "../../../../context/ThemeContext";
 
 const { Text } = Typography;
 const { Option } = Select;
 const { useBreakpoint } = Grid;
 
 const performanceConfig = {
-  EXCELLENT: { color: "#0ea472", bg: "rgba(14,164,114,0.08)", border: "rgba(14,164,114,0.2)", dot: "#0ea472" },
-  GOOD:      { color: "#1677ff", bg: "rgba(22,119,255,0.08)", border: "rgba(22,119,255,0.2)", dot: "#1677ff" },
-  AVERAGE:   { color: "#ea580c", bg: "rgba(234,88,12,0.08)",  border: "rgba(234,88,12,0.2)",  dot: "#ea580c" },
-  POOR:      { color: "#EF4444", bg: "rgba(217,107,122,0.08)",border: "rgba(217,107,122,0.2)",dot: "#EF4444" },
+  EXCELLENT: { color: "var(--success)", bg: "rgba(var(--success-rgb), 0.08)", border: "rgba(var(--success-rgb), 0.2)", dot: "var(--success)" },
+  GOOD:      { color: "var(--primary)", bg: "rgba(var(--primary-rgb), 0.08)", border: "rgba(var(--primary-rgb), 0.2)", dot: "var(--primary)" },
+  // no --orange-rgb token exists in index.css; decimal rgba kept for the bg/border tint
+  AVERAGE:   { color: "var(--orange)", bg: "rgba(234, 88, 12, 0.08)",  border: "rgba(234, 88, 12, 0.2)",  dot: "var(--orange)" },
+  POOR:      { color: "var(--danger)", bg: "rgba(var(--danger-rgb), 0.08)",border: "rgba(var(--danger-rgb), 0.2)",dot: "var(--danger)" },
 };
 
 const PerfBadge = ({ value }) => {
@@ -30,7 +30,6 @@ const PerfBadge = ({ value }) => {
 };
 
 const EmployeePerformance = ({ employees = [] }) => {
-  const { isDark } = useTheme();
   const screens    = useBreakpoint();
   const isMobile   = !screens.md;
 
@@ -40,11 +39,11 @@ const EmployeePerformance = ({ employees = [] }) => {
     ? employees
     : [{ name: "No records", email: "-", designation: "-", performance: "AVERAGE", dept: "-", avatar: null }];
 
-  const border  = isDark ? "#1f1f1f" : "#f0f0f0";
-  const cardBg  = isDark ? "#141414" : "#ffffff";
-  const rowSep  = isDark ? "#1a1a1a" : "#f5f5f5";
-  const textPri = isDark ? "#e8e8e8" : "#111827";
-  const textSec = isDark ? "#8c8c8c" : "#6b7280";
+  const border  = "var(--border)";
+  const cardBg  = "var(--surface)";
+  const rowSep  = "var(--border-muted)";
+  const textPri = "var(--text)";
+  const textSec = "var(--text-secondary)";
 
   return (
     <div style={{
@@ -71,7 +70,7 @@ const EmployeePerformance = ({ employees = [] }) => {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {list.map((emp) => (
             <div key={emp.email} style={{
-              background: isDark ? "#1a1a2e" : "#f9fafb",
+              background: "var(--surface-soft)",
               border: `1px solid ${border}`,
               borderRadius: 12,
               padding: "12px 14px",
@@ -79,7 +78,7 @@ const EmployeePerformance = ({ employees = [] }) => {
               {/* Row 1: Avatar + Name + Badge */}
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                 <Avatar src={emp.avatar} size={38}
-                  style={{ background: "linear-gradient(135deg,#7c3aed,#06b6d4)", flexShrink: 0 }}>
+                  style={{ background: "linear-gradient(135deg, var(--purple), var(--cyan))", flexShrink: 0 }}>
                   {emp?.name?.[0] || "E"}
                 </Avatar>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -99,16 +98,16 @@ const EmployeePerformance = ({ employees = [] }) => {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <span style={{
                   fontSize: 11, color: textSec,
-                  background: isDark ? "#1f2937" : "#eef2ff",
-                  border: `1px solid ${isDark ? "#2a3550" : "#e0e7ff"}`,
+                  background: "var(--primary-light)",
+                  border: "1px solid rgba(var(--primary-rgb), 0.3)",
                   borderRadius: 6, padding: "2px 8px",
                 }}>
                   {emp.dept}
                 </span>
                 <span style={{
                   fontSize: 11, color: textSec,
-                  background: isDark ? "#1f2937" : "#f0fdf4",
-                  border: `1px solid ${isDark ? "#2a3550" : "#bbf7d0"}`,
+                  background: "var(--success-light)",
+                  border: "1px solid rgba(var(--success-rgb), 0.3)",
                   borderRadius: 6, padding: "2px 8px",
                 }}>
                   {emp.designation}

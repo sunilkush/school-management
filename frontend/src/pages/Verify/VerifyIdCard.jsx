@@ -23,9 +23,9 @@ export default function VerifyIdCard() {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#F1F5F9", padding: 24,
+      background: "var(--surface-soft)", padding: 24,
     }}>
-      <div style={{ background: "#fff", borderRadius: 16, padding: "32px 24px", maxWidth: 480, width: "100%", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
+      <div style={{ background: "var(--surface)", borderRadius: 16, padding: "32px 24px", maxWidth: 480, width: "100%", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: "40px 0" }}><Spin size="large" /></div>
         ) : error ? (
@@ -39,10 +39,10 @@ export default function VerifyIdCard() {
             <Flex align="center" gap={16} style={{ marginBottom: 16 }}>
               {result.photoUrl
                 ? <Avatar src={result.photoUrl} size={72} />
-                : <Avatar size={72} style={{ background: "#2563EB" }}>{(result.fullName || "?")[0]?.toUpperCase()}</Avatar>}
+                : <Avatar size={72} style={{ background: "var(--primary)" }}>{(result.fullName || "?")[0]?.toUpperCase()}</Avatar>}
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{result.fullName}</div>
-                <div style={{ color: "#64748B", fontSize: 13 }}>{result.roleLine || "—"}</div>
+                <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>{result.roleLine || "—"}</div>
               </div>
             </Flex>
             <Descriptions column={1} bordered size="small">

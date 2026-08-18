@@ -7,15 +7,16 @@ import {
 } from "@ant-design/icons";
 import { fetchVendors, createVendor, updateVendor, toggleVendor, deleteVendor } from "../../../features/vendorSlice";
 import {
-  sectionPanel, toolbarRow, tableContainer, tableHeadCss,
+  toolbarRow, tableContainer, tableHeadCss,
   statGrid, iconWell, modalTitle, pill,
 } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
-
 const { Option } = Select;
 const { Text } = Typography;
 const CATEGORIES = ["General", "Stationery", "Electronics", "Furniture", "IT", "Lab Equipment", "Sports", "Housekeeping", "Catering"];
 
+// `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
+// builds its background as `${color}22` — breaks with a var() string, so these stay hex.
+// Same reasoning applies to the standalone iconWell()/pill() calls further down this file.
 const KPI_DEFS = (vendors) => [
   { label: "Total Vendors",  value: vendors.length,                          color: "#1677ff", icon: <ShopOutlined /> },
   { label: "Active",         value: vendors.filter((v) => v.isActive).length,  color: "#0ea472", icon: <CheckCircleOutlined /> },
@@ -25,7 +26,6 @@ const KPI_DEFS = (vendors) => [
 
 export default function VendorPage() {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const { vendors, loading, actionLoading } = useSelector((s) => s.vendor);
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState(null);

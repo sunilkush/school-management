@@ -63,7 +63,7 @@ export default function MyIdCard() {
               <Flex align="center" gap={16} wrap="wrap">
                 {card.photoUrl
                   ? <Avatar src={card.photoUrl} size={64} />
-                  : <Avatar size={64} style={{ background: "#2563EB" }}>{(card.fullName || "?")[0]?.toUpperCase()}</Avatar>}
+                  : <Avatar size={64} style={{ background: "var(--primary)" }}>{(card.fullName || "?")[0]?.toUpperCase()}</Avatar>}
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <Text strong style={{ fontSize: 16 }}>{card.fullName}</Text><br />
                   <Text type="secondary" style={{ fontSize: 12 }}>

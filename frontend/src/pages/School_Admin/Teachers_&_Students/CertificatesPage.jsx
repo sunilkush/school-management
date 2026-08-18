@@ -27,10 +27,10 @@ const { Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 const CERT_TYPES = [
-  { value: "Transfer Certificate", short: "TC", color: "#DC2626" },
-  { value: "Bonafide Certificate", short: "BC", color: "#2563EB" },
-  { value: "Character Certificate", short: "CC", color: "#7C3AED" },
-  { value: "Study Certificate", short: "SC", color: "#0D9488" },
+  { value: "Transfer Certificate", short: "TC", color: "var(--danger-hover)" },
+  { value: "Bonafide Certificate", short: "BC", color: "var(--primary)" },
+  { value: "Character Certificate", short: "CC", color: "var(--purple)" },
+  { value: "Study Certificate", short: "SC", color: "var(--accent-hover)" },
 ];
 
 const fmt = (v) => (v ? dayjs(v).format("DD MMM YYYY") : "—");
@@ -227,7 +227,7 @@ export default function CertificatesPage() {
       dataIndex: "certificateType",
       render: (v) => {
         const t = CERT_TYPES.find((c) => c.value === v);
-        return <span style={pill(t?.color || "#64748B")}>{t?.short || v}</span>;
+        return <span style={pill(t?.color || "var(--text-secondary)")}>{t?.short || v}</span>;
       },
     },
     {
@@ -304,7 +304,7 @@ export default function CertificatesPage() {
         {/* ── Generate panel ─────────────────────────────────── */}
         <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-            <div style={iconWell("#2563EB", 38)}>
+            <div style={iconWell("var(--primary)", 38)}>
               <SafetyCertificateOutlined style={{ fontSize: 17 }} />
             </div>
             <div>

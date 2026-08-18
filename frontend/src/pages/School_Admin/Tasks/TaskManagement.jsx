@@ -16,7 +16,7 @@ import {
 } from "../../../features/taskSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { iconWell, modalTitle, pageWrapper, sectionPanel, statGrid } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
+import { categoricalColorFor } from "../../../utils/colorPalette";
 
 dayjs.extend(relativeTime);
 
@@ -25,6 +25,11 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 /* ── Config ─────────────────────────────────────────────────────────── */
+// NOTE: col.color values are intentionally left as raw hex, not var(--token).
+// They're consumed all over TaskCard/KanbanColumn/AddBtn via hex-alpha-suffix
+// concatenation (e.g. `${col.color}22`, `${col.color}0D`) to derive tinted
+// borders/backgrounds/shadows — that trick produces invalid CSS if the base
+// value is a var() reference, so converting would break the Kanban board styling.
 const COLUMNS = [
   { key: "todo",        label: "To Do",       color: "#F59E0B", icon: <ClockCircleOutlined /> },
   { key: "in_progress", label: "In Progress",  color: "#2563EB", icon: <SyncOutlined />        },
@@ -32,6 +37,9 @@ const COLUMNS = [
   { key: "cancelled",   label: "Cancelled",    color: "#6B7280", icon: <StopOutlined />        },
 ];
 
+// Same reasoning as COLUMNS above: PRIORITY[x].color is consumed via `${p.color}18`
+// in PriorityPill, so it stays raw hex. The `bg` field here is currently unused
+// dead code (PriorityPill recomputes its background from `color` instead).
 const PRIORITY = {
   low:    { label: "Low",    color: "#64748B", bg: "#F1F5F918", icon: <Minus size={9} /> },
   medium: { label: "Medium", color: "#D97706", bg: "#FEF3C718", icon: <ChevronDown size={9} /> },
@@ -41,8 +49,8 @@ const PRIORITY = {
 const PRIORITY_LABEL = { low: "Low", medium: "Medium", high: "High", urgent: "Urgent" };
 const STATUS_LABEL   = { todo: "To Do", in_progress: "In Progress", done: "Done", cancelled: "Cancelled" };
 
-const AVATAR_COLORS = ["#7C3AED", "#2563EB", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
-const avatarBg = (name = "") => AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+// Stable per-person color (same user always gets the same avatar color across renders/pages).
+const avatarBg = (name = "") => categoricalColorFor(name);
 
 /* ── Priority pill ──────────────────────────────────────────────────── */
 const PriorityPill = ({ priority }) => {
@@ -64,12 +72,12 @@ const DueChip = ({ date, status }) => {
   const d       = dayjs(date);
   const overdue = d.isBefore(dayjs(), "day") && status !== "done" && status !== "cancelled";
   const today   = d.isSame(dayjs(), "day");
-  const color   = overdue ? "#EF4444" : today ? "#D97706" : "var(--text-muted)";
+  const color   = overdue ? "var(--danger)" : today ? "var(--warning-hover)" : "var(--text-muted)";
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       fontSize: 10, fontWeight: 600, color,
-      background: overdue ? "#FEF2F2" : today ? "#FFFBEB" : "var(--surface-soft)",
+      background: overdue ? "var(--danger-light)" : today ? "var(--warning-light)" : "var(--surface-soft)",
       padding: "2px 7px", borderRadius: 6,
     }}>
       <ClockCircleOutlined style={{ fontSize: 9 }} />
@@ -97,7 +105,7 @@ const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, isDragO
         borderRadius: 12,
         padding: "12px 14px",
         border: `1px solid ${hovered ? col.color + "50" : "var(--border-muted)"}`,
-        borderLeft: `3px solid ${isOverdue ? "#EF4444" : col.color}`,
+        borderLeft: `3px solid ${isOverdue ? "var(--danger)" : col.color}`,
         boxShadow: hovered
           ? `0 6px 20px ${col.color}20`
           : "0 1px 3px rgba(0,0,0,0.06)",
@@ -112,8 +120,8 @@ const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, isDragO
         <PriorityPill priority={task.priority} />
         {isOverdue && (
           <span style={{
-            fontSize: 9, fontWeight: 700, color: "#EF4444",
-            background: "#FEF2F2", borderRadius: 99, padding: "1px 7px",
+            fontSize: 9, fontWeight: 700, color: "var(--danger)",
+            background: "var(--danger-light)", borderRadius: 99, padding: "1px 7px",
           }}>
             OVERDUE
           </span>
@@ -187,8 +195,8 @@ const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, isDragO
             <button
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: "#FEF2F2", border: "1px solid #FECACA",
-                borderRadius: 7, padding: "4px 7px", cursor: "pointer", color: "#EF4444",
+                background: "var(--danger-light)", border: "1px solid #FECACA",
+                borderRadius: 7, padding: "4px 7px", cursor: "pointer", color: "var(--danger)",
               }}
             >
               <DeleteOutlined style={{ fontSize: 11 }} />
@@ -319,7 +327,6 @@ const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd, dragState, onDragSt
 ══════════════════════════════════════════════════════════════════════ */
 const TaskManagement = () => {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const {
     items: tasks = [], loading = false,
     assignableUsers = [], usersLoading = false,
@@ -423,10 +430,10 @@ const TaskManagement = () => {
   const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
 
   const KPI = [
-    { label: "Total Tasks",  value: tasks.length,                                          color: "#7C3AED", icon: <SnippetsOutlined />    },
-    { label: "In Progress",  value: tasks.filter((t) => t.status === "in_progress").length, color: "#2563EB", icon: <SyncOutlined />         },
-    { label: "Completed",    value: doneCount,                                              color: "#10B981", icon: <CheckCircleOutlined /> },
-    { label: "Overdue",      value: overdueCount,                                           color: "#EF4444", icon: <ClockCircleOutlined />  },
+    { label: "Total Tasks",  value: tasks.length,                                          color: "var(--purple)", icon: <SnippetsOutlined />    },
+    { label: "In Progress",  value: tasks.filter((t) => t.status === "in_progress").length, color: "var(--primary)", icon: <SyncOutlined />         },
+    { label: "Completed",    value: doneCount,                                              color: "var(--success)", icon: <CheckCircleOutlined /> },
+    { label: "Overdue",      value: overdueCount,                                           color: "var(--danger)", icon: <ClockCircleOutlined />  },
   ];
 
   return (
@@ -484,19 +491,19 @@ const TaskManagement = () => {
                 </div>
                 <Flex align="center" gap={8}>
                   <div style={{ width: 120, height: 6, background: "var(--border-muted)", borderRadius: 4, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: "#10B981", borderRadius: 4, transition: "width 0.4s" }} />
+                    <div style={{ height: "100%", width: `${pct}%`, background: "var(--success)", borderRadius: 4, transition: "width 0.4s" }} />
                   </div>
-                  <Text style={{ fontSize: 12, fontWeight: 700, color: "#10B981" }}>{pct}%</Text>
+                  <Text style={{ fontSize: 12, fontWeight: 700, color: "var(--success)" }}>{pct}%</Text>
                 </Flex>
               </div>
               {overdueCount > 0 && (
                 <div style={{
                   display: "flex", alignItems: "center", gap: 5,
-                  background: "#FEF2F2", border: "1px solid #FECACA",
+                  background: "var(--danger-light)", border: "1px solid #FECACA",
                   borderRadius: 8, padding: "5px 10px",
                 }}>
-                  <ClockCircleOutlined style={{ color: "#EF4444", fontSize: 12 }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#EF4444" }}>{overdueCount} overdue</span>
+                  <ClockCircleOutlined style={{ color: "var(--danger)", fontSize: 12 }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)" }}>{overdueCount} overdue</span>
                 </div>
               )}
             </Flex>

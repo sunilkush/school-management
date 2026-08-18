@@ -17,23 +17,23 @@ dayjs.extend(isSameOrBefore);
 
 /* ── theme ── */
 const C = {
-  primary: "#2563EB", primaryLight: "#DBEAFE", primaryLighter: "#EFF6FF",
-  accent:  "#14B8A6", accentLight:  "#CCFBF1",
-  success: "#22C55E", successLight: "#DCFCE7",
-  warning: "#F59E0B", warningLight: "#FEF3C7",
-  danger:  "#EF4444", dangerLight:  "#FEE2E2",
-  purple:  "#8B5CF6", purpleLight:  "#EDE9FE",
-  cyan:    "#06B6D4", cyanLight:    "#CFFAFE",
-  border:  "#E2E8F0", text: "#0F172A", textSub: "#64748B", textMuted: "#94A3B8",
-  surface: "#FFFFFF", surfaceSoft: "#F8FAFC",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
+  accent:  "var(--accent)", accentLight:  "var(--accent-light)",
+  success: "var(--success)", successLight: "var(--success-light)",
+  warning: "var(--warning)", warningLight: "var(--warning-light)",
+  danger:  "var(--danger)", dangerLight:  "var(--danger-light)",
+  purple:  "var(--purple)", purpleLight:  "rgba(var(--purple-rgb), 0.12)",
+  cyan:    "var(--cyan)", cyanLight:    "#CFFAFE", // no design token exists for this cyan-100 tint; left as-is
+  border:  "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
+  surface: "var(--surface)", surfaceSoft: "var(--surface-soft)",
 };
 
 const STATUS = {
-  present: { color: C.success, bg: C.successLight, border: "#86EFAC", label: "Present",  icon: <CheckCircleOutlined />, antBadge: "success"  },
-  absent:  { color: C.danger,  bg: C.dangerLight,  border: "#FCA5A5", label: "Absent",   icon: <CloseCircleOutlined />, antBadge: "error"    },
-  late:    { color: C.warning, bg: C.warningLight,  border: "#FCD34D", label: "Late",     icon: <ClockCircleOutlined />, antBadge: "warning"  },
-  halfday: { color: C.purple,  bg: C.purpleLight,  border: "#C4B5FD", label: "Half Day", icon: <MinusCircleOutlined />, antBadge: "processing"},
-  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "#67E8F9", label: "On Leave", icon: <QuestionCircleOutlined/>,antBadge: "default"  },
+  present: { color: C.success, bg: C.successLight, border: "var(--success-light)", label: "Present",  icon: <CheckCircleOutlined />, antBadge: "success"  },
+  absent:  { color: C.danger,  bg: C.dangerLight,  border: "var(--danger-light)", label: "Absent",   icon: <CloseCircleOutlined />, antBadge: "error"    },
+  late:    { color: C.warning, bg: C.warningLight,  border: "var(--warning)", label: "Late",     icon: <ClockCircleOutlined />, antBadge: "warning"  },
+  halfday: { color: C.purple,  bg: C.purpleLight,  border: "rgba(var(--purple-rgb), 0.5)", label: "Half Day", icon: <MinusCircleOutlined />, antBadge: "processing"},
+  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "#67E8F9", label: "On Leave", icon: <QuestionCircleOutlined/>,antBadge: "default"  }, // no cyan-rgb token exists to build a tint; left as-is
 };
 
 const PANEL = {
@@ -45,11 +45,11 @@ const PANEL = {
 const StatCard = ({ label, value, color, bg, icon, pct }) => (
   <div style={{
     background: bg, borderRadius: 12, padding: "14px 16px",
-    border: `1px solid ${color}30`, display: "flex", alignItems: "center", gap: 12,
+    border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`, display: "flex", alignItems: "center", gap: 12,
   }}>
     <div style={{
       width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-      background: color + "22", display: "flex", alignItems: "center", justifyContent: "center",
+      background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: 18, color,
     }}>
       {icon}
@@ -177,7 +177,7 @@ const MyAttendanceMonthlyReport = () => {
             background: cfg.bg, color: cfg.color,
             border: `1px solid ${cfg.border || C.border}`,
             fontSize: 10, fontWeight: 700, whiteSpace: "nowrap",
-            boxShadow: isToday ? `0 0 0 2px ${C.primary}30` : "none",
+            boxShadow: isToday ? `0 0 0 2px color-mix(in srgb, ${C.primary} 19%, transparent)` : "none",
           }}>
             {cfg.icon} {cfg.label}
           </div>

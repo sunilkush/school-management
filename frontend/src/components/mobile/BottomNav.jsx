@@ -140,12 +140,12 @@ const BottomNav = ({ onMenuOpen }) => {
   const roleName = user?.role?.name?.toLowerCase() || "";
   const tabs     = TABS[roleName] || FALLBACK_TABS;
 
-  const bg      = isDark ? "rgba(15,23,42,0.97)"  : "rgba(255,255,255,0.97)";
-  const border  = isDark ? "#1E2A3B"               : "#E8EEF6";
-  const txtActive = isDark ? "#60A5FA" : "#2563EB";
-  const txtMuted  = isDark ? "#475569" : "#94A3B8";
-  const dotColor  = isDark ? "#3B82F6" : "#2563EB";
-  const ripple    = isDark ? "rgba(59,130,246,0.12)" : "rgba(37,99,235,0.08)";
+  const bg      = "var(--glass-bg)";
+  const border  = "var(--border)";
+  const txtActive = "var(--primary)";
+  const txtMuted  = "var(--text-muted)";
+  const dotColor  = "var(--primary)";
+  const ripple    = "rgba(var(--primary-rgb), 0.08)";
 
   /* All 5 tabs: 4 nav links + Menu */
   const allTabs = [
@@ -271,7 +271,7 @@ const BottomNav = ({ onMenuOpen }) => {
               <div className="bn-icon-wrap"
                 style={{
                   background: isActive
-                    ? isDark ? "rgba(59,130,246,0.15)" : "rgba(37,99,235,0.08)"
+                    ? "rgba(var(--primary-rgb), 0.1)"
                     : "transparent",
                 }}>
                 {isActive && <span className="bn-active-dot"/>}

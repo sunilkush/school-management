@@ -71,8 +71,8 @@ const Loader = () => (
         border-radius: 22px;
         background: #ffffff;
         box-shadow:
-          0 0 0 1px rgba(37,99,235,0.08),
-          0 8px 28px rgba(37,99,235,0.14),
+          0 0 0 1px rgba(var(--primary-rgb),0.08),
+          0 8px 28px rgba(var(--primary-rgb),0.14),
           0 2px 6px rgba(0,0,0,0.05);
         display: flex;
         align-items: center;
@@ -86,8 +86,8 @@ const Loader = () => (
         inset: -6px;
         border-radius: 27px;
         border: 3px solid transparent;
-        border-top-color: #2563EB;
-        border-left-color: #8B5CF6;
+        border-top-color: var(--primary);
+        border-left-color: var(--purple);
         animation: ld-spin 1s linear infinite;
       }
       .ld-ring-inner {
@@ -95,8 +95,8 @@ const Loader = () => (
         inset: -2px;
         border-radius: 23px;
         border: 2px solid transparent;
-        border-bottom-color: #14B8A6;
-        border-right-color: rgba(37,99,235,0.3);
+        border-bottom-color: var(--accent);
+        border-right-color: rgba(var(--primary-rgb),0.3);
         animation: ld-spin-rev 1.5s linear infinite;
       }
 
@@ -105,7 +105,7 @@ const Loader = () => (
         font-size: 23px;
         font-weight: 800;
         letter-spacing: -0.6px;
-        background: linear-gradient(120deg, #1D4ED8 0%, #7C3AED 50%, #0D9488 100%);
+        background: linear-gradient(120deg, var(--primary-hover) 0%, var(--purple) 50%, var(--accent-hover) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -131,22 +131,22 @@ const Loader = () => (
         border-radius: 50%;
         animation: ld-dot 1.3s ease-in-out infinite;
       }
-      .ld-dot:nth-child(1) { animation-delay: 0s;    background: #2563EB; }
-      .ld-dot:nth-child(2) { animation-delay: 0.2s;  background: #8B5CF6; }
-      .ld-dot:nth-child(3) { animation-delay: 0.4s;  background: #14B8A6; }
+      .ld-dot:nth-child(1) { animation-delay: 0s;    background: var(--primary); }
+      .ld-dot:nth-child(2) { animation-delay: 0.2s;  background: var(--purple); }
+      .ld-dot:nth-child(3) { animation-delay: 0.4s;  background: var(--accent); }
 
       /* ── Progress bar ── */
       .ld-bar-track {
         width: 180px;
         height: 3px;
-        background: rgba(37,99,235,0.1);
+        background: rgba(var(--primary-rgb),0.1);
         border-radius: 99px;
         overflow: hidden;
       }
       .ld-bar-fill {
         height: 100%;
         width: 45%;
-        background: linear-gradient(90deg, #2563EB, #8B5CF6, #14B8A6);
+        background: linear-gradient(90deg, var(--primary), var(--purple), var(--accent));
         border-radius: 99px;
         animation: ld-bar 1.4s ease-in-out infinite;
       }
@@ -155,20 +155,20 @@ const Loader = () => (
     {/* Background decoration blobs */}
     <div className="ld-blob" style={{
       width: 340, height: 340,
-      background: "radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%)",
+      background: "radial-gradient(circle, rgba(var(--primary-rgb),0.18) 0%, transparent 70%)",
       top: "-60px", left: "-80px",
       animationDuration: "5s",
     }} />
     <div className="ld-blob" style={{
       width: 280, height: 280,
-      background: "radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%)",
+      background: "radial-gradient(circle, rgba(var(--purple-rgb),0.14) 0%, transparent 70%)",
       bottom: "20px", right: "-40px",
       animationDuration: "6s",
       animationDelay: "1s",
     }} />
     <div className="ld-blob" style={{
       width: 200, height: 200,
-      background: "radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%)",
+      background: "radial-gradient(circle, rgba(var(--accent-rgb),0.12) 0%, transparent 70%)",
       bottom: "-30px", left: "10%",
       animationDuration: "4.5s",
       animationDelay: "0.5s",
@@ -188,7 +188,7 @@ const Loader = () => (
             onError={(e) => {
               e.target.style.display = "none";
               e.target.parentElement.innerHTML =
-                '<span style="font-size:28px;font-weight:900;background:linear-gradient(135deg,#2563EB,#8B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">S</span>';
+                '<span style="font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--primary),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">S</span>';
             }}
           />
         </div>

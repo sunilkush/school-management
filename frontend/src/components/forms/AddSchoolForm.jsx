@@ -227,7 +227,7 @@ const AddSchoolForm = () => {
                 height={56}
                 style={{
                   borderRadius: 8,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border)",
                 }}
               />
               <Text type="secondary">Logo Preview</Text>

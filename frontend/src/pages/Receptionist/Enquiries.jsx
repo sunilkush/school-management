@@ -18,9 +18,9 @@ const INQ_STATUS_LABELS = {
   rejected: "Rejected", waitlist: "Waitlisted",
 };
 const INQ_COLORS = {
-  new: "#f59e0b", contacted: "#0ea5e9", visit_scheduled: "#0ea5e9",
-  docs_submitted: "#0ea5e9", approved: "#0ea5e9", enrolled: "#10b981",
-  rejected: "#ef4444", waitlist: "#8b5cf6",
+  new: "var(--warning)", contacted: "var(--info)", visit_scheduled: "var(--info)",
+  docs_submitted: "var(--info)", approved: "var(--info)", enrolled: "var(--success)",
+  rejected: "var(--danger)", waitlist: "var(--purple)",
 };
 const INQ_IN_PROGRESS = ["contacted", "visit_scheduled", "docs_submitted", "approved", "waitlist"];
 
@@ -57,14 +57,14 @@ const Enquiries = () => {
     inProgress: inquiries.filter((i) => INQ_IN_PROGRESS.includes(i.status)).length,
   }), [inquiries]);
 
-  const SOURCE_COLORS = { "walk-in": "#6366f1", phone: "#0ea5e9", website: "#10b981", referral: "#f59e0b", other: "#8b5cf6" };
+  const SOURCE_COLORS = { "walk-in": "var(--purple)", phone: "var(--info)", website: "var(--success)", referral: "var(--warning)", other: "var(--purple)" };
 
   const columns = [
     {
       title: "Student / Parent",
       render: (_, r) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Avatar name={r.studentName || "S"} color="#6366f1" />
+          <Avatar name={r.studentName || "S"} color="var(--purple)" />
           <div>
             <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.studentName || "—"}</div>
             <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.parentName || ""} {r.parentPhone ? `· ${r.parentPhone}` : ""}</div>
@@ -76,15 +76,15 @@ const Enquiries = () => {
     {
       title: "Source", dataIndex: "source", width: 110,
       render: (v) => {
-        const c = SOURCE_COLORS[v] || "#8b5cf6";
-        return <span style={pill(c, `${c}15`)}>{v || "—"}</span>;
+        const c = SOURCE_COLORS[v] || "var(--purple)";
+        return <span style={pill(c, `color-mix(in srgb, ${c} 8%, transparent)`)}>{v || "—"}</span>;
       },
     },
     {
       title: "Status", dataIndex: "status", width: 120,
       render: (v) => {
-        const c = INQ_COLORS[v] || "#94a3b8";
-        return <span style={pill(c, `${c}15`)}>{INQ_STATUS_LABELS[v] || "New"}</span>;
+        const c = INQ_COLORS[v] || "var(--text-muted)";
+        return <span style={pill(c, `color-mix(in srgb, ${c} 8%, transparent)`)}>{INQ_STATUS_LABELS[v] || "New"}</span>;
       },
     },
     {
@@ -93,8 +93,8 @@ const Enquiries = () => {
         <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
           <Popconfirm title="Mark as Enrolled?" okText="Enroll" onConfirm={() => handleStatus(r._id, "enrolled")}>
             <button style={{
-              padding: "4px 10px", borderRadius: 7, border: "1px solid #10b98140",
-              background: "#10b98110", color: "#10b981", cursor: "pointer", fontSize: 11, fontWeight: 600,
+              padding: "4px 10px", borderRadius: 7, border: "1px solid color-mix(in srgb, var(--success) 25%, transparent)",
+              background: "color-mix(in srgb, var(--success) 6%, transparent)", color: "var(--success)", cursor: "pointer", fontSize: 11, fontWeight: 600,
             }}>Enroll</button>
           </Popconfirm>
           <button style={{
@@ -124,10 +124,10 @@ const Enquiries = () => {
       />
 
       <div style={{ ...statGrid(140), marginTop: 20 }}>
-        <StatCard icon={HelpCircle}  label="Total Enquiries" value={counts.total}      color="#6366f1" />
-        <StatCard icon={Clock}       label="Pending"         value={counts.pending}    color="#f59e0b" />
-        <StatCard icon={CheckCircle} label="Enrolled"        value={counts.enrolled}   color="#10b981" />
-        <StatCard icon={Users}       label="In Progress"     value={counts.inProgress} color="#0ea5e9" />
+        <StatCard icon={HelpCircle}  label="Total Enquiries" value={counts.total}      color="var(--purple)" />
+        <StatCard icon={Clock}       label="Pending"         value={counts.pending}    color="var(--warning)" />
+        <StatCard icon={CheckCircle} label="Enrolled"        value={counts.enrolled}   color="var(--success)" />
+        <StatCard icon={Users}       label="In Progress"     value={counts.inProgress} color="var(--info)" />
       </div>
 
       <div style={sectionPanel}>

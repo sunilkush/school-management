@@ -31,7 +31,7 @@ const getAudienceLabel = (n) => {
   return "Everyone";
 };
 
-const AUDIENCE_COLORS = { Everyone: "#6366f1", Student: "#0ea5e9", Parent: "#10b981", Teacher: "#f59e0b", Staff: "#8b5cf6" };
+const AUDIENCE_COLORS = { Everyone: "var(--purple)", Student: "var(--info)", Parent: "var(--success)", Teacher: "var(--warning)", Staff: "var(--purple)" };
 const CH_ICONS = { App: "📱", SMS: "💬", Email: "📧" };
 
 const Broadcasts = () => {
@@ -77,10 +77,10 @@ const Broadcasts = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{
             width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-            background: "#6366f115",
+            background: "color-mix(in srgb, var(--purple) 8%, transparent)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <Megaphone size={16} color="#6366f1" strokeWidth={1.8} />
+            <Megaphone size={16} color="var(--purple)" strokeWidth={1.8} />
           </div>
           <div>
             <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.title || "Untitled"}</div>
@@ -97,7 +97,7 @@ const Broadcasts = () => {
         const label = getAudienceLabel(r);
         const firstRole = r.targetRoles?.[0] || "Everyone";
         const c = AUDIENCE_COLORS[firstRole] || AUDIENCE_COLORS.Everyone;
-        return <span style={pill(c, `${c}15`)}>{label}</span>;
+        return <span style={pill(c, `color-mix(in srgb, ${c} 8%, transparent)`)}>{label}</span>;
       },
     },
     {
@@ -106,9 +106,9 @@ const Broadcasts = () => {
         const ch = r.channels || {};
         return (
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-            {ch.inApp  && <span style={pill("#6366f1", "#6366f115")}>{CH_ICONS.App} App</span>}
-            {ch.sms    && <span style={pill("#0ea5e9", "#0ea5e915")}>{CH_ICONS.SMS} SMS</span>}
-            {ch.email  && <span style={pill("#10b981", "#10b98115")}>{CH_ICONS.Email} Email</span>}
+            {ch.inApp  && <span style={pill("var(--purple)", "color-mix(in srgb, var(--purple) 8%, transparent)")}>{CH_ICONS.App} App</span>}
+            {ch.sms    && <span style={pill("var(--info)", "color-mix(in srgb, var(--info) 8%, transparent)")}>{CH_ICONS.SMS} SMS</span>}
+            {ch.email  && <span style={pill("var(--success)", "color-mix(in srgb, var(--success) 8%, transparent)")}>{CH_ICONS.Email} Email</span>}
             {!ch.inApp && !ch.sms && !ch.email && <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>}
           </div>
         );
@@ -118,8 +118,8 @@ const Broadcasts = () => {
       title: "Status", dataIndex: "status", width: 110,
       render: (v) => {
         const sent = v === "sent";
-        const c = sent ? "#10b981" : v === "scheduled" ? "#0ea5e9" : "#94a3b8";
-        return <span style={pill(c, `${c}15`)}>{v || "—"}</span>;
+        const c = sent ? "var(--success)" : v === "scheduled" ? "var(--info)" : "var(--text-muted)";
+        return <span style={pill(c, `color-mix(in srgb, ${c} 8%, transparent)`)}>{v || "—"}</span>;
       },
     },
   ];
@@ -140,9 +140,9 @@ const Broadcasts = () => {
       />
 
       <div style={{ ...statGrid(150), marginTop: 20 }}>
-        <StatCard icon={Megaphone}    label="Total Broadcasts" value={counts.total}     color="#6366f1" loading={loading} />
-        <StatCard icon={CheckCircle}  label="Sent"             value={counts.sent}      color="#10b981" loading={loading} />
-        <StatCard icon={Clock}        label="Scheduled"        value={counts.scheduled} color="#0ea5e9" loading={loading} />
+        <StatCard icon={Megaphone}    label="Total Broadcasts" value={counts.total}     color="var(--purple)" loading={loading} />
+        <StatCard icon={CheckCircle}  label="Sent"             value={counts.sent}      color="var(--success)" loading={loading} />
+        <StatCard icon={Clock}        label="Scheduled"        value={counts.scheduled} color="var(--info)" loading={loading} />
       </div>
 
       <div style={sectionPanel}>

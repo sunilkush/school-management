@@ -7,25 +7,25 @@ import {
 } from "lucide-react";
 import { fetchAllAcademicYears, fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import { fetchSchoolReports } from "../../features/reportSlice";
-import { useTheme } from "../../context/ThemeContext";
 import PageHeader from "../../components/layout/PageHeader";
+import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
 /* ── Tokens ─────────────────────────────────────────────────── */
-const tk = (isDark) => ({
-  card:       isDark ? "#141C2E" : "#FFFFFF",
-  cardBorder: isDark ? "#1E2A3B" : "#E2E8F0",
-  sectionBg:  isDark ? "#1A2438" : "#F8FAFF",
-  textPri:    isDark ? "#E8EDF7" : "#0F172A",
-  textSec:    isDark ? "#64748B" : "#64748B",
-  shadow:     isDark ? "0 2px 12px rgba(0,0,0,0.4)" : "0 2px 8px rgba(37,99,235,0.07)",
-  divider:    isDark ? "#1E2A3B" : "#E2E8F0",
-  rowHover:   isDark ? "#1E2A3B" : "#F4F7FF",
-  barBg:      isDark ? "#1E2A3B" : "#EEF2FF",
-});
+const tk = {
+  card:       "var(--surface)",
+  cardBorder: "var(--border)",
+  sectionBg:  "var(--surface-soft)",
+  textPri:    "var(--text-primary)",
+  textSec:    "var(--text-secondary)",
+  shadow:     "var(--shadow-soft)",
+  divider:    "var(--border)",
+  rowHover:   "var(--surface-soft)",
+  barBg:      "var(--surface-soft)",
+};
 
 /* ── KPI Card ───────────────────────────────────────────────── */
-const KpiCard = ({ icon: Icon, label, value, color, bg, isDark }) => {
-  const t = tk(isDark);
+const KpiCard = ({ icon: Icon, label, value, color, bg }) => {
+  const t = tk;
   return (
     <div style={{
       background: t.card,
@@ -58,8 +58,8 @@ const KpiCard = ({ icon: Icon, label, value, color, bg, isDark }) => {
 };
 
 /* ── Horizontal bar chart ───────────────────────────────────── */
-const BarList = ({ title, rows, colorFn, isDark }) => {
-  const t = tk(isDark);
+const BarList = ({ title, rows, colorFn }) => {
+  const t = tk;
   const maxVal = Math.max(...rows.map((r) => r.count || 0), 1);
   return (
     <div style={{
@@ -90,7 +90,7 @@ const BarList = ({ title, rows, colorFn, isDark }) => {
                   <div style={{
                     height: "100%", width: `${pct}%`,
                     borderRadius: 99,
-                    background: `linear-gradient(90deg, ${color}88, ${color})`,
+                    background: `linear-gradient(90deg, color-mix(in srgb, ${color} 53%, transparent), ${color})`,
                     transition: "width 0.8s cubic-bezier(0.4,0,0.2,1)",
                   }} />
                 </div>
@@ -104,17 +104,17 @@ const BarList = ({ title, rows, colorFn, isDark }) => {
 };
 
 /* ── Gender donut-style card ────────────────────────────────── */
-const GenderCard = ({ genderStats, isDark }) => {
-  const t = tk(isDark);
+const GenderCard = ({ genderStats }) => {
+  const t = tk;
   const male   = genderStats?.male   || 0;
   const female = genderStats?.female || 0;
   const other  = genderStats?.other  || 0;
   const total  = male + female + other || 1;
 
   const slices = [
-    { label: "Male",   value: male,   color: "#6366F1" },
-    { label: "Female", value: female, color: "#EC4899" },
-    { label: "Other",  value: other,  color: "#F59E0B" },
+    { label: "Male",   value: male,   color: "var(--purple)" },
+    { label: "Female", value: female, color: "var(--pink)" },
+    { label: "Other",  value: other,  color: "var(--warning)" },
   ].filter((s) => s.value > 0);
 
   return (
@@ -154,8 +154,8 @@ const GenderCard = ({ genderStats, isDark }) => {
 };
 
 /* ── Section table ──────────────────────────────────────────── */
-const SectionTable = ({ rows, isDark }) => {
-  const t = tk(isDark);
+const SectionTable = ({ rows }) => {
+  const t = tk;
   if (!rows?.length) return (
     <div style={{
       background: t.card, border: `1px solid ${t.cardBorder}`,
@@ -197,7 +197,7 @@ const SectionTable = ({ rows, isDark }) => {
                 </td>
                 <td style={{ padding: "10px 12px", borderBottom: `1px solid ${t.divider}` }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ height: 4, width: Math.min((row.count / 40) * 80, 80), borderRadius: 99, background: "#6366F1" }} />
+                    <div style={{ height: 4, width: Math.min((row.count / 40) * 80, 80), borderRadius: 99, background: "var(--purple)" }} />
                     <span style={{ fontSize: 13, fontWeight: 600, color: t.textPri }}>{row.count}</span>
                   </div>
                 </td>
@@ -210,14 +210,9 @@ const SectionTable = ({ rows, isDark }) => {
   );
 };
 
-/* ── Role colors ────────────────────────────────────────────── */
-const ROLE_COLORS = ["#6366F1", "#14B8A6", "#F59E0B", "#EF4444", "#22C55E", "#EC4899", "#8B5CF6"];
-const CLASS_COLORS = ["#2563EB", "#0891B2", "#059669", "#D97706", "#DC2626", "#7C3AED", "#DB2777"];
-
 /* ── Main ───────────────────────────────────────────────────── */
 const VicePrincipalReports = () => {
   const dispatch  = useDispatch();
-  const { isDark } = useTheme();
 
   const { user } = useSelector((state) => state.auth || {});
   const { schoolReports, loading } = useSelector((state) => state.reports || {});
@@ -256,10 +251,10 @@ const VicePrincipalReports = () => {
   };
 
   const kpis = [
-    { icon: Users,       label: "Total Students",  value: summary.studentCount, color: "#6366F1", bg: "rgba(99,102,241,0.12)" },
-    { icon: GraduationCap, label: "Teachers",      value: summary.teacherCount, color: "#14B8A6", bg: "rgba(20,184,166,0.12)" },
-    { icon: UserCheck,   label: "Parents",          value: summary.parentCount,  color: "#F59E0B", bg: "rgba(245,158,11,0.12)" },
-    { icon: BookOpen,    label: "Admin Staff",      value: summary.adminCount,   color: "#22C55E", bg: "rgba(34,197,94,0.12)" },
+    { icon: Users,       label: "Total Students",  value: summary.studentCount, color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.12)" },
+    { icon: GraduationCap, label: "Teachers",      value: summary.teacherCount, color: "var(--accent)", bg: "rgba(var(--accent-rgb), 0.12)" },
+    { icon: UserCheck,   label: "Parents",          value: summary.parentCount,  color: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.12)" },
+    { icon: BookOpen,    label: "Admin Staff",      value: summary.adminCount,   color: "var(--success)", bg: "rgba(var(--success-rgb), 0.12)" },
   ];
 
   const selectedYear = academicYears.find((y) => y._id === selectedAcademicYearId);
@@ -303,15 +298,15 @@ const VicePrincipalReports = () => {
           </div>
         ) : !schoolReports?.academicYear ? (
           <div style={{
-            background: tk(isDark).card,
-            border: `1px solid ${tk(isDark).cardBorder}`,
+            background: tk.card,
+            border: `1px solid ${tk.cardBorder}`,
             borderRadius: 14,
             padding: 40,
           }}>
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <span style={{ color: tk(isDark).textSec }}>
+                <span style={{ color: tk.textSec }}>
                   No report data available for the selected academic year
                 </span>
               }
@@ -321,30 +316,28 @@ const VicePrincipalReports = () => {
           <>
             {/* ── KPI row ── */}
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              {kpis.map((k) => <KpiCard key={k.label} {...k} isDark={isDark} />)}
+              {kpis.map((k) => <KpiCard key={k.label} {...k} />)}
             </div>
 
             {/* ── Gender ── */}
-            <GenderCard genderStats={genderStats} isDark={isDark} />
+            <GenderCard genderStats={genderStats} />
 
             {/* ── Role-wise + Class-wise ── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
               <BarList
                 title="Users by Role"
                 rows={roleWise}
-                colorFn={(i) => ROLE_COLORS[i % ROLE_COLORS.length]}
-                isDark={isDark}
+                colorFn={(i) => CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length]}
               />
               <BarList
                 title="Students by Class"
                 rows={classWise}
-                colorFn={(i) => CLASS_COLORS[i % CLASS_COLORS.length]}
-                isDark={isDark}
+                colorFn={(i) => CATEGORICAL_COLORS[(i + 3) % CATEGORICAL_COLORS.length]}
               />
             </div>
 
             {/* ── Section breakdown ── */}
-            <SectionTable rows={sectionWise} isDark={isDark} />
+            <SectionTable rows={sectionWise} />
           </>
         )}
       </div>

@@ -22,9 +22,9 @@ const { Text } = Typography;
 
 /* ─── Gender color ───────────────────────────────────────── */
 const GENDER_TAG = {
-  Male:   { color: "#2563EB", bg: "#EFF6FF"  },
-  Female: { color: "#DB2777", bg: "#FDF2F8"  },
-  Other:  { color: "#7C3AED", bg: "#F5F3FF"  },
+  Male:   { color: "var(--primary)", bg: "var(--primary-light)", border: "rgba(var(--primary-rgb), 0.19)" },
+  Female: { color: "#DB2777", bg: "#FDF2F8", border: "#DB277730" },
+  Other:  { color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.08)", border: "rgba(var(--purple-rgb), 0.19)" },
 };
 
 export default function RollNumberManagement() {
@@ -177,11 +177,11 @@ export default function RollNumberManagement() {
           <Flex align="center" gap={6}>
             <div style={{
               width: 34, height: 34, borderRadius: "50%",
-              background: val ? "#EFF6FF" : "#F1F5F9",
-              border: `1.5px solid ${val ? "#93C5FD" : "#CBD5E1"}`,
+              background: val ? "var(--primary-light)" : "var(--surface-soft)",
+              border: `1.5px solid ${val ? "#93C5FD" : "var(--border)"}`,
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 13, fontWeight: 800,
-              color: val ? "#1D4ED8" : "#94A3B8",
+              color: val ? "var(--primary-hover)" : "var(--text-muted)",
               flexShrink: 0,
             }}>
               {val ?? "—"}
@@ -203,11 +203,11 @@ export default function RollNumberManagement() {
         <Flex align="center" gap={10}>
           <div style={{
             width: 34, height: 34, borderRadius: "50%",
-            background: GENDER_TAG[row.gender]?.bg || "#F1F5F9",
-            border: `1.5px solid ${GENDER_TAG[row.gender]?.color || "#CBD5E1"}30`,
+            background: GENDER_TAG[row.gender]?.bg || "var(--surface-soft)",
+            border: `1.5px solid ${GENDER_TAG[row.gender]?.border || "var(--border)"}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 14, fontWeight: 700,
-            color: GENDER_TAG[row.gender]?.color || "#64748B",
+            color: GENDER_TAG[row.gender]?.color || "var(--text-secondary)",
             flexShrink: 0,
           }}>
             {name?.[0]?.toUpperCase() || "?"}
@@ -290,7 +290,7 @@ export default function RollNumberManagement() {
         {/* ── Filter Panel ─────────────────────────────────── */}
         <div style={{ ...sectionPanel, marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
-            <div style={iconWell("#2563EB", 38)}>
+            <div style={iconWell("var(--primary)", 38)}>
               <NumberOutlined style={{ fontSize: 17 }} />
             </div>
             <div>
@@ -357,9 +357,9 @@ export default function RollNumberManagement() {
         {rollNumberList.length > 0 && (
           <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
             {[
-              { label: "Total Students", value: rollNumberList.length, color: "#2563EB", emoji: "👨‍🎓" },
-              { label: "Assigned",       value: assignedCount,         color: "#16A34A", emoji: "✅" },
-              { label: "Unassigned",     value: unassignedCount,       color: "#D97706", emoji: "⚠️" },
+              { label: "Total Students", value: rollNumberList.length, color: "var(--primary)", emoji: "👨‍🎓" },
+              { label: "Assigned",       value: assignedCount,         color: "var(--success)", emoji: "✅" },
+              { label: "Unassigned",     value: unassignedCount,       color: "var(--warning-hover)", emoji: "⚠️" },
             ].map((s) => (
               <Col xs={8} key={s.label}>
                 <div style={{

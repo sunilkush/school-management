@@ -21,7 +21,7 @@ const { useBreakpoint } = Grid;
 const loader = <Spin size="small" style={{ display: "flex", alignItems: "center" }} />;
 
 /* ── Icon button ────────────────────────────────────────────────── */
-const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark, active }) => {
+const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, active }) => {
   const [hov, setHov] = useState(false);
 
   const btn = (
@@ -39,15 +39,15 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark, active
         borderRadius: 10,
         border: `1px solid ${
           active
-            ? isDark ? "#2563EB66" : "#2563EB22"
-            : isDark ? "#1E2A3B" : "#E8EEF6"
+            ? "rgba(var(--primary-rgb), 0.25)"
+            : "var(--border)"
         }`,
         background: active
-          ? isDark ? "#1E3A6E" : "#EFF6FF"
+          ? "rgba(var(--primary-rgb), 0.12)"
           : hov
-            ? isDark ? "#1A2438" : "#F0F4FF"
-            : isDark ? "#111827" : "#F8FAFF",
-        color: active ? "#2563EB" : isDark ? "#94A3B8" : "#64748B",
+            ? "var(--surface-soft-hover)"
+            : "var(--surface-soft)",
+        color: active ? "var(--primary)" : "var(--text-secondary)",
         transition: "all 0.18s ease",
         cursor: "pointer",
         transform: hov ? "scale(1.05)" : "scale(1)",
@@ -56,7 +56,7 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, isDark, active
     >
       {badge !== undefined ? (
         <Badge count={badge} size="small" offset={[4, -4]}
-          style={{ fontSize: 9, background: "#EF4444", boxShadow: "none", border: "none" }}>
+          style={{ fontSize: 9, background: "var(--danger)", boxShadow: "none", border: "none" }}>
           {icon}
         </Badge>
       ) : icon}
@@ -77,36 +77,32 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
   const [searchVal, setSearchVal]                = useState("");
   const mobile = !screens.md;
 
-  const topbarBg     = isDark
-    ? "rgba(17,24,39,0.96)"
-    : "rgba(255,255,255,0.95)";
-  const topbarBorder = isDark ? "#1E2A3B" : "#E8EEF6";
-  const topbarShadow = isDark
-    ? "0 1px 0 #1E2A3B, 0 2px 16px rgba(0,0,0,0.25)"
-    : "0 1px 0 #E8EEF6, 0 2px 16px rgba(37,99,235,0.06)";
+  const topbarBg     = "var(--glass-bg)";
+  const topbarBorder = "var(--border)";
+  const topbarShadow = "var(--header-shadow), var(--shadow-soft)";
 
   return (
     <>
       <style>{`
         .tb-search.ant-input-affix-wrapper {
-          background: ${isDark ? "#1A2438" : "#F4F7FF"} !important;
-          border-color: ${isDark ? "#1E2A3B" : "#E2E9F8"} !important;
+          background: var(--surface-soft) !important;
+          border-color: var(--border) !important;
           border-radius: 10px !important;
           box-shadow: none !important;
           transition: border-color 0.2s, box-shadow 0.2s !important;
         }
         .tb-search.ant-input-affix-wrapper:hover,
         .tb-search.ant-input-affix-wrapper-focused {
-          border-color: ${isDark ? "#3B82F6" : "#93C5FD"} !important;
-          box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important;
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 3px rgba(var(--primary-rgb),0.12) !important;
         }
         .tb-search .ant-input {
           background: transparent !important;
-          color: ${isDark ? "#E8EDF7" : "#0F172A"} !important;
+          color: var(--text) !important;
           font-size: 13px !important;
         }
         .tb-search .ant-input::placeholder {
-          color: ${isDark ? "#4B5875" : "#A0AABA"} !important;
+          color: var(--text-muted) !important;
         }
       `}</style>
 
@@ -139,9 +135,9 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
                 width: 40, height: 40, borderRadius: 12,
-                border: `1px solid ${isDark ? "#1E2A3B" : "#E8EEF6"}`,
-                background: isDark ? "#111827" : "#F8FAFF",
-                color: isDark ? "#94A3B8" : "#64748B",
+                border: "1px solid var(--border)",
+                background: "var(--surface-soft)",
+                color: "var(--text-secondary)",
                 cursor: "pointer", transition: "all 0.18s ease",
                 flexShrink: 0,
                 /* Minimum touch target 44px visual area */
@@ -160,7 +156,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
             <div style={{ flex: 1, textAlign: "center" }}>
               <span style={{
                 fontSize: 14, fontWeight: 700,
-                color: isDark ? "#E2E8F0" : "#0F172A",
+                color: "var(--text)",
                 letterSpacing: "-0.01em",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 display: "block",
@@ -178,12 +174,12 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
               allowClear
               value={searchVal}
               onChange={(e) => setSearchVal(e.target.value)}
-              prefix={<SearchOutlined style={{ color: isDark ? "#4B5875" : "#A0AABA", fontSize: 14 }} />}
+              prefix={<SearchOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />}
               suffix={
                 <span style={{
                   fontSize: 10, fontWeight: 600, letterSpacing: "0.03em",
-                  color: isDark ? "#4B5875" : "#CBD5E1",
-                  background: isDark ? "#1E2A3B" : "#EDF0F7",
+                  color: "var(--text-muted)",
+                  background: "var(--surface-soft)",
                   padding: "1px 5px", borderRadius: 5,
                 }}>
                   ⌘K
@@ -200,7 +196,6 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
           {/* Mobile search icon */}
           {mobile && (
             <IconBtn
-              isDark={isDark}
               icon={<SearchOutlined style={{ fontSize: 17 }} />}
               tooltip="Search"
               onClick={() => setMobileSearch(true)}
@@ -216,7 +211,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
 
           {/* Divider */}
           {!mobile && (
-            <span style={{ width: 1, height: 20, background: isDark ? "#1E2A3B" : "#E2E8F0" }} />
+            <span style={{ width: 1, height: 20, background: "var(--border)" }} />
           )}
 
           {/* Theme toggle */}
@@ -235,7 +230,6 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
           >
             <span>
               <IconBtn
-                isDark={isDark}
                 tooltip={`Theme: ${themeMode}`}
                 ariaLabel="Switch theme"
                 icon={
@@ -256,7 +250,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
 
           {/* Divider */}
           {!mobile && (
-            <span style={{ width: 1, height: 20, background: isDark ? "#1E2A3B" : "#E2E8F0" }} />
+            <span style={{ width: 1, height: 20, background: "var(--border)" }} />
           )}
 
           {/* User */}
@@ -276,7 +270,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
         styles={{
           body: {
             padding: "16px",
-            background: isDark ? "#111827" : "#fff",
+            background: "var(--surface)",
             overflow: "hidden",
             display: "flex",
             alignItems: "center",
@@ -292,7 +286,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
           value={searchVal}
           onChange={(e) => setSearchVal(e.target.value)}
           onPressEnter={() => setMobileSearch(false)}
-          prefix={<SearchOutlined style={{ color: isDark ? "#4B5875" : "#A0AABA", fontSize: 14 }} />}
+          prefix={<SearchOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />}
           style={{ borderRadius: 10, flex: 1 }}
         />
         <button
@@ -302,8 +296,8 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
             width: 36, height: 36,
             borderRadius: 10,
             border: `1px solid ${topbarBorder}`,
-            background: isDark ? "#1A2438" : "#F4F7FF",
-            color: isDark ? "#94A3B8" : "#64748B",
+            background: "var(--surface-soft)",
+            color: "var(--text-secondary)",
             cursor: "pointer",
             fontSize: 13,
             display: "flex", alignItems: "center", justifyContent: "center",

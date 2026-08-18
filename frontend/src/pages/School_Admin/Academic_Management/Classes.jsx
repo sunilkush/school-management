@@ -23,7 +23,14 @@ const { Text } = Typography;
 const { Panel } = Collapse;
 const { Option } = Select;
 
-const C = { primary: "#7c3aed", success: "#10b981", warning: "#f59e0b", danger: "#ef4444", info: "#06b6d4" };
+const C = {
+  primary: "var(--purple)",  primaryBg: "rgba(var(--purple-rgb), 0.08)",
+  success: "var(--success)", successBg: "rgba(var(--success-rgb), 0.08)",
+  warning: "var(--warning)",
+  danger:  "var(--danger)",
+  // --cyan-rgb has no token in index.css; decimal rgba keeps the exact hue for alpha tints
+  info:    "var(--cyan)",    infoBg: "rgba(6, 182, 212, 0.08)",
+};
 
 /* ─── Pastel palette — one per class card ────────────────────── */
 const PASTEL = [
@@ -45,9 +52,9 @@ const StatRow = ({ classes, sections, subjects }) => (
     marginBottom: 16,
   }}>
     {[
-      { icon: <AppstoreOutlined />, label: "Classes",  value: classes,  color: C.primary },
-      { icon: <TeamOutlined />,     label: "Sections", value: sections, color: C.info    },
-      { icon: <BookOutlined />,     label: "Subjects", value: subjects, color: C.success },
+      { icon: <AppstoreOutlined />, label: "Classes",  value: classes,  color: C.primary, bg: C.primaryBg },
+      { icon: <TeamOutlined />,     label: "Sections", value: sections, color: C.info,    bg: C.infoBg    },
+      { icon: <BookOutlined />,     label: "Subjects", value: subjects, color: C.success, bg: C.successBg },
     ].map((s) => (
       <div key={s.label} style={{
         flex: 1, background: "var(--surface)", padding: "12px 16px",
@@ -55,7 +62,7 @@ const StatRow = ({ classes, sections, subjects }) => (
       }}>
         <div style={{
           width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-          background: `${s.color}15`,
+          background: s.bg,
           display: "flex", alignItems: "center", justifyContent: "center",
           color: s.color, fontSize: 14,
         }}>
@@ -359,7 +366,7 @@ const Classes = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{
                 width: 30, height: 30, borderRadius: 8,
-                background: "rgba(124,58,237,0.1)",
+                background: "rgba(var(--purple-rgb), 0.1)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 <UserAddOutlined style={{ color: C.primary, fontSize: 14 }} />

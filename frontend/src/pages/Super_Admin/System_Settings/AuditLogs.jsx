@@ -21,9 +21,9 @@ import {
 const { RangePicker } = DatePicker;
 
 const STATUS_PILL = {
-  SUCCESS: ["#15803D", "rgba(220,252,231,0.5)"],
-  FAILED: ["#DC2626", "rgba(254,226,226,0.5)"],
-  WARNING: ["#B45309", "rgba(254,243,199,0.5)"],
+  SUCCESS: ["var(--success-hover)", "var(--success-light)"],
+  FAILED: ["var(--danger-hover)", "var(--danger-light)"],
+  WARNING: ["var(--warning-hover)", "var(--warning-light)"],
 };
 
 const AuditLogs = () => {
@@ -174,7 +174,7 @@ const AuditLogs = () => {
         title: "Module",
         dataIndex: "module",
         key: "module",
-        render: (value) => <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{value || "N/A"}</span>,
+        render: (value) => <span style={pill("var(--primary)", "var(--primary-light)")}>{value || "N/A"}</span>,
       },
       {
         title: "Status",
@@ -259,7 +259,7 @@ const AuditLogs = () => {
           />
         </div>
 
-        {error ? <div style={{ color: "#DC2626", marginBottom: 12 }}>{error}</div> : null}
+        {error ? <div style={{ color: "var(--danger-hover)", marginBottom: 12 }}>{error}</div> : null}
 
         <style>{tableHeadCss("audit-logs-tbl")}</style>
         <div className="audit-logs-tbl" style={tableContainer}>

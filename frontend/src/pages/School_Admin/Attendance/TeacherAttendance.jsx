@@ -33,6 +33,9 @@ import {
 } from "../../../styles/pageStyles";
 
 /* ── Status config ───────────────────────────────────────────────── */
+// `color` feeds StatusBtn's `${opt.color}18` alpha-suffix trick and the shared iconWell()
+// helper (frontend/src/styles/pageStyles.js) elsewhere in this file — both break with a
+// var() string, so these stay raw hex.
 const STATUS_OPTIONS = [
   { value: "present", label: "P",  fullLabel: "Present",  color: "#22C55E" },
   { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#EF4444" },
@@ -242,8 +245,8 @@ const TeacherAttendance = () => {
                     title={`GPS self check-in at ${gpsRec.checkInAt ? dayjs(gpsRec.checkInAt).format("HH:mm") : "—"}`}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 2,
-                      fontSize: 10, fontWeight: 700, color: "#22C55E",
-                      background: "#22C55E18", borderRadius: 4,
+                      fontSize: 10, fontWeight: 700, color: "var(--success)",
+                      background: "rgba(var(--success-rgb), 0.1)", borderRadius: 4,
                       padding: "1px 5px",
                     }}
                   >
@@ -314,7 +317,7 @@ const TeacherAttendance = () => {
               />
             </div>
             {working && (
-              <div style={{ fontSize: 11, color: "#22C55E", fontWeight: 600 }}>
+              <div style={{ fontSize: 11, color: "var(--success)", fontWeight: 600 }}>
                 {working} worked
               </div>
             )}
@@ -408,6 +411,7 @@ const TeacherAttendance = () => {
       </div>
 
       {/* ── Stats ── */}
+      {/* `color` feeds the shared iconWell() helper below — see STATUS_OPTIONS note above. */}
       <div style={statGrid(120)}>
         {[
           { key: "total",   label: "Total",    color: "var(--primary)" },
@@ -470,11 +474,11 @@ const TeacherAttendance = () => {
                 ? Math.round((summary.present / summary.total) * 100)
                 : 0
             }
-            strokeColor="#22C55E"
+            strokeColor="var(--success)"
             trailColor="var(--border-muted)"
             size="small"
             format={(p) => (
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#22C55E" }}>{p}%</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--success)" }}>{p}%</span>
             )}
           />
         </div>

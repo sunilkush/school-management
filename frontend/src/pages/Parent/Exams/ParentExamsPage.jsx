@@ -17,7 +17,7 @@ import {
   statCard, statLabel, statValue, statGrid,
 } from "../../../styles/pageStyles";
 
-const STAT_COLORS = ["#14B8A6", "#22C55E", "#EF4444", "#2563EB"];
+const STAT_COLORS = ["var(--accent)", "var(--success)", "var(--danger)", "var(--primary)"];
 
 const ParentExamsPage = () => {
   const dispatch = useDispatch();
@@ -172,12 +172,12 @@ const ParentExamsPage = () => {
           <div style={{
             ...sectionPanel,
             display: "flex", alignItems: "center", gap: 10,
-            background: "#EFF6FF", borderColor: "#BFDBFE",
+            background: "var(--primary-light)", borderColor: "var(--primary-light)",
           }}>
-            <CalendarOutlined style={{ color: "#2563EB", fontSize: 18 }} />
+            <CalendarOutlined style={{ color: "var(--primary)", fontSize: 18 }} />
             <span>
-              <span style={{ fontWeight: 700, color: "#1D4ED8" }}>Next Exam: </span>
-              <span style={{ color: "#1D4ED8" }}>
+              <span style={{ fontWeight: 700, color: "var(--primary-hover)" }}>Next Exam: </span>
+              <span style={{ color: "var(--primary-hover)" }}>
                 {nextExam.title || "Exam"} — {dayjs(nextExam.examDate).format("DD MMM YYYY")}
               </span>
             </span>
@@ -204,7 +204,7 @@ const ParentExamsPage = () => {
           </div>
           <Progress
             percent={summary.avg}
-            strokeColor={summary.avg >= 75 ? "#22C55E" : summary.avg >= 50 ? "#F59E0B" : "#EF4444"}
+            strokeColor={summary.avg >= 75 ? "var(--success)" : summary.avg >= 50 ? "var(--warning)" : "var(--danger)"}
             trailColor="var(--border-muted)"
             format={(p) => <span style={{ fontWeight: 700 }}>{p}%</span>}
           />

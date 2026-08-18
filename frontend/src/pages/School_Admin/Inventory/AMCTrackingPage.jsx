@@ -12,11 +12,13 @@ import {
   toolbarRow, tableContainer, tableHeadCss,
   statGrid, iconWell, modalTitle, pill,
 } from "../../../styles/pageStyles";
-import { useTheme } from "../../../context/ThemeContext";
 import dayjs from "dayjs";
 
 const { Option } = Select;
 
+// `color` feeds the shared iconWell()/pill() helpers (frontend/src/styles/pageStyles.js),
+// which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
+// so these stay hex. Same applies to the KPI array below.
 const STATUS_META = {
   active:         { color: "#0ea472",  icon: <CheckCircleOutlined />, label: "Active" },
   expired:        { color: "#EF4444",  icon: <CloseCircleOutlined />, label: "Expired" },
@@ -26,7 +28,6 @@ const STATUS_META = {
 
 export default function AMCTrackingPage() {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
   const { amcs, loading, actionLoading } = useSelector((s) => s.amc);
   const { items: inventoryItems }        = useSelector((s) => s.inventory);
   const { vendors }                      = useSelector((s) => s.vendor);
@@ -129,7 +130,7 @@ export default function AMCTrackingPage() {
             {dayjs(r.startDate).format("DD MMM YY")} → {dayjs(r.endDate).format("DD MMM YY")}
           </div>
           {r.daysRemaining > 0 && (
-            <div style={{ fontSize: 11, color: r.daysRemaining <= 30 ? "#F59E0B" : "var(--text-muted)" }}>
+            <div style={{ fontSize: 11, color: r.daysRemaining <= 30 ? "var(--warning)" : "var(--text-muted)" }}>
               {r.daysRemaining} days left
             </div>
           )}
@@ -284,7 +285,7 @@ export default function AMCTrackingPage() {
           <div style={{ marginTop: 16, paddingLeft: 8 }}>
             <Timeline
               items={viewLogs.serviceLogs.map((l) => ({
-                color: "#1677ff",
+                color: "var(--primary)",
                 children: (
                   <div style={{ padding: "8px 12px", background: "var(--surface-soft)", borderRadius: 10, border: "1px solid var(--border-muted)", marginBottom: 4 }}>
                     <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{dayjs(l.date).format("DD MMM YYYY")}</div>

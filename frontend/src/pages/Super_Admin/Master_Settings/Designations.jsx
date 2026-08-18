@@ -49,13 +49,13 @@ const { TextArea } = Input;
 
 /* ── Level badge colours ─────────────────────────────────────────── */
 const LEVEL_STYLE = {
-  Senior: { color: "#14B8A6", bg: "rgba(20,184,166,0.2)" },
-  Mid: { color: "#2563EB", bg: "rgba(219,234,254,0.2)" },
-  Junior: { color: "#22C55E", bg: "rgba(220,252,231,0.2)" },
+  Senior: { color: "var(--accent)", bg: "rgba(20,184,166,0.2)" },
+  Mid: { color: "var(--primary)", bg: "rgba(219,234,254,0.2)" },
+  Junior: { color: "var(--success)", bg: "rgba(220,252,231,0.2)" },
 };
 
 function LevelBadge({ level }) {
-  const style = LEVEL_STYLE[level] || { color: "#64748b", bg: "#f1f5f9" };
+  const style = LEVEL_STYLE[level] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" };
   return (
     <span style={pill(style.color, style.bg)}>
       {level || "—"}
@@ -66,13 +66,13 @@ function LevelBadge({ level }) {
 function StatusBadge({ status }) {
   const isActive = status === "Active" || status === "active";
   return (
-    <span style={pill(isActive ? "#22C55E" : "#EF4444", isActive ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
+    <span style={pill(isActive ? "var(--success)" : "var(--danger)", isActive ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
       <span
         style={{
           width: 6,
           height: 6,
           borderRadius: "50%",
-          background: isActive ? "#22C55E" : "#EF4444",
+          background: isActive ? "var(--success)" : "var(--danger)",
           display: "inline-block",
           marginRight: 5,
         }}
@@ -278,7 +278,7 @@ export default function Designations() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#EF4444",
+                color: "var(--danger)",
               }}
               title="Delete"
             >
@@ -320,26 +320,26 @@ export default function Designations() {
           </div>
           <UserOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#22C55E" })}>
+        <div style={statCard({ color: "var(--success)" })}>
           <div>
-            <div style={statLabel("#22C55E")}>Active</div>
-            <div style={statValue("#22C55E")}>{active}</div>
+            <div style={statLabel("var(--success)")}>Active</div>
+            <div style={statValue("var(--success)")}>{active}</div>
           </div>
-          <CheckCircleOutlined style={{ fontSize: 26, color: "#22C55E", opacity: 0.4 }} />
+          <CheckCircleOutlined style={{ fontSize: 26, color: "var(--success)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#EF4444" })}>
+        <div style={statCard({ color: "var(--danger)" })}>
           <div>
-            <div style={statLabel("#EF4444")}>Inactive</div>
-            <div style={statValue("#EF4444")}>{inactive}</div>
+            <div style={statLabel("var(--danger)")}>Inactive</div>
+            <div style={statValue("var(--danger)")}>{inactive}</div>
           </div>
-          <StopOutlined style={{ fontSize: 26, color: "#EF4444", opacity: 0.4 }} />
+          <StopOutlined style={{ fontSize: 26, color: "var(--danger)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#14B8A6" })}>
+        <div style={statCard({ color: "var(--accent)" })}>
           <div>
-            <div style={statLabel("#14B8A6")}>Senior Level</div>
-            <div style={statValue("#14B8A6")}>{seniorCount}</div>
+            <div style={statLabel("var(--accent)")}>Senior Level</div>
+            <div style={statValue("var(--accent)")}>{seniorCount}</div>
           </div>
-          <IdcardOutlined style={{ fontSize: 26, color: "#14B8A6", opacity: 0.4 }} />
+          <IdcardOutlined style={{ fontSize: 26, color: "var(--accent)", opacity: 0.4 }} />
         </div>
       </div>
 

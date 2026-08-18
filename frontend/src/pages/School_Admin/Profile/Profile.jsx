@@ -117,7 +117,7 @@ const Profile = () => {
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{profileForm.name || roleName}</div>
               <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{profileForm.email || 'No email'}</div>
-              <span style={{ display: 'inline-block', marginTop: 6, fontSize: 11, background: 'rgba(220,252,231,0.2)', color: '#22C55E', padding: '2px 10px', borderRadius: 99, fontWeight: 600 }}>
+              <span style={{ display: 'inline-block', marginTop: 6, fontSize: 11, background: 'rgba(220,252,231,0.2)', color: 'var(--success)', padding: '2px 10px', borderRadius: 99, fontWeight: 600 }}>
                 {user?.isActive ? 'Active' : 'Inactive'}
               </span>
             </div>
@@ -147,7 +147,7 @@ const Profile = () => {
               <InputField icon={<Phone style={{ width: 14, height: 14 }} />} label="Phone" name="phone" value={profileForm.phone} onChange={(e) => setProfileForm((p) => ({ ...p, phone: e.target.value }))} />
             </div>
           </Section>
-          {saveMsg.text && <p style={{ fontSize: 13, color: saveMsg.error ? '#EF4444' : '#22C55E', margin: '8px 0 0' }}>{saveMsg.text}</p>}
+          {saveMsg.text && <p style={{ fontSize: 13, color: saveMsg.error ? 'var(--danger)' : 'var(--success)', margin: '8px 0 0' }}>{saveMsg.text}</p>}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -158,7 +158,7 @@ const Profile = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{user?.school?.name || '—'}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{roleName}</div>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, background: 'rgba(220,252,231,0.4)', color: '#15803D', padding: '3px 10px', borderRadius: 99, fontWeight: 600, width: 'fit-content', marginTop: 4 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, background: 'rgba(220,252,231,0.4)', color: 'var(--success-hover)', padding: '3px 10px', borderRadius: 99, fontWeight: 600, width: 'fit-content', marginTop: 4 }}>
                 <CheckCircle style={{ width: 11, height: 11 }} /> {user?.isActive ? 'Active Member' : 'Inactive'}
               </span>
             </div>
@@ -193,7 +193,7 @@ const Profile = () => {
               <PwdField label="Confirm Password" value={pwdForm.confirm} onChange={(v) => setPwdForm((p) => ({ ...p, confirm: v }))} placeholder="Repeat new password" />
             </div>
           </Section>
-          {pwdMsg.text && <p style={{ fontSize: 13, color: pwdMsg.error ? '#EF4444' : '#22C55E', margin: '8px 0 0' }}>{pwdMsg.text}</p>}
+          {pwdMsg.text && <p style={{ fontSize: 13, color: pwdMsg.error ? 'var(--danger)' : 'var(--success)', margin: '8px 0 0' }}>{pwdMsg.text}</p>}
           <button type="submit" disabled={pwdLoading} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 16, padding: '8px 16px', borderRadius: 8, background: 'var(--primary, #7c3aed)', color: '#fff', border: 'none', cursor: pwdLoading ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, opacity: pwdLoading ? 0.6 : 1 }}>
             {pwdLoading ? <Loader2 style={{ width: 14, height: 14 }} /> : <Lock style={{ width: 14, height: 14 }} />}
             {pwdLoading ? 'Updating…' : 'Update Password'}
@@ -205,7 +205,7 @@ const Profile = () => {
           <ul style={{ padding: 0, margin: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {['At least 8 characters', 'Mix uppercase & lowercase', 'Include numbers & symbols', 'Avoid your name or email'].map((tip) => (
               <li key={tip} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--text-muted)' }}>
-                <CheckCircle style={{ width: 13, height: 13, color: '#10B981', flexShrink: 0 }} />{tip}
+                <CheckCircle style={{ width: 13, height: 13, color: 'var(--success)', flexShrink: 0 }} />{tip}
               </li>
             ))}
           </ul>

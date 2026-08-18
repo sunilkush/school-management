@@ -76,12 +76,12 @@ const TAB_FIELDS = {
 };
 
 const TAB_COLORS = {
-  profile:      "#2563EB",
-  preferences:  "#7C3AED",
-  school:       "#10B981",
-  communication:"#0EA5E9",
-  security:     "#EF4444",
-  backup:       "#14B8A6",
+  profile:      "var(--primary)",
+  preferences:  "var(--purple)",
+  school:       "var(--success)",
+  communication:"var(--info)",
+  security:     "var(--danger)",
+  backup:       "var(--accent)",
 };
 
 /* ── Password strength ───────────────────────────────────────────── */
@@ -95,14 +95,14 @@ const getStrength = (pwd = "") => {
   return s;
 };
 const STRENGTH = [
-  { label: "Weak",   color: "#EF4444", pct: 25 },
-  { label: "Fair",   color: "#F59E0B", pct: 50 },
-  { label: "Good",   color: "#3B82F6", pct: 75 },
-  { label: "Strong", color: "#22C55E", pct: 100 },
+  { label: "Weak",   color: "var(--danger)", pct: 25 },
+  { label: "Fair",   color: "var(--warning)", pct: 50 },
+  { label: "Good",   color: "var(--info)", pct: 75 },
+  { label: "Strong", color: "var(--success)", pct: 100 },
 ];
 
 /* ── Small reusable pieces ───────────────────────────────────────── */
-const SectionTitle = ({ icon, label, description, color = "#2563EB" }) => (
+const SectionTitle = ({ icon, label, description, color = "var(--primary)" }) => (
   <Flex align="center" gap={12} style={{ marginBottom: 20 }}>
     <div style={iconWell(color, 38)}>
       <span style={{ fontSize: 17 }}>{icon}</span>
@@ -130,7 +130,7 @@ const InfoBox = ({ icon, children }) => (
 const DirtyDot = () => (
   <span className="settings-dirty-dot" style={{
     width: 7, height: 7, borderRadius: "50%",
-    background: "#F59E0B", display: "inline-block", marginLeft: 6, flexShrink: 0,
+    background: "var(--warning)", display: "inline-block", marginLeft: 6, flexShrink: 0,
   }} />
 );
 
@@ -436,7 +436,7 @@ const Settings = () => {
       children: (
         <div>
           <SectionTitle
-            icon={<UserOutlined />} color="#2563EB"
+            icon={<UserOutlined />} color="var(--primary)"
             label="Personal Information"
             description="Update your display name, email address, phone, and profile photo."
           />
@@ -505,7 +505,7 @@ const Settings = () => {
       children: (
         <div>
           <SectionTitle
-            icon={<SettingOutlined />} color="#7C3AED"
+            icon={<SettingOutlined />} color="var(--purple)"
             label="Display & Regional"
             description="Theme changes apply immediately. Language and timezone are saved with your profile."
           />
@@ -568,7 +568,7 @@ const Settings = () => {
                 <Flex align="center" justify="space-between" wrap="wrap" gap={12}>
                   <div>
                     <Flex align="center" gap={8} style={{ marginBottom: 2 }}>
-                      <BellOutlined style={{ color: "#F59E0B" }} />
+                      <BellOutlined style={{ color: "var(--warning)" }} />
                       <Text strong style={{ color: "var(--text-primary)" }}>In-App Notifications</Text>
                     </Flex>
                     <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
@@ -592,7 +592,7 @@ const Settings = () => {
       children: (
         <div>
           <SectionTitle
-            icon={<BankOutlined />} color="#10B981"
+            icon={<BankOutlined />} color="var(--success)"
             label="School Configuration"
             description="Set your default role view and active academic year for this session."
           />
@@ -629,7 +629,7 @@ const Settings = () => {
           <Divider style={{ margin: "8px 0 20px" }} />
 
           <SectionTitle
-            icon={<CreditCardOutlined />} color="#F59E0B"
+            icon={<CreditCardOutlined />} color="var(--warning)"
             label="Razorpay Integration"
             description="Configure payment gateway credentials for online fee collection."
           />
@@ -656,7 +656,7 @@ const Settings = () => {
                     <Switch />
                   </Form.Item>
                   <Button type="primary" icon={<SaveOutlined />} onClick={() => razorpayForm.submit()}
-                    loading={isRazorpaySaving} style={{ background: "#F59E0B", borderColor: "#F59E0B" }}>
+                    loading={isRazorpaySaving} style={{ background: "var(--warning)", borderColor: "var(--warning)" }}>
                     Save Razorpay Settings
                   </Button>
                 </Flex>
@@ -773,7 +773,7 @@ const Settings = () => {
       children: (
         <div>
           <SectionTitle
-            icon={<LockOutlined />} color="#EF4444"
+            icon={<LockOutlined />} color="var(--danger)"
             label="Change Password"
             description="Leave all three fields blank if you don't want to change your password."
           />
@@ -817,7 +817,7 @@ const Settings = () => {
           <Divider style={{ margin: "4px 0 20px" }} />
 
           <SectionTitle
-            icon={<SafetyOutlined />} color="#94A3B8"
+            icon={<SafetyOutlined />} color="var(--text-muted)"
             label="Two-Factor Authentication"
             description=""
           />
@@ -837,7 +837,7 @@ const Settings = () => {
       children: (
         <div>
           <SectionTitle
-            icon={<DatabaseOutlined />} color="#14B8A6"
+            icon={<DatabaseOutlined />} color="var(--accent)"
             label="Backup & Data"
             description="Configure automatic data backup preferences for your school."
           />
@@ -847,7 +847,7 @@ const Settings = () => {
                 <Flex align="center" justify="space-between" wrap="wrap" gap={12}>
                   <div>
                     <Flex align="center" gap={8} style={{ marginBottom: 2 }}>
-                      <DatabaseOutlined style={{ color: "#14B8A6" }} />
+                      <DatabaseOutlined style={{ color: "var(--accent)" }} />
                       <Text strong style={{ color: "var(--text-primary)" }}>Enable Auto Backup</Text>
                     </Flex>
                     <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
@@ -855,7 +855,7 @@ const Settings = () => {
                     </Text>
                   </div>
                   <Form.Item name="autoBackup" valuePropName="checked" style={{ margin: 0 }}>
-                    <Switch style={{ "--ant-switch-color": "#14B8A6" }} />
+                    <Switch style={{ "--ant-switch-color": "var(--accent)" }} />
                   </Form.Item>
                 </Flex>
               </div>
@@ -900,7 +900,7 @@ const Settings = () => {
         }
         .settings-tabs .ant-tabs-tab:hover { background: var(--surface) !important; }
         .settings-tabs .ant-tabs-tab-active { background: rgba(37,99,235,0.09) !important; }
-        .settings-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: #2563EB !important; font-weight: 600 !important; }
+        .settings-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--primary) !important; font-weight: 600 !important; }
         .settings-tabs .ant-tabs-ink-bar { display: none !important; }
         .settings-tabs .ant-tabs-content-holder { padding: 28px 28px !important; }
 
@@ -913,16 +913,16 @@ const Settings = () => {
 
         /* Save-button pulse when dirty */
         @keyframes settings-btn-glow {
-          0%   { box-shadow: 0 0 0 0   rgba(37,99,235,0.45); }
-          70%  { box-shadow: 0 0 0 9px rgba(37,99,235,0);    }
-          100% { box-shadow: 0 0 0 0   rgba(37,99,235,0);    }
+          0%   { box-shadow: 0 0 0 0   rgba(var(--primary-rgb),0.45); }
+          70%  { box-shadow: 0 0 0 9px rgba(var(--primary-rgb),0);    }
+          100% { box-shadow: 0 0 0 0   rgba(var(--primary-rgb),0);    }
         }
         .settings-save-dirty { animation: settings-btn-glow 1.8s ease-in-out infinite; }
 
         /* Success flash */
         @keyframes settings-save-flash {
-          0%,100% { background: #22C55E; border-color: #22C55E; }
-          50%      { background: #16A34A; border-color: #16A34A; }
+          0%,100% { background: var(--success); border-color: var(--success); }
+          50%      { background: var(--success-hover); border-color: var(--success-hover); }
         }
         .settings-save-success { animation: settings-save-flash 0.5s ease-in-out 2; }
 
@@ -947,7 +947,7 @@ const Settings = () => {
               onClick={() => form.submit()}
               loading={isSaving}
               className={saveSuccess ? "settings-save-success" : isDirty ? "settings-save-dirty" : ""}
-              style={saveSuccess ? { background: "#22C55E", borderColor: "#22C55E" } : {}}
+              style={saveSuccess ? { background: "var(--success)", borderColor: "var(--success)" } : {}}
             >
               {isSaving ? "Saving…" : saveSuccess ? "Saved!" : isDirty ? `Save Changes (${dirtyTabs.size})` : "Save Changes"}
             </Button>

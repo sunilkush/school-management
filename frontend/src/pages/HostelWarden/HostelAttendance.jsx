@@ -14,9 +14,9 @@ import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../
 const { Option } = Select;
 
 const STATUS_STYLE = {
-  present: { color: "#22C55E", bg: "rgba(220,252,231,0.2)" },
-  absent:  { color: "#EF4444", bg: "rgba(254,226,226,0.2)" },
-  leave:   { color: "#F59E0B", bg: "rgba(254,243,199,0.25)" },
+  present: { color: "var(--success)", bg: "rgba(var(--success-rgb), 0.2)" },
+  absent:  { color: "var(--danger)", bg: "rgba(var(--danger-rgb), 0.2)" },
+  leave:   { color: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.25)" },
 };
 
 const HostelAttendance = () => {
@@ -107,9 +107,9 @@ const HostelAttendance = () => {
           buttonStyle="solid"
           size="small"
         >
-          <Radio.Button value="present" style={{ color: markedStatus[r.studentId] === "present" ? "#fff" : "#22C55E", borderColor: "#22C55E", background: markedStatus[r.studentId] === "present" ? "#22C55E" : "transparent" }}>P</Radio.Button>
-          <Radio.Button value="absent"  style={{ color: markedStatus[r.studentId] === "absent"  ? "#fff" : "#EF4444", borderColor: "#EF4444", background: markedStatus[r.studentId] === "absent"  ? "#EF4444" : "transparent" }}>A</Radio.Button>
-          <Radio.Button value="leave"   style={{ color: markedStatus[r.studentId] === "leave"   ? "#fff" : "#F59E0B", borderColor: "#F59E0B", background: markedStatus[r.studentId] === "leave"   ? "#F59E0B" : "transparent" }}>L</Radio.Button>
+          <Radio.Button value="present" style={{ color: markedStatus[r.studentId] === "present" ? "#fff" : "var(--success)", borderColor: "var(--success)", background: markedStatus[r.studentId] === "present" ? "var(--success)" : "transparent" }}>P</Radio.Button>
+          <Radio.Button value="absent"  style={{ color: markedStatus[r.studentId] === "absent"  ? "#fff" : "var(--danger)", borderColor: "var(--danger)", background: markedStatus[r.studentId] === "absent"  ? "var(--danger)" : "transparent" }}>A</Radio.Button>
+          <Radio.Button value="leave"   style={{ color: markedStatus[r.studentId] === "leave"   ? "#fff" : "var(--warning)", borderColor: "var(--warning)", background: markedStatus[r.studentId] === "leave"   ? "var(--warning)" : "transparent" }}>L</Radio.Button>
         </Radio.Group>
       ),
     },
@@ -118,13 +118,13 @@ const HostelAttendance = () => {
   const historyColumns = [
     { title: "Date",    dataIndex: "date",    render: (d) => dayjs(d).format("DD MMM YYYY") },
     { title: "Session", dataIndex: "session", render: (s) => <Tag>{s}</Tag> },
-    { title: "Present", dataIndex: "totalPresent", render: (v) => <span style={{ color: "#22C55E", fontWeight: 700 }}>{v}</span> },
-    { title: "Absent",  dataIndex: "totalAbsent",  render: (v) => <span style={{ color: "#EF4444", fontWeight: 700 }}>{v}</span> },
-    { title: "Leave",   dataIndex: "totalOnLeave", render: (v) => <span style={{ color: "#F59E0B", fontWeight: 700 }}>{v}</span> },
+    { title: "Present", dataIndex: "totalPresent", render: (v) => <span style={{ color: "var(--success)", fontWeight: 700 }}>{v}</span> },
+    { title: "Absent",  dataIndex: "totalAbsent",  render: (v) => <span style={{ color: "var(--danger)", fontWeight: 700 }}>{v}</span> },
+    { title: "Leave",   dataIndex: "totalOnLeave", render: (v) => <span style={{ color: "var(--warning)", fontWeight: 700 }}>{v}</span> },
     { title: "Rate",    render: (_, r) => {
       const t = (r.totalPresent || 0) + (r.totalAbsent || 0) + (r.totalOnLeave || 0);
       const pct = t > 0 ? Math.round((r.totalPresent / t) * 100) : 0;
-      return <Progress percent={pct} size="small" strokeColor={pct >= 80 ? "#22C55E" : pct >= 60 ? "#F59E0B" : "#EF4444"} />;
+      return <Progress percent={pct} size="small" strokeColor={pct >= 80 ? "var(--success)" : pct >= 60 ? "var(--warning)" : "var(--danger)"} />;
     }, width: 140 },
   ];
 
@@ -164,10 +164,10 @@ const HostelAttendance = () => {
           {/* ── Stats ───────────────────────────────────────────── */}
           <div style={statGrid(130)}>
             {[
-              { label: "Total",   value: total,        color: "#14B8A6" },
-              { label: "Present", value: presentCount, color: "#22C55E" },
-              { label: "Absent",  value: absentCount,  color: "#EF4444" },
-              { label: "On Leave",value: leaveCount,   color: "#F59E0B" },
+              { label: "Total",   value: total,        color: "var(--accent)" },
+              { label: "Present", value: presentCount, color: "var(--success)" },
+              { label: "Absent",  value: absentCount,  color: "var(--danger)" },
+              { label: "On Leave",value: leaveCount,   color: "var(--warning)" },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "12px 16px" }}>
                 <div style={iconWell(color, 36)}><CheckCircleOutlined /></div>
@@ -186,14 +186,14 @@ const HostelAttendance = () => {
                 <span style={{ fontWeight: 700, fontSize: 13 }}>Attendance Rate — {date.format("DD MMM YYYY")} ({session})</span>
                 <span style={{ fontWeight: 700 }}>{attendancePct}%</span>
               </div>
-              <Progress percent={attendancePct} strokeColor={attendancePct >= 80 ? "#22C55E" : attendancePct >= 60 ? "#F59E0B" : "#EF4444"} showInfo={false} />
+              <Progress percent={attendancePct} strokeColor={attendancePct >= 80 ? "var(--success)" : attendancePct >= 60 ? "var(--warning)" : "var(--danger)"} showInfo={false} />
             </div>
           )}
 
           {/* ── Bulk actions ─────────────────────────────────────── */}
           {sheetStudents.length > 0 && (
             <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-              <Button size="small" icon={<CheckOutlined />} onClick={() => setAll("present")} style={{ color: "#22C55E", borderColor: "#22C55E" }}>Mark All Present</Button>
+              <Button size="small" icon={<CheckOutlined />} onClick={() => setAll("present")} style={{ color: "var(--success)", borderColor: "var(--success)" }}>Mark All Present</Button>
               <Button size="small" icon={<CloseOutlined />} onClick={() => setAll("absent")}  danger>Mark All Absent</Button>
             </div>
           )}

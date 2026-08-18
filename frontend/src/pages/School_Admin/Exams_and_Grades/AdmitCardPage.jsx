@@ -44,6 +44,11 @@ const fmtDate = (v) => {
 const escHtml = (v = "") =>
   String(v).replace(/[&<>'"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;" }[c]));
 
+// NOTE: this HTML string is rendered into a blank popup window via
+// handlePrint's `document.write()` (see below), which has no <link> to
+// index.css — CSS custom properties like var(--text) would not resolve
+// there. It should also always print on white paper regardless of the
+// app's active theme, so the hex colors below are intentionally literal.
 const buildPrintHtml = (card) => `
 <!DOCTYPE html>
 <html>
@@ -490,7 +495,7 @@ const AdmitCardPage = () => {
                 background: `${C.warning}15`, border: `1px solid ${C.warning}30`,
                 borderRadius: 10, padding: "14px 16px",
               }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#B45309", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--warning-hover)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
                   ⚠ Instructions
                 </div>
                 <ul style={{ paddingLeft: 18, margin: 0 }}>
