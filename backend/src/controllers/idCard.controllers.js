@@ -376,7 +376,7 @@ export const downloadIdCardsPdf = asyncHandler(async (req, res) => {
   cards.forEach((card) => ensureIdCardAccess(card, req.user));
 
   const schoolId = cards[0].schoolId;
-  const school = await School.findById(schoolId).select("name logo").lean();
+  const school = await School.findById(schoolId).select("name logo address phone email website").lean();
 
   const pdfBuffer = await exportIdCardsPdf(cards, school);
 
@@ -411,7 +411,7 @@ export const downloadMyIdCardPdf = asyncHandler(async (req, res) => {
 
   if (!card) throw new ApiError(404, "ID card not found");
 
-  const school = await School.findById(card.schoolId).select("name logo").lean();
+  const school = await School.findById(card.schoolId).select("name logo address phone email website").lean();
   const pdfBuffer = await exportIdCardsPdf([card], school);
 
   res.setHeader("Content-Type", "application/pdf");

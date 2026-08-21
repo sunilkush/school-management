@@ -610,8 +610,11 @@ const fetchImageBuffer = async (url) => {
 };
 
 /**
- * ID Cards — print-ready CR80-size cards (student or staff), 8 per A4 sheet
- * (2 columns x 4 rows), for batch printing and cutting.
+ * ID Cards — portrait lanyard-badge style (student or staff), 4 per A4 sheet
+ * (2 columns x 2 rows): solid navy wave header, circular photo frame, pill-style
+ * role badge, and a navy footer band with the school logo/name on the left and a
+ * QR code on the right (the platform's /verify/id-card flow scans QR, not a
+ * barcode, so the QR takes the "scan me" icon's spot in the reference design).
  */
 export const exportIdCardsPdf = async (cards, school) => {
   const photoBuffers = new Map(
@@ -623,10 +626,11 @@ export const exportIdCardsPdf = async (cards, school) => {
     await Promise.all(
       cards.map(async (card) => [
         `${card._id}`,
-        await generateQrBuffer(buildVerifyUrl(`/verify/id-card/${card.cardNumber}`), 90).catch(() => null),
+        await generateQrBuffer(buildVerifyUrl(`/verify/id-card/${card.cardNumber}`), 120).catch(() => null),
       ])
     )
   );
+  const logoBuffer = await fetchImageBuffer(school?.logo);
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 30, size: "A4", layout: "portrait" });
@@ -636,122 +640,276 @@ export const exportIdCardsPdf = async (cards, school) => {
     doc.on("error", reject);
 
     const PW = doc.page.width;
-    const PH = doc.page.height;
     const MX = 30;
     const MY = 30;
 
-    const CARD_W = 243;
-    const CARD_H = 153;
-    const GAP_X = 20;
-    const GAP_Y = 20;
+    const CARD_W = 220;
+    const CARD_H = 360;
+    const GAP_X = 24;
+    const GAP_Y = 24;
     const COLS = 2;
-    const ROWS = 4;
+    const ROWS = 2;
     const PER_PAGE = COLS * ROWS;
 
     const gridW = COLS * CARD_W + (COLS - 1) * GAP_X;
     const startX = MX + ((PW - MX * 2) - gridW) / 2;
     const startY = MY + 24; // room for a thin page title line
 
+    const NAVY = "#173A73";
+    const TEXT_MUTED = "#64748B";
+    const TEXT_DARK = "#152A52";
+
     const fmtDate = (v) => {
       if (!v) return "—";
       try { return new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); } catch { return "—"; }
     };
 
+    const drawInitialsAvatar = (card, cx, cy, r) => {
+      const { bg, color } = avatarPalette(card.fullName);
+      doc.circle(cx, cy, r).fill(bg);
+      doc.fillColor(color).fontSize(r).font("Helvetica-Bold")
+        .text((card.fullName || "?")[0].toUpperCase(), cx - r, cy - r / 2, { width: r * 2, align: "center" });
+    };
+
+    // 4 navy corner brackets on the white QR box, standing in for the QR when one couldn't be
+    // generated — matches the reference design's "scan me" icon.
+    const drawScanIcon = (bx, by, s) => {
+      const L = s * 0.3;
+      doc.lineWidth(2).strokeColor(NAVY);
+      doc.moveTo(bx, by + L).lineTo(bx, by).lineTo(bx + L, by).stroke();
+      doc.moveTo(bx + s - L, by).lineTo(bx + s, by).lineTo(bx + s, by + L).stroke();
+      doc.moveTo(bx, by + s - L).lineTo(bx, by + s).lineTo(bx + L, by + s).stroke();
+      doc.moveTo(bx + s - L, by + s).lineTo(bx + s, by + s).lineTo(bx + s, by + s - L).stroke();
+    };
+
     const drawCard = (card, x, y) => {
-      // Cut-guide border
-      doc.rect(x, y, CARD_W, CARD_H).lineWidth(0.75).stroke("#94A3B8");
+      // Base card
+      doc.roundedRect(x, y, CARD_W, CARD_H, 14).fill("#FFFFFF");
+      doc.roundedRect(x, y, CARD_W, CARD_H, 14).lineWidth(0.75).stroke("#D8DCE6");
 
-      // Header band
-      const HDR_H = 26;
-      doc.rect(x, y, CARD_W, HDR_H).fill("#1E3A8A");
-      doc.fillColor("#ffffff").fontSize(9).font("Helvetica-Bold")
-        .text(school?.name || "School", x + 8, y + 5, { width: CARD_W - 70 });
-      doc.fontSize(6.5).font("Helvetica")
-        .text(card.holderType === "Student" ? "STUDENT ID" : "STAFF ID", x + CARD_W - 62, y + 8, { width: 54, align: "right" });
+      // Clip ALL of this card's content to its own rounded-rect boundary. The vertical flow
+      // below is sized to fit comfortably, but this is a safety net so an edge case (e.g. an
+      // unusually long name wrapping to 2 lines) gets cut off at this card's own edge instead
+      // of bleeding into the next card in the grid.
+      doc.save();
+      doc.roundedRect(x, y, CARD_W, CARD_H, 14).clip();
 
-      // Photo box
-      const PHOTO_X = x + 10;
-      const PHOTO_Y = y + HDR_H + 10;
-      const PHOTO_W = 62;
-      const PHOTO_H = 74;
+      // Solid navy header with a wave-shaped bottom edge — shallow at the corners, dipping
+      // deeper in the middle so the photo can sit half inside it, half in the white body.
+      const photoCx = x + CARD_W / 2;
+      const photoCy = y + 82;
+      const R = 44;
+      const waveEdgeY = y + CARD_H * 0.10;
+      const waveDipY = photoCy;
+
+      doc.moveTo(x, y)
+        .lineTo(x + CARD_W, y)
+        .lineTo(x + CARD_W, waveEdgeY)
+        .bezierCurveTo(x + CARD_W * 0.75, waveEdgeY, x + CARD_W * 0.60, waveDipY, x + CARD_W * 0.5, waveDipY)
+        .bezierCurveTo(x + CARD_W * 0.40, waveDipY, x + CARD_W * 0.25, waveEdgeY, x, waveEdgeY)
+        .closePath()
+        .fill(NAVY);
+
+      // Circular photo — thin white gap ring, then a navy border ring, then the photo itself
+      doc.circle(photoCx, photoCy, R + 6).fill("#FFFFFF");
+      doc.circle(photoCx, photoCy, R + 3).fill(NAVY);
 
       const buffer = photoBuffers.get(`${card._id}`);
+      let photoDrawn = false;
       if (buffer) {
+        doc.save();
+        doc.circle(photoCx, photoCy, R).clip();
         try {
-          doc.rect(PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H).lineWidth(0.5).stroke("#CBD5E1");
-          doc.image(buffer, PHOTO_X, PHOTO_Y, { fit: [PHOTO_W, PHOTO_H], align: "center", valign: "center" });
-        } catch {
-          drawInitialsAvatar(card, PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H);
-        }
-      } else {
-        drawInitialsAvatar(card, PHOTO_X, PHOTO_Y, PHOTO_W, PHOTO_H);
+          doc.image(buffer, photoCx - R, photoCy - R, { fit: [R * 2, R * 2], align: "center", valign: "center" });
+          photoDrawn = true;
+        } catch { /* fall through to initials avatar below */ }
+        doc.restore();
+      }
+      if (!photoDrawn) {
+        drawInitialsAvatar(card, photoCx, photoCy, R);
       }
 
-      // Text block
-      const TX = PHOTO_X + PHOTO_W + 10;
-      const TW = x + CARD_W - TX - 8;
-      let ty = PHOTO_Y + 2;
+      // Everything below the photo flows sequentially off a single cursor (ty) — each block
+      // advances ty by what it actually drew (measured, not guessed), so a long name or an
+      // optional row can never push into the block after it.
+      const NAME_W = CARD_W - 20;
+      doc.fontSize(17).font("Helvetica-Bold");
+      const nameHeight = doc.heightOfString(card.fullName || "—", { width: NAME_W, align: "center" });
+      let ty = photoCy + R + 12;
+      doc.fillColor(TEXT_DARK).text(card.fullName || "—", x + 10, ty, { width: NAME_W, align: "center" });
+      ty += nameHeight + 8;
 
-      doc.fillColor("#0F172A").fontSize(9.5).font("Helvetica-Bold")
-        .text(card.fullName || "—", TX, ty, { width: TW });
-      ty += 16;
-
+      // Role / class pill
       const roleLine = card.holderType === "Student"
-        ? [card.className, card.sectionName].filter(Boolean).join(" - ")
+        ? [card.className, card.sectionName].filter(Boolean).join(" - ") || "Student"
         : (card.designation || card.department || "Staff");
-      doc.fillColor("#475569").fontSize(7.5).font("Helvetica")
-        .text(roleLine || "—", TX, ty, { width: TW });
-      ty += 13;
+      const pillW = CARD_W - 40;
+      const pillH = 18;
+      doc.roundedRect(x + 20, ty, pillW, pillH, pillH / 2).fill(NAVY);
+      doc.fillColor("#FFFFFF").fontSize(9).font("Helvetica-Bold")
+        .text(roleLine, x + 20, ty + 4.5, { width: pillW, align: "center" });
+      ty += pillH + 12;
 
-      const idLabel = card.holderType === "Student" ? "Roll No" : "Emp Code";
-      const idValue = card.holderType === "Student" ? (card.rollNumber || "—") : (card.employeeCode || "—");
-      doc.fillColor("#64748B").fontSize(7).font("Helvetica")
-        .text(`${idLabel}: ${idValue}`, TX, ty, { width: TW });
-      ty += 11;
+      // Info rows
+      const rows = card.holderType === "Student"
+        ? [
+            ["ID No", card.cardNumber || "—"],
+            ["Roll No", card.rollNumber || "—"],
+            ["Class", [card.className, card.sectionName].filter(Boolean).join(" - ") || "—"],
+            ["Phone", card.contactPhone || "—"],
+          ]
+        : [
+            ["ID No", card.cardNumber || "—"],
+            ["Emp Code", card.employeeCode || "—"],
+            ["Dept", card.department || "—"],
+            ["Phone", card.contactPhone || "—"],
+          ];
+      if (card.bloodGroup) rows.push(["Blood Grp", card.bloodGroup]);
+      if (card.validUntil) rows.push(["Valid Till", fmtDate(card.validUntil)]);
 
-      if (card.bloodGroup) {
-        doc.fillColor("#DC2626").fontSize(7).font("Helvetica-Bold")
-          .text(`Blood Group: ${card.bloodGroup}`, TX, ty, { width: TW });
+      const LABEL_X = x + 22;
+      const VALUE_X = x + 86;
+      const ROW_H = 13;
+      rows.forEach(([label, value]) => {
+        doc.fillColor(TEXT_DARK).fontSize(8.5).font("Helvetica-Bold").text(label, LABEL_X, ty, { width: 56 });
+        doc.fillColor(TEXT_MUTED).fontSize(8.5).font("Helvetica")
+          .text(`: ${value}`, VALUE_X, ty, { width: x + CARD_W - 12 - VALUE_X });
+        ty += ROW_H;
+      });
+
+      // Navy footer band — school logo/name on the left, QR (scan target) on the right.
+      // The card-boundary clip already applied above means this automatically picks up the
+      // card's own rounded bottom corners without needing a separate rounded-top-only path.
+      const FOOT_H = 56;
+      const footY = y + CARD_H - FOOT_H;
+      doc.rect(x, footY, CARD_W, FOOT_H).fill(NAVY);
+
+      const logoSize = 24;
+      const logoX = x + 14;
+      const logoY = footY + (FOOT_H - logoSize) / 2;
+      if (logoBuffer) {
+        try {
+          doc.image(logoBuffer, logoX, logoY, { fit: [logoSize, logoSize] });
+        } catch { /* ignore unreadable logo asset */ }
+      } else {
+        doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2).fill("#FFFFFF");
+        doc.fillColor(NAVY).fontSize(12).font("Helvetica-Bold")
+          .text((school?.name || "S")[0].toUpperCase(), logoX, logoY + logoSize / 2 - 7, { width: logoSize, align: "center" });
       }
 
-      // Footer strip
-      const FOOT_Y = y + CARD_H - 16;
-      const QR_SIZE = 14;
-      doc.moveTo(x + 6, FOOT_Y).lineTo(x + CARD_W - 6, FOOT_Y).lineWidth(0.5).stroke("#E2E8F0");
-      doc.fillColor("#94A3B8").fontSize(6).font("Helvetica")
-        .text(card.cardNumber || "", x + 8, FOOT_Y + 4, { width: CARD_W / 2 - 10 });
-      doc.text(
-        `Valid Until: ${fmtDate(card.validUntil)}`,
-        x + CARD_W / 2, FOOT_Y + 4,
-        { width: CARD_W / 2 - 10 - QR_SIZE - 6, align: "right" }
-      );
+      const qrSize = 38;
+      const qrBoxX = x + CARD_W - 14 - qrSize;
+      const qrBoxY = footY + (FOOT_H - qrSize) / 2;
+      doc.roundedRect(qrBoxX, qrBoxY, qrSize, qrSize, 6).fill("#FFFFFF");
+
+      const nameTextX = logoX + logoSize + 8;
+      doc.fillColor("#FFFFFF").fontSize(9.5).font("Helvetica-Bold")
+        .text(school?.name || "School", nameTextX, footY + FOOT_H / 2 - 6, { width: qrBoxX - 8 - nameTextX });
+
       const qrBuffer = qrBuffers.get(`${card._id}`);
       if (qrBuffer) {
-        doc.image(qrBuffer, x + CARD_W - 6 - QR_SIZE, FOOT_Y + 1, { width: QR_SIZE, height: QR_SIZE });
-      }
-    };
-
-    const drawInitialsAvatar = (card, x, y, w, h) => {
-      const { bg, color } = avatarPalette(card.fullName);
-      doc.rect(x, y, w, h).fill(bg);
-      doc.fillColor(color).fontSize(22).font("Helvetica-Bold")
-        .text((card.fullName || "?")[0].toUpperCase(), x, y + h / 2 - 12, { width: w, align: "center" });
-    };
-
-    cards.forEach((card, i) => {
-      const posInPage = i % PER_PAGE;
-      if (i > 0 && posInPage === 0) doc.addPage();
-      if (posInPage === 0) {
-        doc.fillColor("#0F172A").fontSize(10).font("Helvetica-Bold")
-          .text(`ID Cards — ${school?.name || ""}`, MX, MY, { width: PW - MX * 2 });
+        doc.image(qrBuffer, qrBoxX + 3, qrBoxY + 3, { width: qrSize - 6, height: qrSize - 6 });
+      } else {
+        drawScanIcon(qrBoxX + 6, qrBoxY + 6, qrSize - 12);
       }
 
-      const col = posInPage % COLS;
-      const row = Math.floor(posInPage / COLS);
-      const x = startX + col * (CARD_W + GAP_X);
-      const y = startY + row * (CARD_H + GAP_Y);
-      drawCard(card, x, y);
-    });
+      doc.restore(); // matches the card-boundary clip opened at the top of drawCard
+    };
+
+    const drawCardBack = (card, x, y) => {
+      doc.roundedRect(x, y, CARD_W, CARD_H, 14).fill("#FFFFFF");
+      doc.roundedRect(x, y, CARD_W, CARD_H, 14).lineWidth(0.75).stroke("#D8DCE6");
+
+      doc.save();
+      doc.roundedRect(x, y, CARD_W, CARD_H, 14).clip();
+
+      // Thin navy header
+      const HEADER_H = 40;
+      doc.rect(x, y, CARD_W, HEADER_H).fill(NAVY);
+      doc.fillColor("#FFFFFF").fontSize(10).font("Helvetica-Bold")
+        .text("TERMS & CONDITIONS", x, y + HEADER_H / 2 - 5, { width: CARD_W, align: "center" });
+
+      const BLOCK_W = CARD_W - 44;
+      const BLOCK_X = x + 22;
+      let ty = y + HEADER_H + 16;
+
+      // School contact block
+      doc.fillColor(TEXT_DARK).fontSize(8).font("Helvetica-Bold").text("Address", BLOCK_X, ty, { width: BLOCK_W });
+      ty += 11;
+      doc.fillColor(TEXT_MUTED).fontSize(8).font("Helvetica");
+      const addrText = school?.address || "—";
+      const addrHeight = doc.heightOfString(addrText, { width: BLOCK_W });
+      doc.text(addrText, BLOCK_X, ty, { width: BLOCK_W });
+      ty += addrHeight + 10;
+
+      const contactRows = [
+        ["Phone", school?.phone],
+        ["Email", school?.email],
+        ["Website", school?.website],
+      ].filter(([, value]) => value);
+
+      contactRows.forEach(([label, value]) => {
+        doc.fillColor(TEXT_DARK).fontSize(8).font("Helvetica-Bold").text(label, BLOCK_X, ty, { width: 50 });
+        doc.fillColor(TEXT_MUTED).fontSize(8).font("Helvetica")
+          .text(value, BLOCK_X + 52, ty, { width: BLOCK_W - 52 });
+        ty += 12;
+      });
+      ty += 10;
+
+      // Ownership / return-if-found notice
+      const holderNoun = card.holderType === "Student" ? "student" : "staff member";
+      const noticeText =
+        `This card is the property of ${school?.name || "the school"} and remains valid only while ` +
+        `the bearer is a registered ${holderNoun}. If found, please return it to the school office ` +
+        "using the contact details above.";
+      doc.fillColor(TEXT_MUTED).fontSize(7.5).font("Helvetica");
+      const noticeHeight = doc.heightOfString(noticeText, { width: BLOCK_W });
+      doc.text(noticeText, BLOCK_X, ty, { width: BLOCK_W, align: "left" });
+      ty += noticeHeight + 22;
+
+      // Signature line
+      const SIG_W = 120;
+      const sigX = x + CARD_W - 22 - SIG_W;
+      doc.moveTo(sigX, ty).lineTo(sigX + SIG_W, ty).lineWidth(0.75).stroke("#94A3B8");
+      doc.fillColor(TEXT_MUTED).fontSize(7).font("Helvetica")
+        .text("Authorized Signatory", sigX, ty + 4, { width: SIG_W, align: "center" });
+
+      // Navy footer band — mirrors the front for visual consistency
+      const FOOT_H = 44;
+      const footY = y + CARD_H - FOOT_H;
+      doc.rect(x, footY, CARD_W, FOOT_H).fill(NAVY);
+      doc.fillColor("#FFFFFF").fontSize(7.5).font("Helvetica")
+        .text(`Issued: ${fmtDate(card.issueDate)}`, x + 14, footY + FOOT_H / 2 - 5, { width: CARD_W / 2 - 18 });
+      doc.text(card.cardNumber || "", x + CARD_W / 2, footY + FOOT_H / 2 - 5, {
+        width: CARD_W / 2 - 14,
+        align: "right",
+      });
+
+      doc.restore(); // matches the card-boundary clip opened at the top of drawCardBack
+    };
+
+    const drawPage = (batch, drawFn, title) => {
+      doc.fillColor("#0F172A").fontSize(10).font("Helvetica-Bold")
+        .text(title, MX, MY, { width: PW - MX * 2 });
+      batch.forEach((card, posInPage) => {
+        const col = posInPage % COLS;
+        const row = Math.floor(posInPage / COLS);
+        const x = startX + col * (CARD_W + GAP_X);
+        const y = startY + row * (CARD_H + GAP_Y);
+        drawFn(card, x, y);
+      });
+    };
+
+    // Each batch of PER_PAGE cards gets a front page immediately followed by a back page for
+    // the same cards, in the same grid positions — so printing/cutting the pages in order keeps
+    // every card's front and back together.
+    for (let i = 0; i < cards.length; i += PER_PAGE) {
+      const batch = cards.slice(i, i + PER_PAGE);
+      if (i > 0) doc.addPage();
+      drawPage(batch, drawCard, `ID Cards — ${school?.name || ""} (Front)`);
+      doc.addPage();
+      drawPage(batch, drawCardBack, `ID Cards — ${school?.name || ""} (Back)`);
+    }
 
     doc.end();
   });
