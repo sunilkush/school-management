@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { SchoolClass } from "../models/schoolClass.model.js";
 import { Section } from "../models/section.model.js";
 import { BoardClass } from "../models/BoardClass.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 
 const createClass = asyncHandler(async (req, res) => {
@@ -158,6 +159,24 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
     .populate("subjects.subjectId", "name")
     .lean();
 
+  // Section.StudentEnrollmentId is a denormalized cache that goes stale whenever a
+  // student's sectionId is corrected/reassigned after admission (see updateStudent),
+  // so count live from StudentEnrollment — the same source the admissions screens use —
+  // instead of trusting that array.
+  const studentCounts = await StudentEnrollment.aggregate([
+    {
+      $match: {
+        sectionId: { $in: sections.map((sec) => sec._id) },
+        academicYearId: new mongoose.Types.ObjectId(academicYearId),
+        status: "Active",
+      },
+    },
+    { $group: { _id: "$sectionId", count: { $sum: 1 } } },
+  ]);
+  const studentCountBySection = new Map(
+    studentCounts.map((c) => [c._id.toString(), c.count])
+  );
+
   const classMap = {};
 
   sections.forEach((sec) => {
@@ -170,10 +189,11 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
         name: sec.schoolClassId?.name,
         sections: [],
         subjects: [],
-        studentCount: sec.StudentEnrollmentId?.length || 0,
+        studentCount: 0,
         role: [],
       };
     }
+    classMap[classId].studentCount += studentCountBySection.get(sec._id.toString()) || 0;
 
     const isClassTeacher = isTeacher && sec.classTeacherId?.toString() === teacherId.toString();
     const teacherSubjects = isTeacher
@@ -187,7 +207,7 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
         subjectId: { _id: sub.subjectId?._id, name: sub.subjectId?.name },
       })),
       isClassTeacher,
-      studentCount: sec.StudentEnrollmentId?.length || 0,
+      studentCount: studentCountBySection.get(sec._id.toString()) || 0,
     });
 
     if (isClassTeacher) classMap[classId].role.push("class_teacher");

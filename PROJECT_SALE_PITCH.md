@@ -4,15 +4,15 @@
 **Asset:** Full source code + IP for a production-grade, multi-tenant School Management SaaS platform
 **Seller:** Sunil Kushwaha
 **Contact:** sunilkushwaha066@gmail.com
-**Date:** July 2026
+**Date:** August 2026
 
 ---
 
 ## 1. Executive Summary
 
-EduManage is a complete, actively-maintained School ERP built over **21 months of continuous development** (Oct 2024 – Jul 2026, 1,055 commits). It is a **multi-tenant SaaS platform** — one codebase serving unlimited schools, each with isolated data, its own admin, and a subscription plan billed through an already-integrated Razorpay payment flow.
+EduManage is a complete, actively-maintained School ERP built over **22 months of continuous development** (Oct 2024 – Aug 2026, 1,133 commits). It is a **multi-tenant SaaS platform** — one codebase serving unlimited schools, each with isolated data, its own admin, and a subscription plan billed through an already-integrated Razorpay payment flow.
 
-This is not a template or a boilerplate. It is a working system with **20+ role-based portals** (Super Admin down to Student/Parent), **125 database models**, **83 controllers**, and **~145,000 lines of code** across a Node.js/Express/MongoDB backend and a React 19/Vite frontend.
+This is not a template or a boilerplate. It is a working system with **20+ role-based portals** (Super Admin down to Student/Parent), **143 database models**, **95 controllers**, and **~168,000 lines of code** across a Node.js/Express/MongoDB backend and a React 19/Vite frontend.
 
 For a buyer — an EdTech company, IT services firm, or entrepreneur — this asset removes 12–18+ months of build time and lets you go to market with a feature-complete product immediately.
 
@@ -22,9 +22,9 @@ For a buyer — an EdTech company, IT services firm, or entrepreneur — this as
 
 | Item | Details |
 |---|---|
-| Backend source | Node.js + Express + MongoDB, 331 files, 34,989 LOC |
-| Frontend source | React 19 + Vite, 312+ components/pages, 110,323 LOC |
-| Git history | Full commit history (1,055 commits) proving organic, incremental development |
+| Backend source | Node.js + Express + MongoDB, 388 files, 44,028 LOC |
+| Frontend source | React 19 + Vite, 455+ components/pages, 124,038 LOC |
+| Git history | Full commit history (1,133 commits) proving organic, incremental development |
 | Documentation | `USER_GUIDE.md` (complete role-by-role manual) + `RoleWiseGuide.html` (interactive guide) |
 | Test suite | Jest + Supertest backend tests, `mongodb-memory-server` for isolated test runs |
 | Mobile app | React Native / Expo (SDK 54) companion app, merged into `main` — fully redesigned UI (navy + purple theme), 23 role-driven navigation trees, 290+ screens, 400 RTK Query endpoint definitions against the same backend |
@@ -167,22 +167,22 @@ Each role has its own dashboard, permission scope, and workflows — this is not
 
 | Metric | Value |
 |---|---|
-| Development span | Oct 2024 – Jul 2026 (21 months, actively maintained) |
-| Total commits | 1,055 |
-| Backend | 34,989 LOC / 331 files |
-| Frontend | 110,323 LOC / 312+ components |
-| Database models | 125 |
-| Controllers | 83 |
-| Route groups | 81 |
+| Development span | Oct 2024 – Aug 2026 (22 months, actively maintained) |
+| Total commits | 1,133 |
+| Backend | 44,028 LOC / 388 files |
+| Frontend | 124,038 LOC / 455+ components |
+| Database models | 143 |
+| Controllers | 95 |
+| Route groups | 94 |
 | Role-based portals | 20+ |
 
-Recent commits (last 7 days of history) added new roles (Sports Teacher, Lab Technician, Medical Officer, Class Teacher) and reworked the Security Dashboard/Entry Register module — this is a live, evolving codebase, not an abandoned or frozen project.
+Recent commits (last 7 days of history) refined the school-setup wizard (class/section/subject assignment), attendance date handling, and role-management UI — this is a live, evolving codebase, not an abandoned or frozen project.
 
 ---
 
 ## 7. Why Buy vs. Build
 
-Building comparable scope from scratch — 20+ role-specific portals, 125 data models, billing integration, security hardening, and a tested backend — typically requires an experienced team **12–18+ months**. At typical offshore/blended development rates, replacement cost for equivalent scope commonly falls in the **tens of thousands of dollars** range before accounting for the market risk of a first release (bugs, missing edge cases, UX iteration) that this codebase has already absorbed through 21 months of real iteration.
+Building comparable scope from scratch — 20+ role-specific portals, 143 data models, billing integration, security hardening, and a tested backend — typically requires an experienced team **12–18+ months**. At typical offshore/blended development rates, replacement cost for equivalent scope commonly falls in the **tens of thousands of dollars** range before accounting for the market risk of a first release (bugs, missing edge cases, UX iteration) that this codebase has already absorbed through 22 months of real iteration.
 
 Buying this asset converts that time-and-risk cost into a fixed, immediate acquisition — with a working product on day one.
 

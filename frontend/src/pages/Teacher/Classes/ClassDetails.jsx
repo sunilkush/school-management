@@ -136,9 +136,13 @@ const ClassDetails = () => {
     [classData]
   );
 
-  const handleAttendance = () =>
+  const handleAttendance = (sectionId) =>
     classData?._id &&
-    navigate(`/dashboard/${rolePath}/attendance/students?classId=${classData._id}&className=${encodeURIComponent(classData?.name || "")}`);
+    navigate(
+      `/dashboard/${rolePath}/attendance/students?classId=${classData._id}` +
+        (sectionId ? `&sectionId=${sectionId}` : "") +
+        `&className=${encodeURIComponent(classData?.name || "")}`
+    );
 
   if (!loading && !classData) {
     return (
@@ -171,7 +175,7 @@ const ClassDetails = () => {
             <Tooltip title="Back to Classes">
               <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/dashboard/${rolePath}/classes`)} />
             </Tooltip>
-            <Button type="primary" icon={<CalendarOutlined />} onClick={handleAttendance}>
+            <Button type="primary" icon={<CalendarOutlined />} onClick={() => handleAttendance()}>
               Take Attendance
             </Button>
           </Space>
@@ -213,7 +217,7 @@ const ClassDetails = () => {
           <Row gutter={[16, 16]}>
             {classData.sections.map((section) => (
               <Col xs={24} sm={12} lg={8} key={section?.sectionId?._id || section?.sectionId?.name}>
-                <SectionCard section={section} onAttendance={handleAttendance} />
+                <SectionCard section={section} onAttendance={() => handleAttendance(section?.sectionId?._id)} />
               </Col>
             ))}
           </Row>
