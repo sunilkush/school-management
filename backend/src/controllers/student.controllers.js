@@ -13,6 +13,7 @@ import { SchoolClass } from "../models/schoolClass.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { HostelRoom } from "../models/HostelRoom.model.js";
 import { StudentTransportAssignment } from "../models/StudentTransportAssignment.model.js";
+import { issueStudentIdCard, reissueStudentIdCardOnPromotion } from "./idCard.controllers.js";
 import { School } from "../models/school.model.js";
 import mongoose from "mongoose";
 import crypto from "crypto";
@@ -302,6 +303,14 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
+
+    // Best-effort — a card-generation hiccup must never surface as an admission failure,
+    // since the admission itself already committed above.
+    try {
+      await issueStudentIdCard({ schoolId, studentId: student._id, generatedBy: req.user?._id || null });
+    } catch (idCardError) {
+      console.error("Auto ID card generation failed for new admission:", idCardError?.message);
+    }
 
     return res.status(201).json(
       new ApiResponse(
@@ -1562,6 +1571,23 @@ const promoteStudentsToNextAcademicYear = asyncHandler(async (req, res) => {
     );
 
     await session.commitTransaction();
+
+    // Best-effort — retire each promoted student's now-stale (old class/section) ID card and
+    // issue a fresh one. Failures here must never surface as a promotion failure, since the
+    // promotion itself already committed above.
+    try {
+      await Promise.allSettled(
+        createdEnrollments.map((item) =>
+          reissueStudentIdCardOnPromotion({
+            schoolId,
+            studentId: item.studentId,
+            generatedBy: req.user?._id || null,
+          })
+        )
+      );
+    } catch (idCardError) {
+      console.error("Auto ID card reissue failed after promotion:", idCardError?.message);
+    }
 
     return res.status(200).json(
       new ApiResponse(

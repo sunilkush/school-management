@@ -96,6 +96,64 @@ const buildCardNumber = async (schoolId, holderType) => {
   return generateNextCardNumber(lastCard?.cardNumber, { prefix, year, digits: 4 });
 };
 
+// Shared by the manual /generate endpoint below and by the auto-issue hooks called from
+// student admission and promotion — builds a fresh snapshot and a unique card number,
+// retrying once on a cardNumber collision (same race-safety as generateIdCard/generateBulkIdCards).
+const createStudentIdCardDoc = async ({ schoolId, studentId, generatedBy = null, validUntil = null }) => {
+  const student = await Student.findById(studentId).populate("userId", "name avatar").lean();
+  if (!student) return null;
+
+  const school = await School.findById(schoolId).select("activeAcademicYearId").lean();
+  const enrollment = await resolveStudentEnrollment(studentId, schoolId, school?.activeAcademicYearId);
+  const snapshot = buildStudentSnapshot(student, enrollment);
+
+  let card;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const cardNumber = await buildCardNumber(schoolId, "Student");
+    try {
+      [card] = await IDCard.create([
+        {
+          ...snapshot,
+          schoolId,
+          holderType: "Student",
+          holderId: studentId,
+          cardNumber,
+          validUntil,
+          generatedBy,
+        },
+      ]);
+      break;
+    } catch (error) {
+      if (error?.code === 11000 && attempt === 0) continue;
+      throw error;
+    }
+  }
+  return card;
+};
+
+// Called right after a new admission commits. Best-effort by design — the caller must swallow
+// errors from this so a card-service hiccup never fails the admission itself.
+export const issueStudentIdCard = async ({ schoolId, studentId, generatedBy = null }) =>
+  createStudentIdCardDoc({ schoolId, studentId, generatedBy });
+
+// Called right after promotion commits. The student's className/sectionName/rollNumber snapshot
+// on their previous card is now stale, so retire it and issue a fresh one rather than leaving a
+// card in circulation that shows last year's class. Best-effort — same contract as above.
+export const reissueStudentIdCardOnPromotion = async ({ schoolId, studentId, generatedBy = null }) => {
+  await IDCard.updateMany(
+    { schoolId, holderType: "Student", holderId: studentId, status: "Active" },
+    {
+      $set: {
+        status: "Inactive",
+        deactivatedAt: new Date(),
+        deactivatedBy: generatedBy,
+        deactivateReason: "Promoted to next class",
+      },
+    }
+  );
+  return createStudentIdCardDoc({ schoolId, studentId, generatedBy });
+};
+
 export const generateIdCard = asyncHandler(async (req, res) => {
   const { holderType, holderId, validUntil } = req.body;
 
