@@ -158,12 +158,14 @@ const studentFeeSlice = createSlice({
       .addCase(payStudentFee.fulfilled, (state, action) => {
         state.loading = false;
 
-        // update local fee status
-        const index = state.myFees.findIndex(
-          (f) => f._id === action.payload._id
-        );
-        if (index !== -1) {
-          state.myFees[index] = action.payload;
+        // Response is { studentFee, payment } — payment is the ledger record (receiptNo etc.)
+        // for building a receipt; studentFee is the updated fee doc for local state sync.
+        const updatedFee = action.payload?.studentFee;
+        if (updatedFee) {
+          const index = state.myFees.findIndex((f) => f._id === updatedFee._id);
+          if (index !== -1) {
+            state.myFees[index] = updatedFee;
+          }
         }
       })
       .addCase(payStudentFee.rejected, (state, action) => {

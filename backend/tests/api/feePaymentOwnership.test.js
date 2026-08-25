@@ -8,7 +8,7 @@ beforeAll(connectTestDb);
 afterAll(disconnectTestDb);
 afterEach(clearTestDb);
 
-describe('PUT /student-fees/pay/:id — ownership enforcement', () => {
+describe('PUT /student-fees/pay/:id — staff-only, self-service payment moved to /payments', () => {
   it("blocks a Student from paying another student's fee record, and leaves it unchanged", async () => {
     const school = await createSchool();
     const studentRole = await createRole('Student');
@@ -32,9 +32,9 @@ describe('PUT /student-fees/pay/:id — ownership enforcement', () => {
     const unchanged = await StudentFee.findById(fee._id);
     expect(unchanged.paidAmount).toBe(0);
     expect(unchanged.status).toBe('pending');
-  });
+  }, 15000);
 
-  it('still lets the rightful Student pay their own fee record', async () => {
+  it('rejects even the rightful Student — self-service now only goes through gateway-verified /payments, not this staff endpoint (closes the self-reported-cash fraud gap)', async () => {
     const school = await createSchool();
     const studentRole = await createRole('Student');
 
@@ -49,13 +49,12 @@ describe('PUT /student-fees/pay/:id — ownership enforcement', () => {
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ paidAmount: 1000, paymentMode: 'cash' });
 
-    expect(response.status).toBe(200);
-    const updated = await StudentFee.findById(fee._id);
-    expect(updated.status).toBe('paid');
-    expect(updated.paidAmount).toBe(1000);
-  });
+    expect(response.status).toBe(403);
+    const unchanged = await StudentFee.findById(fee._id);
+    expect(unchanged.paidAmount).toBe(0);
+  }, 15000);
 
-  it("blocks a Parent from paying a fee record for a student who isn't their child", async () => {
+  it("blocks a Parent from paying any fee record through this staff endpoint", async () => {
     const school = await createSchool();
     const studentRole = await createRole('Student');
     const parentRole = await createRole('Parent');
@@ -73,5 +72,29 @@ describe('PUT /student-fees/pay/:id — ownership enforcement', () => {
       .send({ paidAmount: 500, paymentMode: 'cash' });
 
     expect(response.status).toBe(403);
-  });
+  }, 15000);
+
+  it('still lets an Accountant collect a fee, and it updates via the shared payment service', async () => {
+    const school = await createSchool();
+    const studentRole = await createRole('Student');
+    const accountantRole = await createRole('Accountant');
+
+    const { user: studentUser } = await createUser({ name: 'Some Student', email: 'student2@school.test', roleId: studentRole._id, schoolId: school._id });
+    const student = await createStudent({ userId: studentUser._id, schoolId: school._id });
+    const { user: accountant } = await createUser({ name: 'Accountant', email: 'accountant@school.test', roleId: accountantRole._id, schoolId: school._id });
+
+    const fee = await createStudentFee({ schoolId: school._id, studentId: student._id, totalAmount: 1000 });
+    const token = await loginAs(accountant.email);
+
+    const response = await request(app)
+      .put(`/api/v1/student-fees/pay/${fee._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ paidAmount: 1000, paymentMode: 'cash' });
+
+    expect(response.status).toBe(200);
+    const updated = await StudentFee.findById(fee._id);
+    expect(updated.status).toBe('paid');
+    expect(updated.paidAmount).toBe(1000);
+    expect(updated.dueAmount).toBe(0);
+  }, 15000);
 });

@@ -46,11 +46,17 @@ const studentFeeSchema = new mongoose.Schema(
     },
 
     /**
-     * Discount / Concession (optional)
+     * Discount / Concession auto-applied from the student's StudentEnrollment.feeDiscount
+     * percentage at assignment time (see assignFeesToStudents) — null when no discount applied
+     * (e.g. an explicit customAmount override was used instead).
+     *
+     * Typed as Mixed rather than a plain nested object: Mongoose auto-vivifies an unset plain
+     * nested object path to `{}` on every document, which would make "was a discount applied?"
+     * checks always truthy even when nothing was ever set. Mixed with an explicit null default
+     * stays genuinely null until assignFeesToStudents sets it.
      */
-    discountId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Discount",
+    discountApplied: {
+      type: mongoose.Schema.Types.Mixed,
       default: null,
     },
 

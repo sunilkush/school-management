@@ -7,6 +7,7 @@ import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
+import { applyFeePayment } from "../services/feePayment.service.js";
 
 export const assignFeesToStudents = asyncHandler(async (req, res) => {
   const {
@@ -71,13 +72,27 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
   }
 
   // ✅ Amount validation
-  const totalAmount =
-    customAmount !== undefined && customAmount !== null
-      ? Number(customAmount)
-      : Number(feeStructure.amount);
+  const hasCustomAmount = customAmount !== undefined && customAmount !== null;
+  const flatTotalAmount = hasCustomAmount ? Number(customAmount) : Number(feeStructure.amount);
 
-  if (isNaN(totalAmount) || totalAmount < 0) {
+  if (isNaN(flatTotalAmount) || flatTotalAmount < 0) {
     throw new ApiError(400, "Invalid amount");
+  }
+
+  // ✅ Auto-apply each student's admission-time discount (StudentEnrollment.feeDiscount, a
+  // percentage) unless the admin explicitly overrode the amount via customAmount — an explicit
+  // override always wins outright, same as it did before discounts existed here.
+  let discountByStudent = new Map();
+  if (!hasCustomAmount) {
+    const enrollments = await StudentEnrollment.find({
+      studentId: { $in: students },
+      schoolId,
+      academicYearId,
+      feeDiscount: { $gt: 0 },
+    }).select("studentId feeDiscount");
+    discountByStudent = new Map(
+      enrollments.map((e) => [e.studentId.toString(), Number(e.feeDiscount) || 0])
+    );
   }
 
   // ✅ Prevent duplicate assignment (IMPORTANT)
@@ -100,19 +115,30 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Fees already assigned to all selected students");
   }
 
-  // ✅ Prepare records
-  const records = newStudents.map((sid) => ({
-    schoolId,
-    academicYearId,
-    studentId: sid,
-    feeStructureId,
-    customAmount: customAmount ?? null,
-    totalAmount,
-    paidAmount: 0,
-    dueAmount: totalAmount,
-    status: "pending",
-    assignedBy: req.user?._id || null,
-  }));
+  // ✅ Prepare records — apply each student's own discount percentage (if any) to the flat
+  // structure amount; an explicit customAmount bypasses this entirely.
+  const records = newStudents.map((sid) => {
+    const discountPercent = discountByStudent.get(sid.toString()) || 0;
+    const totalAmount = discountPercent
+      ? Number((flatTotalAmount * (1 - discountPercent / 100)).toFixed(2))
+      : flatTotalAmount;
+
+    return {
+      schoolId,
+      academicYearId,
+      studentId: sid,
+      feeStructureId,
+      customAmount: customAmount ?? null,
+      totalAmount,
+      paidAmount: 0,
+      dueAmount: totalAmount,
+      status: "pending",
+      assignedBy: req.user?._id || null,
+      discountApplied: discountPercent
+        ? { percent: discountPercent, amount: Number((flatTotalAmount - totalAmount).toFixed(2)) }
+        : undefined,
+    };
+  });
 
   // ✅ Insert safely
   await StudentFee.insertMany(records, { ordered: false });
@@ -123,6 +149,9 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
     data: {
       assignedCount: records.length,
       skipped: students.length - records.length,
+      discounted: records
+        .filter((r) => r.discountApplied)
+        .map((r) => ({ studentId: r.studentId, discountApplied: r.discountApplied })),
     },
   });
 });
@@ -267,56 +296,68 @@ export const payStudentFee = asyncHandler(async (req, res) => {
     throw new ApiError(400, "paidAmount cannot exceed dueAmount");
   }
 
-  const newPaidAmount = Number(feeRecord.paidAmount || 0) + amount;
-  const newDueAmount = Math.max(Number(feeRecord.totalAmount || 0) - newPaidAmount, 0);
-
-  feeRecord.paidAmount = newPaidAmount;
-  feeRecord.dueAmount = newDueAmount;
-
-  if (newDueAmount === 0) {
-    feeRecord.status = "paid";
-  } else if (newPaidAmount > 0) {
-    feeRecord.status = "partial";
-  } else {
-    feeRecord.status = "pending";
-  }
-
   const paidAt = new Date();
-  feeRecord.lastPayment = {
-    amount,
-    paymentMode: paymentMode || "cash",
-    referenceNo: referenceNo || "",
-    remarks: remarks || "",
-    paidAt,
-    collectedBy: req.user?._id || null,
-  };
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  let studentFee;
+  let payment;
+  try {
+    // Applies via the same shared service every other payment entry point uses, so this
+    // (staff-collected, cash/cheque/etc.) payment updates StudentFee exactly like a
+    // self-service Razorpay payment does — no separate ad hoc paidAmount/dueAmount/status math
+    // that could drift from the installment-aware path.
+    ({ studentFee } = await applyFeePayment({ studentFeeId: feeRecord._id, amount, session }));
 
-  await feeRecord.save();
+    studentFee.lastPayment = {
+      amount,
+      paymentMode: paymentMode || "cash",
+      referenceNo: referenceNo || "",
+      remarks: remarks || "",
+      paidAt,
+      collectedBy: req.user?._id || null,
+    };
+    await studentFee.save({ session });
 
-  // Mirror this into the Payment ledger too — Fee Reports' transaction history,
-  // payment-mode breakdown, and collection trend all read from Payment, not
-  // StudentFee, so without this an accountant's cash/cheque/UPI collections here
-  // would be invisible everywhere except the aggregate paid/due totals.
-  await Payment.create({
-    schoolId: feeRecord.schoolId,
-    studentId: feeRecord.studentId,
-    academicYearId: feeRecord.academicYearId,
-    studentFeeId: feeRecord._id,
-    amountPaid: amount,
-    paymentMode: paymentMode || "cash",
-    transactionId: referenceNo || null,
-    paymentDate: paidAt,
-    status: "success",
-    receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    collectedBy: req.user?._id || null,
-  });
+    // Mirror this into the Payment ledger too — Fee Reports' transaction history,
+    // payment-mode breakdown, and collection trend all read from Payment, not
+    // StudentFee, so without this an accountant's cash/cheque/UPI collections here
+    // would be invisible everywhere except the aggregate paid/due totals.
+    [payment] = await Payment.create(
+      [
+        {
+          schoolId: feeRecord.schoolId,
+          studentId: feeRecord.studentId,
+          academicYearId: feeRecord.academicYearId,
+          studentFeeId: feeRecord._id,
+          amountPaid: amount,
+          paymentMode: paymentMode || "cash",
+          transactionId: referenceNo || null,
+          paymentDate: paidAt,
+          status: "success",
+          receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          collectedBy: req.user?._id || null,
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
 
   return sendSuccess(res, {
     message:
-      feeRecord.status === "paid"
+      studentFee.status === "paid"
         ? "Fee paid successfully"
         : "Partial fee payment successful",
-    data: feeRecord,
+    // Include the created Payment ledger record (receiptNo etc.) alongside the updated
+    // StudentFee — the frontend's receipt view reads from this real, persisted record instead
+    // of re-deriving one from in-memory form state.
+    data: { studentFee, payment },
   });
 });
 

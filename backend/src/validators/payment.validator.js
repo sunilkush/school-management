@@ -28,25 +28,6 @@ export const createPaymentSchema = z.object({
   query: z.object({}).optional().default({}),
 });
 
-export const createRazorpayOrderSchema = z.object({
-  body: z.object({
-    installmentId: objectId,
-  }),
-  params: z.object({}).optional().default({}),
-  query: z.object({}).optional().default({}),
-});
-
-export const verifyRazorpayPaymentSchema = z.object({
-  body: z.object({
-    razorpay_order_id: z.string().min(1),
-    razorpay_payment_id: z.string().min(1),
-    razorpay_signature: z.string().min(1),
-    installmentId: objectId,
-  }),
-  params: z.object({}).optional().default({}),
-  query: z.object({}).optional().default({}),
-});
-
 export const paymentListQuerySchema = z.object({
   body: z.object({}).optional().default({}),
   params: z.object({

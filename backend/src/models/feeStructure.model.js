@@ -56,12 +56,9 @@ const feeStructureSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         },
-        installments: [
-            {
-                month: String,
-                amount: Number,
-            }
-        ],
+        // Real installment breakdown lives in the separate FeeInstallment collection
+        // (generated per-student via feeInstallment.controllers.js) — this embedded array was
+        // never written to by anything.
     },
     {
         timestamps: true,

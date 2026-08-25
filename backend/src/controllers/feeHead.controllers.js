@@ -2,17 +2,20 @@ import { FeeHead } from "../models/feeHead.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 
 /* ================= CREATE ================= */
 export const createFeeHead = asyncHandler(async (req, res) => {
-    const { schoolId, name, type, isEditable } = req.body;
+    const { name, type, isEditable } = req.body;
       if (!name?.trim()) {
         throw new ApiError(400, "Fee head name is required");
     }
-    // School Admin apna hi school use karega
-    const currentRole = req.Role?.name || req.user?.role;
+    // Previously read `req.Role?.name` (no such property — auth middleware sets `req.userRole`)
+    // which was always undefined, so the "School Admin locks to own school" branch below never
+    // actually triggered and every role fell through to trusting req.body.schoolId outright.
+    const currentRole = req.userRole?.name;
     const finalSchoolId =
-         currentRole === "School Admin" ? req.user.schoolId : schoolId;
+         currentRole === "Super Admin" ? (req.body.schoolId || resolveSchoolId(req.user)) : resolveSchoolId(req.user);
 
     if (!finalSchoolId) {
         throw new ApiError(400, "School ID is required");
@@ -65,7 +68,11 @@ export const getFeeHeads = asyncHandler(async (req, res) => {
 
 /* ================= GET BY SCHOOL ================= */
 export const getFeeHeadsBySchool = asyncHandler(async (req, res) => {
-     const schoolId = req.query.schoolId || req.user.schoolId;
+    // Previously let req.query.schoolId win over the caller's own school for every role,
+    // including non-Super-Admin — a School Admin/Accountant could list another school's fee
+    // heads just by passing its schoolId as a query param.
+    const currentRole = req.userRole?.name;
+    const schoolId = currentRole === "Super Admin" ? (req.query.schoolId || resolveSchoolId(req.user)) : resolveSchoolId(req.user);
     if (!schoolId) {
         throw new ApiError(400, "schoolId is required");
     }

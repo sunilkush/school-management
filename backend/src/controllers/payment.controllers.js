@@ -14,6 +14,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 import { requireSchoolId } from "../utils/resolveSchoolId.js";
+import { applyFeePayment } from "../services/feePayment.service.js";
 
 const REFUND_MODES = ["cash", "online", "cheque", "bank_transfer", "upi", "adjustment"];
 
@@ -60,22 +61,53 @@ const ensureInstallmentAccess = async ({ installmentId, schoolId, user }) => {
 };
 
 
-// Atomically creates the Payment record and updates the installment so a
-// crash between the two can never leave a payment without its installment update (or vice versa).
-const recordPayment = async ({ installment, paymentData }) => {
+// Atomically creates the Payment record and updates both the installment AND its parent
+// StudentFee (via applyFeePayment) so a crash — or just a code path that used to forget one of
+// the two — can never leave the payment ledger, the installment, and the fee summary disagreeing
+// with each other. This previously only updated the installment, leaving StudentFee.paidAmount/
+// dueAmount/status stale after every self-service Razorpay payment.
+//
+// Idempotent on paymentData.transactionId (the gateway's payment id): the fee-payment webhook
+// (webhook.controllers.js) and this same client-side verify path can both race to record the
+// same real-world Razorpay payment. Checking first — rather than relying solely on the unique
+// index to reject the loser — means whichever call comes second gets back the payment that was
+// already recorded instead of an error.
+export const recordPayment = async ({ installment, paymentData }) => {
+  if (paymentData.transactionId) {
+    const existing = await Payment.findOne({ transactionId: paymentData.transactionId });
+    if (existing) {
+      const studentFee = await StudentFee.findById(existing.studentFeeId);
+      return { payment: existing, installment, studentFee, alreadyRecorded: true };
+    }
+  }
+
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
     const [payment] = await Payment.create([paymentData], { session });
+    const { studentFee, installment: updatedInstallment } = await applyFeePayment({
+      installment,
+      amount: paymentData.amountPaid,
+      session,
+    });
 
-    installment.paidAmount += paymentData.amountPaid;
-    installment.status = installment.paidAmount >= installment.amount ? "paid" : "partial";
-    await installment.save({ session });
+    payment.studentFeeId = studentFee._id;
+    await payment.save({ session });
 
     await session.commitTransaction();
-    return payment;
+    return { payment, installment: updatedInstallment, studentFee };
   } catch (err) {
     await session.abortTransaction();
+    // Lost the race between the pre-check above and this insert (webhook + client-verify firing
+    // within milliseconds of each other) — the unique index on transactionId rejected us, so
+    // whoever won already recorded this exact payment. Return their result instead of erroring.
+    if (err?.code === 11000 && paymentData.transactionId) {
+      const existing = await Payment.findOne({ transactionId: paymentData.transactionId });
+      if (existing) {
+        const studentFee = await StudentFee.findById(existing.studentFeeId);
+        return { payment: existing, installment, studentFee, alreadyRecorded: true };
+      }
+    }
     throw err;
   } finally {
     session.endSession();
@@ -112,7 +144,7 @@ export const createPayment = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Payment verification failed");
       }
 
-      const payment = await recordPayment({
+      const { payment, studentFee } = await recordPayment({
         installment,
         paymentData: {
           schoolId,
@@ -122,6 +154,7 @@ export const createPayment = asyncHandler(async (req, res) => {
           paymentMode: "razorpay",
           status: "success",
           razorpay,
+          transactionId: razorpay.razorpay_payment_id,
           receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         },
       });
@@ -129,7 +162,7 @@ export const createPayment = asyncHandler(async (req, res) => {
       return sendSuccess(res, {
         statusCode: 201,
         message: "Payment verified and captured",
-        data: payment,
+        data: { payment, studentFee },
       });
     }
 
@@ -165,7 +198,7 @@ export const createPayment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Amount exceeds remaining due");
   }
 
-  const payment = await recordPayment({
+  const { payment, studentFee } = await recordPayment({
     installment,
     paymentData: {
       schoolId,
@@ -182,68 +215,16 @@ export const createPayment = asyncHandler(async (req, res) => {
   return sendSuccess(res, {
     statusCode: 201,
     message: "Payment created successfully",
-    data: payment,
+    data: { payment, studentFee },
   });
 });
 
-export const createRazorpayOrder = asyncHandler(async (req, res) => {
-  const { installmentId } = req.body;
-   const schoolId = requireSchoolId(req.user);
-
-  const installment = await ensureInstallmentAccess({ installmentId, schoolId, user: req.user });
-  const payableAmount = installment.amount - installment.paidAmount;
-
-  if (payableAmount <= 0) throw new ApiError(400, "Installment already paid");
-
-  const { razorpay, keyId } = await getRazorpayInstance(schoolId);
-  const order = await razorpay.orders.create({
-    amount: Math.round(payableAmount * 100),
-    currency: "INR",
-    receipt: `INST-${installmentId}`,
-    notes: {
-      schoolId: schoolId.toString(),
-      installmentId,
-      requestId: req.requestId,
-    },
-  });
-
-  return sendSuccess(res, {
-    message: "Razorpay order created",
-    data: { ...order, keyId },
-  });
-});
-
-export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, installmentId } = req.body;
-  const schoolId = requireSchoolId(req.user);
-
-  const { keySecret } = await getRazorpayInstance(schoolId);
-  const body = `${razorpay_order_id}|${razorpay_payment_id}`;
-  const expectedSignature = crypto.createHmac("sha256", keySecret).update(body).digest("hex");
-
-  if (expectedSignature !== razorpay_signature) throw new ApiError(400, "Payment verification failed");
-
-  const installment = await ensureInstallmentAccess({ installmentId, schoolId, user: req.user });
-  const amount = installment.amount - installment.paidAmount;
-
-  if (amount <= 0) throw new ApiError(400, "Installment already paid");
-
-  const payment = await recordPayment({
-    installment,
-    paymentData: {
-      schoolId,
-      studentId: installment.studentId,
-      installmentId,
-      amountPaid: amount,
-      paymentMode: "razorpay",
-      status: "success",
-      razorpay: { razorpay_order_id, razorpay_payment_id },
-      receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random()*1000)}`,
-    },
-  });
-
-  return sendSuccess(res, { message: "Payment verified and captured", data: payment });
-});
+// createRazorpayOrder/verifyRazorpayPayment (standalone order-create + verify) used to exist as
+// separate endpoints here, duplicating exactly what createPayment's own "mode: razorpay" branch
+// already does in one place (create an order when no gateway response is present yet, verify +
+// capture when it is). Removed as dead code — confirmed zero frontend callers; RazorpayButton.jsx
+// imports identically-named actions from superAdminBillingSlice.js, a different, unrelated
+// platform-billing feature that hits its own backend endpoints, not these.
 
 export const getPayments = asyncHandler(async (req, res) => {
   const schoolId = requireSchoolId(req.user);

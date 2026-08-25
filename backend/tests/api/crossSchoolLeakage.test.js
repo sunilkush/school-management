@@ -11,6 +11,7 @@ import { SchoolClass } from '../../src/models/schoolClass.model.js';
 import { AcademicYear } from '../../src/models/AcademicYear.model.js';
 import { PTMSession } from '../../src/models/PTMSession.model.js';
 import { PTMSlot } from '../../src/models/PTMSlot.model.js';
+import { FeeHead } from '../../src/models/feeHead.model.js';
 
 beforeAll(connectTestDb);
 afterAll(disconnectTestDb);
@@ -368,5 +369,87 @@ describe('POST /ptm/slots/:id/book', () => {
     expect(response.status).toBeGreaterThanOrEqual(400);
     const unchangedSlot = await PTMSlot.findById(slotB._id).lean();
     expect(unchangedSlot.status).toBe('Available');
+  }, 15000);
+});
+
+describe('POST /fee-structures (create)', () => {
+  it('ignores a spoofed schoolId in the body and creates the fee structure under the caller\'s own school', async () => {
+    const schoolA = await createSchool();
+    const schoolB = await createSchool();
+
+    const adminRole = await createRole('School Admin', { schoolId: schoolA._id });
+    const { user: admin } = await createUser({
+      name: 'Admin A',
+      email: 'admin@schoolA-fs.test',
+      roleId: adminRole._id,
+      schoolId: schoolA._id,
+    });
+    const token = await loginAs(admin.email);
+
+    const response = await request(app)
+      .post('/api/v1/fee-structures')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        schoolId: schoolB._id.toString(),
+        schoolClassId: new mongoose.Types.ObjectId().toString(),
+        academicYearId: new mongoose.Types.ObjectId().toString(),
+        feeHeadId: new mongoose.Types.ObjectId().toString(),
+        amount: 5000,
+        frequency: 'monthly',
+      });
+
+    const createdUnderB = await FeeStructure.find({ schoolId: schoolB._id });
+    expect(createdUnderB).toHaveLength(0);
+    if (response.status === 201) {
+      expect(response.body.data.schoolId.toString()).toBe(schoolA._id.toString());
+    }
+  }, 15000);
+});
+
+describe('POST /fee-heads (create)', () => {
+  it('ignores a spoofed schoolId in the body and creates the fee head under the caller\'s own school', async () => {
+    const schoolA = await createSchool();
+    const schoolB = await createSchool();
+
+    const adminRole = await createRole('School Admin', { schoolId: schoolA._id });
+    const { user: admin } = await createUser({
+      name: 'Admin A',
+      email: 'admin@schoolA-fh.test',
+      roleId: adminRole._id,
+      schoolId: schoolA._id,
+    });
+    const token = await loginAs(admin.email);
+
+    const response = await request(app)
+      .post('/api/v1/fee-heads')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ schoolId: schoolB._id.toString(), name: 'Tuition Fee', type: 'recurring', isEditable: true });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.schoolId.toString()).toBe(schoolA._id.toString());
+    const createdUnderB = await FeeHead.find({ schoolId: schoolB._id });
+    expect(createdUnderB).toHaveLength(0);
+  }, 15000);
+
+  it('an Accountant (previously fell through the req.Role typo bug) is also locked to their own school', async () => {
+    const schoolA = await createSchool();
+    const schoolB = await createSchool();
+
+    const accountantRole = await createRole('Accountant', { schoolId: schoolA._id });
+    const { user: accountant } = await createUser({
+      name: 'Accountant A',
+      email: 'accountant@schoolA-fh.test',
+      roleId: accountantRole._id,
+      schoolId: schoolA._id,
+    });
+    const token = await loginAs(accountant.email);
+
+    const response = await request(app)
+      .post('/api/v1/fee-heads')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ schoolId: schoolB._id.toString(), name: 'Library Fee', type: 'one-time', isEditable: true });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.schoolId.toString()).toBe(schoolA._id.toString());
   }, 15000);
 });

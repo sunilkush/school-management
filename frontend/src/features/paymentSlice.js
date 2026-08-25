@@ -139,7 +139,10 @@ const paymentSlice = createSlice({
             .addCase(createPayment.fulfilled, (state, action) => {
                 state.loading = false;
                 state.success = true;
-                const createdPayment = action.payload?.data;
+                // A captured payment returns { payment, studentFee }; a razorpay order-creation
+                // call (no gateway response yet) returns { orderId, amount, currency, keyId }
+                // instead — only the former has an actual Payment doc to add to local state.
+                const createdPayment = action.payload?.data?.payment;
                 if (createdPayment?._id) {
                     state.payments.unshift(createdPayment);
                 }

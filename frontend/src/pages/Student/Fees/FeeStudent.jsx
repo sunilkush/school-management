@@ -3,11 +3,9 @@ import {
   Table,
   Tag,
   Button,
-  Input,
   Modal,
   Descriptions,
   message,
-  InputNumber,
   Radio,
   Space,
 } from "antd";
@@ -29,6 +27,7 @@ import {
 } from "../../../features/feeInstallmentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles";
+import FeeReceipt, { printFeeReceipt } from "../../../components/fees/FeeReceipt.jsx";
 
 /* ── Razorpay loader ── */
 const loadRazorpay = () =>
@@ -95,9 +94,6 @@ const FeeStudent = () => {
 
   const [open,                setOpen]                = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState(null);
-  const [amountPaid,          setAmountPaid]          = useState(0);
-  const [paymentMethod,       setPaymentMethod]       = useState("online");
-  const [chequeNo,            setChequeNo]            = useState("");
   const [frequencyModalOpen,  setFrequencyModalOpen]  = useState(false);
   const [selectedFrequency,   setSelectedFrequency]   = useState("monthly");
   const [receiptInstallment,  setReceiptInstallment]  = useState(null);
@@ -172,12 +168,9 @@ const FeeStudent = () => {
   /* ── Handlers ── */
   const openPayModal = (inst) => {
     setSelectedInstallment(inst);
-    setAmountPaid(inst.amount - inst.paidAmount);
-    setPaymentMethod("online");
-    setChequeNo("");
     setOpen(true);
   };
-  const closePayModal = () => { setOpen(false); setPaymentMethod("online"); setChequeNo(""); };
+  const closePayModal = () => { setOpen(false); };
 
   const handleGenerateInstallments = async () => {
     try {
@@ -188,21 +181,8 @@ const FeeStudent = () => {
     } catch (err) { message.error(err || "Failed to generate installments"); }
   };
 
-  const handleOfflinePayment = async () => {
-    try {
-      await dispatch(createPayment({
-        installmentId: selectedInstallment._id,
-        amount: amountPaid,
-        paymentMode: paymentMethod,
-        ...(paymentMethod === "cheque" && chequeNo ? { transactionId: chequeNo } : {}),
-      })).unwrap();
-      message.success(`${paymentMethod === "cheque" ? "Cheque" : "Cash"} payment recorded`);
-      closePayModal();
-      dispatch(fetchMyFees({ studentId, academicYearId }));
-      dispatch(fetchFeeInstallments({ studentId, academicYearId }));
-    } catch (err) { message.error(err || "Payment failed"); }
-  };
-
+  // Self-service payment only ever goes through gateway-verified Razorpay now — the backend
+  // rejects any other paymentMode for Student/Parent, so there's nothing left to pick.
   const handleRazorpayPayment = async () => {
     const loaded = await loadRazorpay();
     if (!loaded) { message.error("Razorpay SDK failed to load"); return; }
@@ -235,21 +215,7 @@ const FeeStudent = () => {
     } catch (err) { message.error(err || "Payment failed"); }
   };
 
-  const handlePrintReceipt = () => {
-    const content = receiptRef.current?.innerHTML;
-    if (!content) return;
-    const win = window.open("", "_blank");
-    win.document.write(`<html><head><title>Fee Receipt</title>
-      <style>body{font-family:sans-serif;padding:24px;max-width:480px;margin:auto;}
-      h2{text-align:center;margin-bottom:4px;}
-      .sub{text-align:center;color:#666;font-size:13px;margin-bottom:16px;}
-      table{width:100%;border-collapse:collapse;}
-      td,th{padding:8px 10px;border:1px solid #ddd;font-size:13px;}
-      th{background:#f5f5f5;font-weight:600;}
-      </style></head>
-      <body onload="window.print();window.close()">${content}</body></html>`);
-    win.document.close();
-  };
+  const handlePrintReceipt = () => printFeeReceipt(receiptRef.current);
 
   /* ── Fee totals ── */
   const feeTotals = useMemo(() => {
@@ -541,15 +507,9 @@ const FeeStudent = () => {
         centered
         footer={[
           <Button key="cancel" onClick={closePayModal}>Cancel</Button>,
-          paymentMethod === "online" ? (
-            <Button key="pay" type="primary" icon={<RupeeIcon />} onClick={handleRazorpayPayment}>
-              Pay Online (Razorpay)
-            </Button>
-          ) : (
-            <Button key="pay" type="primary" icon={<RupeeIcon />} onClick={handleOfflinePayment}>
-              Confirm {paymentMethod === "cheque" ? "Cheque" : "Cash"} Payment
-            </Button>
-          ),
+          <Button key="pay" type="primary" icon={<RupeeIcon />} onClick={handleRazorpayPayment}>
+            Pay Online (Razorpay)
+          </Button>,
         ]}
       >
         {selectedInstallment && (
@@ -565,52 +525,13 @@ const FeeStudent = () => {
               </Descriptions.Item>
             </Descriptions>
 
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Amount to Pay
-              </div>
-              <InputNumber
-                style={{ width: "100%" }}
-                min={1}
-                max={selectedInstallment.amount - selectedInstallment.paidAmount}
-                value={amountPaid}
-                onChange={setAmountPaid}
-                formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                parser={(v) => v?.replace(/[₹,\s]/g, "")}
-                size="large"
-              />
+            <div style={{
+              fontSize: 12, color: "var(--text-muted)",
+              background: "var(--surface-soft)", border: "1px solid var(--border-muted)",
+              borderRadius: 8, padding: "8px 12px",
+            }}>
+              💳 Paid securely online via Razorpay. Cash/cheque payments are recorded by your school's accounts office, not here.
             </div>
-
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Payment Method
-              </div>
-              <Radio.Group
-                value={paymentMethod}
-                onChange={(e) => { setPaymentMethod(e.target.value); setChequeNo(""); }}
-                style={{ width: "100%" }}
-              >
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Radio value="online" style={{ fontWeight: 500 }}>💳 Online (Razorpay)</Radio>
-                  <Radio value="cash"   style={{ fontWeight: 500 }}>💵 Cash</Radio>
-                  <Radio value="cheque" style={{ fontWeight: 500 }}>📋 Cheque</Radio>
-                </Space>
-              </Radio.Group>
-            </div>
-
-            {paymentMethod === "cheque" && (
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                  Cheque Number
-                </div>
-                <Input
-                  placeholder="Enter cheque number"
-                  value={chequeNo}
-                  onChange={(e) => setChequeNo(e.target.value)}
-                  size="large"
-                />
-              </div>
-            )}
           </Space>
         )}
       </Modal>
@@ -629,33 +550,16 @@ const FeeStudent = () => {
         centered
       >
         {receiptInstallment && (
-          <div ref={receiptRef}>
-            <h2 style={{ textAlign: "center", marginBottom: 4 }}>Fee Receipt</h2>
-            <div style={{ textAlign: "center", color: "#666", fontSize: 13, marginBottom: 16 }}>
-              Official Payment Receipt
-            </div>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <tbody>
-                {[
-                  ["Installment",  receiptInstallment.installmentName],
-                  ["Total Amount", `₹${receiptInstallment.amount}`],
-                  ["Amount Paid",  `₹${receiptInstallment.paidAmount}`],
-                  ["Status",       receiptInstallment.status?.toUpperCase()],
-                  ...(receiptInstallment.paidAt
-                    ? [["Paid On", new Date(receiptInstallment.paidAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })]]
-                    : []),
-                ].map(([th, td]) => (
-                  <tr key={th}>
-                    <th style={{ padding: "8px 10px", border: "1px solid #ddd", textAlign: "left", background: "#f5f5f5" }}>{th}</th>
-                    <td style={{ padding: "8px 10px", border: "1px solid #ddd" }}>{td}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div style={{ textAlign: "center", color: "#888", fontSize: 11, marginTop: 24 }}>
-              This is a computer-generated receipt. No signature required.
-            </div>
-          </div>
+          <FeeReceipt
+            ref={receiptRef}
+            payment={{
+              amountPaid: receiptInstallment.paidAmount,
+              paymentDate: receiptInstallment.updatedAt,
+            }}
+            description={receiptInstallment.installmentName}
+            student={{ name: myEnrollment?.studentName || myEnrollment?.name }}
+            school={myEnrollment?.school}
+          />
         )}
       </Modal>
     </div>

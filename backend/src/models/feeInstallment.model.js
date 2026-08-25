@@ -42,6 +42,14 @@ const feeInstallmentSchema = new mongoose.Schema(
       // Apr, May, Q1, Annual
     },
 
+    // Generation frequency this installment came from (monthly/quarterly/half_yearly/yearly) —
+    // set by generateInstallments but previously undeclared here, so Mongoose silently dropped
+    // it on every insert.
+    installmentType: {
+      type: String,
+      trim: true,
+    },
+
     // 🔹 Amounts
     amount: {
       type: Number,

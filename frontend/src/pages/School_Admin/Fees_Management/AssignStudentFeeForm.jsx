@@ -433,10 +433,17 @@ const AssignStudentFee = () => {
 
       if (!assignPromises.length) { showAlert("warning", "Fees already assigned"); return; }
 
-      await Promise.all(assignPromises);
+      const results = await Promise.all(assignPromises);
+      // Surfaces when a student's admission-time discount (StudentEnrollment.feeDiscount) was
+      // automatically applied to the assigned amount, so the admin isn't left guessing why a
+      // total came out lower than the fee structure's default.
+      const discountedCount = results.reduce((sum, r) => sum + (r?.data?.discounted?.length || 0), 0);
+      const discountNote = discountedCount > 0
+        ? ` — discount auto-applied for ${discountedCount} student${discountedCount !== 1 ? "s" : ""}`
+        : "";
       showAlert(
         skipped > 0 ? "warning" : "success",
-        skipped > 0 ? `Skipped ${skipped} duplicates` : "Fees assigned successfully"
+        (skipped > 0 ? `Skipped ${skipped} duplicates` : "Fees assigned successfully") + discountNote
       );
 
       form.resetFields();

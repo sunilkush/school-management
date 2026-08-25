@@ -25,7 +25,6 @@ import ptmRoutes from "./ptm.routes.js";
 import sportsRoutes from "./sports.routes.js";
 import attemptRoutes from "./attempt.routes.js";
 import subscriptionPlans from "./subscriptionPlan.routes.js";
-import feeRoutes from "./fee.routes.js";
 import feeHeadRoutes from "./feeHead.routes.js";
 import feeStructureRoutes from "./feeStructure.routes.js";
 import studentFeeRoutes from "./studentFee.routes.js";
@@ -120,7 +119,6 @@ export const apiV1Routes = [
   ["/sports", sportsRoutes],
   ["/attempt", attemptRoutes],
   ["/subscription", subscriptionPlans],
-  ["/fees", feeRoutes],
   ["/fee-heads", feeHeadRoutes],
   ["/fee-structures", feeStructureRoutes],
   ["/student-fees", studentFeeRoutes],

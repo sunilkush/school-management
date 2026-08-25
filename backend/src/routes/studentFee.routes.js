@@ -15,7 +15,12 @@ const router = Router();
 router.use(auth);
 const ADMIN_ONLY = ["School Admin", "Accountant"];
 const STUDENT_PARENT = ["School Admin","Student", "Parent","Accountant"];
-const FEE_PAY_ROLES = ["School Admin", "Accountant", "Student", "Parent"];
+// Self-service (Student/Parent) fee payment now goes exclusively through POST /payments
+// (createPayment), which is gateway-verified (Razorpay only, no client-supplied "paid" claim).
+// This endpoint records staff-collected payments (cash/cheque/UPI/etc. actually received in
+// person), so it must stay staff-only — Student/Parent here previously meant either could submit
+// any payment mode with no verification and mark their own fee paid.
+const FEE_PAY_ROLES = ADMIN_ONLY;
 /* =====================================================
    ✅ ASSIGN FEES TO STUDENTS
    Role: School Admin

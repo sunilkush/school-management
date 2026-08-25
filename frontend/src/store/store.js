@@ -35,7 +35,6 @@ import sectionReducer from "../features/sectionSlice";
 import classSectionReducer from "../features/classSectionSlice";
 import employeeReducer from "../features/employeeSlice";
 import subscriptionPlanReducer from "../features/subscriptionPlanSlice";
-import feeReducer from "../features/feesSlice.js";
 import feeHeadReducer from "../features/headSlice.js";
 import feeStructureReducer from "../features/feeStructureSlice.js";
 import studentFeeReducer from "../features/studentFeeSlice.js";
@@ -121,7 +120,6 @@ const rootReducer = combineReducers({
   classSection: classSectionReducer,
   employee: employeeReducer,
   subscriptionPlans: subscriptionPlanReducer,
-  fees: feeReducer,
   feeHead: feeHeadReducer,
   feeStructure: feeStructureReducer,
   studentFee: studentFeeReducer,

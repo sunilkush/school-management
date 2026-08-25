@@ -40,26 +40,10 @@ export const fetchFeeInstallments = createAsyncThunk(
   }
 );
 
-// ✅ Pay Installment (FIXED)
-export const payInstallment = createAsyncThunk(
-  "feeInstallment/pay",
-  async ({ installmentId, amount, paymentMode, razorpay }, { rejectWithValue }) => {
-    try {
-
-      const res = await apiClient.post(
-        `/fee-installments/pay/${installmentId}`,
-        { amount, paymentMode, razorpay },
-        {        }
-      );
-
-      return res.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to pay installment"
-      );
-    }
-  }
-);
+// Installment payment goes through paymentSlice's createPayment (POST /payments) — see
+// backend/src/services/feePayment.service.js — which keeps the installment and its parent
+// StudentFee in sync in one call. The old /fee-installments/pay/:installmentId endpoint this
+// action hit is gone.
 
 /* ============================
    SLICE
@@ -105,29 +89,6 @@ const feeInstallmentSlice = createSlice({
         state.installments = action.payload?.data || [];
       })
       .addCase(fetchFeeInstallments.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // PAY
-      .addCase(payInstallment.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(payInstallment.fulfilled, (state, action) => {
-        state.loading = false;
-        state.success = true;
-
-        const updatedInstallment = action.payload?.data?.installment;
-        if (updatedInstallment) {
-          const index = state.installments.findIndex(
-            (i) => i._id === updatedInstallment._id
-          );
-          if (index !== -1) {
-            state.installments[index] = updatedInstallment;
-          }
-        }
-      })
-      .addCase(payInstallment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

@@ -3,9 +3,16 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
+import { requireSchoolId } from "../utils/resolveSchoolId.js";
+
 /* ================= CREATE ================= */
 export const createFeeStructure = asyncHandler(async (req, res) => {
-  const { schoolId, schoolClassId,  academicYearId, feeHeadId, amount, frequency } = req.body;
+  const { schoolClassId, academicYearId, feeHeadId, amount, frequency } = req.body;
+  // schoolId is resolved from the caller's own session (Super Admin may still override via
+  // body.schoolId) — previously trusted req.body.schoolId outright for every role, letting a
+  // School Admin/Accountant create a fee structure inside another school's namespace.
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const schoolId = isSuperAdmin && req.body.schoolId ? req.body.schoolId : requireSchoolId(req.user);
    for (const [key, value] of Object.entries({ schoolId, schoolClassId, academicYearId, feeHeadId })) {
     if (!mongoose.isValidObjectId(value)) {
       throw new ApiError(400, `Invalid ${key}`);

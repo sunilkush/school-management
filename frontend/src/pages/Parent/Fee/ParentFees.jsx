@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert, Button, Collapse, Descriptions, Empty, Input,
-  InputNumber, Modal, Progress, Select, Space, Table, Tag, Tooltip, message,
+  Alert, Button, Collapse, Descriptions, Empty,
+  Modal, Progress, Select, Space, Table, Tag, Tooltip, message,
 } from "antd";
 import {
   CalendarOutlined, CheckCircleOutlined, ClockCircleOutlined,
@@ -20,6 +20,7 @@ import {
   pageWrapper, sectionPanel,
   statCard, statLabel, statValue,
 } from "../../../styles/pageStyles";
+import FeeReceipt, { printFeeReceipt } from "../../../components/fees/FeeReceipt.jsx";
 
 const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 
@@ -177,10 +178,9 @@ const ParentFees = () => {
   const [selectedChildId,     setSelectedChildId]     = useState(null);
   const [paymentOpen,         setPaymentOpen]         = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState(null);
-  const [amountPaid,          setAmountPaid]          = useState(0);
+  const [receiptInstallment,  setReceiptInstallment]  = useState(null);
   const [paying,              setPaying]              = useState(false);
-  const [paymentMethod,       setPaymentMethod]       = useState("online");
-  const [chequeNo,            setChequeNo]            = useState("");
+  const receiptRef = useRef(null);
 
   const academicYearId = selectedAcademicYear?._id;
 
@@ -233,45 +233,15 @@ const ParentFees = () => {
   }, [installments]);
 
   const openPayModal = (inst) => {
-    const due = Number(inst.amount || 0) - Number(inst.paidAmount || 0);
     setSelectedInstallment(inst);
-    setAmountPaid(due);
-    setPaymentMethod("online");
-    setChequeNo("");
     setPaymentOpen(true);
   };
 
   const closePayModal = () => {
     setPaymentOpen(false);
-    setPaymentMethod("online");
-    setChequeNo("");
   };
 
-  const handlePrintReceipt = (inst) => {
-    const child = children.find((c) => c.userId === selectedChildId);
-    const w = window.open("", "_blank", "width=700,height=600");
-    w.document.write(`
-      <html><head><title>Fee Receipt</title>
-      <style>body{font-family:Arial,sans-serif;padding:30px}table{width:100%;border-collapse:collapse}
-      td,th{border:1px solid #ddd;padding:8px 12px}th{background:#f4f4f4}h2{text-align:center}</style>
-      </head><body>
-      <h2>Fee Payment Receipt</h2>
-      <p><strong>Student:</strong> ${child?.name || "—"} &nbsp;&nbsp;
-         <strong>Class:</strong> ${child?.className || "—"} ${child?.sectionName || ""}</p>
-      <table>
-        <tr><th>Field</th><th>Details</th></tr>
-        <tr><td>Installment</td><td>${inst.installmentName || "—"}</td></tr>
-        <tr><td>Amount</td><td>₹${Number(inst.amount || 0).toLocaleString("en-IN")}</td></tr>
-        <tr><td>Paid</td><td>₹${Number(inst.paidAmount || 0).toLocaleString("en-IN")}</td></tr>
-        <tr><td>Due Date</td><td>${inst.dueDate ? new Date(inst.dueDate).toLocaleDateString("en-IN") : "—"}</td></tr>
-        <tr><td>Status</td><td>${String(inst.status || "—").toUpperCase()}</td></tr>
-        <tr><td>Printed On</td><td>${new Date().toLocaleString("en-IN")}</td></tr>
-      </table>
-      </body></html>
-    `);
-    w.document.close();
-    w.print();
-  };
+  const openReceipt = (inst) => setReceiptInstallment(inst);
 
   const handleGenerateInstallments = async () => {
     if (!enrollmentId || !academicYearId) { message.error("Student and academic year are required"); return; }
@@ -284,24 +254,8 @@ const ParentFees = () => {
     }
   };
 
-  const handleOfflinePayment = async () => {
-    if (!selectedInstallment?._id || !amountPaid) return;
-    try {
-      setPaying(true);
-      await dispatch(createPayment({
-        installmentId: selectedInstallment._id,
-        amount: amountPaid,
-        paymentMode: paymentMethod,
-        ...(paymentMethod === "cheque" && chequeNo ? { transactionId: chequeNo } : {}),
-      })).unwrap();
-      message.success(`${paymentMethod === "cheque" ? "Cheque" : "Cash"} payment recorded`);
-      closePayModal();
-      refreshFeeData();
-    } catch (err) {
-      message.error(getErrorMessage(err, "Payment failed"));
-    } finally { setPaying(false); }
-  };
-
+  // Self-service payment only ever goes through gateway-verified Razorpay now — the backend
+  // rejects any other paymentMode for Student/Parent, so there's nothing left to pick.
   const handleRazorpayPayment = async () => {
     const loaded = await loadRazorpay();
     if (!loaded) { message.error("Razorpay SDK failed to load"); return; }
@@ -309,7 +263,6 @@ const ParentFees = () => {
       setPaying(true);
       const paymentInit = await dispatch(createPayment({
         installmentId: selectedInstallment._id,
-        amount: amountPaid,
         paymentMode: "razorpay",
       })).unwrap();
       const options = {
@@ -322,7 +275,6 @@ const ParentFees = () => {
         handler: async (response) => {
           await dispatch(createPayment({
             installmentId: selectedInstallment._id,
-            amount: amountPaid,
             paymentMode: "razorpay",
             razorpay: response,
           })).unwrap();
@@ -583,7 +535,7 @@ const ParentFees = () => {
                               key={inst._id}
                               inst={inst}
                               onPay={openPayModal}
-                              onPrint={handlePrintReceipt}
+                              onPrint={openReceipt}
                             />
                           ))}
                       </div>
@@ -604,15 +556,9 @@ const ParentFees = () => {
           width={460}
           footer={[
             <Button key="cancel" onClick={closePayModal}>Cancel</Button>,
-            paymentMethod === "online" ? (
-              <Button key="pay" type="primary" icon={<CreditCardOutlined />} loading={paying} onClick={handleRazorpayPayment}>
-                Pay Online (Razorpay)
-              </Button>
-            ) : (
-              <Button key="pay" type="primary" icon={<WalletOutlined />} loading={paying} onClick={handleOfflinePayment}>
-                Confirm {paymentMethod === "cheque" ? "Cheque" : "Cash"} Payment
-              </Button>
-            ),
+            <Button key="pay" type="primary" icon={<CreditCardOutlined />} loading={paying} onClick={handleRazorpayPayment}>
+              Pay Online (Razorpay)
+            </Button>,
           ]}
         >
           {selectedInstallment && (
@@ -630,60 +576,44 @@ const ParentFees = () => {
                 </Descriptions>
               </div>
 
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
-                  Amount to Pay
-                </div>
-                <InputNumber
-                  size="large"
-                  style={{ width: "100%" }}
-                  min={1}
-                  max={Number(selectedInstallment.amount || 0) - Number(selectedInstallment.paidAmount || 0)}
-                  value={amountPaid}
-                  onChange={setAmountPaid}
-                  formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
-                  parser={(v) => v?.replace(/[₹,\s]/g, "")}
-                />
+              <div style={{
+                fontSize: 12, color: "var(--text-muted)",
+                background: "var(--surface-soft)", border: "1px solid var(--border-muted)",
+                borderRadius: 8, padding: "8px 12px",
+              }}>
+                💳 Paid securely online via Razorpay. Cash/cheque payments are recorded by your school's accounts office, not here.
               </div>
-
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
-                  Payment Method
-                </div>
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  {[
-                    { value: "online", label: "💳 Pay Online (Razorpay)", desc: "Secure card / UPI / netbanking via Razorpay" },
-                    { value: "cash",   label: "💵 Cash",   desc: "Record an offline cash payment" },
-                    { value: "cheque", label: "📋 Cheque", desc: "Record a cheque payment (enter cheque no. below)" },
-                  ].map((opt) => (
-                    <div
-                      key={opt.value}
-                      onClick={() => { setPaymentMethod(opt.value); setChequeNo(""); }}
-                      style={{
-                        padding: "10px 14px", borderRadius: 12,
-                        border: `2px solid ${paymentMethod === opt.value ? "var(--primary)" : "var(--border-muted)"}`,
-                        background: paymentMethod === opt.value ? "var(--primary-light)" : "var(--surface)",
-                        cursor: "pointer", transition: "all 0.15s",
-                      }}
-                    >
-                      <div style={{ fontWeight: 600, color: paymentMethod === opt.value ? "var(--primary)" : "var(--text-primary)" }}>
-                        {opt.label}
-                      </div>
-                      <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{opt.desc}</div>
-                    </div>
-                  ))}
-                </Space>
-              </div>
-
-              {paymentMethod === "cheque" && (
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
-                    Cheque Number
-                  </div>
-                  <Input size="large" placeholder="Enter cheque number" value={chequeNo} onChange={(e) => setChequeNo(e.target.value)} />
-                </div>
-              )}
             </Space>
+          )}
+        </Modal>
+
+        {/* ── Receipt Modal ── */}
+        <Modal
+          title="Fee Receipt"
+          open={!!receiptInstallment}
+          onCancel={() => setReceiptInstallment(null)}
+          footer={[
+            <Button key="print" type="primary" icon={<PrinterOutlined />} onClick={() => printFeeReceipt(receiptRef.current)}>
+              Print
+            </Button>,
+            <Button key="close" onClick={() => setReceiptInstallment(null)}>Close</Button>,
+          ]}
+          centered
+        >
+          {receiptInstallment && (
+            <FeeReceipt
+              ref={receiptRef}
+              payment={{
+                amountPaid: receiptInstallment.paidAmount,
+                paymentDate: receiptInstallment.updatedAt,
+              }}
+              description={receiptInstallment.installmentName}
+              student={{
+                name: selectedChild?.name,
+                className: selectedChild?.className,
+                section: selectedChild?.sectionName,
+              }}
+            />
           )}
         </Modal>
       </div>
