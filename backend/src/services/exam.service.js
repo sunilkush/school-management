@@ -109,8 +109,17 @@ const resolveScope = async ({ user, studentId }) => {
     return { studentId: child.userId?._id || child.userId };
   }
 
+  // Staff roles (Teacher, School Admin, Principal, Exam Coordinator, ...) reach here with an
+  // arbitrary :studentId from the route param. Without pinning schoolId too, any staff member
+  // in ANY school could pull another school's student's exam results just by knowing/guessing
+  // their user id — ExamResult always carries its own schoolId, so scoping by it here is enough
+  // to keep this staff-only branch tenant-safe (Super Admin is intentionally left unscoped).
   if (!studentId) throw new ApiError(400, "studentId is required");
-  return { studentId: new OBJECT_ID(studentId) };
+  const scope = { studentId: new OBJECT_ID(studentId) };
+  if (user?.roleId?.name !== "Super Admin") {
+    scope.schoolId = user?.schoolId?._id || user?.schoolId;
+  }
+  return scope;
 };
 
 export const createExamService = async ({ body, user }) => {
@@ -633,6 +642,7 @@ export const publishResultService = async ({ body, user }) => {
 export const getStudentResultService = async ({ query, user, studentId }) => {
   const scope = await resolveScope({ user, studentId });
   const filters = { studentId: scope.studentId };
+  if (scope.schoolId) filters.schoolId = scope.schoolId;
 
   if (query.examId) filters.examId = query.examId;
   if (user.roleId?.name === "Student" || user.roleId?.name === "Parent") {

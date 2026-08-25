@@ -16,7 +16,11 @@ function generateAcademicYearName(startDate, endDate) {
 
 // ✅ CREATE academic year
 export const createAcademicYear = asyncHandler(async (req, res) => {
-  const { code, startDate, endDate, schoolId, isActive } = req.body;
+  const { code, startDate, endDate, isActive } = req.body;
+  // Forces schoolId to the caller's own school for everyone except Super Admin — previously
+  // req.body.schoolId was trusted outright, letting a School Admin create academic years for
+  // (and deactivate the currently-active year of) a school that isn't theirs.
+  const { schoolId } = buildSchoolAccessFilter(req, { schoolId: req.body.schoolId });
 
   if (!startDate || !endDate || !schoolId) {
     throw new ApiError(400, "Start Date, End Date, and School ID are required.");
@@ -50,7 +54,9 @@ export const createAcademicYear = asyncHandler(async (req, res) => {
     code: codeValue,
     startDate: startDateF,
     endDate: endDateF,
-    schoolId: schoolId.trim(),
+    // schoolId may now come from req.user.schoolId (an ObjectId, not a string) rather than
+    // always req.body.schoolId — String(...) handles both instead of assuming .trim() exists.
+    schoolId: String(schoolId).trim(),
     isActive: !!isActive,
     status: isActive ? "active" : "inactive",
   });
@@ -63,9 +69,13 @@ export const createAcademicYear = asyncHandler(async (req, res) => {
 });
 // ✅ GET all academic years for a school
 export const getAcademicYearsBySchool = asyncHandler(async (req, res) => {
-  const { schoolId } = req.params;
+  // The route (GET /academicYear/school/:schoolId) has no role restriction, so any
+  // authenticated user could otherwise list another school's academic years just by editing
+  // the URL — buildSchoolAccessFilter forces schoolId back to the caller's own school unless
+  // they're Super Admin.
+  const filter = buildSchoolAccessFilter(req, { schoolId: req.params.schoolId });
 
-  const academicYears = await AcademicYear.find({ schoolId }).sort({ startDate: -1 });
+  const academicYears = await AcademicYear.find(filter).sort({ startDate: -1 });
 
   res.status(200).json({
     success: true,
@@ -178,10 +188,13 @@ export const archiveAcademicYear = asyncHandler(async (req, res) => {
 
 // ✅ GET currently active year by school
 export const getActiveAcademicYearBySchool = asyncHandler(async (req, res) => {
-  const { schoolId } = req.params;
+  // Same tenancy fix as getAcademicYearsBySchool above — this route also has no role
+  // restriction, so schoolId must come from the caller's own session, not the URL, unless
+  // they're Super Admin.
+  const { schoolId } = buildSchoolAccessFilter(req, { schoolId: req.params.schoolId });
 
   const academicYear = await AcademicYear.findOne({
-    schoolId: schoolId.trim(),
+    schoolId: String(schoolId).trim(),
     isActive: true,
     status: "active",
   });

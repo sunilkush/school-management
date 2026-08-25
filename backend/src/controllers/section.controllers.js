@@ -11,7 +11,12 @@ import { escapeRegex } from "../utils/escapeRegex.js";
 // 🔹 CREATE SECTION
 // ==============================
 export const createSection = asyncHandler(async (req, res) => {
-  const { schoolId, schoolClassId, name, capacity, academicYearId } = req.body;
+  const { schoolClassId, name, capacity, academicYearId } = req.body;
+
+  // schoolId is resolved via buildSchoolAccessFilter (req.user's own school, unless Super
+  // Admin) rather than trusted from req.body — a School Admin could otherwise create a
+  // section under a class that isn't even theirs by passing another school's schoolId.
+  const { schoolId } = buildSchoolAccessFilter(req, { schoolId: req.body.schoolId });
 
   if (!schoolId || !schoolClassId || !name) {
     throw new ApiError(400, "Required fields missing");
@@ -22,8 +27,8 @@ export const createSection = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid schoolClassId");
   }
 
-  // ✅ Check class exists
-  const schoolClass = await SchoolClass.findById(schoolClassId);
+  // ✅ Check class exists AND belongs to this school
+  const schoolClass = await SchoolClass.findOne(buildSchoolAccessFilter(req, { _id: schoolClassId }));
   if (!schoolClass) {
     throw new ApiError(404, "SchoolClass not found");
   }
@@ -70,8 +75,11 @@ export const createSection = asyncHandler(async (req, res) => {
 export const getAllSections = asyncHandler(async (req, res) => {
   const { schoolId, academicYearId, schoolClassId } = req.query;
 
-  const filter = {};
-  if (schoolId) filter.schoolId = schoolId;
+  // buildSchoolAccessFilter forces schoolId to the caller's own school for everyone except
+  // Super Admin — previously an omitted schoolId query param returned every school's sections,
+  // and a supplied one was never checked against the caller's own school at all.
+  const filter = buildSchoolAccessFilter(req, {});
+  if (!filter.schoolId && schoolId) filter.schoolId = schoolId; // Super Admin may optionally scope by school
   if (academicYearId) filter.academicYearId = academicYearId;
   if (schoolClassId) filter.schoolClassId = schoolClassId;
 
@@ -166,9 +174,8 @@ export const deleteSection = asyncHandler(async (req, res) => {
 // ==============================
 export const assignClassTeacher = asyncHandler(async (req, res) => {
   const { sectionId, teacherId } = req.body;
-  console.log("Assigning teacher", { sectionId, teacherId });
-  const section = await Section.findByIdAndUpdate(
-    sectionId,
+  const section = await Section.findOneAndUpdate(
+    buildSchoolAccessFilter(req, { _id: sectionId }),
     {
       classTeacherId: teacherId,
       updatedBy: req.user?._id,
@@ -214,7 +221,7 @@ const populatedSection = await Section.findById(section._id)
 export const addStudentToSection = asyncHandler(async (req, res) => {
   const { sectionId, studentId } = req.body;
 
-  const section = await Section.findById(sectionId);
+  const section = await Section.findOne(buildSchoolAccessFilter(req, { _id: sectionId }));
   if (!section) {
     throw new ApiError(404, "Section not found");
   }
@@ -239,8 +246,8 @@ export const addStudentToSection = asyncHandler(async (req, res) => {
 export const removeStudentFromSection = asyncHandler(async (req, res) => {
   const { sectionId, studentId } = req.body;
 
-  const section = await Section.findByIdAndUpdate(
-    sectionId,
+  const section = await Section.findOneAndUpdate(
+    buildSchoolAccessFilter(req, { _id: sectionId }),
     {
       $pull: { StudentEnrollmentId: studentId },
     },
@@ -272,7 +279,7 @@ export const addSubjectToSection = asyncHandler(async (req, res) => {
   // =============================
   // 🔹 CHECK SCHOOL CLASS
   // =============================
-  const schoolClass = await SchoolClass.findById(schoolClassId);
+  const schoolClass = await SchoolClass.findOne(buildSchoolAccessFilter(req, { _id: schoolClassId }));
   if (!schoolClass) {
     return res.status(404).json({
       success: false,
@@ -283,7 +290,7 @@ export const addSubjectToSection = asyncHandler(async (req, res) => {
   // =============================
   // 🔹 CHECK SECTION
   // =============================
-  const section = await Section.findById(sectionId);
+  const section = await Section.findOne(buildSchoolAccessFilter(req, { _id: sectionId }));
   if (!section) {
     return res.status(404).json({
       success: false,
@@ -347,10 +354,10 @@ export const assignSubjectTeacher = asyncHandler(async (req, res) => {
      ✅ UPDATE DIRECTLY (OPTIMIZED)
   ============================= */
   const updatedSection = await Section.findOneAndUpdate(
-    {
+    buildSchoolAccessFilter(req, {
       _id: sectionId,
       "subjects.subjectId": subjectId, // 🔥 match subject inside array
-    },
+    }),
     {
       $set: {
         "subjects.$.teacherId": teacherId, // 🔥 update matched subject

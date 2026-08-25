@@ -6,7 +6,11 @@ import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 // 🔹 CREATE
 export const createSchoolClass = async (req, res) => {
   try {
-    const { schoolId, academicYearId, boardClassId, name } = req.body;
+    const { academicYearId, boardClassId, name } = req.body;
+    // Forces schoolId to the caller's own school for everyone except Super Admin — previously
+    // req.body.schoolId was trusted outright, letting a School Admin create/duplicate-check
+    // classes against another school's schoolId.
+    const { schoolId } = buildSchoolAccessFilter(req, { schoolId: req.body.schoolId });
 
     // ✅ VALIDATION
     if (!schoolId || !academicYearId || !boardClassId || !name) {
@@ -56,7 +60,11 @@ export const createSchoolClass = async (req, res) => {
 // 🔹 GET ALL
 export const getAllSchoolClasses = async (req, res) => {
   try {
-    const { schoolId, academicYearId } = req.query;
+    const { academicYearId } = req.query;
+    // Forces schoolId to the caller's own school for everyone except Super Admin — previously
+    // this trusted req.query.schoolId outright, so any Teacher/Student/etc. could pass another
+    // school's id and list its full class roster.
+    const { schoolId } = buildSchoolAccessFilter(req, { schoolId: req.query.schoolId });
 
     if (!schoolId) {
       return res.status(400).json({
@@ -244,7 +252,10 @@ export const deleteSchoolClass = async (req, res) => {
 };
 
 export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
-  const { schoolId, academicYearId } = req.query;
+  const { academicYearId } = req.query;
+  // Forces schoolId to the caller's own school for everyone except Super Admin — same leak as
+  // getAllSchoolClasses above.
+  const { schoolId } = buildSchoolAccessFilter(req, { schoolId: req.query.schoolId });
 
   // =============================
   // VALIDATION

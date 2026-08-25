@@ -15,13 +15,16 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
     studentIds,
     academicYearId,
     customAmount,
-    schoolId,
   } = req.body;
 
+  // schoolId is deliberately NOT read from req.body — this route is reachable by School
+  // Admin/Accountant (not Super Admin only, see studentFee.routes.js), and trusting a
+  // client-supplied schoolId let one school's admin assign fees into another school's books.
+  const schoolId = req.user?.schoolId?._id || req.user?.schoolId;
 
   // ✅ Required validation
-  if (!feeStructureId || !academicYearId || !schoolId) {
-    throw new ApiError(400, "feeStructureId, academicYearId and schoolId are required");
+  if (!schoolId || !feeStructureId || !academicYearId) {
+    throw new ApiError(400, "feeStructureId and academicYearId are required");
   }
    for (const [key, value] of Object.entries({ feeStructureId, academicYearId, schoolId })) {
     if (!mongoose.Types.ObjectId.isValid(value)) {
@@ -45,6 +48,17 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
 
   // ✅ Remove duplicate studentIds
   students = [...new Set(students)];
+
+  // ✅ Only assign fees to students who actually belong to the caller's school — otherwise a
+  // studentId belonging to a different school could be passed through and end up cross-linked
+  // into this school's fee records.
+  const ownStudents = await Student.find({ _id: { $in: students }, schoolId }).select("_id");
+  const ownStudentIds = new Set(ownStudents.map((s) => s._id.toString()));
+  students = students.filter((sid) => ownStudentIds.has(sid.toString()));
+
+  if (!students.length) {
+    throw new ApiError(404, "None of the selected students belong to this school");
+  }
 
   // ✅ Validate Fee Structure
   const feeStructure = await FeeStructure.findOne({

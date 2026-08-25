@@ -179,11 +179,18 @@ export const bookSlot = asyncHandler(async (req, res) => {
     await ensureParentOwnsStudent(studentId, parentId);
   }
 
-  const student = await Student.findById(studentId).populate("userId", "name").lean();
+  // Unlike every other handler in this file, this had no ensureAccess check at all — a School
+  // Admin (or a Parent whose child-ownership check above only confirms parentage, not school)
+  // could book/claim any other school's PTM slot by guessing its _id. Fetch-then-check first,
+  // then scope both the student lookup and the atomic update to that slot's real school.
+  const existingSlot = await PTMSlot.findById(req.params.id);
+  ensureAccess(existingSlot, req.user, "PTM slot not found");
+
+  const student = await Student.findOne({ _id: studentId, schoolId: existingSlot.schoolId }).populate("userId", "name").lean();
   if (!student) throw new ApiError(404, "Student not found");
 
   const slot = await PTMSlot.findOneAndUpdate(
-    { _id: req.params.id, status: "Available" },
+    { _id: req.params.id, status: "Available", schoolId: existingSlot.schoolId },
     {
       $set: {
         status: "Booked",
