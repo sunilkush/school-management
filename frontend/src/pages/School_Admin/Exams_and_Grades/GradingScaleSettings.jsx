@@ -4,9 +4,6 @@ import { Button, Input, InputNumber, Spin, message, Tooltip } from "antd";
 import { PlusOutlined, DeleteOutlined, SaveOutlined, ReloadOutlined, TrophyOutlined } from "@ant-design/icons";
 import { fetchGradingScale, updateGradingScale } from "../../../features/gradingScaleSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-// NOTE: `pill()`'s `color` argument (used at each call site below) is baked into its
-// border as `1px solid ${color}25` — a raw-hex alpha-suffix trick that breaks with a
-// var() string. That helper is outside this task's scope, so those args stay hex.
 import { pageWrapper, sectionPanel, pill } from "../../../styles/pageStyles";
 
 let rowKeySeq = 0;
@@ -94,7 +91,7 @@ const GradingScaleSettings = () => {
       />
 
       {isDefault && (
-        <div style={{ ...pill("#B45309", "rgba(254,243,199,0.5)"), display: "block", padding: "10px 16px", margin: "20px 0" }}>
+        <div style={{ ...pill("var(--warning-hover)", "var(--warning-light)"), display: "block", padding: "10px 16px", margin: "20px 0" }}>
           This school hasn't customized its grading scale yet — showing the platform default. Save to make it official.
         </div>
       )}
@@ -147,7 +144,7 @@ const GradingScaleSettings = () => {
         </Button>
 
         {validationError && (
-          <div style={{ ...pill("#DC2626", "rgba(254,226,226,0.3)"), display: "block", padding: "8px 14px", marginTop: 16 }}>
+          <div style={{ ...pill("var(--danger-hover)", "var(--danger-light)"), display: "block", padding: "8px 14px", marginTop: 16 }}>
             {validationError}
           </div>
         )}
@@ -162,7 +159,7 @@ const GradingScaleSettings = () => {
                 const upperBound = idx === 0 ? 100 : sortedForPreview[idx - 1].minPercentage;
                 const rangeLabel = idx === 0 ? `${row.minPercentage}% – 100%` : `${row.minPercentage}% – ${upperBound}%`;
                 return (
-                  <span key={row.key} style={pill("#2563EB", "rgba(219,234,254,0.5)")}>
+                  <span key={row.key} style={pill("var(--primary)", "var(--primary-light)")}>
                     {row.grade}: {rangeLabel}
                   </span>
                 );

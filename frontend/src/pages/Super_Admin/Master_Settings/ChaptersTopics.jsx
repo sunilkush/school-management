@@ -57,10 +57,10 @@ const { Text } = Typography;
 
 // ─── Color palette per tree depth ───────────────────────────────────────────
 const DEPTH_COLORS = {
-  board: { bg: "#e8f4ff", border: "#91caff", text: "#0958d9", icon: <AppstoreOutlined /> },
-  class: { bg: "#f6ffed", border: "#b7eb8f", text: "#389e0d", icon: <FolderOpenOutlined /> },
-  subject: { bg: "#fff7e6", border: "#ffd591", text: "#d46b08", icon: <ReadOutlined /> },
-  chapter: { bg: "#fff", border: "var(--border-muted)", text: "#595959", icon: <BookOutlined /> },
+  board: { bg: "var(--primary-light)", border: "rgba(var(--primary-rgb), 0.4)", text: "var(--primary-hover)", icon: <AppstoreOutlined /> },
+  class: { bg: "var(--success-light)", border: "rgba(var(--success-rgb), 0.4)", text: "var(--success-hover)", icon: <FolderOpenOutlined /> },
+  subject: { bg: "var(--warning-light)", border: "rgba(var(--warning-rgb), 0.4)", text: "var(--warning-hover)", icon: <ReadOutlined /> },
+  chapter: { bg: "var(--surface)", border: "var(--border-muted)", text: "var(--text-secondary)", icon: <BookOutlined /> },
 };
 
 const rowStyle = (type) => {
@@ -416,9 +416,9 @@ const ChaptersTopics = () => {
 
       {/* ── Stat cards ── */}
       <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<AppstoreOutlined />} label="Boards" value={boardCount} color="#0958d9" />
-        <StatCard icon={<BookOutlined />} label="Chapters" value={totalChapters} color="#389e0d" />
-        <StatCard icon={<GlobalOutlined />} label="Global" value={globalCount} color="#d46b08" />
+        <StatCard icon={<AppstoreOutlined />} label="Boards" value={boardCount} color="var(--primary-hover)" />
+        <StatCard icon={<BookOutlined />} label="Chapters" value={totalChapters} color="var(--success-hover)" />
+        <StatCard icon={<GlobalOutlined />} label="Global" value={globalCount} color="var(--warning-hover)" />
       </div>
 
       <style>{tableHeadCss("chapters-tbl")}</style>

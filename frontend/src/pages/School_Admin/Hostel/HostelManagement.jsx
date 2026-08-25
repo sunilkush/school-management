@@ -388,12 +388,9 @@ const HostelManagement = () => {
       {/* Stats */}
       <div style={{ ...statGrid(160), margin: "20px 0 20px" }}>
         {[
-          // Raw hex here (not C.primary/etc): feeds the shared iconWell() helper
-          // (frontend/src/styles/pageStyles.js), which builds its background as
-          // `${color}22` — breaks with a var() string.
-          { icon: <HomeOutlined />,   label: "Total Rooms",       value: stats.totalRooms,    color: "#2563EB" },
-          { icon: <TeamOutlined />,   label: "Students Assigned", value: stats.totalOccupied,  color: "#F59E0B" },
-          { icon: <BankOutlined />,   label: "Beds Available",    value: stats.totalAvailable, color: "#22C55E" },
+          { icon: <HomeOutlined />,   label: "Total Rooms",       value: stats.totalRooms,    color: C.primary },
+          { icon: <TeamOutlined />,   label: "Students Assigned", value: stats.totalOccupied,  color: C.warning },
+          { icon: <BankOutlined />,   label: "Beds Available",    value: stats.totalAvailable, color: C.success },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14,

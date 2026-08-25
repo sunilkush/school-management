@@ -85,7 +85,7 @@ const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
         style={{
           height: 4,
           background: school.isActive
-            ? "linear-gradient(90deg, var(--primary), #93C5FD)"
+            ? "linear-gradient(90deg, var(--primary), rgba(var(--primary-rgb), 0.4))"
             : "linear-gradient(90deg, var(--text-disabled), var(--border))",
         }}
       />
@@ -95,7 +95,7 @@ const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
         {/* Header row */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
           <Space align="start" size={10}>
-            <div style={iconWell("#2563EB", 40)}>
+            <div style={iconWell("var(--primary)", 40)}>
               <BankOutlined />
             </div>
             <div style={{ minWidth: 0 }}>
@@ -160,7 +160,7 @@ const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {school.boards?.length ? (
               school.boards.map((board) => (
-                <span key={board._id} style={pill("#2563EB", "rgba(219,234,254,0.4)")}>
+                <span key={board._id} style={pill("var(--primary)", "var(--primary-light-rgb)")}>
                   {board.name}
                 </span>
               ))
@@ -180,9 +180,9 @@ const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
           </Space>
           {school.subscriptionPlan ? (
             <Space size={5} wrap>
-              <span style={pill("#14B8A6", "rgba(20,184,166,0.15)")}>{school.subscriptionPlan.name}</span>
-              <span style={pill("#B45309", "rgba(254,243,199,0.5)")}>₹{school.subscriptionPlan.price}</span>
-              <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>{school.subscriptionPlan.durationInDays}d</span>
+              <span style={pill("var(--accent)", "rgba(var(--accent-rgb), 0.15)")}>{school.subscriptionPlan.name}</span>
+              <span style={pill("var(--warning-hover)", "var(--warning-light)")}>₹{school.subscriptionPlan.price}</span>
+              <span style={pill("var(--primary)", "var(--primary-light-rgb)")}>{school.subscriptionPlan.durationInDays}d</span>
             </Space>
           ) : (
             <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>No plan assigned</Text>
@@ -236,8 +236,8 @@ const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
 const PAGE_SIZE = 9;
 
 const STATUS_COLOR = {
-  active:    { color: "var(--success-hover)", bg: "var(--success-light)", border: "#86EFAC" },
-  trial:     { color: "var(--primary-hover)", bg: "var(--primary-light)", border: "#93C5FD" },
+  active:    { color: "var(--success-hover)", bg: "var(--success-light)", border: "rgba(var(--success-rgb), 0.4)" },
+  trial:     { color: "var(--primary-hover)", bg: "var(--primary-light)", border: "rgba(var(--primary-rgb), 0.4)" },
   expired:   { color: "var(--danger-hover)", bg: "var(--danger-light)", border: "var(--danger-light)" },
   suspended: { color: "var(--warning-hover)", bg: "var(--warning-light)", border: "var(--warning)" },
   cancelled: { color: "var(--text-secondary)", bg: "var(--surface-soft)", border: "var(--border)" },
@@ -466,10 +466,10 @@ const Schools = () => {
         {/* ══════════ STATS ROW ══════════ */}
         <div className="stat-grid" style={statGrid(170)}>
           {[
-            { title: "Total Schools", value: totalSchools, icon: <TeamOutlined />, color: "#2563EB" },
-            { title: "Active", value: activeSchools, icon: <CheckCircleFilled />, color: "#22C55E" },
-            { title: "Inactive", value: inactiveSchools, icon: <CloseCircleFilled />, color: "#EF4444" },
-            { title: "Board Types", value: totalBoards, icon: <BookOutlined />, color: "#2563EB" },
+            { title: "Total Schools", value: totalSchools, icon: <TeamOutlined />, color: "var(--primary)" },
+            { title: "Active", value: activeSchools, icon: <CheckCircleFilled />, color: "var(--success)" },
+            { title: "Inactive", value: inactiveSchools, icon: <CloseCircleFilled />, color: "var(--danger)" },
+            { title: "Board Types", value: totalBoards, icon: <BookOutlined />, color: "var(--primary)" },
           ].map((stat) => (
             <div key={stat.title} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, marginBottom: 0, padding: "16px 20px" }}>
               <div style={iconWell(stat.color, 38)}>{stat.icon}</div>
@@ -859,7 +859,7 @@ const Schools = () => {
                     icon={<PlayCircleOutlined style={{ color: "var(--success-hover)" }} />}
                   >
                     <Button block icon={<PlayCircleOutlined />} loading={actionLoading}
-                      style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "var(--success-light)", borderColor: "#86EFAC", color: "var(--success-hover)" }}>
+                      style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "var(--success-light)", borderColor: "rgba(var(--success-rgb), 0.4)", color: "var(--success-hover)" }}>
                       Reactivate
                     </Button>
                   </Popconfirm>

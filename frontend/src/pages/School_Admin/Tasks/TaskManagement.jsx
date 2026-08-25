@@ -25,26 +25,23 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 /* ── Config ─────────────────────────────────────────────────────────── */
-// NOTE: col.color values are intentionally left as raw hex, not var(--token).
-// They're consumed all over TaskCard/KanbanColumn/AddBtn via hex-alpha-suffix
-// concatenation (e.g. `${col.color}22`, `${col.color}0D`) to derive tinted
-// borders/backgrounds/shadows — that trick produces invalid CSS if the base
-// value is a var() reference, so converting would break the Kanban board styling.
+// col.color values are var(--token) references. Every consumer below that used to derive a
+// tinted border/background/shadow via hex-alpha-suffix concatenation (e.g. `${col.color}22`)
+// now wraps the same math in color-mix(in srgb, ${col.color} N%, transparent) instead, which
+// works with both literal hex and var() color strings.
 const COLUMNS = [
-  { key: "todo",        label: "To Do",       color: "#F59E0B", icon: <ClockCircleOutlined /> },
-  { key: "in_progress", label: "In Progress",  color: "#2563EB", icon: <SyncOutlined />        },
-  { key: "done",        label: "Done",         color: "#16A34A", icon: <CheckCircleOutlined /> },
-  { key: "cancelled",   label: "Cancelled",    color: "#6B7280", icon: <StopOutlined />        },
+  { key: "todo",        label: "To Do",       color: "var(--warning)", icon: <ClockCircleOutlined /> },
+  { key: "in_progress", label: "In Progress",  color: "var(--primary)", icon: <SyncOutlined />        },
+  { key: "done",        label: "Done",         color: "var(--success)", icon: <CheckCircleOutlined /> },
+  { key: "cancelled",   label: "Cancelled",    color: "var(--text-secondary)", icon: <StopOutlined />        },
 ];
 
-// Same reasoning as COLUMNS above: PRIORITY[x].color is consumed via `${p.color}18`
-// in PriorityPill, so it stays raw hex. The `bg` field here is currently unused
-// dead code (PriorityPill recomputes its background from `color` instead).
+// Same reasoning as COLUMNS above: PRIORITY[x].color is consumed via color-mix() in PriorityPill.
 const PRIORITY = {
-  low:    { label: "Low",    color: "#64748B", bg: "#F1F5F918", icon: <Minus size={9} /> },
-  medium: { label: "Medium", color: "#D97706", bg: "#FEF3C718", icon: <ChevronDown size={9} /> },
-  high:   { label: "High",   color: "#EA580C", bg: "#FFF7ED18", icon: <Flame size={9} /> },
-  urgent: { label: "Urgent", color: "#DC2626", bg: "#FEF2F218", icon: <AlertTriangle size={9} /> },
+  low:    { label: "Low",    color: "var(--text-secondary)", icon: <Minus size={9} /> },
+  medium: { label: "Medium", color: "var(--warning-hover)", icon: <ChevronDown size={9} /> },
+  high:   { label: "High",   color: "var(--orange)", icon: <Flame size={9} /> },
+  urgent: { label: "Urgent", color: "var(--danger-hover)", icon: <AlertTriangle size={9} /> },
 };
 const PRIORITY_LABEL = { low: "Low", medium: "Medium", high: "High", urgent: "Urgent" };
 const STATUS_LABEL   = { todo: "To Do", in_progress: "In Progress", done: "Done", cancelled: "Cancelled" };
@@ -59,7 +56,7 @@ const PriorityPill = ({ priority }) => {
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 3,
       fontSize: 10, fontWeight: 700, color: p.color,
-      background: `${p.color}18`, padding: "2px 8px", borderRadius: 99,
+      background: `color-mix(in srgb, ${p.color} 9%, transparent)`, padding: "2px 8px", borderRadius: 99,
     }}>
       {p.icon} {p.label.toUpperCase()}
     </span>
@@ -104,10 +101,10 @@ const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, isDragO
         background: "var(--surface)",
         borderRadius: 12,
         padding: "12px 14px",
-        border: `1px solid ${hovered ? col.color + "50" : "var(--border-muted)"}`,
+        border: `1px solid ${hovered ? `color-mix(in srgb, ${col.color} 31%, transparent)` : "var(--border-muted)"}`,
         borderLeft: `3px solid ${isOverdue ? "var(--danger)" : col.color}`,
         boxShadow: hovered
-          ? `0 6px 20px ${col.color}20`
+          ? `0 6px 20px color-mix(in srgb, ${col.color} 13%, transparent)`
           : "0 1px 3px rgba(0,0,0,0.06)",
         transition: "box-shadow 0.18s, border-color 0.18s, opacity 0.15s",
         position: "relative",
@@ -195,7 +192,7 @@ const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, isDragO
             <button
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: "var(--danger-light)", border: "1px solid #FECACA",
+                background: "var(--danger-light)", border: "1px solid rgba(var(--danger-rgb), 0.3)",
                 borderRadius: 7, padding: "4px 7px", cursor: "pointer", color: "var(--danger)",
               }}
             >
@@ -218,8 +215,8 @@ const AddBtn = ({ col, onAdd }) => {
       onMouseLeave={() => setHov(false)}
       style={{
         padding: "10px 14px", width: "100%",
-        background: hov ? `${col.color}0A` : "transparent",
-        border: `1.5px dashed ${hov ? col.color + "70" : col.color + "28"}`,
+        background: hov ? `color-mix(in srgb, ${col.color} 4%, transparent)` : "transparent",
+        border: `1.5px dashed ${hov ? `color-mix(in srgb, ${col.color} 44%, transparent)` : `color-mix(in srgb, ${col.color} 16%, transparent)`}`,
         borderTop: "none",
         borderRadius: "0 0 14px 14px",
         cursor: "pointer",
@@ -244,8 +241,8 @@ const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd, dragState, onDragSt
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "12px 16px",
-        background: `${col.color}0D`,
-        border: `1px solid ${col.color}28`,
+        background: `color-mix(in srgb, ${col.color} 5%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${col.color} 16%, transparent)`,
         borderBottom: "none",
         borderRadius: "14px 14px 0 0",
       }}>
@@ -286,11 +283,11 @@ const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd, dragState, onDragSt
           flex: 1, minHeight: 240,
           padding: "10px 10px 8px",
           display: "flex", flexDirection: "column", gap: 8,
-          border: `1px solid ${over ? col.color + "55" : col.color + "22"}`,
+          border: `1px solid ${over ? `color-mix(in srgb, ${col.color} 33%, transparent)` : `color-mix(in srgb, ${col.color} 13%, transparent)`}`,
           borderTop: "none",
-          background: over ? `${col.color}07` : "var(--surface-page)",
+          background: over ? `color-mix(in srgb, ${col.color} 3%, transparent)` : "var(--surface-page)",
           transition: "all 0.15s",
-          boxShadow: over ? `inset 0 0 0 2px ${col.color}28` : "none",
+          boxShadow: over ? `inset 0 0 0 2px color-mix(in srgb, ${col.color} 16%, transparent)` : "none",
         }}
       >
         {tasks.length === 0 && (
@@ -499,7 +496,7 @@ const TaskManagement = () => {
               {overdueCount > 0 && (
                 <div style={{
                   display: "flex", alignItems: "center", gap: 5,
-                  background: "var(--danger-light)", border: "1px solid #FECACA",
+                  background: "var(--danger-light)", border: "1px solid rgba(var(--danger-rgb), 0.3)",
                   borderRadius: 8, padding: "5px 10px",
                 }}>
                   <ClockCircleOutlined style={{ color: "var(--danger)", fontSize: 12 }} />
@@ -541,7 +538,7 @@ const TaskManagement = () => {
             {COLUMNS.map((c) => (
               <div key={c.key} style={{ flex: "1 1 260px", minWidth: 260 }}>
                 <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid var(--border-muted)" }}>
-                  <div style={{ padding: "12px 16px", background: `${c.color}0D`, borderBottom: "1px solid var(--border-muted)" }}>
+                  <div style={{ padding: "12px 16px", background: `color-mix(in srgb, ${c.color} 5%, transparent)`, borderBottom: "1px solid var(--border-muted)" }}>
                     <Skeleton active title={{ width: "60%" }} paragraph={false} />
                   </div>
                   <div style={{ padding: 12, background: "var(--surface-page)" }}>

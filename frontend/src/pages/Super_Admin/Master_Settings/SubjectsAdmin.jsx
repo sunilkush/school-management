@@ -95,9 +95,9 @@ function SubjectCell({ name }) {
 function TypeChip({ type }) {
   if (!type) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
   const map = {
-    theory:    { bg: "#e3f2fd", color: "#0984e3", border: "#9ed4f5" },
-    practical: { bg: "#fff8e1", color: "#e65100", border: "#fdd7a0" },
-    both:      { bg: "#f3e5f5", color: "#6a1b9a", border: "#ce93d8" },
+    theory:    { bg: "var(--info-light)", color: "var(--info)", border: "rgba(var(--info-rgb), 0.4)" },
+    practical: { bg: "var(--orange-light)", color: "var(--orange)", border: "rgba(var(--orange-rgb), 0.4)" },
+    both:      { bg: "rgba(var(--purple-rgb), 0.12)", color: "var(--purple-hover)", border: "rgba(var(--purple-rgb), 0.4)" },
   };
   const s = map[type?.toLowerCase()] || { bg: "var(--surface-soft)", color: "var(--text-muted)", border: "var(--border-muted)" };
   return (
@@ -116,8 +116,8 @@ function CategoryChip({ category }) {
   if (!category) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
   return (
     <span style={{
-      background: "#e8f5e9", color: "#00897b",
-      border: "1px solid #a5d6a7",
+      background: "var(--accent-light)", color: "var(--accent-hover)",
+      border: "1px solid rgba(var(--accent-rgb), 0.4)",
       borderRadius: 6, padding: "3px 9px", fontSize: 11, fontWeight: 600,
     }}>
       {category}
@@ -143,8 +143,8 @@ function ScopeBadge({ isGlobal, schoolName }) {
     return (
       <span style={{
         display: "inline-flex", alignItems: "center", gap: 4,
-        background: "#e3f2fd", color: "#0984e3",
-        border: "1px solid #9ed4f5",
+        background: "var(--info-light)", color: "var(--info)",
+        border: "1px solid rgba(var(--info-rgb), 0.4)",
         borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 600,
       }}>
         <GlobalOutlined style={{ fontSize: 10 }} /> Global
@@ -288,8 +288,8 @@ const SubjectsAdmin = () => {
           <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{name}</span>
         ) : (
           <span style={{
-            fontSize: 11, color: "#fa8c16",
-            background: "#fff7e6", border: "1px solid #ffd591",
+            fontSize: 11, color: "var(--warning)",
+            background: "var(--warning-light)", border: "1px solid rgba(var(--warning-rgb), 0.4)",
             borderRadius: 20, padding: "2px 9px", fontWeight: 500,
           }}>
             Unassigned
@@ -369,9 +369,9 @@ const SubjectsAdmin = () => {
       {/* ── Stats ── */}
       <div style={{ ...statGrid(180), marginTop: 20 }}>
         <StatCard label="Total Subjects"    value={total}         icon={<ReadOutlined />}         accentColor="var(--accent)" />
-        <StatCard label="Active Subjects"   value={activeCount}   icon={<CheckCircleOutlined />}  accentColor="#00b894" />
-        <StatCard label="Global Subjects"   value={globalCount}   icon={<GlobalOutlined />}       accentColor="#0984e3" />
-        <StatCard label="Teacher Assigned"  value={assignedCount} icon={<TeamOutlined />}         accentColor="#e17055" />
+        <StatCard label="Active Subjects"   value={activeCount}   icon={<CheckCircleOutlined />}  accentColor="var(--success)" />
+        <StatCard label="Global Subjects"   value={globalCount}   icon={<GlobalOutlined />}       accentColor="var(--info)" />
+        <StatCard label="Teacher Assigned"  value={assignedCount} icon={<TeamOutlined />}         accentColor="var(--orange)" />
       </div>
 
       <style>{tableHeadCss("subjects-tbl")}</style>

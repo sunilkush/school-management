@@ -42,7 +42,7 @@ const levelConfig = {
   "user-level": { icon: <InfoCircleOutlined />, bg: "var(--primary-light)", color: "var(--primary)" },
   user:       { icon: <UserOutlined />,       bg: "var(--warning-light)", color: "var(--warning-hover)" },
   warning:    { icon: <WarningOutlined />,    bg: "var(--danger-light)", color: "var(--danger-hover)" },
-  achievement:{ icon: <TrophyOutlined />,     bg: "var(--warning-light)", color: "#CA8A04" },
+  achievement:{ icon: <TrophyOutlined />,     bg: "var(--warning-light)", color: "var(--warning-hover)" },
 };
 const getLevel = (item) => levelConfig[item?.level] || levelConfig.all;
 
@@ -258,7 +258,7 @@ const NotificationDropdown = () => {
           <div style={{ padding: "40px 0", textAlign: "center" }}>
             <div style={{
               width: 56, height: 56, borderRadius: "50%",
-              background: "#F3F4F6",
+              background: "var(--surface-soft)",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 12px",
             }}>

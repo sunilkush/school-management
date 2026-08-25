@@ -44,13 +44,13 @@ function getInitials(name = "") {
 // (used to be a local hardcoded 5-color array duplicated across pages).
 function getPalette(name = "") {
   const color = categoricalColorFor(name);
-  return { bg: `${color}22`, color };
+  return { bg: `color-mix(in srgb, ${color} 13%, transparent)`, color };
 }
 
 function getRoleStyle(name = "") {
   if (!name || name === "—") return { bg: "var(--surface-soft)", color: "var(--text-muted)" };
   const color = categoricalColorFor(name);
-  return { bg: `${color}22`, color };
+  return { bg: `color-mix(in srgb, ${color} 13%, transparent)`, color };
 }
 
 function formatDate(d) {
@@ -262,8 +262,8 @@ const normalizedLogs = useMemo(() => {
             display: "inline-flex",
             alignItems: "center",
             gap: 5,
-            background: "#FAEEDA",
-            color: "#854F0B",
+            background: "var(--warning-light)",
+            color: "var(--warning-hover)",
             borderRadius: 5,
             fontSize: 11,
             fontWeight: 500,
@@ -275,7 +275,7 @@ const normalizedLogs = useMemo(() => {
               width: 5,
               height: 5,
               borderRadius: "50%",
-              background: "#854F0B",
+              background: "var(--warning-hover)",
               display: "inline-block",
               flexShrink: 0,
             }}

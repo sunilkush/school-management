@@ -23,7 +23,7 @@ const { Text } = Typography;
 /* ─── Gender color ───────────────────────────────────────── */
 const GENDER_TAG = {
   Male:   { color: "var(--primary)", bg: "var(--primary-light)", border: "rgba(var(--primary-rgb), 0.19)" },
-  Female: { color: "#DB2777", bg: "#FDF2F8", border: "#DB277730" },
+  Female: { color: "var(--pink-hover)", bg: "var(--pink-light)", border: "rgba(var(--pink-rgb), 0.19)" },
   Other:  { color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.08)", border: "rgba(var(--purple-rgb), 0.19)" },
 };
 
@@ -178,7 +178,7 @@ export default function RollNumberManagement() {
             <div style={{
               width: 34, height: 34, borderRadius: "50%",
               background: val ? "var(--primary-light)" : "var(--surface-soft)",
-              border: `1.5px solid ${val ? "#93C5FD" : "var(--border)"}`,
+              border: `1.5px solid ${val ? "rgba(var(--primary-rgb), 0.4)" : "var(--border)"}`,
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 13, fontWeight: 800,
               color: val ? "var(--primary-hover)" : "var(--text-muted)",

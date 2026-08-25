@@ -135,10 +135,10 @@ const SalaryStructures = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <TeamOutlined />,        label: "Employees",         value: stats.employees,                    color: "#2563EB" },
-          { icon: <CheckCircleOutlined />, label: "Active Structures", value: stats.active,                       color: "#22C55E" },
-          { icon: <RupeeIcon />,           label: "Total Structures",  value: stats.total,                        color: "#14B8A6"  },
-          { icon: <BarChartOutlined />,    label: "Monthly Payroll",   value: formatCurrencyINR(stats.totalGross), color: "#F59E0B", small: true },
+          { icon: <TeamOutlined />,        label: "Employees",         value: stats.employees,                    color: "var(--primary)" },
+          { icon: <CheckCircleOutlined />, label: "Active Structures", value: stats.active,                       color: "var(--success)" },
+          { icon: <RupeeIcon />,           label: "Total Structures",  value: stats.total,                        color: "var(--accent)"  },
+          { icon: <BarChartOutlined />,    label: "Monthly Payroll",   value: formatCurrencyINR(stats.totalGross), color: "var(--warning)", small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: "var(--surface)", borderRadius: 14,

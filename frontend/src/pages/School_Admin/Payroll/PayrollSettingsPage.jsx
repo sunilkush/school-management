@@ -120,7 +120,7 @@ const PayrollSettingsPage = () => {
           <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={DEFAULTS}>
             <SectionTitle
               icon={<SafetyCertificateOutlined style={{ fontSize: 13 }} />}
-              color="#2563EB"
+              color="var(--primary)"
               title="EPF (Provident Fund)"
               subtitle="Employees' Provident Funds & Miscellaneous Provisions Act, 1952"
             />
@@ -192,7 +192,7 @@ const PayrollSettingsPage = () => {
 
             <SectionTitle
               icon={<HeartOutlined style={{ fontSize: 13 }} />}
-              color="#14B8A6"
+              color="var(--accent)"
               title="ESI (State Insurance)"
               subtitle="Employees' State Insurance Act, 1948 — rates per the 2019 revision"
             />
@@ -244,7 +244,7 @@ const PayrollSettingsPage = () => {
                 message="No components selected — ESI wage will be ₹0 for every ESI-eligible employee until you pick at least one." />
             )}
 
-            <SectionTitle icon={<SettingOutlined style={{ fontSize: 13 }} />} color="#F59E0B" title="Other Rules" />
+            <SectionTitle icon={<SettingOutlined style={{ fontSize: 13 }} />} color="var(--warning)" title="Other Rules" />
             <div style={grid2}>
               <Form.Item label="Professional Tax (₹/month)" name="professionalTaxAmount" style={fi}>
                 <InputNumber min={0} style={{ width: "100%" }} />
@@ -280,7 +280,7 @@ const PayrollSettingsPage = () => {
         </div>
 
         <div style={sectionPanel}>
-          <SectionTitle icon={<HistoryOutlined style={{ fontSize: 13 }} />} color="#7C3AED" title="Settings History" subtitle="All configured versions, newest first" />
+          <SectionTitle icon={<HistoryOutlined style={{ fontSize: 13 }} />} color="var(--purple)" title="Settings History" subtitle="All configured versions, newest first" />
           <Table
             size="small"
             rowKey="_id"

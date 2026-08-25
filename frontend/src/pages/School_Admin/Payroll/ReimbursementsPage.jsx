@@ -32,8 +32,8 @@ const C = {
 
 const TYPE_CFG = {
   travel:   { label: "Travel",   icon: <CarOutlined />,         color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
-  fuel:     { label: "Fuel",     icon: "⛽",                    color: C.orange,  bg: C.orangeLight,    border: "#FED7AA",     emoji: true },
-  internet: { label: "Internet", icon: <WifiOutlined />,        color: C.accent,  bg: C.accentLight,    border: "#99F6E4" },
+  fuel:     { label: "Fuel",     icon: "⛽",                    color: C.orange,  bg: C.orangeLight,    border: "rgba(var(--orange-rgb), 0.3)",     emoji: true },
+  internet: { label: "Internet", icon: <WifiOutlined />,        color: C.accent,  bg: C.accentLight,    border: "rgba(var(--accent-rgb), 0.3)" },
   medical:  { label: "Medical",  icon: <MedicineBoxOutlined />, color: "var(--danger-hover)", bg: "var(--danger-light)", border: "var(--danger-light)" },
   food:     { label: "Food",     icon: <CoffeeOutlined />,      color: C.warning, bg: C.warningLight,   border: "var(--warning-light)" },
   other:    { label: "Other",    icon: <RupeeIcon />,           color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)" },
@@ -41,9 +41,9 @@ const TYPE_CFG = {
 
 const STATUS_CFG = {
   pending_manager:  { label: "Pending Manager",  color: C.warning, bg: C.warningLight,   border: "var(--warning-light)" },
-  pending_finance:  { label: "Pending Finance",  color: C.orange,  bg: C.orangeLight,    border: "#FED7AA" },
+  pending_finance:  { label: "Pending Finance",  color: C.orange,  bg: C.orangeLight,    border: "rgba(var(--orange-rgb), 0.3)" },
   approved:         { label: "Approved",         color: "var(--success-hover)", bg: C.successLight,   border: "var(--success-light)" },
-  rejected:         { label: "Rejected",         color: "#991B1B", bg: C.dangerLight,    border: "var(--danger-light)" },
+  rejected:         { label: "Rejected",         color: "var(--danger-hover)", bg: C.dangerLight,    border: "var(--danger-light)" },
   added_to_payroll: { label: "Added to Payroll", color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
 };
 
@@ -302,10 +302,10 @@ const ReimbursementsPage = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <FileTextOutlined />, label: "Total Claims",    value: stats.total,          color: "#2563EB" },
-          { icon: <CarOutlined />,      label: "Pending",         value: stats.pending,        color: "#F59E0B" },
-          { icon: <CheckOutlined />,    label: "Approved",        value: stats.approved,       color: "#22C55E" },
-          { icon: <RupeeIcon />,        label: "Approved Amount", value: fmt(stats.totalAmt),  color: "#14B8A6", small: true },
+          { icon: <FileTextOutlined />, label: "Total Claims",    value: stats.total,          color: "var(--primary)" },
+          { icon: <CarOutlined />,      label: "Pending",         value: stats.pending,        color: "var(--warning)" },
+          { icon: <CheckOutlined />,    label: "Approved",        value: stats.approved,       color: "var(--success)" },
+          { icon: <RupeeIcon />,        label: "Approved Amount", value: fmt(stats.totalAmt),  color: "var(--accent)", small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: "var(--surface)", borderRadius: 14,
@@ -332,7 +332,7 @@ const ReimbursementsPage = () => {
           <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Claims</span>
           <span style={{
             fontSize: 12, padding: "2px 9px", borderRadius: 20,
-            background: C.accentLight, color: "#0F766E", border: "1px solid #99F6E4", fontWeight: 600,
+            background: C.accentLight, color: "var(--accent-hover)", border: "1px solid rgba(var(--accent-rgb), 0.3)", fontWeight: 600,
           }}>
             {reimbursements.length}
           </span>

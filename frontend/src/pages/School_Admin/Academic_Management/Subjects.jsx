@@ -14,6 +14,7 @@ import {
 } from "@ant-design/icons";
 import { getAllSubjects, createSubject, updateSubject, deleteSubject } from "../../../features/subjectSlice.js";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
+import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 
@@ -22,21 +23,8 @@ const C = {
   success: "var(--success)", successBg: "rgba(var(--success-rgb), 0.08)",
   warning: "var(--warning)",
   danger:  "var(--danger)",  dangerBg: "rgba(var(--danger-rgb), 0.08)",
-  // --cyan-rgb has no token in index.css; decimal rgba keeps the exact hue for alpha tints
-  info:    "var(--cyan)",    infoBg: "rgba(6, 182, 212, 0.08)",
+  info:    "var(--cyan)",    infoBg: "rgba(var(--cyan-rgb), 0.08)",
 };
-
-/* ─── Pastel palette — one per subject card ──────────────────── */
-const PASTEL = [
-  { accent: "#7c3aed", light: "#ede9fe" },
-  { accent: "#0369a1", light: "#e0f2fe" },
-  { accent: "#047857", light: "#d1fae5" },
-  { accent: "#b45309", light: "#fef3c7" },
-  { accent: "#be123c", light: "#ffe4e6" },
-  { accent: "#0e7490", light: "#cffafe" },
-  { accent: "#7e22ce", light: "#f3e8ff" },
-  { accent: "#be185d", light: "#fce7f3" },
-];
 
 /* ─── helpers ────────────────────────────────────────────────── */
 const toDisplay = (v, fallback = "—") => {
@@ -81,7 +69,8 @@ const StatRow = ({ total, active, inactive, global: glob }) => (
 
 /* ─── Subject card ───────────────────────────────────────────── */
 const SubjectCard = ({ item, index, onEdit, onDelete }) => {
-  const p    = PASTEL[index % PASTEL.length];
+  const accent = CATEGORICAL_COLORS[index % CATEGORICAL_COLORS.length];
+  const light  = `color-mix(in srgb, ${accent} 15%, transparent)`;
   const name = toDisplay(item?.name, "Unnamed");
   const canManage = !item?.isGlobal;
 
@@ -91,21 +80,21 @@ const SubjectCard = ({ item, index, onEdit, onDelete }) => {
       borderRadius: 12, overflow: "hidden", boxShadow: "var(--shadow-soft)",
     }}>
       {/* Pastel top strip */}
-      <div style={{ height: 4, background: p.accent, opacity: 0.7 }} />
+      <div style={{ height: 4, background: accent, opacity: 0.7 }} />
 
       {/* Card header */}
       <div style={{
         padding: "12px 14px",
         borderBottom: "1px solid var(--border)",
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: p.light + "55",
+        background: `color-mix(in srgb, ${accent} 5%, transparent)`,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-            background: p.light, border: `1.5px solid ${p.accent}30`,
+            background: light, border: `1.5px solid color-mix(in srgb, ${accent} 19%, transparent)`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 11, fontWeight: 700, color: p.accent,
+            fontSize: 11, fontWeight: 700, color: accent,
           }}>
             {name.charAt(0).toUpperCase()}
           </div>
@@ -147,8 +136,8 @@ const SubjectCard = ({ item, index, onEdit, onDelete }) => {
           {item?.category && (
             <span style={{
               fontSize: 11, padding: "2px 8px", borderRadius: 6,
-              background: `${p.accent}12`, color: p.accent,
-              border: `1px solid ${p.accent}25`,
+              background: `color-mix(in srgb, ${accent} 7%, transparent)`, color: accent,
+              border: `1px solid color-mix(in srgb, ${accent} 15%, transparent)`,
             }}>
               {toDisplay(item.category)}
             </span>
@@ -167,7 +156,7 @@ const SubjectCard = ({ item, index, onEdit, onDelete }) => {
         {/* Marks + Scope row */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
           <Text style={{ fontSize: 11.5, color: "var(--text-muted)" }}>
-            <BookOutlined style={{ marginRight: 4, color: p.accent }} />
+            <BookOutlined style={{ marginRight: 4, color: accent }} />
             Pass{" "}
             <strong style={{ color: "var(--text)" }}>{toDisplay(item?.passMarks, "0")}</strong>
             {" / Max "}
@@ -177,9 +166,9 @@ const SubjectCard = ({ item, index, onEdit, onDelete }) => {
           <span style={{
             fontSize: 11, padding: "2px 8px", borderRadius: 99,
             display: "inline-flex", alignItems: "center", gap: 4,
-            background: item?.isGlobal ? "rgba(6, 182, 212, 0.1)" : "rgba(var(--purple-rgb), 0.08)",
+            background: item?.isGlobal ? "rgba(var(--cyan-rgb), 0.1)" : "rgba(var(--purple-rgb), 0.08)",
             color: item?.isGlobal ? C.info : C.primary,
-            border: `1px solid ${item?.isGlobal ? "rgba(6, 182, 212, 0.2)" : "rgba(var(--purple-rgb), 0.2)"}`,
+            border: `1px solid ${item?.isGlobal ? "rgba(var(--cyan-rgb), 0.2)" : "rgba(var(--purple-rgb), 0.2)"}`,
           }}>
             {item?.isGlobal
               ? <><GlobalOutlined style={{ fontSize: 10 }} /> Global</>

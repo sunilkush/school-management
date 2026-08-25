@@ -36,7 +36,7 @@ const StatusBadge = ({ active }) => (
     padding: "3px 11px", borderRadius: 20, fontSize: 12, fontWeight: 700,
     background: active ? C.successLight : "var(--surface-soft)",
     color: active ? "var(--success-hover)" : C.textSub,
-    border: `1px solid ${active ? "#86EFAC" : C.border}`,
+    border: `1px solid ${active ? "rgba(var(--success-rgb), 0.4)" : C.border}`,
   }}>
     <span style={{
       width: 6, height: 6, borderRadius: "50%",
@@ -175,7 +175,7 @@ const Assignments = () => {
         <span style={{
           padding: "3px 10px", borderRadius: 20,
           background: C.purpleLight, color: C.purple,
-          border: "1px solid #DDD6FE",
+          border: "1px solid rgba(var(--purple-rgb), 0.3)",
           fontSize: 12, fontWeight: 700,
         }}>
           {r.className} {r.sectionName}
@@ -191,8 +191,8 @@ const Assignments = () => {
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           padding: "3px 11px", borderRadius: 20,
-          background: C.accentLight, color: "#0F766E",
-          border: "1px solid #99F6E4",
+          background: C.accentLight, color: "var(--accent-hover)",
+          border: "1px solid rgba(var(--accent-rgb), 0.3)",
           fontSize: 12, fontWeight: 700,
         }}>
           <NodeIndexOutlined style={{ fontSize: 10 }} />

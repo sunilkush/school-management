@@ -16,11 +16,11 @@ const renderDiff = (oldData = {}, newData = {}) => {
     if (JSON.stringify(o) === JSON.stringify(n)) return null;
     return (
       <div key={k} style={{ marginBottom: 6 }}>
-        <div style={{ fontSize: 13, color: "#333", fontWeight: 600 }}>{k}</div>
+        <div style={{ fontSize: 13, color: "var(--text)", fontWeight: 600 }}>{k}</div>
         <div style={{ fontSize: 12 }}>
-          <span style={{ color: "#999" }}>Old: </span>
+          <span style={{ color: "var(--text-muted)" }}>Old: </span>
           <span style={{ textDecoration: "line-through", marginRight: 12 }}>{typeof o === "object" ? JSON.stringify(o) : String(o)}</span>
-          <span style={{ color: "#1890ff" }}>New: </span>
+          <span style={{ color: "var(--primary)" }}>New: </span>
           <span>{typeof n === "object" ? JSON.stringify(n) : String(n)}</span>
         </div>
       </div>
@@ -53,7 +53,7 @@ const PlanLogs = ({ planId }) => {
 
       <Card>
         {(!planLogs || planLogs.length === 0) ? (
-          <div style={{ textAlign: "center", padding: 40, color: "#888" }}>
+          <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
             No update logs found for this plan.
           </div>
         ) : (
@@ -66,7 +66,7 @@ const PlanLogs = ({ planId }) => {
                     <div style={{ fontWeight: 700 }}>
                       {log.updatedBy?.name ?? log.updatedBy?.email ?? "Unknown"}
                     </div>
-                    <div style={{ fontSize: 12, color: "#666" }}>
+                    <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
                       {dayjs(log.createdAt).format("DD MMM YYYY, HH:mm")}
                     </div>
                   </div>

@@ -6,7 +6,7 @@ import { Plus, X } from "lucide-react";
  * Floating Action Button
  * Usage:
  *   <FAB onClick={openCreateModal} />
- *   <FAB icon={<PlusOutlined />} label="New Student" onClick={...} color="#2563EB" />
+ *   <FAB icon={<PlusOutlined />} label="New Student" onClick={...} color="var(--primary)" />
  *
  * For multi-action FAB, pass `actions` array:
  *   <FAB actions={[
@@ -18,7 +18,7 @@ const FAB = ({
   onClick,
   icon,
   label = "Create",
-  color = "#2563EB",
+  color = "var(--primary)",
   actions,
   bottom = 76,   /* above bottom nav on mobile */
   right  = 20,
@@ -45,7 +45,7 @@ const FAB = ({
     alignItems:   "center",
     justifyContent: "center",
     cursor:       "pointer",
-    boxShadow:    `0 4px 16px ${bg}55, 0 2px 6px rgba(0,0,0,0.18)`,
+    boxShadow:    `0 4px 16px color-mix(in srgb, ${bg} 33%, transparent), 0 2px 6px rgba(0,0,0,0.18)`,
     color:        "#fff",
     transition:   "transform 0.18s ease, box-shadow 0.18s ease",
     flexShrink:   0,

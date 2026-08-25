@@ -54,10 +54,10 @@ const { Text } = Typography;
 
 // ─── Plan tier accent colors (by index) ───────────────────────
 const TIER_COLORS = [
-  { color: "#2563EB", bg: "rgba(37,99,235,0.08)" },
-  { color: "#14B8A6", bg: "rgba(20,184,166,0.08)" },
-  { color: "#F59E0B", bg: "rgba(245,158,11,0.08)" },
-  { color: "#8B5CF6", bg: "rgba(139,92,246,0.08)" },
+  { color: "var(--primary)", bg: "rgba(var(--primary-rgb), 0.08)" },
+  { color: "var(--accent)", bg: "rgba(var(--accent-rgb), 0.08)" },
+  { color: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.08)" },
+  { color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.08)" },
 ];
 
 const LIMIT_META = [
@@ -112,7 +112,7 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
       }}
     >
       {/* ── TOP ACCENT BAR ── */}
-      <div style={{ height: 4, background: `linear-gradient(90deg, ${tier.color}, ${tier.color}88)` }} />
+      <div style={{ height: 4, background: `linear-gradient(90deg, ${tier.color}, color-mix(in srgb, ${tier.color} 53%, transparent))` }} />
 
       <div style={{ padding: "18px 20px 0", flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Header row */}
@@ -351,9 +351,9 @@ const SubscriptionPlans = () => {
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
         {[
-          { label: "Total Plans", value: plans?.length ?? 0, color: "#2563EB", icon: <AppstoreOutlined /> },
-          { label: "Avg. Price", value: plans?.length ? `₹${Math.round(plans.reduce((s, p) => s + (p.price || 0), 0) / plans.length)}` : "—", color: "#F59E0B", icon: <CrownOutlined /> },
-          { label: "Avg. Duration", value: plans?.length ? `${Math.round(plans.reduce((s, p) => s + (p.durationInDays || 0), 0) / plans.length)}d` : "—", color: "#14B8A6", icon: <ClockCircleOutlined /> },
+          { label: "Total Plans", value: plans?.length ?? 0, color: "var(--primary)", icon: <AppstoreOutlined /> },
+          { label: "Avg. Price", value: plans?.length ? `₹${Math.round(plans.reduce((s, p) => s + (p.price || 0), 0) / plans.length)}` : "—", color: "var(--warning)", icon: <CrownOutlined /> },
+          { label: "Avg. Duration", value: plans?.length ? `${Math.round(plans.reduce((s, p) => s + (p.durationInDays || 0), 0) / plans.length)}d` : "—", color: "var(--accent)", icon: <ClockCircleOutlined /> },
         ].map((stat) => (
           <div key={stat.label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, marginBottom: 0 }}>
             <div style={iconWell(stat.color, 38)}>{stat.icon}</div>

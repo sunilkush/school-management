@@ -88,7 +88,7 @@ const EmployeeSalaries = () => {
           <div style={{
             marginBottom: 16,
             background: cycle.status === "paid" ? "var(--success-light)" : "var(--primary-light)",
-            border: `1px solid ${cycle.status === "paid" ? "var(--success-light)" : "#93C5FD"}`,
+            border: `1px solid ${cycle.status === "paid" ? "var(--success-light)" : "var(--primary-light)"}`,
             borderRadius: 12,
             padding: "14px 20px",
             display: "flex",
@@ -125,7 +125,7 @@ const EmployeeSalaries = () => {
           <div style={{
             marginBottom: 16,
             background: "var(--surface, #fff)",
-            border: "1px dashed #d1d5db",
+            border: "1px dashed var(--border)",
             borderRadius: 12,
             padding: "32px 24px",
             textAlign: "center",

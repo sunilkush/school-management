@@ -5,16 +5,21 @@ import { User } from "../models/user.model.js";
 // Create a new activity log
 export const createActivityLog = async (req, res) => {
   try {
-    const { user, action, description, role, school, ipAddress, userAgent, meta } = req.body;
+    const { action, description, meta } = req.body;
 
+    // user/role/school/ipAddress/userAgent must come from the authenticated request, never the
+    // body — any signed-in user (Student, Parent, ...) could otherwise forge a log entry
+    // attributed to an arbitrary other user, role, or school, and Super Admin/School
+    // Admin/IT Support/Principal read this collection back as a trusted audit trail
+    // (getActivityLogs below). Mirrors how autoAudit.middleware.js derives the same fields.
     const log = new ActivityLog({
-      user,
+      user: req.user._id,
       action,
       description,
-      role,
-      school,
-      ipAddress,
-      userAgent,
+      role: req.user.roleId?._id || req.user.roleId,
+      school: req.user.schoolId?._id || req.user.schoolId || null,
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"] || "",
       meta,
     });
 

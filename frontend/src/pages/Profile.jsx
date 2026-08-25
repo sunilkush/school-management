@@ -225,7 +225,7 @@ const Profile = () => {
               }
               {uploadingPhoto
                 ? <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }}><Spin size="small" /></div>
-                : <div style={{ position: "absolute", bottom: 0, right: 0, width: 20, height: 20, borderRadius: "50%", background: "var(--primary,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white", boxShadow: "0 2px 6px rgba(0,0,0,.25)" }}>
+                : <div style={{ position: "absolute", bottom: 0, right: 0, width: 20, height: 20, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white", boxShadow: "0 2px 6px rgba(0,0,0,.25)" }}>
                     <Camera style={{ width: 10, height: 10, color: "#fff" }} />
                   </div>
               }
@@ -235,7 +235,7 @@ const Profile = () => {
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
                 {isEmployee && user?.designation?.title ? `${user.designation.title} · ` : ""}{profileForm.email || "No email"}
               </div>
-              <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "rgba(220,252,231,.2)", color: "#22C55E", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
+              <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "var(--success-light)", color: "var(--success)", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
                 {isStudent ? "Active Student" : (user?.isActive ? "Active" : "Inactive")}
               </span>
             </div>
@@ -268,7 +268,7 @@ const Profile = () => {
             <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
               {isStudent ? "Student Profile" : isEmployee ? "Employee Profile" : "My Profile"}
             </div>
-            <button type="submit" disabled={saving} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "var(--primary,#7c3aed)", color: "#fff", border: "none", cursor: saving ? "not-allowed" : "pointer", fontSize: 13, opacity: saving ? 0.6 : 1 }}>
+            <button type="submit" disabled={saving} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "var(--primary)", color: "#fff", border: "none", cursor: saving ? "not-allowed" : "pointer", fontSize: 13, opacity: saving ? 0.6 : 1 }}>
               {saving ? <Loader2 style={{ width: 14, height: 14 }} /> : <Save style={{ width: 14, height: 14 }} />}
               {saving ? "Saving…" : "Save Changes"}
             </button>
@@ -327,7 +327,7 @@ const Profile = () => {
             </Section>
           )}
 
-          {saveMsg.text && <p style={{ fontSize: 13, color: saveMsg.error ? "#EF4444" : "#22C55E", margin: "8px 0 0" }}>{saveMsg.text}</p>}
+          {saveMsg.text && <p style={{ fontSize: 13, color: saveMsg.error ? "var(--danger)" : "var(--success)", margin: "8px 0 0" }}>{saveMsg.text}</p>}
         </div>
 
         {/* Sidebar */}
@@ -354,7 +354,7 @@ const Profile = () => {
                       Joined: {new Date(user.joiningDate).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" })}
                     </div>
                   )}
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, background: "rgba(220,252,231,.4)", color: "#15803D", padding: "3px 10px", borderRadius: 99, fontWeight: 600, width: "fit-content", marginTop: 4 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, background: "var(--success-light)", color: "var(--success-hover)", padding: "3px 10px", borderRadius: 99, fontWeight: 600, width: "fit-content", marginTop: 4 }}>
                     <CheckCircle style={{ width: 11, height: 11 }} /> {user?.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
@@ -396,8 +396,8 @@ const Profile = () => {
               <PwdField label="Confirm Password" value={pwdForm.confirm} onChange={(v) => setPwdForm((p) => ({ ...p, confirm: v }))} placeholder="Repeat new password" />
             </div>
           </Section>
-          {pwdMsg.text && <p style={{ fontSize: 13, color: pwdMsg.error ? "#EF4444" : "#22C55E", margin: "8px 0 0" }}>{pwdMsg.text}</p>}
-          <button type="submit" disabled={pwdLoading} style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 16, padding: "8px 16px", borderRadius: 8, background: "var(--primary,#7c3aed)", color: "#fff", border: "none", cursor: pwdLoading ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 600, opacity: pwdLoading ? 0.6 : 1 }}>
+          {pwdMsg.text && <p style={{ fontSize: 13, color: pwdMsg.error ? "var(--danger)" : "var(--success)", margin: "8px 0 0" }}>{pwdMsg.text}</p>}
+          <button type="submit" disabled={pwdLoading} style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 16, padding: "8px 16px", borderRadius: 8, background: "var(--primary)", color: "#fff", border: "none", cursor: pwdLoading ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 600, opacity: pwdLoading ? 0.6 : 1 }}>
             {pwdLoading ? <Loader2 style={{ width: 14, height: 14 }} /> : <Lock style={{ width: 14, height: 14 }} />}
             {pwdLoading ? "Updating…" : "Update Password"}
           </button>
@@ -408,7 +408,7 @@ const Profile = () => {
           <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
             {["At least 8 characters", "Mix uppercase & lowercase", "Include numbers & symbols", "Avoid your name or email"].map((tip) => (
               <li key={tip} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--text-muted)" }}>
-                <CheckCircle style={{ width: 13, height: 13, color: "#10B981", flexShrink: 0 }} />{tip}
+                <CheckCircle style={{ width: 13, height: 13, color: "var(--success)", flexShrink: 0 }} />{tip}
               </li>
             ))}
           </ul>

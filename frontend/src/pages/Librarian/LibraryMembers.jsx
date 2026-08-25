@@ -338,7 +338,7 @@ const LibraryMembers = () => {
                 { label: "Pending Fine",     value: `₹${historyMember.pendingFine}` },
               ].map(({ label, value }) => (
                 <Col xs={12} sm={6} key={label}>
-                  <div style={{ textAlign: "center", padding: "10px 8px", background: "var(--bg-secondary, #F8FAFC)", borderRadius: 8 }}>
+                  <div style={{ textAlign: "center", padding: "10px 8px", background: "var(--background)", borderRadius: 8 }}>
                     <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
                     <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
                   </div>

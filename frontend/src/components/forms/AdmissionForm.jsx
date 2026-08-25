@@ -56,10 +56,10 @@ const CredentialBlock = ({ label, creds }) => {
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
         {label}
       </div>
-      <div style={{ fontSize: 13, color: "#374151", marginBottom: 2 }}>
+      <div style={{ fontSize: 13, color: "var(--text)", marginBottom: 2 }}>
         Login ID: <span style={{ fontWeight: 600 }}>{creds.loginId || "—"}</span>
       </div>
-      <div style={{ fontSize: 13, color: "#374151" }}>
+      <div style={{ fontSize: 13, color: "var(--text)" }}>
         Password: <span style={{ fontWeight: 600 }}>{creds.password || "Already exists (unchanged)"}</span>
       </div>
     </div>
@@ -86,7 +86,7 @@ const InfoHint = ({ children }) => (
     borderRadius: 10, marginTop: 12,
   }}>
     <InfoCircleOutlined style={{ color: "var(--purple)", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
-    <span style={{ fontSize: 13, color: "#5b21b6", lineHeight: 1.55 }}>{children}</span>
+    <span style={{ fontSize: 13, color: "var(--purple-hover)", lineHeight: 1.55 }}>{children}</span>
   </div>
 );
 
@@ -276,7 +276,7 @@ const AdmissionForm = ({ onClose }) => {
         .adm-form .ant-form-item-label > label {
           font-size: 12px !important;
           font-weight: 600 !important;
-          color: var(--text-secondary, #4b5563) !important;
+          color: var(--text-secondary) !important;
           height: auto !important;
         }
         .adm-form .ant-input,
@@ -286,7 +286,7 @@ const AdmissionForm = ({ onClose }) => {
           border-radius: 8px !important;
           border: 1.5px solid var(--border) !important;
           font-size: 13px !important;
-          background: #fff !important;
+          background: var(--surface) !important;
           color: var(--text) !important;
           transition: border-color 0.18s, box-shadow 0.18s !important;
           height: 38px !important;
@@ -300,7 +300,7 @@ const AdmissionForm = ({ onClose }) => {
         .adm-form .ant-input:hover,
         .adm-form .ant-input-number:hover,
         .adm-form .ant-picker:hover {
-          border-color: #a78bfa !important;
+          border-color: var(--purple) !important;
         }
         .adm-form textarea.ant-input {
           height: auto !important;
@@ -311,13 +311,13 @@ const AdmissionForm = ({ onClose }) => {
           border-radius: 8px !important;
           border: 1.5px solid var(--border) !important;
           font-size: 13px !important;
-          background: #fff !important;
+          background: var(--surface) !important;
           color: var(--text) !important;
           height: 38px !important;
           align-items: center !important;
         }
         .adm-form .ant-select:hover .ant-select-selector {
-          border-color: #a78bfa !important;
+          border-color: var(--purple) !important;
         }
         .adm-form .ant-select-focused .ant-select-selector {
           border-color: var(--purple) !important;
@@ -333,13 +333,13 @@ const AdmissionForm = ({ onClose }) => {
           background: rgba(var(--purple-rgb), 0.08) !important;
           color: var(--purple) !important;
           font-weight: 700 !important;
-          border-color: #ddd6fe !important;
+          border-color: rgba(var(--purple-rgb), 0.3) !important;
           cursor: default !important;
         }
         .adm-form .roll-preview-assigned .ant-input[disabled] {
           background: var(--success-light) !important;
           color: var(--success-hover) !important;
-          border-color: #86efac !important;
+          border-color: rgba(var(--success-rgb), 0.3) !important;
           font-size: 15px !important;
         }
         .adm-form .roll-preview-placeholder .ant-input[disabled] {
@@ -401,7 +401,7 @@ const AdmissionForm = ({ onClose }) => {
         }
         .adm-tab.done .step-lbl { color: var(--success-hover); }
         .adm-tab.idle .step-num {
-          background: #f3f4f6;
+          background: var(--surface-soft);
           color: var(--text-muted);
           border: 1.5px solid var(--border);
         }
@@ -438,7 +438,7 @@ const AdmissionForm = ({ onClose }) => {
 
       {/* ── Gradient Header ── */}
       <div style={{
-        background: "linear-gradient(135deg, var(--purple) 0%, #4f46e5 100%)",
+        background: "linear-gradient(135deg, var(--purple) 0%, var(--purple-hover) 100%)",
         padding: "20px 28px 18px",
         position: "relative",
         overflow: "hidden",
@@ -488,8 +488,8 @@ const AdmissionForm = ({ onClose }) => {
         display: "flex",
         alignItems: "center",
         padding: "0 8px",
-        borderBottom: "1px solid #f3f4f6",
-        background: "#fafafa",
+        borderBottom: "1px solid var(--border-muted)",
+        background: "var(--surface-soft)",
       }}>
         {TABS.map((tab, i) => (
           <React.Fragment key={tab.key}>
@@ -775,7 +775,7 @@ const AdmissionForm = ({ onClose }) => {
                         beforeUpload={(file) => handleDocumentFileSelect(row.uid, file)}
                       >
                         {name ? (
-                          <span style={{ fontSize: 12, color: "#374151" }}>
+                          <span style={{ fontSize: 12, color: "var(--text)" }}>
                             {name}{" "}
                             <span style={{ color: "var(--text-muted)" }}>({(row.size / 1024).toFixed(1)} KB)</span>{" "}
                             <span style={{ color: "var(--purple)", cursor: "pointer", fontWeight: 600 }}>Change</span>
@@ -822,8 +822,8 @@ const AdmissionForm = ({ onClose }) => {
         justifyContent: "space-between",
         alignItems: "center",
         padding: "16px 28px 20px",
-        borderTop: "1px solid #f3f4f6",
-        background: "#fafafa",
+        borderTop: "1px solid var(--border-muted)",
+        background: "var(--surface-soft)",
       }}>
         {/* Back button */}
         <button
@@ -834,7 +834,7 @@ const AdmissionForm = ({ onClose }) => {
             display: "inline-flex", alignItems: "center", gap: 6,
             padding: "0 20px", height: 38, borderRadius: 8,
             border: "1.5px solid var(--border)",
-            background: "#fff", color: "#374151",
+            background: "var(--surface)", color: "var(--text)",
             fontSize: 13, fontWeight: 600, cursor: currentIndex === 0 ? "not-allowed" : "pointer",
             opacity: currentIndex === 0 ? 0.4 : 1,
           }}
@@ -868,7 +868,7 @@ const AdmissionForm = ({ onClose }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "0 22px", height: 38, borderRadius: 8,
-              background: "linear-gradient(135deg, var(--purple) 0%, #4f46e5 100%)",
+              background: "linear-gradient(135deg, var(--purple) 0%, var(--purple-hover) 100%)",
               color: "#fff", border: "none",
               fontSize: 13, fontWeight: 600, cursor: "pointer",
               boxShadow: "0 4px 12px rgba(124,58,237,0.3)",
@@ -884,7 +884,7 @@ const AdmissionForm = ({ onClose }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 7,
               padding: "0 28px", height: 38, borderRadius: 8,
-              background: submitting ? "var(--success-light)" : "linear-gradient(135deg, var(--success) 0%, #0d9488 100%)",
+              background: submitting ? "var(--success-light)" : "linear-gradient(135deg, var(--success) 0%, var(--accent-hover) 100%)",
               color: "#fff", border: "none",
               fontSize: 13, fontWeight: 600,
               cursor: submitting ? "not-allowed" : "pointer",

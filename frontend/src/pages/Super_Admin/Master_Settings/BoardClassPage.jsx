@@ -203,12 +203,12 @@ export default function BoardClassPage() {
           </div>
           <StopOutlined style={{ fontSize: 26, color: "var(--danger)", opacity: 0.4 }} />
         </div>
-        <div style={statCard({ color: "#0984e3" })}>
+        <div style={statCard({ color: "var(--info)" })}>
           <div>
-            <div style={statLabel("#0984e3")}>Boards Linked</div>
-            <div style={statValue("#0984e3")}>{boardCount}</div>
+            <div style={statLabel("var(--info)")}>Boards Linked</div>
+            <div style={statValue("var(--info)")}>{boardCount}</div>
           </div>
-          <ApartmentOutlined style={{ fontSize: 26, color: "#0984e3", opacity: 0.4 }} />
+          <ApartmentOutlined style={{ fontSize: 26, color: "var(--info)", opacity: 0.4 }} />
         </div>
       </div>
 

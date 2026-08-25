@@ -17,31 +17,31 @@ const FORM_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
   .reg-form .ant-form-item-label > label {
-    font-size: 11px !important; font-weight: 700 !important; color: #999 !important;
+    font-size: 11px !important; font-weight: 700 !important; color: var(--text-muted) !important;
     text-transform: uppercase !important; letter-spacing: 0.07em !important; height: auto !important;
   }
   .reg-form .ant-input, .reg-form .ant-input-affix-wrapper,
   .reg-form .ant-input-number, .reg-form .ant-picker {
-    border-radius: 10px !important; border: 1.5px solid #e8e4ff !important;
+    border-radius: 10px !important; border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important;
     font-size: 12px !important; height: 30px !important;
-    background: #fdfcff !important; color: #1a1a2e !important; width: 100% !important;
+    background: var(--surface-soft) !important; color: var(--text) !important; width: 100% !important;
   }
   .reg-form .ant-input-affix-wrapper { padding: 0 12px !important; }
   .reg-form .ant-input-affix-wrapper input { height: 30px !important; background: transparent !important; }
   .reg-form .ant-input:focus, .reg-form .ant-input-affix-wrapper-focused,
   .reg-form .ant-input-number-focused, .reg-form .ant-picker-focused {
-    border-color: #7c6ff7 !important; box-shadow: 0 0 0 3px rgba(124,111,247,0.1) !important;
+    border-color: var(--purple) !important; box-shadow: 0 0 0 3px rgba(var(--purple-rgb), 0.1) !important;
   }
   .reg-form .ant-select .ant-select-selector {
-    border-radius: 10px !important; border: 1.5px solid #e8e4ff !important;
-    height: 30px !important; background: #fdfcff !important;
+    border-radius: 10px !important; border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important;
+    height: 30px !important; background: var(--surface-soft) !important;
     align-items: center !important; font-size: 12px !important;
   }
   .reg-form .ant-select-focused .ant-select-selector {
-    border-color: #7c6ff7 !important; box-shadow: 0 0 0 3px rgba(124,111,247,0.1) !important;
+    border-color: var(--purple) !important; box-shadow: 0 0 0 3px rgba(var(--purple-rgb), 0.1) !important;
   }
   .reg-form .ant-checkbox-checked .ant-checkbox-inner {
-    background: #7c6ff7 !important; border-color: #7c6ff7 !important;
+    background: var(--purple) !important; border-color: var(--purple) !important;
   }
   .reg-form .ant-form-item-explain-error { font-size: 11px !important; margin-top: 3px !important; }
   .reg-form .ant-form-item { margin-bottom: 14px !important; }
@@ -51,8 +51,8 @@ const FORM_CSS = `
     padding: 10px 14px; border-radius: 10px; margin-bottom: 16px;
     display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;
   }
-  .reg-alert.success { background: #f0fdf8; color: #1d9e75; border: 1px solid #bbf7d0; }
-  .reg-alert.error   { background: var(--danger-light); color: var(--danger-hover); border: 1px solid #fecaca; }
+  .reg-alert.success { background: var(--success-light); color: var(--success-hover); border: 1px solid rgba(var(--success-rgb), 0.3); }
+  .reg-alert.error   { background: var(--danger-light); color: var(--danger-hover); border: 1px solid rgba(var(--danger-rgb), 0.3); }
 
   .reg-btn {
     height: 30px; border-radius: 10px; font-size: 12px; font-weight: 600;
@@ -60,22 +60,22 @@ const FORM_CSS = `
     display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .reg-btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, #5a50c9 100%);
-    color: #fff; box-shadow: 0 4px 14px rgba(124,111,247,0.35); padding: 0 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--purple-hover) 100%);
+    color: #fff; box-shadow: 0 4px 14px rgba(var(--purple-rgb),0.35); padding: 0 20px;
   }
   .reg-btn-primary:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(124,111,247,0.45); transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(var(--purple-rgb),0.45); transform: translateY(-1px);
   }
   .reg-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-  .reg-btn-ghost { background: transparent; color: #7c6ff7; border: 1.5px solid #e8e4ff !important; padding: 0 16px; }
-  .reg-btn-ghost:hover { border-color: #7c6ff7 !important; }
+  .reg-btn-ghost { background: transparent; color: var(--purple); border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important; padding: 0 16px; }
+  .reg-btn-ghost:hover { border-color: var(--purple) !important; }
 
   .upload-zone {
     display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-    border: 1.5px dashed #ddd8ff; border-radius: 10px; background: #faf9ff;
+    border: 1.5px dashed rgba(var(--purple-rgb), 0.25); border-radius: 10px; background: var(--surface-soft);
     cursor: pointer; transition: border-color 0.2s, background 0.2s;
   }
-  .upload-zone:hover { border-color: #7c6ff7; background: #f3f0ff; }
+  .upload-zone:hover { border-color: var(--purple); background: rgba(var(--purple-rgb), 0.12); }
 
   .step-status-row {
     display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
@@ -84,7 +84,7 @@ const FORM_CSS = `
     display: flex; align-items: center; gap: 10px; padding: 8px 12px;
     border-radius: 10px; font-size: 12px; font-weight: 500;
   }
-  .step-status-item.done    { background: #f0fdf8; color: #1d9e75; }
+  .step-status-item.done    { background: var(--success-light); color: var(--success-hover); }
   .step-status-item.loading { background: rgba(var(--purple-rgb), 0.08); color: var(--purple); }
   .step-status-item.error   { background: var(--danger-light); color: var(--danger-hover); }
   .step-status-item.idle    { background: var(--background); color: var(--text-muted); }
@@ -399,7 +399,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           >
             <Upload beforeUpload={handleAvatarUpload} maxCount={1} showUploadList={false}>
               <div className="upload-zone">
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f0eeff", color: "#7c6ff7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(var(--purple-rgb), 0.12)", color: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Camera size={18} />
                 </div>
                 <div>
@@ -410,10 +410,10 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
             </Upload>
           </Form.Item>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 10, background: "#faf9ff", border: "1.5px solid #ede9fe", borderRadius: 10, marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 10, background: "var(--surface-soft)", border: "1.5px solid rgba(var(--purple-rgb), 0.25)", borderRadius: 10, marginBottom: 20 }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e" }}>Activate Account</div>
-              <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>User can log in immediately after registration</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Activate Account</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>User can log in immediately after registration</div>
             </div>
             <Form.Item name="isActive" valuePropName="checked" noStyle>
               <Checkbox />
@@ -431,7 +431,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
         <div style={{ display: currentStep === 1 ? "block" : "none" }}>
 
           {/* Section label */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#7c6ff7", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12, paddingBottom: 6, borderBottom: "1.5px solid #ede9fe" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12, paddingBottom: 6, borderBottom: "1.5px solid rgba(var(--purple-rgb), 0.25)" }}>
             Employee Profile
           </div>
 
@@ -473,7 +473,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           </div>
 
           {/* Payroll section */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#7c6ff7", textTransform: "uppercase", letterSpacing: "0.07em", margin: "8px 0 12px", paddingBottom: 6, borderBottom: "1.5px solid #ede9fe" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", margin: "8px 0 12px", paddingBottom: 6, borderBottom: "1.5px solid rgba(var(--purple-rgb), 0.25)" }}>
             Payroll Setup
           </div>
 

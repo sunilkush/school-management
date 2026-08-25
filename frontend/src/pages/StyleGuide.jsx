@@ -22,6 +22,7 @@ import {
   TrendingUp, Award, CheckCircle, XCircle, Clock, AlertTriangle,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import { CATEGORICAL_COLORS } from "../utils/colorPalette";
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -34,7 +35,7 @@ const Section = ({ id, title, children }) => (
     }}>
       <div style={{
         width: 4, height: 32, borderRadius: 2,
-        background: "linear-gradient(180deg, #14B8A6, #06b6d4)",
+        background: "linear-gradient(180deg, var(--accent), var(--cyan))",
       }} />
       <Title level={2} style={{ margin: 0, color: "var(--text-primary)", fontWeight: 800 }}>
         {title}
@@ -65,7 +66,7 @@ const Demo = ({ label, children, bg = "var(--surface)", pad = 24 }) => (
 );
 
 /* ─── Color swatch ────────────────────────────────────────────────── */
-const Swatch = ({ name, value, light, textDark = false }) => (
+const Swatch = ({ name, value, light }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
     <div style={{
       height: 64, borderRadius: 10, background: value,
@@ -88,7 +89,7 @@ const TokenRow = ({ name, value, desc }) => (
   }}>
     <code style={{
       flex: "0 0 220px", fontSize: 12, background: "var(--surface-soft)",
-      padding: "2px 8px", borderRadius: 6, color: "#14B8A6",
+      padding: "2px 8px", borderRadius: 6, color: "var(--accent)",
     }}>
       {name}
     </code>
@@ -131,7 +132,6 @@ const ROLE_COLORS = {
 const StyleGuide = () => {
   const { isDark, toggleTheme } = useTheme();
   const [activeSection, setActiveSection] = useState("colors");
-  const [inputVal, setInputVal] = useState("");
 
   const scrollTo = (id) => {
     setActiveSection(id);
@@ -200,7 +200,7 @@ const StyleGuide = () => {
         <div style={{ padding: "0 16px 20px" }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10, marginBottom: 10,
-            background: "linear-gradient(135deg,#14B8A6,#06b6d4)",
+            background: "linear-gradient(135deg,var(--accent),var(--cyan))",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <BookOutlined style={{ color: "#fff", fontSize: 16 }} />
@@ -219,10 +219,10 @@ const StyleGuide = () => {
               style={{
                 display: "block", width: "100%", textAlign: "left",
                 background: activeSection === item.id
-                  ? "rgba(124,58,237,0.08)" : "transparent",
+                  ? "rgba(var(--purple-rgb),0.08)" : "transparent",
                 border: "none", cursor: "pointer",
                 padding: "8px 12px", borderRadius: 8,
-                color: activeSection === item.id ? "#14B8A6" : "var(--text-secondary)",
+                color: activeSection === item.id ? "var(--accent)" : "var(--text-secondary)",
                 fontSize: 13, fontWeight: activeSection === item.id ? 600 : 400,
                 marginBottom: 2, transition: "all 0.15s",
               }}
@@ -415,7 +415,7 @@ const StyleGuide = () => {
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
                     <div style={{
                       width: size, height: size, flexShrink: 0,
-                      background: "linear-gradient(135deg,#14B8A6,#06b6d4)",
+                      background: "linear-gradient(135deg,var(--accent),var(--cyan))",
                       borderRadius: 3,
                     }} />
                     <Text style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "monospace" }}>{label}</Text>
@@ -506,11 +506,11 @@ const StyleGuide = () => {
           <Demo label="Gradient Buttons (custom CSS)">
             <Space wrap size={10}>
               {[
-                { label: "Sign In",     bg: "linear-gradient(135deg,#14B8A6,#6d28d9)", shadow: "rgba(124,58,237,0.4)" },
-                { label: "Confirm",     bg: "linear-gradient(135deg,#22C55E,#22C55E)", shadow: "rgba(16,185,129,0.4)" },
-                { label: "Send",        bg: "linear-gradient(135deg,#06b6d4,#0891b2)", shadow: "rgba(6,182,212,0.4)" },
-                { label: "Warning",     bg: "linear-gradient(135deg,#F59E0B,#F59E0B)", shadow: "rgba(245,158,11,0.4)" },
-                { label: "Delete",      bg: "linear-gradient(135deg,#EF4444,#EF4444)", shadow: "rgba(239,68,68,0.4)" },
+                { label: "Sign In",     bg: "linear-gradient(135deg,var(--accent),var(--purple-hover))", shadow: "rgba(var(--purple-rgb),0.4)" },
+                { label: "Confirm",     bg: "linear-gradient(135deg,var(--success),var(--success))", shadow: "rgba(var(--success-rgb),0.4)" },
+                { label: "Send",        bg: "linear-gradient(135deg,var(--cyan),var(--cyan))", shadow: "rgba(var(--cyan-rgb),0.4)" },
+                { label: "Warning",     bg: "linear-gradient(135deg,var(--warning),var(--warning))", shadow: "rgba(var(--warning-rgb),0.4)" },
+                { label: "Delete",      bg: "linear-gradient(135deg,var(--danger),var(--danger))", shadow: "rgba(var(--danger-rgb),0.4)" },
               ].map(({ label, bg, shadow }) => (
                 <button
                   key={label}
@@ -640,7 +640,7 @@ const StyleGuide = () => {
             <Col xs={24} md={8}>
               <Demo label="Hoverable Card">
                 <Card hoverable cover={
-                  <div style={{ height: 100, background: "linear-gradient(135deg,#14B8A6,#06b6d4)", borderRadius: "14px 14px 0 0" }} />
+                  <div style={{ height: 100, background: "linear-gradient(135deg,var(--accent),var(--cyan))", borderRadius: "14px 14px 0 0" }} />
                 }>
                   <Card.Meta title="Class 10-A" description="42 students enrolled" />
                 </Card>
@@ -654,13 +654,13 @@ const StyleGuide = () => {
                 }}>
                   <div style={{
                     position: "absolute", top: -20, right: -20, width: 80, height: 80,
-                    borderRadius: "50%", background: "#14B8A6", opacity: 0.07,
+                    borderRadius: "50%", background: "var(--accent)", opacity: 0.07,
                   }} />
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <Text style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 500 }}>Total Revenue</Text>
                     <div style={{
-                      width: 36, height: 36, borderRadius: 10, background: "rgba(124,58,237,0.1)",
-                      display: "flex", alignItems: "center", justifyContent: "center", color: "#14B8A6",
+                      width: 36, height: 36, borderRadius: 10, background: "rgba(var(--purple-rgb),0.1)",
+                      display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)",
                     }}>
                       <RupeeIcon />
                     </div>
@@ -677,10 +677,10 @@ const StyleGuide = () => {
           <Demo label="KPI Grid — School Dashboard Pattern">
             <Row gutter={[12, 12]}>
               {[
-                { title: "Total Students", value: "1,284", delta: "+24", icon: <Users size={18} />, color: "#14B8A6" },
-                { title: "Teachers",       value: "86",    delta: "+3",  icon: <Award size={18} />,  color: "#22C55E" },
-                { title: "Fee Collected",  value: "₹42L",  delta: "+8%", icon: <TrendingUp size={18} />, color: "#F59E0B" },
-                { title: "Attendance",     value: "94.2%", delta: "+1.2%", icon: <CheckCircle size={18} />, color: "#06b6d4" },
+                { title: "Total Students", value: "1,284", delta: "+24", icon: <Users size={18} />, color: "var(--accent)" },
+                { title: "Teachers",       value: "86",    delta: "+3",  icon: <Award size={18} />,  color: "var(--success)" },
+                { title: "Fee Collected",  value: "₹42L",  delta: "+8%", icon: <TrendingUp size={18} />, color: "var(--warning)" },
+                { title: "Attendance",     value: "94.2%", delta: "+1.2%", icon: <CheckCircle size={18} />, color: "var(--cyan)" },
               ].map(({ title, value, delta, icon, color }) => (
                 <Col key={title} xs={12} lg={6}>
                   <div style={{
@@ -691,7 +691,7 @@ const StyleGuide = () => {
                       <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>{title}</Text>
                       <div style={{
                         width: 32, height: 32, borderRadius: 8, color,
-                        background: `${color}18`,
+                        background: `color-mix(in srgb, ${color} 9%, transparent)`,
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
                         {icon}
@@ -764,14 +764,14 @@ const StyleGuide = () => {
           <Demo label="Pill Tags (Rounded) — Used in Academic Pages">
             <Space wrap size={8}>
               {["Mathematics", "Science", "English", "History", "Physics", "Chemistry", "Biology", "Computer Science"].map((sub, i) => {
-                const colors = ["#14B8A6", "#22C55E", "#F59E0B", "#06b6d4", "#EF4444", "#14B8A6", "#14b8a6", "#F59E0B"];
+                const c = CATEGORICAL_COLORS[i % CATEGORICAL_COLORS.length];
                 return (
                   <Tag
                     key={sub}
                     style={{
                       borderRadius: 99, fontWeight: 600, fontSize: 12,
-                      background: `${colors[i]}15`,
-                      color: colors[i], border: `1px solid ${colors[i]}30`,
+                      background: `color-mix(in srgb, ${c} 8%, transparent)`,
+                      color: c, border: `1px solid color-mix(in srgb, ${c} 19%, transparent)`,
                       padding: "2px 12px",
                     }}
                   >
@@ -829,29 +829,29 @@ const StyleGuide = () => {
                 <Text style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6, display: "block" }}>
                   Fee Collection — 78%
                 </Text>
-                <Progress percent={78} strokeColor="#14B8A6" />
+                <Progress percent={78} strokeColor="var(--accent)" />
               </div>
               <div>
                 <Text style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6, display: "block" }}>
                   Attendance — 94%
                 </Text>
-                <Progress percent={94} strokeColor="#22C55E" />
+                <Progress percent={94} strokeColor="var(--success)" />
               </div>
               <div>
                 <Text style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6, display: "block" }}>
                   Syllabus Completion — 62% (Warning)
                 </Text>
-                <Progress percent={62} strokeColor="#F59E0B" />
+                <Progress percent={62} strokeColor="var(--warning)" />
               </div>
               <Row gutter={16}>
                 <Col span={6}>
-                  <Progress type="circle" percent={78} strokeColor="#14B8A6" size={80} />
+                  <Progress type="circle" percent={78} strokeColor="var(--accent)" size={80} />
                 </Col>
                 <Col span={6}>
-                  <Progress type="circle" percent={94} strokeColor="#22C55E" size={80} />
+                  <Progress type="circle" percent={94} strokeColor="var(--success)" size={80} />
                 </Col>
                 <Col span={6}>
-                  <Progress type="dashboard" percent={62} strokeColor="#F59E0B" size={80} />
+                  <Progress type="dashboard" percent={62} strokeColor="var(--warning)" size={80} />
                 </Col>
                 <Col span={6}>
                   <Progress type="circle" percent={100} size={80} />
@@ -883,10 +883,10 @@ const StyleGuide = () => {
                     <Space>
                       <Progress
                         percent={v} size="small" showInfo={false}
-                        strokeColor={v >= 75 ? "#22C55E" : v >= 50 ? "#F59E0B" : "#EF4444"}
+                        strokeColor={v >= 75 ? "var(--success)" : v >= 50 ? "var(--warning)" : "var(--danger)"}
                         style={{ width: 80 }}
                       />
-                      <Text style={{ fontSize: 12, color: v >= 75 ? "#22C55E" : v >= 50 ? "#F59E0B" : "#EF4444", fontWeight: 600 }}>
+                      <Text style={{ fontSize: 12, color: v >= 75 ? "var(--success)" : v >= 50 ? "var(--warning)" : "var(--danger)", fontWeight: 600 }}>
                         {v}%
                       </Text>
                     </Space>
@@ -917,12 +917,12 @@ const StyleGuide = () => {
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <Row gutter={[12, 12]}>
                 {[
-                  { label: "Active",     bg: "rgba(220,252,231,0.15)", color: "#15803d", border: "#bbf7d0", dot: "#22C55E" },
-                  { label: "Pending",    bg: "#fffbeb", color: "#92400e", border: "#fde68a", dot: "#F59E0B" },
-                  { label: "Overdue",    bg: "#fff1f2", color: "#be123c", border: "#fecdd3", dot: "#EF4444" },
+                  { label: "Active",     bg: "rgba(220,252,231,0.15)", color: "var(--success-hover)", border: "#bbf7d0", dot: "var(--success)" },
+                  { label: "Pending",    bg: "var(--warning-light)", color: "var(--warning-hover)", border: "var(--warning-light)", dot: "var(--warning)" },
+                  { label: "Overdue",    bg: "var(--danger-light)", color: "#be123c", border: "#fecdd3", dot: "var(--danger)" },
                   { label: "Suspended",  bg: "#fafafa", color: "#525252", border: "#e5e5e5", dot: "#a3a3a3" },
-                  { label: "Processing", bg: "rgba(219,234,254,0.2)", color: "#1d4ed8", border: "rgba(219,234,254,0.4)", dot: "#2563EB" },
-                  { label: "Graduated",  bg: "#faf5ff", color: "#6d28d9", border: "#ddd6fe", dot: "#14B8A6" },
+                  { label: "Processing", bg: "rgba(219,234,254,0.2)", color: "var(--primary-hover)", border: "rgba(219,234,254,0.4)", dot: "var(--primary)" },
+                  { label: "Graduated",  bg: "#faf5ff", color: "var(--purple-hover)", border: "#ddd6fe", dot: "var(--accent)" },
                 ].map(({ label, bg, color, border, dot }) => (
                   <Col key={label} xs={12} sm={8} md={4}>
                     <div style={{
@@ -942,16 +942,16 @@ const StyleGuide = () => {
           <Demo label="Fee Status Indicators">
             <Row gutter={[12, 12]}>
               {[
-                { label: "Paid",        icon: <CheckCircleOutlined />, color: "#22C55E" },
-                { label: "Partially Paid", icon: <InfoCircleOutlined />, color: "#F59E0B" },
-                { label: "Unpaid",      icon: <CloseCircleOutlined />, color: "#EF4444" },
-                { label: "Waived",      icon: <StarOutlined />, color: "#14B8A6" },
-                { label: "Overdue",     icon: <WarningOutlined />, color: "#F59E0B" },
+                { label: "Paid",        icon: <CheckCircleOutlined />, color: "var(--success)" },
+                { label: "Partially Paid", icon: <InfoCircleOutlined />, color: "var(--warning)" },
+                { label: "Unpaid",      icon: <CloseCircleOutlined />, color: "var(--danger)" },
+                { label: "Waived",      icon: <StarOutlined />, color: "var(--accent)" },
+                { label: "Overdue",     icon: <WarningOutlined />, color: "var(--warning)" },
               ].map(({ label, icon, color }) => (
                 <Col key={label}>
                   <Tag
                     icon={icon}
-                    style={{ borderRadius: 8, padding: "4px 12px", border: `1px solid ${color}30`, color, background: `${color}12`, fontWeight: 600 }}
+                    style={{ borderRadius: 8, padding: "4px 12px", border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`, color, background: `color-mix(in srgb, ${color} 7%, transparent)`, fontWeight: 600 }}
                   >
                     {label}
                   </Tag>
@@ -1115,7 +1115,7 @@ const StyleGuide = () => {
                 <div key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                   <div style={{
                     width: 40, height: 40, borderRadius: 10,
-                    background: "rgba(6,182,212,0.1)", color: "#06b6d4",
+                    background: "rgba(var(--cyan-rgb),0.1)", color: "var(--cyan)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     <Icon size={18} strokeWidth={1.8} />
@@ -1203,7 +1203,7 @@ const StyleGuide = () => {
                 <Timeline
                   items={[
                     {
-                      color: "#14B8A6",
+                      color: "var(--accent)",
                       children: (
                         <div>
                           <Text strong style={{ fontSize: 13 }}>New student admitted</Text>
@@ -1213,7 +1213,7 @@ const StyleGuide = () => {
                       ),
                     },
                     {
-                      color: "#22C55E",
+                      color: "var(--success)",
                       children: (
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Fee collected</Text>
@@ -1223,7 +1223,7 @@ const StyleGuide = () => {
                       ),
                     },
                     {
-                      color: "#F59E0B",
+                      color: "var(--warning)",
                       children: (
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Exam scheduled</Text>
@@ -1233,7 +1233,7 @@ const StyleGuide = () => {
                       ),
                     },
                     {
-                      color: "#EF4444",
+                      color: "var(--danger)",
                       children: (
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Attendance below threshold</Text>
@@ -1251,12 +1251,12 @@ const StyleGuide = () => {
                 <Row gutter={[12, 12]}>
                   <Col span={12}>
                     <Card style={{ borderRadius: 12 }}>
-                      <Statistic title="Fee Collected" value="₹42,85,000" valueStyle={{ color: "#22C55E", fontSize: 22 }} />
+                      <Statistic title="Fee Collected" value="₹42,85,000" valueStyle={{ color: "var(--success)", fontSize: 22 }} />
                     </Card>
                   </Col>
                   <Col span={12}>
                     <Card style={{ borderRadius: 12 }}>
-                      <Statistic title="Attendance" value={94.2} suffix="%" valueStyle={{ color: "#14B8A6", fontSize: 22 }} />
+                      <Statistic title="Attendance" value={94.2} suffix="%" valueStyle={{ color: "var(--accent)", fontSize: 22 }} />
                     </Card>
                   </Col>
                   <Col span={12}>
@@ -1266,7 +1266,7 @@ const StyleGuide = () => {
                   </Col>
                   <Col span={12}>
                     <Card style={{ borderRadius: 12 }}>
-                      <Statistic title="Teachers" value={86} prefix={<UserOutlined />} valueStyle={{ color: "#F59E0B", fontSize: 22 }} />
+                      <Statistic title="Teachers" value={86} prefix={<UserOutlined />} valueStyle={{ color: "var(--warning)", fontSize: 22 }} />
                     </Card>
                   </Col>
                 </Row>
@@ -1275,9 +1275,9 @@ const StyleGuide = () => {
               <Demo label="Avatar + User Info Pattern">
                 <Space direction="vertical" style={{ width: "100%" }} size={12}>
                   {[
-                    { name: "Aryan Sharma", role: "Student", class: "Class 10-A", color: "#14B8A6" },
-                    { name: "Priya Verma",  role: "Teacher",  class: "Mathematics", color: "#22C55E" },
-                    { name: "Rahul Singh",  role: "Parent",   class: "2 children",  color: "#F59E0B" },
+                    { name: "Aryan Sharma", role: "Student", class: "Class 10-A", color: "var(--accent)" },
+                    { name: "Priya Verma",  role: "Teacher",  class: "Mathematics", color: "var(--success)" },
+                    { name: "Rahul Singh",  role: "Parent",   class: "2 children",  color: "var(--warning)" },
                   ].map(({ name, role, class: cls, color }) => (
                     <div key={name} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -1285,8 +1285,8 @@ const StyleGuide = () => {
                     }}>
                       <Space>
                         <Avatar size={40} style={{
-                          background: `${color}20`, color, fontWeight: 700, fontSize: 15,
-                          border: `2px solid ${color}40`,
+                          background: `color-mix(in srgb, ${color} 13%, transparent)`, color, fontWeight: 700, fontSize: 15,
+                          border: `2px solid color-mix(in srgb, ${color} 25%, transparent)`,
                         }}>
                           {name[0]}
                         </Avatar>
@@ -1297,7 +1297,7 @@ const StyleGuide = () => {
                       </Space>
                       <Tag style={{
                         borderRadius: 99, fontSize: 11, fontWeight: 600,
-                        background: `${color}15`, color, border: `1px solid ${color}30`,
+                        background: `color-mix(in srgb, ${color} 8%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`,
                       }}>
                         {role}
                       </Tag>

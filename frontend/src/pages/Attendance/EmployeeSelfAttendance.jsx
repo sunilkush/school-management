@@ -24,7 +24,7 @@ const STATUS_CFG = {
   absent:  { color: "var(--danger)", bg: "var(--danger-light)", border: "var(--danger-light)", label: "Absent"   },
   late:    { color: "var(--warning)", bg: "var(--warning-light)", border: "var(--warning)", label: "Late"     },
   halfday: { color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.12)", border: "rgba(var(--purple-rgb), 0.5)", label: "Half Day" },
-  leave:   { color: "var(--cyan)", bg: "#CFFAFE", border: "#67E8F9", label: "On Leave" }, // no cyan-tint tokens exist; left as-is
+  leave:   { color: "var(--cyan)", bg: "var(--cyan-light)", border: "rgba(var(--cyan-rgb), 0.5)", label: "On Leave" },
 };
 
 function fmtTime(d) { return d ? dayjs(d).format("hh:mm A") : null; }

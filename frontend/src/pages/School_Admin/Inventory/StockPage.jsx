@@ -37,14 +37,11 @@ export default function StockPage() {
   const totalQty      = stock.reduce((s, i) => s + (i.quantity || 0), 0);
   const totalAvail    = stock.reduce((s, i) => s + Math.max((i.quantity || 0) - (i.allocated || 0), 0), 0);
 
-  // `color` feeds the shared iconWell()/pill() helpers (frontend/src/styles/pageStyles.js),
-  // which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
-  // so these stay hex.
   const KPI = [
-    { label: "Total Items",   value: stock.length,         color: "#1677ff",  icon: <AppstoreOutlined /> },
-    { label: "Low Stock",     value: lowStockCount,        color: "#EF4444",  icon: <WarningOutlined /> },
-    { label: "Total Qty",     value: fmt(totalQty),        color: "#8B5CF6",  icon: <InboxOutlined /> },
-    { label: "Available",     value: fmt(totalAvail),      color: "#0ea472",  icon: <CheckCircleOutlined /> },
+    { label: "Total Items",   value: stock.length,         color: "var(--primary)",  icon: <AppstoreOutlined /> },
+    { label: "Low Stock",     value: lowStockCount,        color: "var(--danger)",  icon: <WarningOutlined /> },
+    { label: "Total Qty",     value: fmt(totalQty),        color: "var(--purple)",  icon: <InboxOutlined /> },
+    { label: "Available",     value: fmt(totalAvail),      color: "var(--success)",  icon: <CheckCircleOutlined /> },
   ];
 
   const openModal = (item = null) => {
@@ -77,7 +74,7 @@ export default function StockPage() {
         const isLow = (r.quantity || 0) <= (r.minThreshold || 10);
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={iconWell(isLow ? "#EF4444" : "#1677ff", 34)}>
+            <div style={iconWell(isLow ? "var(--danger)" : "var(--primary)", 34)}>
               {isLow ? <WarningOutlined style={{ fontSize: 13 }} /> : <InboxOutlined style={{ fontSize: 13 }} />}
             </div>
             <div>
@@ -112,7 +109,7 @@ export default function StockPage() {
       title: "Status", key: "status",
       render: (_, r) => {
         const low = (r.quantity || 0) <= (r.minThreshold || 10);
-        return <span style={pill(low ? "#EF4444" : "#0ea472")}>{low ? "Low Stock" : "Healthy"}</span>;
+        return <span style={pill(low ? "var(--danger)" : "var(--success)")}>{low ? "Low Stock" : "Healthy"}</span>;
       },
     },
     {

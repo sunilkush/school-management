@@ -20,14 +20,10 @@ import {
 
 const { Option } = Select;
 
-// `color` is passed into the shared `pill()` helper (frontend/src/styles/pageStyles.js),
-// which builds its border as `1px solid ${color}25` — a raw-hex alpha-suffix trick that
-// breaks with a var() string. That helper is outside this task's scope, so `color` stays
-// hex; `bg` (used directly, no suffix) is safely converted to shared tokens.
 const FREQ_STYLE = {
-  monthly:   { color: "#14B8A6", bg: "rgba(var(--accent-rgb), 0.2)" },
-  quarterly: { color: "#2563EB", bg: "var(--primary-light)" },
-  yearly:    { color: "#22C55E", bg: "var(--success-light)" },
+  monthly:   { color: "var(--accent)",  bg: "rgba(var(--accent-rgb), 0.2)" },
+  quarterly: { color: "var(--primary)", bg: "var(--primary-light)" },
+  yearly:    { color: "var(--success)", bg: "var(--success-light)" },
 };
 
 const FeeStructure = () => {
@@ -111,7 +107,7 @@ const FeeStructure = () => {
     {
       title: "Class",
       render: (r) => r.schoolClassId?.name
-        ? <span style={pill("#14B8A6", "rgba(var(--accent-rgb), 0.2)")}>{r.schoolClassId.name}</span>
+        ? <span style={pill("var(--accent)", "rgba(var(--accent-rgb), 0.2)")}>{r.schoolClassId.name}</span>
         : <span style={{ color: "var(--text-muted)" }}>—</span>,
     },
     {
@@ -136,7 +132,7 @@ const FeeStructure = () => {
       dataIndex: "frequency",
       render: (v) => {
         if (!v) return <span style={{ color: "var(--text-muted)" }}>—</span>;
-        const s = FREQ_STYLE[v.toLowerCase()] || { color: "#64748B", bg: "var(--surface-soft)" };
+        const s = FREQ_STYLE[v.toLowerCase()] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" };
         return <span style={pill(s.color, s.bg)}>{v.toUpperCase()}</span>;
       },
     },

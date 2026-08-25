@@ -172,9 +172,6 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
 };
 
 /* ── KPI stat card ── */
-// `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
-// builds its background as `${color}22` — breaks with a var() string, so call sites below
-// pass raw hex for `color`.
 const StatCard = ({ icon, label, value, color }) => (
   <div style={{
     background: "var(--surface)",
@@ -511,7 +508,7 @@ const AssignStudentFee = () => {
       title: "Final",
       width: 140,
       render: (_, record) => (
-        <Text strong style={{ color: "#22C55E" }}>
+        <Text strong style={{ color: "var(--success)" }}>
           {money(customAmounts[record._id] ?? record.amount)}
         </Text>
       ),
@@ -600,10 +597,10 @@ const AssignStudentFee = () => {
         gap: 14,
         marginBottom: 20,
       }}>
-        <StatCard icon={<TeamOutlined />} label="Target Students" value={targetStudentCount} color="#6D28D9" />
-        <StatCard icon={<WalletOutlined />} label="Selected Fees" value={selectedFeeIds.length} color="#0891B2" />
-        <StatCard icon={<TagOutlined />} label="Default Total" value={money(totalDefaultAmount)} color="#D97706" />
-        <StatCard icon={<RupeeIcon />} label="Final Total" value={money(totalFinalAmount)} color="#16A34A" />
+        <StatCard icon={<TeamOutlined />} label="Target Students" value={targetStudentCount} color="var(--purple-hover)" />
+        <StatCard icon={<WalletOutlined />} label="Selected Fees" value={selectedFeeIds.length} color="var(--cyan)" />
+        <StatCard icon={<TagOutlined />} label="Default Total" value={money(totalDefaultAmount)} color="var(--warning-hover)" />
+        <StatCard icon={<RupeeIcon />} label="Final Total" value={money(totalFinalAmount)} color="var(--success)" />
       </div>
 
       <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -618,7 +615,7 @@ const AssignStudentFee = () => {
               top: 20,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                <div style={iconWell("#6D28D9", 36)}>
+                <div style={iconWell("var(--purple-hover)", 36)}>
                   <FilterOutlined />
                 </div>
                 <div>
@@ -726,7 +723,7 @@ const AssignStudentFee = () => {
 
               {mode === "bulk" && effectiveClassId && (
                 <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={iconWell("#0891B2", 28)}>
+                  <div style={iconWell("var(--cyan)", 28)}>
                     <TeamOutlined style={{ fontSize: 13 }} />
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
@@ -742,7 +739,7 @@ const AssignStudentFee = () => {
             <div style={{ ...sectionPanel, background: cardBg }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={iconWell("#0891B2", 36)}>
+                  <div style={iconWell("var(--cyan)", 36)}>
                     <WalletOutlined />
                   </div>
                   <div>
@@ -829,7 +826,7 @@ const AssignStudentFee = () => {
       <Drawer
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={iconWell("#6D28D9", 34)}>
+            <div style={iconWell("var(--purple-hover)", 34)}>
               <EyeOutlined style={{ fontSize: 15 }} />
             </div>
             <div>

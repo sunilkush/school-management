@@ -26,18 +26,15 @@ const BADGE_STATUS = {
   Reminder: "processing",
 };
 
-// NOTE: `color` fields here are passed into the shared `pill()` helper
-// (frontend/src/styles/pageStyles.js), which builds its border as
-// `1px solid ${color}25` — a raw-hex alpha-suffix trick that breaks with a
-// var() string (produces invalid CSS like "var(--accent)25"). Since that
-// helper is outside this task's scope, `color` is left as hex; `bg` (used
-// directly, no suffix) is safely converted to shared tokens.
 const TYPE_STYLE = {
-  Event:    { color: "#14B8A6", bg: "rgba(var(--accent-rgb), 0.2)" },
-  Holiday:  { color: "#22C55E", bg: "var(--success-light)" },
-  Meeting:  { color: "#2563EB", bg: "var(--primary-light)" },
-  Exam:     { color: "#EF4444", bg: "var(--danger-light)" },
-  Activity: { color: "#F59E0B", bg: "rgba(var(--warning-rgb), 0.08)" },
+  Event:    { color: "var(--accent)",  bg: "rgba(var(--accent-rgb), 0.2)" },
+  Holiday:  { color: "var(--success)", bg: "var(--success-light)" },
+  Meeting:  { color: "var(--primary)", bg: "var(--primary-light)" },
+  Exam:     { color: "var(--danger)",  bg: "var(--danger-light)" },
+  Activity: { color: "var(--warning)", bg: "rgba(var(--warning-rgb), 0.08)" },
+  // #0e7490 / #ecfeff (cyan-700 / cyan-50) aren't an exact match for any table entry
+  // (closest is #0891b2 → var(--cyan), a visibly different shade) — left as literal
+  // hex rather than guess; see final report.
   Reminder: { color: "#0e7490", bg: "#ecfeff" },
 };
 
@@ -51,6 +48,8 @@ const toPayload = (values) => ({
   allDay: true,
   startDate: values.dateRange?.[0]?.startOf("day").toISOString(),
   endDate: values.dateRange?.[1]?.endOf("day").toISOString(),
+  // Default for the <Input type="color"> picker below — HTML5 color inputs require a literal
+  // #rrggbb value, var(--token) is not valid here, so this stays hex intentionally.
   color: values.color || "#14B8A6",
 });
 
@@ -184,7 +183,7 @@ const CalendarPage = () => {
   };
 
   const EventListItem = ({ event, onEdit, onDelete }) => {
-    const s = TYPE_STYLE[event.type] || { color: "#64748B", bg: "var(--surface-soft)" };
+    const s = TYPE_STYLE[event.type] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" };
     return (
       <List.Item
         actions={[

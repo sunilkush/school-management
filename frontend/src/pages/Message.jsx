@@ -74,10 +74,10 @@ const PRIORITY_COLOR = {
 };
 
 const PRIORITY_HEX = {
-  low: "#94A3B8",
-  normal: "#2563EB",
-  high: "#F59E0B",
-  urgent: "#EF4444",
+  low: "var(--text-muted)",
+  normal: "var(--primary)",
+  high: "var(--warning)",
+  urgent: "var(--danger)",
 };
 
 const formatTime = (value) => {
@@ -175,9 +175,9 @@ const MessagePage = () => {
   }, [mailbox, rows]);
 
   const statCards = [
-    { title: "Total Messages", value: stats.total, icon: <Mail size={20} />, color: "#2563EB" },
-    { title: "Unread", value: stats.unread, icon: <MailOpen size={20} />, color: "#22C55E" },
-    { title: "High Priority", value: stats.urgent, icon: <AlertTriangle size={20} />, color: "#EF4444" },
+    { title: "Total Messages", value: stats.total, icon: <Mail size={20} />, color: "var(--primary)" },
+    { title: "Unread", value: stats.unread, icon: <MailOpen size={20} />, color: "var(--success)" },
+    { title: "High Priority", value: stats.urgent, icon: <AlertTriangle size={20} />, color: "var(--danger)" },
   ];
 
   const loadRecipients = useCallback(async () => {
@@ -436,7 +436,7 @@ const MessagePage = () => {
               renderItem={(item) => {
                 const priority = getPriority(item);
                 const isUnread = !item.isRead && mailbox === "inbox";
-                const accentColor = PRIORITY_HEX[priority] || "#2563EB";
+                const accentColor = PRIORITY_HEX[priority] || "var(--primary)";
 
                 return (
                   <List.Item style={{ padding: 0, marginBottom: 10 }}>
@@ -449,10 +449,10 @@ const MessagePage = () => {
                         border: "1px solid var(--border-muted)",
                         borderLeft: isUnread ? `4px solid ${accentColor}` : "1px solid var(--border-muted)",
                         background: isUnread
-                          ? "linear-gradient(90deg, rgba(37,99,235,0.04) 0%, var(--surface) 60%)"
+                          ? "linear-gradient(90deg, rgba(var(--primary-rgb),0.04) 0%, var(--surface) 60%)"
                           : "var(--surface)",
                         boxShadow: isUnread
-                          ? "0 4px 16px rgba(37,99,235,0.08)"
+                          ? "0 4px 16px rgba(var(--primary-rgb),0.08)"
                           : "0 1px 4px rgba(0,0,0,0.03)",
                       }}
                       styles={{ body: { padding: isMobile ? 14 : 16 } }}
@@ -514,7 +514,7 @@ const MessagePage = () => {
       <Drawer
         title={
           <Flex align="center" gap={10}>
-            <div style={iconWell("#2563EB", 32)}>
+            <div style={iconWell("var(--primary)", 32)}>
               <Send size={15} />
             </div>
             <Text strong style={{ fontSize: 15 }}>Compose Message</Text>
@@ -555,7 +555,7 @@ const MessagePage = () => {
         title={
           selected ? (
             <Flex align="center" gap={10}>
-              <div style={iconWell("#7C3AED", 32)}>
+              <div style={iconWell("var(--purple)", 32)}>
                 <MessageSquareText size={15} />
               </div>
               <Text strong style={{ fontSize: 14, maxWidth: 300 }} ellipsis>
@@ -597,7 +597,7 @@ const MessagePage = () => {
                       <Space direction="vertical" size={8} style={{ width: "100%" }}>
                         <Flex vertical={isMobile} gap={8} justify="space-between" align={isMobile ? "flex-start" : "center"}>
                           <Space wrap>
-                            <MessageSquareText size={15} color="#2563EB" />
+                            <MessageSquareText size={15} color="var(--primary)" />
                             <Text strong>{getSenderName(item)}</Text>
                             <Tag style={{ borderRadius: 99 }}>{getSenderRole(item)}</Tag>
                           </Space>

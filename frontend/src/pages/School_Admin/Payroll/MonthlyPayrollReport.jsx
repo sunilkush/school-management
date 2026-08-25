@@ -14,12 +14,14 @@ import {
   iconWell, pageCard, pageWrapper, sectionPanel, tableHeadCss,
 } from "../../../styles/pageStyles";
 import { formatCurrencyINR } from "../../../utils/payroll";
+import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
-const DEPT_COLORS = ["#2563EB", "#7C3AED", "#10B981", "#F59E0B", "#EF4444", "#EC4899", "#0EA5E9", "#F97316"];
-const deptColor = (name = "") => DEPT_COLORS[(name.charCodeAt(0) || 0) % DEPT_COLORS.length];
+// Deterministic per-department color from the shared categorical palette (8 distinct hues) —
+// replaces a local hex array so every department keeps a stable color across renders/pages.
+const deptColor = (name = "") => categoricalColorFor(name);
 
 const moneyK = (v) => {
   const n = Number(v || 0);
@@ -85,7 +87,8 @@ const MonthlyPayrollReport = () => {
         return (
           <span style={{
             fontSize: 12, fontWeight: 700, padding: "3px 12px", borderRadius: 99,
-            background: `${color}14`, color, border: `1px solid ${color}28`,
+            background: `color-mix(in srgb, ${color} 8%, transparent)`, color,
+            border: `1px solid color-mix(in srgb, ${color} 16%, transparent)`,
           }}>
             {dept}
           </span>
@@ -166,7 +169,7 @@ const MonthlyPayrollReport = () => {
         padding: "14px 20px",
         display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
       }}>
-        <div style={iconWell("#7C3AED", 32)}><BarChartOutlined style={{ fontSize: 14 }} /></div>
+        <div style={iconWell("var(--purple)", 32)}><BarChartOutlined style={{ fontSize: 14 }} /></div>
         <div style={{ flex: 1 }}>
           <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
             Report Period
@@ -226,7 +229,7 @@ const MonthlyPayrollReport = () => {
                 padding: "14px 20px", borderBottom: "1px solid var(--border-muted)",
                 display: "flex", alignItems: "center", gap: 10,
               }}>
-                <div style={iconWell("#2563EB", 32)}><BarChartOutlined style={{ fontSize: 14 }} /></div>
+                <div style={iconWell("var(--primary)", 32)}><BarChartOutlined style={{ fontSize: 14 }} /></div>
                 <div>
                   <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                     Dept-wise Distribution
@@ -277,7 +280,7 @@ const MonthlyPayrollReport = () => {
                 padding: "14px 20px", borderBottom: "1px solid var(--border-muted)",
                 display: "flex", alignItems: "center", gap: 10,
               }}>
-                <div style={iconWell("#10B981", 32)}><TeamOutlined style={{ fontSize: 14 }} /></div>
+                <div style={iconWell("var(--success)", 32)}><TeamOutlined style={{ fontSize: 14 }} /></div>
                 <div style={{ flex: 1 }}>
                   <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                     Department Breakdown

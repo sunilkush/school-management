@@ -19,13 +19,14 @@ import {
   tableContainer, tableHeadCss, modalTitle,
 } from "../../../styles/pageStyles";
 
-/* ── Accent colours (semantic, kept as hex per design system rules) ── */
+/* ── Accent colours (design tokens; NOT used inside buildPrintHtml below, which
+   intentionally stays literal hex — see that function's comment) ── */
 const C = {
-  primary: "#2563EB",
-  accent:  "#14B8A6",
-  success: "#22C55E",
-  warning: "#F59E0B",
-  danger:  "#EF4444",
+  primary: "var(--primary)",
+  accent:  "var(--accent)",
+  success: "var(--success)",
+  warning: "var(--warning)",
+  danger:  "var(--danger)",
 };
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
@@ -442,7 +443,7 @@ const AdmitCardPage = () => {
           <div>
             {/* Card header strip */}
             <div style={{
-              background: `linear-gradient(135deg, ${C.primary}, #1D4ED8)`,
+              background: `linear-gradient(135deg, ${C.primary}, var(--primary-hover))`,
               borderRadius: 12, padding: "20px 24px", marginBottom: 16,
               display: "flex", alignItems: "center", gap: 16,
             }}>
@@ -492,7 +493,7 @@ const AdmitCardPage = () => {
             {/* Instructions */}
             {selectedCard.instructions?.length > 0 && (
               <div style={{
-                background: `${C.warning}15`, border: `1px solid ${C.warning}30`,
+                background: `color-mix(in srgb, ${C.warning} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${C.warning} 30%, transparent)`,
                 borderRadius: 10, padding: "14px 16px",
               }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--warning-hover)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>

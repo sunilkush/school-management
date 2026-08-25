@@ -67,7 +67,7 @@ const QuickAction = ({ icon, label, color, path, navigate }) => (
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.borderColor = color;
-      e.currentTarget.style.background   = `${color}08`;
+      e.currentTarget.style.background   = `color-mix(in srgb, ${color} 8%, transparent)`;
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.borderColor = "var(--border-muted)";
@@ -205,16 +205,13 @@ const AttendanceDashboard = () => {
   }, [monthlyReport]);
 
   /* ── Quick actions ── */
-  // `color` feeds a `${color}08` hover-alpha-suffix trick and the shared iconWell() helper
-  // (frontend/src/styles/pageStyles.js) below — both break with a var() string, so these
-  // stay raw hex (except the one entry that was already var(--primary), left as pre-existing).
   const QUICK_ACTIONS = [
     { icon: <EditOutlined />,    label: "Mark Students",  color: "var(--primary)", path: "/dashboard/schooladmin/attendance/students" },
-    { icon: <TeamOutlined />,    label: "Mark Teachers",  color: "#0891b2",        path: "/dashboard/schooladmin/attendance/teachers" },
-    { icon: <UserOutlined />,    label: "Mark Staff",     color: "#F59E0B",        path: "/dashboard/schooladmin/attendance/staff"    },
-    { icon: <CalendarOutlined />,label: "Leave Requests", color: "#14B8A6",        path: "/dashboard/schooladmin/attendance/leave"    },
-    { icon: <FileTextOutlined />,label: "Reports",        color: "#22C55E",        path: "/dashboard/schooladmin/attendance/reports"  },
-    { icon: <BarChartOutlined />,label: "Analytics",      color: "#F59E0B",        path: "/dashboard/schooladmin/attendance/analytics"},
+    { icon: <TeamOutlined />,    label: "Mark Teachers",  color: "var(--cyan)",    path: "/dashboard/schooladmin/attendance/teachers" },
+    { icon: <UserOutlined />,    label: "Mark Staff",     color: "var(--warning)", path: "/dashboard/schooladmin/attendance/staff"    },
+    { icon: <CalendarOutlined />,label: "Leave Requests", color: "var(--accent)",  path: "/dashboard/schooladmin/attendance/leave"    },
+    { icon: <FileTextOutlined />,label: "Reports",        color: "var(--success)", path: "/dashboard/schooladmin/attendance/reports"  },
+    { icon: <BarChartOutlined />,label: "Analytics",      color: "var(--warning)", path: "/dashboard/schooladmin/attendance/analytics"},
   ];
 
   /* ── Low attendance table columns ── */
@@ -326,12 +323,11 @@ const AttendanceDashboard = () => {
             value={totalStudents}
             color="var(--primary)"
           />
-          {/* `color` on KpiCard feeds the shared iconWell() helper — see QUICK_ACTIONS note above. */}
           <KpiCard
             icon={<CheckCircleOutlined />}
             label="Present Today"
             value={presentToday}
-            color="#22C55E"
+            color="var(--success)"
             sub={
               totalStudents > 0
                 ? Math.round((presentToday / totalStudents) * 100)
@@ -342,19 +338,19 @@ const AttendanceDashboard = () => {
             icon={<CloseCircleOutlined />}
             label="Absent Today"
             value={absentToday}
-            color="#EF4444"
+            color="var(--danger)"
           />
           <KpiCard
             icon={<ClockCircleOutlined />}
             label="Late Today"
             value={lateToday}
-            color="#F59E0B"
+            color="var(--warning)"
           />
           <KpiCard
             icon={<CalendarOutlined />}
             label="On Leave Today"
             value={leaveToday}
-            color="#0891b2"
+            color="var(--cyan)"
           />
           <KpiCard
             icon={<BarChartOutlined />}

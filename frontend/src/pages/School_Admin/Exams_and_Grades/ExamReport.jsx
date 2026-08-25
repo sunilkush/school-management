@@ -248,11 +248,8 @@ const ExamReports = () => {
                 key: "status",
                 align: "center",
                 render: (status) => (
-                  // pill()'s first arg (color) is baked into its border as `${color}25` —
-                  // a raw-hex alpha-suffix trick that breaks with a var() string, so it
-                  // stays hex; the bg arg (used directly) is safely tokenized.
                   <span style={pill(
-                    status === "Pass" ? "#389e0d" : status === "Fail" ? "#cf1322" : "#0284c7",
+                    status === "Pass" ? "var(--success-hover)" : status === "Fail" ? "var(--danger-hover)" : "var(--info)",
                     status === "Pass" ? "var(--success-light)" : status === "Fail" ? "var(--danger-light)" : "var(--info-light)"
                   )}>
                     {status || "Pending"}

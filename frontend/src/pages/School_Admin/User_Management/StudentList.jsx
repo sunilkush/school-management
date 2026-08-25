@@ -22,14 +22,14 @@ import {
 } from "../../../styles/pageStyles";
 
 const bloodGroupColor = {
-  "A+":  { bg: "rgba(254,226,226,0.2)", color: "var(--danger)" },
-  "A-":  { bg: "rgba(var(--warning-rgb), 0.08)", color: "#c2410c" },
-  "B+":  { bg: "#fef9ec", color: "var(--warning)" },
-  "B-":  { bg: "#fefce8", color: "#ca8a04" },
-  "AB+": { bg: "rgba(219,234,254,0.2)", color: "var(--primary)" },
-  "AB-": { bg: "#eef2ff", color: "#4338ca" },
-  "O+":  { bg: "#f0fdf8", color: "var(--success)" },
-  "O-":  { bg: "rgba(220,252,231,0.2)", color: "var(--success)" },
+  "A+":  { bg: "rgba(var(--danger-rgb), 0.2)", color: "var(--danger)" },
+  "A-":  { bg: "rgba(var(--warning-rgb), 0.08)", color: "var(--warning-hover)" },
+  "B+":  { bg: "rgba(var(--warning-rgb), 0.08)", color: "var(--warning)" },
+  "B-":  { bg: "rgba(var(--warning-rgb), 0.1)", color: "var(--warning-hover)" },
+  "AB+": { bg: "rgba(var(--primary-rgb), 0.2)", color: "var(--primary)" },
+  "AB-": { bg: "rgba(var(--purple-rgb), 0.08)", color: "var(--purple-hover)" },
+  "O+":  { bg: "rgba(var(--success-rgb), 0.08)", color: "var(--success)" },
+  "O-":  { bg: "rgba(var(--success-rgb), 0.2)", color: "var(--success)" },
 };
 
 const STAT_META = [
@@ -215,7 +215,7 @@ const StudentList = () => {
       render: (s) => {
         const isActive  = s === "Active";
         const isPending = s === "Pending";
-        const color = isActive ? "var(--success-hover)" : isPending ? "var(--warning-hover)" : "#991b1b";
+        const color = isActive ? "var(--success-hover)" : isPending ? "var(--warning-hover)" : "var(--danger-hover)";
         const dot   = isActive ? "var(--success)" : isPending ? "var(--warning)" : "var(--danger)";
         const dotRing = isActive ? "rgba(var(--success-rgb), 0.19)" : isPending ? "rgba(var(--warning-rgb), 0.19)" : "rgba(var(--danger-rgb), 0.19)";
         return (

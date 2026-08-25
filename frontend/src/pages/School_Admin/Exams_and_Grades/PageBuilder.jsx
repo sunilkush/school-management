@@ -17,21 +17,21 @@ import {
   pageWrapper, sectionPanel, statGrid, iconWell, modalTitle, emptyState,
 } from "../../../styles/pageStyles";
 
-/* ── Accent colours (semantic, kept as hex per design system rules) ── */
+/* ── Accent colours (design tokens) ── */
 const C = {
-  primary: "#2563EB",
-  accent:  "#14B8A6",
-  success: "#22C55E",
-  warning: "#F59E0B",
-  danger:  "#EF4444",
-  purple:  "#8B5CF6",
+  primary: "var(--primary)",
+  accent:  "var(--accent)",
+  success: "var(--success)",
+  warning: "var(--warning)",
+  danger:  "var(--danger)",
+  purple:  "var(--purple)",
 };
 
 /* ── Default section blueprint ───────────────────────────────────── */
 const DEFAULT_SECTIONS = [
-  { key: "A", section: "Section A", questionType: "Multiple Choice (MCQ)", questions: 0, marksEach: 1, color: C.primary,  bg: `${C.primary}15` },
-  { key: "B", section: "Section B", questionType: "Short Answer",           questions: 0, marksEach: 3, color: C.accent,   bg: `${C.accent}15`  },
-  { key: "C", section: "Section C", questionType: "Long Answer / Essay",    questions: 0, marksEach: 5, color: C.purple,   bg: `${C.purple}15`  },
+  { key: "A", section: "Section A", questionType: "Multiple Choice (MCQ)", questions: 0, marksEach: 1, color: C.primary,  bg: `color-mix(in srgb, ${C.primary} 15%, transparent)` },
+  { key: "B", section: "Section B", questionType: "Short Answer",           questions: 0, marksEach: 3, color: C.accent,   bg: `color-mix(in srgb, ${C.accent} 15%, transparent)`  },
+  { key: "C", section: "Section C", questionType: "Long Answer / Essay",    questions: 0, marksEach: 5, color: C.purple,   bg: `color-mix(in srgb, ${C.purple} 15%, transparent)`  },
 ];
 
 const QUESTION_TYPES = [
@@ -119,7 +119,7 @@ const SectionRow = ({ sec, totalMarks, onChange, onDelete, index }) => {
             />
           </label>
           <Tag style={{
-            background: sec.bg, color: sec.color, border: `1px solid ${sec.color}30`,
+            background: sec.bg, color: sec.color, border: `1px solid color-mix(in srgb, ${sec.color} 30%, transparent)`,
             fontWeight: 700, fontSize: 13, borderRadius: 8, padding: "2px 12px",
           }}>
             {rowTotal} marks
@@ -195,9 +195,9 @@ const PaperBuilder = () => {
 
   const handleAddSection = () => {
     const sectionColors = [
-      { color: C.success, bg: `${C.success}15` },
-      { color: C.warning, bg: `${C.warning}15` },
-      { color: C.danger,  bg: `${C.danger}15`  },
+      { color: C.success, bg: `color-mix(in srgb, ${C.success} 15%, transparent)` },
+      { color: C.warning, bg: `color-mix(in srgb, ${C.warning} 15%, transparent)` },
+      { color: C.danger,  bg: `color-mix(in srgb, ${C.danger} 15%, transparent)`  },
     ];
     const pick = sectionColors[sections.length % sectionColors.length];
     setSections((prev) => [
@@ -419,15 +419,15 @@ const PaperBuilder = () => {
               {!selectedExam ? (
                 <div style={{ textAlign: "center", color: "var(--text-muted)", fontSize: 12 }}>Select an exam to see summary</div>
               ) : isOver ? (
-                <div style={{ background: `${C.danger}15`, border: `1px solid ${C.danger}25`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: C.danger, fontWeight: 600 }}>
+                <div style={{ background: `color-mix(in srgb, ${C.danger} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${C.danger} 25%, transparent)`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: C.danger, fontWeight: 600 }}>
                   ⚠ Blueprint exceeds total marks by {Math.abs(remaining)}
                 </div>
               ) : isBalanced ? (
-                <div style={{ background: `${C.success}15`, border: `1px solid ${C.success}25`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--success-hover)", fontWeight: 600 }}>
+                <div style={{ background: `color-mix(in srgb, ${C.success} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${C.success} 25%, transparent)`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--success-hover)", fontWeight: 600 }}>
                   <CheckCircleOutlined /> Blueprint is perfectly balanced
                 </div>
               ) : (
-                <div style={{ background: `${C.warning}15`, border: `1px solid ${C.warning}25`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--warning-hover)", fontWeight: 600 }}>
+                <div style={{ background: `color-mix(in srgb, ${C.warning} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${C.warning} 25%, transparent)`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--warning-hover)", fontWeight: 600 }}>
                   <InfoCircleOutlined /> {remaining} marks unallocated
                 </div>
               )}
@@ -463,7 +463,7 @@ const PaperBuilder = () => {
 
           {/* Quick tip */}
           <div style={{
-            background: `${C.primary}10`, border: `1px solid ${C.primary}30`,
+            background: `color-mix(in srgb, ${C.primary} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${C.primary} 30%, transparent)`,
             borderRadius: 12, padding: "14px 16px",
           }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.primary, marginBottom: 6 }}>
@@ -509,7 +509,7 @@ const PaperBuilder = () => {
             <div key={sec.key} style={{ marginBottom: 16 }}>
               <div style={{
                 display: "flex", justifyContent: "space-between",
-                background: `${sec.color}10`, border: `1px solid ${sec.color}25`,
+                background: `color-mix(in srgb, ${sec.color} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${sec.color} 25%, transparent)`,
                 borderRadius: 8, padding: "8px 14px", marginBottom: 8,
               }}>
                 <span style={{ fontWeight: 700, color: sec.color }}>{sec.section}</span>

@@ -16,14 +16,11 @@ import dayjs from "dayjs";
 const { Option } = Select;
 const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
 
-// `color` feeds the shared pill()/iconWell() helpers (frontend/src/styles/pageStyles.js),
-// which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
-// so these stay hex. Same applies to the KPI array below.
 const STATUS_META = {
-  issued:   { color: "#1677ff", label: "Issued" },
-  returned: { color: "#0ea472", label: "Returned" },
-  partial:  { color: "#F59E0B", label: "Partial" },
-  overdue:  { color: "#EF4444", label: "Overdue" },
+  issued:   { color: "var(--primary)", label: "Issued" },
+  returned: { color: "var(--success)", label: "Returned" },
+  partial:  { color: "var(--warning)", label: "Partial" },
+  overdue:  { color: "var(--danger)",  label: "Overdue" },
 };
 
 export default function IssuePage() {
@@ -47,9 +44,9 @@ export default function IssuePage() {
   );
 
   const KPI = [
-    { label: "Currently Issued", value: totalIssued,    color: "#1677ff", icon: <ExportOutlined /> },
-    { label: "Overdue Returns",  value: overdue,         color: "#EF4444", icon: <WarningOutlined /> },
-    { label: "Total Records",    value: issues.length,   color: "#8B5CF6", icon: <CheckCircleOutlined /> },
+    { label: "Currently Issued", value: totalIssued,    color: "var(--primary)", icon: <ExportOutlined /> },
+    { label: "Overdue Returns",  value: overdue,         color: "var(--danger)", icon: <WarningOutlined /> },
+    { label: "Total Records",    value: issues.length,   color: "var(--purple)", icon: <CheckCircleOutlined /> },
   ];
 
   const onFinish = async (vals) => {
@@ -109,7 +106,7 @@ export default function IssuePage() {
       title: "Status", key: "status",
       render: (_, r) => {
         const key = r.isOverdue && r.status === "issued" ? "overdue" : r.status;
-        const m   = STATUS_META[key] || { color: "#94A3B8", label: key };
+        const m   = STATUS_META[key] || { color: "var(--text-muted)", label: key };
         return <span style={pill(m.color)}>{m.label}</span>;
       },
     },

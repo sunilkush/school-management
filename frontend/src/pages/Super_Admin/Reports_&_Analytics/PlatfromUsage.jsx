@@ -188,7 +188,7 @@ const PlatformUsage = () => {
         title: `${row.school} updated`,
         desc: `${row.users.toLocaleString()} users onboarded on ${row.plan} plan`,
         icon: <BankOutlined />,
-        color: idx % 2 === 0 ? "var(--primary)" : "#13c2c2",
+        color: idx % 2 === 0 ? "var(--primary)" : "var(--cyan)",
         time: new Date(row.createdAt).toLocaleDateString(),
       }));
 
@@ -247,7 +247,7 @@ const PlatformUsage = () => {
           <Avatar
             size={28}
             icon={<BankOutlined />}
-            style={{ background: "rgba(37,99,235,0.15)", color: "var(--primary)" }}
+            style={{ background: "rgba(var(--primary-rgb), 0.15)", color: "var(--primary)" }}
           />
           <Text strong style={{ fontSize: 13 }}>
             {name}
@@ -506,7 +506,7 @@ const PlatformUsage = () => {
                     size={28}
                     icon={item.icon}
                     style={{
-                      background: `${item.color}18`,
+                      background: `color-mix(in srgb, ${item.color} 9%, transparent)`,
                       color: item.color,
                     }}
                   />

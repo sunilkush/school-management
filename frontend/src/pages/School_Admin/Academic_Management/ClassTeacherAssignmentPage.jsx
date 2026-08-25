@@ -219,7 +219,7 @@ const ClassTeacherAssignmentPage = () => {
     {
       title: "Class",
       render: (_, r) => (
-        <span style={pill("#2563EB", "rgba(219,234,254,0.4)")}>
+        <span style={pill("var(--primary)", "rgba(var(--primary-rgb), 0.4)")}>
           {r.schoolClassId?.name || r.schoolClassId?.grade || "—"}
         </span>
       ),
@@ -227,7 +227,7 @@ const ClassTeacherAssignmentPage = () => {
     {
       title: "Section",
       render: (_, r) => r.sectionId?.name
-        ? <span style={pill("#0D9488", "rgba(204,251,241,0.5)")}>{r.sectionId.name}</span>
+        ? <span style={pill("var(--accent-hover)", "rgba(var(--accent-rgb), 0.5)")}>{r.sectionId.name}</span>
         : <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Whole class</span>,
     },
     {
@@ -283,10 +283,10 @@ const ClassTeacherAssignmentPage = () => {
       />
 
       <div style={{ ...statGrid(170), marginTop: 20 }}>
-        <StatCard icon={<Users size={18} />}        label="Assignments"        value={stats.total}            color="#7C3AED" />
-        <StatCard icon={<BookOpen size={18} />}      label="Classes This Session" value={stats.classesThisSession} color="#2563EB" />
-        <StatCard icon={<GraduationCap size={18} />} label="Whole-Class"         value={stats.wholeClass}       color="#15803D" />
-        <StatCard icon={<Layers size={18} />}        label="Section-Level"       value={stats.sectionLevel}     color="#0D9488" />
+        <StatCard icon={<Users size={18} />}        label="Assignments"        value={stats.total}            color="var(--purple)" />
+        <StatCard icon={<BookOpen size={18} />}      label="Classes This Session" value={stats.classesThisSession} color="var(--primary)" />
+        <StatCard icon={<GraduationCap size={18} />} label="Whole-Class"         value={stats.wholeClass}       color="var(--success-hover)" />
+        <StatCard icon={<Layers size={18} />}        label="Section-Level"       value={stats.sectionLevel}     color="var(--accent-hover)" />
       </div>
 
       <div style={{ ...sectionPanel, marginTop: 20 }}>

@@ -21,7 +21,7 @@ const StatCard = ({ icon, label, value, color }) => (
 );
 
 const StatusBadge = ({ isActive }) => (
-  <span style={pill(isActive ? "#15803D" : "#DC2626", isActive ? "rgba(220,252,231,0.5)" : "rgba(254,226,226,0.5)")}>
+  <span style={pill(isActive ? "var(--success-hover)" : "var(--danger-hover)", isActive ? "rgba(var(--success-rgb), 0.5)" : "rgba(var(--danger-rgb), 0.5)")}>
     {isActive ? "Active" : "Inactive"}
   </span>
 );
@@ -126,10 +126,10 @@ const Transport = () => {
       </Modal>
 
       <div style={{ ...statGrid(170), marginTop: 20 }}>
-        <StatCard icon={<CarOutlined />} label="Drivers" value={drivers.length} color="#2563EB" />
-        <StatCard icon={<CarOutlined />} label="Transporters" value={transporters.length} color="#7C3AED" />
-        <StatCard icon={<CheckCircleOutlined />} label="Active" value={[...drivers, ...transporters].filter((u) => u.isActive).length} color="#22C55E" />
-        <StatCard icon={<StopOutlined />} label="Inactive" value={[...drivers, ...transporters].filter((u) => !u.isActive).length} color="#EF4444" />
+        <StatCard icon={<CarOutlined />} label="Drivers" value={drivers.length} color="var(--primary)" />
+        <StatCard icon={<CarOutlined />} label="Transporters" value={transporters.length} color="var(--purple)" />
+        <StatCard icon={<CheckCircleOutlined />} label="Active" value={[...drivers, ...transporters].filter((u) => u.isActive).length} color="var(--success)" />
+        <StatCard icon={<StopOutlined />} label="Inactive" value={[...drivers, ...transporters].filter((u) => !u.isActive).length} color="var(--danger)" />
       </div>
 
       <style>{tableHeadCss("transport-tbl")}</style>

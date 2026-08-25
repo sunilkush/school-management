@@ -164,9 +164,9 @@ const PfEsiReports = () => {
       ) : (
         <>
           <div style={{ ...statGrid(200), marginBottom: 16 }}>
-            <StatCard label={`${reportType.toUpperCase()}-Eligible Employees`} value={totals.employees} color="#2563EB" />
-            <StatCard label="Employee Contribution" value={formatCurrencyINR(totals.employeeShare)} color="#F59E0B" />
-            <StatCard label="Employer Contribution" value={formatCurrencyINR(totals.employerShare)} color="#22C55E" />
+            <StatCard label={`${reportType.toUpperCase()}-Eligible Employees`} value={totals.employees} color="var(--primary)" />
+            <StatCard label="Employee Contribution" value={formatCurrencyINR(totals.employeeShare)} color="var(--warning)" />
+            <StatCard label="Employer Contribution" value={formatCurrencyINR(totals.employerShare)} color="var(--success)" />
           </div>
 
           <div style={{ ...pageCard, padding: 0, overflow: "hidden" }}>

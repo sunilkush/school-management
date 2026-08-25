@@ -253,7 +253,7 @@ const LoginForm = () => {
                       autoFocus
                       style={{
                         width: "100%", textAlign: "center", fontSize: 28, letterSpacing: "0.4em",
-                        padding: "12px", border: `1.5px solid ${otpError ? "var(--danger)" : "#d1d5db"}`,
+                        padding: "12px", border: `1.5px solid ${otpError ? "var(--danger)" : "var(--border)"}`,
                         borderRadius: 8, fontFamily: "monospace", outline: "none",
                       }}
                     />
@@ -414,7 +414,7 @@ const LoginForm = () => {
               background: subWarning.daysLeft <= 7 ? "var(--danger-light)" : "var(--warning-light)",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 16px",
-              border: `2px solid ${subWarning.daysLeft <= 7 ? "#FECACA" : "var(--warning-light)"}`,
+              border: `2px solid ${subWarning.daysLeft <= 7 ? "var(--danger-light)" : "var(--warning-light)"}`,
             }}>
               <ExclamationCircleFilled style={{
                 fontSize: 28,
@@ -429,7 +429,7 @@ const LoginForm = () => {
             <div style={{
               display: "inline-block",
               background: subWarning.daysLeft <= 7 ? "var(--danger-light)" : "var(--warning-light)",
-              border: `1px solid ${subWarning.daysLeft <= 7 ? "#FECACA" : "var(--warning-light)"}`,
+              border: `1px solid ${subWarning.daysLeft <= 7 ? "var(--danger-light)" : "var(--warning-light)"}`,
               borderRadius: 99,
               padding: "4px 16px",
               fontSize: 13,

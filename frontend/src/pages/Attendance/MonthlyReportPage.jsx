@@ -22,7 +22,7 @@ const C = {
   warning:      "var(--warning)", warningLight: "var(--warning-light)",
   danger:       "var(--danger)", dangerLight:  "var(--danger-light)",
   purple:       "var(--purple)", purpleLight:  "rgba(var(--purple-rgb), 0.12)",
-  cyan:         "var(--cyan)", cyanLight:    "#CFFAFE", // no design token exists for this cyan-100 tint; left as-is
+  cyan:         "var(--cyan)", cyanLight:    "var(--cyan-light)",
   accent:       "var(--accent)", accentLight:  "var(--accent-light)",
   border:       "var(--border)", text:         "var(--text)",
   textSub:      "var(--text-secondary)", textMuted:    "var(--text-muted)",

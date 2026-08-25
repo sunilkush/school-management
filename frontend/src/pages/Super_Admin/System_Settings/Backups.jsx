@@ -68,20 +68,20 @@ const MODULE_OPTIONS = [
 ];
 
 const STATUS_META = {
-  queued:           { color: "#94A3B8", bg: "var(--surface-soft)",              label: "Queued"           },
-  running:          { color: "#2563EB", bg: "var(--primary-light)",             label: "Running"          },
-  success:          { color: "#16A34A", bg: "var(--success-light)",             label: "Success"          },
-  failed:           { color: "#DC2626", bg: "var(--danger-light)",              label: "Failed"           },
-  cancelled:        { color: "#D97706", bg: "var(--warning-light)",             label: "Cancelled"        },
-  pending_approval: { color: "#7C3AED", bg: "rgba(var(--purple-rgb), 0.08)",    label: "Pending Approval" },
+  queued:           { color: "var(--text-muted)", bg: "var(--surface-soft)",              label: "Queued"           },
+  running:          { color: "var(--primary)", bg: "var(--primary-light)",             label: "Running"          },
+  success:          { color: "var(--success)", bg: "var(--success-light)",             label: "Success"          },
+  failed:           { color: "var(--danger-hover)", bg: "var(--danger-light)",              label: "Failed"           },
+  cancelled:        { color: "var(--warning-hover)", bg: "var(--warning-light)",             label: "Cancelled"        },
+  pending_approval: { color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.08)",    label: "Pending Approval" },
 };
 
 const StatusTag = ({ status }) => {
-  const m = STATUS_META[status] || { color: "#94A3B8", bg: "var(--surface-soft)", label: status || "--" };
+  const m = STATUS_META[status] || { color: "var(--text-muted)", bg: "var(--surface-soft)", label: status || "--" };
   return (
     <span style={{
       fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 99,
-      color: m.color, background: m.bg, border: `1px solid ${m.color}30`,
+      color: m.color, background: m.bg, border: `1px solid color-mix(in srgb, ${m.color} 19%, transparent)`,
       display: "inline-block",
     }}>
       {m.label}

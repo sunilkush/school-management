@@ -223,12 +223,9 @@ const HostelAllocations = () => {
 
       <div style={{ ...statGrid(160), margin: "20px 0 20px" }}>
         {[
-          // Raw hex here (not C.primary/etc): feeds the shared iconWell() helper
-          // (frontend/src/styles/pageStyles.js), which builds its background as
-          // `${color}22` — breaks with a var() string.
-          { icon: <TeamOutlined />, label: "Total Students", value: stats.total, color: "#2563EB" },
-          { icon: <CheckCircleOutlined />, label: "Allocated", value: stats.allocated, color: "#22C55E" },
-          { icon: <ClockCircleOutlined />, label: "Unallocated", value: stats.unallocated, color: "#F59E0B" },
+          { icon: <TeamOutlined />, label: "Total Students", value: stats.total, color: C.primary },
+          { icon: <CheckCircleOutlined />, label: "Allocated", value: stats.allocated, color: C.success },
+          { icon: <ClockCircleOutlined />, label: "Unallocated", value: stats.unallocated, color: C.warning },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14, border: "1px solid " + C.border,

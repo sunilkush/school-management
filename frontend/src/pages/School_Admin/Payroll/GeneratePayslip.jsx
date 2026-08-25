@@ -218,7 +218,7 @@ const GeneratePayslip = () => {
             borderBottom: "1px solid var(--border-muted)",
             display: "flex", alignItems: "center", gap: 10,
           }}>
-            <div style={iconWell("#2563EB", 32)}><UserOutlined style={{ fontSize: 14 }} /></div>
+            <div style={iconWell("var(--primary)", 32)}><UserOutlined style={{ fontSize: 14 }} /></div>
             <div>
               <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                 Payroll Entries
@@ -276,7 +276,7 @@ const GeneratePayslip = () => {
             borderBottom: "1px solid var(--border-muted)",
             display: "flex", alignItems: "center", gap: 10,
           }}>
-            <div style={iconWell("#7C3AED", 32)}><FileTextOutlined style={{ fontSize: 14 }} /></div>
+            <div style={iconWell("var(--purple)", 32)}><FileTextOutlined style={{ fontSize: 14 }} /></div>
             <div>
               <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                 Payslip Preview

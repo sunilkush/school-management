@@ -69,24 +69,24 @@ const ROLE_OPTIONS = ALL_ROLE_NAMES.map((role) => ({ label: role, value: role })
 const CREATOR_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Receptionist", "IT Support"];
 
 const LEVEL_META = {
-  "all":        { icon: <GlobalOutlined />,    color: "#2563EB", label: "Broadcast" },
-  "role":       { icon: <SolutionOutlined />,  color: "#7C3AED", label: "Role"      },
-  "user-level": { icon: <UserSwitchOutlined />,color: "#D97706", label: "Level"     },
-  "user":       { icon: <UserOutlined />,      color: "#16A34A", label: "User"      },
+  "all":        { icon: <GlobalOutlined />,    color: "var(--primary)", label: "Broadcast" },
+  "role":       { icon: <SolutionOutlined />,  color: "var(--purple)", label: "Role"      },
+  "user-level": { icon: <UserSwitchOutlined />,color: "var(--warning-hover)", label: "Level"     },
+  "user":       { icon: <UserOutlined />,      color: "var(--success)", label: "User"      },
 };
 
 const STATUS_COLOR = {
-  scheduled: "#D97706",
-  draft:     "#94A3B8",
-  failed:    "#DC2626",
-  sent:      "#16A34A",
+  scheduled: "var(--warning-hover)",
+  draft:     "var(--text-muted)",
+  failed:    "var(--danger-hover)",
+  sent:      "var(--success)",
 };
 
 const CHANNEL_LIST = [
-  { key: "inApp",    label: "In App",   icon: <BellFilled />,    color: "#2563EB" },
-  { key: "email",    label: "Email",    icon: <MailOutlined />,   color: "#16A34A" },
-  { key: "sms",      label: "SMS",      icon: <MobileOutlined />, color: "#D97706" },
-  { key: "whatsapp", label: "WhatsApp", icon: <MessageOutlined />,color: "#25D366" },
+  { key: "inApp",    label: "In App",   icon: <BellFilled />,    color: "var(--primary)" },
+  { key: "email",    label: "Email",    icon: <MailOutlined />,   color: "var(--success)" },
+  { key: "sms",      label: "SMS",      icon: <MobileOutlined />, color: "var(--warning-hover)" },
+  { key: "whatsapp", label: "WhatsApp", icon: <MessageOutlined />,color: "#25D366" }, // WhatsApp's own brand green — distinct third-party brand identity, not a semantic token
 ];
 
 /* ─── Helpers ────────────────────────────────────────────────────── */
@@ -130,7 +130,7 @@ const ChannelToggle = ({ value = [], onChange }) => {
               display: "flex", flexDirection: "column", alignItems: "center",
               gap: 5, padding: "10px 16px", borderRadius: 12,
               border: `1.5px solid ${active ? ch.color : "var(--border-muted)"}`,
-              background: active ? `${ch.color}14` : "var(--surface)",
+              background: active ? `color-mix(in srgb, ${ch.color} 14%, transparent)` : "var(--surface)",
               cursor: "pointer", transition: "all 0.18s",
               minWidth: 72, userSelect: "none",
             }}
@@ -154,7 +154,7 @@ const LevelAvatar = ({ level, size = 38 }) => {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: `${m.color}18`, border: `1.5px solid ${m.color}30`,
+      background: `color-mix(in srgb, ${m.color} 18%, transparent)`, border: `1.5px solid color-mix(in srgb, ${m.color} 30%, transparent)`,
       display: "flex", alignItems: "center", justifyContent: "center",
       color: m.color, fontSize: size * 0.44, flexShrink: 0,
     }}>
@@ -181,13 +181,13 @@ const NotifItem = ({ item, isMobile, onMarkRead }) => {
       onClick={() => !item.isRead && onMarkRead(item)}
       style={{
         display: "flex", gap: 14, alignItems: "flex-start",
-        background: item.isRead ? "var(--surface)" : `linear-gradient(135deg, ${lm.color}05 0%, var(--surface) 100%)`,
-        border: `1px solid ${item.isRead ? "var(--border-muted)" : `${lm.color}30`}`,
+        background: item.isRead ? "var(--surface)" : `linear-gradient(135deg, color-mix(in srgb, ${lm.color} 5%, transparent) 0%, var(--surface) 100%)`,
+        border: `1px solid ${item.isRead ? "var(--border-muted)" : `color-mix(in srgb, ${lm.color} 30%, transparent)`}`,
         borderLeft: `4px solid ${item.isRead ? "var(--border-muted)" : lm.color}`,
         borderRadius: 14, padding: isMobile ? "12px 14px" : "14px 18px",
         cursor: item.isRead ? "default" : "pointer",
         transition: "box-shadow 0.18s",
-        boxShadow: item.isRead ? "none" : `0 4px 18px ${lm.color}12`,
+        boxShadow: item.isRead ? "none" : `0 4px 18px color-mix(in srgb, ${lm.color} 12%, transparent)`,
       }}
     >
       <LevelAvatar level={level} size={38} />
@@ -206,15 +206,15 @@ const NotifItem = ({ item, isMobile, onMarkRead }) => {
           <Flex align="center" gap={4} wrap="wrap">
             <span style={{
               fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99,
-              color: lm.color, background: `${lm.color}15`, border: `1px solid ${lm.color}25`,
+              color: lm.color, background: `color-mix(in srgb, ${lm.color} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${lm.color} 25%, transparent)`,
             }}>
               {lm.label}
             </span>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99,
-              color: STATUS_COLOR[status] || "#94A3B8",
-              background: `${STATUS_COLOR[status] || "#94A3B8"}15`,
-              border: `1px solid ${STATUS_COLOR[status] || "#94A3B8"}25`,
+              color: STATUS_COLOR[status] || "var(--text-muted)",
+              background: `color-mix(in srgb, ${STATUS_COLOR[status] || "var(--text-muted)"} 15%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${STATUS_COLOR[status] || "var(--text-muted)"} 25%, transparent)`,
             }}>
               {status}
             </span>
@@ -400,13 +400,13 @@ const Notification = () => {
     return (
       <Col xs={24}>
         <div style={{
-          background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 12,
+          background: "var(--primary-light)", border: "1px solid rgba(var(--primary-rgb), 0.3)", borderRadius: 12,
           padding: "10px 16px", display: "flex", alignItems: "center", gap: 10,
         }}>
-          <GlobalOutlined style={{ color: "#2563EB", fontSize: 16 }} />
+          <GlobalOutlined style={{ color: "var(--primary)", fontSize: 16 }} />
           <div>
-            <Text strong style={{ fontSize: 12, color: "#1D4ED8", display: "block" }}>Broadcasting to everyone</Text>
-            <Text style={{ fontSize: 11, color: "#3B82F6" }}>
+            <Text strong style={{ fontSize: 12, color: "var(--primary-hover)", display: "block" }}>Broadcasting to everyone</Text>
+            <Text style={{ fontSize: 11, color: "var(--info)" }}>
               Visible to every role and user account in the portal.
             </Text>
           </div>
@@ -417,10 +417,10 @@ const Notification = () => {
 
   /* ── Stat cards ─────────────────────────────────────────────────── */
   const STAT_CARDS = [
-    { title: "Visible",   value: visibleNotifications.length, icon: <InboxOutlined />,   color: "#14B8A6", helper: "Assigned to you"    },
-    { title: "Unread",    value: unreadCount,                 icon: <BellOutlined />,    color: "#F59E0B", helper: "Needs attention"     },
-    { title: "Scheduled", value: analytics.scheduled || 0,   icon: <CalendarOutlined />, color: "#2563EB", helper: "Planned delivery"   },
-    { title: "Opened",    value: analytics.opened || 0,      icon: <EyeOutlined />,     color: "#22C55E", helper: "Engagement"          },
+    { title: "Visible",   value: visibleNotifications.length, icon: <InboxOutlined />,   color: "var(--accent)", helper: "Assigned to you"    },
+    { title: "Unread",    value: unreadCount,                 icon: <BellOutlined />,    color: "var(--warning)", helper: "Needs attention"     },
+    { title: "Scheduled", value: analytics.scheduled || 0,   icon: <CalendarOutlined />, color: "var(--primary)", helper: "Planned delivery"   },
+    { title: "Opened",    value: analytics.opened || 0,      icon: <EyeOutlined />,     color: "var(--success)", helper: "Engagement"          },
   ];
 
   /* ── Grouped notifications ──────────────────────────────────────── */
@@ -493,7 +493,7 @@ const Notification = () => {
           <div style={{ ...sectionPanel, marginBottom: 20 }}>
             {/* Form header */}
             <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
-              <div style={iconWell("#7C3AED", 38)}>
+              <div style={iconWell("var(--purple)", 38)}>
                 <SendOutlined style={{ fontSize: 17 }} />
               </div>
               <div>
@@ -577,7 +577,7 @@ const Notification = () => {
               >
                 <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "var(--text-secondary)" }}>
                   <Form.Item name="saveAsDraft" valuePropName="checked" noStyle>
-                    <input type="checkbox" style={{ width: 15, height: 15, accentColor: "#7C3AED" }} />
+                    <input type="checkbox" style={{ width: 15, height: 15, accentColor: "var(--purple)" }} />
                   </Form.Item>
                   Save as draft instead of publishing now
                 </label>
@@ -607,7 +607,7 @@ const Notification = () => {
               <Text strong style={{ fontSize: 15, color: "var(--text-primary)" }}>My Notifications</Text>
               {unreadCount > 0 && (
                 <span style={{
-                  background: "#2563EB", color: "#fff", fontSize: 11, fontWeight: 700,
+                  background: "var(--primary)", color: "#fff", fontSize: 11, fontWeight: 700,
                   borderRadius: 99, padding: "1px 8px", lineHeight: "20px",
                 }}>
                   {unreadCount}

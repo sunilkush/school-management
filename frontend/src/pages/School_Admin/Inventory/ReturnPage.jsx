@@ -28,13 +28,10 @@ export default function ReturnPage() {
     (i) => i.status === "returned" && i.returnDate && dayjs(i.returnDate).isSame(dayjs(), "day")
   ).length;
 
-  // `color` feeds the shared iconWell()/pill() helpers (frontend/src/styles/pageStyles.js),
-  // which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
-  // so these stay hex.
   const KPI = [
-    { label: "Pending Returns",  value: returnable.length, color: "#1677ff", icon: <ImportOutlined /> },
-    { label: "Overdue",          value: overdueCount,       color: "#EF4444", icon: <WarningOutlined /> },
-    { label: "Returned Today",   value: returnedToday,      color: "#0ea472", icon: <CheckCircleOutlined /> },
+    { label: "Pending Returns",  value: returnable.length, color: "var(--primary)", icon: <ImportOutlined /> },
+    { label: "Overdue",          value: overdueCount,       color: "var(--danger)", icon: <WarningOutlined /> },
+    { label: "Returned Today",   value: returnedToday,      color: "var(--success)", icon: <CheckCircleOutlined /> },
   ];
 
   const openReturn = (rec) => {
@@ -90,7 +87,7 @@ export default function ReturnPage() {
       title: "Status", key: "status",
       render: (_, r) => {
         const key   = r.isOverdue && r.status === "issued" ? "overdue" : r.status;
-        const color = key === "overdue" ? "#EF4444" : key === "partial" ? "#F59E0B" : "#1677ff";
+        const color = key === "overdue" ? "var(--danger)" : key === "partial" ? "var(--warning)" : "var(--primary)";
         return <span style={pill(color)}>{key.toUpperCase()}</span>;
       },
     },

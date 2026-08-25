@@ -18,10 +18,10 @@ import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 
-// Note: GENDER_HEX values are left as raw hex (not var(--token)) because they're
-// consumed both as a direct color AND via `${hex}18` string-concatenation to derive
-// a translucent background below — that trick breaks if the value is a CSS var().
-const GENDER_HEX = { Male: "#2563EB", Female: "#EC4899", Other: "#94A3B8" };
+// GENDER_HEX is consumed both as a direct color AND via a translucent-background derivation
+// below — that derivation now uses color-mix() (see the Gender Distribution badge), which works
+// fine with var(--token) references, so these are tokenized like everywhere else.
+const GENDER_HEX = { Male: "var(--primary)", Female: "var(--pink)", Other: "var(--text-muted)" };
 
 /* ── Custom Tooltip ─────────────────────────────────────────────────── */
 const ChartTip = ({ active, payload }) => {
@@ -249,10 +249,7 @@ const SchoolAdminReport = () => {
                       {genderStats.map((g, i) => (
                         <span key={i} style={{
                           fontSize: 11, fontWeight: 700, borderRadius: 99, padding: "2px 10px",
-                          // GENDER_HEX values stay raw hex specifically so this alpha-suffix trick
-                          // keeps working; the CATEGORICAL_COLORS fallback (var() strings) can't be
-                          // suffixed the same way, so it gets a safe themed background instead.
-                          background: GENDER_HEX[g.name] ? `${GENDER_HEX[g.name]}18` : "var(--surface-soft)",
+                          background: GENDER_HEX[g.name] ? `color-mix(in srgb, ${GENDER_HEX[g.name]} 9%, transparent)` : "var(--surface-soft)",
                           color: GENDER_HEX[g.name] || CATEGORICAL_COLORS[i],
                         }}>
                           {g.name}: {g.count}
@@ -336,7 +333,7 @@ const SchoolAdminReport = () => {
                       <Tooltip content={tipContent} cursor={{ fill: cursorBg }} />
                       <Bar dataKey="count" name="Students" fill="var(--warning)" radius={[0, 6, 6, 0]} maxBarSize={20}>
                         {sectionWise.map((_, i) => (
-                          <Cell key={i} fill={`${["var(--warning)", "#FB923C", "#FBBF24", "var(--warning)"][i % 4]}`} />
+                          <Cell key={i} fill={`${["var(--warning)", "var(--orange)", "var(--warning)", "var(--warning)"][i % 4]}`} />
                         ))}
                       </Bar>
                     </BarChart>

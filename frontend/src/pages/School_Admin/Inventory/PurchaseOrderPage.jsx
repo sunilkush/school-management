@@ -16,25 +16,22 @@ import dayjs from "dayjs";
 
 const { Option } = Select;
 
-// `color` is baked into this pill's border as `${m.color}30` — a raw-hex alpha-suffix
-// trick that breaks with a var() string, so `color` stays hex. `bg` (used directly, no
-// suffix) is safely converted to shared tokens.
 const STATUS_META = {
-  draft:      { color: "#94A3B8", bg: "var(--surface-soft)", label: "Draft" },
-  pending:    { color: "#F59E0B", bg: "var(--warning-light)", label: "Pending" },
-  approved:   { color: "#1677ff", bg: "var(--primary-light)", label: "Approved" },
-  ordered:    { color: "#8B5CF6", bg: "rgba(var(--purple-rgb), 0.12)", label: "Ordered" },
-  partial:    { color: "#F59E0B", bg: "var(--warning-light)", label: "Partial" },
-  received:   { color: "#0ea472", bg: "var(--success-light)", label: "Received" },
-  cancelled:  { color: "#EF4444", bg: "var(--danger-light)", label: "Cancelled" },
+  draft:      { color: "var(--text-muted)", bg: "var(--surface-soft)", label: "Draft" },
+  pending:    { color: "var(--warning)", bg: "var(--warning-light)", label: "Pending" },
+  approved:   { color: "var(--primary)", bg: "var(--primary-light)", label: "Approved" },
+  ordered:    { color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.12)", label: "Ordered" },
+  partial:    { color: "var(--warning)", bg: "var(--warning-light)", label: "Partial" },
+  received:   { color: "var(--success)", bg: "var(--success-light)", label: "Received" },
+  cancelled:  { color: "var(--danger)", bg: "var(--danger-light)", label: "Cancelled" },
 };
 
 const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 const StatusPill = ({ status }) => {
-  const m = STATUS_META[status] || { color: "#94A3B8", bg: "var(--surface-soft)", label: status };
+  const m = STATUS_META[status] || { color: "var(--text-muted)", bg: "var(--surface-soft)", label: status };
   return (
-    <span style={{ display: "inline-block", padding: "2px 10px", background: m.bg, color: m.color, borderRadius: 99, fontSize: 12, fontWeight: 600, border: `1px solid ${m.color}30` }}>
+    <span style={{ display: "inline-block", padding: "2px 10px", background: m.bg, color: m.color, borderRadius: 99, fontSize: 12, fontWeight: 600, border: `1px solid color-mix(in srgb, ${m.color} 30%, transparent)` }}>
       {m.label}
     </span>
   );
@@ -103,13 +100,11 @@ export default function PurchaseOrderPage() {
 
   const totalValue = orders.reduce((s, o) => s + (o.totalAmount || 0), 0);
 
-  // `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
-  // builds its background as `${color}22` — breaks with a var() string, so these stay hex.
   const KPI = [
-    { label: "Draft",      value: orders.filter((o) => o.status === "draft").length,      color: "#94A3B8", icon: <FileTextOutlined /> },
-    { label: "Pending",    value: orders.filter((o) => o.status === "pending").length,    color: "#F59E0B", icon: <ClockCircleOutlined /> },
-    { label: "Approved",   value: orders.filter((o) => o.status === "approved").length,   color: "#1677ff", icon: <CheckCircleOutlined /> },
-    { label: "Total Value",value: fmt(totalValue),                                         color: "#0ea472", icon: <ShoppingCartOutlined /> },
+    { label: "Draft",      value: orders.filter((o) => o.status === "draft").length,      color: "var(--text-muted)", icon: <FileTextOutlined /> },
+    { label: "Pending",    value: orders.filter((o) => o.status === "pending").length,    color: "var(--warning)", icon: <ClockCircleOutlined /> },
+    { label: "Approved",   value: orders.filter((o) => o.status === "approved").length,   color: "var(--primary)", icon: <CheckCircleOutlined /> },
+    { label: "Total Value",value: fmt(totalValue),                                         color: "var(--success)", icon: <ShoppingCartOutlined /> },
   ];
 
   const columns = [
@@ -126,7 +121,7 @@ export default function PurchaseOrderPage() {
       title: "Vendor", key: "vendor",
       render: (_, r) => (
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={iconWell("#8B5CF6", 30)}>
+          <div style={iconWell("var(--purple)", 30)}>
             <ShoppingCartOutlined style={{ fontSize: 12 }} />
           </div>
           <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{r.vendorId?.name || "—"}</span>

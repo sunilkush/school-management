@@ -29,12 +29,12 @@ const C = {
 
 const VEHICLE_TYPE_CFG = {
   Bus: { color: C.primary,  bg: C.primaryLighter, border: C.primaryLight,  icon: "🚌" },
-  Van: { color: C.accent,   bg: C.accentLight,    border: "#99F6E4",        icon: "🚐" },
-  Car: { color: C.purple,   bg: C.purpleLight,    border: "#DDD6FE",        icon: "🚗" },
+  Van: { color: C.accent,   bg: C.accentLight,    border: "rgba(var(--accent-rgb), 0.3)",        icon: "🚐" },
+  Car: { color: C.purple,   bg: C.purpleLight,    border: "rgba(var(--purple-rgb), 0.3)",        icon: "🚗" },
 };
 
 const STATUS_CFG = {
-  "Available":   { color: "var(--success-hover)", bg: C.successLight, border: "#86EFAC", dot: C.success },
+  "Available":   { color: "var(--success-hover)", bg: C.successLight, border: "rgba(var(--success-rgb), 0.4)", dot: C.success },
   "In Use":      { color: "var(--warning-hover)", bg: C.warningLight,  border: "var(--warning-light)", dot: C.warning },
   "Maintenance": { color: C.textSub, bg: "var(--surface-soft)",       border: C.border,  dot: C.textMuted },
 };
@@ -262,8 +262,8 @@ const Vehicles = () => {
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           padding: "3px 11px", borderRadius: 20,
-          background: C.accentLight, color: "#0F766E",
-          border: "1px solid #99F6E4",
+          background: C.accentLight, color: "var(--accent-hover)",
+          border: "1px solid rgba(var(--accent-rgb), 0.3)",
           fontSize: 12, fontWeight: 700,
         }}>
           <NodeIndexOutlined style={{ fontSize: 10 }} />

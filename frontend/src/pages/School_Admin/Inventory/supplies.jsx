@@ -27,9 +27,6 @@ import {
 
 const { Option } = Select;
 
-// `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
-// builds its background as `${color}22` — breaks with a var() string, so call sites (and
-// the pill() calls further down this file) pass raw hex.
 const StatCard = ({ icon, label, value, color }) => (
   <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
     <div style={iconWell(color, 42)}>{icon}</div>
@@ -144,8 +141,8 @@ const Supplies = () => {
       render: (_, record) => {
         const isLow = record.lowStock ?? Number(record.quantity || 0) <= Number(record.minThreshold || 10);
         return isLow
-          ? <span style={pill("#DC2626", "rgba(254,226,226,0.5)")}>Low Stock</span>
-          : <span style={pill("#15803D", "rgba(220,252,231,0.5)")}>Healthy</span>;
+          ? <span style={pill("var(--danger-hover)", "var(--danger-light)")}>Low Stock</span>
+          : <span style={pill("var(--success-hover)", "var(--success-light)")}>Healthy</span>;
       },
     },
     {
@@ -180,9 +177,9 @@ const Supplies = () => {
         {error ? <Alert style={{ marginBottom: 16 }} type="error" showIcon message={error} /> : null}
 
         <div style={{ ...statGrid(180), marginTop: 0 }}>
-          <StatCard icon={<AppstoreOutlined />} label="Total Supplies" value={totalSupplies} color="#2563EB" />
-          <StatCard icon={<WarningOutlined />} label="Low Stock" value={lowStock} color="#DC2626" />
-          <StatCard icon={<InboxOutlined />} label="Available Units" value={`${totalAvailable} / ${totalQuantity}`} color="#15803D" />
+          <StatCard icon={<AppstoreOutlined />} label="Total Supplies" value={totalSupplies} color="var(--primary)" />
+          <StatCard icon={<WarningOutlined />} label="Low Stock" value={lowStock} color="var(--danger-hover)" />
+          <StatCard icon={<InboxOutlined />} label="Available Units" value={`${totalAvailable} / ${totalQuantity}`} color="var(--success-hover)" />
         </div>
 
         <style>{tableHeadCss("supplies-tbl")}</style>

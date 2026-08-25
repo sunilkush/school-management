@@ -14,7 +14,7 @@ import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 
 const Section = ({ title, children }) => (
   <div style={{ ...sectionPanel, marginBottom: 20 }}>
-    <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border, #e2e8f0)", paddingBottom: 10 }}>
+    <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border)", paddingBottom: 10 }}>
       {title}
     </div>
     {children}

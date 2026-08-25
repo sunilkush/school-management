@@ -19,13 +19,10 @@ const FEE_HEAD_TYPES = [
   "Sports Fee", "Books Fee", "Uniform Fee", "Fine", "Late Fee Fine",
 ];
 
-// `color` is passed into the shared `pill()` helper (frontend/src/styles/pageStyles.js),
-// which builds its border as `1px solid ${color}25` — a raw-hex alpha-suffix trick that
-// breaks with a var() string. That helper is outside this task's scope, so these stay hex.
 const TYPE_META = {
-  recurring: { color: "#0891b2", label: "Recurring" },
-  "one-time": { color: "#14B8A6", label: "One-Time" },
-  penalty:   { color: "#EF4444", label: "Penalty"  },
+  recurring: { color: "var(--cyan)",   label: "Recurring" },
+  "one-time": { color: "var(--accent)", label: "One-Time" },
+  penalty:   { color: "var(--danger)", label: "Penalty"  },
 };
 
 const SchoolFeeCategories = () => {

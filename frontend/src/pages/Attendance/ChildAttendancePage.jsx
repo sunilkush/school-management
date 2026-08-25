@@ -27,7 +27,7 @@ const STATUS_CFG = {
   absent:  { color: "var(--danger)", bg: "var(--danger-light)", border: "var(--danger-light)", label: "Absent",   tagColor: "error"   },
   late:    { color: "var(--warning)", bg: "var(--warning-light)", border: "var(--warning)", label: "Late",     tagColor: "warning" },
   halfday: { color: "var(--orange)", bg: "rgba(var(--warning-rgb), 0.08)", border: "var(--orange)", label: "Half Day", tagColor: "orange"  },
-  leave:   { color: "var(--cyan)", bg: "#ECFEFF", border: "#67E8F9", label: "Leave",    tagColor: "cyan"    }, // no cyan-tint tokens exist; left as-is
+  leave:   { color: "var(--cyan)", bg: "var(--cyan-light)", border: "rgba(var(--cyan-rgb), 0.5)", label: "Leave",    tagColor: "cyan"    },
 };
 
 /* ─── mini calendar ──────────────────────────────────────────────────── */

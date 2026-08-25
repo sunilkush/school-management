@@ -196,7 +196,7 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
             </Tooltip>
           ))}
         </div>
-        <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(var(--warning-rgb), 0.08)", borderRadius: 8, border: "1px solid #FED7AA", fontSize: 12, color: "var(--warning-hover)", lineHeight: 1.7 }}>
+        <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(var(--warning-rgb), 0.08)", borderRadius: 8, border: "1px solid rgba(var(--warning-rgb), 0.3)", fontSize: 12, color: "var(--warning-hover)", lineHeight: 1.7 }}>
           <InfoCircleOutlined style={{ marginRight: 6 }} />
           <strong>className</strong> aur <strong>sectionName</strong> ke liye — template ki <em>Sheet 2</em> se sahi naam copy karein, spelling bilkul match honi chahiye.
         </div>

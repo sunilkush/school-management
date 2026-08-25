@@ -358,13 +358,10 @@ const SeatPlanPage = () => {
       {/* ── Stats (shown after generation) ── */}
       {seats.length > 0 && (
         <div style={{ ...statGrid(160), marginBottom: 16 }}>
-          {/* Raw hex here (not C.primary/etc): feeds the shared iconWell() helper
-              (frontend/src/styles/pageStyles.js), which builds its background as
-              `${color}22` — breaks with a var() string. */}
           {[
-            { icon: <TeamOutlined />,   label: "Total Students", value: seats.length,      color: "#2563EB" },
-            { icon: <HomeOutlined />,   label: "Rooms Used",     value: rooms.length,       color: "#14B8A6" },
-            { icon: <NumberOutlined />, label: "Max Per Room",   value: capacity,            color: "#7C3AED" },
+            { icon: <TeamOutlined />,   label: "Total Students", value: seats.length,      color: C.primary },
+            { icon: <HomeOutlined />,   label: "Rooms Used",     value: rooms.length,       color: C.accent  },
+            { icon: <NumberOutlined />, label: "Max Per Room",   value: capacity,            color: C.purple },
           ].map((s) => (
             <div key={s.label} style={{
               background: C.surface, borderRadius: 14,

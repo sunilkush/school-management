@@ -28,9 +28,6 @@ import {
 
 const { Option } = Select;
 
-// `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
-// builds its background as `${color}22` — breaks with a var() string, so call sites pass
-// raw hex.
 const StatCard = ({ icon, label, value, color }) => (
   <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
     <div style={iconWell(color, 42)}>{icon}</div>
@@ -181,9 +178,9 @@ const Assets = () => {
         {error ? <Alert style={{ marginBottom: 16 }} type="error" showIcon message={error} /> : null}
 
         <div style={statGrid(160)}>
-          <StatCard icon={<AppstoreOutlined />} label="Total Assets" value={totalAssets} color="#2563EB" />
-          <StatCard icon={<CheckCircleOutlined />} label="Total Available" value={totalAvailable} color="#22C55E" />
-          <StatCard icon={<DatabaseOutlined />} label="Total Allocated" value={`${totalAllocated} / ${totalQuantity}`} color="#F59E0B" />
+          <StatCard icon={<AppstoreOutlined />} label="Total Assets" value={totalAssets} color="var(--primary)" />
+          <StatCard icon={<CheckCircleOutlined />} label="Total Available" value={totalAvailable} color="var(--success)" />
+          <StatCard icon={<DatabaseOutlined />} label="Total Allocated" value={`${totalAllocated} / ${totalQuantity}`} color="var(--warning)" />
         </div>
 
         <div style={sectionPanel}>

@@ -18,6 +18,7 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
+import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
 const { Panel } = Collapse;
@@ -28,21 +29,8 @@ const C = {
   success: "var(--success)", successBg: "rgba(var(--success-rgb), 0.08)",
   warning: "var(--warning)",
   danger:  "var(--danger)",
-  // --cyan-rgb has no token in index.css; decimal rgba keeps the exact hue for alpha tints
-  info:    "var(--cyan)",    infoBg: "rgba(6, 182, 212, 0.08)",
+  info:    "var(--cyan)",    infoBg: "rgba(var(--cyan-rgb), 0.08)",
 };
-
-/* ─── Pastel palette — one per class card ────────────────────── */
-const PASTEL = [
-  { accent: "#7c3aed", light: "#ede9fe" },   // lavender
-  { accent: "#0369a1", light: "#e0f2fe" },   // sky
-  { accent: "#047857", light: "#d1fae5" },   // mint
-  { accent: "#b45309", light: "#fef3c7" },   // amber
-  { accent: "#be123c", light: "#ffe4e6" },   // rose
-  { accent: "#0e7490", light: "#cffafe" },   // cyan
-  { accent: "#7e22ce", light: "#f3e8ff" },   // violet
-  { accent: "#be185d", light: "#fce7f3" },   // pink
-];
 
 /* ─── Stat row ───────────────────────────────────────────────── */
 const StatRow = ({ classes, sections, subjects }) => (
@@ -80,7 +68,8 @@ const StatRow = ({ classes, sections, subjects }) => (
 /* ─── Class card ─────────────────────────────────────────────── */
 const ClassCard = ({ item, index, onAssign }) => {
   const [openSec, setOpenSec] = useState(null);
-  const p = PASTEL[index % PASTEL.length];
+  const accent = CATEGORICAL_COLORS[index % CATEGORICAL_COLORS.length];
+  const light  = `color-mix(in srgb, ${accent} 15%, transparent)`;
 
   return (
     <div style={{
@@ -89,22 +78,22 @@ const ClassCard = ({ item, index, onAssign }) => {
       boxShadow: "var(--shadow-soft)",
     }}>
       {/* Pastel top strip */}
-      <div style={{ height: 4, background: p.accent, opacity: 0.7 }} />
+      <div style={{ height: 4, background: accent, opacity: 0.7 }} />
 
       {/* Card header */}
       <div style={{
         padding: "12px 14px",
         borderBottom: "1px solid var(--border)",
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: p.light + "55",
+        background: `color-mix(in srgb, ${accent} 5%, transparent)`,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-            background: p.light,
-            border: `1.5px solid ${p.accent}30`,
+            background: light,
+            border: `1.5px solid color-mix(in srgb, ${accent} 19%, transparent)`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 11, fontWeight: 700, color: p.accent,
+            fontSize: 11, fontWeight: 700, color: accent,
           }}>
             {String(index + 1).padStart(2, "0")}
           </div>
@@ -112,7 +101,7 @@ const ClassCard = ({ item, index, onAssign }) => {
             <Text style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", display: "block" }}>
               {item.name}
             </Text>
-            <Text style={{ fontSize: 11, color: p.accent, opacity: 0.85 }}>
+            <Text style={{ fontSize: 11, color: accent, opacity: 0.85 }}>
               {item.sections?.length || 0} section{item.sections?.length !== 1 ? "s" : ""}
             </Text>
           </div>
@@ -123,8 +112,8 @@ const ClassCard = ({ item, index, onAssign }) => {
           onClick={() => onAssign(item)}
           style={{
             borderRadius: 7, fontSize: 11, fontWeight: 600,
-            background: p.light, borderColor: `${p.accent}40`,
-            color: p.accent,
+            background: light, borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
+            color: accent,
           }}
         >
           Assign
@@ -138,9 +127,9 @@ const ClassCard = ({ item, index, onAssign }) => {
             const isOpen = openSec === sec._id;
             return (
               <div key={sec._id} style={{
-                border: `1px solid ${isOpen ? p.accent + "35" : "var(--border)"}`,
+                border: `1px solid ${isOpen ? `color-mix(in srgb, ${accent} 21%, transparent)` : "var(--border)"}`,
                 borderRadius: 8, overflow: "hidden",
-                background: isOpen ? p.light + "66" : "var(--surface-soft)",
+                background: isOpen ? `color-mix(in srgb, ${accent} 6%, transparent)` : "var(--surface-soft)",
                 transition: "border-color 0.15s, background 0.15s",
               }}>
                 <button
@@ -154,10 +143,10 @@ const ClassCard = ({ item, index, onAssign }) => {
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     <div style={{
                       width: 20, height: 20, borderRadius: 5, flexShrink: 0,
-                      background: p.light,
-                      border: `1px solid ${p.accent}30`,
+                      background: light,
+                      border: `1px solid color-mix(in srgb, ${accent} 19%, transparent)`,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 9, fontWeight: 800, color: p.accent,
+                      fontSize: 9, fontWeight: 800, color: accent,
                     }}>
                       {sec.name?.charAt(0) || "?"}
                     </div>
@@ -167,9 +156,9 @@ const ClassCard = ({ item, index, onAssign }) => {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
                     <span style={{
-                      fontSize: 10, fontWeight: 600, color: p.accent,
-                      background: p.light, padding: "1px 7px", borderRadius: 99,
-                      border: `1px solid ${p.accent}25`,
+                      fontSize: 10, fontWeight: 600, color: accent,
+                      background: light, padding: "1px 7px", borderRadius: 99,
+                      border: `1px solid color-mix(in srgb, ${accent} 15%, transparent)`,
                     }}>
                       {sec.subjects?.length || 0} subj
                     </span>
@@ -186,11 +175,11 @@ const ClassCard = ({ item, index, onAssign }) => {
                     {sec.subjects?.length ? (
                       sec.subjects.map((sub) => (
                         <div key={sub._id} style={{
-                          background: p.light + "88",
-                          border: `1px solid ${p.accent}20`,
+                          background: `color-mix(in srgb, ${accent} 8%, transparent)`,
+                          border: `1px solid color-mix(in srgb, ${accent} 13%, transparent)`,
                           borderRadius: 7, padding: "4px 9px",
                         }}>
-                          <Text style={{ fontSize: 11, fontWeight: 600, color: p.accent, display: "block" }}>
+                          <Text style={{ fontSize: 11, fontWeight: 600, color: accent, display: "block" }}>
                             {sub.name}
                           </Text>
                           <Text type="secondary" style={{ fontSize: 10 }}>

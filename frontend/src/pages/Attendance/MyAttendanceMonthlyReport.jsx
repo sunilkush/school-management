@@ -23,7 +23,7 @@ const C = {
   warning: "var(--warning)", warningLight: "var(--warning-light)",
   danger:  "var(--danger)", dangerLight:  "var(--danger-light)",
   purple:  "var(--purple)", purpleLight:  "rgba(var(--purple-rgb), 0.12)",
-  cyan:    "var(--cyan)", cyanLight:    "#CFFAFE", // no design token exists for this cyan-100 tint; left as-is
+  cyan:    "var(--cyan)", cyanLight:    "var(--cyan-light)",
   border:  "var(--border)", text: "var(--text)", textSub: "var(--text-secondary)", textMuted: "var(--text-muted)",
   surface: "var(--surface)", surfaceSoft: "var(--surface-soft)",
 };
@@ -33,7 +33,7 @@ const STATUS = {
   absent:  { color: C.danger,  bg: C.dangerLight,  border: "var(--danger-light)", label: "Absent",   icon: <CloseCircleOutlined />, antBadge: "error"    },
   late:    { color: C.warning, bg: C.warningLight,  border: "var(--warning)", label: "Late",     icon: <ClockCircleOutlined />, antBadge: "warning"  },
   halfday: { color: C.purple,  bg: C.purpleLight,  border: "rgba(var(--purple-rgb), 0.5)", label: "Half Day", icon: <MinusCircleOutlined />, antBadge: "processing"},
-  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "#67E8F9", label: "On Leave", icon: <QuestionCircleOutlined/>,antBadge: "default"  }, // no cyan-rgb token exists to build a tint; left as-is
+  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "rgba(var(--cyan-rgb), 0.4)", label: "On Leave", icon: <QuestionCircleOutlined/>,antBadge: "default"  },
 };
 
 const PANEL = {

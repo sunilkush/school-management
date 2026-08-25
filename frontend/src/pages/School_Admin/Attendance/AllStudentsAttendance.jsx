@@ -32,15 +32,15 @@ import {
 } from "../../../styles/pageStyles";
 
 /* ── Status config ───────────────────────────────────────────────── */
-// `color` feeds StatusBtn's `${opt.color}18` alpha-suffix trick and the shared iconWell()
-// helper (frontend/src/styles/pageStyles.js) elsewhere in this file — both break with a
-// var() string, so these stay raw hex.
+// `color` feeds StatusBtn's alpha tint (via color-mix()) and the shared iconWell()
+// helper (frontend/src/styles/pageStyles.js) elsewhere in this file — both now work fine
+// with var(--token) strings.
 const STATUS_OPTIONS = [
-  { value: "present", label: "P",  fullLabel: "Present",  color: "#22C55E" },
-  { value: "absent",  label: "A",  fullLabel: "Absent",   color: "#EF4444" },
-  { value: "late",    label: "L",  fullLabel: "Late",     color: "#F59E0B" },
-  { value: "halfday", label: "H",  fullLabel: "Half Day", color: "#F59E0B" },
-  { value: "leave",   label: "Lv", fullLabel: "Leave",    color: "#0891b2" },
+  { value: "present", label: "P",  fullLabel: "Present",  color: "var(--success)" },
+  { value: "absent",  label: "A",  fullLabel: "Absent",   color: "var(--danger)" },
+  { value: "late",    label: "L",  fullLabel: "Late",     color: "var(--warning)" },
+  { value: "halfday", label: "H",  fullLabel: "Half Day", color: "var(--warning)" },
+  { value: "leave",   label: "Lv", fullLabel: "Leave",    color: "var(--cyan)" },
 ];
 
 const TABLE_CLS    = "stud-att-tbl";
@@ -54,7 +54,7 @@ const StatusBtn = ({ opt, active, onClick }) => (
       padding: "4px 10px",
       borderRadius: 6,
       border: `1.5px solid ${active ? opt.color : "var(--border-muted)"}`,
-      background: active ? `${opt.color}18` : "transparent",
+      background: active ? `color-mix(in srgb, ${opt.color} 9%, transparent)` : "transparent",
       color: active ? opt.color : "var(--text-muted)",
       fontWeight: active ? 700 : 500,
       cursor: "pointer",
@@ -391,14 +391,14 @@ const AllStudentsAttendance = () => {
       </div>
 
       {/* ── Stats ── */}
-      {/* `color` feeds the shared iconWell() helper below — see STATUS_OPTIONS note above. */}
+      {/* `color` feeds the shared iconWell() helper below. */}
       <div style={statGrid(130)}>
         {[
           { key: "total",   label: "Total",    color: "var(--primary)" },
-          { key: "present", label: "Present",  color: "#22C55E"        },
-          { key: "absent",  label: "Absent",   color: "#EF4444"        },
-          { key: "late",    label: "Late",     color: "#F59E0B"        },
-          { key: "leave",   label: "Leave",    color: "#0891b2"        },
+          { key: "present", label: "Present",  color: "var(--success)" },
+          { key: "absent",  label: "Absent",   color: "var(--danger)"  },
+          { key: "late",    label: "Late",     color: "var(--warning)" },
+          { key: "leave",   label: "Leave",    color: "var(--cyan)"    },
         ].map(({ key, label, color }) => (
           <div
             key={key}

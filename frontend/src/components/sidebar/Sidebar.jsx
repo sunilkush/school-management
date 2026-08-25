@@ -27,7 +27,7 @@ const ROLE_COLORS = {
   "transport manager": "var(--warning)",
   "exam coordinator":  "var(--danger)",
   receptionist:        "var(--pink)",
-  counselor:           "#A78BFA",
+  counselor:           "var(--purple)",
   security:            "var(--text-secondary)",
   staff:               "var(--text-secondary)",
 };
@@ -40,8 +40,8 @@ const tk = (accent) => ({
   border:      "var(--border)",
   headerBg:    "var(--surface-soft)",
   accent,
-  accentBg:    `${accent}16`,
-  accentBorder:`${accent}30`,
+  accentBg:    `color-mix(in srgb, ${accent} 9%, transparent)`,
+  accentBorder:`color-mix(in srgb, ${accent} 19%, transparent)`,
   textPrimary: "var(--text)",
   textMuted:   "var(--text-muted)",
   hover:       "var(--surface-soft-hover)",
@@ -222,10 +222,10 @@ const Sidebar = ({ collapsed, onToggle }) => {
             >
               <div style={{
                 width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                background: `linear-gradient(135deg, ${accent}, ${accent}99)`,
+                background: `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 60%, transparent))`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "#fff", fontWeight: 800, fontSize: 14, letterSpacing: 0.5,
-                boxShadow: `0 3px 10px ${accent}40`,
+                boxShadow: `0 3px 10px color-mix(in srgb, ${accent} 25%, transparent)`,
               }}>
                 {initials}
               </div>
@@ -242,7 +242,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
                     fontSize: 10, fontWeight: 600, letterSpacing: "0.04em",
                     textTransform: "capitalize",
                     color: accent,
-                    background: `${accent}15`,
+                    background: `color-mix(in srgb, ${accent} 8%, transparent)`,
                     padding: "1px 7px", borderRadius: 99,
                     marginTop: 2, display: "inline-block",
                   }}>
@@ -310,7 +310,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
                 size={32}
                 style={{
                   flexShrink: 0,
-                  background: `linear-gradient(135deg, ${accent}cc, ${accent}66)`,
+                  background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 80%, transparent), color-mix(in srgb, ${accent} 40%, transparent))`,
                   color: "#fff",
                   fontSize: 12,
                   fontWeight: 700,

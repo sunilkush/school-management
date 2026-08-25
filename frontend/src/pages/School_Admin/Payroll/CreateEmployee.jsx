@@ -66,8 +66,8 @@ const RoleBadge = ({ role = "Staff" }) => {
     <span style={{
       padding: "2px 9px", borderRadius: 20, fontSize: 11, fontWeight: 700,
       background: isTeacher ? C.accentLight : isAdmin ? C.primaryLighter : C.purpleLight,
-      color: isTeacher ? "#0F766E" : isAdmin ? C.primary : C.purple,
-      border: `1px solid ${isTeacher ? "#99F6E4" : isAdmin ? C.primaryLight : "#DDD6FE"}`,
+      color: isTeacher ? "var(--accent-hover)" : isAdmin ? C.primary : C.purple,
+      border: `1px solid ${isTeacher ? "rgba(var(--accent-rgb), 0.3)" : isAdmin ? C.primaryLight : "rgba(var(--purple-rgb), 0.3)"}`,
     }}>
       {role}
     </span>
@@ -282,10 +282,10 @@ const CreateEmployee = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <TeamOutlined />,      label: "Total Employees", value: stats.total,    color: "#2563EB" },
-          { icon: <UserOutlined />,      label: "Active",          value: stats.active,   color: "#22C55E" },
-          { icon: <BookOutlined />,      label: "Teachers",        value: stats.teachers, color: "#14B8A6" },
-          { icon: <ApartmentOutlined />, label: "Other Staff",     value: stats.staff,    color: "#7C3AED" },
+          { icon: <TeamOutlined />,      label: "Total Employees", value: stats.total,    color: "var(--primary)" },
+          { icon: <UserOutlined />,      label: "Active",          value: stats.active,   color: "var(--success)" },
+          { icon: <BookOutlined />,      label: "Teachers",        value: stats.teachers, color: "var(--accent)" },
+          { icon: <ApartmentOutlined />, label: "Other Staff",     value: stats.staff,    color: "var(--purple)" },
         ].map((s) => (
           <div key={s.label} style={{
             background: C.surface, borderRadius: 14,

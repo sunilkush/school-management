@@ -46,11 +46,11 @@ const formatCurrency = (n) =>
   `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 const statusMap = {
-  draft: { color: "#64748B", bg: "rgba(241,245,249,0.6)", label: "Draft" },
-  unpaid: { color: "#B45309", bg: "rgba(254,243,199,0.5)", label: "Unpaid" },
-  paid: { color: "#15803D", bg: "rgba(220,252,231,0.5)", label: "Paid" },
-  overdue: { color: "#DC2626", bg: "rgba(254,226,226,0.5)", label: "Overdue" },
-  cancelled: { color: "#64748B", bg: "rgba(241,245,249,0.6)", label: "Cancelled" },
+  draft: { color: "var(--text-secondary)", bg: "var(--surface-soft)", label: "Draft" },
+  unpaid: { color: "var(--warning-hover)", bg: "var(--warning-light)", label: "Unpaid" },
+  paid: { color: "var(--success-hover)", bg: "var(--success-light)", label: "Paid" },
+  overdue: { color: "var(--danger-hover)", bg: "var(--danger-light)", label: "Overdue" },
+  cancelled: { color: "var(--text-secondary)", bg: "var(--surface-soft)", label: "Cancelled" },
 };
 
 const paymentModes = [
@@ -213,7 +213,7 @@ export default function RevenuePage() {
       dataIndex: "invoiceNumber",
       render: (value) => (
         <Space>
-          <div style={iconWell("#2563EB", 34)}><FileTextOutlined /></div>
+          <div style={iconWell("var(--primary)", 34)}><FileTextOutlined /></div>
           <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{value}</span>
         </Space>
       ),
@@ -285,10 +285,10 @@ export default function RevenuePage() {
       />
 
       <div style={{ ...statGrid(200), marginTop: 20 }}>
-        <MetricCard title="Total Invoiced" value={formatCurrency(revenueSummary.totalInvoiced)} icon={<FileTextOutlined />} color="#2563EB" sub="All generated invoices" />
-        <MetricCard title="Total Paid" value={formatCurrency(revenueSummary.totalPaid)} icon={<CheckCircleOutlined />} color="#22C55E" sub="Received payments" />
-        <MetricCard title="Outstanding" value={formatCurrency(revenueSummary.totalOutstanding)} icon={<ClockCircleOutlined />} color="#F59E0B" sub="Pending collection" />
-        <MetricCard title="Overdue" value={formatCurrency(revenueSummary.overdue)} icon={<WarningOutlined />} color="#EF4444" sub="Needs follow-up" />
+        <MetricCard title="Total Invoiced" value={formatCurrency(revenueSummary.totalInvoiced)} icon={<FileTextOutlined />} color="var(--primary)" sub="All generated invoices" />
+        <MetricCard title="Total Paid" value={formatCurrency(revenueSummary.totalPaid)} icon={<CheckCircleOutlined />} color="var(--success)" sub="Received payments" />
+        <MetricCard title="Outstanding" value={formatCurrency(revenueSummary.totalOutstanding)} icon={<ClockCircleOutlined />} color="var(--warning)" sub="Pending collection" />
+        <MetricCard title="Overdue" value={formatCurrency(revenueSummary.overdue)} icon={<WarningOutlined />} color="var(--danger)" sub="Needs follow-up" />
       </div>
 
       <style>{tableHeadCss("revenue-page-tbl")}</style>

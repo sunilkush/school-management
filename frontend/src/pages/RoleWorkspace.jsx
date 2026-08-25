@@ -12,59 +12,59 @@ import { pageWrapper, iconWell } from "../styles/pageStyles";
 
 /* ── Module → icon + color ───────────────────────────────────────── */
 const MODULE_KEYS = [
-  { key: "user",         icon: Users,        color: "#2563EB" },
-  { key: "employee",     icon: Users,        color: "#2563EB" },
-  { key: "student",      icon: GraduationCap,color: "#8B5CF6" },
-  { key: "exam",         icon: ClipboardList, color: "#EF4444" },
-  { key: "assessment",   icon: ClipboardList, color: "#EF4444" },
-  { key: "class",        icon: BookOpen,     color: "#14B8A6" },
-  { key: "subject",      icon: BookOpen,     color: "#06B6D4" },
-  { key: "payroll",      icon: DollarSign,   color: "#22C55E" },
-  { key: "fee",          icon: DollarSign,   color: "#22C55E" },
-  { key: "transport",    icon: Bus,          color: "#F59E0B" },
-  { key: "library",      icon: Layers,       color: "#7C3AED" },
-  { key: "report",       icon: BarChart3,    color: "#F97316" },
-  { key: "notification", icon: Bell,         color: "#F59E0B" },
-  { key: "message",      icon: MessageSquare,color: "#06B6D4" },
-  { key: "calendar",     icon: Calendar,     color: "#14B8A6" },
-  { key: "role",         icon: ShieldCheck,  color: "#8B5CF6" },
-  { key: "permission",   icon: Lock,         color: "#64748B" },
-  { key: "task",         icon: CheckSquare,  color: "#F97316" },
-  { key: "document",     icon: FileText,     color: "#3B82F6" },
-  { key: "inventory",    icon: Package,      color: "#10B981" },
-  { key: "building",     icon: Building2,    color: "#6366F1" },
-  { key: "setting",      icon: Wrench,       color: "#94A3B8" },
-  { key: "database",     icon: Database,     color: "#64748B" },
+  { key: "user",         icon: Users,        color: "var(--primary)" },
+  { key: "employee",     icon: Users,        color: "var(--primary)" },
+  { key: "student",      icon: GraduationCap,color: "var(--purple)" },
+  { key: "exam",         icon: ClipboardList, color: "var(--danger)" },
+  { key: "assessment",   icon: ClipboardList, color: "var(--danger)" },
+  { key: "class",        icon: BookOpen,     color: "var(--accent)" },
+  { key: "subject",      icon: BookOpen,     color: "var(--cyan)" },
+  { key: "payroll",      icon: DollarSign,   color: "var(--success)" },
+  { key: "fee",          icon: DollarSign,   color: "var(--success)" },
+  { key: "transport",    icon: Bus,          color: "var(--warning)" },
+  { key: "library",      icon: Layers,       color: "var(--purple)" },
+  { key: "report",       icon: BarChart3,    color: "var(--orange)" },
+  { key: "notification", icon: Bell,         color: "var(--warning)" },
+  { key: "message",      icon: MessageSquare,color: "var(--cyan)" },
+  { key: "calendar",     icon: Calendar,     color: "var(--accent)" },
+  { key: "role",         icon: ShieldCheck,  color: "var(--purple)" },
+  { key: "permission",   icon: Lock,         color: "var(--text-secondary)" },
+  { key: "task",         icon: CheckSquare,  color: "var(--orange)" },
+  { key: "document",     icon: FileText,     color: "var(--info)" },
+  { key: "inventory",    icon: Package,      color: "var(--success)" },
+  { key: "building",     icon: Building2,    color: "var(--purple)" },
+  { key: "setting",      icon: Wrench,       color: "var(--text-muted)" },
+  { key: "database",     icon: Database,     color: "var(--text-secondary)" },
 ];
 
 const getModuleMeta = (name = "") => {
   const lower = name.toLowerCase();
   const match = MODULE_KEYS.find((m) => lower.includes(m.key));
-  return match ?? { icon: Settings, color: "#64748B" };
+  return match ?? { icon: Settings, color: "var(--text-secondary)" };
 };
 
 /* ── Action → pill style ─────────────────────────────────────────── */
 const ACTION_STYLES = {
-  read:    { color: "#1D4ED8", bg: "#DBEAFE" },
-  view:    { color: "#1D4ED8", bg: "#DBEAFE" },
-  create:  { color: "#15803D", bg: "#DCFCE7" },
-  add:     { color: "#15803D", bg: "#DCFCE7" },
-  write:   { color: "#B45309", bg: "#FEF3C7" },
-  update:  { color: "#B45309", bg: "#FEF3C7" },
-  edit:    { color: "#B45309", bg: "#FEF3C7" },
-  delete:  { color: "#DC2626", bg: "#FEE2E2" },
-  remove:  { color: "#DC2626", bg: "#FEE2E2" },
-  manage:  { color: "#6D28D9", bg: "#EDE9FE" },
-  publish: { color: "#0D9488", bg: "#CCFBF1" },
-  approve: { color: "#0D9488", bg: "#CCFBF1" },
-  export:  { color: "#6D28D9", bg: "#EDE9FE" },
-  import:  { color: "#1D4ED8", bg: "#DBEAFE" },
+  read:    { color: "var(--primary-hover)", bg: "var(--primary-light)" },
+  view:    { color: "var(--primary-hover)", bg: "var(--primary-light)" },
+  create:  { color: "var(--success-hover)", bg: "var(--success-light)" },
+  add:     { color: "var(--success-hover)", bg: "var(--success-light)" },
+  write:   { color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  update:  { color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  edit:    { color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  delete:  { color: "var(--danger-hover)", bg: "var(--danger-light)" },
+  remove:  { color: "var(--danger-hover)", bg: "var(--danger-light)" },
+  manage:  { color: "var(--purple-hover)", bg: "rgba(var(--purple-rgb), 0.12)" },
+  publish: { color: "var(--accent-hover)", bg: "var(--accent-light)" },
+  approve: { color: "var(--accent-hover)", bg: "var(--accent-light)" },
+  export:  { color: "var(--purple-hover)", bg: "rgba(var(--purple-rgb), 0.12)" },
+  import:  { color: "var(--primary-hover)", bg: "var(--primary-light)" },
 };
 
 const getActionStyle = (action = "") => {
   const lower = action.toLowerCase();
   const key = Object.keys(ACTION_STYLES).find((k) => lower.includes(k));
-  return key ? ACTION_STYLES[key] : { color: "#475569", bg: "#F1F5F9" };
+  return key ? ACTION_STYLES[key] : { color: "#475569", bg: "var(--surface-soft)" };
 };
 
 /* ── Component ───────────────────────────────────────────────────── */
@@ -124,12 +124,12 @@ const RoleWorkspace = () => {
         <div
           style={{
             position:     "relative",
-            background:   "linear-gradient(135deg, var(--primary) 0%, #1e40af 100%)",
+            background:   "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
             borderRadius: 18,
             padding:      "28px 32px",
             marginBottom: 20,
             overflow:     "hidden",
-            boxShadow:    "0 4px 24px rgba(37,99,235,0.3)",
+            boxShadow:    "0 4px 24px rgba(var(--primary-rgb),0.3)",
           }}
         >
           {/* Decorative circles */}
@@ -298,7 +298,7 @@ const RoleWorkspace = () => {
                       width:        26,
                       height:       26,
                       borderRadius: 8,
-                      background:   `${meta.color}18`,
+                      background:   `color-mix(in srgb, ${meta.color} 9%, transparent)`,
                       color:        meta.color,
                       fontSize:     12,
                       fontWeight:   800,
@@ -335,7 +335,7 @@ const RoleWorkspace = () => {
                               fontSize:     11,
                               fontWeight:   600,
                               letterSpacing:"0.03em",
-                              border:       `1px solid ${color}25`,
+                              border:       `1px solid color-mix(in srgb, ${color} 15%, transparent)`,
                             }}
                           >
                             {action.toUpperCase()}

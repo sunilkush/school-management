@@ -32,7 +32,7 @@ const C = {
 const STATUS_CFG = {
   pending:  { color: "var(--warning-hover)", bg: "var(--warning-light)", border: "var(--warning-light)", dot: C.warning,  label: "Pending"  },
   active:   { color: "var(--success-hover)", bg: "var(--success-light)", border: "var(--success-light)", dot: C.success,  label: "Active"   },
-  rejected: { color: "#991B1B", bg: "var(--danger-light)", border: "var(--danger-light)", dot: C.danger,   label: "Rejected" },
+  rejected: { color: "var(--danger-hover)", bg: "var(--danger-light)", border: "var(--danger-light)", dot: C.danger,   label: "Rejected" },
   closed:   { color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)", dot: "var(--text-muted)", label: "Closed" },
 };
 
@@ -300,10 +300,10 @@ const SalaryAdvance = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <WalletOutlined />,      label: "Total Advances",    value: stats.total,            color: "#2563EB" },
-          { icon: <CheckCircleOutlined />, label: "Active",            value: stats.active,           color: "#22C55E" },
-          { icon: <ClockCircleOutlined />, label: "Pending Approval",  value: stats.pending,          color: "#F59E0B" },
-          { icon: <FieldTimeOutlined />,   label: "Total Outstanding", value: fmt(stats.outstanding), color: "#7C3AED", small: true },
+          { icon: <WalletOutlined />,      label: "Total Advances",    value: stats.total,            color: "var(--primary)" },
+          { icon: <CheckCircleOutlined />, label: "Active",            value: stats.active,           color: "var(--success)" },
+          { icon: <ClockCircleOutlined />, label: "Pending Approval",  value: stats.pending,          color: "var(--warning)" },
+          { icon: <FieldTimeOutlined />,   label: "Total Outstanding", value: fmt(stats.outstanding), color: "var(--purple)", small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: "var(--surface)", borderRadius: 14,
@@ -411,7 +411,7 @@ const SalaryAdvance = () => {
               };
               const cfg = ACTION_CFG[h.action] || ACTION_CFG.created;
               return (
-                <div key={i} style={{ display: "flex", gap: 12, padding: "10px 14px", background: cfg.bg, borderRadius: 10, border: `1px solid ${cfg.color}22` }}>
+                <div key={i} style={{ display: "flex", gap: 12, padding: "10px 14px", background: cfg.bg, borderRadius: 10, border: `1px solid color-mix(in srgb, ${cfg.color} 13%, transparent)` }}>
                   <div style={{ flexShrink: 0, width: 8, height: 8, borderRadius: "50%", background: cfg.color, marginTop: 6 }} />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 13, color: cfg.color }}>{cfg.label}</div>

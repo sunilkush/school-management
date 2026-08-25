@@ -15,21 +15,20 @@ import {
   fetchSchoolClasses,
 } from "../../../features/schoolClassSlice";
 import { createSection, deleteSection, fetchSections } from "../../../features/sectionSlice";
-import { useTheme } from "../../../context/ThemeContext";
 
-const tokens = (isDark) => ({
+const tokens = () => ({
   cardBg: "var(--surface)",
   innerBg: "var(--background)",
   rowBg: "var(--surface)",
-  rowAlt: isDark ? "#111111" : "#fafafa",
-  rowHover: isDark ? "#1a1a1a" : "#f0f7ff",
+  rowAlt: "var(--surface-soft)",
+  rowHover: "var(--surface-soft-hover)",
   border: "var(--border-muted)",
   textPri: "var(--text)",
   textSec: "var(--text-secondary)",
-  accent: "#1677ff",
-  accentBg: isDark ? "rgba(22,119,255,0.08)" : "rgba(22,119,255,0.06)",
+  accent: "var(--primary)",
+  accentBg: "rgba(var(--primary-rgb), 0.08)",
   success: "var(--success)",
-  successBg: isDark ? "rgba(var(--success-rgb),0.08)" : "rgba(var(--success-rgb),0.06)",
+  successBg: "rgba(var(--success-rgb), 0.08)",
   thBg: "var(--background)",
   thBorder: "var(--border-muted)",
 });
@@ -60,8 +59,7 @@ const safeMessage = (err, fallback = "Something went wrong") => {
 
 const SchoolClass = ({ next }) => {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
-  const t = tokens(isDark);
+  const t = tokens();
 
   const boardClassState = useSelector((s) => s.boardClass || {});
   const boardState = useSelector((s) => s.boards || {});

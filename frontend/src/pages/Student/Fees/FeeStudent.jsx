@@ -28,7 +28,7 @@ import {
   fetchFeeInstallments,
 } from "../../../features/feeInstallmentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, tableHeadCss, pill } from "../../../styles/pageStyles";
+import { pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles";
 
 /* ── Razorpay loader ── */
 const loadRazorpay = () =>
@@ -43,7 +43,7 @@ const loadRazorpay = () =>
 /* ── Quarter meta ── */
 const Q_MONTHS = {
   1: { label: "Q1", months: "Jan · Feb · Mar", color: "var(--purple)", bg: "rgba(var(--purple-rgb),0.12)" },
-  2: { label: "Q2", months: "Apr · May · Jun", color: "var(--cyan)", bg: "rgba(6,182,212,0.12)" },
+  2: { label: "Q2", months: "Apr · May · Jun", color: "var(--cyan)", bg: "rgba(var(--cyan-rgb),0.12)" },
   3: { label: "Q3", months: "Jul · Aug · Sep", color: "var(--warning-hover)", bg: "var(--warning-light)" },
   4: { label: "Q4", months: "Oct · Nov · Dec", color: "var(--success)", bg: "var(--success-light)" },
 };
@@ -51,7 +51,7 @@ const Q_MONTHS = {
 const STATUS_CFG = {
   paid:    { color: "var(--success)", bg: "var(--success-light)", icon: <CheckCircleOutlined />,      label: "Paid"    },
   pending: { color: "var(--warning)", bg: "var(--warning-light)", icon: <ClockCircleOutlined />,      label: "Pending" },
-  partial: { color: "var(--cyan)", bg: "rgba(6,182,212,0.15)", icon: <ExclamationCircleOutlined />, label: "Partial" },
+  partial: { color: "var(--cyan)", bg: "rgba(var(--cyan-rgb),0.15)", icon: <ExclamationCircleOutlined />, label: "Partial" },
 };
 
 const StatusPill = ({ status }) => {

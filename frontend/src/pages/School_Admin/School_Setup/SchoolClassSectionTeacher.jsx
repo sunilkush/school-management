@@ -20,21 +20,20 @@ import {
   fetchSections,
 } from "../../../features/sectionSlice.js";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
-import { useTheme } from "../../../context/ThemeContext";
 
 const { Option } = Select;
 const { useBreakpoint } = Grid;
 
-const tokens = (isDark) => ({
+const tokens = () => ({
   cardBg: "var(--surface)",
   innerBg: "var(--background)",
   border: "var(--border-muted)",
   textPri: "var(--text)",
   textSec: "var(--text-secondary)",
-  accent: "#1677ff",
-  accentBg: isDark ? "rgba(22,119,255,0.08)" : "rgba(22,119,255,0.06)",
+  accent: "var(--primary)",
+  accentBg: "rgba(var(--primary-rgb), 0.08)",
   success: "var(--success)",
-  successBg: isDark ? "rgba(var(--success-rgb),0.08)" : "rgba(var(--success-rgb),0.06)",
+  successBg: "rgba(var(--success-rgb), 0.08)",
   thBg: "var(--background)",
   thBorder: "var(--border-muted)",
 });
@@ -60,8 +59,7 @@ const compareClassNames = (a, b) => {
 
 const SchoolClassSectionTeacher = ({ next }) => {
   const dispatch = useDispatch();
-  const { isDark } = useTheme();
-  const t = tokens(isDark);
+  const t = tokens();
 
   const screens = useBreakpoint();
   const isMobile = !screens.md;

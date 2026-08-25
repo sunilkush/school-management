@@ -69,7 +69,7 @@ const Loader = () => (
         width: 76px;
         height: 76px;
         border-radius: 22px;
-        background: #ffffff;
+        background: var(--surface);
         box-shadow:
           0 0 0 1px rgba(var(--primary-rgb),0.08),
           0 8px 28px rgba(var(--primary-rgb),0.14),
@@ -114,7 +114,7 @@ const Loader = () => (
       .ld-sub {
         margin-top: 6px;
         font-size: 13px;
-        color: #94A3B8;
+        color: var(--text-muted);
         text-align: center;
         letter-spacing: 0.01em;
       }

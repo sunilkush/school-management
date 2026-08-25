@@ -29,15 +29,15 @@ const TYPE_CFG = {
   festival_bonus:    { label: "Festival Bonus",    emoji: "🪔", color: C.warning, bg: C.warningLight,   border: "var(--warning-light)" },
   performance_bonus: { label: "Performance Bonus", emoji: "🏆", color: C.success, bg: C.successLight,   border: "var(--success-light)" },
   incentive:         { label: "Incentive",         emoji: "⭐", color: C.primary, bg: C.primaryLighter, border: C.primaryLight },
-  target_bonus:      { label: "Target Bonus",      emoji: "🎯", color: C.purple,  bg: C.purpleLight,    border: "#DDD6FE" },
-  one_time_payout:   { label: "One-Time Payout",   emoji: "💰", color: C.orange,  bg: C.orangeLight,    border: "#FED7AA" },
+  target_bonus:      { label: "Target Bonus",      emoji: "🎯", color: C.purple,  bg: C.purpleLight,    border: "rgba(var(--purple-rgb), 0.3)" },
+  one_time_payout:   { label: "One-Time Payout",   emoji: "💰", color: C.orange,  bg: C.orangeLight,    border: "rgba(var(--orange-rgb), 0.3)" },
 };
 
 const STATUS_CFG = {
   draft:     { color: "var(--text-muted)", bg: "var(--surface-soft)", border: "var(--border-muted)", label: "Draft"     },
   approved:  { color: "var(--success-hover)", bg: C.successLight,   border: "var(--success-light)",  label: "Approved"  },
   paid:      { color: C.primary, bg: C.primaryLighter, border: C.primaryLight,   label: "Paid"      },
-  cancelled: { color: "#991B1B", bg: C.dangerLight,    border: "var(--danger-light)",  label: "Cancelled" },
+  cancelled: { color: "var(--danger-hover)", bg: C.dangerLight,    border: "var(--danger-light)",  label: "Cancelled" },
 };
 
 const MONTHS = [
@@ -254,10 +254,10 @@ const BonusIncentivePage = () => {
       {/* Stats */}
       <div style={{ ...statGrid(150), margin: "20px 0 20px" }}>
         {[
-          { icon: <GiftOutlined />,   label: "Total Bonuses",    value: stats.total,        color: "#2563EB" },
-          { icon: <GiftOutlined />,   label: "Festival Bonuses", value: stats.festival,     color: "#F59E0B" },
-          { icon: <TrophyOutlined />, label: "Performance",      value: stats.perf,         color: "#22C55E" },
-          { icon: <StarOutlined />,   label: "Total Value",      value: fmt(stats.totalAmt), color: "#7C3AED", small: true },
+          { icon: <GiftOutlined />,   label: "Total Bonuses",    value: stats.total,        color: "var(--primary)" },
+          { icon: <GiftOutlined />,   label: "Festival Bonuses", value: stats.festival,     color: "var(--warning)" },
+          { icon: <TrophyOutlined />, label: "Performance",      value: stats.perf,         color: "var(--success)" },
+          { icon: <StarOutlined />,   label: "Total Value",      value: fmt(stats.totalAmt), color: "var(--purple)", small: true },
         ].map((s) => (
           <div key={s.label} style={{
             background: "var(--surface)", borderRadius: 14,

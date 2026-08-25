@@ -36,15 +36,17 @@ const C = {
 };
 
 /* ─── class colour palette ───────────────────────────────────── */
+// 7 distinct hues cycling across classes (categorical use — differentiating many class cards at
+// once), so this stays a local multi-color array rather than collapsing to one semantic token.
 const CLASS_COLORS = [
   { bg: "rgba(var(--purple-rgb),0.08)",  text: "var(--purple-hover)", border: "rgba(var(--purple-rgb),0.2)"  },
   { bg: "rgba(var(--primary-rgb),0.08)",   text: "var(--primary-hover)", border: "rgba(var(--primary-rgb),0.2)"   },
-  { bg: "rgba(var(--success-rgb),0.08)",  text: "#065f46", border: "rgba(var(--success-rgb),0.2)"  },
+  { bg: "rgba(var(--success-rgb),0.08)",  text: "var(--success-hover)", border: "rgba(var(--success-rgb),0.2)"  },
   { bg: "rgba(var(--warning-rgb),0.08)",  text: "var(--warning-hover)", border: "rgba(var(--warning-rgb),0.2)"  },
-  { bg: "rgba(var(--danger-rgb),0.08)",   text: "#991b1b", border: "rgba(var(--danger-rgb),0.2)"   },
-  { bg: "rgba(6,182,212,0.08)",   text: "#0e7490", border: "rgba(6,182,212,0.2)"   },
-  { bg: "rgba(236,72,153,0.08)",  text: "#9d174d", border: "rgba(236,72,153,0.2)"  },
-  { bg: "rgba(var(--success-rgb),0.08)",   text: "#14532d", border: "rgba(var(--success-rgb),0.2)"   },
+  { bg: "rgba(var(--danger-rgb),0.08)",   text: "var(--danger-hover)", border: "rgba(var(--danger-rgb),0.2)"   },
+  { bg: "rgba(var(--cyan-rgb),0.08)",   text: "var(--cyan-hover)", border: "rgba(var(--cyan-rgb),0.2)"   },
+  { bg: "rgba(var(--pink-rgb),0.08)",  text: "var(--pink-hover)", border: "rgba(var(--pink-rgb),0.2)"  },
+  { bg: "rgba(var(--success-rgb),0.08)",   text: "var(--success-hover)", border: "rgba(var(--success-rgb),0.2)"   },
 ];
 const classColor = (idx) => CLASS_COLORS[idx % CLASS_COLORS.length];
 

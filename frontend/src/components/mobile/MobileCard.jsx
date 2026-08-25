@@ -48,7 +48,7 @@ const MobileCard = ({
   const txtPri = "var(--text)";
   const txtMut = "var(--text-muted)";
   const metaBg = "var(--surface-soft)";
-  const accentColor = accent || "var(--primary, #2563EB)";
+  const accentColor = accent || "var(--primary)";
 
   return (
     <div

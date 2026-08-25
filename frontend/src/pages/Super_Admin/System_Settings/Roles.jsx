@@ -67,17 +67,17 @@ const ROLE_TEMPLATES = {
 const templateMeta = {
   small: {
     title: "Small School",
-    color: "#2563EB",
+    color: "var(--primary)",
     desc: "Basic school operations ke liye recommended roles.",
   },
   medium: {
     title: "Medium School",
-    color: "#14B8A6",
+    color: "var(--accent)",
     desc: "Growing school ke liye admin + operation roles.",
   },
   enterprise: {
     title: "Enterprise School",
-    color: "#22C55E",
+    color: "var(--success)",
     desc: "Large schools ke liye complete governance roles.",
   },
 };
@@ -433,7 +433,7 @@ const Roles = () => {
                     borderRadius: 14,
                     padding: 16,
                     border: active ? `1px solid ${meta.color}` : "1px solid var(--border-muted)",
-                    boxShadow: active ? `0 0 0 3px ${meta.color}22` : "none",
+                    boxShadow: active ? `0 0 0 3px color-mix(in srgb, ${meta.color} 13%, transparent)` : "none",
                     background: "var(--surface)",
                     transition: "0.15s ease",
                   }}

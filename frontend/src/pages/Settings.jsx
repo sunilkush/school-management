@@ -191,7 +191,7 @@ const Settings = () => {
 
       <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
         <Col xs={24} lg={12}>
-          <SectionPanel icon={<UserOutlined />} title="Profile Settings" color="#2563EB">
+          <SectionPanel icon={<UserOutlined />} title="Profile Settings" color="var(--primary)">
             <Form layout="vertical">
               <Row gutter={12}>
                 <Col xs={24} md={12}>
@@ -242,7 +242,7 @@ const Settings = () => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <SectionPanel icon={<SettingOutlined />} title="Preferences" color="#7C3AED">
+          <SectionPanel icon={<SettingOutlined />} title="Preferences" color="var(--purple)">
             <Form layout="vertical">
               <Row gutter={12}>
                 <Col xs={24} md={12}>
@@ -264,7 +264,7 @@ const Settings = () => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <SectionPanel icon={<SafetyCertificateOutlined />} title="Security" color="#DC2626">
+          <SectionPanel icon={<SafetyCertificateOutlined />} title="Security" color="var(--danger-hover)">
             <Form layout="vertical">
               <Row gutter={12}>
                 <Col xs={24} md={12}>
@@ -306,7 +306,7 @@ const Settings = () => {
 
         {isSuperAdmin && (
           <Col xs={24} lg={12}>
-            <SectionPanel icon={<NotificationOutlined />} title="Communication (Platform)" color="#F59E0B">
+            <SectionPanel icon={<NotificationOutlined />} title="Communication (Platform)" color="var(--warning)">
               <Form layout="vertical">
                 <Row gutter={12}>
                   <Col xs={24}>
@@ -326,7 +326,7 @@ const Settings = () => {
 
         {isSuperAdmin && (
           <Col xs={24} lg={12}>
-            <SectionPanel icon={<DatabaseOutlined />} title="Platform Settings" color="#14B8A6">
+            <SectionPanel icon={<DatabaseOutlined />} title="Platform Settings" color="var(--accent)">
               <Form layout="vertical">
                 <Row gutter={12}>
                   <Col xs={24} md={12}>

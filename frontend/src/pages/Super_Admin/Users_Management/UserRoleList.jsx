@@ -28,7 +28,7 @@ const StatCard = ({ icon, label, value, color }) => (
 );
 
 const StatusBadge = ({ isActive }) => (
-  <span style={pill(isActive ? "#15803D" : "#DC2626", isActive ? "rgba(220,252,231,0.5)" : "rgba(254,226,226,0.5)")}>
+  <span style={pill(isActive ? "var(--success-hover)" : "var(--danger-hover)", isActive ? "rgba(var(--success-rgb), 0.5)" : "rgba(var(--danger-rgb), 0.5)")}>
     <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "var(--success)" : "var(--danger)", display: "inline-block", marginRight: 5 }} />
     {isActive ? "Active" : "Inactive"}
   </span>
@@ -205,14 +205,14 @@ const UserRoleList = ({
       />
 
       <div style={{ ...statGrid(170), marginTop: 20 }}>
-        <StatCard icon={<TeamOutlined />} label={`Total ${nounPlural}`} value={stats.total} color="#2563EB" />
-        <StatCard icon={<CheckCircleOutlined />} label="Active" value={stats.active} color="#22C55E" />
-        <StatCard icon={<StopOutlined />} label="Inactive" value={stats.inactive} color="#EF4444" />
-        <StatCard icon={<SafetyCertificateOutlined />} label="Schools Covered" value={stats.schoolsCovered} color="#14B8A6" />
+        <StatCard icon={<TeamOutlined />} label={`Total ${nounPlural}`} value={stats.total} color="var(--primary)" />
+        <StatCard icon={<CheckCircleOutlined />} label="Active" value={stats.active} color="var(--success)" />
+        <StatCard icon={<StopOutlined />} label="Inactive" value={stats.inactive} color="var(--danger)" />
+        <StatCard icon={<SafetyCertificateOutlined />} label="Schools Covered" value={stats.schoolsCovered} color="var(--accent)" />
       </div>
 
       {error && (
-        <div style={{ ...pill("#DC2626", "rgba(254,226,226,0.3)"), display: "block", padding: "10px 16px", marginBottom: 16 }}>
+        <div style={{ ...pill("var(--danger-hover)", "rgba(var(--danger-rgb), 0.3)"), display: "block", padding: "10px 16px", marginBottom: 16 }}>
           {error}
         </div>
       )}

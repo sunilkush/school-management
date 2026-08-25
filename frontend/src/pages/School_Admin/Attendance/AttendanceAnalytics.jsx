@@ -307,15 +307,14 @@ const AttendanceAnalytics = () => {
 
       <Spin spinning={reportLoading}>
         {/* ── Summary stat cards ── */}
-        {/* `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js),
-            which builds its background as `${color}22` — breaks with a var() string. */}
+        {/* `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js). */}
         <div style={statGrid(120)}>
           {[
-            { key: "present",  label: "Present",   color: "#22C55E" },
-            { key: "absent",   label: "Absent",    color: "#EF4444" },
-            { key: "late",     label: "Late",      color: "#F59E0B" },
-            { key: "halfday",  label: "Half Day",  color: "#F59E0B" },
-            { key: "leave",    label: "Leave",     color: "#0891b2" },
+            { key: "present",  label: "Present",   color: "var(--success)" },
+            { key: "absent",   label: "Absent",    color: "var(--danger)"  },
+            { key: "late",     label: "Late",      color: "var(--warning)" },
+            { key: "halfday",  label: "Half Day",  color: "var(--warning)" },
+            { key: "leave",    label: "Leave",     color: "var(--cyan)"    },
           ].map(({ key, label, color }) => (
             <div
               key={key}

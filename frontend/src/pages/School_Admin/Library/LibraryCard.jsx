@@ -11,7 +11,7 @@ const { Option } = Select;
 
 const C = {
   primary:   "var(--primary)",
-  primaryBg: "#EFF6FF",
+  primaryBg: "var(--primary-light)",
   primaryBd: "#BFDBFE",
   danger:    "var(--danger)",
   dangerBg:  "var(--danger-light)",

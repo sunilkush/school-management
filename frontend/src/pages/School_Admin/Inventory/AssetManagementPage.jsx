@@ -18,10 +18,7 @@ import dayjs from "dayjs";
 
 const { Option } = Select;
 const CATEGORIES  = ["Electronics", "Furniture", "Lab Equipment", "Sports Equipment", "Musical Instruments", "Vehicles", "IT Hardware", "General"];
-// `color` feeds the shared iconWell()/pill() helpers (frontend/src/styles/pageStyles.js),
-// which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
-// so these stay hex. Same applies to the KPI array below.
-const COND_COLOR  = { new: "#1677ff", good: "#0ea472", fair: "#F59E0B", poor: "#EF4444", disposed: "#94A3B8" };
+const COND_COLOR  = { new: "var(--primary)", good: "var(--success)", fair: "var(--warning)", poor: "var(--danger)", disposed: "var(--text-muted)" };
 
 export default function AssetManagementPage() {
   const dispatch = useDispatch();
@@ -49,10 +46,10 @@ export default function AssetManagementPage() {
   }).length;
 
   const KPI = [
-    { label: "Total Assets",      value: assets.length,                                    color: "#1677ff",  icon: <DesktopOutlined /> },
-    { label: "Total Value",       value: `₹${Number(totalValue).toLocaleString("en-IN")}`, color: "#0ea472",  icon: <DollarOutlined /> },
-    { label: "Warranty Expiring", value: expiringSoon,                                      color: "#F59E0B",  icon: <WarningOutlined /> },
-    { label: "Disposed",          value: assets.filter((a) => a.condition === "disposed").length, color: "#94A3B8", icon: <StopOutlined /> },
+    { label: "Total Assets",      value: assets.length,                                    color: "var(--primary)",  icon: <DesktopOutlined /> },
+    { label: "Total Value",       value: `₹${Number(totalValue).toLocaleString("en-IN")}`, color: "var(--success)",  icon: <DollarOutlined /> },
+    { label: "Warranty Expiring", value: expiringSoon,                                      color: "var(--warning)",  icon: <WarningOutlined /> },
+    { label: "Disposed",          value: assets.filter((a) => a.condition === "disposed").length, color: "var(--text-muted)", icon: <StopOutlined /> },
   ];
 
   const openModal = (item = null) => {
@@ -106,7 +103,7 @@ export default function AssetManagementPage() {
       title: "Asset", key: "asset",
       render: (_, r) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={iconWell(COND_COLOR[r.condition] || "#1677ff", 34)}>
+          <div style={iconWell(COND_COLOR[r.condition] || "var(--primary)", 34)}>
             <DesktopOutlined style={{ fontSize: 13 }} />
           </div>
           <div>
@@ -119,7 +116,7 @@ export default function AssetManagementPage() {
     {
       title: "Condition", key: "condition",
       render: (_, r) => (
-        <span style={pill(COND_COLOR[r.condition] || "#94A3B8")}>{(r.condition || "—").toUpperCase()}</span>
+        <span style={pill(COND_COLOR[r.condition] || "var(--text-muted)")}>{(r.condition || "—").toUpperCase()}</span>
       ),
     },
     {

@@ -14,14 +14,11 @@ const { Option } = Select;
 const { Text } = Typography;
 const CATEGORIES = ["General", "Stationery", "Electronics", "Furniture", "IT", "Lab Equipment", "Sports", "Housekeeping", "Catering"];
 
-// `color` feeds the shared iconWell() helper (frontend/src/styles/pageStyles.js), which
-// builds its background as `${color}22` — breaks with a var() string, so these stay hex.
-// Same reasoning applies to the standalone iconWell()/pill() calls further down this file.
 const KPI_DEFS = (vendors) => [
-  { label: "Total Vendors",  value: vendors.length,                          color: "#1677ff", icon: <ShopOutlined /> },
-  { label: "Active",         value: vendors.filter((v) => v.isActive).length,  color: "#0ea472", icon: <CheckCircleOutlined /> },
-  { label: "Inactive",       value: vendors.filter((v) => !v.isActive).length, color: "#EF4444", icon: <StopOutlined /> },
-  { label: "Categories",     value: new Set(vendors.map((v) => v.category)).size, color: "#8B5CF6", icon: <UserOutlined /> },
+  { label: "Total Vendors",  value: vendors.length,                          color: "var(--primary)", icon: <ShopOutlined /> },
+  { label: "Active",         value: vendors.filter((v) => v.isActive).length,  color: "var(--success)", icon: <CheckCircleOutlined /> },
+  { label: "Inactive",       value: vendors.filter((v) => !v.isActive).length, color: "var(--danger)", icon: <StopOutlined /> },
+  { label: "Categories",     value: new Set(vendors.map((v) => v.category)).size, color: "var(--purple)", icon: <UserOutlined /> },
 ];
 
 export default function VendorPage() {
@@ -72,7 +69,7 @@ export default function VendorPage() {
       title: "Vendor", key: "vendor",
       render: (_, r) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ ...iconWell("#1677ff", 34), flexShrink: 0 }}>
+          <div style={{ ...iconWell("var(--primary)", 34), flexShrink: 0 }}>
             <ShopOutlined style={{ fontSize: 14 }} />
           </div>
           <div>
@@ -98,7 +95,7 @@ export default function VendorPage() {
     {
       title: "Status", key: "status",
       render: (_, r) => (
-        <span style={pill(r.isActive ? "#0ea472" : "#EF4444")}>
+        <span style={pill(r.isActive ? "var(--success)" : "var(--danger)")}>
           {r.isActive ? "Active" : "Inactive"}
         </span>
       ),

@@ -22,11 +22,11 @@ const ROLE_COLORS = {
   teacher:            { color: "var(--accent)", bg: "rgba(var(--accent-rgb), 0.2)" },
   "school admin":     { color: "var(--primary)", bg: "rgba(219,234,254,0.2)" },
   principal:          { color: "var(--success)", bg: "var(--success-light)" },
-  accountant:         { color: "var(--primary)", bg: "#e0f2fe" },
+  accountant:         { color: "var(--primary)", bg: "var(--info-light)" },
   staff:              { color: "var(--text-secondary)", bg: "var(--surface-soft)" },
-  librarian:          { color: "#be123c", bg: "var(--danger-light)" },
-  "hostel warden":    { color: "#7c2d12", bg: "rgba(var(--warning-rgb), 0.08)" },
-  "transport manager":{ color: "#0e7490", bg: "#ecfeff" },
+  librarian:          { color: "var(--pink-hover)", bg: "var(--danger-light)" },
+  "hostel warden":    { color: "var(--warning-hover)", bg: "rgba(var(--warning-rgb), 0.08)" },
+  "transport manager":{ color: "var(--cyan-hover)", bg: "var(--cyan-light)" },
   receptionist:       { color: "var(--purple-hover)", bg: "rgba(var(--purple-rgb), 0.08)" },
 };
 
@@ -170,7 +170,7 @@ const TeacherList = () => {
       key: "status",
       render: (_, r) => {
         const active = r?.isActive;
-        const color  = active ? "var(--success-hover)" : "#991b1b";
+        const color  = active ? "var(--success-hover)" : "var(--danger-hover)";
         const dot    = active ? "var(--success)" : "var(--danger)";
         const dotRing = active ? "rgba(var(--success-rgb), 0.19)" : "rgba(var(--danger-rgb), 0.19)";
         return (

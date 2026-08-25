@@ -179,7 +179,7 @@ const HostelDashboard = () => {
           { label: "Occupancy",       value: `${kpis.occupancyRate || 0}%`,  color: "var(--purple-hover)", bg: "rgba(var(--accent-rgb), 0.22)", border: "rgba(var(--accent-rgb), 0.4)" },
           { label: "Pending Leaves",  value: kpis.pendingLeaves || 0,        color: "var(--warning-hover)", bg: "rgba(var(--warning-rgb), 0.30)", border: "rgba(var(--warning-rgb), 0.55)" },
           { label: "Open Complaints", value: kpis.openComplaints || 0,       color: "var(--danger-hover)", bg: "rgba(var(--danger-rgb), 0.25)", border: "rgba(var(--danger-rgb), 0.5)" },
-          { label: "Visitors Today",  value: kpis.visitorsToday || 0,        color: "#2E6A9A", bg: "rgba(var(--primary-rgb), 0.22)", border: "rgba(var(--primary-rgb), 0.4)" },
+          { label: "Visitors Today",  value: kpis.visitorsToday || 0,        color: "var(--primary-hover)", bg: "rgba(var(--primary-rgb), 0.22)", border: "rgba(var(--primary-rgb), 0.4)" },
         ].map(({ label, value, color, bg, border }) => (
           <Col xs={12} sm={6} key={label}>
             <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 14, padding: "16px 18px", textAlign: "center" }}>

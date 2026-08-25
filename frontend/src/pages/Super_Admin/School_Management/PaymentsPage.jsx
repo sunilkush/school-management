@@ -43,15 +43,15 @@ const formatCurrency = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
 const statusConfig = {
-  paid: { label: "Paid", color: "#15803D", bg: "rgba(220,252,231,0.5)" },
-  success: { label: "Success", color: "#15803D", bg: "rgba(220,252,231,0.5)" },
-  unpaid: { label: "Unpaid", color: "#B45309", bg: "rgba(254,243,199,0.5)" },
-  overdue: { label: "Overdue", color: "#DC2626", bg: "rgba(254,226,226,0.5)" },
-  pending: { label: "Pending", color: "#B45309", bg: "rgba(254,243,199,0.5)" },
-  failed: { label: "Failed", color: "#DC2626", bg: "rgba(254,226,226,0.5)" },
-  refunded: { label: "Refunded", color: "#6D28D9", bg: "rgba(237,233,254,0.5)" },
-  cancelled: { label: "Cancelled", color: "#64748B", bg: "rgba(241,245,249,0.6)" },
-  draft: { label: "Draft", color: "#64748B", bg: "rgba(241,245,249,0.6)" },
+  paid: { label: "Paid", color: "var(--success-hover)", bg: "var(--success-light)" },
+  success: { label: "Success", color: "var(--success-hover)", bg: "var(--success-light)" },
+  unpaid: { label: "Unpaid", color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  overdue: { label: "Overdue", color: "var(--danger-hover)", bg: "var(--danger-light)" },
+  pending: { label: "Pending", color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  failed: { label: "Failed", color: "var(--danger-hover)", bg: "var(--danger-light)" },
+  refunded: { label: "Refunded", color: "var(--purple-hover)", bg: "rgba(var(--purple-rgb), 0.12)" },
+  cancelled: { label: "Cancelled", color: "var(--text-secondary)", bg: "var(--surface-soft)" },
+  draft: { label: "Draft", color: "var(--text-secondary)", bg: "var(--surface-soft)" },
 };
 
 const paymentModeOptions = [
@@ -228,10 +228,10 @@ export default function PaymentsPage() {
         {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 16, borderRadius: 14 }} /> : null}
 
         <div style={{ ...statGrid(200), marginBottom: 20 }}>
-          <MetricCard title="Total Invoiced" value={formatCurrency(stats.totalInvoiced)} icon={<FileTextOutlined />} color="#2563EB" sub="All generated invoices" />
-          <MetricCard title="Total Collected" value={formatCurrency(stats.totalCollected)} icon={<CheckCircleOutlined />} color="#22C55E" sub="Successful payments" />
-          <MetricCard title="Pending Invoices" value={stats.pendingInvoices} icon={<ClockCircleOutlined />} color="#F59E0B" sub="Unpaid + overdue" />
-          <MetricCard title="Payment Records" value={stats.totalPayments} icon={<CreditCardOutlined />} color="#14B8A6" sub="Total payment entries" />
+          <MetricCard title="Total Invoiced" value={formatCurrency(stats.totalInvoiced)} icon={<FileTextOutlined />} color="var(--primary)" sub="All generated invoices" />
+          <MetricCard title="Total Collected" value={formatCurrency(stats.totalCollected)} icon={<CheckCircleOutlined />} color="var(--success)" sub="Successful payments" />
+          <MetricCard title="Pending Invoices" value={stats.pendingInvoices} icon={<ClockCircleOutlined />} color="var(--warning)" sub="Unpaid + overdue" />
+          <MetricCard title="Payment Records" value={stats.totalPayments} icon={<CreditCardOutlined />} color="var(--accent)" sub="Total payment entries" />
         </div>
 
         <style>{tableHeadCss("payments-invoices-tbl")}</style>
@@ -277,7 +277,7 @@ export default function PaymentsPage() {
                   dataIndex: "invoiceNumber",
                   render: (value) => (
                     <Space>
-                      <div style={iconWell("#2563EB", 34)}><FileTextOutlined /></div>
+                      <div style={iconWell("var(--primary)", 34)}><FileTextOutlined /></div>
                       <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{value}</span>
                     </Space>
                   ),
@@ -308,7 +308,7 @@ export default function PaymentsPage() {
                   title: "Status",
                   dataIndex: "status",
                   render: (status) => (
-                    <span style={pill(statusConfig[status]?.color || "#64748B", statusConfig[status]?.bg)}>
+                    <span style={pill(statusConfig[status]?.color || "var(--text-secondary)", statusConfig[status]?.bg)}>
                       {statusConfig[status]?.label || status}
                     </span>
                   ),
@@ -361,7 +361,7 @@ export default function PaymentsPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
             <CreditCardOutlined style={{ color: "var(--accent)" }} />
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Payment History</span>
-            <span style={pill("#14B8A6")}>{filteredPayments.length}</span>
+            <span style={pill("var(--accent)")}>{filteredPayments.length}</span>
 
             <Input
               allowClear
@@ -406,7 +406,7 @@ export default function PaymentsPage() {
                   title: "Status",
                   dataIndex: "status",
                   render: (status) => (
-                    <span style={pill(statusConfig[status]?.color || "#64748B", statusConfig[status]?.bg)}>
+                    <span style={pill(statusConfig[status]?.color || "var(--text-secondary)", statusConfig[status]?.bg)}>
                       {statusConfig[status]?.label || status}
                     </span>
                   ),
@@ -480,7 +480,7 @@ export default function PaymentsPage() {
             <div style={{ marginTop: 4 }}>
               <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>{" "}
               <Tag color="blue">{selectedInvoice.invoiceNumber}</Tag>
-              <span style={pill(statusConfig[selectedInvoice.status]?.color || "#64748B", statusConfig[selectedInvoice.status]?.bg)}>
+              <span style={pill(statusConfig[selectedInvoice.status]?.color || "var(--text-secondary)", statusConfig[selectedInvoice.status]?.bg)}>
                 {statusConfig[selectedInvoice.status]?.label || selectedInvoice.status}
               </span>
             </div>

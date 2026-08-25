@@ -19,7 +19,7 @@ const StatusBadge = ({ status }) => {
       padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
       background: active ? C.successLight : "var(--surface-soft)",
       color: active ? "var(--success-hover)" : C.textSub,
-      border: `1px solid ${active ? "#86EFAC" : C.border}`,
+      border: `1px solid ${active ? "rgba(var(--success-rgb), 0.5)" : C.border}`,
     }}>
       {active
         ? <CheckCircleOutlined style={{ fontSize: 10 }} />

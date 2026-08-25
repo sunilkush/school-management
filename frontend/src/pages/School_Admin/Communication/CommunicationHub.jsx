@@ -59,30 +59,27 @@ const LEVEL_OPTIONS = [
 ];
 const ROLE_OPTIONS = ALL_ROLE_NAMES.map((r) => ({ label: r, value: r }));
 
-// NOTE: the `color` values below are consumed via `${color}NN` alpha-suffix
-// string concatenation (see LevelAvatar, ChannelToggle, and the notification/
-// message row styles) and/or passed into the shared `pill()` / `iconWell()`
-// helpers (frontend/src/styles/pageStyles.js), which do the same suffix trick
-// internally. Both break with a var() string (e.g. "var(--primary)18" is
-// invalid CSS), and that shared helper file is outside this task's scope, so
-// these stay as raw hex.
+// `color` values below feed local `${color}NN` alpha-suffix concatenation (LevelAvatar,
+// ChannelToggle, notification/message row styles) — those call sites use color-mix() so
+// they work with both var() and literal hex. #25D366 (WhatsApp brand green) has no matching
+// semantic token, so it stays literal hex; every other value maps to a token.
 const LEVEL_META = {
-  all:          { icon: <GlobalOutlined />,    color: "#2563EB", label: "Broadcast" },
-  role:         { icon: <SolutionOutlined />,  color: "#7C3AED", label: "Role"      },
-  "user-level": { icon: <UserSwitchOutlined />,color: "#D97706", label: "Level"     },
-  user:         { icon: <UserOutlined />,      color: "#16A34A", label: "User"      },
+  all:          { icon: <GlobalOutlined />,    color: "var(--primary)",       label: "Broadcast" },
+  role:         { icon: <SolutionOutlined />,  color: "var(--purple)",        label: "Role"      },
+  "user-level": { icon: <UserSwitchOutlined />,color: "var(--warning-hover)", label: "Level"     },
+  user:         { icon: <UserOutlined />,      color: "var(--success)",       label: "User"      },
 };
 
-const STATUS_COLOR = { scheduled: "#D97706", draft: "#94A3B8", failed: "#DC2626", sent: "#16A34A" };
+const STATUS_COLOR = { scheduled: "var(--warning-hover)", draft: "var(--text-muted)", failed: "var(--danger-hover)", sent: "var(--success)" };
 
 const CHANNEL_LIST = [
-  { key: "inApp",    label: "In-App",   icon: <BellFilled />,    color: "#2563EB" },
-  { key: "email",    label: "Email",    icon: <MailOutlined />,   color: "#16A34A" },
-  { key: "sms",      label: "SMS",      icon: <MobileOutlined />, color: "#D97706" },
-  { key: "whatsapp", label: "WhatsApp", icon: <MessageOutlined />,color: "#25D366" },
+  { key: "inApp",    label: "In-App",   icon: <BellFilled />,    color: "var(--primary)"       },
+  { key: "email",    label: "Email",    icon: <MailOutlined />,   color: "var(--success)"       },
+  { key: "sms",      label: "SMS",      icon: <MobileOutlined />, color: "var(--warning-hover)" },
+  { key: "whatsapp", label: "WhatsApp", icon: <MessageOutlined />,color: "#25D366"              },
 ];
 
-const PRIORITY_HEX = { low: "#94A3B8", normal: "#2563EB", high: "#F59E0B", urgent: "#EF4444" };
+const PRIORITY_HEX = { low: "var(--text-muted)", normal: "var(--primary)", high: "var(--warning)", urgent: "var(--danger)" };
 const PRIORITY_COLOR = { low: "default", normal: "blue", high: "orange", urgent: "red" };
 
 /* ── Small helpers ──────────────────────────────────────────────────── */
@@ -112,7 +109,7 @@ const ChannelToggle = ({ value = [], onChange }) => {
               display: "flex", flexDirection: "column", alignItems: "center",
               gap: 4, padding: "10px 14px", borderRadius: 12, cursor: "pointer",
               border: `1.5px solid ${active ? ch.color : "var(--border-muted)"}`,
-              background: active ? `${ch.color}14` : "var(--surface)",
+              background: active ? `color-mix(in srgb, ${ch.color} 14%, transparent)` : "var(--surface)",
               transition: "all 0.18s", minWidth: 68, userSelect: "none",
             }}
           >
@@ -131,7 +128,7 @@ const LevelAvatar = ({ level, size = 36 }) => {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: `${m.color}18`, border: `1.5px solid ${m.color}30`,
+      background: `color-mix(in srgb, ${m.color} 18%, transparent)`, border: `1.5px solid color-mix(in srgb, ${m.color} 30%, transparent)`,
       display: "flex", alignItems: "center", justifyContent: "center",
       color: m.color, fontSize: size * 0.42, flexShrink: 0,
     }}>
@@ -243,7 +240,7 @@ const BroadcastPanel = ({ user }) => {
       </Form.Item>
     );
     return (
-      <div style={{ background: "var(--primary-light)", border: "1px solid #BFDBFE", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ background: "var(--primary-light)", border: "1px solid rgba(var(--primary-rgb), 0.3)", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
         <GlobalOutlined style={{ color: "var(--primary)", fontSize: 15 }} />
         <div>
           <Text strong style={{ fontSize: 12, color: "var(--primary-hover)" }}>Broadcasting to everyone</Text>
@@ -259,7 +256,7 @@ const BroadcastPanel = ({ user }) => {
       {canCreate && (
         <div style={{ ...sectionPanel, marginBottom: 20 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 18 }}>
-            <div style={iconWell("#7C3AED", 38)}><SendOutlined style={{ fontSize: 17 }} /></div>
+            <div style={iconWell("var(--purple)", 38)}><SendOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Create Broadcast</Text>
               <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>Send announcement to specific roles, levels, or all users.</Text>
@@ -353,16 +350,16 @@ const BroadcastPanel = ({ user }) => {
           <Space direction="vertical" size={8} style={{ width: "100%" }}>
             {filtered.map((n) => {
               const lm = LEVEL_META[n.level] || LEVEL_META.all;
-              const st = STATUS_COLOR[n.status] || "#94A3B8";
+              const st = STATUS_COLOR[n.status] || "var(--text-muted)";
               return (
                 <div
                   key={n._id}
                   onClick={() => handleMarkRead(n)}
                   style={{
                     display: "flex", gap: 12, padding: "12px 16px", borderRadius: 12, cursor: n.isRead ? "default" : "pointer",
-                    border: `1px solid ${n.isRead ? "var(--border-muted)" : `${lm.color}30`}`,
+                    border: `1px solid ${n.isRead ? "var(--border-muted)" : `color-mix(in srgb, ${lm.color} 30%, transparent)`}`,
                     borderLeft: `4px solid ${n.isRead ? "var(--border-muted)" : lm.color}`,
-                    background: n.isRead ? "var(--surface)" : `${lm.color}05`,
+                    background: n.isRead ? "var(--surface)" : `color-mix(in srgb, ${lm.color} 5%, transparent)`,
                     transition: "box-shadow 0.18s",
                   }}
                 >
@@ -527,7 +524,7 @@ const MessagesPanel = ({ user }) => {
             renderItem={(item) => {
               const isUnread = !item.isRead && mailbox === "inbox";
               const pri = (item.priority || "normal").toLowerCase();
-              const accent = PRIORITY_HEX[pri] || "#2563EB";
+              const accent = PRIORITY_HEX[pri] || "var(--primary)";
               return (
                 <List.Item style={{ padding: 0, marginBottom: 8 }}>
                   <div
@@ -536,10 +533,10 @@ const MessagesPanel = ({ user }) => {
                       width: "100%", padding: "12px 16px", borderRadius: 14, cursor: "pointer",
                       border: "1px solid var(--border-muted)",
                       borderLeft: isUnread ? `4px solid ${accent}` : "1px solid var(--border-muted)",
-                      background: isUnread ? `linear-gradient(90deg, ${accent}06, var(--surface) 60%)` : "var(--surface)",
+                      background: isUnread ? `linear-gradient(90deg, color-mix(in srgb, ${accent} 6%, transparent), var(--surface) 60%)` : "var(--surface)",
                       transition: "box-shadow 0.18s",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 18px rgba(37,99,235,0.1)"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 18px rgba(var(--primary-rgb), 0.1)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
                   >
                     <Flex gap={10} align="flex-start">
@@ -600,7 +597,7 @@ const MessagesPanel = ({ user }) => {
 
       {/* Compose Drawer */}
       <Drawer
-        title={<Flex align="center" gap={10}><div style={iconWell("#2563EB", 32)}><Send size={14} /></div><Text strong>Compose Message</Text></Flex>}
+        title={<Flex align="center" gap={10}><div style={iconWell("var(--primary)", 32)}><Send size={14} /></div><Text strong>Compose Message</Text></Flex>}
         open={compose} onClose={() => setCompose(false)} width={isMobile ? "100%" : 600}
         destroyOnClose
         footer={
@@ -629,7 +626,7 @@ const MessagesPanel = ({ user }) => {
       {/* Thread Drawer */}
       <Drawer
         title={selected
-          ? <Flex align="center" gap={10}><div style={iconWell("#7C3AED", 32)}><MailOutlined /></div><Text strong ellipsis style={{ maxWidth: 260 }}>{safeText(selected.subject)}</Text></Flex>
+          ? <Flex align="center" gap={10}><div style={iconWell("var(--purple)", 32)}><MailOutlined /></div><Text strong ellipsis style={{ maxWidth: 260 }}>{safeText(selected.subject)}</Text></Flex>
           : "Message"
         }
         open={Boolean(selected)} onClose={() => setSelected(null)} width={isMobile ? "100%" : 700}
@@ -658,7 +655,7 @@ const MessagesPanel = ({ user }) => {
                     <div style={{ ...sectionPanel, padding: 14, width: "100%" }}>
                       <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
                         <Flex align="center" gap={8}>
-                          <div style={iconWell("#2563EB", 28)}><MailOutlined style={{ fontSize: 12 }} /></div>
+                          <div style={iconWell("var(--primary)", 28)}><MailOutlined style={{ fontSize: 12 }} /></div>
                           <Text strong style={{ fontSize: 13 }}>{safeText(msg.senderId?.name || msg.senderId)}</Text>
                         </Flex>
                         <Text type="secondary" style={{ fontSize: 11 }}>{fmtDate(msg.createdAt)}</Text>
@@ -742,7 +739,7 @@ const HistoryPanel = () => {
     { title: "Date", dataIndex: "createdAt", key: "createdAt", render: (v) => fmtDate(v), sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt), defaultSortOrder: "descend" },
     {
       title: "Status", dataIndex: "status", key: "status",
-      render: (v) => <span style={pill(STATUS_COLOR[v] || "#94A3B8")}>{v}</span>,
+      render: (v) => <span style={pill(STATUS_COLOR[v] || "var(--text-muted)")}>{v}</span>,
     },
   ];
 
@@ -751,10 +748,10 @@ const HistoryPanel = () => {
       {/* Mini-stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 20 }}>
         {[
-          { label: "In-App", value: totalApp,   color: "#2563EB", icon: <BellFilled /> },
-          { label: "SMS",    value: totalSMS,   color: "#D97706", icon: <MobileOutlined /> },
-          { label: "Email",  value: totalEmail, color: "#16A34A", icon: <MailOutlined /> },
-          { label: "Total",  value: history.length, color: "#7C3AED", icon: <HistoryOutlined /> },
+          { label: "In-App", value: totalApp,   color: "var(--primary)", icon: <BellFilled /> },
+          { label: "SMS",    value: totalSMS,   color: "var(--warning-hover)", icon: <MobileOutlined /> },
+          { label: "Email",  value: totalEmail, color: "var(--success)", icon: <MailOutlined /> },
+          { label: "Total",  value: history.length, color: "var(--purple)", icon: <HistoryOutlined /> },
         ].map((s) => (
           <div key={s.label} style={{ padding: "14px 16px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border-muted)", borderLeft: `4px solid ${s.color}`, display: "flex", alignItems: "center", gap: 12 }}>
             <div style={iconWell(s.color, 34)}>{React.cloneElement(s.icon, { style: { fontSize: 14 } })}</div>
@@ -812,10 +809,10 @@ export default function CommunicationHub() {
   const drafts      = (notifs?.items   || []).filter((n) => n.status === "draft").length;
 
   const KPI = [
-    { label: "Unread Messages",      value: unreadMsgs,  color: "#2563EB", icon: <MailOutlined /> },
-    { label: "Unread Notifications", value: unreadNotif, color: "#F59E0B", icon: <BellOutlined /> },
-    { label: "Scheduled",            value: scheduled,   color: "#7C3AED", icon: <CalendarOutlined /> },
-    { label: "Drafts",               value: drafts,      color: "#94A3B8", icon: <EyeOutlined /> },
+    { label: "Unread Messages",      value: unreadMsgs,  color: "var(--primary)", icon: <MailOutlined /> },
+    { label: "Unread Notifications", value: unreadNotif, color: "var(--warning)", icon: <BellOutlined /> },
+    { label: "Scheduled",            value: scheduled,   color: "var(--purple)", icon: <CalendarOutlined /> },
+    { label: "Drafts",               value: drafts,      color: "var(--text-muted)", icon: <EyeOutlined /> },
   ];
 
   const TABS = [

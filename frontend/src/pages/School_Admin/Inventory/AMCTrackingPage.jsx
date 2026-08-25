@@ -16,14 +16,11 @@ import dayjs from "dayjs";
 
 const { Option } = Select;
 
-// `color` feeds the shared iconWell()/pill() helpers (frontend/src/styles/pageStyles.js),
-// which bake it into an alpha-suffixed string (`${color}NN`) — breaks with a var() string,
-// so these stay hex. Same applies to the KPI array below.
 const STATUS_META = {
-  active:         { color: "#0ea472",  icon: <CheckCircleOutlined />, label: "Active" },
-  expired:        { color: "#EF4444",  icon: <CloseCircleOutlined />, label: "Expired" },
-  expiring_soon:  { color: "#F59E0B",  icon: <WarningOutlined />,    label: "Expiring Soon" },
-  upcoming:       { color: "#1677ff",  icon: <CalendarOutlined />,    label: "Upcoming" },
+  active:         { color: "var(--success)", icon: <CheckCircleOutlined />, label: "Active" },
+  expired:        { color: "var(--danger)",  icon: <CloseCircleOutlined />, label: "Expired" },
+  expiring_soon:  { color: "var(--warning)", icon: <WarningOutlined />,    label: "Expiring Soon" },
+  upcoming:       { color: "var(--primary)", icon: <CalendarOutlined />,    label: "Upcoming" },
 };
 
 export default function AMCTrackingPage() {
@@ -97,10 +94,10 @@ export default function AMCTrackingPage() {
   const expired      = amcs.filter((a) => (a.computedStatus || a.status) === "expired").length;
 
   const KPI = [
-    { label: "Active",         value: activeCount,  color: "#0ea472", icon: <CheckCircleOutlined /> },
-    { label: "Expiring Soon",  value: expiring,     color: "#F59E0B", icon: <WarningOutlined /> },
-    { label: "Expired",        value: expired,      color: "#EF4444", icon: <CloseCircleOutlined /> },
-    { label: "Total Contracts",value: amcs.length,  color: "#1677ff", icon: <ToolOutlined /> },
+    { label: "Active",         value: activeCount,  color: "var(--success)", icon: <CheckCircleOutlined /> },
+    { label: "Expiring Soon",  value: expiring,     color: "var(--warning)", icon: <WarningOutlined /> },
+    { label: "Expired",        value: expired,      color: "var(--danger)",  icon: <CloseCircleOutlined /> },
+    { label: "Total Contracts",value: amcs.length,  color: "var(--primary)", icon: <ToolOutlined /> },
   ];
 
   const columns = [
@@ -108,7 +105,7 @@ export default function AMCTrackingPage() {
       title: "Asset / Contract", key: "asset",
       render: (_, r) => (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={iconWell(STATUS_META[r.computedStatus || r.status]?.color || "#1677ff", 34)}>
+          <div style={iconWell(STATUS_META[r.computedStatus || r.status]?.color || "var(--primary)", 34)}>
             <ToolOutlined style={{ fontSize: 13 }} />
           </div>
           <div>
@@ -145,7 +142,7 @@ export default function AMCTrackingPage() {
       title: "Status", key: "status",
       render: (_, r) => {
         const st  = r.computedStatus || r.status;
-        const m   = STATUS_META[st] || { color: "#94A3B8", label: st };
+        const m   = STATUS_META[st] || { color: "var(--text-muted)", label: st };
         return <span style={pill(m.color)}>{m.label || st}</span>;
       },
     },
