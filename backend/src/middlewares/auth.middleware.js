@@ -4,8 +4,6 @@ import { User } from "../models/user.model.js";
 import { Role } from "../models/Roles.model.js";
 import jwt from "jsonwebtoken";
 
-const ACCESS_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
-
 const resolveRoleId = (user) => {
   if (!user) return null;
   if (typeof user.roleId === "string") return user.roleId;
@@ -26,14 +24,20 @@ const fetchRole = async (user) => {
 };
 
 export const auth = asyncHandler(async (req, _res, next) => {
-  if (!ACCESS_SECRET) throw new ApiError(500, "Access token secret is not configured");
+  // Read lazily (not cached at module-import time): dotenv.config() runs in app.js's own body,
+  // which ES modules only execute *after* every static import — including this file's — has
+  // already been evaluated. A top-level `const` here would race that and can end up permanently
+  // undefined depending on unrelated import-order changes elsewhere in the graph. user.model.js
+  // and user.controllers.js already read these same secrets lazily for the same reason.
+  const accessSecret = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
+  if (!accessSecret) throw new ApiError(500, "Access token secret is not configured");
 
   const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
   if (!token) throw new ApiError(401, "Unauthorized. Access token missing.");
 
   let decodedToken;
   try {
-    decodedToken = jwt.verify(token, ACCESS_SECRET);
+    decodedToken = jwt.verify(token, accessSecret);
   } catch {
     throw new ApiError(401, "Unauthorized. Invalid access token.");
   }
@@ -69,6 +73,10 @@ export const allowPublic = (req, _res, next) => {
   /^\/health$/,
   /^\/certificates\/verify\/[^/]+$/,
   /^\/id-cards\/verify\/[^/]+$/,
+  // Gateway webhooks are called server-to-server by Razorpay itself, never by a logged-in
+  // user — authenticity is instead enforced by HMAC signature verification inside
+  // webhook.controllers.js, not a session/JWT.
+  /^\/webhooks\/razorpay$/,
 ];
 
 const isPublicApiRoute = (req) => {

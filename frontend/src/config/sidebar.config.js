@@ -284,6 +284,11 @@ export const sidebarMenu = {
       ],
     },
     {
+      title: "My Subscription",
+      icon: CreditCard,
+      path: "schooladmin/billing/subscription",
+    },
+    {
       title: "Library",
       icon: Book,
       subMenu: [

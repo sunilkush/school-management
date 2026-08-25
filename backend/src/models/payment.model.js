@@ -102,6 +102,14 @@ paymentSchema.index(
   { unique: true }
 );
 paymentSchema.index({ schoolId: 1, studentId: 1, paymentDate: -1 });
+// A gateway payment id is globally unique per real transaction — a sparse unique index means the
+// fee-payment webhook (webhook.controllers.js) and the client-side verify call racing to record
+// the same Razorpay payment can't both succeed; the loser gets a duplicate-key error the caller
+// treats as "already recorded, not an error".
+paymentSchema.index(
+  { transactionId: 1 },
+  { unique: true, partialFilterExpression: { transactionId: { $exists: true, $type: "string" } } }
+);
 
 // Installment status is updated atomically alongside the Payment write inside
 // the same transaction (see recordPayment() in payment.controllers.js) —

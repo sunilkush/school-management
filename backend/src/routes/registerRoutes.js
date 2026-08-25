@@ -1,4 +1,6 @@
 import indexRouter from "./index.js";
+import webhookRoutes from "./webhook.routes.js";
+import schoolBillingRoutes from "./schoolBilling.routes.js";
 import schoolRoutes from "./school.routes.js";
 import userRoutes from "./user.routes.js";
 import classRoutes from "./class.routes.js";
@@ -184,6 +186,8 @@ export const apiV1Routes = [
   ["/ip-restrictions", ipRestrictionRoutes],
   ["/login-logs", loginLogRoutes],
   ["/class-teacher-assignments", classTeacherAssignmentRoutes],
+  ["/webhooks", webhookRoutes],
+  ["/school-billing", schoolBillingRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {

@@ -239,6 +239,7 @@ const FeeStructure = lazy(() => import("./pages/School_Admin/Fees_Management/Fee
 const StudentAssignFees = lazy(() => import("./pages/School_Admin/Fees_Management/AssignStudentFeeForm.jsx"));
 const SchoolFeeCategories = lazy(() => import("./pages/School_Admin/Fees_Management/SchoolFeeCategories.jsx"));
 const FeeCollection = lazy(() => import("./pages/School_Admin/Fees_Management/FeeCollection.jsx"));
+const MySubscription = lazy(() => import("./pages/School_Admin/Billing/MySubscription.jsx"));
 const AdmissionInquiryPage = lazy(() => import("./pages/School_Admin/Teachers_&_Students/AdmissionInquiry.jsx"));
 
 const HostelManagement = lazy(() => import("./pages/School_Admin/Hostel/HostelManagement.jsx"));
@@ -694,6 +695,7 @@ const router = createBrowserRouter([
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
               { path: "fees/collect", element: <FeeCollection /> },
+              { path: "billing/subscription", element: <MySubscription /> },
               { path: "admission/inquiry", element: <AdmissionInquiryPage /> },
               { path: "hostel", element: <HostelManagement /> },
               { path: "hostel/allocations", element: <HostelAllocations /> },

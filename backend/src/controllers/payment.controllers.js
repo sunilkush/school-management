@@ -468,7 +468,7 @@ const schoolId = requireSchoolId(req.user);
 export const getRazorpayConfig = asyncHandler(async (req, res) => {
   const schoolId = requireSchoolId(req.user);
 
-  const school = await School.findById(schoolId).select("+razorpay.keyId razorpay.accountId razorpay.isEnabled");
+  const school = await School.findById(schoolId).select("+razorpay.keyId razorpay.accountId razorpay.isEnabled +razorpay.webhookSecret");
   if (!school) throw new ApiError(404, "School not found");
 
   return sendSuccess(res, {
@@ -478,6 +478,7 @@ export const getRazorpayConfig = asyncHandler(async (req, res) => {
       accountId: school.razorpay?.accountId || "",
       isEnabled: Boolean(school.razorpay?.isEnabled),
       hasKeySecret: Boolean(school.razorpay?.keySecret),
+      hasWebhookSecret: Boolean(school.razorpay?.webhookSecret),
     },
   });
 });
@@ -485,8 +486,8 @@ export const getRazorpayConfig = asyncHandler(async (req, res) => {
 export const updateRazorpayConfig = asyncHandler(async (req, res) => {
   const schoolId = requireSchoolId(req.user);
 
-  const { keyId, keySecret, accountId, isEnabled } = req.body;
-  const school = await School.findById(schoolId).select("+razorpay.keyId +razorpay.keySecret razorpay.accountId razorpay.isEnabled");
+  const { keyId, keySecret, webhookSecret, accountId, isEnabled } = req.body;
+  const school = await School.findById(schoolId).select("+razorpay.keyId +razorpay.keySecret +razorpay.webhookSecret razorpay.accountId razorpay.isEnabled");
   if (!school) throw new ApiError(404, "School not found");
 
   school.razorpay = school.razorpay || {};
@@ -496,6 +497,9 @@ export const updateRazorpayConfig = asyncHandler(async (req, res) => {
 
   if (keySecret?.trim()) {
     school.razorpay.keySecret = keySecret.trim();
+  }
+  if (webhookSecret?.trim()) {
+    school.razorpay.webhookSecret = webhookSecret.trim();
   }
 
   if (school.razorpay.isEnabled && (!school.razorpay.keyId || !school.razorpay.keySecret)) {
@@ -511,6 +515,7 @@ export const updateRazorpayConfig = asyncHandler(async (req, res) => {
       accountId: school.razorpay?.accountId || "",
       isEnabled: Boolean(school.razorpay?.isEnabled),
       hasKeySecret: Boolean(school.razorpay?.keySecret),
+      hasWebhookSecret: Boolean(school.razorpay?.webhookSecret),
     },
   });
 });

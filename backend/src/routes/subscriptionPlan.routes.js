@@ -2,11 +2,8 @@
 
 import { Router } from "express";
 import {
-  createPlan,
   getAllPlans,
   getPlanById,
-  updatePlan,
-  deletePlan,
   getPlanUpdateLogs,
 } from "../controllers/subscriptionPlan.controllers.js";
 
@@ -16,53 +13,22 @@ const router = Router();
 
 // 🔑 Role Groups
 const ADMIN_TEACHER = ["Super Admin", "School Admin", "Teacher"];
-const ADMIN_ONLY = ["Super Admin", "School Admin"];
-// Plans here are always platform-wide (createPlan/updatePlan never reference the model's
-// customForSchoolId, and updatePlan propagates every change to every school's subscription) —
-// School Admin should never have been able to create/edit/delete a tier every other school
-// depends on. Was ADMIN_ONLY, which let any single school's admin take down "Premium" for
-// the whole platform.
-const SUPER_ADMIN_ONLY = ["Super Admin"];
 
-// =====================================================
-// 📌 PUBLIC ROUTES (If your business model allows)
-// =====================================================
+// Read-only router now — plan creation/update/delete used to be duplicated here (hard-delete,
+// no limits-sync) AND in superAdminBilling.controllers.js's *PlanV2 functions (soft-deactivate,
+// syncs limits), both editing the same SubscriptionPlan model from two different frontend
+// pieces. Consolidated onto the v2 (superAdminBilling) implementation — see
+// POST/PUT/DELETE /super-admin/billing/plans. This router keeps only the reads, which were
+// never duplicated.
 
-// Get all plans (Public)
-router.get("/allplan",auth, getAllPlans);
+// Get all plans
+router.get("/allplan", auth, getAllPlans);
 
-// Get single plan (Public)
-router.get("/:id", getPlanById);
+// Get single plan — previously had no auth at all (fully public to the internet); plan details
+// aren't sensitive, but there's no reason for zero authentication either.
+router.get("/:id", auth, getPlanById);
 
-// =====================================================
-// 🔐 PROTECTED ROUTES (Admin Level Control)
-// =====================================================
-
-// ⭐ CREATE PLAN — Only Super Admin
-router.post(
-  "/create",
-  auth,
-  roleMiddleware(SUPER_ADMIN_ONLY),
-  createPlan
-);
-
-// ⭐ UPDATE PLAN + SYNC — Only Super Admin
-router.put(
-  "/:id",
-  auth,
-  roleMiddleware(SUPER_ADMIN_ONLY),
-  updatePlan
-);
-
-// ⭐ DELETE PLAN — Only Super Admin
-router.delete(
-  "/:id",
-  auth,
-  roleMiddleware(SUPER_ADMIN_ONLY),
-  deletePlan
-);
-
-// ⭐ GET PLAN UPDATE LOGS — Super Admin, School Admin, Teacher
+// Get plan update logs — Super Admin, School Admin, Teacher
 router.get(
   "/:id/logs",
   auth,

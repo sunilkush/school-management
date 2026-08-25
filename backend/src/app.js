@@ -22,7 +22,12 @@ applySecurityMiddleware(app);
 app.use(requestContext);
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
-app.use(express.json({ limit: "1mb" }));
+// Gateway webhooks (webhook.routes.js) verify an HMAC signature over the exact raw request
+// body bytes — re-serializing the already-parsed req.body with JSON.stringify is not
+// guaranteed to byte-for-byte match what the gateway actually sent and signed (key ordering,
+// whitespace), so the verify callback stashes the untouched raw buffer here for that one route
+// to use. Every other route keeps using req.body as normal; this is purely additive.
+app.use(express.json({ limit: "1mb", verify: (req, _res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 

@@ -1,5 +1,5 @@
 import PDFDocument from "pdfkit";
-import Razorpay from "razorpay";
+import { createOrder, verifyPaymentSignature, refundPayment as refundViaGateway } from "../services/paymentGateway/razorpayGateway.js";
 import { SubscriptionPlan } from "../models/SubscriptionPlan.model.js";
 import { SchoolSubscription } from "../models/schoolSubscription.model.js";
 import { SubscriptionInvoice } from "../models/SubscriptionInvoice.model.js";
@@ -222,13 +222,12 @@ export const getSchoolSubscription = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, subscription, "Subscription fetched"));
 });
 
-export const generateInvoice = asyncHandler(async (req, res) => {
-  const { schoolId } = req.params;
-  const { discount = 0, taxGst = 0, dueDate, status = "unpaid" } = req.body;
-
-  const subscription = await SchoolSubscription.findOne({ schoolId });
-  if (!subscription) throw new ApiError(404, "Subscription not found");
-
+/**
+ * Shared invoice-creation logic — used by the generateInvoice HTTP handler below and by
+ * subscriptionExpiry.job.js's renewal-reminder step, so both stay in sync rather than the cron
+ * job duplicating (and inevitably drifting from) this math.
+ */
+export const createInvoiceForSubscription = async (subscription, { discount = 0, taxGst = 0, dueDate, status = "unpaid" } = {}) => {
   const invoiceNumber = await nextInvoiceNumber();
   const planPrice = subscription.snapshot.price;
   let normalizedDueDate = subscription.endDate;
@@ -241,8 +240,8 @@ export const generateInvoice = asyncHandler(async (req, res) => {
     normalizedDueDate = parsedDueDate;
   }
 
-  const invoice = await SubscriptionInvoice.create({
-    schoolId,
+  return SubscriptionInvoice.create({
+    schoolId: subscription.schoolId,
     subscriptionId: subscription._id,
     invoiceNumber,
     billingPeriodStart: subscription.startDate,
@@ -254,6 +253,16 @@ export const generateInvoice = asyncHandler(async (req, res) => {
     dueDate: normalizedDueDate,
     status,
   });
+};
+
+export const generateInvoice = asyncHandler(async (req, res) => {
+  const { schoolId } = req.params;
+  const { discount, taxGst, dueDate, status } = req.body;
+
+  const subscription = await SchoolSubscription.findOne({ schoolId });
+  if (!subscription) throw new ApiError(404, "Subscription not found");
+
+  const invoice = await createInvoiceForSubscription(subscription, { discount, taxGst, dueDate, status });
 
   return res.status(201).json(new ApiResponse(201, invoice, "Invoice generated"));
 });
@@ -320,23 +329,12 @@ export const addManualPayment = asyncHandler(async (req, res) => {
 export const createGatewayPaymentIntent = asyncHandler(async (req, res) => {
   const { invoiceId } = req.params;
 
-  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-    throw new ApiError(500, "Razorpay credentials not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env");
-  }
-
   const invoice = await SubscriptionInvoice.findById(invoiceId).populate("schoolId");
   if (!invoice) throw new ApiError(404, "Invoice not found");
   if (invoice.status === "paid") throw new ApiError(400, "Invoice is already paid");
 
-  const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-  });
-
-  // Razorpay expects amount in paisa (1 INR = 100 paisa)
-  const order = await razorpay.orders.create({
-    amount: Math.round(invoice.totalAmount * 100),
-    currency: "INR",
+  const order = await createOrder({
+    amount: invoice.totalAmount,
     receipt: invoice.invoiceNumber,
     notes: {
       invoiceId: invoice._id.toString(),
@@ -346,54 +344,87 @@ export const createGatewayPaymentIntent = asyncHandler(async (req, res) => {
   });
 
   return res.status(200).json(new ApiResponse(200, {
-    orderId: order.id,
+    orderId: order.orderId,
     amount: order.amount,
     currency: order.currency,
-    keyId: process.env.RAZORPAY_KEY_ID,
+    keyId: order.keyId,
     invoiceId: invoice._id,
     invoiceNumber: invoice.invoiceNumber,
     schoolName: invoice.schoolId?.name || "",
   }, "Razorpay order created"));
 });
 
-export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
-  const { invoiceId } = req.params;
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-  if (!process.env.RAZORPAY_KEY_SECRET) {
-    throw new ApiError(500, "Razorpay secret not configured");
-  }
-
-  // Verify signature
-  const crypto = await import("crypto");
-  const expectedSignature = crypto.default
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    .digest("hex");
-
-  if (expectedSignature !== razorpay_signature) {
-    throw new ApiError(400, "Payment verification failed: invalid signature");
+/**
+ * Records a successful SaaS-billing payment against an invoice and marks it paid — idempotent
+ * on `transactionId` (the gateway's payment id), so both the client-side verify call below and
+ * the webhook (webhook.controllers.js) can safely race to record the same real-world payment;
+ * whichever loses either the pre-check or the unique-index insert gets back what the winner
+ * already recorded instead of an error or a duplicate.
+ */
+export const recordSubscriptionPayment = async ({
+  invoiceId,
+  amount,
+  transactionId,
+  gatewayOrderId,
+  paymentMode = "gateway",
+  gatewayProvider = "razorpay",
+}) => {
+  if (transactionId) {
+    const existing = await SubscriptionPayment.findOne({ transactionId });
+    if (existing) return { payment: existing, invoice: null, alreadyRecorded: true };
   }
 
   const invoice = await SubscriptionInvoice.findById(invoiceId);
   if (!invoice) throw new ApiError(404, "Invoice not found");
 
-  // Record the payment
-  const payment = await SubscriptionPayment.create({
-    schoolId: invoice.schoolId,
-    invoiceId: invoice._id,
-    amount: invoice.totalAmount,
-    paymentMode: "gateway",
-    transactionId: razorpay_payment_id,
-    gatewayProvider: "razorpay",
-    status: "success",
-    paymentDate: new Date(),
-  });
+  let payment;
+  try {
+    payment = await SubscriptionPayment.create({
+      schoolId: invoice.schoolId,
+      invoiceId: invoice._id,
+      amount: amount ?? invoice.totalAmount,
+      paymentMode,
+      gatewayOrderId,
+      transactionId,
+      gatewayProvider,
+      status: "success",
+      paymentDate: new Date(),
+    });
+  } catch (err) {
+    if (err?.code === 11000 && transactionId) {
+      const existing = await SubscriptionPayment.findOne({ transactionId });
+      if (existing) return { payment: existing, invoice, alreadyRecorded: true };
+    }
+    throw err;
+  }
 
-  // Mark invoice as paid
-  invoice.status = "paid";
-  invoice.paidDate = new Date();
-  await invoice.save();
+  if (invoice.status !== "paid") {
+    invoice.status = "paid";
+    invoice.paidDate = new Date();
+    await invoice.save();
+  }
+
+  return { payment, invoice };
+};
+
+export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
+  const { invoiceId } = req.params;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+  const isValid = await verifyPaymentSignature({
+    orderId: razorpay_order_id,
+    paymentId: razorpay_payment_id,
+    signature: razorpay_signature,
+  });
+  if (!isValid) {
+    throw new ApiError(400, "Payment verification failed: invalid signature");
+  }
+
+  const { payment, invoice } = await recordSubscriptionPayment({
+    invoiceId,
+    transactionId: razorpay_payment_id,
+    gatewayOrderId: razorpay_order_id,
+  });
 
   return res.status(200).json(new ApiResponse(200, { payment, invoice }, "Payment verified and recorded"));
 });
@@ -522,4 +553,81 @@ export const getRevenueSummary = asyncHandler(async (req, res) => {
       "Revenue summary fetched"
     )
   );
+});
+
+/**
+ * Refunds a SaaS-billing gateway payment — full or partial. Mirrors the same atomic-guard
+ * pattern already proven for student-fee refunds (payment.controllers.js's refundPayment):
+ * re-check the refundable balance inside the update itself to close the race window between
+ * the initial read and the write. Unlike that fee-collection refund (which only records the
+ * refund locally), this one actually calls Razorpay's refund API first — only recorded here
+ * once the gateway confirms it.
+ */
+export const refundSubscriptionPayment = asyncHandler(async (req, res) => {
+  const { paymentId } = req.params;
+  const { amount, reason } = req.body;
+
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    throw new ApiError(400, "Invalid refund amount");
+  }
+  if (!reason?.trim()) throw new ApiError(400, "A refund reason is required");
+
+  const payment = await SubscriptionPayment.findById(paymentId);
+  if (!payment) throw new ApiError(404, "Payment not found");
+  if (payment.status !== "success") {
+    throw new ApiError(400, `Only successful payments can be refunded (current status: ${payment.status})`);
+  }
+
+  const refundable = payment.amount - (payment.refundAmount || 0);
+  if (numericAmount > refundable) {
+    throw new ApiError(400, `Refund amount exceeds refundable balance (₹${refundable})`);
+  }
+
+  // Gateway-only: manual/offline SubscriptionPayments (cash, bank transfer, etc.) have no
+  // gateway transaction to reverse automatically — those need a manual accounting adjustment
+  // instead, not this endpoint.
+  if (payment.gatewayProvider === "razorpay" && payment.transactionId) {
+    await refundViaGateway({ paymentId: payment.transactionId, amount: numericAmount, notes: { reason: reason.trim() } });
+  } else {
+    throw new ApiError(400, "This payment has no gateway transaction to refund automatically — record a manual adjustment instead.");
+  }
+
+  const updatedPayment = await SubscriptionPayment.findOneAndUpdate(
+    {
+      _id: paymentId,
+      status: "success",
+      $expr: { $lte: [{ $add: [{ $ifNull: ["$refundAmount", 0] }, numericAmount] }, "$amount"] },
+    },
+    [{
+      $set: {
+        refundAmount: { $add: [{ $ifNull: ["$refundAmount", 0] }, numericAmount] },
+        refundStatus: {
+          $cond: [
+            { $gte: [{ $add: [{ $ifNull: ["$refundAmount", 0] }, numericAmount] }, "$amount"] },
+            "full",
+            "partial",
+          ],
+        },
+        status: {
+          $cond: [
+            { $gte: [{ $add: [{ $ifNull: ["$refundAmount", 0] }, numericAmount] }, "$amount"] },
+            "refunded",
+            "success",
+          ],
+        },
+      },
+    }],
+    { new: true }
+  );
+  if (!updatedPayment) throw new ApiError(409, "Payment was modified concurrently — please retry");
+
+  // Reflect the refund on the invoice too, so it stops showing as simply "paid".
+  const invoice = await SubscriptionInvoice.findByIdAndUpdate(
+    payment.invoiceId,
+    { status: updatedPayment.refundStatus === "full" ? "cancelled" : "paid" },
+    { new: true }
+  );
+
+  return res.status(200).json(new ApiResponse(200, { payment: updatedPayment, invoice }, "Refund processed successfully"));
 });

@@ -86,6 +86,14 @@ const schoolSchema = new Schema(
         type: String,
         select: false,
       },
+      // Separate from keySecret — the secret Razorpay issues specifically for webhook payload
+      // signature verification (configured per-account in the Razorpay Dashboard's Webhooks
+      // section), used by webhook.controllers.js to confirm a fee-payment webhook actually
+      // came from Razorpay for this school's account.
+      webhookSecret: {
+        type: String,
+        select: false,
+      },
       accountId: String,
       isEnabled: {
         type: Boolean,

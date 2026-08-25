@@ -40,6 +40,7 @@ import feeStructureReducer from "../features/feeStructureSlice.js";
 import studentFeeReducer from "../features/studentFeeSlice.js";
 import paymentReducer from "../features/paymentSlice.js";
 import feeInstallmentReducer from "../features/feeInstallmentSlice.js";
+import schoolBillingReducer from "../features/schoolBillingSlice.js";
 import activityReducer from "../features/activitySlice.js";
 import boardsReducer from "../features/boardSlice.js";
 import chapterReducer from "../features/chapterSlice.js";
@@ -125,6 +126,7 @@ const rootReducer = combineReducers({
   studentFee: studentFeeReducer,
   payment: paymentReducer,
   feeInstallment: feeInstallmentReducer,
+  schoolBilling: schoolBillingReducer,
   activity: activityReducer,
   chapter: chapterReducer,
   boards: boardsReducer,
