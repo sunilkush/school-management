@@ -10,7 +10,6 @@ import dayjs from "dayjs";
 import {
   fetchStudentEnrollment,
   fetchStudentGrades,
-  fetchStudentLibraryBooks,
   fetchStudentTimetable,
   fetchStudentTransport,
 } from "../../../features/studentPortalSlice";
@@ -39,7 +38,7 @@ const StudentDashboard = () => {
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
   const { user }  = useSelector((state) => state.auth);
-  const { enrollment, grades, timetable, transportAssignment, libraryBooks, loading, error } =
+  const { enrollment, grades, timetable, transportAssignment, loading, error } =
     useSelector((state) => state.studentPortal);
   const { myAttendance = [] } = useSelector((state) => state.attendance || {});
   const [pendingHomework, setPendingHomework] = useState(0);
@@ -48,7 +47,6 @@ const StudentDashboard = () => {
     dispatch(fetchStudentEnrollment());
     dispatch(fetchStudentGrades());
     dispatch(fetchStudentTimetable());
-    dispatch(fetchStudentLibraryBooks());
     dispatch(fetchStudentTransport());
     dispatch(fetchMyAttendance({ month: dayjs().month() + 1, year: dayjs().year() }));
     apiClient.get("/student-portal/me/homework")

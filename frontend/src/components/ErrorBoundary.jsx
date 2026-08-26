@@ -34,7 +34,7 @@ class ErrorBoundary extends React.Component {
           style={{
             maxWidth: 480,
             textAlign: "center",
-            background: "#fff",
+            background: "var(--surface)",
             borderRadius: 16,
             padding: "48px 32px",
             boxShadow: "var(--shadow-strong)",
