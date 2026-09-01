@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="20" height="20" rx="5" fill="#E63E6D" transform="translate(11, 16) rotate(45) translate(-10, -10)"/>
-  <rect width="20" height="20" rx="5" fill="#7B5CE0" transform="translate(21, 16) rotate(45) translate(-10, -10)"/>
-  <text x="16" y="17" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-weight="800" font-size="13" fill="#FFFFFF" letter-spacing="-1">CV</text>
-</svg>
