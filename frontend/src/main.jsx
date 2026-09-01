@@ -15,10 +15,12 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
 
 export const ThemedAntWrapper = ({ children }) => {
   const { isDark } = useTheme();
+  // Aligned with index.css CSS variables so Ant components and custom
+  // components render the same brand — blue-forward "Soft UI" palette.
   const palette = {
-    primary: "#7c3aed",
-    info: "#06b6d4",
-    success: "#10b981",
+    primary: "#2563eb",
+    info: "#3b82f6",
+    success: "#22c55e",
     warning: "#f59e0b",
     error: "#ef4444",
   };
@@ -28,21 +30,24 @@ export const ThemedAntWrapper = ({ children }) => {
       theme={{
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          borderRadius: 14,
-          borderRadiusLG: 18,
-          borderRadiusSM: 10,
+          borderRadius: 16,
+          borderRadiusLG: 22,
+          borderRadiusSM: 12,
           colorPrimary: palette.primary,
           colorInfo: palette.info,
           colorSuccess: palette.success,
           colorWarning: palette.warning,
           colorError: palette.error,
-          colorBgBase: isDark ? "#020617" : "#f8fafc",
-          colorBgContainer: isDark ? "#0f172a" : "#ffffff",
+          colorBgBase: isDark ? "#0f172a" : "#f8fafc",
+          colorBgContainer: isDark ? "#1e293b" : "#ffffff",
           colorTextBase: isDark ? "#e2e8f0" : "#0f172a",
-          colorBorder: isDark ? "#334155" : "#e2e8f0",
+          colorBorder: isDark ? "#2a3648" : "#e9edf4",
           boxShadow: isDark
-            ? "0 12px 36px rgba(2, 6, 23, 0.55)"
-            : "0 10px 30px rgba(15, 23, 42, 0.10)",
+            ? "0 8px 20px rgba(0, 0, 0, 0.4), 0 28px 64px rgba(0, 0, 0, 0.55)"
+            : "0 6px 16px rgba(17, 24, 39, 0.06), 0 24px 56px rgba(17, 24, 39, 0.10)",
+          boxShadowSecondary: isDark
+            ? "0 2px 8px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.38)"
+            : "0 2px 6px rgba(17, 24, 39, 0.04), 0 12px 32px rgba(17, 24, 39, 0.06)",
           fontFamily: '"Inter", "Poppins", sans-serif',
           fontSize: 13,
           fontSizeSM: 12,
@@ -57,24 +62,39 @@ export const ThemedAntWrapper = ({ children }) => {
         },
         components: {
           Layout: {
-            bodyBg: isDark ? "#020617" : "#f8fafc",
-            siderBg: isDark ? "#0f172a" : "#ffffff",
-            headerBg: isDark ? "#0f172a" : "#ffffff",
+            bodyBg: isDark ? "#0f172a" : "#f8fafc",
+            siderBg: isDark ? "#1e293b" : "#ffffff",
+            headerBg: isDark ? "#1e293b" : "#ffffff",
           },
           Card: {
-            borderRadiusLG: 18,
+            borderRadiusLG: 22,
+            paddingLG: 24,
           },
           Button: {
-            borderRadius: 12,
-            controlHeight: 40,
+            borderRadius: 14,
+            controlHeight: 42,
+            controlHeightLG: 48,
+            controlHeightSM: 34,
+            fontWeight: 600,
+            primaryShadow: "0 8px 22px rgba(37, 99, 235, 0.28)",
           },
           Input: {
             borderRadius: 12,
-            controlHeight: 40,
+            controlHeight: 42,
           },
           Select: {
             borderRadius: 12,
-            controlHeight: 40,
+            controlHeight: 42,
+          },
+          Modal: {
+            borderRadiusLG: 24,
+          },
+          Segmented: {
+            borderRadius: 12,
+            trackPadding: 4,
+          },
+          Table: {
+            borderRadiusLG: 18,
           },
         },
       }}

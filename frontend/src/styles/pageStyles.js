@@ -29,9 +29,9 @@ export const statGrid = (minColPx = 150) => ({
 /* ── Main content card ───────────────────────────────────────────── */
 export const pageCard = {
   background: "var(--surface)",
-  borderRadius: 18,
+  borderRadius: 22,
   border: "1px solid var(--border-muted)",
-  boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+  boxShadow: "var(--shadow-soft)",
   overflow: "hidden",
 };
 
@@ -39,9 +39,10 @@ export const pageCard = {
 export const sectionPanel = {
   background: "var(--surface)",
   border: "1px solid var(--border-muted)",
-  borderRadius: 14,
-  padding: 20,
+  borderRadius: 18,
+  padding: 22,
   marginBottom: 20,
+  boxShadow: "var(--shadow-soft)",
 };
 
 /* ── Toolbar row (search + filters + action buttons) ────────────── */
@@ -55,9 +56,10 @@ export const toolbarRow = {
 
 /* ── Table container ─────────────────────────────────────────────── */
 export const tableContainer = {
-  borderRadius: 12,
+  borderRadius: 16,
   overflow: "hidden",
   border: "1px solid var(--border-muted)",
+  boxShadow: "var(--shadow-soft)",
 };
 
 /* ── Table header CSS (inject via <style>) ───────────────────────── */
@@ -90,13 +92,13 @@ export const tableHeadCss = (cls) => `
 export const statCard = ({ color, bg, accentBar }) => ({
   padding: "18px 20px",
   background: bg || "var(--surface)",
-  borderRadius: 16,
-  border: "1px solid var(--border)",
-  borderLeft: `4px solid ${accentBar || color}`,
+  borderRadius: 20,
+  border: "1px solid var(--border-muted)",
+  borderLeft: `3px solid ${accentBar || color}`,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)",
+  boxShadow: "var(--shadow-soft)",
   transition: "transform 0.2s ease, box-shadow 0.2s ease",
 });
 
@@ -178,7 +180,7 @@ export const emptyState = {
   textAlign: "center",
   padding: "56px 24px",
   border: "1.5px dashed var(--border-color)",
-  borderRadius: 16,
+  borderRadius: 20,
   background: "var(--surface-soft)",
 };
 
