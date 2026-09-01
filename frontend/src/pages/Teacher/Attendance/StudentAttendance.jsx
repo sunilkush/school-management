@@ -95,7 +95,8 @@ const StudentAttendance = () => {
     () => new URLSearchParams(location.search),
     [location.search]
   );
-  const prefilledClassId = query.get("classId");
+  const prefilledClassId   = query.get("classId");
+  const prefilledSectionId = query.get("sectionId");
 
   /* ── Fetch ── */
   useEffect(() => {
@@ -146,10 +147,12 @@ const StudentAttendance = () => {
     if (!classSections.length) return;
     if (selectedKey) return; // already set
     const prefilled = prefilledClassId
-      ? classSections.find((c) => c.classId === prefilledClassId)
+      ? classSections.find(
+          (c) => c.classId === prefilledClassId && c.sectionId === prefilledSectionId
+        ) || classSections.find((c) => c.classId === prefilledClassId)
       : null;
     setSelectedKey((prefilled || classSections[0]).key);
-  }, [classSections, selectedKey, prefilledClassId]);
+  }, [classSections, selectedKey, prefilledClassId, prefilledSectionId]);
 
   const selectedClassObj = useMemo(
     () => classSections.find((c) => c.key === selectedKey) || null,

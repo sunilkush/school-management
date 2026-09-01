@@ -114,21 +114,22 @@ export const fetchAllStudentByRole = createAsyncThunk(
 );
 export const fetchStudentsBySchoolId = createAsyncThunk(
   "student/fetchBySchoolId",
-  async ({ schoolId, academicYearId, schoolClassId,page,limit }, { rejectWithValue }) => {
+  async ({ schoolId, academicYearId, schoolClassId, sectionId, page, limit }, { rejectWithValue }) => {
     try {
       // ✅ check valid schoolId
       if (!schoolId) {
         return rejectWithValue("schoolId is required");
       }
 
-    
+
       // ✅ API Call
       const res = await apiClient.get(`/student/school`, {
-        
+
         params: {
           schoolId,
           academicYearId,
           schoolClassId,
+          sectionId,
           page,limit
         },
       });
