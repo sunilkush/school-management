@@ -211,6 +211,10 @@ const ChildIdCard = lazy(() => import("./pages/Parent/IDCards/ChildIdCard.jsx"))
 const ChildAchievements = lazy(() => import("./pages/Parent/Sports/ChildAchievements.jsx"));
 const VerifyCertificate = lazy(() => import("./pages/Verify/VerifyCertificate.jsx"));
 const VerifyIdCard = lazy(() => import("./pages/Verify/VerifyIdCard.jsx"));
+// Public admission portal — no auth, and deliberately not behind PublicOnlyRoute either, so a
+// logged-in staff member can still open the form to help a walk-in parent.
+const AdmissionApply = lazy(() => import("./pages/Admissions/ApplyPage.jsx"));
+const AdmissionTrack = lazy(() => import("./pages/Admissions/TrackPage.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
@@ -422,6 +426,8 @@ const router = createBrowserRouter([
       { path: "/style-guide", element: <StyleGuide /> },
       { path: "/verify/certificate/:certificateNumber", element: <VerifyCertificate /> },
       { path: "/verify/id-card/:cardNumber", element: <VerifyIdCard /> },
+      { path: "/admissions", element: <AdmissionApply /> },
+      { path: "/admissions/track", element: <AdmissionTrack /> },
       { path: "/forgot-password", element: <PublicOnlyRoute><ForgetPasswordPage /></PublicOnlyRoute> },
       { path: "/support", element: <ContactSupportPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },

@@ -8,7 +8,7 @@ import {
   trackApplication,
   uploadApplicationDocuments,
 } from "../controllers/publicAdmission.controllers.js";
-import { uploadAdmissionDocs } from "../middlewares/multer.middleware.js";
+import { uploadPublicAdmissionDocs } from "../middlewares/multer.middleware.js";
 
 /**
  * Unauthenticated admission-portal routes.
@@ -66,7 +66,7 @@ router.post("/apply", applyLimiter, submitApplication);
 router.post(
   "/documents/:applicationNumber",
   uploadLimiter,
-  uploadAdmissionDocs.array("documents", 5),
+  uploadPublicAdmissionDocs.array("documents", 5),
   uploadApplicationDocuments
 );
 
