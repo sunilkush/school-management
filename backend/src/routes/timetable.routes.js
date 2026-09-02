@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   bulkSaveTimetable,
+  generateTimetableForClasses,
   childTimetable,
   classSectionTimetable,
   copyWeekTimetable,
@@ -64,6 +65,8 @@ router.get("/",        roleMiddleware(TIMETABLE_MANAGE), listTimetable);
 // Timetable CRUD
 router.post("/",       roleMiddleware(TIMETABLE_MANAGE), createTimetableEntry);
 router.post("/bulk",   roleMiddleware(TIMETABLE_MANAGE), bulkSaveTimetable);
+// Preview by default; pass commit:true to actually replace the targeted sections' rows.
+router.post("/generate", roleMiddleware(TIMETABLE_MANAGE), generateTimetableForClasses);
 router.post("/copy-week", roleMiddleware(TIMETABLE_MANAGE), copyWeekTimetable);
 router.put("/:id",     roleMiddleware(TIMETABLE_MANAGE), updateTimetableEntry);
 router.delete("/:id",  roleMiddleware(TIMETABLE_MANAGE), deleteTimetableEntry);

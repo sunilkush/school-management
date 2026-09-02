@@ -7,6 +7,7 @@ import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { generateTimetable, commitGeneratedTimetable } from "../services/timetableGenerator.service.js";
 
 const CRUD_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Academic Coordinator", "Exam Coordinator"];
 const READ_ROLES = [...CRUD_ROLES, "Teacher", "Student", "Parent", "Staff", "Support Staff"];
@@ -354,3 +355,51 @@ export const listTeacherTimetable = listTimetable;
 export const createClassTimetableEntry = createTimetableEntry;
 export const updateClassTimetableEntry = updateTimetableEntry;
 export const deleteClassTimetableEntry = deleteTimetableEntry;
+/* ── Auto-generation ──────────────────────────────────────────────
+   Defaults to a PREVIEW. Generating a timetable replaces real, hand-tuned
+   rows, so committing has to be asked for explicitly rather than being the
+   side effect of pressing a button once. */
+export const generateTimetableForClasses = asyncHandler(async (req, res) => {
+  requireRole(req, CRUD_ROLES);
+
+  const schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  if (!schoolId) throw new ApiError(400, "School context not found");
+
+  const { academicYearId, targets, workingDays, commit = false } = req.body;
+  if (!academicYearId) throw new ApiError(400, "Academic year is required");
+  if (!Array.isArray(targets) || !targets.length) {
+    throw new ApiError(400, "Select at least one class/section to generate");
+  }
+  for (const t of targets) {
+    if (!isObjectId(t.schoolClassId)) throw new ApiError(400, "Invalid class in targets");
+    if (t.sectionId && !isObjectId(t.sectionId)) throw new ApiError(400, "Invalid section in targets");
+  }
+
+  const result = await generateTimetable({
+    schoolId,
+    academicYearId,
+    targets,
+    ...(Array.isArray(workingDays) && workingDays.length ? { workingDays } : {}),
+  });
+
+  if (!commit) {
+    return success(res, 200, { ...result, committed: false }, "Timetable preview generated");
+  }
+
+  const written = await commitGeneratedTimetable({
+    schoolId,
+    academicYearId,
+    targets,
+    entries: result.entries,
+    createdBy: req.user._id,
+  });
+
+  return success(
+    res,
+    200,
+    { ...result, committed: true, written },
+    result.unmet.length
+      ? `Timetable saved with ${result.unmet.length} subject(s) short of their weekly periods`
+      : "Timetable saved"
+  );
+});
