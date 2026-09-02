@@ -18,12 +18,13 @@ const MONDAY = '2026-09-07';
 const MATHS = new mongoose.Types.ObjectId();
 const SCIENCE = new mongoose.Types.ObjectId();
 
+// Roles.model.js has a unique index on { name, schoolId }, so the school's single "Teacher" role
+// is created once in scaffold() and every teacher reuses it — creating one per teacher collides.
 let seq = 0;
-const makeTeacher = async ({ school, year, name, subjectId }) => {
+const makeTeacher = async ({ school, year, name, subjectId, roleId }) => {
   seq += 1;
-  const role = await createRole('Teacher', { schoolId: school._id });
   const { user } = await createUser({
-    name, email: `t${seq}-${Date.now()}@sub.test`, roleId: role._id, schoolId: school._id,
+    name, email: `t${seq}-${Date.now()}@sub.test`, roleId, schoolId: school._id,
   });
   await Teacher.create({
     teacherId: user._id, schoolId: school._id, academicYearId: year._id, subjectId, status: 'active',
@@ -54,14 +55,15 @@ const scaffold = async () => {
   const schoolClassId = new mongoose.Types.ObjectId();
   const sectionId = new mongoose.Types.ObjectId();
 
-  const absent = await makeTeacher({ school, year, name: 'Absent Teacher', subjectId: MATHS });
+  const teacherRole = await createRole('Teacher', { schoolId: school._id });
+  const absent = await makeTeacher({ school, year, name: 'Absent Teacher', subjectId: MATHS, roleId: teacherRole._id });
 
   const period = await Timetable.create({
     schoolId: school._id, academicYearId: year._id, schoolClassId, sectionId,
     dayOfWeek: 'monday', timeSlotId: slot1._id, subjectId: MATHS, teacherId: absent._id, type: 'regular',
   });
 
-  return { school, year, token, slot1, slot2, schoolClassId, sectionId, absent, period };
+  return { school, year, token, slot1, slot2, schoolClassId, sectionId, absent, period, teacherRole };
 };
 
 const planFor = (ctx, extra = '') =>
@@ -72,10 +74,10 @@ const planFor = (ctx, extra = '') =>
 describe('GET /substitutions/plan', () => {
   it('lists the periods an approved leave leaves uncovered', async () => {
     const ctx = await scaffold();
-    await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Free Teacher', subjectId: MATHS });
+    await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Free Teacher', subjectId: MATHS });
 
     await LeaveRequest.create({
-      schoolId: ctx.school._id, userId: ctx.absent._id, role: 'Teacher', leaveType: 'sick',
+      schoolId: ctx.school._id, userId: ctx.absent._id, role: 'teacher', leaveType: 'sick',
       startDate: new Date(`${MONDAY}T00:00:00Z`), endDate: new Date(`${MONDAY}T00:00:00Z`),
       totalDays: 1, reason: 'Fever', status: 'approved',
     });
@@ -91,7 +93,7 @@ describe('GET /substitutions/plan', () => {
 
   it('accepts an ad-hoc absence for a teacher with no leave on record', async () => {
     const ctx = await scaffold();
-    await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Free Teacher', subjectId: MATHS });
+    await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Free Teacher', subjectId: MATHS });
 
     const res = await planFor(ctx, `&absentTeacherIds=${ctx.absent._id}`);
 
@@ -101,8 +103,8 @@ describe('GET /substitutions/plan', () => {
 
   it('ranks a teacher of the same subject above one who is merely free', async () => {
     const ctx = await scaffold();
-    await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Other Subject', subjectId: SCIENCE });
-    const sameSubject = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Same Subject', subjectId: MATHS });
+    await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Other Subject', subjectId: SCIENCE });
+    const sameSubject = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Same Subject', subjectId: MATHS });
 
     const res = await planFor(ctx, `&absentTeacherIds=${ctx.absent._id}`);
     const candidates = res.body.data.periods[0].candidates;
@@ -114,8 +116,8 @@ describe('GET /substitutions/plan', () => {
 
   it('excludes a teacher already teaching in that slot, and the absent teacher themselves', async () => {
     const ctx = await scaffold();
-    const busy = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Busy Teacher', subjectId: MATHS });
-    await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Free Teacher', subjectId: MATHS });
+    const busy = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Busy Teacher', subjectId: MATHS });
+    await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Free Teacher', subjectId: MATHS });
 
     // Busy already has another class in the very same slot.
     await Timetable.create({
@@ -147,7 +149,7 @@ describe('POST /substitutions', () => {
 
   it('assigns cover without touching the recurring timetable', async () => {
     const ctx = await scaffold();
-    const free = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Free Teacher', subjectId: MATHS });
+    const free = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Free Teacher', subjectId: MATHS });
 
     const res = await assign(ctx, free._id);
     expect(res.status).toBe(201);
@@ -165,7 +167,7 @@ describe('POST /substitutions', () => {
 
   it('refuses a teacher who is already teaching in that slot', async () => {
     const ctx = await scaffold();
-    const busy = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Busy Teacher', subjectId: MATHS });
+    const busy = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Busy Teacher', subjectId: MATHS });
     await Timetable.create({
       schoolId: ctx.school._id, academicYearId: ctx.year._id,
       schoolClassId: new mongoose.Types.ObjectId(), sectionId: new mongoose.Types.ObjectId(),
@@ -180,8 +182,8 @@ describe('POST /substitutions', () => {
 
   it('refuses a second cover for the same teacher in the same slot on the same date', async () => {
     const ctx = await scaffold();
-    const free = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Free Teacher', subjectId: MATHS });
-    const otherAbsent = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Also Absent', subjectId: MATHS });
+    const free = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Free Teacher', subjectId: MATHS });
+    const otherAbsent = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Also Absent', subjectId: MATHS });
 
     // A second, different class needing cover in the very same slot.
     const otherPeriod = await Timetable.create({
@@ -208,7 +210,7 @@ describe('POST /substitutions', () => {
 
   it('refuses a date whose weekday does not match the period', async () => {
     const ctx = await scaffold();
-    const free = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Free Teacher', subjectId: MATHS });
+    const free = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Free Teacher', subjectId: MATHS });
 
     // 2026-09-08 is a Tuesday; the period is scheduled on Monday.
     const res = await assign(ctx, free._id, '2026-09-08');
@@ -219,8 +221,8 @@ describe('POST /substitutions', () => {
 
   it('re-assigning the same period replaces the cover instead of duplicating it', async () => {
     const ctx = await scaffold();
-    const first = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'First Cover', subjectId: MATHS });
-    const second = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Second Cover', subjectId: MATHS });
+    const first = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'First Cover', subjectId: MATHS });
+    const second = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Second Cover', subjectId: MATHS });
 
     await assign(ctx, first._id);
     await assign(ctx, second._id);
@@ -234,7 +236,7 @@ describe('POST /substitutions', () => {
 describe('substitution register', () => {
   it("lists the day's covers and lets a teacher see only their own duties", async () => {
     const ctx = await scaffold();
-    const free = await makeTeacher({ school: ctx.school, year: ctx.year, name: 'Free Teacher', subjectId: MATHS });
+    const free = await makeTeacher({ school: ctx.school, year: ctx.year, roleId: ctx.teacherRole._id, name: 'Free Teacher', subjectId: MATHS });
 
     await request(app)
       .post('/api/v1/substitutions')

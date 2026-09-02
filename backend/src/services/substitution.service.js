@@ -1,6 +1,10 @@
 import { LeaveRequest } from "../models/LeaveRequest.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { Subject } from "../models/subject.model.js";
 import { Substitution } from "../models/Substitution.model.js";
 import { Teacher } from "../models/teacherAssignment.model.js";
+import { TimeSlot } from "../models/TimeSlot.model.js";
 import { Timetable } from "../models/Timetable.model.js";
 
 /**
@@ -39,7 +43,14 @@ export const absentTeacherIdsOn = async ({ schoolId, date }) => {
   return leaves.map((l) => ({ teacherId: l.userId, leaveRequestId: l._id }));
 };
 
-/** The teaching periods a given teacher holds on that weekday. */
+/**
+ * The teaching periods a given teacher holds on that weekday.
+ *
+ * Deliberately NOT populated. Populate REPLACES the field and yields null when the referenced
+ * document is missing — which would lose the very subjectId the same-subject ranking below is
+ * keyed on, silently degrading every suggestion the moment a subject is deleted. Raw ids are
+ * kept and display names are resolved separately by decorate().
+ */
 const periodsForTeacher = ({ schoolId, academicYearId, teacherId, dayOfWeek }) =>
   Timetable.find({
     schoolId,
@@ -49,11 +60,28 @@ const periodsForTeacher = ({ schoolId, academicYearId, teacherId, dayOfWeek }) =
     status: "active",
     type: { $in: ["regular", "activity"] },
   })
-    .populate("timeSlotId", "name startTime endTime order")
-    .populate("subjectId", "name")
-    .populate("schoolClassId", "name")
-    .populate("sectionId", "name")
+    .select("schoolClassId sectionId timeSlotId subjectId")
     .lean();
+
+/** Batch-resolves display names for a set of rows, leaving the ids untouched. */
+const buildNameMaps = async (rows) => {
+  const ids = (field) => [...new Set(rows.map((r) => r[field]).filter(Boolean).map(String))];
+
+  const [slots, subjects, classes, sections] = await Promise.all([
+    TimeSlot.find({ _id: { $in: ids("timeSlotId") } }).select("name order").lean(),
+    Subject.find({ _id: { $in: ids("subjectId") } }).select("name").lean(),
+    SchoolClass.find({ _id: { $in: ids("schoolClassId") } }).select("name").lean(),
+    Section.find({ _id: { $in: ids("sectionId") } }).select("name").lean(),
+  ]);
+
+  const toMap = (docs) => new Map(docs.map((d) => [String(d._id), d]));
+  return {
+    slots: toMap(slots),
+    subjects: toMap(subjects),
+    classes: toMap(classes),
+    sections: toMap(sections),
+  };
+};
 
 /**
  * Candidate substitutes for one period, best first.
@@ -173,25 +201,30 @@ export const buildSubstitutionPlan = async ({ schoolId, academicYearId, date, ex
   const periods = [];
   const absentTeachers = [];
 
+  const rowsByTeacher = [];
   for (const absentId of absentIds) {
     const rows = await periodsForTeacher({ schoolId, academicYearId, teacherId: absentId, dayOfWeek });
     if (!rows.length) continue;
-
     absentTeachers.push({ teacherId: absentId, periods: rows.length, onLeave: leaveByTeacher.has(absentId) });
+    rowsByTeacher.push({ absentId, rows });
+  }
 
+  const names = await buildNameMaps(rowsByTeacher.flatMap((r) => r.rows));
+
+  for (const { absentId, rows } of rowsByTeacher) {
     for (const row of rows) {
       const already = existingByTimetable.get(String(row._id));
       periods.push({
         timetableId: row._id,
-        schoolClassId: row.schoolClassId?._id || row.schoolClassId,
-        className: row.schoolClassId?.name,
-        sectionId: row.sectionId?._id || row.sectionId || null,
-        sectionName: row.sectionId?.name,
-        timeSlotId: row.timeSlotId?._id || row.timeSlotId,
-        slotName: row.timeSlotId?.name,
-        slotOrder: row.timeSlotId?.order ?? 0,
-        subjectId: row.subjectId?._id || row.subjectId || null,
-        subjectName: row.subjectId?.name,
+        schoolClassId: row.schoolClassId,
+        className: names.classes.get(String(row.schoolClassId))?.name,
+        sectionId: row.sectionId || null,
+        sectionName: names.sections.get(String(row.sectionId))?.name,
+        timeSlotId: row.timeSlotId,
+        slotName: names.slots.get(String(row.timeSlotId))?.name,
+        slotOrder: names.slots.get(String(row.timeSlotId))?.order ?? 0,
+        subjectId: row.subjectId || null,
+        subjectName: names.subjects.get(String(row.subjectId))?.name,
         absentTeacherId: absentId,
         leaveRequestId: leaveByTeacher.get(absentId) || null,
         assigned: already
@@ -210,8 +243,8 @@ export const buildSubstitutionPlan = async ({ schoolId, academicYearId, date, ex
               academicYearId,
               date,
               dayOfWeek,
-              timeSlotId: row.timeSlotId?._id || row.timeSlotId,
-              subjectId: row.subjectId?._id || row.subjectId,
+              timeSlotId: row.timeSlotId,
+              subjectId: row.subjectId,
               excludeTeacherIds: absentIds,
             }),
       });
