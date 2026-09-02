@@ -261,6 +261,20 @@ const getSchoolById = asyncHandler(async (req, res) => {
     // the response included the school's own `bank` sub-document (account number, IFSC) with no
     // restriction — nothing anywhere actually reads school.bank server-side, so it was purely an
     // unnecessary financial-data leak to every student and teacher in the school.
+    //
+    // The id also came straight from the URL with no ownership check, so any Student or Teacher
+    // could read ANOTHER school's record by changing it — exposing razorpay.accountId, the
+    // geofence coordinates/radius, attendance hours and the active academic year. (The razorpay
+    // key/secret/webhookSecret fields are `select: false`, so those were never in the response.)
+    // Public directory data lives on the public admissions endpoints instead.
+    const callerRole = (req.userRole?.name || '').toLowerCase().trim()
+    if (callerRole !== 'super admin') {
+        const ownSchoolId = resolveSchoolId(req.user)
+        if (!ownSchoolId || String(ownSchoolId) !== String(req.params.schoolId)) {
+            throw new ApiError(403, 'You can only view your own school')
+        }
+    }
+
     const school = await School.findById(req.params.schoolId).select('-bank')
     if (!school) throw new ApiError(404, 'School not found')
 
