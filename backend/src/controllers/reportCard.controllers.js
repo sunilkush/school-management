@@ -2,12 +2,14 @@ import mongoose from "mongoose";
 
 import { ReportCard } from "../models/ReportCard.model.js";
 import { ReportCardTemplate } from "../models/ReportCardTemplate.model.js";
+import { School } from "../models/school.model.js";
 import { Student } from "../models/student.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 import { generateReportCards } from "../services/reportCard.service.js";
+import { renderReportCardPdf } from "../services/reportCardPdf.service.js";
 
 /**
  * Report cards — the consolidated, publishable term document built on top of per-exam
@@ -209,6 +211,52 @@ export const publishReportCards = asyncHandler(async (req, res) => {
       `${result.modifiedCount} report card(s) ${publish ? "published" : "unpublished"}`
     )
   );
+});
+
+/* ── PDF ─────────────────────────────────────────────────────────
+   Staff read any card in their own school; a student or parent only their
+   own, and only once it is published. Both paths converge here so the
+   rendering can't drift between them. */
+export const downloadReportCardPdf = asyncHandler(async (req, res) => {
+  const card = await ReportCard.findById(req.params.id)
+    .populate("studentId", "name email regId")
+    .populate("schoolClassId", "name")
+    .populate("sectionId", "name")
+    .lean();
+  if (!card) throw new ApiError(404, "Report card not found");
+
+  const roleName = (req.userRole?.name || "").toLowerCase().trim();
+  const viewerId = String(req.user._id);
+
+  if (roleName === "student") {
+    if (String(card.studentId?._id) !== viewerId) throw new ApiError(403, "This report card is not yours");
+    if (!card.isPublished) throw new ApiError(403, "This report card has not been published yet");
+  } else if (roleName === "parent") {
+    const student = await Student.findOne({ userId: card.studentId?._id })
+      .select("fatherId motherId guardianId")
+      .lean();
+    const linked = [student?.fatherId, student?.motherId, student?.guardianId].filter(Boolean).map(String);
+    if (!linked.includes(viewerId)) throw new ApiError(403, "You are not allowed to view this report card");
+    if (!card.isPublished) throw new ApiError(403, "This report card has not been published yet");
+  } else if (roleName !== "super admin") {
+    if (String(card.schoolId) !== String(requireSchool(req))) {
+      throw new ApiError(403, "This report card belongs to another school");
+    }
+  }
+
+  const [template, school] = await Promise.all([
+    ReportCardTemplate.findById(card.templateId).select("name options").lean(),
+    School.findById(card.schoolId).select("name address").lean(),
+  ]);
+
+  const safeName = `${card.studentId?.name || "report-card"}-${template?.name || ""}`
+    .replace(/[^a-zA-Z0-9-_]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename=${safeName || "report-card"}.pdf`);
+
+  renderReportCardPdf({ stream: res, card, template, school });
 });
 
 /* ── Student / parent access ─────────────────────────────────────── */

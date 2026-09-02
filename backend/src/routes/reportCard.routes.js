@@ -14,6 +14,7 @@ import {
   publishReportCards,
   myReportCards,
   childReportCards,
+  downloadReportCardPdf,
 } from "../controllers/reportCard.controllers.js";
 
 const router = Router();
@@ -42,6 +43,9 @@ router.post("/publish", roleMiddleware(EXAM_ADMIN), publishReportCards);
 
 /* Cards */
 router.get("/", roleMiddleware(CARD_STAFF), listReportCards);
+// Students and parents download their own card too, so this one is not restricted to staff —
+// the handler itself enforces ownership and the published-only rule for those roles.
+router.get("/:id/pdf", downloadReportCardPdf);
 router.get("/:id", roleMiddleware(CARD_STAFF), getReportCard);
 router.patch("/:id", roleMiddleware(CARD_STAFF), updateReportCard);
 
