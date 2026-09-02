@@ -4,6 +4,7 @@ import { app } from '../../src/app.js';
 import { connectTestDb, disconnectTestDb, clearTestDb } from '../helpers/testDb.js';
 import { createSchool, createRole, createUser, createActiveAcademicYear, loginAs } from '../helpers/fixtures.js';
 import { Student } from '../../src/models/student.model.js';
+import { School } from '../../src/models/school.model.js';
 import { FeeStructure } from '../../src/models/feeStructure.model.js';
 import { StudentFee } from '../../src/models/studentFee.model.js';
 import { ExamResult } from '../../src/models/ExamResult.model.js';
@@ -451,5 +452,56 @@ describe('POST /fee-heads (create)', () => {
 
     expect(response.status).toBe(201);
     expect(response.body.data.schoolId.toString()).toBe(schoolA._id.toString());
+  }, 15000);
+});
+
+describe('POST /school/update/:schoolId', () => {
+  it('refuses a School Admin editing a school that is not their own', async () => {
+    const schoolA = await createSchool({ name: 'School A' });
+    const schoolB = await createSchool({ name: 'School B' });
+
+    const adminRole = await createRole('School Admin', { schoolId: schoolA._id });
+    const { user: admin } = await createUser({
+      name: 'Admin A',
+      email: 'admin@schoolA-upd.test',
+      roleId: adminRole._id,
+      schoolId: schoolA._id,
+    });
+    const token = await loginAs(admin.email);
+
+    const response = await request(app)
+      .post(`/api/v1/school/update/${schoolB._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Hijacked', admissionsOpen: false });
+
+    expect(response.status).toBe(403);
+
+    const untouched = await School.findById(schoolB._id);
+    expect(untouched.name).toBe('School B');
+    expect(untouched.admissionsOpen).toBe(true);
+  }, 15000);
+
+  it('still lets a School Admin update their own school, including the admissions toggle', async () => {
+    const school = await createSchool({ name: 'My School' });
+
+    const adminRole = await createRole('School Admin', { schoolId: school._id });
+    const { user: admin } = await createUser({
+      name: 'Admin',
+      email: 'admin@ownschool-upd.test',
+      roleId: adminRole._id,
+      schoolId: school._id,
+    });
+    const token = await loginAs(admin.email);
+
+    const response = await request(app)
+      .post(`/api/v1/school/update/${school._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ phone: '9876500000', admissionsOpen: false });
+
+    expect(response.status).toBe(200);
+
+    const updated = await School.findById(school._id);
+    expect(updated.phone).toBe('9876500000');
+    expect(updated.admissionsOpen).toBe(false);
   }, 15000);
 });

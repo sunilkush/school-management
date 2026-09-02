@@ -8,6 +8,7 @@ import { SubscriptionPlan } from "../models/SubscriptionPlan.model.js";
 import { SchoolSubscription } from '../models/schoolSubscription.model.js';
 import { SchoolBoard } from '../models/School_board.model.js';
 import { escapeRegex } from '../utils/escapeRegex.js';
+import { resolveSchoolId } from '../utils/resolveSchoolId.js';
 
 
 const registerSchool = asyncHandler(async (req, res) => {
@@ -270,7 +271,19 @@ const getSchoolById = asyncHandler(async (req, res) => {
 
 const updateSchool = asyncHandler(async (req, res) => {
     const { schoolId } = req.params
-    const { name, address, email, phone, website, isActive } = req.body
+    const { name, address, email, phone, website, isActive, admissionsOpen } = req.body
+
+    // The route guard (roleMiddleware) only checks the caller's role NAME — School Admin and
+    // Accountant pass it for *any* schoolId, so without this a School Admin of one school could
+    // rename, deactivate, or close admissions on another school just by changing the URL. Only
+    // Super Admin legitimately edits schools other than their own.
+    const callerRole = (req.userRole?.name || '').toLowerCase().trim()
+    if (callerRole !== 'super admin') {
+        const ownSchoolId = resolveSchoolId(req.user)
+        if (!ownSchoolId || String(ownSchoolId) !== String(schoolId)) {
+            throw new ApiError(403, 'You can only update your own school')
+        }
+    }
 
     const school = await School.findById(schoolId)
     if (!school) throw new ApiError(404, 'School not found')
@@ -281,7 +294,12 @@ const updateSchool = asyncHandler(async (req, res) => {
     if (email) school.email = email
     if (phone) school.phone = phone
     if (website) school.website = website
-    if (isActive !== undefined) school.isActive = isActive === 'true'
+    if (isActive !== undefined) school.isActive = isActive === 'true' || isActive === true
+    // Sent as a real boolean from a JSON body, but as a string when the form posts multipart
+    // (this route accepts a logo upload) — accept both.
+    if (admissionsOpen !== undefined) {
+        school.admissionsOpen = admissionsOpen === 'true' || admissionsOpen === true
+    }
 
     // Handle new logo upload
     if (req.files?.logo?.[0]?.path) {
