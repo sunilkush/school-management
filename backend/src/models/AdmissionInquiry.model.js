@@ -30,6 +30,27 @@ const AdmissionInquirySchema = new Schema(
       index:   true,
     },
 
+    /* ── Public online application ──────────────────────────────────
+       Only set when the record originated from the public admission portal
+       (source: "website"); walk-in/phone inquiries entered by staff leave
+       these empty. `applicationNumber` is the reference the applicant uses to
+       track their application — it is random, not sequential, so it can't be
+       enumerated from the public tracking endpoint. Single-field sparse unique
+       is safe here (unlike a sparse *compound* index, which only skips a doc
+       when every indexed field is missing — see db/index.js). */
+    applicationNumber: { type: String, trim: true, unique: true, sparse: true },
+    submittedAt:       { type: Date },
+
+    documents: [
+      {
+        docType:      { type: String, trim: true },   // birth_certificate, photo, prev_marksheet, ...
+        url:          { type: String, trim: true },
+        publicId:     { type: String, trim: true },   // Cloudinary public_id, for later deletion
+        originalName: { type: String, trim: true },
+        uploadedAt:   { type: Date, default: Date.now },
+      },
+    ],
+
     /* Follow-up */
     followUpDate:  { type: Date },
     notes:         { type: String, trim: true, maxlength: 1000 },

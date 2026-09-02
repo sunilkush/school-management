@@ -92,6 +92,7 @@ import purchaseOrderRoutes from "./purchaseOrder.routes.js";
 import stockIssueRoutes from "./stockIssue.routes.js";
 import amcTrackingRoutes from "./amcTracking.routes.js";
 import classTeacherAssignmentRoutes from "./classTeacherAssignment.routes.js";
+import publicAdmissionRoutes from "./publicAdmission.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -188,6 +189,8 @@ export const apiV1Routes = [
   ["/class-teacher-assignments", classTeacherAssignmentRoutes],
   ["/webhooks", webhookRoutes],
   ["/school-billing", schoolBillingRoutes],
+  // Unauthenticated — see PUBLIC_API_ROUTE_PATTERNS in middlewares/auth.middleware.js
+  ["/public/admissions", publicAdmissionRoutes],
 ];
 
 export const registerRoutes = (app, enforceApiAuthByDefault) => {

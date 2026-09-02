@@ -77,6 +77,16 @@ export const allowPublic = (req, _res, next) => {
   // user — authenticity is instead enforced by HMAC signature verification inside
   // webhook.controllers.js, not a session/JWT.
   /^\/webhooks\/razorpay$/,
+  // Public admission portal — a prospective parent has no account yet, so the whole
+  // apply/track/upload flow runs unauthenticated. Abuse is bounded by per-route rate limits
+  // (routes/publicAdmission.routes.js) and every lookup requires the application number *and*
+  // the registered phone, so applicants can't be enumerated. Keep these in sync with that
+  // route file — a path that exists there but not here will 401.
+  /^\/public\/admissions\/schools$/,
+  /^\/public\/admissions\/schools\/[^/]+$/,
+  /^\/public\/admissions\/track$/,
+  /^\/public\/admissions\/apply$/,
+  /^\/public\/admissions\/documents\/[^/]+$/,
 ];
 
 const isPublicApiRoute = (req) => {
