@@ -71,9 +71,13 @@ const dbConnection = async()=>{
             console.log(`mongoDB database connect : ${connectInstance.connection.host} / ${connectInstance.connection.name}`)
             await repairStaleIndexes();
     } catch (error) {
-        console.log(`Database Doesn't Connect`)
+        // Must rethrow. Swallowing this only logged a line and then RESOLVED the promise, so
+        // index.js went on to start the cron jobs and listen() against a dead connection — the
+        // server came up "successfully" and 500'd every request, and backfillIdCards.js ran its
+        // queries against nothing. Both callers already handle a rejection by exiting non-zero.
+        console.error(`Database connection failed: ${error.message}`)
+        throw error
     }
 }
 
 export default dbConnection
-//mongodb+srv://Sunil_Kush:OebG8R7RVVcCrZGn@cluster0.xxwzkn3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0

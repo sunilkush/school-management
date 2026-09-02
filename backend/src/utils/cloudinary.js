@@ -38,18 +38,27 @@ const uploadOnCloudinary = async (filePath) => {
     }
 };
 
-const deleteOnCloudinary = async (localFilePath) => {
-    try {
-        if (!localFilePath) {
-            return ApiError(400, "!File Not Found")
-        }
-        const response = await cloudinary.uploader.destroy(localFilePath)
-        return response
-
-    } catch (error) {
-        return ApiError(401, "Unauthorized ")
+/**
+ * Deletes an asset by its Cloudinary public_id. Mirrors uploadOnCloudinary's contract: returns
+ * null on any failure rather than throwing, so a cleanup step can never take down the request
+ * that triggered it.
+ */
+const deleteOnCloudinary = async (publicId) => {
+    // Both branches below previously did `return ApiError(...)` — but ApiError is a *class*, and
+    // calling a class without `new` throws "Class constructor ApiError cannot be invoked without
+    // 'new'". So a missing id raised a confusing TypeError instead of an error object, and the
+    // catch block did the same thing again, replacing whatever the real Cloudinary failure was
+    // with that TypeError and losing it entirely.
+    if (!publicId) {
+        console.error("Cloudinary Delete Error: no public_id supplied")
+        return null
     }
-
+    try {
+        return await cloudinary.uploader.destroy(publicId)
+    } catch (error) {
+        console.error("Cloudinary Delete Error:", error)
+        return null
+    }
 }
 
 
