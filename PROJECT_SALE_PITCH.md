@@ -144,8 +144,8 @@ Each role has its own dashboard, permission scope, and workflows — this is not
 ## 5. Technical Architecture
 
 **Backend**
-- Node.js + Express, MongoDB via Mongoose (125 schemas)
-- JWT authentication, Zod request validation, RBAC via dedicated `rolePermissions` / `userPermissions` models
+- Node.js + Express, MongoDB via Mongoose (132 schemas)
+- JWT authentication, Zod request validation, and three composable layers of RBAC — authenticated, role (`roleMiddleware`), and fine-grained module/action permissions carried on the Role document (`authorize(module, action)`)
 - Security hardening: Helmet, `express-rate-limit`, `express-mongo-sanitize`, `xss-clean`
 - Integrations: Razorpay (payments), Twilio (SMS), Cloudinary (media), Nodemailer (email), PDFKit + ExcelJS (exports)
 - Scheduled jobs via `node-cron` (backups, recurring tasks)
