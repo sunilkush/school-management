@@ -505,3 +505,48 @@ describe('POST /school/update/:schoolId', () => {
     expect(updated.admissionsOpen).toBe(false);
   }, 15000);
 });
+
+describe('GET /school/:schoolId', () => {
+  it('refuses a Student reading a school that is not their own', async () => {
+    const schoolA = await createSchool({ name: 'School A' });
+    const schoolB = await createSchool({ name: 'School B' });
+
+    const studentRole = await createRole('Student', { schoolId: schoolA._id });
+    const { user: student } = await createUser({
+      name: 'Student A',
+      email: 'student@schoolA-get.test',
+      roleId: studentRole._id,
+      schoolId: schoolA._id,
+    });
+    const token = await loginAs(student.email);
+
+    const response = await request(app)
+      .get(`/api/v1/school/${schoolB._id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(403);
+    expect(JSON.stringify(response.body)).not.toMatch(/School B/);
+  }, 15000);
+
+  it('still lets a Student read their own school', async () => {
+    const school = await createSchool({ name: 'My School' });
+
+    const studentRole = await createRole('Student', { schoolId: school._id });
+    const { user: student } = await createUser({
+      name: 'Student',
+      email: 'student@ownschool-get.test',
+      roleId: studentRole._id,
+      schoolId: school._id,
+    });
+    const token = await loginAs(student.email);
+
+    const response = await request(app)
+      .get(`/api/v1/school/${school._id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.name).toBe('My School');
+    // Financial details stay excluded even for your own school.
+    expect(response.body.data.bank).toBeUndefined();
+  }, 15000);
+});
