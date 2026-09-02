@@ -231,6 +231,9 @@ const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/A
 const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/SeatPlanPage.jsx"));
 const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ExamAnalyticsPage.jsx"));
 const GradingScaleSettings = lazy(() => import("./pages/School_Admin/Exams_and_Grades/GradingScaleSettings.jsx"));
+const ReportCards = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ReportCards.jsx"));
+const MyReportCards = lazy(() => import("./pages/Student/Grades/MyReportCards.jsx"));
+const ChildReportCards = lazy(() => import("./pages/Parent/Progress/ChildReportCards.jsx"));
 const AllStudentsAttendance     = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
 const StaffAttendance           = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
 const SATeacherAttendance       = lazy(() => import("./pages/School_Admin/Attendance/TeacherAttendance.jsx"));
@@ -767,6 +770,7 @@ const router = createBrowserRouter([
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
+              { path: "exams/report-cards", element: <ReportCards /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/grading-scale", element: <GradingScaleSettings /> },
 
@@ -847,6 +851,7 @@ const router = createBrowserRouter([
               { path: "homework", element: <StudentHomework /> },
               { path: "attendance", element: <StudentAttendancePage /> },
               { path: "grades", element: <StudentGrades /> },
+              { path: "report-cards", element: <MyReportCards /> },
               { path: "timetable", element: <StudentTimetablePage /> },
               { path: "library", element: <StudentAllowedBook /> },
               { path: "hostel", element: <StudentHostel /> },
@@ -894,6 +899,7 @@ const router = createBrowserRouter([
               { path: "leave",      element: <ChildLeave /> },
               { path: "calendar",   element: <AcademicCalendar /> },
               { path: "progress",   element: <ChildProgress /> },
+              { path: "report-cards", element: <ChildReportCards /> },
               { path: "message",    element: <Message /> },
               { path: "profile",    element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -966,6 +972,7 @@ const router = createBrowserRouter([
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
+              { path: "exams/report-cards", element: <ReportCards /> },
               { path: "library",         element: <LibraryCard /> },
               { path: "transport",       element: <RoutesPage /> },
               { path: "timetable",       element: <PrincipalTimetableOverview /> },
@@ -1006,6 +1013,7 @@ const router = createBrowserRouter([
               { path: "exams/admit-card",         element: <AdmitCardPage /> },
               { path: "exams/seat-plan",          element: <SeatPlanPage /> },
               { path: "exams/analytics",          element: <ExamAnalyticsPage /> },
+              { path: "exams/report-cards",       element: <ReportCards /> },
               { path: "attendance/students",  element: <AllStudentsAttendance /> },
               { path: "attendance/staff",     element: <StaffAttendance /> },
               { path: "attendance/table",     element: <AttendanceTablePage /> },
@@ -1164,6 +1172,7 @@ const router = createBrowserRouter([
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
+              { path: "exams/report-cards", element: <ReportCards /> },
               { path: "reports",          element: <ExamReports /> },
               { path: "payroll",          element: <PayrollSelfServicePage /> },
               { path: "attendance/self",  element: <EmployeeSelfAttendance /> },
