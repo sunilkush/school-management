@@ -68,6 +68,16 @@ const schoolSchema = new Schema(
       index: true,
     },
 
+    // Whether this school accepts online admission applications. updateSchool already reads and
+    // writes it, so without the field here Mongoose's strict mode silently dropped every write.
+    // Inert on its own — the public admission portal that consumes it lands separately; a school
+    // closes intake with this rather than by going inactive, which disables the whole tenant.
+    admissionsOpen: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+
     status: {
       type: String,
       enum: ["active", "inactive", "suspended"],
