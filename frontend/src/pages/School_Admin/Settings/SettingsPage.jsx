@@ -47,6 +47,7 @@ import {
   SafetyOutlined,
   SaveOutlined,
   SettingOutlined,
+  SolutionOutlined,
   UploadOutlined,
   UserOutlined,
   WhatsAppOutlined,
@@ -152,6 +153,8 @@ const Settings = () => {
   const [isSaving,        setIsSaving]        = useState(false);
   const [isRazorpaySaving, setIsRazorpaySaving] = useState(false);
   const [isCommsSaving,   setIsCommsSaving]   = useState(false);
+  const [admissionsOpen,  setAdmissionsOpen]  = useState(true);
+  const [isAdmissionsSaving, setIsAdmissionsSaving] = useState(false);
   const [avatarFile,      setAvatarFile]      = useState(null);
   const [avatarPreview,   setAvatarPreview]   = useState(null);
   const [dirtyTabs,       setDirtyTabs]       = useState(new Set());
@@ -361,6 +364,36 @@ const Settings = () => {
     setAvatarPreview(null);
     setPwdStrength(0);
     message.info("Settings reset to defaults.");
+  };
+
+  /* ── Online admissions toggle ──────────────────────────────────── */
+  // Drives School.admissionsOpen, which decides whether this school is listed on — and accepts
+  // submissions from — the public portal at /admissions. Kept separate from isActive so closing
+  // intake never risks deactivating the tenant.
+  useEffect(() => {
+    if (!schoolId) return;
+    apiClient
+      .get(`/school/${schoolId}`)
+      .then((res) => {
+        const school = res.data?.data;
+        if (school) setAdmissionsOpen(school.admissionsOpen !== false);
+      })
+      .catch(() => { /* leave the default; the toggle just won't reflect a stale value */ });
+  }, [schoolId]);
+
+  const handleAdmissionsToggle = async (checked) => {
+    const previous = admissionsOpen;
+    setAdmissionsOpen(checked);          // optimistic
+    setIsAdmissionsSaving(true);
+    try {
+      await apiClient.post(`/school/update/${schoolId}`, { admissionsOpen: checked });
+      message.success(checked ? "Online admissions are now open." : "Online admissions are now closed.");
+    } catch (err) {
+      setAdmissionsOpen(previous);       // roll back so the switch never lies
+      message.error(err?.response?.data?.message || "Unable to update admission settings.");
+    } finally {
+      setIsAdmissionsSaving(false);
+    }
   };
 
   /* ── Razorpay save ─────────────────────────────────────────────── */
@@ -627,6 +660,38 @@ const Settings = () => {
           </Row>
 
           <Divider style={{ margin: "8px 0 20px" }} />
+
+          <SectionTitle
+            icon={<SolutionOutlined />} color="var(--primary)"
+            label="Online Admissions"
+            description="Let parents apply to this school from the public admission portal."
+          />
+          <Flex align="center" justify="space-between" wrap="wrap" gap={12} style={{ marginBottom: 12 }}>
+            <Form.Item
+              label="Accept online applications"
+              style={{ margin: 0 }}
+              extra={
+                admissionsOpen
+                  ? "Your school is listed on the public portal and can receive applications."
+                  : "Your school is hidden from the portal and new applications are refused."
+              }
+            >
+              <Switch
+                checked={admissionsOpen}
+                loading={isAdmissionsSaving}
+                onChange={handleAdmissionsToggle}
+              />
+            </Form.Item>
+          </Flex>
+          <InfoBox icon={<SolutionOutlined />}>
+            Applications arrive under <strong>Admissions → Inquiries</strong> alongside your walk-in
+            enquiries. Share this link with parents:{" "}
+            <a href="/admissions" target="_blank" rel="noreferrer">
+              {typeof window !== "undefined" ? `${window.location.origin}/admissions` : "/admissions"}
+            </a>
+          </InfoBox>
+
+          <Divider style={{ margin: "20px 0" }} />
 
           <SectionTitle
             icon={<CreditCardOutlined />} color="var(--warning)"

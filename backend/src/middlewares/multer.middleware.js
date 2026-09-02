@@ -67,3 +67,17 @@ export const uploadAdmissionDocs = multer({
     files: 5,
   },
 });
+
+// Public admission portal (routes/publicAdmission.routes.js). Kept separate from
+// uploadAdmissionDocs on purpose: 50 KB is a deliberate storage-cost choice for staff who can
+// re-compress a scan before uploading, but a parent photographing a birth certificate on a phone
+// has no way to hit it, so every upload would fail. 2 MB is the smallest limit a phone camera
+// reliably fits under. Still well below the 5 MB general cap.
+export const uploadPublicAdmissionDocs = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024,  // 2 MB per file
+    files: 5,
+  },
+});

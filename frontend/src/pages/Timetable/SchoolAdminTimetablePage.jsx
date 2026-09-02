@@ -4,7 +4,7 @@ import {
   Button, Col, Empty, Form, Input, Modal, Row, Select, Skeleton, App,
 } from "antd";
 import {
-  CopyOutlined, SaveOutlined, ScheduleOutlined, FilterOutlined, CalendarOutlined,
+  CopyOutlined, SaveOutlined, ScheduleOutlined, FilterOutlined, CalendarOutlined, ThunderboltOutlined,
 } from "@ant-design/icons";
 import {
   bulkSaveTimetable, copyWeekTimetable, deleteTimetableEntry,
@@ -14,6 +14,7 @@ import {
 import TimetableGrid from "./TimetableGrid.jsx";
 import { getId, getName, schoolIdFromUser } from "./timetableUi.js";
 import PageHeader from "../../components/layout/PageHeader";
+import GenerateTimetableModal from "../../components/timetable/GenerateTimetableModal";
 import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 
 const C = {
@@ -57,6 +58,7 @@ export default function SchoolAdminTimetablePage() {
   const [filters, setFilters]     = useState({ schoolClassId: "", sectionId: "" });
   const [modalOpen, setModalOpen] = useState(false);
   const [copyOpen, setCopyOpen]   = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
   const [editing, setEditing]     = useState(null);
   const [form]     = Form.useForm();
   const [copyForm] = Form.useForm();
@@ -174,6 +176,14 @@ export default function SchoolAdminTimetablePage() {
         icon={<ScheduleOutlined />}
         extra={
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Button
+              icon={<ThunderboltOutlined />}
+              disabled={!academicYearId || !filters.schoolClassId || !filters.sectionId}
+              onClick={() => setGenerateOpen(true)}
+              style={{ borderRadius: 9, borderColor: C.border, color: C.textSub, fontWeight: 600 }}
+            >
+              Generate
+            </Button>
             <Button
               icon={<CopyOutlined />}
               disabled={!academicYearId}
@@ -423,6 +433,23 @@ export default function SchoolAdminTimetablePage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <GenerateTimetableModal
+        open={generateOpen}
+        onClose={() => setGenerateOpen(false)}
+        academicYearId={academicYearId}
+        schoolClassId={filters.schoolClassId}
+        sectionId={filters.sectionId}
+        className={
+          [
+            masters.classes.find((c) => getId(c) === filters.schoolClassId)?.name,
+            sections.find((s) => getId(s) === filters.sectionId)?.name,
+          ]
+            .filter(Boolean)
+            .join(" — ")
+        }
+        onApplied={() => dispatch(fetchTimetable({ schoolId, academicYearId, ...filters }))}
+      />
     </div>
   );
 }

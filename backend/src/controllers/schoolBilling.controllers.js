@@ -1,12 +1,15 @@
 import PDFDocument from "pdfkit";
 import { SchoolSubscription } from "../models/schoolSubscription.model.js";
 import { SubscriptionInvoice } from "../models/SubscriptionInvoice.model.js";
+import { School } from "../models/school.model.js";
+import { GlobalConfig } from "../models/GlobalConfig.model.js";
 import { createOrder, verifyPaymentSignature } from "../services/paymentGateway/razorpayGateway.js";
 import { recordSubscriptionPayment } from "./superAdminBilling.controllers.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { renderSubscriptionInvoicePdf } from "../services/subscriptionInvoicePdf.service.js";
 
 /**
  * School Admin's own self-serve billing endpoints — every existing SaaS-billing endpoint
@@ -38,26 +41,29 @@ export const getMyInvoices = asyncHandler(async (req, res) => {
 
 export const downloadMyInvoicePdf = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req.user);
-  const invoice = await SubscriptionInvoice.findOne({ _id: req.params.invoiceId, schoolId }).populate("schoolId", "name");
+
+  const invoice = await SubscriptionInvoice.findOne({ _id: req.params.invoiceId, schoolId }).lean();
   if (!invoice) throw new ApiError(404, "Invoice not found");
 
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `attachment; filename=${invoice.invoiceNumber.replace(/\s+/g, "_")}.pdf`);
+  const [school, subscription, config] = await Promise.all([
+    School.findById(schoolId).select("name address email phone website").lean(),
+    SchoolSubscription.findById(invoice.subscriptionId).populate("planId", "name").lean(),
+    GlobalConfig.findOne({ key: "global" }).select("platformName supportEmail supportPhone currencySymbol").lean(),
+  ]);
 
-  const doc = new PDFDocument({ margin: 40 });
-  doc.pipe(res);
-  doc.fontSize(20).text("Subscription Invoice", { align: "center" });
-  doc.moveDown();
-  doc.fontSize(12).text(`Invoice No: ${invoice.invoiceNumber}`);
-  doc.text(`School: ${invoice.schoolId?.name || "N/A"}`);
-  doc.text(`Billing: ${invoice.billingPeriodStart.toDateString()} - ${invoice.billingPeriodEnd.toDateString()}`);
-  doc.moveDown();
-  doc.text(`Plan Price: ${invoice.planPrice}`);
-  doc.text(`Discount: ${invoice.discount}`);
-  doc.text(`Tax/GST: ${invoice.taxGst}`);
-  doc.text(`Total: ${invoice.totalAmount}`);
-  doc.text(`Status: ${invoice.status}`);
-  doc.end();
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=${String(invoice.invoiceNumber).replace(/\s+/g, "_")}.pdf`
+  );
+
+  renderSubscriptionInvoicePdf({
+    stream: res,
+    invoice,
+    school,
+    planName: subscription?.planId?.name || "Subscription plan",
+    config: config || {},
+  });
 });
 
 export const createMyPaymentIntent = asyncHandler(async (req, res) => {

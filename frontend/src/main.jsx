@@ -15,10 +15,12 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
 
 export const ThemedAntWrapper = ({ children }) => {
   const { isDark } = useTheme();
+  // Aligned with index.css CSS variables so Ant components and custom
+  // components render the same brand — blue-forward "Soft UI" palette.
   const palette = {
-    primary: "#7c3aed",
-    info: "#06b6d4",
-    success: "#10b981",
+    primary: "#2563eb",
+    info: "#3b82f6",
+    success: "#22c55e",
     warning: "#f59e0b",
     error: "#ef4444",
   };
@@ -28,21 +30,24 @@ export const ThemedAntWrapper = ({ children }) => {
       theme={{
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          borderRadius: 14,
-          borderRadiusLG: 18,
-          borderRadiusSM: 10,
+          borderRadius: 16,
+          borderRadiusLG: 22,
+          borderRadiusSM: 12,
           colorPrimary: palette.primary,
           colorInfo: palette.info,
           colorSuccess: palette.success,
           colorWarning: palette.warning,
           colorError: palette.error,
-          colorBgBase: isDark ? "#020617" : "#f8fafc",
-          colorBgContainer: isDark ? "#0f172a" : "#ffffff",
+          colorBgBase: isDark ? "#0f172a" : "#f8fafc",
+          colorBgContainer: isDark ? "#1e293b" : "#ffffff",
           colorTextBase: isDark ? "#e2e8f0" : "#0f172a",
-          colorBorder: isDark ? "#334155" : "#e2e8f0",
+          colorBorder: isDark ? "#2a3648" : "#e9edf4",
           boxShadow: isDark
-            ? "0 12px 36px rgba(2, 6, 23, 0.55)"
-            : "0 10px 30px rgba(15, 23, 42, 0.10)",
+            ? "0 8px 20px rgba(0, 0, 0, 0.4), 0 28px 64px rgba(0, 0, 0, 0.55)"
+            : "0 6px 16px rgba(17, 24, 39, 0.06), 0 24px 56px rgba(17, 24, 39, 0.10)",
+          boxShadowSecondary: isDark
+            ? "0 2px 8px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.38)"
+            : "0 2px 6px rgba(17, 24, 39, 0.04), 0 12px 32px rgba(17, 24, 39, 0.06)",
           fontFamily: '"Inter", "Poppins", sans-serif',
           fontSize: 13,
           fontSizeSM: 12,
@@ -57,24 +62,39 @@ export const ThemedAntWrapper = ({ children }) => {
         },
         components: {
           Layout: {
-            bodyBg: isDark ? "#020617" : "#f8fafc",
-            siderBg: isDark ? "#0f172a" : "#ffffff",
-            headerBg: isDark ? "#0f172a" : "#ffffff",
+            bodyBg: isDark ? "#0f172a" : "#f8fafc",
+            siderBg: isDark ? "#1e293b" : "#ffffff",
+            headerBg: isDark ? "#1e293b" : "#ffffff",
           },
           Card: {
-            borderRadiusLG: 18,
+            borderRadiusLG: 22,
+            paddingLG: 24,
           },
           Button: {
-            borderRadius: 12,
-            controlHeight: 40,
+            borderRadius: 14,
+            controlHeight: 42,
+            controlHeightLG: 48,
+            controlHeightSM: 34,
+            fontWeight: 600,
+            primaryShadow: "0 8px 22px rgba(37, 99, 235, 0.28)",
           },
           Input: {
             borderRadius: 12,
-            controlHeight: 40,
+            controlHeight: 42,
           },
           Select: {
             borderRadius: 12,
-            controlHeight: 40,
+            controlHeight: 42,
+          },
+          Modal: {
+            borderRadiusLG: 24,
+          },
+          Segmented: {
+            borderRadius: 12,
+            trackPadding: 4,
+          },
+          Table: {
+            borderRadiusLG: 18,
           },
         },
       }}
@@ -191,6 +211,10 @@ const ChildIdCard = lazy(() => import("./pages/Parent/IDCards/ChildIdCard.jsx"))
 const ChildAchievements = lazy(() => import("./pages/Parent/Sports/ChildAchievements.jsx"));
 const VerifyCertificate = lazy(() => import("./pages/Verify/VerifyCertificate.jsx"));
 const VerifyIdCard = lazy(() => import("./pages/Verify/VerifyIdCard.jsx"));
+// Public admission portal — no auth, and deliberately not behind PublicOnlyRoute either, so a
+// logged-in staff member can still open the form to help a walk-in parent.
+const AdmissionApply = lazy(() => import("./pages/Admissions/ApplyPage.jsx"));
+const AdmissionTrack = lazy(() => import("./pages/Admissions/TrackPage.jsx"));
 
 const Classes = lazy(() => import("./pages/School_Admin/Academic_Management/Classes.jsx"));
 const Subjects = lazy(() => import("./pages/School_Admin/Academic_Management/Subjects.jsx"));
@@ -207,6 +231,9 @@ const AdmitCardPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/A
 const SeatPlanPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/SeatPlanPage.jsx"));
 const ExamAnalyticsPage = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ExamAnalyticsPage.jsx"));
 const GradingScaleSettings = lazy(() => import("./pages/School_Admin/Exams_and_Grades/GradingScaleSettings.jsx"));
+const ReportCards = lazy(() => import("./pages/School_Admin/Exams_and_Grades/ReportCards.jsx"));
+const MyReportCards = lazy(() => import("./pages/Student/Grades/MyReportCards.jsx"));
+const ChildReportCards = lazy(() => import("./pages/Parent/Progress/ChildReportCards.jsx"));
 const AllStudentsAttendance     = lazy(() => import("./pages/School_Admin/Attendance/AllStudentsAttendance.jsx"));
 const StaffAttendance           = lazy(() => import("./pages/School_Admin/Attendance/StaffAttendance.jsx"));
 const SATeacherAttendance       = lazy(() => import("./pages/School_Admin/Attendance/TeacherAttendance.jsx"));
@@ -232,6 +259,8 @@ const TeacherTimetablePage = lazy(() => import("./pages/Timetable/TeacherTimetab
 const StudentTimetablePage = lazy(() => import("./pages/Timetable/StudentTimetablePage.jsx"));
 const ParentChildTimetablePage = lazy(() => import("./pages/Timetable/ParentChildTimetablePage.jsx"));
 const PrincipalTimetableOverview = lazy(() => import("./pages/Timetable/PrincipalTimetableOverview.jsx"));
+const SubstitutionsPage = lazy(() => import("./pages/Timetable/SubstitutionsPage.jsx"));
+const MySubstitutions = lazy(() => import("./pages/Timetable/MySubstitutions.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -402,6 +431,8 @@ const router = createBrowserRouter([
       { path: "/style-guide", element: <StyleGuide /> },
       { path: "/verify/certificate/:certificateNumber", element: <VerifyCertificate /> },
       { path: "/verify/id-card/:cardNumber", element: <VerifyIdCard /> },
+      { path: "/admissions", element: <AdmissionApply /> },
+      { path: "/admissions/track", element: <AdmissionTrack /> },
       { path: "/forgot-password", element: <PublicOnlyRoute><ForgetPasswordPage /></PublicOnlyRoute> },
       { path: "/support", element: <ContactSupportPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
@@ -691,6 +722,7 @@ const router = createBrowserRouter([
               { path: "timetable", element: <SchoolAdminTimetablePage /> },
               { path: "timetable/time-slots", element: <TimeSlotManager /> },
               { path: "timetable/rooms", element: <RoomManager /> },
+              { path: "timetable/substitutions", element: <SubstitutionsPage /> },
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
@@ -741,6 +773,7 @@ const router = createBrowserRouter([
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
+              { path: "exams/report-cards", element: <ReportCards /> },
               { path: "exams/reports", element: <ExamReports /> },
               { path: "exams/grading-scale", element: <GradingScaleSettings /> },
 
@@ -791,6 +824,7 @@ const router = createBrowserRouter([
               { path: "exams/list", element: <TeacherExamsPage /> },
               { path: "exams/evaluation", element: <TeacherEvaluationPage /> },
               { path: "timetable", element: <TeacherTimetablePage /> },
+              { path: "timetable/my-substitutions", element: <MySubstitutions /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -821,6 +855,7 @@ const router = createBrowserRouter([
               { path: "homework", element: <StudentHomework /> },
               { path: "attendance", element: <StudentAttendancePage /> },
               { path: "grades", element: <StudentGrades /> },
+              { path: "report-cards", element: <MyReportCards /> },
               { path: "timetable", element: <StudentTimetablePage /> },
               { path: "library", element: <StudentAllowedBook /> },
               { path: "hostel", element: <StudentHostel /> },
@@ -868,6 +903,7 @@ const router = createBrowserRouter([
               { path: "leave",      element: <ChildLeave /> },
               { path: "calendar",   element: <AcademicCalendar /> },
               { path: "progress",   element: <ChildProgress /> },
+              { path: "report-cards", element: <ChildReportCards /> },
               { path: "message",    element: <Message /> },
               { path: "profile",    element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -940,6 +976,7 @@ const router = createBrowserRouter([
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
+              { path: "exams/report-cards", element: <ReportCards /> },
               { path: "library",         element: <LibraryCard /> },
               { path: "transport",       element: <RoutesPage /> },
               { path: "timetable",       element: <PrincipalTimetableOverview /> },
@@ -980,6 +1017,7 @@ const router = createBrowserRouter([
               { path: "exams/admit-card",         element: <AdmitCardPage /> },
               { path: "exams/seat-plan",          element: <SeatPlanPage /> },
               { path: "exams/analytics",          element: <ExamAnalyticsPage /> },
+              { path: "exams/report-cards",       element: <ReportCards /> },
               { path: "attendance/students",  element: <AllStudentsAttendance /> },
               { path: "attendance/staff",     element: <StaffAttendance /> },
               { path: "attendance/table",     element: <AttendanceTablePage /> },
@@ -1138,6 +1176,7 @@ const router = createBrowserRouter([
               { path: "exams/admit-card", element: <AdmitCardPage /> },
               { path: "exams/seat-plan", element: <SeatPlanPage /> },
               { path: "exams/analytics", element: <ExamAnalyticsPage /> },
+              { path: "exams/report-cards", element: <ReportCards /> },
               { path: "reports",          element: <ExamReports /> },
               { path: "payroll",          element: <PayrollSelfServicePage /> },
               { path: "attendance/self",  element: <EmployeeSelfAttendance /> },
