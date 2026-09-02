@@ -259,6 +259,8 @@ const TeacherTimetablePage = lazy(() => import("./pages/Timetable/TeacherTimetab
 const StudentTimetablePage = lazy(() => import("./pages/Timetable/StudentTimetablePage.jsx"));
 const ParentChildTimetablePage = lazy(() => import("./pages/Timetable/ParentChildTimetablePage.jsx"));
 const PrincipalTimetableOverview = lazy(() => import("./pages/Timetable/PrincipalTimetableOverview.jsx"));
+const SubstitutionsPage = lazy(() => import("./pages/Timetable/SubstitutionsPage.jsx"));
+const MySubstitutions = lazy(() => import("./pages/Timetable/MySubstitutions.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -720,6 +722,7 @@ const router = createBrowserRouter([
               { path: "timetable", element: <SchoolAdminTimetablePage /> },
               { path: "timetable/time-slots", element: <TimeSlotManager /> },
               { path: "timetable/rooms", element: <RoomManager /> },
+              { path: "timetable/substitutions", element: <SubstitutionsPage /> },
               { path: "timetable/class", element: <ClassTimetable /> },
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
@@ -821,6 +824,7 @@ const router = createBrowserRouter([
               { path: "exams/list", element: <TeacherExamsPage /> },
               { path: "exams/evaluation", element: <TeacherEvaluationPage /> },
               { path: "timetable", element: <TeacherTimetablePage /> },
+              { path: "timetable/my-substitutions", element: <MySubstitutions /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },

@@ -232,6 +232,7 @@ export const sidebarMenu = {
         { title: "Timetable Planner", path: "schooladmin/timetable" },
         { title: "Time Slots", path: "schooladmin/timetable/time-slots" },
         { title: "Rooms", path: "schooladmin/timetable/rooms" },
+        { title: "Substitutions", path: "schooladmin/timetable/substitutions" },
         { title: "Teacher Timetable", path: "schooladmin/timetable/teacher" },
         { title: "Events", path: "schooladmin/events" },
         { title: "Calendar", path: "schooladmin/calendar" },
@@ -356,6 +357,7 @@ export const sidebarMenu = {
         { title: "Subject Resources", path: "teacher/resources" },
         { title: "Lesson Plans", path: "teacher/lesson-plans" },
         { title: "Timetable", path: "teacher/timetable" },
+        { title: "My Cover Duties", path: "teacher/timetable/my-substitutions" },
       ],
     },
     {
