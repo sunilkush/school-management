@@ -1,4 +1,5 @@
 import { Attendance } from "../models/attendance.model.js";
+import { Exam } from "../models/Exam.model.js";
 import { ExamResult } from "../models/ExamResult.model.js";
 import { ReportCard } from "../models/ReportCard.model.js";
 import { getGradeBands, resolveGrade } from "./gradingScale.service.js";
@@ -105,9 +106,16 @@ export const generateReportCards = async ({
     schoolClassId,
     ...(sectionId ? { sectionId } : {}),
   };
-  const results = await ExamResult.find(resultFilter)
-    .populate("examId", "title name")
-    .lean();
+
+  // Exam titles are looked up separately rather than via .populate("examId"). Populate REPLACES
+  // the field, and yields null when the referenced Exam no longer exists — which lost the id the
+  // weightage is keyed on, so every component silently fell to weight 0 and every card came out
+  // as 0%. Keeping the raw ObjectId means a deleted exam only costs us its display name.
+  const [results, exams] = await Promise.all([
+    ExamResult.find(resultFilter).lean(),
+    Exam.find({ _id: { $in: examIds } }).select("title").lean(),
+  ]);
+  const nameByExam = new Map(exams.map((e) => [String(e._id), e.title]));
 
   // studentId -> subjectId -> components[]
   const byStudent = new Map();
@@ -116,8 +124,9 @@ export const generateReportCards = async ({
     if (!byStudent.has(studentKey)) byStudent.set(studentKey, { studentId: result.studentId, sectionId: result.sectionId, subjects: new Map() });
     const bucket = byStudent.get(studentKey);
 
-    const examName = result.examId?.title || result.examId?.name || "Exam";
-    const weightage = weightByExam.get(String(result.examId?._id || result.examId)) ?? 0;
+    const examKey = String(result.examId);
+    const examName = nameByExam.get(examKey) || "Exam";
+    const weightage = weightByExam.get(examKey) ?? 0;
 
     for (const subject of result.subjects || []) {
       const subjectKey = String(subject.subjectId);
@@ -125,7 +134,7 @@ export const generateReportCards = async ({
         bucket.subjects.set(subjectKey, { subjectId: subject.subjectId, subjectName: subject.subjectName, components: [] });
       }
       bucket.subjects.get(subjectKey).components.push({
-        examId: result.examId?._id || result.examId,
+        examId: result.examId,
         examName,
         obtainedMarks: subject.obtainedMarks,
         totalMarks: subject.totalMarks,
