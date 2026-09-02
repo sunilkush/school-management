@@ -94,6 +94,7 @@ import amcTrackingRoutes from "./amcTracking.routes.js";
 import classTeacherAssignmentRoutes from "./classTeacherAssignment.routes.js";
 import publicAdmissionRoutes from "./publicAdmission.routes.js";
 import reportCardRoutes from "./reportCard.routes.js";
+import substitutionRoutes from "./substitution.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -191,6 +192,7 @@ export const apiV1Routes = [
   ["/webhooks", webhookRoutes],
   ["/school-billing", schoolBillingRoutes],
   ["/report-cards", reportCardRoutes],
+  ["/substitutions", substitutionRoutes],
   // Unauthenticated — see PUBLIC_API_ROUTE_PATTERNS in middlewares/auth.middleware.js
   ["/public/admissions", publicAdmissionRoutes],
 ];
