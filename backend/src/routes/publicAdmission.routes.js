@@ -25,28 +25,38 @@ import { uploadAdmissionDocs } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-const readLimiter = rateLimit({
+/** These limits are far tighter than the app-wide one (800/15min), because every route here is
+ *  reachable without a session. That makes them trip inside the test suite, which drives many
+ *  applications from the single loopback IP — express-rate-limit counters are process-global and
+ *  survive `clearTestDb`, so the 11th request in a file would 429 regardless of what it is
+ *  testing. Skipping under NODE_ENV=test (set by tests/setup/env.js) keeps production behaviour
+ *  untouched; the trade-off is that the limits themselves are not exercised by the suite. */
+const publicLimiter = ({ windowMs, max, message }) =>
+  rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: () => process.env.NODE_ENV === "test",
+    message: { success: false, message, data: null },
+  });
+
+const readLimiter = publicLimiter({
   windowMs: 15 * 60 * 1000,
   max: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: "Too many requests. Please try again later.", data: null },
+  message: "Too many requests. Please try again later.",
 });
 
-const applyLimiter = rateLimit({
+const applyLimiter = publicLimiter({
   windowMs: 60 * 60 * 1000,
   max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: "Too many applications from this device. Please try again later.", data: null },
+  message: "Too many applications from this device. Please try again later.",
 });
 
-const uploadLimiter = rateLimit({
+const uploadLimiter = publicLimiter({
   windowMs: 60 * 60 * 1000,
   max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: "Too many uploads. Please try again later.", data: null },
+  message: "Too many uploads. Please try again later.",
 });
 
 router.get("/schools", readLimiter, listAdmissionSchools);
