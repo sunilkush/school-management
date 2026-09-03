@@ -87,6 +87,13 @@ export const allowPublic = (req, _res, next) => {
   /^\/public\/admissions\/track$/,
   /^\/public\/admissions\/apply$/,
   /^\/public\/admissions\/documents\/[^/]+$/,
+  // Attendance readers (fingerprint terminals, RFID gates) are machines on a school's own
+  // network with no account to log in with. Authenticity is enforced by an HMAC signature over
+  // the body using the device's shared secret, checked inside attendanceDevice.controllers.js —
+  // exactly the arrangement the Razorpay webhook above uses. Keep these in sync with
+  // routes/attendanceDevice.routes.js: a path there but not here will 401.
+  /^\/attendance-devices\/punches$/,
+  /^\/attendance-devices\/heartbeat$/,
 ];
 
 const isPublicApiRoute = (req) => {

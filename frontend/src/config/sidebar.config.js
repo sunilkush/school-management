@@ -270,6 +270,7 @@ export const sidebarMenu = {
         { title: "Attendance Table",   path: "schooladmin/attendance/table"      },
         { title: "Monthly Attendance", path: "schooladmin/attendance/monthly"    },
         { title: "Geofence Settings",  path: "schooladmin/attendance/geofence"   },
+        { title: "Biometric / RFID",   path: "schooladmin/attendance/devices"    },
       ],
     },
     {

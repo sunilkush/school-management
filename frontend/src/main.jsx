@@ -268,6 +268,7 @@ const LedgerReconciliation = lazy(() => import("./pages/Accountant/Ledger/Reconc
 const LiveTracking = lazy(() => import("./pages/Transport/LiveTracking.jsx"));
 const DriverTrip = lazy(() => import("./pages/Driver/DriverTrip.jsx"));
 const ChildBusLive = lazy(() => import("./pages/Parent/Transport/ChildBusLive.jsx"));
+const AttendanceDevices = lazy(() => import("./pages/School_Admin/Attendance/AttendanceDevices.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -722,6 +723,7 @@ const router = createBrowserRouter([
               { path: "attendance/table",     element: <AttendanceTablePage /> },
               { path: "attendance/monthly",   element: <MonthlyReportPage /> },
               { path: "attendance/geofence",  element: <GeofenceSettings /> },
+              { path: "attendance/devices",   element: <AttendanceDevices /> },
               { path: "attendance/live",      element: <GeofenceSettings /> },
               { path: "library/books", element: <Books /> },
               { path: "library/issue", element: <IssueBook /> },

@@ -146,11 +146,15 @@ const schoolSchema = new Schema(
     /* ================= ATTENDANCE HOURS ================= */
     // Drives the daily auto-checkout job (see jobs/autoCheckout.job.js) — anyone still
     // checked in (checkInAt set, checkOutAt null) once "now" (Asia/Kolkata) passes endTime
-    // gets automatically checked out. startTime is informational for now (e.g. for a future
-    // "late" cutoff); only endTime is currently consumed.
+    // gets automatically checked out. startTime is now also the "late" cutoff the original
+    // comment here anticipated: devicePunch.service.js marks a reader punch that lands after
+    // startTime + lateGraceMinutes as "late" rather than "present".
     attendanceHours: {
       startTime: { type: String, trim: true, default: "08:00" }, // "HH:mm", 24-hour
       endTime: { type: String, trim: true, default: "15:00" },   // "HH:mm", 24-hour
+      // Nobody is late by one minute. Without a grace period a reader turns an ordinary morning
+      // into a wall of "late" rows and the flag stops meaning anything.
+      lateGraceMinutes: { type: Number, default: 10, min: 0, max: 120 },
       autoCheckoutEnabled: { type: Boolean, default: true },
     },
 

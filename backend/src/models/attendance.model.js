@@ -102,6 +102,22 @@ const attendanceSchema = new Schema(
     // check-in that never got a real check-out — distinguishes a system-forced checkout from
     // one the user actually performed.
     autoCheckedOut: { type: Boolean, default: false },
+    /**
+     * How this record came to exist. Without it a reader-generated row is indistinguishable from
+     * one a teacher typed, and `markedBy` would have to name a person who did not mark it — a
+     * device is not a user. Existing rows have no value and read as "manual", which is what they
+     * were.
+     */
+    source: {
+      type: String,
+      enum: ["manual", "self", "device"],
+      default: "manual",
+    },
+    deviceId: {
+      type: Schema.Types.ObjectId,
+      ref: "AttendanceDevice",
+      default: null,
+    },
   },
   { timestamps: true }
 );
