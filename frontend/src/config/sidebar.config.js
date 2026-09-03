@@ -47,6 +47,7 @@ import {
   Trophy,
   FileBadge,
   IdCard,
+  Landmark,
 } from "lucide-react";
 import RupeeIcon from "../components/icons/RupeeIcon";
 
@@ -286,6 +287,16 @@ export const sidebarMenu = {
       ],
     },
     {
+      title: "Accounting",
+      icon: Landmark,
+      subMenu: [
+        { title: "Chart of Accounts", path: "schooladmin/ledger/accounts" },
+        { title: "Journal", path: "schooladmin/ledger/journal" },
+        { title: "Financial Statements", path: "schooladmin/ledger/statements" },
+        { title: "Reconciliation", path: "schooladmin/ledger/reconciliation" },
+      ],
+    },
+    {
       title: "My Subscription",
       icon: CreditCard,
       path: "schooladmin/billing/subscription",
@@ -446,6 +457,16 @@ export const sidebarMenu = {
     { title: "Expenses",          path: "accountant/expenses",           icon: Receipt },
     { title: "Financial Reports", path: "accountant/reports",            icon: FileText },
     {
+      title: "Accounting",
+      icon: Landmark,
+      subMenu: [
+        { title: "Chart of Accounts", path: "accountant/ledger/accounts" },
+        { title: "Journal", path: "accountant/ledger/journal" },
+        { title: "Financial Statements", path: "accountant/ledger/statements" },
+        { title: "Reconciliation", path: "accountant/ledger/reconciliation" },
+      ],
+    },
+    {
       title: "Payroll",
       icon: Briefcase,
       subMenu: [
@@ -485,6 +506,7 @@ export const sidebarMenu = {
     { title: "Library", path: "principal/library", icon: Book },
     { title: "Transport", path: "principal/transport", icon: Bus },
     { title: "Financial Reports", path: "principal/finance/reports", icon: FileText },
+    { title: "Financial Statements", path: "principal/ledger/statements", icon: Landmark },
     { title: "Fee Reports", path: "principal/fees/reports", icon: FileBarChart2 },
     { title: "My Tasks",         path: "principal/tasks",   icon: ListChecks   },
     { title: "My Payroll",       path: "principal/payroll", icon: IndianRupee  },

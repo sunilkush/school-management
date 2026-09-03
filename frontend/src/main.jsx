@@ -261,6 +261,10 @@ const ParentChildTimetablePage = lazy(() => import("./pages/Timetable/ParentChil
 const PrincipalTimetableOverview = lazy(() => import("./pages/Timetable/PrincipalTimetableOverview.jsx"));
 const SubstitutionsPage = lazy(() => import("./pages/Timetable/SubstitutionsPage.jsx"));
 const MySubstitutions = lazy(() => import("./pages/Timetable/MySubstitutions.jsx"));
+const ChartOfAccounts = lazy(() => import("./pages/Accountant/Ledger/ChartOfAccounts.jsx"));
+const JournalEntries = lazy(() => import("./pages/Accountant/Ledger/JournalEntries.jsx"));
+const FinancialStatements = lazy(() => import("./pages/Accountant/Ledger/FinancialStatements.jsx"));
+const LedgerReconciliation = lazy(() => import("./pages/Accountant/Ledger/Reconciliation.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -727,6 +731,10 @@ const router = createBrowserRouter([
               { path: "timetable/teacher", element: <TeacherTimetable /> },
               { path: "fees/categories", element: <SchoolFeeCategories /> },
               { path: "fees/collect", element: <FeeCollection /> },
+              { path: "ledger/accounts", element: <ChartOfAccounts /> },
+              { path: "ledger/journal", element: <JournalEntries /> },
+              { path: "ledger/statements", element: <FinancialStatements /> },
+              { path: "ledger/reconciliation", element: <LedgerReconciliation /> },
               { path: "billing/subscription", element: <MySubscription /> },
               { path: "admission/inquiry", element: <AdmissionInquiryPage /> },
               { path: "hostel", element: <HostelManagement /> },
@@ -936,6 +944,10 @@ const router = createBrowserRouter([
               { path: "expenses",         element: <ExpenseManagement /> },
               { path: "reports",          element: <FinancialReports /> },
               { path: "fees/reports",     element: <FeeReports /> },
+              { path: "ledger/accounts", element: <ChartOfAccounts /> },
+              { path: "ledger/journal", element: <JournalEntries /> },
+              { path: "ledger/statements", element: <FinancialStatements /> },
+              { path: "ledger/reconciliation", element: <LedgerReconciliation /> },
               { path: "message", element: <Message /> },
               { path: "profile", element: <Profile /> },
               { path: "notification", element: <Notification /> },
@@ -989,6 +1001,7 @@ const router = createBrowserRouter([
               { path: "attendance/my",   element: <MyAttendancePage /> },
               { path: "leave",           element: <TeacherLeave /> },
               { path: "finance/reports", element: <FinancialReports /> },
+              { path: "ledger/statements", element: <FinancialStatements /> },
               { path: "fees/reports",    element: <FeeReports /> },
             ],
           },
