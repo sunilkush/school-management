@@ -44,6 +44,7 @@ const buildStudentSnapshot = (student, enrollment) => ({
   fullName: student.userId?.name || "",
   photoUrl: student.picture || student.userId?.avatar || "",
   bloodGroup: student.bloodGroup || "",
+  dateOfBirth: student.dateOfBirth || null,
   contactPhone: student.fatherInfo?.mobile || student.motherInfo?.mobile || "",
   address: student.address || "",
   className: enrollment?.schoolClassId?.name || "",

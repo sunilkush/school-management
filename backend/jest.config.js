@@ -1,6 +1,6 @@
 export default {
   testEnvironment: "node",
-  testMatch: ["**/tests/api/**/*.test.js"],
+  testMatch: ["**/tests/api/**/*.test.js", "**/tests/unit/**/*.test.js"],
   // tests/setup/env.js was written to be a setupFiles entry and describes itself as one, but was
   // never actually wired up — so until now the suite quietly authenticated with whatever real
   // secrets happened to be in the developer's .env.

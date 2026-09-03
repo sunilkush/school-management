@@ -20,6 +20,10 @@ const idCardSchema = new Schema(
     contactPhone: { type: String, trim: true, default: "" },
     address: { type: String, trim: true, default: "" },
 
+    // Printed on the card, so it is snapshotted like every other field here rather than read
+    // live — a card is a physical object and must keep saying what it said when it was issued.
+    dateOfBirth: { type: Date, default: null },
+
     // ── Student-only ──
     className: { type: String, trim: true, default: "" },
     sectionName: { type: String, trim: true, default: "" },
