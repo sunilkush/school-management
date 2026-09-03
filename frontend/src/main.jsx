@@ -186,6 +186,7 @@ const Faqs = lazy(() => import("./pages/Super_Admin/Support/Faqs.jsx"));
 const ContactSupport = lazy(() => import("./pages/Super_Admin/Support/ContactSupport.jsx"));
 const Documentation = lazy(() => import("./pages/Super_Admin/Support/Documentation.jsx"));
 const RoleDocumentation = lazy(() => import("./pages/Documentation/RoleDocumentation.jsx"));
+const ModuleRoleGuide = lazy(() => import("./pages/Documentation/ModuleRoleGuide.jsx"));
 // School Admin
 const TeacherList = lazy(() => import("./pages/School_Admin/User_Management/TeacherList.jsx"));
 const AddStudent = lazy(() => import("./pages/School_Admin/Teachers_&_Students/AddStudent.jsx"));
@@ -594,6 +595,41 @@ const router = createBrowserRouter([
                 ]}
               >
                 <RoleDocumentation />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "support/modules",
+            element: (
+              <ProtectedRoute
+                allowedRoles={[
+                  "Super Admin",
+                  "School Admin",
+                  "Principal",
+                  "Vice Principal",
+                  "Teacher",
+                  "Subject Coordinator",
+                  "Student",
+                  "Parent",
+                  "Accountant",
+                  "Staff",
+                  "Support Staff",
+                  "Librarian",
+                  "Hostel Warden",
+                  "Transport Manager",
+                  "Exam Coordinator",
+                  "Receptionist",
+                  "IT Support",
+                  "Counselor",
+                  "Security",
+                  "Sports Teacher",
+                  "Lab Technician",
+                  "Medical Officer",
+                  "Class Teacher",
+                  "Driver",
+                ]}
+              >
+                <ModuleRoleGuide />
               </ProtectedRoute>
             ),
           },

@@ -48,6 +48,7 @@ import {
   FileBadge,
   IdCard,
   Landmark,
+  Layers,
   Video,
 } from "lucide-react";
 import RupeeIcon from "../components/icons/RupeeIcon";
@@ -87,6 +88,7 @@ const supportCenterItem = {
   subMenu: [
     { title: "Support Tickets", path: "support/tickets", icon: HelpCircle },
     { title: "Documentation",   path: "support/documentation", icon: FileText },
+    { title: "Modules & Roles", path: "support/modules",       icon: Layers },
   ],
 };
 
@@ -192,6 +194,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Support Tickets", path: "superadmin/support/tickets" },
         { title: "Documentation", path: "superadmin/support/documentation" },
+        { title: "Modules & Roles", path: "superadmin/support/modules" },
         { title: "Contact Support", path: "superadmin/support/contact" },
         { title: "FAQs", path: "superadmin/support/faqs" },
       ],

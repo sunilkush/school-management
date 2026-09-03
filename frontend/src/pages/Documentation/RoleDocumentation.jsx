@@ -40,6 +40,46 @@ const BulletList = ({ items }) => (
 /* ─── Role documentation data ───────────────────────────────── */
 const SCHOOL_ADMIN_DOCS = [
   {
+    id: "compliance", group: "Administration", icon: <SafetyCertificateOutlined />, color: "var(--danger-hover)",
+    title: "Government Compliance", subtitle: "UDISE+, PEN, APAAR and RTE",
+    badge: "Statutory",
+    overview: "Holds the government identifiers for the school and every child, and shows exactly which records are not complete enough to file. Nothing is submitted from here — UDISE+ has no interface for a school system to file through, so the return is still filed on the portal.",
+    sections: [
+      { heading: "Getting ready to file", body: null, steps: [
+        "Enter the school UDISE code and board details on the School details tab.",
+        "Open Readiness. It groups what is missing by field, so 212 children with no mother tongue is one afternoon of work rather than 212 separate jobs.",
+        "Fill the gaps. Use set for all listed for anything a whole class shares.",
+        "Download the sheet and work from it while filing on the portal.",
+      ]},
+      { heading: "APAAR and RTE", body: null, list: [
+        "An APAAR ID cannot be saved until the parent consent is recorded — it cannot be created without one.",
+        "RTE is reported per class, because a school can look compliant overall while having admitted nobody in the class where it was required.",
+        "The RTE percentage is editable: 25% is the figure for private unaided schools and does not apply to every category.",
+      ]},
+    ],
+    tips: ["Full Aadhaar numbers are deliberately not stored — only the last four digits and whether the document is on file."],
+  },
+  {
+    id: "attendance-devices", group: "Administration", icon: <IdcardOutlined />, color: "var(--warning-hover)",
+    title: "Biometric & RFID Devices", subtitle: "Fingerprint terminals and card readers",
+    badge: "Attendance",
+    overview: "Register an attendance reader, record which card or fingerprint belongs to whom, and let the scans become attendance. Works with any device that can send its scans — it is not tied to one brand.",
+    sections: [
+      { heading: "Setting up a reader", body: null, steps: [
+        "Go to Attendance → Biometric / RFID and add the device.",
+        "Copy the device key and secret straight away — the secret is shown once and never again.",
+        "Enter both in whatever sends the scans: the vendor software or a script on the school network.",
+        "Enrol each card or fingerprint against the right person under Cards & fingerprints.",
+      ]},
+      { heading: "When something looks wrong", body: null, list: [
+        "Scans from a card nobody has enrolled are kept and listed — enrol the card, press Reprocess, and the days already scanned become attendance.",
+        "A reader that stops reporting is flagged, because otherwise everyone it covers silently shows as absent.",
+        "A record entered by hand is never overwritten by a scan.",
+      ]},
+    ],
+    tips: ["Lost a secret? Rotate it — but the device stops working until the new one is entered on it."],
+  },
+  {
     id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Dashboard Overview", subtitle: "Your school management control centre",
     badge: "Start Here",
@@ -166,6 +206,29 @@ const SCHOOL_ADMIN_DOCS = [
 
 const TEACHER_DOCS = [
   {
+    id: "online-classes", group: "Teaching", icon: <LaptopOutlined />, color: "var(--cyan)",
+    title: "Online Classes", subtitle: "Run a live class and see who joined",
+    badge: "Live",
+    overview: "Schedule a live class for one of your sections. The system does not host the video — you paste the link from the school's own Meet, Zoom or Teams account, and it handles who the class is for, when the link appears, and who opened it.",
+    sections: [
+      { heading: "Scheduling a class", body: null, steps: [
+        "Create the meeting in your own Meet/Zoom/Teams account and copy the link.",
+        "Go to Online Classes → Schedule class, pick the class and section, set the time, and paste the link.",
+        "Leave the section blank to reach every section of the class.",
+        "Students see the class immediately, but the link only appears shortly before it starts — a link left visible for days gets forwarded outside the school.",
+      ]},
+      { heading: "After the class", body: null, steps: [
+        "Open Joins to see who opened the link.",
+        "If you agree with the list, use Mark these present. Anything already marked by hand is left alone.",
+        "Paste the recording link so anyone who missed it can catch up.",
+      ]},
+    ],
+    tips: [
+      "The join log records who clicked join, not who sat through the lesson — that is why the register is never marked automatically.",
+      "Cancel rather than delete a class: students were told it was happening, and the cancellation explains why nobody turned up.",
+    ],
+  },
+  {
     id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Dashboard Overview", subtitle: "Your teaching workspace at a glance",
     badge: "Start Here",
@@ -252,6 +315,29 @@ const TEACHER_DOCS = [
 ];
 
 const ACCOUNTANT_DOCS = [
+  {
+    id: "ledger", group: "Finance", icon: <BankOutlined />, color: "var(--success-hover)",
+    title: "Accounting (Double Entry)", subtitle: "Chart of accounts, journal and statements",
+    badge: "Books",
+    overview: "Proper books behind the money the system already records. Fee payments, refunds, salaries, income and expenses become journal entries, and the trial balance, income & expenditure and balance sheet are built from them.",
+    sections: [
+      { heading: "Setting up", body: null, steps: [
+        "Open Accounting → Chart of Accounts and use Set up defaults. The standard school chart is created for you.",
+        "Rename anything that does not match how your school talks about it. Running the setup again only fills in what is missing.",
+        "Add opening balances as a manual entry in the Journal.",
+      ]},
+      { heading: "Keeping the books current", body: null, steps: [
+        "Open Reconciliation. It tells you whether every recorded payment, refund, salary and expense is in the books.",
+        "Press Post pending to turn the outstanding ones into journal entries. It is safe to run again — nothing is posted twice.",
+        "Anything it could not post is listed with the reason, usually a missing account.",
+      ]},
+    ],
+    tips: [
+      "Check Reconciliation before quoting any figure — it answers whether the statements can be trusted right now.",
+      "A posted entry can never be edited, only reversed. That is deliberate: somebody may already have reported the original figure.",
+      "Statements count posted entries only, so a draft never changes a number someone else is reading.",
+    ],
+  },
   {
     id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Dashboard Overview", subtitle: "Your financial operations hub",
@@ -477,6 +563,28 @@ const HOSTEL_WARDEN_DOCS = [
 ];
 
 const TRANSPORT_DOCS = [
+  {
+    id: "live-tracking", group: "Fleet", icon: <CarOutlined />, color: "var(--cyan)",
+    title: "Live Bus Tracking", subtitle: "Where every bus is, right now",
+    badge: "Live",
+    overview: "Drivers start their run from their own phone and the bus appears on a map for the office. Parents see only their own child's bus, with an estimated arrival at their stop.",
+    sections: [
+      { heading: "Before it will work", body: null, steps: [
+        "Open Routes and use Map stops on each route — click the map to place every stop.",
+        "Link each driver login to their vehicle on the Vehicles page.",
+        "Without mapped stops the bus still shows on the map, but nobody gets a reached-your-stop update.",
+      ]},
+      { heading: "Every day", body: null, steps: [
+        "The driver opens My Trip and starts the run.",
+        "Watch Live Tracking. A bus marked no signal is running but not reporting — usually location is off on the driver phone.",
+        "The driver ends the trip when the run is finished.",
+      ]},
+    ],
+    tips: [
+      "Tracking comes from the driver phone with the page open. If the browser is closed it stops until they open it again.",
+      "Arrival times are estimates from distance and speed, not a road route — parents are shown them as about.",
+    ],
+  },
   {
     id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Transport Dashboard", subtitle: "Your transport operations workspace",
