@@ -317,6 +317,7 @@ export const sidebarMenu = {
         { title: "Routes", path: "schooladmin/transport/routes" },
         { title: "Vehicles", path: "schooladmin/transport/vehicles" },
         { title: "Assignments", path: "schooladmin/transport/assignments" },
+        { title: "Live Tracking", path: "schooladmin/transport/live" },
       ],
     },
     {
@@ -412,6 +413,7 @@ export const sidebarMenu = {
     { title: "Study Materials", path: "student/study-materials", icon: BookOpen },
     { title: "Hostel", path: "student/hostel", icon: Building2 },
     { title: "Transport", path: "student/transport", icon: Bus },
+    { title: "Where is my Bus", path: "student/transport/live", icon: MapPinned },
     { title: "Fees", path: "student/fees", icon: RupeeIcon },
     { title: "Leave Requests", path: "student/leave", icon: CalendarClock },
     { title: "Exams", path: "student/exams", icon: GraduationCap },
@@ -439,6 +441,7 @@ export const sidebarMenu = {
     { title: "Exams",             path: "parent/exams",        icon: GraduationCap },
     { title: "Leave Requests",    path: "parent/leave",        icon: CalendarClock },
     { title: "Transport",         path: "parent/transport",    icon: Bus },
+    { title: "Where is the Bus",  path: "parent/transport/live", icon: MapPinned },
     { title: "Hostel",            path: "parent/hostel",       icon: Building2  },
     { title: "Library",           path: "parent/library",      icon: Book },
     { title: "Calendar",          path: "parent/calendar",     icon: CalendarClock },
@@ -505,6 +508,7 @@ export const sidebarMenu = {
     { title: "Exams", path: "principal/exams", icon: GraduationCap },
     { title: "Library", path: "principal/library", icon: Book },
     { title: "Transport", path: "principal/transport", icon: Bus },
+    { title: "Live Bus Tracking", path: "principal/transport/live", icon: MapPinned },
     { title: "Financial Reports", path: "principal/finance/reports", icon: FileText },
     { title: "Financial Statements", path: "principal/ledger/statements", icon: Landmark },
     { title: "Fee Reports", path: "principal/fees/reports", icon: FileBarChart2 },
@@ -616,6 +620,7 @@ export const sidebarMenu = {
     { title: "Drivers", path: "transportmanager/drivers", icon: Users },
     { title: "Assignments", path: "transportmanager/assignments", icon: ClipboardCheck },
     { title: "Fuel & Maintenance", path: "transportmanager/maintenance", icon: Fuel },
+    { title: "Live Tracking", path: "transportmanager/live", icon: MapPinned },
     { title: "My Tasks",   path: "transportmanager/tasks",   icon: ListChecks  },
     { title: "My Payroll", path: "transportmanager/payroll", icon: IndianRupee },
     ...employeeAttendance("transportmanager"),
@@ -626,6 +631,7 @@ export const sidebarMenu = {
   /* ================= DRIVER ================= */
   driver: [
     { title: "Overview",   path: "driver",         icon: LayoutDashboard },
+    { title: "My Trip",    path: "driver/trip",     icon: MapPinned       },
     { title: "My Tasks",   path: "driver/tasks",    icon: ListChecks      },
     { title: "My Payroll", path: "driver/payroll",  icon: IndianRupee     },
     ...employeeAttendance("driver"),

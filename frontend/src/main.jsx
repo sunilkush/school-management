@@ -265,6 +265,9 @@ const ChartOfAccounts = lazy(() => import("./pages/Accountant/Ledger/ChartOfAcco
 const JournalEntries = lazy(() => import("./pages/Accountant/Ledger/JournalEntries.jsx"));
 const FinancialStatements = lazy(() => import("./pages/Accountant/Ledger/FinancialStatements.jsx"));
 const LedgerReconciliation = lazy(() => import("./pages/Accountant/Ledger/Reconciliation.jsx"));
+const LiveTracking = lazy(() => import("./pages/Transport/LiveTracking.jsx"));
+const DriverTrip = lazy(() => import("./pages/Driver/DriverTrip.jsx"));
+const ChildBusLive = lazy(() => import("./pages/Parent/Transport/ChildBusLive.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -742,6 +745,7 @@ const router = createBrowserRouter([
               { path: "transport/routes", element: <RoutesPage /> },
               { path: "transport/vehicles", element: <Vehicles /> },
               { path: "transport/assignments", element: <TransportAssignments /> },
+              { path: "transport/live", element: <LiveTracking /> },
               { path: "payroll/monthly-run", element: <EmployeeSalaries /> },
               { path: "payroll/salary-structures", element: <SalaryStructures /> },
               { path: "payroll/create-employee", element: <CreateEmployee/> },
@@ -868,6 +872,7 @@ const router = createBrowserRouter([
               { path: "library", element: <StudentAllowedBook /> },
               { path: "hostel", element: <StudentHostel /> },
               { path: "transport", element: <StudentTransport /> },
+              { path: "transport/live", element: <ChildBusLive /> },
               { path: "leave", element: <StudentLeave /> },
               { path: "study-materials", element: <StudyMaterials /> },
               { path: "calendar", element: <AcademicCalendar /> },
@@ -906,6 +911,7 @@ const router = createBrowserRouter([
               { path: "exams",      element: <ParentExamsPage /> },
               { path: "timetable",  element: <ParentChildTimetablePage /> },
               { path: "transport",  element: <ChildTransport /> },
+              { path: "transport/live",  element: <ChildBusLive /> },
               { path: "hostel",     element: <ChildHostel /> },
               { path: "library",    element: <ChildLibrary /> },
               { path: "leave",      element: <ChildLeave /> },
@@ -991,6 +997,7 @@ const router = createBrowserRouter([
               { path: "exams/report-cards", element: <ReportCards /> },
               { path: "library",         element: <LibraryCard /> },
               { path: "transport",       element: <RoutesPage /> },
+              { path: "transport/live", element: <LiveTracking /> },
               { path: "timetable",       element: <PrincipalTimetableOverview /> },
               { path: "message",         element: <Message /> },
               { path: "profile",         element: <Profile /> },
@@ -1067,6 +1074,7 @@ const router = createBrowserRouter([
               { path: "attendance/my",   element: <MyAttendancePage /> },
               { path: "leave",           element: <TeacherLeave /> },
               { path: "profile",         element: <Profile /> },
+
               { path: "message",         element: <Message /> },
               { path: "notification",    element: <Notification /> },
               { path: "*",               element: <RoleDynamicPortal /> },
@@ -1138,6 +1146,7 @@ const router = createBrowserRouter([
               { path: "drivers",         element: <DriversPage /> },
               { path: "assignments",     element: <TransportAssignments /> },
               { path: "maintenance",     element: <VehicleMaintenance /> },
+              { path: "live",            element: <LiveTracking /> },
               { path: "tasks",           element: <MyTasks /> },
               { path: "payroll",         element: <PayrollSelfServicePage /> },
               { path: "attendance/self", element: <EmployeeSelfAttendance /> },
@@ -1158,6 +1167,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,             element: <DriverDashboard /> },
+              { path: "trip",            element: <DriverTrip /> },
               { path: "tasks",           element: <MyTasks /> },
               { path: "payroll",         element: <PayrollSelfServicePage /> },
               { path: "attendance/self", element: <EmployeeSelfAttendance /> },

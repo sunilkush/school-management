@@ -9,10 +9,11 @@ import {
   InputNumber,
   message,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined, CarOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined, CarOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { createRoute, deleteRoute, fetchRoutes, updateRoute } from "../../../features/transportSlice";
 import PageHeader from "../../../components/layout/PageHeader";
+import RouteStopMapper from "../../../components/transport/RouteStopMapper";
 import {
   pageWrapper,
   pageCard,
@@ -35,6 +36,8 @@ const RoutesPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRoute, setEditingRoute] = useState(null);
   const [form] = Form.useForm();
+  const [mappingRoute, setMappingRoute] = useState(null);
+  const [savingStops, setSavingStops] = useState(false);
 
   useEffect(() => {
     dispatch(fetchRoutes());
@@ -48,6 +51,7 @@ const RoutesPage = () => {
         name: route.name,
         bus: route.bus,
         stops: route.stops || [],
+        stopPoints: route.stopPoints || [],
         students: route.students || 0,
       })),
     [routes]
@@ -110,6 +114,21 @@ const RoutesPage = () => {
   };
 
   const totalRoutes = dataSource.length;
+  /** Saves the mapped stops. The plain `stops` name list is derived from these on the server, so
+   *  the two lists cannot end up describing different stops. */
+  const handleSaveStops = async (stopPoints) => {
+    setSavingStops(true);
+    try {
+      await dispatch(updateRoute({ id: mappingRoute._id, payload: { stopPoints } })).unwrap();
+      message.success("Stops mapped — live tracking can now detect arrivals on this route");
+      setMappingRoute(null);
+    } catch (error) {
+      message.error(error || "Unable to save the stops");
+    } finally {
+      setSavingStops(false);
+    }
+  };
+
   const totalBuses = new Set(dataSource.map((route) => route.bus)).size;
   const totalStudents = dataSource.reduce((acc, route) => acc + route.students, 0);
 
@@ -117,6 +136,19 @@ const RoutesPage = () => {
     { title: "Route Name", dataIndex: "name", key: "name" },
     { title: "Bus Assigned", dataIndex: "bus", key: "bus" },
     { title: "Stops", dataIndex: "stops", key: "stops", render: (stops) => stops.join(", ") },
+    {
+      title: "On map",
+      key: "mapped",
+      width: 110,
+      // Called out per route because an unmapped route tracks the bus but never fires an arrival,
+      // and that difference is invisible until a parent asks why they got no message.
+      render: (_, record) =>
+        record.stopPoints?.length ? (
+          <span style={{ color: "var(--success)", fontWeight: 600 }}>{record.stopPoints.length} mapped</span>
+        ) : (
+          <span style={{ color: "var(--text-muted)" }}>not mapped</span>
+        ),
+    },
     { title: "Students", dataIndex: "students", key: "students" },
     ...(canManageRoutes
       ? [{
@@ -124,6 +156,9 @@ const RoutesPage = () => {
           key: "actions",
           render: (_, record) => (
             <Space>
+              <Button icon={<EnvironmentOutlined />} onClick={() => setMappingRoute(record)}>
+                Map stops
+              </Button>
               <Button icon={<EditOutlined />} onClick={() => handleEditRoute(record)}>
                 Edit
               </Button>
@@ -234,6 +269,14 @@ const RoutesPage = () => {
             </Form.Item>
           </Form>
         </Modal>
+
+        <RouteStopMapper
+          open={!!mappingRoute}
+          route={mappingRoute}
+          saving={savingStops}
+          onClose={() => setMappingRoute(null)}
+          onSave={handleSaveStops}
+        />
       </div>
     </div>
   );

@@ -115,20 +115,48 @@ export const getRoutes = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, routes, "Routes fetched successfully"));
 });
 
+/**
+ * Normalises the mapped stops and keeps the legacy `stops` string list in step with them.
+ *
+ * `stopPoints` is the source of truth once a route has been put on the map; `stops` stays as the
+ * plain list the older screens read. Deriving one from the other means the two can never drift
+ * into disagreeing about which stops a route has.
+ */
+const normaliseStopPoints = (stopPoints) => {
+  if (!Array.isArray(stopPoints)) return null;
+
+  const points = stopPoints
+    .filter((p) => p && p.name && p.lat != null && p.lng != null)
+    .map((p, i) => ({
+      name: String(p.name).trim(),
+      sequence: Number.isFinite(Number(p.sequence)) ? Number(p.sequence) : i,
+      lat: Number(p.lat),
+      lng: Number(p.lng),
+      radiusMeters: Number(p.radiusMeters) || 150,
+      expectedOffsetMin: p.expectedOffsetMin == null ? null : Number(p.expectedOffsetMin),
+    }))
+    .sort((a, b) => a.sequence - b.sequence);
+
+  return { stopPoints: points, stops: points.map((p) => p.name) };
+};
+
 export const createRoute = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);
   if (!schoolId) throw new ApiError(400, "schoolId is required");
 
-  const { name, bus, stops = [], students = 0 } = req.body;
+  const { name, bus, stops = [], stopPoints, students = 0 } = req.body;
 
   if (!name || !bus) throw new ApiError(400, "Route name and bus are required");
+
+  const mapped = normaliseStopPoints(stopPoints);
 
   const route = await TransportRoute.create({
     schoolId,
     academicYearId: resolveAcademicYearId(req),
     name,
     bus,
-    stops: Array.isArray(stops) ? stops : [],
+    stops: mapped ? mapped.stops : Array.isArray(stops) ? stops : [],
+    stopPoints: mapped ? mapped.stopPoints : [],
     students,
   });
 
@@ -137,7 +165,10 @@ export const createRoute = asyncHandler(async (req, res) => {
 
 export const updateRoute = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, bus, stops, students } = req.body;
+  const { name, bus, stops, stopPoints, students } = req.body;
+
+  const schoolId = resolveSchoolId(req);
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
 
   const updates = {};
   if (name !== undefined) updates.name = name;
@@ -145,8 +176,24 @@ export const updateRoute = asyncHandler(async (req, res) => {
   if (stops !== undefined) updates.stops = Array.isArray(stops) ? stops : [];
   if (students !== undefined) updates.students = students;
 
-  const schoolId = resolveSchoolId(req);
-  if (!schoolId) throw new ApiError(400, "schoolId is required");
+  // Mapped stops win over a plain string list sent in the same request — they carry strictly more
+  // information, and letting both through would leave the two lists describing different stops.
+  const mapped = normaliseStopPoints(stopPoints);
+  if (mapped) {
+    updates.stopPoints = mapped.stopPoints;
+    updates.stops = mapped.stops;
+  } else if (updates.stops) {
+    // Only the plain list was edited. Any mapped stop whose name has just been renamed or removed
+    // no longer exists, so it is dropped — otherwise a deleted stop would keep firing arrivals
+    // under a name the route no longer has. Stops added here are simply not mapped yet.
+    const existing = await TransportRoute.findOne({ _id: id, schoolId }).select("stopPoints").lean();
+    if (existing?.stopPoints?.length) {
+      const kept = new Set(updates.stops.map((s) => String(s).trim().toLowerCase()));
+      updates.stopPoints = existing.stopPoints
+        .filter((p) => kept.has(p.name.trim().toLowerCase()))
+        .map((p, i) => ({ ...p, sequence: i }));
+    }
+  }
 
   const route = await TransportRoute.findOneAndUpdate({ _id: id, schoolId }, updates, { new: true, runValidators: true });
   if (!route) throw new ApiError(404, "Route not found");
