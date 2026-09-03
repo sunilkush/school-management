@@ -203,6 +203,7 @@ export const sidebarMenu = {
   "school admin": [
     { title: "Overview", path: "schooladmin", icon: LayoutDashboard },
     { title: "School Setup", path: "schooladmin/school-setup", icon: School },
+    { title: "Govt. Compliance", path: "schooladmin/compliance", icon: ShieldCheck },
     {
       title: "Users",
       icon: Users,
@@ -512,6 +513,7 @@ export const sidebarMenu = {
     { title: "Live Bus Tracking", path: "principal/transport/live", icon: MapPinned },
     { title: "Financial Reports", path: "principal/finance/reports", icon: FileText },
     { title: "Financial Statements", path: "principal/ledger/statements", icon: Landmark },
+    { title: "Govt. Compliance", path: "principal/compliance", icon: ShieldCheck },
     { title: "Fee Reports", path: "principal/fees/reports", icon: FileBarChart2 },
     { title: "My Tasks",         path: "principal/tasks",   icon: ListChecks   },
     { title: "My Payroll",       path: "principal/payroll", icon: IndianRupee  },

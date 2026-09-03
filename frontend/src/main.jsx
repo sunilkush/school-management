@@ -269,6 +269,7 @@ const LiveTracking = lazy(() => import("./pages/Transport/LiveTracking.jsx"));
 const DriverTrip = lazy(() => import("./pages/Driver/DriverTrip.jsx"));
 const ChildBusLive = lazy(() => import("./pages/Parent/Transport/ChildBusLive.jsx"));
 const AttendanceDevices = lazy(() => import("./pages/School_Admin/Attendance/AttendanceDevices.jsx"));
+const CompliancePage = lazy(() => import("./pages/School_Admin/Compliance/CompliancePage.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -807,6 +808,7 @@ const router = createBrowserRouter([
               { path: "expenses", element: <ExpenseManagement /> },
               { path: "finance/reports", element: <FinancialReports /> },
               { path: "school-setup", element: <SchoolSetup /> },
+              { path: "compliance", element: <CompliancePage /> },
               { path: "tasks", element: <TaskManagement /> },
 
             ],
@@ -1011,6 +1013,7 @@ const router = createBrowserRouter([
               { path: "leave",           element: <TeacherLeave /> },
               { path: "finance/reports", element: <FinancialReports /> },
               { path: "ledger/statements", element: <FinancialStatements /> },
+              { path: "compliance", element: <CompliancePage /> },
               { path: "fees/reports",    element: <FeeReports /> },
             ],
           },

@@ -158,6 +158,33 @@ const schoolSchema = new Schema(
       autoCheckoutEnabled: { type: Boolean, default: true },
     },
 
+    /* ================= STATUTORY IDENTITY ================= */
+    /**
+     * What the school is registered as with the government. Every UDISE+ return and every RTE
+     * reimbursement claim is filed against the UDISE code, so it belongs on the school record
+     * rather than being retyped from a note each year.
+     *
+     * There is no UDISE+ API to file through — a school submits on the portal itself. What this
+     * system does is hold the identifiers and tell the office exactly which records are still
+     * incomplete, which is the part that actually takes days.
+     */
+    compliance: {
+      /** 11-digit UDISE+ code for this school. */
+      udiseCode: { type: String, trim: true, default: "" },
+      /** CBSE/ICSE/State board affiliation, as printed on the certificate. */
+      affiliationBoard: { type: String, trim: true, default: "" },
+      affiliationNumber: { type: String, trim: true, default: "" },
+      recognitionNumber: { type: String, trim: true, default: "" },
+      schoolCategory: { type: String, trim: true, default: "" },
+      management: { type: String, trim: true, default: "" },
+      /**
+       * The RTE reservation this school is held to. 25% is the Act's figure for private unaided
+       * schools; it is configurable because it does not apply to every category of school, and a
+       * hard-coded 25 would quietly report a government school as non-compliant.
+       */
+      rteQuotaPercent: { type: Number, default: 25, min: 0, max: 100 },
+    },
+
     /* ================= META ================= */
 
     createdBy: {

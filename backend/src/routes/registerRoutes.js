@@ -97,6 +97,7 @@ import reportCardRoutes from "./reportCard.routes.js";
 import substitutionRoutes from "./substitution.routes.js";
 import ledgerRoutes from "./ledger.routes.js";
 import attendanceDeviceRoutes from "./attendanceDevice.routes.js";
+import complianceRoutes from "./compliance.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -197,6 +198,7 @@ export const apiV1Routes = [
   ["/substitutions", substitutionRoutes],
   ["/ledger", ledgerRoutes],
   ["/attendance-devices", attendanceDeviceRoutes],
+  ["/compliance", complianceRoutes],
   // Unauthenticated — see PUBLIC_API_ROUTE_PATTERNS in middlewares/auth.middleware.js
   ["/public/admissions", publicAdmissionRoutes],
 ];

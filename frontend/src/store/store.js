@@ -75,6 +75,7 @@ import financeReducer from "../features/financeSlice";
 import ledgerReducer from "../features/ledgerSlice";
 import busTrackingReducer from "../features/busTrackingSlice";
 import attendanceDeviceReducer from "../features/attendanceDeviceSlice";
+import complianceReducer from "../features/complianceSlice";
 import hostelWardenReducer from "../features/hostelWardenSlice";
 import advanceReducer from "../features/advanceSlice";
 import taskReducer from "../features/taskSlice";
@@ -162,6 +163,7 @@ const rootReducer = combineReducers({
   ledger: ledgerReducer,
   busTracking: busTrackingReducer,
   attendanceDevice: attendanceDeviceReducer,
+  compliance: complianceReducer,
   hostelWarden: hostelWardenReducer,
   advance: advanceReducer,
   tasks: taskReducer,
