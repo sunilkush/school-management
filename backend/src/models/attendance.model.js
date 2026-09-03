@@ -110,7 +110,7 @@ const attendanceSchema = new Schema(
      */
     source: {
       type: String,
-      enum: ["manual", "self", "device"],
+      enum: ["manual", "self", "device", "online"],
       default: "manual",
     },
     deviceId: {

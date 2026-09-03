@@ -48,6 +48,7 @@ import {
   FileBadge,
   IdCard,
   Landmark,
+  Video,
 } from "lucide-react";
 import RupeeIcon from "../components/icons/RupeeIcon";
 
@@ -204,6 +205,7 @@ export const sidebarMenu = {
     { title: "Overview", path: "schooladmin", icon: LayoutDashboard },
     { title: "School Setup", path: "schooladmin/school-setup", icon: School },
     { title: "Govt. Compliance", path: "schooladmin/compliance", icon: ShieldCheck },
+    { title: "Online Classes", path: "schooladmin/online-classes", icon: Video },
     {
       title: "Users",
       icon: Users,
@@ -368,6 +370,7 @@ export const sidebarMenu = {
         { title: "Assigned Classes", path: "teacher/classes" },
        /*  { title: "My Students", path: "teacher/students" }, */
         { title: "Assignments", path: "teacher/assignments" },
+        { title: "Online Classes", path: "teacher/online-classes" },
         { title: "Subject Resources", path: "teacher/resources" },
         { title: "Lesson Plans", path: "teacher/lesson-plans" },
         { title: "Timetable", path: "teacher/timetable" },
@@ -413,6 +416,7 @@ export const sidebarMenu = {
     { title: "Timetable", path: "student/timetable", icon: CalendarClock },
     { title: "Library", path: "student/library", icon: Book },
     { title: "Study Materials", path: "student/study-materials", icon: BookOpen },
+    { title: "Online Classes", path: "student/online-classes", icon: Video },
     { title: "Hostel", path: "student/hostel", icon: Building2 },
     { title: "Transport", path: "student/transport", icon: Bus },
     { title: "Where is my Bus", path: "student/transport/live", icon: MapPinned },
@@ -438,6 +442,7 @@ export const sidebarMenu = {
     { title: "Attendance",        path: "parent/attendance",   icon: UserCheck },
     { title: "Grades",            path: "parent/grades",       icon: FileCheck },
     { title: "Homework",          path: "parent/homework",     icon: ClipboardCheck },
+    { title: "Online Classes",    path: "parent/online-classes", icon: Video },
     { title: "Fees",              path: "parent/fees",         icon: RupeeIcon },
     { title: "Timetable",         path: "parent/timetable",    icon: CalendarClock },
     { title: "Exams",             path: "parent/exams",        icon: GraduationCap },
@@ -765,6 +770,7 @@ export const sidebarMenu = {
     { title: "PTM",              path: "classteacher/ptm",               icon: CalendarClock   },
     { title: "Mark Attendance",  path: "classteacher/attendance/students", icon: ClipboardCheck },
     { title: "Assignments",      path: "classteacher/assignments",       icon: ClipboardList   },
+    { title: "Online Classes",   path: "classteacher/online-classes",    icon: Video          },
     { title: "Timetable",        path: "classteacher/timetable",         icon: CalendarCheck   },
     { title: "My Payroll",       path: "classteacher/payroll",           icon: IndianRupee     },
     { title: "My Tasks",         path: "classteacher/tasks",             icon: ListChecks      },
