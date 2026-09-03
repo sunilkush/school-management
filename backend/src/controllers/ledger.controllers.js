@@ -13,13 +13,15 @@ import {
   balanceSheet,
   accountLedger,
 } from "../services/ledger.service.js";
+import { reconciliationReport, postPendingEvents } from "../services/ledgerPosting.service.js";
 
 /**
- * Double-entry ledger: chart of accounts, journal entries, and the statements built from them.
+ * Double-entry ledger: chart of accounts, journal entries, the statements built from them, and
+ * the sweep that turns the money the rest of the system already records into entries.
  *
- * Phase 1 is manual-entry only and deliberately touches nothing else in the codebase. The
- * auto-posting layer that turns fee payments, expenses and payslips into journal entries lands
- * separately, along with the reconciliation report that finds money events which never got one.
+ * Entries arrive two ways — typed by hand here, or produced by ledgerPosting.service.js from
+ * existing Payment/Refund/PayrollItem/Income/Expense documents. Both land as ordinary numbered
+ * journal entries, so nothing downstream has to care which produced a given line.
  */
 
 const requireSchool = (req) => {
@@ -282,4 +284,37 @@ export const getAccountLedger = asyncHandler(async (req, res) => {
   });
   if (!data) throw new ApiError(404, "Account not found");
   return res.json(new ApiResponse(200, data, "Account ledger"));
+});
+
+
+/* ── Reconciliation & auto-posting ───────────────────────────────
+   The report and the posting sweep run the SAME query for what is still
+   unposted, so they cannot disagree about the state of the books. */
+export const getReconciliation = asyncHandler(async (req, res) => {
+  const schoolId = requireSchool(req);
+  const data = await reconciliationReport({
+    schoolId,
+    from: parseDate(req.query.from, "from date"),
+    to: parseDate(req.query.to, "to date"),
+  });
+  return res.json(new ApiResponse(200, data, data.isFullyPosted ? "All money events are posted" : "Some money events are not posted yet"));
+});
+
+export const postPending = asyncHandler(async (req, res) => {
+  const schoolId = requireSchool(req);
+  const result = await postPendingEvents({
+    schoolId,
+    from: parseDate(req.body.from, "from date"),
+    to: parseDate(req.body.to, "to date"),
+    postedBy: req.user._id,
+  });
+  return res.json(
+    new ApiResponse(
+      200,
+      result,
+      result.problems.length
+        ? `Posted ${result.posted} entr(ies); ${result.problems.length} could not be posted`
+        : `Posted ${result.posted} entr(ies)`
+    )
+  );
 });

@@ -15,6 +15,8 @@ import {
   getProfitAndLoss,
   getBalanceSheet,
   getAccountLedger,
+  getReconciliation,
+  postPending,
 } from "../controllers/ledger.controllers.js";
 
 const router = Router();
@@ -31,6 +33,8 @@ router.use(auth);
 router.get("/reports/trial-balance", roleMiddleware(STATEMENT_READERS), getTrialBalance);
 router.get("/reports/profit-and-loss", roleMiddleware(STATEMENT_READERS), getProfitAndLoss);
 router.get("/reports/balance-sheet", roleMiddleware(STATEMENT_READERS), getBalanceSheet);
+router.get("/reports/reconciliation", roleMiddleware(STATEMENT_READERS), getReconciliation);
+router.post("/post-pending", roleMiddleware(BOOKKEEPERS), postPending);
 
 /* Chart of accounts */
 router.get("/accounts", roleMiddleware(STATEMENT_READERS), listAccounts);
