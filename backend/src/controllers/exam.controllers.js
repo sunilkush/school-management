@@ -412,15 +412,22 @@ const scopeAdmitCardsToCaller = async (admitCards, user) => {
 }
 
 const buildAdmitCardPayloads = async (exam, userId) => {
+    // `exam` arrives with schoolClassId/sectionId POPULATED, because the payload below needs
+    // their names. Populate REPLACES the field and yields null when the referenced document is
+    // gone, so the ids cannot be recovered from it. Reading the scope back raw matters: a deleted
+    // Section made the sectionId condition false, which silently DROPPED the section filter and
+    // issued admit cards to the whole class instead of the one section.
+    const scope = await Exam.findById(exam._id).select('schoolClassId sectionId').lean()
+
     const enrollmentFilter = {
         schoolId: exam.schoolId,
         academicYearId: exam.academicYearId,
-        schoolClassId: exam.schoolClassId?._id || exam.schoolClassId,
+        schoolClassId: scope?.schoolClassId ?? null,
         status: 'Active',
     }
 
-    if (exam.sectionId?._id || exam.sectionId) {
-        enrollmentFilter.sectionId = exam.sectionId?._id || exam.sectionId
+    if (scope?.sectionId) {
+        enrollmentFilter.sectionId = scope.sectionId
     }
 
     const enrollments = await StudentEnrollment.find(enrollmentFilter)
