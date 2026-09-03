@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Alert, Button, Drawer, Empty, Form, Input, Modal, Popconfirm, Select, Space, Spin,
   Table, Tabs, Tag, Typography, message,
@@ -12,6 +12,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import ReportCardView from "../../../components/reportCard/ReportCardView";
 import { pageWrapper, sectionPanel, toolbarRow } from "../../../styles/pageStyles";
 import httpClient from "../../../api/httpClient";
+import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import {
   fetchReportCardTemplates, createReportCardTemplate, updateReportCardTemplate,
   deleteReportCardTemplate, generateReportCards, fetchReportCards, fetchReportCard,
@@ -23,8 +24,23 @@ const { Text } = Typography;
 const pct = (n) => `${Number(n || 0).toFixed(2)}%`;
 
 export default function ReportCards() {
+  const dispatch = useDispatch();
   const { user } = useSelector((s) => s.auth || {});
-  const academicYearId = user?.school?.activeAcademicYearId || user?.activeAcademicYearId;
+  const { selectedAcademicYear, activeYear } = useSelector((s) => s.academicYear || {});
+
+  const schoolId = user?.school?._id;
+  // The login payload's `school` object carries only _id/name/isActive — there is no
+  // activeAcademicYearId on it, so the previous `user?.school?.activeAcademicYearId` was always
+  // undefined and every request on this page went out unscoped. The academicYear slice is where
+  // the active session actually lives.
+  const academicYearId = selectedAcademicYear?._id || activeYear?._id;
+
+  // The Topbar's year switcher normally fills `selectedAcademicYear`, but it is skipped entirely
+  // on mobile widths and may mount after this page. Fetching the active year here makes the page
+  // correct on its own; the shared reducer is idempotent, so repeating the fetch is harmless.
+  useEffect(() => {
+    if (schoolId && !activeYear && !selectedAcademicYear) dispatch(fetchActiveAcademicYear(schoolId));
+  }, [dispatch, schoolId, activeYear, selectedAcademicYear]);
 
   const [templates, setTemplates] = useState([]);
   const [exams, setExams] = useState([]);
@@ -60,7 +76,11 @@ export default function ReportCards() {
     httpClient.get("/exams", { params: academicYearId ? { academicYearId } : {} })
       .then((res) => setExams(res.data?.data?.exams || res.data?.data || []))
       .catch(() => setExams([]));
-    httpClient.get("/school-class")
+    // The year filter matters here: without it the endpoint returns every class the school has
+    // ever had, so the same grade appears once per academic year and the list reads as duplicates
+    // ("Class 1", "Class 1"). SchoolClass is unique on {schoolId, academicYearId, boardClassId},
+    // so scoped to one year each grade can only appear once.
+    httpClient.get("/school-class", { params: academicYearId ? { academicYearId } : {} })
       .then((res) => setClasses(res.data?.data?.classes || res.data?.data || []))
       .catch(() => setClasses([]));
   }, [academicYearId]);
