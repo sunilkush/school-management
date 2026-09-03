@@ -1,29 +1,38 @@
 import mongoose from 'mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 
-let mongod;
+/** Only set when this file had to start its own server — see the fallback in connectTestDb. */
+let ownReplSet;
 
-/** Starts an in-memory MongoDB and connects mongoose to it — never touches the real Atlas URI in .env.
- * A single-node replica set, not a standalone server — several controllers (refundPayment,
+/** Connects mongoose to the in-memory MongoDB — never to the real Atlas URI in .env.
+ *
+ * The server itself is started once for the whole run by tests/setup/globalSetup.js. It is a
+ * single-node replica set rather than a standalone: several controllers (refundPayment,
  * payStudentFee, promoteStudentsToNextAcademicYear, ...) use mongoose sessions/transactions for
  * atomic multi-document writes, and MongoDB only allows transactions against a replica set or
- * mongos. A standalone instance fails every such call with "Transaction numbers are only
- * allowed on a replica set member or mongos", silently leaving all transactional code paths
- * completely untested. */
+ * mongos. A standalone instance fails every such call with "Transaction numbers are only allowed
+ * on a replica set member or mongos", silently leaving all transactional code paths untested.
+ *
+ * Each worker gets its own database on that shared server, so running suites in parallel cannot
+ * make them read each other's data.
+ */
 export async function connectTestDb() {
-  mongod = await MongoMemoryReplSet.create({
-    replSet: {
-      count: 1,
-      storageEngine: 'wiredTiger',
-      // MongoDB's default 5ms transaction lock-wait timeout is tuned for a busy production
-      // deployment to fail fast under real contention — against a single-node test replica set
-      // it trips on totally ordinary sequential test traffic (e.g. two tests in a row each
-      // starting a transaction), throwing "Unable to acquire IX lock ... within 5ms" for no
-      // application-level reason. 5s gives transactions actual room to run in tests.
-      args: ['--setParameter', 'maxTransactionLockRequestTimeoutMillis=5000'],
-    },
-  });
-  await mongoose.connect(mongod.getUri());
+  let uri = process.env.MONGO_TEST_URI;
+
+  if (!uri) {
+    // Only reached if a suite is run through something that skips globalSetup. Starting a server
+    // here keeps that working rather than failing with a confusing connection error.
+    ownReplSet = await MongoMemoryReplSet.create({
+      replSet: {
+        count: 1,
+        storageEngine: 'wiredTiger',
+        args: ['--setParameter', 'maxTransactionLockRequestTimeoutMillis=5000'],
+      },
+    });
+    uri = ownReplSet.getUri();
+  }
+
+  await mongoose.connect(uri, { dbName: `test_${process.env.JEST_WORKER_ID || '1'}` });
 
   // Mongoose builds each model's indexes asynchronously in the background by default, so a
   // transaction that's the very first write to a given collection in this freshly-created
@@ -47,10 +56,15 @@ export async function connectTestDb() {
   });
 }
 
+/** Drops this suite's database and disconnects. The shared server keeps running for the rest of
+ *  the run and is stopped by globalTeardown. */
 export async function disconnectTestDb() {
   await mongoose.connection.dropDatabase();
   await mongoose.disconnect();
-  if (mongod) await mongod.stop();
+  if (ownReplSet) {
+    await ownReplSet.stop();
+    ownReplSet = undefined;
+  }
 }
 
 /** Clears all collections between tests so each test starts from a clean slate. */
