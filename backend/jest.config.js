@@ -11,7 +11,12 @@ export default {
   // with a beforeAll timeout while passing perfectly on its own. See tests/setup/globalSetup.js.
   globalSetup: "<rootDir>/tests/setup/globalSetup.js",
   globalTeardown: "<rootDir>/tests/setup/globalTeardown.js",
-  // Connecting to an already-running replica set is fast, but a cold first test in a file still
-  // has index builds ahead of it, so this stays well above Jest's 5000ms default.
-  testTimeout: 20000,
+  // Connecting is fast; building indexes is not. Each suite gets a fresh database and then builds
+  // the indexes for all ~132 models, measured at roughly 9-10s on its own and more when the rest
+  // of the run is competing for the machine. At 20000 that tipped over the hook timeout now and
+  // then, and a suite would fail in beforeAll for no reason of its own.
+  //
+  // It got slower for a good reason: three indexes used to be declared twice and Model.init()
+  // rejected early on the conflict, so most of this work never happened. Now it does.
+  testTimeout: 60000,
 };

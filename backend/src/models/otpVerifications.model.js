@@ -24,7 +24,9 @@ const otpSchema = new Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
+      // No `index` here on purpose. It asked for an index named `expiresAt_1`, and so does the
+      // TTL index at the bottom of this file — they collided and the TTL one lost, which meant
+      // expired OTPs were never actually deleted and this collection grew for ever.
     },
 
     verifiedAt: {

@@ -27,8 +27,8 @@ const schoolSchema = new Schema(
       type: String,
       lowercase: true,
       trim: true,
-      unique: true,
-      sparse: true, // ✅ allows null safely
+      // Same reason as `email` above — uniqueness is declared once, as the partial index below,
+      // so a deleted school's slug can be taken again by a new one.
     },
 
     address: {
@@ -42,9 +42,11 @@ const schoolSchema = new Schema(
       required: [true, "School email is required"],
       trim: true,
       lowercase: true,
-      unique: true,
+      // Uniqueness is NOT declared here. A field-level `unique`/`index` makes Mongoose ask for an
+      // index called `email_1`, and the partial one further down asks for that same name with a
+      // filter — so the two collided and the partial one lost. The result was the opposite of
+      // what the comment beside it promised: a deleted school's email could never be reused.
       match: [/^\S+@\S+\.\S+$/, "Please use a valid email"],
-      index: true,
     },
 
     phone: {
@@ -220,10 +222,13 @@ schoolSchema.index(
   { unique: true, partialFilterExpression: { deletedAt: null } }
 );
 
-// Ensure unique slug among non-deleted docs
+// Ensure unique slug among non-deleted docs.
+// `$exists` keeps what the field's old `sparse: true` was doing: the pre-validate hook always
+// fills a slug in, but a write that bypasses hooks (insertMany, an upsert) would not, and without
+// this two such documents would collide on a missing value.
 schoolSchema.index(
   { slug: 1 },
-  { unique: true, partialFilterExpression: { deletedAt: null } }
+  { unique: true, partialFilterExpression: { deletedAt: null, slug: { $exists: true } } }
 );
 
 /* ================= MIDDLEWARE ================= */
