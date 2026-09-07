@@ -63,12 +63,23 @@ const punch = (ctx, punches, { secret = ctx.secret, key = ctx.deviceKey } = {}) 
     .send(body);
 };
 
-/** A time today at a given IST wall-clock hour, expressed as a real instant. */
-const istToday = (hh, mm = 0) => {
-  const now = new Date();
+/**
+ * A given IST wall-clock time on a school day that has already been and gone.
+ *
+ * Deliberately not today. Ingestion rejects a punch dated in the future — that is a device with a
+ * wrong clock, not a person — so building "today at 15:30" made this suite pass in the evening and
+ * fail every morning. Anchoring to a past day makes the afternoon punches these tests need
+ * unambiguously in the past whatever time of day the suite is run.
+ *
+ * All the hours used here are after 05:30 IST, so the whole school day lands on one UTC date and
+ * the by-day grouping under test sees them together.
+ */
+const istSchoolDay = (hh, mm = 0) => {
+  const base = new Date();
+  base.setUTCDate(base.getUTCDate() - 2);
   // IST is UTC+5:30, so an IST wall clock of 08:00 is 02:30 UTC on the same day.
   const utcMinutes = hh * 60 + mm - (5 * 60 + 30);
-  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+  const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate(), 0, 0, 0));
   return new Date(d.getTime() + utcMinutes * 60000);
 };
 
@@ -76,7 +87,7 @@ describe('device authentication', () => {
   it('accepts a batch signed with the device secret', async () => {
     const ctx = await scaffold();
 
-    const res = await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(8, 5).toISOString() }]);
+    const res = await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(8, 5).toISOString() }]);
 
     expect(res.status).toBe(200);
     expect(res.body.data.accepted).toBe(1);
@@ -141,7 +152,7 @@ describe('device authentication', () => {
 describe('ingesting punches', () => {
   it('ignores a batch the device already delivered', async () => {
     const ctx = await scaffold();
-    const at = istToday(8, 5).toISOString();
+    const at = istSchoolDay(8, 5).toISOString();
 
     await punch(ctx, [{ externalId: 'CARD-001', punchedAt: at }]);
     const again = await punch(ctx, [{ externalId: 'CARD-001', punchedAt: at }]);
@@ -166,8 +177,8 @@ describe('ingesting punches', () => {
     const ctx = await scaffold();
 
     const res = await punch(ctx, [
-      { externalId: 'CARD-001', punchedAt: istToday(8, 5).toISOString() },
-      { externalId: '', punchedAt: istToday(8, 6).toISOString() },
+      { externalId: 'CARD-001', punchedAt: istSchoolDay(8, 5).toISOString() },
+      { externalId: '', punchedAt: istSchoolDay(8, 6).toISOString() },
     ]);
 
     expect(res.body.data.accepted).toBe(1);
@@ -179,12 +190,12 @@ describe('turning punches into attendance', () => {
   it('marks the first punch of the day as the arrival', async () => {
     const ctx = await scaffold();
 
-    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(8, 5).toISOString() }]);
+    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(8, 5).toISOString() }]);
 
     const record = await Attendance.findOne({ userId: ctx.teacher.user._id });
     expect(record.status).toBe('present');
     expect(record.source).toBe('device');
-    expect(record.checkInAt).toEqual(istToday(8, 5));
+    expect(record.checkInAt).toEqual(istSchoolDay(8, 5));
     // One punch is an arrival and nothing else — inventing a departure from it would fabricate
     // a time nobody recorded.
     expect(record.checkOutAt).toBeNull();
@@ -194,25 +205,25 @@ describe('turning punches into attendance', () => {
     const ctx = await scaffold();
 
     await punch(ctx, [
-      { externalId: 'CARD-001', punchedAt: istToday(15, 30).toISOString() },
-      { externalId: 'CARD-001', punchedAt: istToday(8, 2).toISOString() },
-      { externalId: 'CARD-001', punchedAt: istToday(12, 0).toISOString() },
+      { externalId: 'CARD-001', punchedAt: istSchoolDay(15, 30).toISOString() },
+      { externalId: 'CARD-001', punchedAt: istSchoolDay(8, 2).toISOString() },
+      { externalId: 'CARD-001', punchedAt: istSchoolDay(12, 0).toISOString() },
     ]);
 
     const record = await Attendance.findOne({ userId: ctx.teacher.user._id });
-    expect(record.checkInAt).toEqual(istToday(8, 2));
-    expect(record.checkOutAt).toEqual(istToday(15, 30));
+    expect(record.checkInAt).toEqual(istSchoolDay(8, 2));
+    expect(record.checkOutAt).toEqual(istSchoolDay(15, 30));
   }, 25000);
 
   it('keeps the morning arrival when the afternoon is uploaded separately', async () => {
     const ctx = await scaffold();
 
-    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(8, 2).toISOString() }]);
-    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(15, 30).toISOString() }]);
+    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(8, 2).toISOString() }]);
+    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(15, 30).toISOString() }]);
 
     const record = await Attendance.findOne({ userId: ctx.teacher.user._id });
-    expect(record.checkInAt).toEqual(istToday(8, 2));
-    expect(record.checkOutAt).toEqual(istToday(15, 30));
+    expect(record.checkInAt).toEqual(istSchoolDay(8, 2));
+    expect(record.checkOutAt).toEqual(istSchoolDay(15, 30));
   }, 25000);
 
   it('marks an arrival after the grace period as late', async () => {
@@ -222,7 +233,7 @@ describe('turning punches into attendance', () => {
       { $set: { 'attendanceHours.startTime': '08:00', 'attendanceHours.lateGraceMinutes': 10 } }
     );
 
-    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(8, 45).toISOString() }]);
+    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(8, 45).toISOString() }]);
 
     const record = await Attendance.findOne({ userId: ctx.teacher.user._id });
     expect(record.status).toBe('late');
@@ -235,7 +246,7 @@ describe('turning punches into attendance', () => {
       { $set: { 'attendanceHours.startTime': '08:00', 'attendanceHours.lateGraceMinutes': 10 } }
     );
 
-    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(8, 7).toISOString() }]);
+    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(8, 7).toISOString() }]);
 
     const record = await Attendance.findOne({ userId: ctx.teacher.user._id });
     expect(record.status).toBe('present');
@@ -243,14 +254,16 @@ describe('turning punches into attendance', () => {
 
   it('does not overrule a record a person entered by hand', async () => {
     const ctx = await scaffold();
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    // Must be the same day the punch lands on, or the two are simply different records and the
+    // test proves nothing about one overruling the other.
+    const day = istSchoolDay(8, 5);
+    day.setUTCHours(0, 0, 0, 0);
     await Attendance.create({
       schoolId: ctx.school._id, userId: ctx.teacher.user._id, role: 'teacher',
-      date: today, status: 'leave', markedBy: ctx.admin.user._id, source: 'manual',
+      date: day, status: 'leave', markedBy: ctx.admin.user._id, source: 'manual',
     });
 
-    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(8, 5).toISOString() }]);
+    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(8, 5).toISOString() }]);
 
     const record = await Attendance.findOne({ userId: ctx.teacher.user._id });
     // If the office has already put somebody on leave, a card scan is not grounds to silently
@@ -266,7 +279,7 @@ describe('cards nobody has enrolled', () => {
   it('keeps an unknown card scan instead of dropping it', async () => {
     const ctx = await scaffold({ enrol: false });
 
-    const res = await punch(ctx, [{ externalId: 'CARD-999', punchedAt: istToday(8, 5).toISOString() }]);
+    const res = await punch(ctx, [{ externalId: 'CARD-999', punchedAt: istSchoolDay(8, 5).toISOString() }]);
 
     expect(res.body.data.accepted).toBe(1);
     expect(res.body.data.unmatched).toBe(1);
@@ -277,8 +290,8 @@ describe('cards nobody has enrolled', () => {
   it('lists the unknown cards so the office can act on them', async () => {
     const ctx = await scaffold({ enrol: false });
     await punch(ctx, [
-      { externalId: 'CARD-999', punchedAt: istToday(8, 5).toISOString() },
-      { externalId: 'CARD-999', punchedAt: istToday(15, 5).toISOString() },
+      { externalId: 'CARD-999', punchedAt: istSchoolDay(8, 5).toISOString() },
+      { externalId: 'CARD-999', punchedAt: istSchoolDay(15, 5).toISOString() },
     ]);
 
     const res = await request(app)
@@ -292,7 +305,7 @@ describe('cards nobody has enrolled', () => {
 
   it('turns already-collected scans into attendance once the card is enrolled', async () => {
     const ctx = await scaffold({ enrol: false });
-    await punch(ctx, [{ externalId: 'CARD-777', punchedAt: istToday(8, 5).toISOString() }]);
+    await punch(ctx, [{ externalId: 'CARD-777', punchedAt: istSchoolDay(8, 5).toISOString() }]);
 
     await request(app)
       .post('/api/v1/attendance-devices/credentials')
@@ -308,7 +321,7 @@ describe('cards nobody has enrolled', () => {
     // leaving a day of absences to correct by hand.
     expect(replay.body.data.applied).toBe(1);
     const record = await Attendance.findOne({ userId: ctx.teacher.user._id });
-    expect(record.checkInAt).toEqual(istToday(8, 5));
+    expect(record.checkInAt).toEqual(istSchoolDay(8, 5));
   }, 25000);
 });
 
@@ -361,7 +374,7 @@ describe('enrolment rules', () => {
       .delete(`/api/v1/attendance-devices/credentials/${credential._id}`)
       .set('Authorization', `Bearer ${ctx.admin.token}`);
 
-    const res = await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(8, 5).toISOString() }]);
+    const res = await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(8, 5).toISOString() }]);
 
     expect(res.body.data.unmatched).toBe(1);
     expect(await Attendance.countDocuments({})).toBe(0);
@@ -382,7 +395,7 @@ describe('managing devices', () => {
 
   it('refuses to delete a device whose punches are behind real attendance', async () => {
     const ctx = await scaffold();
-    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istToday(8, 5).toISOString() }]);
+    await punch(ctx, [{ externalId: 'CARD-001', punchedAt: istSchoolDay(8, 5).toISOString() }]);
 
     const res = await request(app)
       .delete(`/api/v1/attendance-devices/${ctx.device._id}`)

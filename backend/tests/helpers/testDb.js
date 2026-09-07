@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import mongoose from 'mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 
@@ -13,8 +14,8 @@ let ownReplSet;
  * mongos. A standalone instance fails every such call with "Transaction numbers are only allowed
  * on a replica set member or mongos", silently leaving all transactional code paths untested.
  *
- * Each worker gets its own database on that shared server, so running suites in parallel cannot
- * make them read each other's data.
+ * Each suite gets its own database on that shared server, so no two suites can read each other's
+ * data or trip over each other's setup and teardown.
  */
 export async function connectTestDb() {
   let uri = process.env.MONGO_TEST_URI;
@@ -32,7 +33,14 @@ export async function connectTestDb() {
     uri = ownReplSet.getUri();
   }
 
-  await mongoose.connect(uri, { dbName: `test_${process.env.JEST_WORKER_ID || '1'}` });
+  // A fresh database per suite, not per worker.
+  //
+  // Per-worker was wrong: under --runInBand every suite is the same worker, so all 29 shared one
+  // database name. A suite dropping it in afterAll overlapped the next suite creating collections
+  // in it, which surfaced as "database is in the process of being dropped" and "Client must be
+  // connected", index builds silently failing, and then a random suite failing for reasons that
+  // had nothing to do with its own code. Unique names mean no two suites can ever collide.
+  await mongoose.connect(uri, { dbName: `test_${process.env.JEST_WORKER_ID || '1'}_${randomUUID().slice(0, 8)}` });
 
   // Mongoose builds each model's indexes asynchronously in the background by default, so a
   // transaction that's the very first write to a given collection in this freshly-created
