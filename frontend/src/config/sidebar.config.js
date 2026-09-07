@@ -49,6 +49,8 @@ import {
   IdCard,
   Landmark,
   Layers,
+  Award,
+  Briefcase as BriefcaseIcon,
   Video,
 } from "lucide-react";
 import RupeeIcon from "../components/icons/RupeeIcon";
@@ -209,6 +211,14 @@ export const sidebarMenu = {
     { title: "School Setup", path: "schooladmin/school-setup", icon: School },
     { title: "Govt. Compliance", path: "schooladmin/compliance", icon: ShieldCheck },
     { title: "Online Classes", path: "schooladmin/online-classes", icon: Video },
+    {
+      title: "HR",
+      icon: BriefcaseIcon,
+      subMenu: [
+        { title: "Recruitment", path: "schooladmin/hr/recruitment" },
+        { title: "Staff Appraisal", path: "schooladmin/hr/appraisal" },
+      ],
+    },
     {
       title: "Users",
       icon: Users,
@@ -374,6 +384,7 @@ export const sidebarMenu = {
        /*  { title: "My Students", path: "teacher/students" }, */
         { title: "Assignments", path: "teacher/assignments" },
         { title: "Online Classes", path: "teacher/online-classes" },
+        { title: "My Appraisal", path: "teacher/my-appraisal" },
         { title: "Subject Resources", path: "teacher/resources" },
         { title: "Lesson Plans", path: "teacher/lesson-plans" },
         { title: "Timetable", path: "teacher/timetable" },
@@ -501,6 +512,7 @@ export const sidebarMenu = {
     { title: "Attendance Reports",path: "accountant/attendance/monthly", icon: FileBarChart2 },
     { title: "Leave Requests",    path: "accountant/leave",              icon: CalendarClock },
     { title: "My Tasks",          path: "accountant/tasks",              icon: ListChecks    },
+    { title: "My Appraisal",      path: "accountant/my-appraisal",      icon: Award         },
     communicationMenu("accountant"),
     ...commonSelfService("accountant"),
   ],
@@ -522,6 +534,8 @@ export const sidebarMenu = {
     { title: "Financial Reports", path: "principal/finance/reports", icon: FileText },
     { title: "Financial Statements", path: "principal/ledger/statements", icon: Landmark },
     { title: "Govt. Compliance", path: "principal/compliance", icon: ShieldCheck },
+    { title: "Recruitment", path: "principal/hr/recruitment", icon: BriefcaseIcon },
+    { title: "Staff Appraisal", path: "principal/hr/appraisal", icon: Award },
     { title: "Fee Reports", path: "principal/fees/reports", icon: FileBarChart2 },
     { title: "My Tasks",         path: "principal/tasks",   icon: ListChecks   },
     { title: "My Payroll",       path: "principal/payroll", icon: IndianRupee  },

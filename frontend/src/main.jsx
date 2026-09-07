@@ -272,6 +272,9 @@ const ChildBusLive = lazy(() => import("./pages/Parent/Transport/ChildBusLive.js
 const AttendanceDevices = lazy(() => import("./pages/School_Admin/Attendance/AttendanceDevices.jsx"));
 const CompliancePage = lazy(() => import("./pages/School_Admin/Compliance/CompliancePage.jsx"));
 const OnlineClassesPage = lazy(() => import("./pages/OnlineClasses/OnlineClassesPage.jsx"));
+const RecruitmentPage = lazy(() => import("./pages/HR/RecruitmentPage.jsx"));
+const AppraisalPage = lazy(() => import("./pages/HR/AppraisalPage.jsx"));
+const MyAppraisal = lazy(() => import("./pages/HR/MyAppraisal.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -846,6 +849,8 @@ const router = createBrowserRouter([
               { path: "finance/reports", element: <FinancialReports /> },
               { path: "school-setup", element: <SchoolSetup /> },
               { path: "compliance", element: <CompliancePage /> },
+              { path: "hr/recruitment", element: <RecruitmentPage /> },
+              { path: "hr/appraisal", element: <AppraisalPage /> },
               { path: "online-classes", element: <OnlineClassesPage canHost /> },
               { path: "tasks", element: <TaskManagement /> },
 
@@ -866,6 +871,7 @@ const router = createBrowserRouter([
               { path: "students", element: <MyStudents /> },
               { path: "assignments", element: <Assignments /> },
               { path: "online-classes", element: <OnlineClassesPage canHost /> },
+              { path: "my-appraisal", element: <MyAppraisal /> },
               { path: "attendance/students", element: <StudentAttendance /> },
               { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
@@ -1011,6 +1017,7 @@ const router = createBrowserRouter([
               { path: "communication/send", element: <SendNotification /> },
               { path: "communication/history", element: <SmsEmailHistory /> },
               { path: "tasks",              element: <MyTasks /> },
+              { path: "my-appraisal",       element: <MyAppraisal /> },
             ],
           },
 
@@ -1055,6 +1062,8 @@ const router = createBrowserRouter([
               { path: "finance/reports", element: <FinancialReports /> },
               { path: "ledger/statements", element: <FinancialStatements /> },
               { path: "compliance", element: <CompliancePage /> },
+              { path: "hr/recruitment", element: <RecruitmentPage /> },
+              { path: "hr/appraisal", element: <AppraisalPage /> },
               { path: "fees/reports",    element: <FeeReports /> },
             ],
           },
