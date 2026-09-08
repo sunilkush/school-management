@@ -19,6 +19,10 @@ const assertCanManageSubject = (req, subject) => {
 const createSubject = asyncHandler(async (req, res) => {
   const { name, category, type, maxMarks, passMarks, description } = req.body;
 
+  // See the note in class.controllers.js: without this an empty form throws on `.trim()` and the
+  // caller is told the server failed, when in fact they simply left the name blank.
+  if (!name?.trim()) throw new ApiError(400, "Subject name is required");
+
   const normalizedName = name.trim().toUpperCase();
   const global = isSuperAdmin(req);
   const schoolId = global ? null : req.user.schoolId;

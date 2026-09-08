@@ -1,6 +1,8 @@
 # Demo walkthrough
 
-A 20-minute run through the system for a school that is thinking about buying it.
+A 30-minute run through the system for a school that is thinking about buying it. Sections 1–7
+are the core; 8–11 are worth adding when there is time, or picking from depending on who is in
+the room — a principal cares about appraisal, a trustee about concessions.
 
 The order below is deliberate: it opens with the thing every school already understands (money
 they are owed), and ends with the two things no competitor at this price point usually has (a bus
@@ -12,31 +14,20 @@ support ticket three months later.
 
 ## Before the demo
 
-```bash
-cd backend
-node src/seed.js                    # school, people, classes, fees, exams, payroll, transport
-node scripts/seedFeeData.mjs        # fee heads, structures, assignments, installments
-node scripts/seedExamData.mjs       # exams and results
-node scripts/seedAttendanceData.mjs # attendance history
-node scripts/seedDemoModules.mjs    # ledger, bus tracking, readers, compliance, live classes
-```
+Sign in with a school that already has real data in it — students enrolled, fees assigned, exams
+marked, attendance taken. Every section below reads from what is actually in the database, so a
+thinly populated school makes a thin demo.
 
-The last one is the important one for anything built recently — without it the accounting, bus
-tracking, compliance, attendance-device and online-class screens all open empty.
+Two things worth checking on the morning:
 
-**Re-run `seedDemoModules.mjs` on the morning of the demo.** Everything it creates is anchored to
-*today*: the bus is mid-route, the online class is this afternoon, the card scans are from this
-morning. Seed it a week early and the live map is empty and the demo falls flat.
+- **The academic year is the current one and is active.** Several screens scope their queries to
+  it, and a year that has already ended makes concessions, report cards and fee reports come back
+  empty for reasons that look like bugs.
+- **You are pointed at the right database.** `MONGOOSE_URI` in `backend/.env` must name one —
+  a URI that ends at the host with no database name does *not* mean "the default"; it silently
+  means a database called `test`, which is how you end up demoing a school with nothing in it.
 
-It prints the device key and secret once at the end. Note them down if you plan to show the
-reader-integration screen.
-
-To check the seeder without touching a real database (it builds a throwaway one, runs the seeder
-into it, and counts what landed):
-
-```bash
-node scripts/verifyDemoSeed.mjs
-```
+Never demo against a school’s live data. Use a database kept for this.
 
 ---
 
@@ -186,6 +177,67 @@ Also: questions cannot be edited once a survey is open, and anonymous answers ca
 at all.
 
 ---
+## 9 · Circulars  (2 min)
+
+**Log in as:** School Admin → **Circulars**
+
+Three are published; the timings one is pinned and asks parents to confirm they have read it.
+Open **Who has read it**:
+
+- Two tabs: acknowledged, and still to acknowledge — with names, so it can actually be chased.
+- The two numbers on the row are **opened** and **acknowledged**, and they are different.
+
+> "A circular gets a number when you publish it, goes to a fixed list of people, and you can see
+> exactly who has confirmed they read it. When the bus timings change, that record is the thing
+> you want."
+
+**Do not promise:** that opened means agreed. The screen reports them separately on purpose — a
+school that reads "180 opened" as "180 agreed" has drawn the wrong conclusion from its own data.
+Also: published wording cannot be edited. A correction is a new circular that supersedes the old
+one, which is how a school does it on paper anyway.
+
+---
+
+## 10 · Scholarships and concessions  (3 min)
+
+**Log in as:** School Admin → **Scholarships**
+
+Five schemes, twelve approved awards, two still waiting for a decision, one revoked.
+
+- The RTE scheme is capped at 8 funded places and shows how many are used.
+- One child holds **two** concessions — 25% merit plus 10% sibling. The bill shows **35%**, not
+  32.5%. Percentages are summed, not compounded, because that is what a school means when it
+  tells a parent "twenty-five plus ten".
+- Press **Sync** and watch the concession land on the enrolments the fee bills are built from.
+
+> "The concession is not a note in a file. It is on the enrolment, so the fee bill comes out right
+> without anybody remembering to subtract anything."
+
+**Do not promise:** that granting an award rewrites bills already raised. It does not — those are
+listed on the mismatch report instead. Changing a bill a parent has already been given is a
+decision somebody makes, not a cleanup task the software does quietly.
+
+---
+
+## 11 · Recruitment and appraisal  (3 min)
+
+**Log in as:** School Admin → **HR → Recruitment**
+
+A PGT Mathematics vacancy with six applicants spread right across the pipeline — one at offer,
+one at demo class, one interviewed, one shortlisted, one just applied, one rejected. Open a card:
+every stage it passed through is there with its date and the note somebody wrote at the time.
+
+Then **HR → Staff Appraisal**. The cycle is open, its four criteria weighted to 100. Six reviews:
+some not started, some waiting on the reviewer, two finalised with an overall score and a band.
+
+> "The self-assessment and the reviewer scores sit side by side and are never averaged into one
+> number. Where they disagree is the part of an appraisal worth reading."
+
+**Do not promise:** that an appraisal drives pay. It is deliberately not wired to payroll — an
+increment is a decision a head takes, not something a form should trigger. Also: there is no
+candidate-facing portal; applications are entered by the office.
+
+---
 ## Closing
 
 Two lines that tend to land:
@@ -195,16 +247,3 @@ Two lines that tend to land:
 
 > "And where it does not do something — filing your UDISE return, hosting your video calls — it
 > says so on the screen rather than letting you find out later."
-
----
-
-## If something looks empty
-
-| Screen | Fix |
-|---|---|
-| Live map has no bus | Re-run `seedDemoModules.mjs` — the running trip is anchored to today |
-| Accounting statements are zero | Reconciliation → **Post pending** |
-| Report cards list is empty | That is correct — press **Generate**; the template is there |
-| Compliance shows everything complete | Re-run the seeder; it deliberately leaves a fifth of records with gaps |
-| No card scans today | The seeder skips them before 8am, since a future-dated scan is rejected |
-| Survey has no replies | There were no parent accounts when the seeder ran — run `src/seed.js` first, then re-run it |

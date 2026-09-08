@@ -7,6 +7,13 @@ export const createActivityLog = async (req, res) => {
   try {
     const { action, description, meta } = req.body;
 
+    // Without this the missing field reaches Mongoose, throws, and is reported as "Failed to
+    // create activity log" with a 500 — which reads as a server fault rather than a caller
+    // leaving out the one field that gives the entry its meaning.
+    if (!action || !String(action).trim()) {
+      return res.status(400).json({ success: false, message: "action is required" });
+    }
+
     // user/role/school/ipAddress/userAgent must come from the authenticated request, never the
     // body — any signed-in user (Student, Parent, ...) could otherwise forge a log entry
     // attributed to an arbitrary other user, role, or school, and Super Admin/School

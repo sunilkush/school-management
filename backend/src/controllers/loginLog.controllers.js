@@ -1,4 +1,5 @@
 import { LoginLog } from "../models/LoginLog.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
@@ -9,11 +10,21 @@ export const recordLoginEvent = async ({ userId, schoolId, userRole, academicYea
     const ua = req.headers["user-agent"] || "";
     const browser = parseBrowser(ua);
     const os = parseOS(ua);
+
+    // Most users carry no academicYearId of their own, so fall back to the school's active year.
+    // The record is written either way — see the note on the model about why this cannot be a
+    // required field — but the year is worth having when it can be worked out.
+    let yearId = academicYearId || null;
+    if (!yearId && schoolId) {
+      const active = await AcademicYear.findOne({ schoolId, isActive: true }).select("_id").lean();
+      yearId = active?._id || null;
+    }
+
     await LoginLog.create({
       userId,
-      schoolId,
+      schoolId: schoolId || null,
       userRole,
-      academicYearId,
+      academicYearId: yearId,
       ipAddress: req.ip || req.connection?.remoteAddress || "",
       deviceInfo: ua.slice(0, 250),
       browser,

@@ -96,6 +96,13 @@ export const createAuditLog = async (req, res) => {
       metadata,
     } = req.body;
 
+    // Same reason as activity.controllers.js: a missing `action` used to reach the model, throw,
+    // and be reported as a 500 "Failed to create audit log" — indistinguishable from the database
+    // being down, which is the one thing an audit trail must never be ambiguous about.
+    if (!action || !String(action).trim()) {
+      return res.status(400).json({ success: false, message: "action is required", data: null });
+    }
+
     const requesterName = req.user?.name || req.user?.fullName || req.user?.email;
     const requesterEmail = req.user?.email;
 

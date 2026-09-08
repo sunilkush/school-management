@@ -11,6 +11,12 @@ import { escapeRegex } from "../utils/escapeRegex.js";
 
 const createClass = asyncHandler(async (req, res) => {
   const { name, code, description, isGlobal, status } = req.body;
+
+  // Checked before it is used: an empty form used to reach `.trim()` on undefined, which threw and
+  // came back as 500 Internal Server Error. Submitting a blank form is a normal thing to do, and
+  // the answer to it is "you left the name out", not "the server broke".
+  if (!name?.trim()) throw new ApiError(400, "Class name is required");
+
   const normalizedName = name.trim().toUpperCase();
 
   const existingClass = await Class.findOne({ name: normalizedName });

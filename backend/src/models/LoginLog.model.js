@@ -1,10 +1,24 @@
 import mongoose from 'mongoose';
 
+/**
+ * A record that somebody signed in.
+ *
+ * schoolId and academicYearId are deliberately optional. They were both required, and the effect
+ * was that no login was ever recorded at all: User.academicYearId defaults to null, so every
+ * insert failed validation, and the failure is swallowed by a try/catch so that a logging problem
+ * can never stop somebody signing in. Login worked; the audit trail was silently empty. A Super
+ * Admin has no school either, so the one login most worth recording was the one most certain to
+ * be dropped.
+ *
+ * The rule to keep: an audit record is never discarded over a field that is incidental to the
+ * event it describes. Who signed in, from where, and when is the record. Which academic year that
+ * fell in is useful context, and context does not get a veto.
+ */
 const loginLogSchema = new mongoose.Schema({
   schoolId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'School',
-    required: true
+    default: null
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -46,7 +60,7 @@ const loginLogSchema = new mongoose.Schema({
   academicYearId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'AcademicYear',
-    required: true
+    default: null
   }
 }, {
   timestamps: true
