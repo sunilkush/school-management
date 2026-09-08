@@ -276,6 +276,8 @@ const RecruitmentPage = lazy(() => import("./pages/HR/RecruitmentPage.jsx"));
 const AppraisalPage = lazy(() => import("./pages/HR/AppraisalPage.jsx"));
 const MyAppraisal = lazy(() => import("./pages/HR/MyAppraisal.jsx"));
 const ScholarshipsPage = lazy(() => import("./pages/Scholarships/ScholarshipsPage.jsx"));
+const CircularsPage = lazy(() => import("./pages/Circulars/CircularsPage.jsx"));
+const MyCirculars = lazy(() => import("./pages/Circulars/MyCirculars.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -853,6 +855,7 @@ const router = createBrowserRouter([
               { path: "hr/recruitment", element: <RecruitmentPage /> },
               { path: "hr/appraisal", element: <AppraisalPage /> },
               { path: "scholarships", element: <ScholarshipsPage /> },
+              { path: "circulars", element: <CircularsPage /> },
               { path: "online-classes", element: <OnlineClassesPage canHost /> },
               { path: "tasks", element: <TaskManagement /> },
 
@@ -874,6 +877,7 @@ const router = createBrowserRouter([
               { path: "assignments", element: <Assignments /> },
               { path: "online-classes", element: <OnlineClassesPage canHost /> },
               { path: "my-appraisal", element: <MyAppraisal /> },
+              { path: "circulars", element: <MyCirculars /> },
               { path: "attendance/students", element: <StudentAttendance /> },
               { path: "attendance", element: <MonthlyAttendanceReport /> },
               { path: "attendance/my", element: <MyAttendancePage /> },
@@ -924,6 +928,7 @@ const router = createBrowserRouter([
               { path: "hostel", element: <StudentHostel /> },
               { path: "transport", element: <StudentTransport /> },
               { path: "transport/live", element: <ChildBusLive /> },
+              { path: "circulars", element: <MyCirculars /> },
               { path: "leave", element: <StudentLeave /> },
               { path: "study-materials", element: <StudyMaterials /> },
               { path: "online-classes", element: <OnlineClassesPage /> },
@@ -965,6 +970,7 @@ const router = createBrowserRouter([
               { path: "timetable",  element: <ParentChildTimetablePage /> },
               { path: "transport",  element: <ChildTransport /> },
               { path: "transport/live",  element: <ChildBusLive /> },
+              { path: "circulars", element: <MyCirculars /> },
               { path: "hostel",     element: <ChildHostel /> },
               { path: "library",    element: <ChildLibrary /> },
               { path: "leave",      element: <ChildLeave /> },
@@ -1068,6 +1074,7 @@ const router = createBrowserRouter([
               { path: "hr/recruitment", element: <RecruitmentPage /> },
               { path: "hr/appraisal", element: <AppraisalPage /> },
               { path: "scholarships", element: <ScholarshipsPage /> },
+              { path: "circulars", element: <CircularsPage /> },
               { path: "fees/reports",    element: <FeeReports /> },
             ],
           },
