@@ -161,6 +161,31 @@ the same data.
 
 ---
 
+## 8 · Surveys and feedback  (2 min)
+
+**Log in as:** School Admin → **Surveys & Feedback**
+
+A parent-teacher meeting form is open, with about six in ten parents having replied. Open
+**Results**:
+
+- The rating shows its spread, not only its average.
+- The comments are listed as written — that tab is usually where the school stops reading numbers.
+- **Still to reply** names the parents who have not answered, so the survey can actually be finished.
+
+> "The audience is picked the same way a circular is — the parents of Class 8, all teachers, the
+> whole school. And the answers stay in your database, not a form service somebody set up once
+> and left."
+
+Worth showing the anonymous switch in the builder without turning it on, and saying what it does:
+the answers are stored with nobody attached, and the school still sees **who** replied — kept in a
+separate record with no way to join the two.
+
+**Do not promise:** that an anonymous survey is anonymous in a small group. If it goes to three
+people and two have replied, the third answer places itself. Say that before they work it out.
+Also: questions cannot be edited once a survey is open, and anonymous answers cannot be changed
+at all.
+
+---
 ## Closing
 
 Two lines that tend to land:
@@ -182,3 +207,4 @@ Two lines that tend to land:
 | Report cards list is empty | That is correct — press **Generate**; the template is there |
 | Compliance shows everything complete | Re-run the seeder; it deliberately leaves a fifth of records with gaps |
 | No card scans today | The seeder skips them before 8am, since a future-dated scan is rejected |
+| Survey has no replies | There were no parent accounts when the seeder ran — run `src/seed.js` first, then re-run it |

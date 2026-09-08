@@ -40,6 +40,32 @@ const BulletList = ({ items }) => (
 /* ─── Role documentation data ───────────────────────────────── */
 const SCHOOL_ADMIN_DOCS = [
   {
+    id: "surveys", group: "Administration", icon: <BarChartOutlined />, color: "var(--primary)",
+    title: "Surveys & Feedback", subtitle: "Ask the school a question, and read what came back",
+    badge: "Feedback",
+    overview: "Build a questionnaire, send it to a chosen group — the parents of Class 8, all teachers, the whole school — and read the answers question by question. The audience is chosen the same way a circular chooses one, and the answers stay in the school database rather than a form service somewhere else.",
+    sections: [
+      { heading: "Running one", body: null, steps: [
+        "Go to Surveys & Feedback and write the questions — ratings, yes/no, pick one, pick any, a number, or free text.",
+        "Choose who it goes to. Classes alone reach those children and their parents; adding Parent narrows it to the parents only.",
+        "Decide whether the answers are anonymous, before you open it — that choice cannot be changed afterwards.",
+        "Open it. The questions and the recipient list are fixed from that moment.",
+        "Watch the summary fill in, and use Still to reply to chase the rest.",
+      ]},
+      { heading: "Reading the results honestly", body: null, list: [
+        "A rating shows its spread as well as its average — half the room saying 5 and half saying 1 averages the same as everybody saying 3, and those are not the same school.",
+        "Free text is listed, not scored. The comments are usually the reason the survey was run.",
+        "On an anonymous survey the individual answers are refused outright, not shown with the names removed.",
+        "Who has replied is tracked separately from what they said, so an anonymous survey can still be chased.",
+      ]},
+    ],
+    tips: [
+      "Anonymity protects a respondent in a crowd, not one in a group of three — with a very small audience the answers can be placed by elimination.",
+      "Questions cannot be edited once a survey is open. Read them over before pressing Open; a correction means a new survey.",
+    ],
+  },
+
+  {
     id: "compliance", group: "Administration", icon: <SafetyCertificateOutlined />, color: "var(--danger-hover)",
     title: "Government Compliance", subtitle: "UDISE+, PEN, APAAR and RTE",
     badge: "Statutory",
@@ -952,6 +978,26 @@ const STUDENT_DOCS = [
 ];
 
 const PARENT_DOCS = [
+  {
+    id: "surveys", group: "School Life", icon: <BarChartOutlined />, color: "var(--primary)",
+    title: "Surveys", subtitle: "Questions the school has asked you",
+    badge: "Feedback",
+    overview: "The school sends surveys after a parent-teacher meeting, an event, or a change it is thinking about. Anything waiting for you is at the top of the Surveys page.",
+    sections: [
+      { heading: "Answering one", body: null, steps: [
+        "Open Surveys from the menu. Anything marked Waiting for you has not been answered yet.",
+        "Answer the questions; the ones marked with a star have to be filled in.",
+        "Send. On a survey that is not anonymous you can reopen it later and change your answers.",
+      ]},
+      { heading: "Anonymous surveys", body: null, list: [
+        "A survey marked anonymous stores your answers with no name attached.",
+        "The school can see that you replied, but not what you said.",
+        "For the same reason, anonymous answers cannot be changed after they are sent.",
+      ]},
+    ],
+    tips: ["If the survey has a closing date it is shown on the card — after that it stops accepting answers."],
+  },
+
   {
     id: "overview", group: "Getting Started", icon: <RocketOutlined />, color: "var(--primary)",
     title: "Parent Portal Guide", subtitle: "Stay connected with your child's school life",

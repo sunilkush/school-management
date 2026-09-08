@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Empty, Input, Segmented, Tag, Tooltip } from "antd";
 import {
-  ApartmentOutlined, BankOutlined, CalendarOutlined, CarOutlined,
+  ApartmentOutlined, BankOutlined, BarChartOutlined, CalendarOutlined, CarOutlined,
+  FileTextOutlined, GiftOutlined,
   IdcardOutlined, InfoCircleOutlined, ReadOutlined,
   SafetyOutlined, SearchOutlined, SolutionOutlined, UsbOutlined,
   VideoCameraOutlined, WarningOutlined,
@@ -243,6 +244,118 @@ const MODULES = [
       "Nothing is filed with the government from here — UDISE+ has no interface for a school ERP to submit through. The return is filed on the portal; this makes the data ready for it.",
       "Full Aadhaar numbers are deliberately not stored — only the last four digits and whether the document is on file.",
       "An APAAR ID cannot be saved until the parent's consent is recorded, because it cannot be created without one.",
+    ],
+  },
+
+  /* ── People ───────────────────────────────── */
+  {
+    id: "hr",
+    group: "People",
+    icon: <SolutionOutlined />,
+    color: "var(--primary)",
+    title: "Recruitment & Staff Appraisal",
+    subtitle: "Hiring a vacancy, and reviewing the people already in post",
+    what: "Job postings with the applications against them, moved through a pipeline; and appraisal cycles where a member of staff rates themselves and a reviewer rates them separately.",
+    access: [
+      { level: MANAGE, roles: ["Super Admin", "School Admin", "Principal", "Vice Principal"], can: "Post a vacancy, move applicants, run appraisal cycles, finalise a review" },
+      { level: USE, roles: ["Teacher", "Class Teacher", "Accountant", "Librarian", "Staff"], can: "Fill in their own self-assessment for an open cycle" },
+      { level: READ, roles: ["Receptionist"], can: "The applications against a posting" },
+    ],
+    flow: [
+      "Create a posting with the role and the closing date.",
+      "Applications arrive against it and move through the pipeline; every move is kept with its date and note.",
+      "Separately, set up an appraisal cycle whose criteria weights total 100.",
+      "Each person scores themselves; the reviewer scores them on the same criteria.",
+      "Finalise. The review is frozen from then on, along with the overall score it produced.",
+    ],
+    where: [{ role: "School Admin", path: "School Admin → HR → Recruitment / Staff Appraisal" }, { role: "Teacher", path: "Teacher → My Appraisal" }],
+    limits: [
+      "Self scores and reviewer scores are never merged into one number — they are two opinions, and averaging them hides the disagreement that is the point of the exercise.",
+      "Appraisals are deliberately not wired to payroll. An increment is a decision somebody makes, not something a form should trigger.",
+      "There is no candidate-facing portal — applications are entered by the office.",
+    ],
+  },
+
+  /* ── Fees ─────────────────────────────────── */
+  {
+    id: "scholarships",
+    group: "Finance",
+    icon: <GiftOutlined />,
+    color: "var(--success)",
+    title: "Scholarships & Concessions",
+    subtitle: "Who pays less, why, and by how much",
+    what: "Named schemes — merit, sibling, staff ward, RTE — awarded to individual children, with the concession pushed onto their enrolment so the fee bill reflects it.",
+    access: [
+      { level: MANAGE, roles: ["Super Admin", "School Admin", "Principal", "Vice Principal", "Accountant"], can: "Create schemes, award and revoke, sync concessions" },
+      { level: READ, roles: ["Receptionist"], can: "Which children hold which award" },
+    ],
+    flow: [
+      "Create the scheme with its type, value and, if it is limited, how many awards exist.",
+      "Award it to a child for an academic year.",
+      "Sync, so the concession lands on the enrolment the fee bill is built from.",
+      "Check the mismatch list — bills raised before an award are shown, not silently rewritten.",
+    ],
+    where: [{ role: "School Admin", path: "School Admin → Scholarships" }],
+    limits: [
+      "Two percentage awards are added together, not compounded, and the total is capped at 100.",
+      "A bill already raised is never rewritten by an award granted afterwards — it is flagged instead, because a bill the parent has seen should not change on its own.",
+      "The amount actually applied is stored on the award, so changing the scheme later does not rewrite history.",
+    ],
+  },
+
+  /* ── Communication ───────────────────────── */
+  {
+    id: "circulars",
+    group: "Communication",
+    icon: <FileTextOutlined />,
+    color: "var(--warning)",
+    title: "Circulars",
+    subtitle: "Numbered notices, and the record of who has read them",
+    what: "A notice addressed to a chosen group, given a number when it is published, which can ask each recipient to confirm they have read it.",
+    access: [
+      { level: MANAGE, roles: ["Super Admin", "School Admin", "Principal", "Vice Principal"], can: "Write, publish, archive, and see who is outstanding" },
+      { level: USE, roles: ["Teacher", "Parent", "Student", "Accountant", "Librarian", "Transport Manager", "Hostel Warden", "Support Staff"], can: "Read the circulars addressed to them and acknowledge" },
+    ],
+    flow: [
+      "Write it as a draft and choose the audience.",
+      "Publish. It gets a number, and the recipient list is fixed at that moment.",
+      "Recipients read it and, if asked to, press the button that records their acknowledgement.",
+      "Chase the outstanding list. A correction is issued as a new circular that supersedes the old one.",
+    ],
+    where: [{ role: "School Admin", path: "School Admin → Circulars" }, { role: "Parent", path: "Parent → Circulars" }],
+    limits: [
+      "Opened and acknowledged are reported separately and never added together — a school reading “180 opened” as “180 agreed” has drawn the wrong conclusion from its own data.",
+      "Published wording cannot be edited. A circular people have already read has to be corrected by a new one.",
+      "The recipient list is a snapshot. Somebody who joins the school afterwards does not retroactively appear on an old circular.",
+    ],
+  },
+  {
+    id: "surveys",
+    group: "Communication",
+    icon: <BarChartOutlined />,
+    color: "var(--primary)",
+    title: "Surveys & Feedback",
+    subtitle: "Ask the school a question, and see what came back",
+    what: "A questionnaire sent to a chosen group — the parents of Class 8, all teachers, the whole school — answered inside the ERP, summarised question by question, with a list of who has not replied.",
+    access: [
+      { level: MANAGE, roles: ["Super Admin", "School Admin", "Principal", "Vice Principal"], can: "Build a survey, open it, close it, and read the results" },
+      { level: READ, roles: ["Receptionist", "Counselor"], can: "Build a draft and read the summaries" },
+      { level: USE, roles: ["Teacher", "Parent", "Student", "Accountant", "Librarian", "Transport Manager", "Hostel Warden", "Driver", "Support Staff"], can: "Answer the surveys sent to them" },
+    ],
+    flow: [
+      "Build the questions — ratings, yes/no, pick one, pick any, a number, or free text.",
+      "Choose the audience, the same way a circular chooses one.",
+      "Decide whether the answers are anonymous. That cannot be changed later.",
+      "Open it. The questions and the recipient list are fixed from that point.",
+      "Watch the summary fill in, and chase whoever has not replied.",
+    ],
+    where: [{ role: "School Admin", path: "School Admin → Surveys & Feedback" }, { role: "Parent", path: "Parent → Surveys" }],
+    limits: [
+      "Anonymity protects a respondent in a crowd, not one in a group of three — if a survey goes to three people and two have replied, the third answer is not hard to place.",
+      "An anonymous answer cannot be edited afterwards, because there is nothing on it to find it by.",
+      "Individual answers are refused outright on an anonymous survey rather than shown with the names removed.",
+      "A rating is reported with its spread as well as its average: half the room saying 5 and half saying 1 averages the same as everybody saying 3.",
+      "Questions cannot be changed once the survey is open — every answer is filed against a question, so changing them would make every summary quietly wrong.",
     ],
   },
 ];

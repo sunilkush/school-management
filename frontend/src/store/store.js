@@ -80,6 +80,7 @@ import onlineClassReducer from "../features/onlineClassSlice";
 import hrReducer from "../features/hrSlice";
 import scholarshipReducer from "../features/scholarshipSlice";
 import circularReducer from "../features/circularSlice";
+import surveyReducer from "../features/surveySlice";
 import hostelWardenReducer from "../features/hostelWardenSlice";
 import advanceReducer from "../features/advanceSlice";
 import taskReducer from "../features/taskSlice";
@@ -172,6 +173,7 @@ const rootReducer = combineReducers({
   hr: hrReducer,
   scholarship: scholarshipReducer,
   circular: circularReducer,
+  survey: surveyReducer,
   hostelWarden: hostelWardenReducer,
   advance: advanceReducer,
   tasks: taskReducer,

@@ -102,6 +102,7 @@ import onlineClassRoutes from "./onlineClass.routes.js";
 import hrRoutes from "./hr.routes.js";
 import scholarshipRoutes from "./scholarship.routes.js";
 import circularRoutes from "./circular.routes.js";
+import surveyRoutes from "./survey.routes.js";
 
 export const apiV1Routes = [
   ["/school", schoolRoutes],
@@ -207,6 +208,7 @@ export const apiV1Routes = [
   ["/hr", hrRoutes],
   ["/scholarships", scholarshipRoutes],
   ["/circulars", circularRoutes],
+  ["/surveys", surveyRoutes],
   // Unauthenticated — see PUBLIC_API_ROUTE_PATTERNS in middlewares/auth.middleware.js
   ["/public/admissions", publicAdmissionRoutes],
 ];

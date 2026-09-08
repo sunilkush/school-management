@@ -29,6 +29,7 @@ const school = await School.create({ name: "Demo Public School", email: "demo@sc
 const adminRole = await Role.create({ name: "School Admin", schoolId: school._id, type: "system", code: "SA" });
 const teacherRole = await Role.create({ name: "Teacher", schoolId: school._id, type: "system", code: "TCH" });
 const studentRole = await Role.create({ name: "Student", schoolId: school._id, type: "system", code: "STU" });
+const parentRole = await Role.create({ name: "Parent", schoolId: school._id, type: "system", code: "PAR" });
 
 const admin = await User.create({ name: "Admin", email: "admin@demo.test", password: "Password123!", roleId: adminRole._id, schoolId: school._id, isActive: true });
 const year = await AcademicYear.create({ schoolId: school._id, name: "2025-2026", startDate: new Date("2025-06-01"), endDate: new Date("2026-04-30"), isActive: true, status: "active" });
@@ -43,6 +44,11 @@ for (let i = 0; i < 25; i += 1) {
   const u = await User.create({ name: `Student ${i}`, email: `s${i}@demo.test`, password: "Password123!", roleId: studentRole._id, schoolId: school._id, isActive: true });
   const st = await Student.create({ userId: u._id, schoolId: school._id, dateOfBirth: new Date("2012-05-05") });
   await StudentEnrollment.create({ studentId: st._id, schoolId: school._id, academicYearId: year._id, schoolClassId: classId, sectionId, registrationNumber: `REG-${i}`, rollNumber: i + 1, admissionDate: new Date(), status: "Active" });
+}
+// Parents exist so the survey step has an audience to resolve — without them it correctly skips,
+// and a step that skips is a step this script is not checking.
+for (let i = 0; i < 10; i += 1) {
+  await User.create({ name: `Parent ${i}`, email: `p${i}@demo.test`, password: "Password123!", roleId: parentRole._id, schoolId: school._id, isActive: true });
 }
 for (const name of ["Route A – South Delhi", "Route B – West Delhi", "Route C – East Delhi"]) {
   await TransportRoute.create({ schoolId: school._id, academicYearId: year._id, name, bus: "DL-01", stops: [] });
@@ -86,6 +92,9 @@ const snapshot = async () => ({
   "online classes": await count("onlineclasses"),
   "online joins": await count("onlineclassjoins"),
   "report card templates": await count("reportcardtemplates"),
+  "surveys": await count("surveys"),
+  "survey responses": await count("surveyresponses"),
+  "survey participation": await count("surveyparticipations"),
   "students with PEN": await count("students", { "compliance.pen": { $nin: ["", null] } }),
   "students left incomplete": await count("students", { "compliance.pen": "" }),
   "RTE students": await count("students", { "compliance.rteAdmission": true }),

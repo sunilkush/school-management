@@ -49,10 +49,14 @@ import { OnlineClassJoin } from "../src/models/OnlineClassJoin.model.js";
 import { ReportCardTemplate } from "../src/models/ReportCardTemplate.model.js";
 import { JournalEntry } from "../src/models/JournalEntry.model.js";
 import { LedgerAccount } from "../src/models/LedgerAccount.model.js";
+import { Survey } from "../src/models/Survey.model.js";
+import { SurveyResponse } from "../src/models/SurveyResponse.model.js";
+import { SurveyParticipation } from "../src/models/SurveyParticipation.model.js";
 
 import { seedChartOfAccounts } from "../src/services/ledger.service.js";
 import { postPendingEvents, reconciliationReport } from "../src/services/ledgerPosting.service.js";
 import { ingestPunches, applyPunches } from "../src/services/devicePunch.service.js";
+import { resolveRecipients } from "../src/services/circular.service.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env") });
@@ -70,6 +74,7 @@ const step = (n, title) => console.log(`\n${"─".repeat(58)}\n${n}  ${title}`);
 
 const minutesAgo = (n) => new Date(Date.now() - n * 60000);
 const daysAgo = (n) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+const daysFromNow = (n) => daysAgo(-n);
 const atHourToday = (hh, mm = 0) => {
   const d = new Date();
   d.setHours(hh, mm, 0, 0);
@@ -545,6 +550,74 @@ export async function main() {
     warn("Fewer than 2 exams found — run scripts/seedExamData.mjs first for report cards");
   }
 
+  /* ══ 7. A survey, already half answered ══════════════════════ */
+  step("📊", "Surveys — a PTM feedback form with replies in it");
+
+  {
+    const title = "Parent-teacher meeting — how did we do?";
+    let survey = await Survey.findOne({ schoolId, title });
+
+    if (!survey) {
+      const questions = [
+        { key: "overall", text: "How would you rate the meeting overall?", type: "rating", required: true },
+        { key: "time", text: "Did you get enough time with the class teacher?", type: "yes_no" },
+        { key: "useful", text: "Which part was most useful?", type: "single_choice",
+          options: ["Subject-wise discussion", "Report card walkthrough", "Meeting the head", "The facilities tour"] },
+        { key: "comments", text: "Anything you would change next time?", type: "long_text" },
+      ];
+
+      const audience = { roles: ["Parent"], schoolClassIds: [], sectionIds: [], userIds: [] };
+      const recipients = await resolveRecipients({ schoolId, audience, academicYearId: year._id });
+
+      if (!recipients.length) {
+        warn("No parent accounts found — skipped the survey");
+      } else {
+        survey = await Survey.create({
+          schoolId, academicYearId: year._id, title,
+          description: "Five minutes, and it decides how we run the next one.",
+          questions, audience, isAnonymous: false,
+          recipients, recipientCount: recipients.length,
+          status: "open", openedAt: daysAgo(4),
+          closesAt: daysFromNow(6),
+          createdBy: admin._id,
+        });
+
+        // Deliberately not everybody. A demo of "chase the people who have not replied" needs
+        // somebody left to chase, and a 100% response rate is not a thing any school has seen.
+        const replying = recipients.slice(0, Math.max(1, Math.ceil(recipients.length * 0.6)));
+        const useful = questions[2].options;
+        const remarks = [
+          "More time per subject would help — ten minutes goes very fast.",
+          "Well organised. The report card walkthrough was the useful part.",
+          "Please start on time; we waited about twenty minutes.",
+          "",
+          "Would be good to meet the sports teacher as well.",
+        ];
+
+        for (const [i, userId] of replying.entries()) {
+          const answers = [
+            { questionKey: "overall", value: [5, 4, 4, 3, 5, 4, 2, 4][i % 8] },
+            { questionKey: "time", value: i % 3 !== 0 },
+            { questionKey: "useful", value: useful[i % useful.length] },
+          ];
+          const remark = remarks[i % remarks.length];
+          if (remark) answers.push({ questionKey: "comments", value: remark });
+
+          await SurveyResponse.create({
+            schoolId, surveyId: survey._id, respondentId: userId, respondentRole: "Parent",
+            answers, submittedAt: daysAgo(3 - (i % 3)),
+          });
+          await SurveyParticipation.create({
+            schoolId, surveyId: survey._id, userId, respondedAt: daysAgo(3 - (i % 3)),
+          });
+        }
+
+        ok(`"${title}" — open to ${recipients.length} parents, ${replying.length} have replied`);
+      }
+    } else {
+      log("Survey already exists");
+    }
+  }
   /* ══ Done ═════════════════════════════════════════════════════ */
   console.log(`\n${"─".repeat(58)}`);
   console.log("✅  Demo data ready.\n");
@@ -554,6 +627,7 @@ export async function main() {
   console.log("     School Admin → Govt. Compliance → Readiness");
   console.log("     School Admin → Attendance → Biometric / RFID");
   console.log("     Teacher → Online Classes            (one at 4pm today)");
+  console.log("     School Admin → Surveys & Feedback   (open, partly answered)");
   if (deviceSecret) console.log(`\n   Device secret, shown once: ${deviceSecret}`);
   console.log("");
 
