@@ -219,6 +219,7 @@ export const sidebarMenu = {
         { title: "Staff Appraisal", path: "schooladmin/hr/appraisal" },
       ],
     },
+    { title: "Scholarships", path: "schooladmin/scholarships", icon: Award },
     {
       title: "Users",
       icon: Users,
@@ -480,6 +481,7 @@ export const sidebarMenu = {
     { title: "Income",            path: "accountant/income",             icon: IndianRupee },
     { title: "Expenses",          path: "accountant/expenses",           icon: Receipt },
     { title: "Financial Reports", path: "accountant/reports",            icon: FileText },
+    { title: "Scholarships",      path: "accountant/scholarships",       icon: Award },
     {
       title: "Accounting",
       icon: Landmark,
@@ -536,6 +538,7 @@ export const sidebarMenu = {
     { title: "Govt. Compliance", path: "principal/compliance", icon: ShieldCheck },
     { title: "Recruitment", path: "principal/hr/recruitment", icon: BriefcaseIcon },
     { title: "Staff Appraisal", path: "principal/hr/appraisal", icon: Award },
+    { title: "Scholarships", path: "principal/scholarships", icon: Award },
     { title: "Fee Reports", path: "principal/fees/reports", icon: FileBarChart2 },
     { title: "My Tasks",         path: "principal/tasks",   icon: ListChecks   },
     { title: "My Payroll",       path: "principal/payroll", icon: IndianRupee  },

@@ -275,6 +275,7 @@ const OnlineClassesPage = lazy(() => import("./pages/OnlineClasses/OnlineClasses
 const RecruitmentPage = lazy(() => import("./pages/HR/RecruitmentPage.jsx"));
 const AppraisalPage = lazy(() => import("./pages/HR/AppraisalPage.jsx"));
 const MyAppraisal = lazy(() => import("./pages/HR/MyAppraisal.jsx"));
+const ScholarshipsPage = lazy(() => import("./pages/Scholarships/ScholarshipsPage.jsx"));
 const ClassTimetable = SchoolAdminTimetablePage;
 const TeacherTimetable = TeacherTimetablePage;
 
@@ -851,6 +852,7 @@ const router = createBrowserRouter([
               { path: "compliance", element: <CompliancePage /> },
               { path: "hr/recruitment", element: <RecruitmentPage /> },
               { path: "hr/appraisal", element: <AppraisalPage /> },
+              { path: "scholarships", element: <ScholarshipsPage /> },
               { path: "online-classes", element: <OnlineClassesPage canHost /> },
               { path: "tasks", element: <TaskManagement /> },
 
@@ -1001,6 +1003,7 @@ const router = createBrowserRouter([
               { path: "expenses",         element: <ExpenseManagement /> },
               { path: "reports",          element: <FinancialReports /> },
               { path: "fees/reports",     element: <FeeReports /> },
+              { path: "scholarships",     element: <ScholarshipsPage /> },
               { path: "ledger/accounts", element: <ChartOfAccounts /> },
               { path: "ledger/journal", element: <JournalEntries /> },
               { path: "ledger/statements", element: <FinancialStatements /> },
@@ -1064,6 +1067,7 @@ const router = createBrowserRouter([
               { path: "compliance", element: <CompliancePage /> },
               { path: "hr/recruitment", element: <RecruitmentPage /> },
               { path: "hr/appraisal", element: <AppraisalPage /> },
+              { path: "scholarships", element: <ScholarshipsPage /> },
               { path: "fees/reports",    element: <FeeReports /> },
             ],
           },
