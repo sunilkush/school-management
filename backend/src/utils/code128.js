@@ -4,8 +4,7 @@
  * Written rather than pulled in as a dependency: the only thing needed here is turning a card
  * number into bar widths, and a barcode is one of those things that looks completely fine when
  * it is wrong. A mistranscribed pattern produces a neat row of bars that simply will not scan,
- * and nobody finds out until a card is in a reader. tests/unit/code128.test.js checks the table
- * against Code 128's own structural rules for exactly that reason.
+ * and nobody finds out until a card is in a reader.
  */
 
 /**

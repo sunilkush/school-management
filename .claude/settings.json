@@ -17,8 +17,6 @@
       "Skill(dataviz:*)",
       "Bash(npx expo-doctor *)",
       "Bash(npx expo *)",
-      "Bash(npx jest *)",
-      "Bash(npm test *)",
       "Bash(node -e \"const p=require\\('d:/GitHub/school-management/backend/package.json'\\); console.log\\(JSON.stringify\\({scripts:p.scripts, engines:p.engines},null,2\\)\\)\")",
       "Bash(netsh advfirewall *)",
       "Bash(powershell -Command \"Get-NetConnectionProfile | Select-Object -Property Name,NetworkCategory\")",

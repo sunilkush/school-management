@@ -26,7 +26,6 @@ For a buyer — an EdTech company, IT services firm, or entrepreneur — this as
 | Frontend source | React 19 + Vite, 455+ components/pages, 124,038 LOC |
 | Git history | Full commit history (1,133 commits) proving organic, incremental development |
 | Documentation | `USER_GUIDE.md` (complete role-by-role manual) + `RoleWiseGuide.html` (interactive guide) |
-| Test suite | Jest + Supertest backend tests, `mongodb-memory-server` for isolated test runs |
 | Mobile app | React Native / Expo (SDK 54) companion app, merged into `main` — fully redesigned UI (navy + purple theme), 23 role-driven navigation trees, 290+ screens, 400 RTK Query endpoint definitions against the same backend |
 
 **Not included by default:** live customer/school data, existing domain/hosting, or third-party service accounts (Razorpay, Twilio, Cloudinary, SMTP) — the buyer provisions their own. Can be negotiated as part of a handover package.
@@ -149,7 +148,6 @@ Each role has its own dashboard, permission scope, and workflows — this is not
 - Security hardening: Helmet, `express-rate-limit`, `express-mongo-sanitize`, `xss-clean`
 - Integrations: Razorpay (payments), Twilio (SMS), Cloudinary (media), Nodemailer (email), PDFKit + ExcelJS (exports)
 - Scheduled jobs via `node-cron` (backups, recurring tasks)
-- Automated tests: Jest + Supertest + in-memory MongoDB
 
 **Frontend**
 - React 19 + Vite, React Router v7
