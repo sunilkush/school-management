@@ -3,7 +3,7 @@
 React Native (Expo) app for the school ERP in this repo. One app, **all 24 roles**, driven by the
 same permission data the web portal uses.
 
-Status: **Phases 0–2 done, Phase 3 in progress.**
+Status: **Phases 0–3 done.** Phase 4 next.
 
 ---
 
@@ -68,7 +68,7 @@ mobile/
     screens/
       auth/         Login, ForgotPassword, Splash
       custom/       hand-written screens (only where a list won't do)
-      generic/      ListScreen, DetailScreen, FormSheet, ActionSheet, FilterChips, ScopePicker
+      generic/      ListScreen, DetailScreen, FormSheet, ActionSheet, FilterChips, ScopePicker, RoleGate
     components/ui/  shared kit
     store/          redux + RTK Query (apiSlice: 400 endpoints)
     theme/          tokens, ThemeProvider
@@ -106,7 +106,7 @@ Two things the pilots forced into the engine that all later modules get free: **
 could otherwise never reject anything) and **local-time date handling** (`toISOString()` would
 shift the day for anyone east or west of UTC, silently booking the wrong leave date).
 
-### Phase 3 — Tier A: the daily-use modules 🚧 in progress
+### Phase 3 — Tier A: the daily-use modules ✅
 
 | Module | State |
 | --- | --- |
@@ -115,12 +115,13 @@ shift the day for anyone east or west of UTC, silently booking the wrong leave d
 | Leave | ✅ Phase 2 pilot |
 | **Circulars** | ✅ new — endpoints, descriptor, and nav wired for all 23 roles |
 | **Homework** | ✅ new — student / teacher / parent, via the new scope picker |
-| Attendance (mark + view) | ⬜ mark is a bespoke grid, not a list |
-| Timetable + substitutions | ⬜ bespoke grid; substitution endpoints still missing |
-| Fees + Razorpay payment | ⬜ bespoke; endpoints exist |
-| Report cards | ⬜ endpoints missing (post-dates the archive) |
-| Messages | ⬜ bespoke (chat); endpoints exist |
-| Push notifications | ⬜ `usePushRegistration` exists but is unverified; **needs a dev build** (see #6) |
+| **Attendance (view)** | ✅ new — student/parent record with a % summary |
+| **Attendance (marking)** | ✅ new — bespoke roster: everyone starts present, tap only the exceptions |
+| **Timetable** | ✅ new — bespoke: day tabs plus that day’s periods, opening on today |
+| **Fees (view)** | ✅ new — billed / paid / due, read-only on purpose (see below). Online payment still ⬜ |
+| **Report cards** | ✅ new — endpoints + descriptor; each subject expands into its own row |
+| **Messages** | ✅ new — inbox/sent/archive, read-on-open, threaded reply (transcript view ⬜) |
+| **Push notifications** | ⚠️ wired and contract-checked, but **unverified on a device** — see below |
 
 **Engine addition this phase: the scope picker.** A Parent with two children is looking at *one
 child's* homework, not "homework" in the abstract — and the same question blocks their view of
@@ -128,10 +129,51 @@ attendance, fees and report cards too. So a descriptor can now declare `scope`
 (`activeFor` / `useOptions` / `selectOptions`), the list grows a chip row, and the choice arrives
 back in `useList`. Built once here; every remaining Parent-facing module in Tier A gets it free.
 
-The trap it encodes: the `/child/:childId/…` routes resolve a child through
-`Student.findOne({ userId })`, so the picker must pass `child.userId`, **not** `child._id` — the
-Student id 403s as "not authorized to access this child's data". Same class of id-mixup as the
-Students module's enrollment-vs-student id.
+**The child-id trap, which the backend is inconsistent about.** Two different endpoint families
+identify the same child by two different ids, and passing the wrong one 403s:
+
+| Module | Endpoint | Wants | Because |
+| --- | --- | --- | --- |
+| Homework, Attendance, Report cards | `/child/:childId/…`, `/attendance/my?childId=`, `/report-cards/child/:id` | `child.userId` | resolves via `Student.findOne({ userId })`, and `ReportCard.studentId` refs User |
+| Fees, Timetable | `/student-fees/my?studentId=`, `/timetable/parent/child/:studentId` | `child._id` | resolves via `Student.findById`/`findOne({ _id })` |
+
+There is a test asserting these stay opposite, because it is exactly the kind of thing a later
+"cleanup" would happily unify and break. Getting it wrong is a 403, not a visible bug.
+
+**Two more engine additions this phase:**
+
+- **`summary`** — a descriptor can return stat tiles computed from the rows on screen, so they can
+  never disagree with the list below them. Attendance uses it for the % (a half day counts as half
+  a day present, matching the web report); Fees for billed/paid/due.
+- **`servesRole` + RoleGate** — several nav keys mean different things to different roles. "Fees"
+  to a parent is their child's bill; to a School Admin it is the school ledger. "Attendance" to a
+  student is their own record; to an admin it is the school-wide table. The descriptors here are
+  written for the family reading and their endpoints are gated to Student/Parent, so staff now get
+  a plain explanation naming the phase that brings their version — rather than a 403, or worse,
+  their own personal attendance record shown under an admin label.
+
+**Fees is read-only on purpose.** `PUT /student-fees/pay/:id` exists and its ownership check does
+let a Student or Parent call it for their own record — but it records a *manual* cash/cheque
+payment, it is not a gateway. A pay button there would let a family clear their own dues with no
+money moving. Real online payment goes through the separate FeeInstallment/Razorpay flow.
+
+**Teachers could not mark attendance.** Only Super Admin and School Admin had a `MarkAttendance`
+nav entry; Teacher, Class Teacher, Sports Teacher and Hostel Warden had only a bare `Attendance`
+one — which now resolves to the read-only family view. All four are in the backend's
+`STUDENT_ATTENDANCE_MARKERS`, so they have been given the marking screen.
+
+**Push is wired but unverified.** `usePushRegistration` registers the native FCM/APNs token on
+sign-in, unregisters on sign-out, sets an Android MAX-importance channel so pushes appear as
+heads-up banners, and routes a tapped push to Notifications. Its payload matches the backend's
+`{ token, platform }` contract, and it deliberately no-ops under Expo Go, which has had no remote
+push since SDK 53. But **none of that has been run on a device** — it cannot be, without a
+development build. Treat push as unproven until someone installs a dev build and watches a
+notification arrive.
+
+**Still open from this tier:** the Messages *transcript* view (replies are correctly parented, but
+a whole back-and-forth is not rendered in one scroll), composing a brand-new message (needs a
+recipient picker over `/messages/recipients`), online fee payment, and homework file attachments
+(needs `expo-document-picker`).
 
 ### Phase 4 — Tier B: academics
 Exams / results / admit card, Library, Transport + live bus map, Online classes (opens the

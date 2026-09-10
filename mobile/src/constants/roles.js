@@ -303,7 +303,7 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard',
       { group: 'Classroom', icon: 'book-open-variant', items: ['AssignedClasses', 'Assignments', 'SubjectResources', 'LessonPlans', 'Timetable', 'Discipline', 'PTM'] },
-      { group: 'Attendance', icon: 'clipboard-check-outline', items: ['Attendance', 'StudentMonthlyReport', 'MyDailyAttendance', 'MyMonthlyReport', 'GpsCheckInOut'] },
+      { group: 'Attendance', icon: 'clipboard-check-outline', items: ['MarkAttendance', 'Attendance', 'StudentMonthlyReport', 'MyDailyAttendance', 'MyMonthlyReport', 'GpsCheckInOut'] },
       { group: 'Exams & Questions', icon: 'pencil-box-outline', items: ['Exams', 'QuestionBank', 'Evaluation', 'ExamReports'] },
       'Reports', 'Leave', 'MyTasks', 'Payroll',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars'] },
@@ -313,7 +313,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.STUDENT]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'Assignments', 'Attendance', 'Grades', 'Timetable', 'Library', 'StudyMaterials',
+      'Dashboard', 'Assignments', 'Attendance', 'Grades', 'ProgressReport', 'Timetable', 'Library', 'StudyMaterials',
       'Hostel', 'Transport', 'Fees', 'Leave', 'Exams', 'AcademicCalendar', 'MyCertificates', 'MyIdCard', 'MyAchievements',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars'] },
       'Profile',
@@ -353,7 +353,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.HOSTEL_WARDEN]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'Rooms', 'Allocations', 'Leave', 'VisitorLog', 'Complaints', 'Attendance', 'Reports',
+      'Dashboard', 'Rooms', 'Allocations', 'Leave', 'VisitorLog', 'Complaints', 'MarkAttendance', 'Attendance', 'Reports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars'] },
       'Profile',
@@ -463,7 +463,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.SPORTS_TEACHER]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'AssignedClasses', 'MyStudents', 'Attendance', 'Assignments', 'Sports',
+      'Dashboard', 'AssignedClasses', 'MyStudents', 'MarkAttendance', 'Attendance', 'Assignments', 'Sports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars'] },
       'Profile',
@@ -503,7 +503,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.CLASS_TEACHER]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'MyClass', 'MyStudents', 'Attendance', 'Assignments', 'Timetable', 'Discipline', 'PTM',
+      'Dashboard', 'MyClass', 'MyStudents', 'MarkAttendance', 'Attendance', 'Assignments', 'Timetable', 'Discipline', 'PTM',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars'] },
       'Profile',

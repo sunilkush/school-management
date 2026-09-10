@@ -5,6 +5,7 @@ import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { QueryState } from '../../components/ui/QueryState';
 import { SearchField } from '../../components/ui/SearchField';
 import { StatusPill } from '../../components/ui/StatusPill';
+import { StatCard, StatGrid } from '../../components/ui/StatCard';
 import { FilterChips } from './FilterChips';
 import { ScopePicker } from './ScopePicker';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -44,7 +45,9 @@ function Row({ presentation, onPress, disabled }) {
           <Text style={[typography.caption, { color: colors.textMuted, marginTop: 4 }]}>{meta}</Text>
         ) : null}
       </View>
-      {badge ? <StatusPill label={badge.label} color={toneColor(badge.tone, colors)} /> : null}
+      {/* A descriptor names a tone from the shared status vocabulary; one with its own
+          established colour scale (attendance's five statuses) passes a colour directly. */}
+      {badge ? <StatusPill label={badge.label} color={badge.color ?? toneColor(badge.tone, colors)} /> : null}
     </Pressable>
   );
 }
@@ -149,6 +152,20 @@ export function createListScreen(descriptor) {
             data={rows}
             keyExtractor={(row, index) => String(descriptor.rowKey?.(row) ?? row?._id ?? index)}
             ItemSeparatorComponent={() => <Divider style={{ backgroundColor: colors.borderMuted }} />}
+            // Summary tiles scroll WITH the list rather than sitting in a fixed band above it —
+            // on a phone a pinned header would eat most of the screen before a single row shows.
+            // Computed from the rows on screen, so it always agrees with what is listed below it.
+            ListHeaderComponent={
+              descriptor.summary ? (
+                <View style={{ marginBottom: spacing.md }}>
+                  <StatGrid>
+                    {descriptor.summary(rows, ctx).map((stat) => (
+                      <StatCard key={stat.label} label={stat.label} metric={stat} />
+                    ))}
+                  </StatGrid>
+                </View>
+              ) : null
+            }
             refreshing={isFetching}
             onRefresh={refetch}
             contentContainerStyle={{ paddingBottom: canCreate ? 88 : spacing.lg }}

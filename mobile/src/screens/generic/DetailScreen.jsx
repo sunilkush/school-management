@@ -77,7 +77,7 @@ export function createDetailScreen(descriptor) {
                   <View style={{ flexDirection: 'row', marginTop: spacing.sm }}>
                     <StatusPill
                       label={detail.badgeFor(record).label}
-                      color={toneColor(detail.badgeFor(record).tone, colors)}
+                      color={detail.badgeFor(record).color ?? toneColor(detail.badgeFor(record).tone, colors)}
                     />
                   </View>
                 ) : null}

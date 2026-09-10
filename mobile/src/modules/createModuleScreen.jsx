@@ -4,6 +4,7 @@ import { createListScreen } from '../screens/generic/ListScreen';
 import { createDetailScreen } from '../screens/generic/DetailScreen';
 import { createFormScreen } from '../screens/generic/FormSheet';
 import { createActionScreen } from '../screens/generic/ActionSheet';
+import { withRoleGate } from '../screens/generic/RoleGate';
 import { useAppHeaderOptions } from '../navigation/headerOptions';
 
 const Stack = createNativeStackNavigator();
@@ -21,7 +22,7 @@ export function createModuleScreen(descriptor) {
 
   if (!descriptor.detail && !descriptor.create) {
     ListScreen.selfHeadered = false;
-    return ListScreen;
+    return withRoleGate(descriptor, ListScreen);
   }
 
   const DetailScreen = descriptor.detail ? createDetailScreen(descriptor) : null;
@@ -69,5 +70,5 @@ export function createModuleScreen(descriptor) {
   }
 
   ModuleStack.selfHeadered = true;
-  return ModuleStack;
+  return withRoleGate(descriptor, ModuleStack);
 }

@@ -243,3 +243,155 @@ describe('homework descriptor', () => {
     expect(submit.allow(ctxFor('Teacher'), { submission: null })).toBe(false);
   });
 });
+
+describe('attendance descriptor', () => {
+  const attendance = MODULE_REGISTRY.Attendance;
+
+  it('counts a half day as half a day present, matching the web report', () => {
+    const rows = [
+      { status: 'present' }, { status: 'present' }, { status: 'halfday' }, { status: 'absent' },
+    ];
+    const percent = attendance.summary(rows).find((s) => s.label === 'Attendance');
+    // (2 + 0.5) / 4 = 62.5% -> 63
+    expect(percent.value).toBe(63);
+  });
+
+  it('shows no summary tiles when there is nothing to summarise', () => {
+    expect(attendance.summary([])).toEqual([]);
+  });
+
+  it('keeps all five statuses distinct instead of flattening them into three tones', () => {
+    const colorFor = (status) => attendance.row({ status, date: '2026-09-01' }).badge.color;
+    const colors = ['present', 'absent', 'late', 'halfday', 'leave'].map(colorFor);
+    expect(new Set(colors).size).toBe(5);
+  });
+});
+
+describe('fees descriptor', () => {
+  const fees = MODULE_REGISTRY.Fees;
+
+  it('identifies a child by Student._id — the OPPOSITE id to homework and attendance', () => {
+    const children = [{ _id: 'student-1', userId: 'user-1', name: 'Asha' }];
+
+    // Fees: GET /student-fees/my resolves the child as Student.findOne({ _id })
+    expect(fees.scope.selectOptions(children)).toEqual([{ value: 'student-1', label: 'Asha' }]);
+    // Homework/attendance: /child/:childId/… resolve as Student.findOne({ userId })
+    expect(MODULE_REGISTRY.Assignments.scope.selectOptions(children)[0].value).toBe('user-1');
+    expect(MODULE_REGISTRY.Attendance.scope.selectOptions(children)[0].value).toBe('user-1');
+  });
+
+  it('totals what is billed, paid and still owed', () => {
+    const rows = [
+      { totalAmount: 1000, paidAmount: 1000, dueAmount: 0, status: 'paid' },
+      { totalAmount: 500, paidAmount: 200, dueAmount: 300, status: 'partial' },
+    ];
+    const byLabel = Object.fromEntries(fees.summary(rows).map((s) => [s.label, s.value]));
+    expect(byLabel['Total billed']).toBe(1500);
+    expect(byLabel.Paid).toBe(1200);
+    expect(byLabel['Still due']).toBe(300);
+  });
+
+  it('treats anything not fully paid as still due', () => {
+    expect(fees.filter.apply({ status: 'partial' }, 'due')).toBe(true);
+    expect(fees.filter.apply({ status: 'pending' }, 'due')).toBe(true);
+    expect(fees.filter.apply({ status: 'paid' }, 'due')).toBe(false);
+  });
+
+  it('offers no way to pay — the pay endpoint records cash, it is not a gateway', () => {
+    expect(fees.create).toBeUndefined();
+    expect(fees.detail.actions).toBeUndefined();
+  });
+});
+
+describe('role gating', () => {
+  it('keeps the family view of fees and attendance away from staff, who mean something else by it', () => {
+    for (const key of ['Fees', 'Attendance']) {
+      const serves = MODULE_REGISTRY[key].servesRole;
+      expect(serves(ctxFor('Student'))).toBe(true);
+      expect(serves(ctxFor('Parent'))).toBe(true);
+      // Both of these have their own "Fees"/"Attendance" nav entry meaning the school-wide view.
+      expect(serves(ctxFor('School Admin'))).toBe(false);
+      expect(serves(ctxFor('Teacher'))).toBe(false);
+    }
+  });
+
+  it('explains itself rather than showing an error, and says which phase covers the real one', () => {
+    for (const key of ['Fees', 'Attendance']) {
+      expect(MODULE_REGISTRY[key].notForRoleLabel).toBeTruthy();
+    }
+  });
+
+  it('leaves ungated modules alone', () => {
+    expect(MODULE_REGISTRY.Circulars.servesRole).toBeUndefined();
+    expect(MODULE_REGISTRY.Notifications.servesRole).toBeUndefined();
+  });
+});
+
+describe('report cards descriptor', () => {
+  const cards = MODULE_REGISTRY.ProgressReport;
+
+  it('uses the child User id, like homework — ReportCard.studentId refs User, not Student', () => {
+    const children = [{ _id: 'student-1', userId: 'user-1', name: 'Asha' }];
+    expect(cards.scope.selectOptions(children)[0].value).toBe('user-1');
+  });
+
+  it('expands each subject into its own row instead of one crammed field', () => {
+    const fields = cards.detail.fields({
+      subjects: [
+        { subjectName: 'Maths', weightedPercentage: 88, grade: 'A' },
+        { subjectName: 'Science', weightedPercentage: 31, grade: 'D', isPassed: false },
+      ],
+      totals: { obtainedMarks: 119, maximumMarks: 200, percentage: 59.5, grade: 'C' },
+    });
+
+    const maths = fields.find((f) => f.label === 'Maths');
+    expect(maths.value).toBe('88% · Grade A');
+    // A failed subject says so rather than looking like any other row.
+    expect(fields.find((f) => f.label === 'Science').value).toContain('Not passed');
+    expect(fields.find((f) => f.label === 'Overall').value).toBe('119 / 200 · 59.5% · Grade C');
+  });
+
+  it('is read-only for families — publishing is exam-team work', () => {
+    expect(cards.create).toBeUndefined();
+    expect(cards.detail.actions).toBeUndefined();
+    expect(cards.servesRole(ctxFor('Teacher'))).toBe(false);
+  });
+});
+
+describe('messages descriptor', () => {
+  const messages = MODULE_REGISTRY.Messages;
+  const withUser = (roleName, userId) => ({ ...ctxFor(roleName), user: { _id: userId } });
+
+  it('parents a reply so it stays in the same conversation', () => {
+    const reply = messages.detail.actions.find((a) => a.key === 'reply');
+    const arg = reply.buildArg(
+      { _id: 'm1', subject: 'Fee reminder', senderId: { _id: 'u-sender' } },
+      withUser('Parent', 'u-me'),
+      { body: '  will pay today  ' }
+    );
+    expect(arg.parentMessageId).toBe('m1');
+    expect(arg.recipientIds).toEqual(['u-sender']);
+    expect(arg.body).toBe('will pay today');
+  });
+
+  it('does not stack up "Re: Re: Re:" on an ongoing thread', () => {
+    const reply = messages.detail.actions.find((a) => a.key === 'reply');
+    const subjectFor = (subject) =>
+      reply.buildArg({ _id: 'm1', subject, senderId: { _id: 's' } }, withUser('Parent', 'me'), { body: 'x' }).subject;
+
+    expect(subjectFor('Fee reminder')).toBe('Re: Fee reminder');
+    expect(subjectFor('Re: Fee reminder')).toBe('Re: Fee reminder');
+  });
+
+  it('offers no reply on a message you sent yourself', () => {
+    const reply = messages.detail.actions.find((a) => a.key === 'reply');
+    expect(reply.allow(withUser('Parent', 'u-me'), { senderId: { _id: 'u-other' } })).toBe(true);
+    expect(reply.allow(withUser('Parent', 'u-me'), { senderId: { _id: 'u-me' } })).toBe(false);
+    expect(reply.allow(withUser('Parent', 'u-me'), {})).toBe(false);
+  });
+
+  it('marks read on open, like notifications and circulars', () => {
+    expect(messages.detail.onOpenArg({ _id: 'm1', isRead: false })).toBe('m1');
+    expect(messages.detail.onOpenArg({ _id: 'm1', isRead: true })).toBeNull();
+  });
+});

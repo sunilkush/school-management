@@ -1,5 +1,7 @@
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { TimetableScreen } from '../screens/custom/TimetableScreen';
+import { MarkAttendanceScreen } from '../screens/custom/MarkAttendanceScreen';
 import { GroupMenuScreen } from '../screens/GroupMenuScreen';
 import { ModulePlaceholderScreen } from '../screens/ModulePlaceholderScreen';
 import { MODULE_REGISTRY } from '../modules/registry';
@@ -13,6 +15,11 @@ import { MODULE_REGISTRY } from '../modules/registry';
 const CUSTOM_SCREENS = {
   Dashboard: DashboardScreen,
   Profile: ProfileScreen,
+  // A week × period grid does not fit a phone, so this is day tabs + that day's periods.
+  Timetable: TimetableScreen,
+  // A roster with per-row state that only exists until you submit it — not a list of records that
+  // already exist, which is why the registry cannot express it.
+  MarkAttendance: MarkAttendanceScreen,
 };
 
 // Screens that are themselves a nested navigator (Profile pushes to Settings) and so render their

@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard', 'PayrollSettings', 'PayrollStructure', 'PayrollCycle', 'LoanAdvance', 'BonusIncentive', 'Reimbursement', 'ExamAttempt', 'Circular'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard', 'PayrollSettings', 'PayrollStructure', 'PayrollCycle', 'LoanAdvance', 'BonusIncentive', 'Reimbursement', 'ExamAttempt', 'Circular', 'ReportCard'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -2072,6 +2072,21 @@ export const apiSlice = createApi({
       query: ({ id, note }) => ({ url: `/circulars/${id}/acknowledge`, method: 'post', data: { note } }),
       invalidatesTags: ['Circular'],
     }),
+
+    // ── Report cards — consolidated, weighted marksheets built on top of ExamResult. Also
+    // post-dates the archived app.
+    // Both of these return only PUBLISHED cards: an unpublished one is still being worked on by
+    // the exam team and is not the school's word yet.
+    // ReportCard.studentId refs User, not Student — so both of these take a USER id, the same id
+    // homework and attendance use, and NOT the Student._id that the fee endpoints want.
+    getMyReportCards: builder.query({
+      query: () => ({ url: '/report-cards/mine' }),
+      providesTags: ['ReportCard'],
+    }),
+    getChildReportCards: builder.query({
+      query: (childUserId) => ({ url: `/report-cards/child/${childUserId}` }),
+      providesTags: ['ReportCard'],
+    }),
   }),
 });
 
@@ -2489,4 +2504,6 @@ export const {
   useGetMyCircularsQuery,
   useGetCircularQuery,
   useAcknowledgeCircularMutation,
+  useGetMyReportCardsQuery,
+  useGetChildReportCardsQuery,
 } = apiSlice;
