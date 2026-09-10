@@ -3,7 +3,7 @@
 React Native (Expo) app for the school ERP in this repo. One app, **all 24 roles**, driven by the
 same permission data the web portal uses.
 
-Status: **Phases 0–3 done.** Phase 4 next.
+Status: **Phases 0–4 done.** Phase 5 next.
 
 ---
 
@@ -175,9 +175,72 @@ a whole back-and-forth is not rendered in one scroll), composing a brand-new mes
 recipient picker over `/messages/recipients`), online fee payment, and homework file attachments
 (needs `expo-document-picker`).
 
-### Phase 4 — Tier B: academics
-Exams / results / admit card, Library, Transport + live bus map, Online classes (opens the
-school's own meeting link — the app hosts no video), Study material, PTM, Events, Surveys.
+### Phase 4 — Tier B: academics ✅
+
+| Module | State |
+| --- | --- |
+| **Events** | ✅ new — school calendar; "upcoming" keeps a multi-day event that is still running |
+| **Results** | ✅ new — per-exam marks, one row per subject |
+| **Library** | ✅ new — books you are holding, with due-soon and overdue warnings |
+| **Study material** | ✅ new — notes and links, opened in the device browser |
+| **Online classes** | ✅ new — endpoints + descriptor; the app hosts no video (see below) |
+| **Surveys** | ✅ new — bespoke, because the form is built from the survey's own questions |
+| **PTM** | ✅ new — bespoke: bookings list + slot picker grouped by session |
+| **Live bus** | ✅ new — bespoke, **no map yet** (a real decision, see below) |
+| **Exams** | ✅ new — the exam schedule. Admit cards still ⬜ (per-exam, needs its own fetch) |
+
+**Two more engine additions**, both forced by real modules rather than invented:
+
+- **`stayOnSuccess`** — most actions change the record, so leaving for the list afterwards is
+  right. Opening a link does not: popping the screen behind the user means they come back from the
+  browser to the wrong place.
+- **`onSuccess(result)`** — for actions whose whole point is the response. Joining an online class
+  returns the meeting link, and that link is deliberately not in the list row.
+
+**Online classes host no video.** The school pastes its own Meet/Zoom/Teams link and the app hands
+it to the device. Two things the backend is careful about and this module preserves:
+
+- A learner's list arrives with `meetingLink` **nulled** until the link is due to open, plus
+  `canJoin` and `joinOpensAt` — so the button is honest about when class starts instead of failing
+  on tap, and the link is fetched from the join response, never cached in a row.
+- Joining is **not attendance**. The backend records a "join" — that someone opened a link — and
+  never calls it attendance, because opening a link is not sitting through a lesson. Nothing here
+  implies otherwise.
+
+**The live bus screen has no map, on purpose.** Drawing one needs a native maps dependency and
+a decision that is the school's to make: Google Maps on Android wants an API key per build, while
+the web portal draws its map with Leaflet on OpenStreetMap, which would mean a WebView here
+instead. Until that is settled the screen answers the question a parent actually opens it for —
+*has it left, where is it, when does it reach my stop* — in words, which needs no map.
+
+Everything it shows is the backend's own honest reporting, passed through rather than smoothed:
+
+- The only position source is the **driver's phone**. No hardware tracker — when their app is
+  closed or out of signal, positions simply stop.
+- A fix older than a few minutes is **labelled as old**, and the speed from that fix is withheld
+  rather than shown next to a stale timestamp.
+- The ETA is an **estimate** (straight lines between stops, a flat assumed speed) and says so.
+- When there is no ETA the backend explains *why* — the stop is not on the route map, the bus has
+  not reported yet, the stop is already passed — and that reason is shown verbatim.
+- **No polling.** The API is rate limited at ~800 requests per window; a bus screen left open on a
+  timer would eat it. Pull to refresh.
+
+**PTM is bespoke** because its two halves read different endpoints with different shapes
+(`/ptm/slots/my-bookings` vs `/ptm/slots/available?schoolClassId=&sectionId=`), and the second
+needs the child's class and section rather than just an id — more than `scope` hands a descriptor.
+Booking is also picking one of many live slots grouped by session, which `FormSheet` cannot express.
+Note the id: `bookSlot` wants **Student._id**, joining Fees and Timetable on that side of the split.
+
+**Student and Parent got their own `MyTransport` nav key.** They previously shared `Transport` with
+Transport Manager, where it means the fleet — same key, two meanings. Splitting it is what let the
+bus screen exist without a role gate.
+
+**Surveys are bespoke** because the form is built at runtime from the survey's own questions —
+seven types (rating, yes/no, single and multi choice, number, short and long text), each with its
+own control. `FormSheet` takes a fixed field list declared up front and cannot express that. Two
+details that matter: a "No" answer is stored by identity (`value === false`), not truthiness, or a
+submitted "No" would render as unanswered; and the anonymity note is shown **before** answering,
+because anonymity is why someone answers honestly and irreversibility is its price.
 
 ### Phase 5 — Tier C: school operations
 Students, staff, admissions (+ public admission tracker), HR (recruitment + appraisal),

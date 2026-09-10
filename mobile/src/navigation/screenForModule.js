@@ -2,6 +2,9 @@ import { DashboardScreen } from '../screens/DashboardScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { TimetableScreen } from '../screens/custom/TimetableScreen';
 import { MarkAttendanceScreen } from '../screens/custom/MarkAttendanceScreen';
+import { SurveysScreen } from '../screens/custom/SurveysScreen';
+import { PTMScreen } from '../screens/custom/PTMScreen';
+import { MyBusScreen } from '../screens/custom/MyBusScreen';
 import { GroupMenuScreen } from '../screens/GroupMenuScreen';
 import { ModulePlaceholderScreen } from '../screens/ModulePlaceholderScreen';
 import { MODULE_REGISTRY } from '../modules/registry';
@@ -20,11 +23,20 @@ const CUSTOM_SCREENS = {
   // A roster with per-row state that only exists until you submit it — not a list of records that
   // already exist, which is why the registry cannot express it.
   MarkAttendance: MarkAttendanceScreen,
+  // The form is built from the survey's own questions at runtime — seven question types — which
+  // a fixed FormSheet field list cannot express.
+  Surveys: SurveysScreen,
+  // Two endpoints with different shapes, and booking means picking one of many live slots
+  // grouped by session — more than a descriptor can express.
+  PTMBooking: PTMScreen,
+  // A live-position state machine, not a record — and the map itself is a pending decision
+  // (Google Maps API key vs a Leaflet WebView). See the screen header.
+  MyTransport: MyBusScreen,
 };
 
 // Screens that are themselves a nested navigator (Profile pushes to Settings) and so render their
 // own header — the outer Tab/Stack must not also show one, or the user sees two stacked headers.
-export const SELF_HEADERED_KEYS = new Set(['Profile']);
+export const SELF_HEADERED_KEYS = new Set(['Profile', 'Surveys', 'PTMBooking']);
 
 /** True for anything rendering its own nested Stack.Navigator — the named screens above, every
  * submenu group (GroupMenuScreen), and any registry module that gained a detail or form screen

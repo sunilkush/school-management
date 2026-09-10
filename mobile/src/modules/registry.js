@@ -8,6 +8,12 @@ import { attendanceModule } from './definitions/attendance';
 import { feesModule } from './definitions/fees';
 import { reportCardsModule } from './definitions/reportCards';
 import { messagesModule } from './definitions/messages';
+import { eventsModule } from './definitions/events';
+import { libraryModule } from './definitions/library';
+import { gradesModule } from './definitions/grades';
+import { studyMaterialsModule } from './definitions/studyMaterials';
+import { onlineClassesModule } from './definitions/onlineClasses';
+import { examsModule } from './definitions/exams';
 
 /**
  * Declarative module registry — the reason this app is not 294 hand-written screens.
@@ -59,6 +65,12 @@ const DEFINITIONS = [
   feesModule,
   reportCardsModule,
   messagesModule,
+  eventsModule,
+  libraryModule,
+  gradesModule,
+  studyMaterialsModule,
+  onlineClassesModule,
+  examsModule,
 ];
 
 export const MODULE_REGISTRY = Object.fromEntries(

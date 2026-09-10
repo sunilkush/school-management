@@ -99,7 +99,17 @@ export function createDetailScreen(descriptor) {
                   : () => {
                       run(action.buildArg(record, ctx))
                         .unwrap()
-                        .then(() => navigation.goBack())
+                        // Most actions change the record, so leaving is right — the list behind is
+                        // what you want next. `stayOnSuccess` is for the ones that don't (opening
+                        // a link hands off to the browser; popping this screen behind the user's
+                        // back means they return to the wrong place).
+                        // `onSuccess` receives what the server sent back, for actions whose whole
+                        // point is the response — joining an online class returns the meeting link.
+                        .then((result) => {
+                          const followUp = action.onSuccess?.(result, record);
+                          if (!action.stayOnSuccess) navigation.goBack();
+                          return followUp;
+                        })
                         // errorMiddleware.js already alerts on any rejected mutation — swallowing
                         // here only stops the unhandled-rejection warning, it does not hide it.
                         .catch(() => {});

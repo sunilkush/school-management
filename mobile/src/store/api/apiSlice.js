@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard', 'PayrollSettings', 'PayrollStructure', 'PayrollCycle', 'LoanAdvance', 'BonusIncentive', 'Reimbursement', 'ExamAttempt', 'Circular', 'ReportCard'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard', 'PayrollSettings', 'PayrollStructure', 'PayrollCycle', 'LoanAdvance', 'BonusIncentive', 'Reimbursement', 'ExamAttempt', 'Circular', 'ReportCard', 'OnlineClass', 'Survey', 'TransportTrip'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -2087,6 +2087,50 @@ export const apiSlice = createApi({
       query: (childUserId) => ({ url: `/report-cards/child/${childUserId}` }),
       providesTags: ['ReportCard'],
     }),
+
+    // ── Exam results. Distinct from report cards: this is per-exam marks as published, while a
+    // report card is the weighted consolidation across exams. Published results only.
+    getMyGrades: builder.query({
+      query: () => ({ url: '/student-portal/me/grades' }),
+      providesTags: ['Marks'],
+    }),
+
+    // ── Online classes. The app hosts no video: the school pastes its own Meet/Zoom link and this
+    // hands it to the device. For a student or parent the list arrives with `meetingLink` nulled
+    // and `canJoin`/`joinOpensAt` set until the link is due to open, so the UI never has a link it
+    // is not supposed to show yet.
+    getOnlineClasses: builder.query({
+      query: (params) => ({ url: '/online-classes', params }),
+      providesTags: ['OnlineClass'],
+    }),
+    // Records that this person opened the link and hands the link back. Deliberately NOT
+    // attendance — the backend calls this a "join" everywhere for that reason.
+    joinOnlineClass: builder.mutation({
+      query: (id) => ({ url: `/online-classes/${id}/join`, method: 'post' }),
+      invalidatesTags: ['OnlineClass'],
+    }),
+
+    // ── Surveys. The respondent's side only: which open surveys were sent to me, and answering
+    // one. `hasResponded` comes from a separate SurveyParticipation record, which is how the
+    // backend can still tell who has not replied WITHOUT being able to link an anonymous survey's
+    // answers back to a person.
+    getMySurveys: builder.query({
+      query: () => ({ url: '/surveys/mine' }),
+      providesTags: ['Survey'],
+    }),
+    submitSurveyResponse: builder.mutation({
+      query: ({ id, answers }) => ({ url: `/surveys/${id}/respond`, method: 'post', data: { answers } }),
+      invalidatesTags: ['Survey'],
+    }),
+
+    // ── Live bus. Parent/Student only. The response is a small state machine, not a record:
+    // { assigned: false } | { assigned: true, running: false } | { assigned, running, lastLocation,
+    // eta, stops, stopArrivals }. The backend is deliberate about saying WHY there is no ETA
+    // rather than showing a blank, so this is passed through rather than flattened.
+    getMyBus: builder.query({
+      query: () => ({ url: '/transport/trips/my-bus' }),
+      providesTags: ['TransportTrip'],
+    }),
   }),
 });
 
@@ -2506,4 +2550,10 @@ export const {
   useAcknowledgeCircularMutation,
   useGetMyReportCardsQuery,
   useGetChildReportCardsQuery,
+  useGetMyGradesQuery,
+  useGetOnlineClassesQuery,
+  useJoinOnlineClassMutation,
+  useGetMySurveysQuery,
+  useSubmitSurveyResponseMutation,
+  useGetMyBusQuery,
 } = apiSlice;

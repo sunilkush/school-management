@@ -395,3 +395,163 @@ describe('messages descriptor', () => {
     expect(messages.detail.onOpenArg({ _id: 'm1', isRead: true })).toBeNull();
   });
 });
+
+describe('events descriptor', () => {
+  const events = MODULE_REGISTRY.Events;
+
+  it('keeps a multi-day event in "upcoming" while it is still running', () => {
+    const yesterday = new Date(Date.now() - 86400000).toISOString();
+    const tomorrow = new Date(Date.now() + 86400000).toISOString();
+
+    // Started yesterday, ends tomorrow — still upcoming, not gone.
+    expect(events.filter.apply({ startDate: yesterday, endDate: tomorrow }, 'upcoming')).toBe(true);
+    // Finished.
+    expect(events.filter.apply({ startDate: yesterday, endDate: yesterday }, 'upcoming')).toBe(false);
+    // No dates at all cannot be claimed as upcoming.
+    expect(events.filter.apply({}, 'upcoming')).toBe(false);
+  });
+
+  it('collapses a single-day span instead of printing the same date twice', () => {
+    const day = '2026-09-15T10:00:00.000Z';
+    expect(events.row({ title: 'x', startDate: day, endDate: day, allDay: true }).meta).not.toContain('–');
+  });
+});
+
+describe('library descriptor', () => {
+  const library = MODULE_REGISTRY.Library;
+
+  it('only shows a fine tile when something is actually owed', () => {
+    const labels = (rows) => library.summary(rows).map((t) => t.label);
+    expect(labels([{ status: 'Issued', fineAmount: 0 }])).not.toContain('Fine due');
+    expect(labels([{ status: 'Overdue', fineAmount: 40 }])).toContain('Fine due');
+  });
+
+  it('warns before a book is late, not only after', () => {
+    const soon = new Date(Date.now() + 2 * 86400000).toISOString();
+    const later = new Date(Date.now() + 20 * 86400000).toISOString();
+
+    expect(library.row({ status: 'Issued', dueDate: soon }).badge.tone).toBe('pending');
+    // Plenty of time left — no badge nagging the student.
+    expect(library.row({ status: 'Issued', dueDate: later }).badge).toBeNull();
+    expect(library.row({ status: 'Overdue', dueDate: soon, fineAmount: 10 }).badge.tone).toBe('overdue');
+  });
+});
+
+describe('results descriptor', () => {
+  const grades = MODULE_REGISTRY.Grades;
+
+  it('reads the wrapped list shape', () => {
+    expect(grades.selectRows({ studentId: 's', grades: [{ _id: 'a' }] })).toHaveLength(1);
+    expect(grades.selectRows(undefined)).toEqual([]);
+  });
+
+  it('averages published results and only flags failures when there are some', () => {
+    const labels = (rows) => grades.summary(rows).map((t) => t.label);
+    expect(labels([{ percentage: 80, resultStatus: 'PASS' }])).not.toContain('Not passed');
+    expect(labels([{ percentage: 30, resultStatus: 'FAIL' }])).toContain('Not passed');
+
+    const avg = grades.summary([{ percentage: 80 }, { percentage: 60 }]).find((t) => t.label === 'Average');
+    expect(avg.value).toBe(70);
+  });
+
+  it('gives each subject its own row with marks out of the total', () => {
+    const fields = grades.detail.fields({
+      subjects: [{ subjectName: 'Maths', obtainedMarks: 42, totalMarks: 50, isPassed: true }],
+      totalObtainedMarks: 42, totalMaximumMarks: 50, percentage: 84, grade: 'A',
+    });
+    expect(fields.find((f) => f.label === 'Maths').value).toBe('42 / 50');
+    expect(fields.find((f) => f.label === 'Total').value).toBe('42 / 50 · 84% · Grade A');
+  });
+});
+
+describe('online classes descriptor', () => {
+  const classes = MODULE_REGISTRY.OnlineClasses;
+
+  it('offers Join only when the backend says the link is open', () => {
+    const join = classes.detail.actions.find((a) => a.key === 'join');
+    const ctx = ctxFor('Student');
+
+    expect(join.allow(ctx, { status: 'scheduled', canJoin: true })).toBe(true);
+    // The link is not open yet — the backend would 403 this.
+    expect(join.allow(ctx, { status: 'scheduled', canJoin: false })).toBe(false);
+    expect(join.allow(ctx, { status: 'cancelled', canJoin: true })).toBe(false);
+  });
+
+  it('stays on the class after joining, since the passcode may still be needed', () => {
+    const join = classes.detail.actions.find((a) => a.key === 'join');
+    expect(join.stayOnSuccess).toBe(true);
+  });
+
+  it('takes the meeting link from the join RESPONSE, never from the list row', () => {
+    const join = classes.detail.actions.find((a) => a.key === 'join');
+    // buildArg sends only the id — the link is not something the client supplies or caches.
+    expect(join.buildArg({ _id: 'c1', meetingLink: 'https://stale.example' })).toBe('c1');
+    expect(typeof join.onSuccess).toBe('function');
+  });
+});
+
+describe('study materials descriptor', () => {
+  const materials = MODULE_REGISTRY.StudyMaterials;
+
+  it('prefers an external link over an uploaded file when both exist', () => {
+    const open = materials.detail.actions.find((a) => a.key === 'open');
+    expect(open.buildArg({ externalLink: 'https://a', fileUrl: 'https://b' })).toBe('https://a');
+    expect(open.buildArg({ fileUrl: 'https://b' })).toBe('https://b');
+  });
+
+  it('offers nothing to open when there is neither a link nor a file', () => {
+    const open = materials.detail.actions.find((a) => a.key === 'open');
+    expect(open.allow(ctxFor('Student'), {})).toBe(false);
+    expect(open.allow(ctxFor('Student'), { fileUrl: 'https://b' })).toBe(true);
+  });
+});
+
+describe('surveys screen wiring', () => {
+  it('is bespoke, not a descriptor — the form is built from the survey’s own questions', () => {
+    expect(moduleDescriptor('Surveys')).toBeNull();
+    expect(screenForModule({ key: 'Surveys' })).not.toBe(ModulePlaceholderScreen);
+    // It renders its own stack (list -> respond), so the outer navigator must not add a header.
+    expect(isSelfHeadered({ key: 'Surveys' })).toBe(true);
+  });
+
+  it('routes the other bespoke Tier A screens too', () => {
+    for (const key of ['Timetable', 'MarkAttendance']) {
+      expect(screenForModule({ key })).not.toBe(ModulePlaceholderScreen);
+    }
+  });
+});
+
+describe('exams descriptor', () => {
+  const exams = MODULE_REGISTRY.Exams;
+
+  it('reads the paginated list shape', () => {
+    expect(exams.selectRows({ exams: [{ _id: 'a' }], pagination: {} })).toHaveLength(1);
+    expect(exams.selectRows(undefined)).toEqual([]);
+  });
+
+  it('does not leave a past exam sitting in "upcoming" forever', () => {
+    const longAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+    const soon = new Date(Date.now() + 3 * 86400000).toISOString();
+
+    expect(exams.filter.apply({ examDate: soon, status: 'published' }, 'upcoming')).toBe(true);
+    expect(exams.filter.apply({ examDate: longAgo, status: 'published' }, 'upcoming')).toBe(false);
+    // Marked completed by the school — done regardless of date.
+    expect(exams.filter.apply({ examDate: soon, status: 'completed' }, 'upcoming')).toBe(false);
+    expect(exams.filter.apply({ examDate: longAgo, status: 'completed' }, 'completed')).toBe(true);
+  });
+});
+
+describe('bespoke Tier B screens', () => {
+  it('routes PTM booking and the live bus to real screens, not the placeholder', () => {
+    for (const key of ['PTMBooking', 'MyTransport']) {
+      expect(moduleDescriptor(key)).toBeNull();
+      expect(screenForModule({ key })).not.toBe(ModulePlaceholderScreen);
+    }
+  });
+
+  it('lets PTM render its own header, since it is a two-screen stack', () => {
+    expect(isSelfHeadered({ key: 'PTMBooking' })).toBe(true);
+    // The bus screen is a single screen — the outer navigator still owns its header.
+    expect(isSelfHeadered({ key: 'MyTransport' })).toBe(false);
+  });
+});

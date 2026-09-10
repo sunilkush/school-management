@@ -8,7 +8,7 @@ import { MODULE_META, NAV_CONFIG } from '../constants/roles';
 // Circulars joins this list for the same reason as the rest: circular.routes.js gates reading on
 // role NAME (its EVERYONE list covers all 24 roles), never on the granular permissions array, so
 // no role has a 'Circulars' permission entry and filtering on one would hide it from everybody.
-const ALWAYS_VISIBLE = new Set(['Dashboard', 'Profile', 'Notifications', 'Messages', 'Leave', 'Payroll', 'Events', 'Circulars']);
+const ALWAYS_VISIBLE = new Set(['Dashboard', 'Profile', 'Notifications', 'Messages', 'Leave', 'Payroll', 'Events', 'Circulars', 'Surveys']);
 
 // Mirrors the web app's mobile BottomNav (frontend/src/components/mobile/BottomNav.jsx), which
 // always shows at most 4 quick-access tabs + a 5th "Menu" overflow — never a side drawer. Only
