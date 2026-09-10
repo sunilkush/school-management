@@ -1,0 +1,11 @@
+.expo/
+.expo-shared/
+ios/
+android/
+dist/
+*.jks
+*.p12
+*.key
+*.mobileprovision
+web-build/
+.env
