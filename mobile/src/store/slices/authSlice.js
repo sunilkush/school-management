@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../../api/authApi';
 import { secureStorage } from '../../utils/secureStorage';
 import { clearAuthTokens, hydrateAuthTokens, setAuthTokens } from '../../api/client';
+import { API_BASE_URL } from '../../constants/config';
 
 const initialState = {
   status: 'idle', // idle | loading | authenticated | unauthenticated | error
@@ -25,6 +26,25 @@ export const bootstrapSession = createAsyncThunk('auth/bootstrap', async (_, { r
   }
 });
 
+/**
+ * Says what actually went wrong instead of always blaming the password.
+ *
+ * When the phone cannot reach the server at all, axios rejects with no `response` — and the old
+ * message ("Check your email and password") sent people off retyping a password that was fine.
+ * The usual cause is the API URL: `EXPO_PUBLIC_API_URL` unset means it falls back to `localhost`,
+ * which on a phone is the phone itself, not the machine running the backend.
+ */
+export function describeLoginFailure(error) {
+  if (error?.response) {
+    // The server answered, so it gets to say why.
+    return error.response.data?.message || 'Unable to sign in. Check your email and password.';
+  }
+  if (error?.code === 'ECONNABORTED') {
+    return 'The server took too long to answer. Check that you are on the same network as it.';
+  }
+  return `Could not reach the server at ${API_BASE_URL}. Check that the backend is running and that this device is on the same network.`;
+}
+
 export const login = createAsyncThunk('auth/login', async ({ email, password }, { rejectWithValue }) => {
   try {
     const response = await authApi.login(email, password);
@@ -33,7 +53,7 @@ export const login = createAsyncThunk('auth/login', async ({ email, password }, 
     await secureStorage.setTokens({ accessToken, refreshToken });
     return user;
   } catch (error) {
-    return rejectWithValue(error?.response?.data?.message || 'Unable to sign in. Check your email and password.');
+    return rejectWithValue(describeLoginFailure(error));
   }
 });
 

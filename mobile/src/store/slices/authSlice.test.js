@@ -1,4 +1,5 @@
-import reducer, { sessionExpired } from './authSlice';
+import reducer, { sessionExpired, describeLoginFailure } from './authSlice';
+import { API_BASE_URL } from '../../constants/config';
 
 const initialState = { status: 'idle', user: null, role: null, permissions: [], error: null };
 
@@ -57,5 +58,25 @@ describe('authSlice reducer', () => {
     const state = reducer(authenticated, { type: 'auth/updateProfile/fulfilled', payload: updated });
     expect(state.status).toBe('authenticated');
     expect(state.user.name).toBe('Asha V. Verma');
+  });
+});
+
+describe('describeLoginFailure', () => {
+  it('lets the server speak when it actually answered', () => {
+    expect(describeLoginFailure({ response: { data: { message: 'Invalid credentials' } } })).toBe('Invalid credentials');
+  });
+
+  it('does not blame the password when the server was never reached', () => {
+    // axios rejects with no `response` on a network failure. The old message told people to check
+    // a password that was fine, while the real cause was usually an unreachable API URL.
+    const message = describeLoginFailure({ message: 'Network Error' });
+    expect(message).not.toMatch(/password/i);
+    expect(message).toMatch(/Could not reach the server/i);
+    // Naming the URL is what makes this actionable — it is nearly always wrong, not unreachable.
+    expect(message).toContain(API_BASE_URL);
+  });
+
+  it('calls a timeout a timeout', () => {
+    expect(describeLoginFailure({ code: 'ECONNABORTED' })).toMatch(/too long/i);
   });
 });

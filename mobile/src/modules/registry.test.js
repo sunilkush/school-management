@@ -16,9 +16,12 @@ describe('module registry wiring', () => {
     }
   });
 
+  // GlobalConfig is a deliberate never-build (platform-wide switches do not belong behind a
+  // single tap on a phone — see PLAN.md), so unlike 'Hostel' and 'SubscriptionPlans' before it,
+  // this key will not quietly become a real module and break this test.
   it('falls back to the placeholder for a module that has no descriptor yet', () => {
-    expect(moduleDescriptor('Hostel')).toBeNull();
-    expect(screenForModule({ key: 'Hostel' })).toBe(ModulePlaceholderScreen);
+    expect(moduleDescriptor('GlobalConfig')).toBeNull();
+    expect(screenForModule({ key: 'GlobalConfig' })).toBe(ModulePlaceholderScreen);
   });
 
   it('marks modules that became their own stack as self-headered, so no double header renders', () => {
@@ -26,7 +29,7 @@ describe('module registry wiring', () => {
     expect(isSelfHeadered({ key: 'Leave' })).toBe(true);
     expect(isSelfHeadered({ key: 'Students' })).toBe(true);
     // A module with no descriptor is a bare placeholder and must NOT claim its own header.
-    expect(isSelfHeadered({ key: 'Hostel' })).toBe(false);
+    expect(isSelfHeadered({ key: 'GlobalConfig' })).toBe(false);
   });
 });
 
@@ -553,5 +556,360 @@ describe('bespoke Tier B screens', () => {
     expect(isSelfHeadered({ key: 'PTMBooking' })).toBe(true);
     // The bus screen is a single screen — the outer navigator still owns its header.
     expect(isSelfHeadered({ key: 'MyTransport' })).toBe(false);
+  });
+});
+
+describe('Phase 5 — school operations', () => {
+  it('resolves an aliased nav key to the very same screen, not a second one', () => {
+    // Receptionist's sidebar says "Enquiries" where School Admin's says "Admission Enquiries".
+    expect(screenForModule({ key: 'Enquiries' })).toBe(screenForModule({ key: 'AdmissionInquiries' }));
+    // Same for the warden's "Hostel" vs the room register.
+    expect(screenForModule({ key: 'Hostel' })).toBe(screenForModule({ key: 'Rooms' }));
+  });
+
+  it('keeps the office registers away from families, and the family views open to them', () => {
+    const parent = ctxFor('Parent');
+    const admin = ctxFor('School Admin');
+
+    expect(MODULE_REGISTRY.Certificates.servesRole(parent)).toBe(false);
+    expect(MODULE_REGISTRY.Certificates.servesRole(admin)).toBe(true);
+    // A family's own copies are ungated — they only ever return that family's documents.
+    expect(MODULE_REGISTRY.MyCertificates.servesRole).toBeUndefined();
+    expect(MODULE_REGISTRY.MyIdCard.servesRole).toBeUndefined();
+  });
+
+  it('offers no way to issue a certificate or an ID card from the app', () => {
+    for (const key of ['Certificates', 'MyCertificates', 'IDCards', 'MyIdCard']) {
+      expect(MODULE_REGISTRY[key].create).toBeUndefined();
+    }
+    // Revoking is the one act that might genuinely be urgent away from a desk.
+    expect(MODULE_REGISTRY.Certificates.detail.actions).toHaveLength(1);
+    expect(MODULE_REGISTRY.Certificates.detail.actions[0].key).toBe('revoke');
+  });
+
+  it('tells an expired ID card apart from a deactivated one', () => {
+    const badge = MODULE_REGISTRY.MyIdCard.row;
+    const past = new Date(Date.now() - 86400000).toISOString();
+    const future = new Date(Date.now() + 86400000).toISOString();
+
+    expect(badge({ fullName: 'A', validUntil: past }).badge.label).toBe('expired');
+    expect(badge({ fullName: 'A', validUntil: future }).badge.label).toBe('active');
+    // Deactivated wins over the date — the card is void either way, but for a different reason.
+    expect(badge({ fullName: 'A', validUntil: future, isActive: false }).badge.label).toBe('deactivated');
+  });
+
+  it('counts free hostel beds from capacity minus occupants', () => {
+    const rows = [
+      { roomNumber: '1', capacity: 4, students: [{ name: 'A' }, { name: 'B' }] },
+      { roomNumber: '2', capacity: 2, students: [{ name: 'C' }, { name: 'D' }] },
+    ];
+    const byLabel = Object.fromEntries(MODULE_REGISTRY.Rooms.summary(rows).map((s) => [s.label, s.value]));
+    expect(byLabel.Beds).toBe(6);
+    expect(byLabel.Occupied).toBe(4);
+    expect(byLabel.Free).toBe(2);
+
+    // A full room says so; one with space says how much.
+    expect(MODULE_REGISTRY.Rooms.row(rows[1]).badge.label).toBe('full');
+    expect(MODULE_REGISTRY.Rooms.row(rows[0]).badge.label).toBe('2 free');
+  });
+
+  it('flags low stock from the server’s own per-item threshold, not a guessed rule', () => {
+    const low = { name: 'Chalk', lowStock: true, quantity: 2, minThreshold: 5 };
+    const fine = { name: 'Paper', lowStock: false, quantity: 900, minThreshold: 50 };
+    expect(MODULE_REGISTRY.Inventory.filter.apply(low, 'low')).toBe(true);
+    expect(MODULE_REGISTRY.Inventory.filter.apply(fine, 'low')).toBe(false);
+    expect(MODULE_REGISTRY.Inventory.row(low).badge.label).toBe('low stock');
+  });
+
+  it('lets a guard log an entry and tap that person out, but nothing else', () => {
+    const visitors = MODULE_REGISTRY.VisitorLog;
+    const security = ctxFor('Security');
+
+    expect(visitors.create.allow(security)).toBe(true);
+    expect(visitors.create.allow(ctxFor('Teacher'))).toBe(false);
+
+    const exit = visitors.detail.actions.find((a) => a.key === 'exit');
+    expect(exit.allow(security, { status: 'Inside' })).toBe(true);
+    // Already gone — nothing to do.
+    expect(exit.allow(security, { status: 'Exited' })).toBe(false);
+  });
+
+  it('will not let an incident be closed without saying what was done', () => {
+    const resolve = MODULE_REGISTRY.Discipline.detail.actions.find((a) => a.key === 'resolve');
+    expect(resolve.fields[0].required).toBe(true);
+    expect(resolve.buildArg({ _id: 'i1' }, ctxFor('Teacher'), { actionTaken: ' spoke to parent ' })).toEqual({
+      id: 'i1',
+      status: 'Resolved',
+      actionTaken: 'spoke to parent',
+    });
+  });
+
+  it('counts a referred child whose parent has not been told', () => {
+    const rows = [
+      { referredToHospital: true, parentNotified: false, status: 'Open' },
+      { referredToHospital: true, parentNotified: true, status: 'Open' },
+      { referredToHospital: false, parentNotified: false, status: 'Open' },
+    ];
+    const tile = MODULE_REGISTRY.HealthRecords.summary(rows).find((s) => s.label === 'Referred, parent not told');
+    expect(tile.value).toBe(1);
+  });
+
+  it('records that a parent was called without pretending to place the call', () => {
+    const notify = MODULE_REGISTRY.HealthRecords.detail.actions.find((a) => a.key === 'notify');
+    const arg = notify.buildArg({ _id: 'v1' });
+    expect(arg.parentNotified).toBe(true);
+    expect(arg.parentNotifiedAt).toBeTruthy();
+    expect(notify.allow(ctxFor('Medical Officer'), { parentNotified: true })).toBe(false);
+  });
+
+  it('gives payslips no actions at all — payroll is run by accounts, not by the employee', () => {
+    expect(MODULE_REGISTRY.Payroll.create).toBeUndefined();
+    expect(MODULE_REGISTRY.Payroll.detail.actions).toBeUndefined();
+  });
+
+  it('counts an admission follow-up as overdue only while the enquiry is still live', () => {
+    const past = new Date(Date.now() - 86400000).toISOString();
+    const rows = [
+      { status: 'contacted', followUpDate: past },
+      { status: 'enrolled', followUpDate: past },
+      { status: 'rejected', followUpDate: past },
+    ];
+    const tile = MODULE_REGISTRY.AdmissionInquiries.summary(rows).find((s) => s.label === 'Follow-up overdue');
+    expect(tile.value).toBe(1);
+  });
+
+  it('stops offering to move an enquiry once it is enrolled or rejected', () => {
+    const advance = MODULE_REGISTRY.AdmissionInquiries.detail.actions.find((a) => a.key === 'advance');
+    const reception = ctxFor('Receptionist');
+    expect(advance.allow(reception, { status: 'new' })).toBe(true);
+    expect(advance.allow(reception, { status: 'enrolled' })).toBe(false);
+    expect(advance.allow(reception, { status: 'rejected' })).toBe(false);
+  });
+
+  it('sells nothing from the canteen — it is a price list, not a shop', () => {
+    expect(MODULE_REGISTRY.Canteen.create).toBeUndefined();
+    expect(MODULE_REGISTRY.Canteen.detail.actions).toBeUndefined();
+    expect(MODULE_REGISTRY.Canteen.footerNote).toMatch(/not available/i);
+  });
+});
+
+describe('HR', () => {
+  const appraisal = MODULE_REGISTRY.MyAppraisal;
+
+  it('treats "no appraisal open" as an empty list, not an error', () => {
+    expect(appraisal.selectRows(null)).toEqual([]);
+    expect(appraisal.selectRows({ _id: 'r1' })).toHaveLength(1);
+  });
+
+  it('never merges the two opinions into one score', () => {
+    const review = {
+      status: 'finalised',
+      selfScores: [{ criterion: 'Punctuality', score: 5 }],
+      reviewerScores: [{ criterion: 'Punctuality', score: 3 }],
+    };
+    const labels = appraisal.detail.fields(review).map((f) => f.label);
+    // Both survive, separately labelled — there is no averaged "Punctuality: 4".
+    expect(labels).toContain('You rated: Punctuality');
+    expect(labels).toContain('Reviewer rated: Punctuality');
+  });
+
+  it('withholds the reviewer’s half until the review is finalised, and says so', () => {
+    const inProgress = {
+      status: 'self_submitted',
+      selfScores: [{ criterion: 'Punctuality', score: 5 }],
+      reviewerScores: [{ criterion: 'Punctuality', score: 3 }],
+      reviewerComment: 'not ready',
+      overallScore: 4,
+      goals: ['x'],
+    };
+    const fields = appraisal.detail.fields(inProgress);
+    const byLabel = Object.fromEntries(fields.map((f) => [f.label, f.value]));
+
+    // Your own scores are always yours to see.
+    expect(fields.map((f) => f.label)).toContain('You rated: Punctuality');
+    // The reviewer's are not shown at all before finalisation.
+    expect(fields.map((f) => f.label)).not.toContain('Reviewer rated: Punctuality');
+    expect(byLabel['Reviewer’s comment']).toBeNull();
+    expect(byLabel['Overall score']).toBeNull();
+    // And the screen explains the gap rather than leaving blank rows.
+    expect(byLabel['Your reviewer’s assessment']).toMatch(/finalised/i);
+  });
+
+  it('offers no way to submit the self-assessment from the app', () => {
+    expect(appraisal.create).toBeUndefined();
+    expect(appraisal.detail.actions).toBeUndefined();
+    expect(appraisal.footerNote).toMatch(/web portal/i);
+  });
+
+  it('counts recruitment candidates still in the running, not everyone who ever applied', () => {
+    const rows = [
+      { status: 'open', openings: 2, applicants: { total: 40, active: 5, hired: 1 } },
+      { status: 'closed', openings: 3, applicants: { total: 10, active: 0, hired: 3 } },
+    ];
+    const byLabel = Object.fromEntries(MODULE_REGISTRY.Recruitment.summary(rows).map((s) => [s.label, s.value]));
+    // Only open postings' seats count as openings.
+    expect(byLabel.Openings).toBe(2);
+    expect(byLabel['Candidates in play']).toBe(5);
+    expect(MODULE_REGISTRY.Recruitment.row(rows[0]).meta).toContain('5 in play of 40 applied');
+  });
+
+  it('lets coordinators read recruitment but keeps the directory to the office', () => {
+    expect(MODULE_REGISTRY.Recruitment.servesRole(ctxFor('Subject Coordinator'))).toBe(true);
+    expect(MODULE_REGISTRY.Recruitment.servesRole(ctxFor('Teacher'))).toBe(false);
+    // The staff directory is narrower than the recruitment pipeline.
+    expect(MODULE_REGISTRY.Teachers.servesRole(ctxFor('Subject Coordinator'))).toBe(false);
+    expect(MODULE_REGISTRY.Teachers.servesRole(ctxFor('School Admin'))).toBe(true);
+  });
+
+  it('points the directory’s other nav labels at the same screen', () => {
+    expect(screenForModule({ key: 'Users' })).toBe(screenForModule({ key: 'Teachers' }));
+    expect(screenForModule({ key: 'Members' })).toBe(screenForModule({ key: 'Teachers' }));
+  });
+});
+
+describe('Phase 6 — finance', () => {
+  it('keeps the books read-only — a posted entry is corrected by reversal, never edited', () => {
+    for (const key of ['ChartOfAccounts', 'Journal', 'TrialBalance']) {
+      expect(MODULE_REGISTRY[key].create).toBeUndefined();
+      expect(MODULE_REGISTRY[key].detail?.actions).toBeUndefined();
+    }
+  });
+
+  it('lets leadership read the books without being able to touch them', () => {
+    const ledger = MODULE_REGISTRY.Journal;
+    expect(ledger.servesRole(ctxFor('Principal'))).toBe(true);
+    expect(ledger.servesRole(ctxFor('Accountant'))).toBe(true);
+    expect(ledger.servesRole(ctxFor('Teacher'))).toBe(false);
+  });
+
+  it('spells out both sides of a journal entry instead of collapsing it to one total', () => {
+    const entry = {
+      entryNumber: 'JE-1',
+      lines: [
+        { debit: 5000, credit: 0, accountId: { code: '1001', name: 'Bank' } },
+        { debit: 0, credit: 5000, accountId: { code: '4001', name: 'Tuition Fee' } },
+      ],
+    };
+    const labels = MODULE_REGISTRY.Journal.detail.fields(entry).map((f) => f.label);
+    expect(labels).toContain('Debit · 1001 Bank');
+    expect(labels).toContain('Credit · 4001 Tuition Fee');
+  });
+
+  it('says out loud when the trial balance does not balance', () => {
+    const balanced = [{ debit: 100, credit: 60 }, { debit: 0, credit: 40 }];
+    const broken = [{ debit: 100, credit: 60 }, { debit: 0, credit: 30 }];
+
+    expect(MODULE_REGISTRY.TrialBalance.summary(balanced).map((s) => s.label)).toContain('Balanced');
+    const bad = MODULE_REGISTRY.TrialBalance.summary(broken).find((s) => s.label === 'OUT OF BALANCE');
+    expect(bad).toBeTruthy();
+    expect(bad.value).toBe(10);
+  });
+
+  it('admits the trial-balance totals only cover what is listed', () => {
+    expect(MODULE_REGISTRY.TrialBalance.footerNote).toMatch(/only the accounts listed/i);
+  });
+
+  it('builds income and expenses from one shape, with their own labels', () => {
+    expect(MODULE_REGISTRY.Income.selectRows({ records: [{ _id: 'a' }] })).toHaveLength(1);
+    expect(MODULE_REGISTRY.Expenses.selectRows(undefined)).toEqual([]);
+
+    const paid = MODULE_REGISTRY.Expenses.detail.fields({ paidTo: 'Vendor Ltd' });
+    expect(paid.map((f) => f.label)).toContain('Paid to');
+    const got = MODULE_REGISTRY.Income.detail.fields({ receivedFrom: 'A Parent' });
+    expect(got.map((f) => f.label)).toContain('Received from');
+  });
+
+  it('trusts the server’s remaining-places count, which already nets off pending', () => {
+    const scheme = {
+      name: 'Merit', value: 20, discountType: 'percent',
+      usage: { approved: 3, pending: 2, maxAwards: 10, remaining: 5, isFull: false },
+    };
+    // 10 - (3 approved + 2 pending) = 5, not 10 - 3.
+    expect(MODULE_REGISTRY.Scholarships.row(scheme).meta).toContain('5 of 10 places left');
+    const used = MODULE_REGISTRY.Scholarships.detail
+      .fields(scheme)
+      .find((f) => f.label === 'Places used');
+    expect(used.value).toMatch(/both count against the cap/);
+  });
+
+  it('shows a percent scheme as a percentage and a flat one as money', () => {
+    expect(MODULE_REGISTRY.Scholarships.row({ value: 20, discountType: 'percent', usage: {} }).meta).toContain('20% off');
+    expect(MODULE_REGISTRY.Scholarships.row({ value: 5000, discountType: 'flat', usage: {} }).meta).toMatch(/5,000 off/);
+  });
+
+  it('keeps the accounts desk from approving its own scholarship requests', () => {
+    const approve = MODULE_REGISTRY.ScholarshipAwards.detail.actions.find((a) => a.key === 'approve');
+    const pending = { status: 'pending' };
+
+    expect(approve.allow(ctxFor('Principal'), pending)).toBe(true);
+    // Accountant raises requests and reads the list, but is not an approver.
+    expect(approve.allow(ctxFor('Accountant'), pending)).toBe(false);
+    expect(MODULE_REGISTRY.ScholarshipAwards.servesRole(ctxFor('Accountant'))).toBe(true);
+  });
+
+  it('requires a reason to reject an award but not to approve one', () => {
+    const actions = MODULE_REGISTRY.ScholarshipAwards.detail.actions;
+    const reject = actions.find((a) => a.key === 'reject');
+    const approve = actions.find((a) => a.key === 'approve');
+
+    expect(reject.fields[0].required).toBe(true);
+    expect(approve.fields[0].required).toBeUndefined();
+    expect(reject.buildArg({ _id: 'a1' }, ctxFor('Principal'), { note: ' no funds left ' })).toEqual({
+      id: 'a1',
+      decision: 'rejected',
+      note: 'no funds left',
+    });
+  });
+});
+
+describe('Phase 7 — the platform tier', () => {
+  it('deliberately does NOT build the destructive platform screens', () => {
+    // These are the screens that killed the previous mobile app by being cloned wholesale. Each is
+    // either irreversible (a restore), or changes every school at once (global config), or grants
+    // access (the permission matrix). They stay on the web portal — see PLAN.md.
+    for (const key of ['GlobalConfig', 'Backups', 'RestoreJobs', 'BackupSchedules', 'Permissions', 'Roles']) {
+      expect(moduleDescriptor(key)).toBeNull();
+    }
+  });
+
+  it('keeps the platform list to Super Admin', () => {
+    expect(MODULE_REGISTRY.Schools.servesRole(ctxFor('Super Admin'))).toBe(true);
+    expect(MODULE_REGISTRY.Schools.servesRole(ctxFor('School Admin'))).toBe(false);
+    expect(MODULE_REGISTRY.SubscriptionPlans.servesRole(ctxFor('School Admin'))).toBe(false);
+  });
+
+  it('will not suspend or cancel a school from the phone', () => {
+    expect(MODULE_REGISTRY.Schools.create).toBeUndefined();
+    expect(MODULE_REGISTRY.Schools.detail.actions).toBeUndefined();
+    expect(MODULE_REGISTRY.Schools.footerNote).toMatch(/web portal/i);
+    // Pricing is a business decision, not a phone tap.
+    expect(MODULE_REGISTRY.SubscriptionPlans.create).toBeUndefined();
+  });
+
+  it('lets a School Admin read the audit log, and points ActivityLogs at the same screen', () => {
+    expect(MODULE_REGISTRY.AuditLogs.servesRole(ctxFor('School Admin'))).toBe(true);
+    expect(MODULE_REGISTRY.AuditLogs.servesRole(ctxFor('Teacher'))).toBe(false);
+    expect(screenForModule({ key: 'ActivityLogs' })).toBe(screenForModule({ key: 'AuditLogs' }));
+  });
+
+  it('flags a failed audit entry rather than letting it read like any other', () => {
+    expect(MODULE_REGISTRY.AuditLogs.row({ actorName: 'A', action: 'login', status: 'failure' }).unread).toBe(true);
+    expect(MODULE_REGISTRY.AuditLogs.row({ actorName: 'A', action: 'login', status: 'success' }).unread).toBe(false);
+  });
+
+  it('lists only students who are NOT ready to file, and names the actual gaps', () => {
+    const compliance = MODULE_REGISTRY.Compliance;
+    expect(compliance.selectRows({ totalStudents: 200, readyStudents: 198, students: [{ studentId: 's1' }] })).toHaveLength(1);
+
+    const row = compliance.row({ name: 'Asha', className: '5', missing: [{ key: 'pen', label: 'PEN' }] });
+    // "Incomplete" on its own tells the office nothing — the missing field is named.
+    expect(row.meta).toBe('Missing: PEN');
+    expect(compliance.emptyLabel).toMatch(/complete/i);
+  });
+
+  it('never claims to submit anything to a government system', () => {
+    // There is no UDISE+ API to integrate with; this is the school's own record-keeping.
+    expect(MODULE_REGISTRY.Compliance.footerNote).toMatch(/nothing is submitted/i);
+    expect(MODULE_REGISTRY.Compliance.footerNote).not.toMatch(/integration/i);
   });
 });

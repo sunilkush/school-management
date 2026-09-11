@@ -15,6 +15,35 @@ import { studyMaterialsModule } from './definitions/studyMaterials';
 import { onlineClassesModule } from './definitions/onlineClasses';
 import { examsModule } from './definitions/exams';
 
+// Phase 5 — Tier C: school operations
+import { inventoryModule } from './definitions/inventory';
+import { visitorsModule } from './definitions/visitors';
+import { disciplineModule } from './definitions/discipline';
+import {
+  certificatesModule,
+  myCertificatesModule,
+  idCardsModule,
+  myIdCardModule,
+} from './definitions/credentials';
+import { payslipsModule } from './definitions/payslips';
+import { admissionsModule } from './definitions/admissions';
+import { healthModule } from './definitions/health';
+import { hostelModule, canteenModule } from './definitions/hostelCanteen';
+import { staffModule, recruitmentModule, myAppraisalModule } from './definitions/hr';
+
+// Phase 6 — Tier D: finance
+import { incomeModule, expensesModule } from './definitions/cashbook';
+import { ledgerAccountsModule, journalModule, trialBalanceModule } from './definitions/ledger';
+import { scholarshipSchemesModule, scholarshipAwardsModule } from './definitions/scholarships';
+
+// Phase 7 — Tier E: the platform
+import {
+  schoolsModule,
+  subscriptionPlansModule,
+  auditLogsModule,
+  complianceModule,
+} from './definitions/platform';
+
 /**
  * Declarative module registry — the reason this app is not 294 hand-written screens.
  *
@@ -41,6 +70,7 @@ import { examsModule } from './definitions/exams';
  *   detail                   { titleFor, fields, badgeFor, actions, useItem?, idFor?, selectItem?,
  *                              useOnOpen?, onOpenArg? }
  *   create                   { allow(ctx), fields, useMutation, buildPayload, validate? }
+ *   aliases                  other nav keys that mean the same feature (two roles, two labels)
  *
  * Rules for adding one:
  *   1. Reuse an existing apiSlice endpoint — ~400 are already defined. Only add one if the backend
@@ -71,13 +101,45 @@ const DEFINITIONS = [
   studyMaterialsModule,
   onlineClassesModule,
   examsModule,
+  inventoryModule,
+  visitorsModule,
+  disciplineModule,
+  certificatesModule,
+  myCertificatesModule,
+  idCardsModule,
+  myIdCardModule,
+  payslipsModule,
+  admissionsModule,
+  healthModule,
+  hostelModule,
+  canteenModule,
+  staffModule,
+  recruitmentModule,
+  myAppraisalModule,
+  incomeModule,
+  expensesModule,
+  ledgerAccountsModule,
+  journalModule,
+  trialBalanceModule,
+  scholarshipSchemesModule,
+  scholarshipAwardsModule,
+  schoolsModule,
+  subscriptionPlansModule,
+  auditLogsModule,
+  complianceModule,
 ];
 
+/**
+ * The web sidebar sometimes gives one feature two different nav keys because two roles call it
+ * two different things — Receptionist's "Enquiries" is School Admin's "Admission Enquiries". A
+ * descriptor can list those other keys in `aliases`, and every one of them resolves to the SAME
+ * screen component, so the two roles share a screen instead of one of them hitting the placeholder.
+ */
 export const MODULE_REGISTRY = Object.fromEntries(
-  DEFINITIONS.map((descriptor) => [
-    descriptor.key,
-    { ...descriptor, screen: createModuleScreen(descriptor) },
-  ])
+  DEFINITIONS.flatMap((descriptor) => {
+    const entry = { ...descriptor, screen: createModuleScreen(descriptor) };
+    return [descriptor.key, ...(descriptor.aliases ?? [])].map((key) => [key, entry]);
+  })
 );
 
 /** Descriptor for a nav key, or null if this module has no declarative screen yet. Anything

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { useDispatch, useSelector } from 'react-redux';
 import { ScreenContainer } from '../components/ui/ScreenContainer';
@@ -11,21 +10,24 @@ import { Panel } from '../components/ui/Panel';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { setThemeMode } from '../store/slices/uiSlice';
 import { APP_NAME } from '../constants/config';
+import { getNotifications, isExpoGo } from '../utils/pushNotifications';
 
+// Under Expo Go there is no notifications module to ask — importing it there is fatal on its own
+// (see utils/pushNotifications.js), so the permission reports as unavailable rather than as denied,
+// which would send someone into Android settings to fix something that is not broken.
 function useNotificationPermission() {
-  const [status, setStatus] = useState('unknown');
-
-  const check = async () => {
-    const result = await Notifications.getPermissionsAsync();
-    setStatus(result.status);
-  };
+  const [status, setStatus] = useState(isExpoGo ? 'unavailable' : 'unknown');
 
   useEffect(() => {
-    check();
+    const notifications = getNotifications();
+    if (!notifications) return;
+    notifications.getPermissionsAsync().then((result) => setStatus(result.status));
   }, []);
 
   const request = async () => {
-    const result = await Notifications.requestPermissionsAsync();
+    const notifications = getNotifications();
+    if (!notifications) return;
+    const result = await notifications.requestPermissionsAsync();
     setStatus(result.status);
   };
 
@@ -76,15 +78,28 @@ export function SettingsScreen() {
         <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>NOTIFICATIONS</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <StatusPill
-            label={notificationPermission.status === 'granted' ? 'Enabled' : 'Disabled'}
+            label={
+              notificationPermission.status === 'granted'
+                ? 'Enabled'
+                : notificationPermission.status === 'unavailable'
+                  ? 'Not available'
+                  : 'Disabled'
+            }
             color={notificationPermission.status === 'granted' ? colors.success : colors.textMuted}
           />
-          {notificationPermission.status !== 'granted' && (
+          {/* No Enable button under Expo Go — it could not do anything, and a button that does
+              nothing is worse than none. */}
+          {notificationPermission.status !== 'granted' && notificationPermission.status !== 'unavailable' && (
             <Button mode="outlined" onPress={notificationPermission.request} compact>
               Enable
             </Button>
           )}
         </View>
+        {notificationPermission.status === 'unavailable' && (
+          <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm }]}>
+            Expo Go cannot receive push notifications. Install a development build to use them.
+          </Text>
+        )}
       </Panel>
 
       <View style={{ marginTop: spacing.lg, alignItems: 'center' }}>

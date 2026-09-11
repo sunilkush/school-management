@@ -26,6 +26,36 @@ device/emulator (Expo CLI installs the matching client itself), or `eas go` on i
 | `react-test-renderer` pinned to an **exact** version | It must equal React's version. A `^` range resolves to a newer patch whose peer range excludes the React that Expo ships, and then `npm install` cannot build a tree at all. |
 | `"resolver": "react-native-worklets/jest/resolver.js"` in the jest config | Reanimated 4.5 pulls in `react-native-worklets`, which touches its native module at import time and crashes every Jest suite without this. |
 
+## Never import `expo-notifications` statically
+
+In SDK 57, **importing** expo-notifications inside Expo Go throws at module load — its
+`DevicePushTokenAutoRegistration` side effect calls `addPushTokenListener`, which now raises
+instead of warning. The app dies on a red `[runtime not ready]` screen before rendering anything.
+No try/catch at the call site helps, because nothing of ours has run yet.
+
+This actually shipped and broke the app on first launch on a real device. Nothing caught it:
+`expo export` bundles it fine, `expo-doctor` passes, and the unit tests passed — it only fails when
+the module is genuinely loaded inside Expo Go.
+
+Always go through `src/utils/pushNotifications.js`, which lazily requires it and returns `null`
+under Expo Go. `src/utils/pushNotifications.test.js` fails the build if a static import reappears
+anywhere in `src/`.
+
+## The API URL, and why login "silently fails"
+
+`EXPO_PUBLIC_API_URL` in `.env` must be the backend machine's **LAN IP**. On a phone `localhost` is
+the phone itself, so the default in `.env.example` reaches nothing and every request fails before
+it leaves the device.
+
+**Changing `.env` requires `npx expo start -c`.** Expo inlines `EXPO_PUBLIC_*` at bundle time and
+Metro caches the result, so a plain restart keeps serving the old address — verified: the exported
+bundle still contained `localhost:9000` until the cache was cleared. The startup log should say
+`env: load .env`.
+
+If it still fails after that, in order: is the backend running (`/api/v1/health` returns
+`{"db":"connected"}`), is the phone on the same network, and is the port allowed through the
+Windows firewall.
+
 ## Adding a module
 
 Write a descriptor in `src/modules/definitions/`, register it in `src/modules/registry.js`. The

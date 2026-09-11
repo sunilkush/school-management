@@ -29,7 +29,7 @@ function buildLedgerEndpoints(builder, { key, url, tag }) {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard', 'PayrollSettings', 'PayrollStructure', 'PayrollCycle', 'LoanAdvance', 'BonusIncentive', 'Reimbursement', 'ExamAttempt', 'Circular', 'ReportCard', 'OnlineClass', 'Survey', 'TransportTrip'],
+  tagTypes: ['Attendance', 'Notifications', 'Fees', 'Homework', 'Income', 'Expense', 'Book', 'TransportRoute', 'Vehicle', 'HostelRoom', 'User', 'School', 'IssuedBook', 'Message', 'LeaveRequest', 'SchoolEvent', 'TimetableEntry', 'TimeSlot', 'TimetableRoom', 'StudentProfile', 'LessonPlan', 'StudyMaterial', 'Task', 'SelfAttendance', 'Question', 'Marks', 'Inventory', 'FeeHead', 'Class', 'SupportTicket', 'TransportAssignment', 'FeeStructure', 'StudentFee', 'AdmissionInquiry', 'Role', 'Exam', 'AdmitCard', 'LibrarySetting', 'HostelVisitor', 'HostelComplaint', 'HostelAttendance', 'VehicleMaintenance', 'GateEntry', 'CallLog', 'Department', 'Designation', 'Faq', 'ActivityLog', 'Board', 'BoardClass', 'SchoolSubscription', 'SubscriptionPlan', 'SubscriptionInvoice', 'SubscriptionPayment', 'AcademicYear', 'Chapter', 'GlobalConfig', 'TempAccess', 'Report', 'SystemBackup', 'BackupSchedule', 'RestoreJob', 'BackupAuditLog', 'AuditLog', 'MaintenanceTask', 'CounselingSession', 'EmergencyAlert', 'HealthRecord', 'HealthVisit', 'Certificate', 'IDCard', 'DisciplineIncident', 'PTMSession', 'SportsTeam', 'SportsEvent', 'Achievement', 'Alumni', 'CanteenItem', 'CanteenWallet', 'CanteenOrder', 'SchoolBoard', 'PayrollSettings', 'PayrollStructure', 'PayrollCycle', 'LoanAdvance', 'BonusIncentive', 'Reimbursement', 'ExamAttempt', 'Circular', 'ReportCard', 'OnlineClass', 'Survey', 'TransportTrip', 'JobPosting', 'AppraisalReview', 'LedgerAccount', 'JournalEntry', 'Scholarship', 'Compliance'],
   // The `queries` branch of this reducer is persisted (see store/index.js) so a screen shows its
   // last-known-good data immediately on a cold start, even offline. refetchOnMountOrArgChange
   // means that cached data is shown instantly while a background revalidation still runs — the
@@ -2131,6 +2131,68 @@ export const apiSlice = createApi({
       query: () => ({ url: '/transport/trips/my-bus' }),
       providesTags: ['TransportTrip'],
     }),
+
+    // ── HR: recruitment and staff appraisal. Post-dates the archived app.
+    // Each posting arrives with an `applicants` roll-up ({ total, active, hired }).
+    getJobPostings: builder.query({
+      query: (params) => ({ url: '/hr/postings', params }),
+      providesTags: ['JobPosting'],
+    }),
+    // The caller's OWN appraisal. Returns null when none is open — that is a normal state, not an
+    // error. The backend blanks the reviewer's scores until the review is finalised, deliberately:
+    // a half-filled reviewer form read over somebody's shoulder is worse than no form at all. So
+    // the app must never try to show reviewer fields before then; they simply are not sent.
+    getMyAppraisal: builder.query({
+      query: () => ({ url: '/hr/appraisal/reviews/mine' }),
+      providesTags: ['AppraisalReview'],
+    }),
+
+    // ── Double-entry ledger. Post-dates the archived app. Read-only from the phone: journal
+    // entries here are immutable once posted, and are mostly written by a server-side sweep over
+    // money events rather than typed by hand, so there is nothing sensible to create from here.
+    getLedgerAccounts: builder.query({
+      query: (params) => ({ url: '/ledger/accounts', params }),
+      providesTags: ['LedgerAccount'],
+    }),
+    getJournalEntries: builder.query({
+      query: (params) => ({ url: '/ledger/entries', params }),
+      providesTags: ['JournalEntry'],
+    }),
+    // Reports `isBalanced` alongside the totals — always true given the model's balance rule, but
+    // surfaced so a mismatch announces itself instead of having to be spotted by eye.
+    getTrialBalance: builder.query({
+      query: (params) => ({ url: '/ledger/reports/trial-balance', params }),
+      providesTags: ['JournalEntry'],
+    }),
+
+    // ── Scholarships: named fee concessions. Post-dates the archived app.
+    // Each scheme carries a `usage` roll-up. Note that PENDING awards count against the cap — a
+    // place promised is a place gone — so `remaining` is already the honest number.
+    getScholarshipSchemes: builder.query({
+      query: (params) => ({ url: '/scholarships/schemes', params }),
+      providesTags: ['Scholarship'],
+    }),
+    getScholarshipAwards: builder.query({
+      query: (params) => ({ url: '/scholarships/awards', params }),
+      providesTags: ['Scholarship'],
+    }),
+    decideScholarshipAward: builder.mutation({
+      query: ({ id, decision, note }) => ({
+        url: `/scholarships/awards/${id}/decide`,
+        method: 'patch',
+        data: { decision, note },
+      }),
+      invalidatesTags: ['Scholarship'],
+    }),
+
+    // ── Government compliance (UDISE+ / PEN / APAAR / RTE). Post-dates the archived app.
+    // This is record-keeping the school files itself — there is NO UDISE+ API to integrate with,
+    // so nothing here submits anything anywhere. The readiness report just says which student
+    // records are not complete enough to file.
+    getComplianceReadiness: builder.query({
+      query: (params) => ({ url: '/compliance/readiness', params }),
+      providesTags: ['Compliance'],
+    }),
   }),
 });
 
@@ -2556,4 +2618,13 @@ export const {
   useGetMySurveysQuery,
   useSubmitSurveyResponseMutation,
   useGetMyBusQuery,
+  useGetJobPostingsQuery,
+  useGetMyAppraisalQuery,
+  useGetLedgerAccountsQuery,
+  useGetJournalEntriesQuery,
+  useGetTrialBalanceQuery,
+  useGetScholarshipSchemesQuery,
+  useGetScholarshipAwardsQuery,
+  useDecideScholarshipAwardMutation,
+  useGetComplianceReadinessQuery,
 } = apiSlice;

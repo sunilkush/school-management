@@ -3,7 +3,7 @@
 React Native (Expo) app for the school ERP in this repo. One app, **all 24 roles**, driven by the
 same permission data the web portal uses.
 
-Status: **Phases 0–4 done.** Phase 5 next.
+Status: **Phases 0–7 done.** Phase 8 next.
 
 ---
 
@@ -242,17 +242,138 @@ details that matter: a "No" answer is stored by identity (`value === false`), no
 submitted "No" would render as unanswered; and the anonymity note is shown **before** answering,
 because anonymity is why someone answers honestly and irreversibility is its price.
 
-### Phase 5 — Tier C: school operations
-Students, staff, admissions (+ public admission tracker), HR (recruitment + appraisal),
-Payroll / payslips, Inventory, Hostel, Canteen, Visitors, Discipline, Health, Certificates,
-ID cards.
+### Phase 5 — Tier C: school operations ✅
 
-### Phase 6 — Tier D: finance
-Ledger (chart of accounts, journal, statements), fee reports, expenses, income, scholarships.
+| Module | State |
+| --- | --- |
+| Students | ✅ Phase 2 pilot |
+| **Admissions** | ✅ new — read-write: log an enquiry and move it along the pipeline |
+| **Gate register** | ✅ new — read-write: log an arrival, tap the person out |
+| **My payslips** | ✅ new — employee's own pay history; no actions at all |
+| **Health records** | ✅ new — sick-room log, close a visit, record a parent call |
+| **Discipline** | ✅ new — incident register, resolve with a note |
+| **Inventory** | ✅ new — stock and assets, low-stock filter |
+| **Hostel rooms** | ✅ new — occupancy, who is in which room |
+| **Canteen** | ✅ new — the menu and prices, read-only |
+| **Certificates / ID cards** | ✅ new — office register (+ revoke) and the family's own copies, as separate keys |
+| **Staff directory** | ✅ new — read-only; `Users` and `Members` alias to it |
+| **HR — recruitment** | ✅ new — vacancies and pipeline, read-only |
+| **HR — my appraisal** | ✅ new — the staff member's own review; see the two rules below |
 
-### Phase 7 — Tier E: Super Admin
-Schools, subscription plans, billing / invoices, backups + restore jobs, roles & permissions,
-platform modules, global config, compliance.
+**Where the write actions are, and are not.** Almost every Tier C module is read-only on purpose.
+The two that are not — the gate register and admission enquiries — are the two where the phone is
+genuinely the *right* device: a guard logging a visitor at the gate, reception taking a call from a
+parent. Everything else is a considered act done at a desk with a document or a student in front of
+you, and a half-fitting phone form is exactly how the wrong student ends up on the wrong record.
+Where an action *is* offered it is the one that might be urgent away from a desk: revoking a
+certificate, closing a sick-room visit, marking a visitor out.
+
+**Two things a closing action must not lose.** Resolving a discipline incident requires saying what
+was done, and closing a health visit requires the treatment given — both are required fields rather
+than optional, because a closed record with an empty outcome is useless to whoever reads it next.
+
+**Engine addition: `aliases`.** The web sidebar gives one feature two nav keys when two roles call
+it two different things — Receptionist's "Enquiries" is School Admin's "Admission Enquiries", and
+the warden's "Hostel" is the room register. A descriptor now lists those under `aliases` and every
+key resolves to the *same* screen component, instead of one role silently landing on the
+placeholder.
+
+**The canteen is a price list, not a shop.** There is a wallet and an order endpoint behind it, but
+taking a child's money would need a top-up flow, a parent consent trail and a refund path — none of
+which exist. An honest menu beats a half-built checkout.
+
+
+**The appraisal screen must not blur two things**, and the backend already enforces both:
+
+1. **Self and reviewer scores are never merged into one number.** They are two separate opinions
+   recorded side by side, so the screen lists them side by side — there is no averaged figure.
+2. **The reviewer's half is hidden until the review is finalised.** The endpoint blanks it before
+   then, deliberately: a half-filled reviewer form read over somebody's shoulder is worse than no
+   form at all. The screen says *why* the section is missing rather than rendering empty rows that
+   look like a reviewer who wrote nothing.
+
+Submitting the self-assessment is not in the app — the form is one score per criterion and the
+criteria live on the cycle, so it is a runtime-built form like Surveys. A once-a-year sit-down task
+stays on the web portal.
+
+### Phase 6 — Tier D: finance ✅
+
+| Module | State |
+| --- | --- |
+| **Income / Expenses** | ✅ new — two identical cash ledgers built from one factory |
+| **Chart of accounts** | ✅ new — endpoints + descriptor |
+| **Journal** | ✅ new — both sides of every entry spelled out |
+| **Trial balance** | ✅ new — with an explicit balanced / out-of-balance check |
+| **Scholarship schemes** | ✅ new — endpoints + descriptor, with funded-place caps |
+| **Scholarship awards** | ✅ new — approve / reject, gated to actual approvers |
+| Fee reports | ⬜ |
+| Profit & loss, balance sheet | ⬜ web portal only |
+
+**The books are read-only from the phone, and that is not a gap to fill later.** A posted journal
+entry is immutable by design — a mistake is corrected with a reversing entry, never an edit — and
+most entries are not typed by anyone at all: a server-side sweep posts them from money events that
+already happened. A "new journal entry" button on a phone would be inviting someone to hand-write
+into a book that is meant to be a *consequence* of other records.
+
+**Two scholarship rules the screen must not blur**, both already true in the backend:
+
+- **Pending awards count against the cap.** A place promised is a place gone; discovering at
+  approval time that the last one was taken is how a school over-commits. So `remaining` is
+  already net of pending, and the detail spells that out rather than letting the arithmetic look
+  wrong.
+- **Percentages sum, they do not compound.** Two 20% schemes are 40% off, not 36%. Nothing here
+  multiplies discounts together.
+
+**The accounts desk cannot approve its own scholarship requests.** `APPROVERS` is deliberately
+narrower than `READERS` — Accountant raises requests and reads the list; Principal and the admins
+decide. The approve/reject actions mirror that exactly.
+
+**One honest limitation on the trial balance.** `summary` only ever receives the rows currently on
+screen, so the totals narrow when you search, and the endpoint's own `isBalanced` cannot be reached
+from a descriptor. The footer says so outright — a balance check that silently covered only part of
+the books would be worse than no check at all.
+
+### Phase 7 — Tier E: the platform ✅
+
+| Module | State |
+| --- | --- |
+| **Schools** | ✅ new — every school on the platform, read-only |
+| **Subscription plans** | ✅ new — what the platform sells, read-only |
+| **Audit log** | ✅ new — who did what; `ActivityLogs` aliases to it |
+| **Compliance** | ✅ new — endpoints + descriptor; students not ready to file |
+| Backups, restore jobs, backup schedules | ⛔ **deliberately not built** |
+| Roles & permissions matrix | ⛔ **deliberately not built** |
+| Global config, platform modules | ⛔ **deliberately not built** |
+| Billing invoices | ⬜ |
+
+**This is the tier that killed the previous app**, which cloned Super Admin's entire desktop
+sidebar onto a phone — backup schedules, restore jobs, the permission matrix, global config — and
+then had to maintain all of it. So this phase is as much about what was refused as what was built.
+
+**What was refused, and why each one:**
+
+- **Restore jobs and backups.** A restore is irreversible and overwrites live data. Nothing whose
+  worst case is "the wrong database came back" should be one tap away on a device you use while
+  walking.
+- **Global config and platform modules.** These change behaviour for *every school at once*. A
+  mis-tap has no blast radius limit.
+- **The roles and permissions matrix.** Editing it grants access. A permission grid on a phone
+  screen is how somebody gets handed the wrong module.
+- **Suspending or cancelling a school's subscription.** The endpoints exist and would have been
+  easy to wire; it cuts off every user in that school at once, so it stays on the web portal with
+  its confirmations. The school list says so in its footer rather than hiding the capability.
+
+What *is* here is the part a platform owner genuinely asks away from a desk: which schools are on
+the system, what they are paying for, and — when something looks wrong — who touched it and when.
+
+**The compliance wording is deliberate.** It is **not a UDISE+ integration**: no such API exists.
+This is the school's own record-keeping against what UDISE+, PEN and APAAR ask for, and **nothing
+is submitted to any government system from the app**. The backend also never stores a full Aadhaar
+number, so there is none to display. The list shows only students who are *not* ready and **names
+the missing fields**, because "incomplete" on its own tells the office nothing.
+
+A test asserts the refused keys stay unbuilt, and another asserts the compliance footer never uses
+the word "integration".
 
 ### Phase 8 — Driver + release
 Driver trip start/stop with background location (`expo-location`). EAS build, icons, store

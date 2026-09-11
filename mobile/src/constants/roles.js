@@ -62,6 +62,14 @@ export const MODULE_META = {
   OnlineClasses: { label: 'Online Classes', icon: 'video-outline' },
   Surveys: { label: 'Surveys', icon: 'clipboard-list-outline' },
   MyTransport: { label: 'My Bus', icon: 'bus-marker' },
+  Recruitment: { label: 'Recruitment', icon: 'briefcase-search-outline' },
+  MyAppraisal: { label: 'My Appraisal', icon: 'star-check-outline' },
+  ChartOfAccounts: { label: 'Chart of Accounts', icon: 'file-tree-outline' },
+  Journal: { label: 'Journal', icon: 'book-open-outline' },
+  TrialBalance: { label: 'Trial Balance', icon: 'scale-balance' },
+  Scholarships: { label: 'Scholarships', icon: 'school-outline' },
+  ScholarshipAwards: { label: 'Scholarship Awards', icon: 'hand-heart-outline' },
+  Compliance: { label: 'Compliance', icon: 'shield-check-outline' },
   Attendance: { label: 'Attendance', icon: 'clipboard-check-outline' },
   Fees: { label: 'Fees', icon: 'cash-multiple' },
   Finance: { label: 'Finance', icon: 'finance' },
@@ -250,7 +258,9 @@ export const NAV_CONFIG = {
       { group: 'System Control', icon: 'cog-outline', items: ['Roles', 'Permissions', 'PlatformModules', 'SystemBackup', 'AuditLogs', 'Settings'] },
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation', 'ContactSupport', 'Faqs'] },
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
-      'Profile',
+      'Recruitment', 'MyAppraisal', 
+      { group: 'Accounts', icon: 'book-open-outline', items: ['ChartOfAccounts', 'Journal', 'TrialBalance'] },
+      'Scholarships', 'ScholarshipAwards', 'Compliance', 'Profile',
     ],
   },
   [ROLE_NAMES.SCHOOL_ADMIN]: {
@@ -279,7 +289,9 @@ export const NAV_CONFIG = {
       'Inventory', 'TaskManagement', 'Reports', 'SchoolSettings',
       { group: 'Communication', icon: 'message-text-outline', items: ['Communication', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
-      'Profile',
+      'Recruitment', 'MyAppraisal', 
+      { group: 'Accounts', icon: 'book-open-outline', items: ['ChartOfAccounts', 'Journal', 'TrialBalance'] },
+      'Scholarships', 'ScholarshipAwards', 'Compliance', 'Profile',
     ],
   },
   [ROLE_NAMES.PRINCIPAL]: {
@@ -289,7 +301,9 @@ export const NAV_CONFIG = {
       'AttendanceReports', 'MarkAttendance', 'AttendanceTable', 'Exams', 'Library', 'Transport', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
-      'Profile',
+      'Recruitment', 'MyAppraisal', 
+      { group: 'Accounts', icon: 'book-open-outline', items: ['ChartOfAccounts', 'Journal', 'TrialBalance'] },
+      'Scholarships', 'ScholarshipAwards', 'Compliance', 'Profile',
     ],
   },
   [ROLE_NAMES.VICE_PRINCIPAL]: {
@@ -298,7 +312,9 @@ export const NAV_CONFIG = {
       'Dashboard', 'Timetable', 'Exams', 'StudentAttendance', 'TeacherAttendance', 'AttendanceTable', 'Reports', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
-      'Profile',
+      'Recruitment', 'MyAppraisal', 
+      { group: 'Accounts', icon: 'book-open-outline', items: ['ChartOfAccounts', 'Journal', 'TrialBalance'] },
+      'Scholarships', 'ScholarshipAwards', 'Compliance', 'Profile',
     ],
   },
   [ROLE_NAMES.TEACHER]: {
@@ -310,7 +326,7 @@ export const NAV_CONFIG = {
       { group: 'Exams & Questions', icon: 'pencil-box-outline', items: ['Exams', 'QuestionBank', 'Evaluation', 'ExamReports'] },
       'Reports', 'Leave', 'MyTasks', 'Payroll',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.STUDENT]: {
@@ -341,7 +357,9 @@ export const NAV_CONFIG = {
       { group: 'Payroll', icon: 'cash-multiple', items: ['SalaryRun', 'SalaryStructures', 'CreateEmployee', 'PayslipCenter', 'PayrollMonthlyReports', 'SalaryAdvance', 'BonusIncentives', 'Reimbursements', 'Payroll', 'PayrollSettings'] },
       'MyAttendance', 'GpsCheckInOut', 'AttendanceReports', 'Leave', 'MyTasks',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 
+      { group: 'Accounts', icon: 'book-open-outline', items: ['ChartOfAccounts', 'Journal', 'TrialBalance'] },
+      'Scholarships', 'ScholarshipAwards', 'Profile',
     ],
   },
   [ROLE_NAMES.LIBRARIAN]: {
@@ -350,7 +368,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'BookCatalog', 'IssuedBooks', 'Members', 'FineManagement', 'Reports', 'LibrarySettings',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.HOSTEL_WARDEN]: {
@@ -359,7 +377,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'Rooms', 'Allocations', 'Leave', 'VisitorLog', 'Complaints', 'MarkAttendance', 'Attendance', 'Reports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.TRANSPORT_MANAGER]: {
@@ -368,7 +386,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'Routes', 'Vehicles', 'Drivers', 'TransportAssignments', 'FuelMaintenance',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.RECEPTIONIST]: {
@@ -377,7 +395,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'VisitorManagement', 'Enquiries', 'PhoneCallsLog',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
       { group: 'Communication', icon: 'message-text-outline', items: ['Broadcasts', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Scholarships', 'ScholarshipAwards', 'Compliance', 'Profile',
     ],
   },
   [ROLE_NAMES.EXAM_COORDINATOR]: {
@@ -392,7 +410,7 @@ export const NAV_CONFIG = {
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
-      'Profile',
+      'Recruitment', 'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.SUBJECT_COORDINATOR]: {
@@ -402,7 +420,7 @@ export const NAV_CONFIG = {
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
-      'Profile',
+      'Recruitment', 'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.IT_SUPPORT]: {
@@ -417,7 +435,7 @@ export const NAV_CONFIG = {
       'SupportTickets', 'NetworkStatus', 'SystemLogs', 'Documentation',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.COUNSELOR]: {
@@ -427,7 +445,7 @@ export const NAV_CONFIG = {
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.SECURITY]: {
@@ -441,7 +459,7 @@ export const NAV_CONFIG = {
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'Leave',
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   // Staff and Support Staff have identical resolved web sidebars (Support Staff's only extra is
@@ -452,7 +470,7 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard', 'MyTasks', 'MyAttendance', 'GpsCheckInOut', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.SUPPORT_STAFF]: {
@@ -460,7 +478,7 @@ export const NAV_CONFIG = {
     items: [
       'Dashboard', 'MyTasks', 'MyAttendance', 'GpsCheckInOut', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.SPORTS_TEACHER]: {
@@ -469,7 +487,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'AssignedClasses', 'MyStudents', 'MarkAttendance', 'Attendance', 'Assignments', 'Sports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   [ROLE_NAMES.LAB_TECHNICIAN]: {
@@ -482,7 +500,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'MyStudents', 'Timetable',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   // Confirmed via frontend/src/main.jsx: medicalofficer/students routes to the exact same
@@ -495,7 +513,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'MyStudents', 'HealthRecords',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
   // The last of the roles sharing the "My Students" gap — but unlike Sports Teacher/Lab
@@ -509,7 +527,7 @@ export const NAV_CONFIG = {
       'Dashboard', 'MyClass', 'MyStudents', 'MarkAttendance', 'Attendance', 'Assignments', 'Timetable', 'Discipline', 'PTM',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
-      'Profile',
+      'MyAppraisal', 'Profile',
     ],
   },
 };
