@@ -1048,3 +1048,79 @@ describe('Phase 9c — the admin attendance cluster', () => {
     expect(MODULE_REGISTRY.AttendanceReports.create).toBeUndefined();
   });
 });
+
+describe('Phase 9d — academics', () => {
+  it('splits team management from a student’s own achievements', () => {
+    // Sports is staff-only; the self-service half is a separate, ungated key.
+    expect(MODULE_REGISTRY.Sports.servesRole(ctxFor('Sports Teacher'))).toBe(true);
+    expect(MODULE_REGISTRY.Sports.servesRole(ctxFor('Student'))).toBe(false);
+    expect(MODULE_REGISTRY.MyAchievements.servesRole).toBeUndefined();
+    // And the refusal message points the student at the right key rather than dead-ending.
+    expect(MODULE_REGISTRY.Sports.notForRoleLabel).toMatch(/My Achievements/);
+  });
+
+  it('counts players across teams, not teams alone', () => {
+    const rows = [
+      { name: 'A', members: [{ name: 'x' }, { name: 'y' }] },
+      { name: 'B', members: [{ name: 'z' }] },
+    ];
+    const byLabel = Object.fromEntries(MODULE_REGISTRY.Sports.summary(rows).map((s) => [s.label, s.value]));
+    expect(byLabel.Teams).toBe(2);
+    expect(byLabel.Players).toBe(3);
+  });
+
+  it('reads the paginated lesson-plan shape and flags drafts as needing attention', () => {
+    expect(MODULE_REGISTRY.LessonPlans.selectRows({ items: [{ _id: 'a' }], total: 1 })).toHaveLength(1);
+    expect(MODULE_REGISTRY.LessonPlans.selectRows(undefined)).toEqual([]);
+    expect(MODULE_REGISTRY.LessonPlans.row({ title: 't', status: 'draft' }).unread).toBe(true);
+    expect(MODULE_REGISTRY.LessonPlans.row({ title: 't', status: 'approved' }).unread).toBe(false);
+  });
+
+  it('keeps these read-only, and says where the writing happens', () => {
+    for (const key of ['Subjects', 'LessonPlans']) {
+      expect(MODULE_REGISTRY[key].create).toBeUndefined();
+      expect(MODULE_REGISTRY[key].detail.actions).toBeUndefined();
+      expect(MODULE_REGISTRY[key].footerNote).toMatch(/web portal/i);
+    }
+  });
+});
+
+describe('Phase 9d — school structure', () => {
+  it('flags a section with nobody responsible for it', () => {
+    const rows = [
+      { name: 'A', classTeacherId: { name: 'T' } },
+      { name: 'B', classTeacherId: null },
+    ];
+    const tile = MODULE_REGISTRY.ClassSections.summary(rows).find((s) => s.label === 'No class teacher');
+    expect(tile.value).toBe(1);
+    expect(MODULE_REGISTRY.ClassSections.row(rows[1]).badge.label).toBe('unassigned');
+    expect(MODULE_REGISTRY.ClassSections.row(rows[0]).badge).toBeNull();
+  });
+
+  it('points the class-teacher mapping at the section list, which already carries it', () => {
+    expect(screenForModule({ key: 'ClassTeacherAssignments' })).toBe(screenForModule({ key: 'ClassSections' }));
+    expect(screenForModule({ key: 'BoardClasses' })).toBe(screenForModule({ key: 'Boards' }));
+  });
+
+  it('makes the running academic year obvious, since it drives every other screen', () => {
+    const active = MODULE_REGISTRY.AcademicYears.row({ name: '2026-27', isActive: true });
+    const closed = MODULE_REGISTRY.AcademicYears.row({ name: '2025-26', isActive: false, status: 'closed' });
+    expect(active.badge).toEqual({ label: 'active', tone: 'active' });
+    expect(active.unread).toBe(true);
+    expect(closed.badge.tone).toBe('inactive');
+  });
+
+  it('reads the academic-year endpoint’s bare-array response', () => {
+    // This one answers { success, count, data } rather than the usual ApiResponse wrapper.
+    expect(MODULE_REGISTRY.AcademicYears.selectRows([{ _id: 'a' }])).toHaveLength(1);
+    expect(MODULE_REGISTRY.AcademicYears.selectRows(undefined)).toEqual([]);
+    expect(MODULE_REGISTRY.Boards.selectRows({ boards: [{ _id: 'b' }], total: 1 })).toHaveLength(1);
+  });
+
+  it('keeps school structure read-only — this is setup, not a corridor task', () => {
+    for (const key of ['Classes', 'ClassSections', 'Boards', 'AcademicYears']) {
+      expect(MODULE_REGISTRY[key].create).toBeUndefined();
+      expect(MODULE_REGISTRY[key].detail.actions).toBeUndefined();
+    }
+  });
+});

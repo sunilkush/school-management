@@ -3,8 +3,8 @@
 React Native (Expo) app for the school ERP in this repo. One app, **all 24 roles**, driven by the
 same permission data the web portal uses.
 
-Status: **Phase 9 in progress — 75 of 180 nav destinations have a real screen (~42%).**
-**105 still land on `ModulePlaceholderScreen`.** See §3a for the two coverage numbers.
+Status: **Phase 9 in progress — 85 of 180 nav destinations have a real screen (~47%).**
+**95 still land on `ModulePlaceholderScreen`.** See §3a for the two coverage numbers.
 
 ---
 
@@ -88,8 +88,8 @@ node scripts/audit-nav.mjs
 
 | | |
 | --- | --- |
-| Destinations with a screen | **75** (61 registry keys + 14 bespoke screens) |
-| Destinations with **no** screen | **105** — they land on `ModulePlaceholderScreen` |
+| Destinations with a screen | **85** (71 registry keys + 14 bespoke screens) |
+| Destinations with **no** screen | **95** — they land on `ModulePlaceholderScreen` |
 
 The placeholder navigates and does not crash; it names the module and the caller's granted actions
 and shows no data. Phase 9 is the plan for these.

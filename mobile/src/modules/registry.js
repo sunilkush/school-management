@@ -47,6 +47,18 @@ import {
 // Phase 9 — the destinations nearly every role has
 import { myAttendanceModule, myTasksModule, supportTicketsModule } from './definitions/selfService';
 import { adminAttendanceModule, attendanceReportModule } from './definitions/adminAttendance';
+import {
+  subjectsModule,
+  lessonPlansModule,
+  sportsModule,
+  myAchievementsModule,
+} from './definitions/academics';
+import {
+  classesModule,
+  sectionsModule,
+  boardsModule,
+  academicYearsModule,
+} from './definitions/schoolSetup';
 
 /**
  * Declarative module registry — the reason this app is not 294 hand-written screens.
@@ -136,6 +148,14 @@ const DEFINITIONS = [
   supportTicketsModule,
   adminAttendanceModule,
   attendanceReportModule,
+  subjectsModule,
+  lessonPlansModule,
+  sportsModule,
+  myAchievementsModule,
+  classesModule,
+  sectionsModule,
+  boardsModule,
+  academicYearsModule,
 ];
 
 /**
