@@ -59,6 +59,32 @@ import {
   boardsModule,
   academicYearsModule,
 } from './definitions/schoolSetup';
+import {
+  questionBankModule,
+  assignedClassesModule,
+  ptmSessionsModule,
+} from './definitions/teaching';
+import { routesModule, vehiclesModule, transportAssignmentsModule } from './definitions/transportOps';
+import {
+  departmentsModule,
+  designationsModule,
+  faqsModule,
+  alumniModule,
+  counsellingModule,
+  emergencyAlertsModule,
+} from './definitions/organisation';
+import { bookCatalogueModule, issuedBooksModule, librarySettingsModule } from './definitions/libraryOps';
+import {
+  feeStructuresModule,
+  reimbursementsModule,
+  myChildrenModule,
+  teacherTimetableModule,
+} from './definitions/financeOps';
+import {
+  hostelComplaintsModule,
+  payrollSettingsModule,
+  geofenceModule,
+} from './definitions/hostelOps';
 
 /**
  * Declarative module registry — the reason this app is not 294 hand-written screens.
@@ -156,6 +182,28 @@ const DEFINITIONS = [
   sectionsModule,
   boardsModule,
   academicYearsModule,
+  questionBankModule,
+  assignedClassesModule,
+  ptmSessionsModule,
+  routesModule,
+  vehiclesModule,
+  transportAssignmentsModule,
+  departmentsModule,
+  designationsModule,
+  faqsModule,
+  alumniModule,
+  counsellingModule,
+  emergencyAlertsModule,
+  bookCatalogueModule,
+  issuedBooksModule,
+  librarySettingsModule,
+  feeStructuresModule,
+  reimbursementsModule,
+  myChildrenModule,
+  teacherTimetableModule,
+  hostelComplaintsModule,
+  payrollSettingsModule,
+  geofenceModule,
 ];
 
 /**

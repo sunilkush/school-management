@@ -1124,3 +1124,213 @@ describe('Phase 9d — school structure', () => {
     }
   });
 });
+
+describe('Phase 9d — teaching', () => {
+  it('does not put an answer key on a screen that is open in front of a class', () => {
+    const fields = MODULE_REGISTRY.QuestionBank.detail.fields({
+      statement: 'What is 2+2?',
+      options: [{ text: '3' }, { text: '4' }],
+      correctAnswers: ['4'],
+      correctAnswer: '4',
+    });
+    const labels = fields.map((f) => f.label);
+    expect(labels).toContain('Options');
+    // The endpoint returns the answers; this screen deliberately does not render them.
+    expect(labels.join(' ')).not.toMatch(/correct|answer key/i);
+    expect(JSON.stringify(fields)).not.toContain('correctAnswers');
+  });
+
+  it('shows whether you are the class teacher or just teach a subject there', () => {
+    const asClassTeacher = MODULE_REGISTRY.AssignedClasses.row({ name: '5A', role: ['classTeacher'] });
+    const asSubjectTeacher = MODULE_REGISTRY.AssignedClasses.row({ name: '5B', role: ['subjectTeacher'] });
+    expect(asClassTeacher.badge.label).toBe('class teacher');
+    expect(asSubjectTeacher.badge).toBeNull();
+  });
+
+  it('totals students across the classes a teacher actually has', () => {
+    const rows = [{ name: 'A', studentCount: 30 }, { name: 'B', studentCount: 25 }];
+    const byLabel = Object.fromEntries(MODULE_REGISTRY.AssignedClasses.summary(rows).map((s) => [s.label, s.value]));
+    expect(byLabel.Classes).toBe(2);
+    expect(byLabel.Students).toBe(55);
+  });
+
+  it('keeps the staff PTM view apart from the parent booking screen', () => {
+    expect(screenForModule({ key: 'PTM' })).not.toBe(screenForModule({ key: 'PTMBooking' }));
+    expect(MODULE_REGISTRY.PTM.servesRole(ctxFor('Teacher'))).toBe(true);
+    expect(MODULE_REGISTRY.PTM.servesRole(ctxFor('Parent'))).toBe(false);
+    // And the refusal sends a parent to the screen that is theirs.
+    expect(MODULE_REGISTRY.PTM.notForRoleLabel).toMatch(/PTM Booking/);
+    // MyClass is the class teacher's label for their own class list.
+    expect(screenForModule({ key: 'MyClass' })).toBe(screenForModule({ key: 'AssignedClasses' }));
+  });
+});
+
+describe('Phase 9 — transport ops and organisation', () => {
+  it('counts routes that have no stop coordinates, because those break parent ETAs', () => {
+    const rows = [
+      { name: 'A', stopPoints: [{ sequence: 1, name: 'Gate' }] },
+      { name: 'B', stopPoints: [] },
+    ];
+    const tile = MODULE_REGISTRY.Routes.summary(rows).find((s) => s.label === 'Not on the map');
+    expect(tile.value).toBe(1);
+    expect(MODULE_REGISTRY.Routes.row(rows[1]).badge.label).toBe('no map');
+    // The detail says what the consequence is, rather than just leaving the field blank.
+    const mapped = MODULE_REGISTRY.Routes.detail.fields(rows[1]).find((f) => f.label === 'Stops on the map');
+    expect(mapped.value).toMatch(/no arrival times/i);
+  });
+
+  it('shows both pickup and drop, since which one matters depends on direction', () => {
+    const meta = MODULE_REGISTRY.TransportAssignments.row({
+      studentName: 'Asha', pickupStop: 'Gate', dropStop: 'Market',
+    }).meta;
+    expect(meta).toContain('Pickup Gate');
+    expect(meta).toContain('Drop Market');
+  });
+
+  it('flags a bus with no driver assigned', () => {
+    expect(MODULE_REGISTRY.Vehicles.row({ busNumber: 'B1' }).unread).toBe(true);
+    expect(MODULE_REGISTRY.Vehicles.row({ busNumber: 'B1', driverName: 'D' }).unread).toBe(false);
+  });
+
+  it('leaves FAQs open to everyone but gates the office registers', () => {
+    expect(MODULE_REGISTRY.Faqs.servesRole).toBeUndefined();
+    expect(MODULE_REGISTRY.Departments.servesRole(ctxFor('Teacher'))).toBe(false);
+    expect(MODULE_REGISTRY.Alumni.servesRole(ctxFor('Principal'))).toBe(true);
+  });
+
+  it('lets the counsellor in, and keeps counselling notes off the phone', () => {
+    expect(MODULE_REGISTRY.CounselingSessions.servesRole(ctxFor('Counselor'))).toBe(true);
+    expect(MODULE_REGISTRY.CounselingSessions.servesRole(ctxFor('Teacher'))).toBe(false);
+    // The most sensitive text in the system is not written from here.
+    expect(MODULE_REGISTRY.CounselingSessions.create).toBeUndefined();
+    expect(MODULE_REGISTRY.CounselingSessions.footerNote).toMatch(/web portal/i);
+  });
+
+  it('will not raise an emergency alert from the app', () => {
+    // Raising one notifies the whole school at once.
+    expect(MODULE_REGISTRY.EmergencyAlerts.create).toBeUndefined();
+    expect(MODULE_REGISTRY.EmergencyAlerts.detail.actions).toBeUndefined();
+    expect(MODULE_REGISTRY.EmergencyAlerts.servesRole(ctxFor('Security'))).toBe(true);
+  });
+});
+
+describe('Phase 9 — library, finance and family', () => {
+  it('counts only UNPAID library fines as money owed', () => {
+    const rows = [
+      { status: 'Overdue', fine: 50, fineStatus: 'Unpaid' },
+      { status: 'Returned', fine: 30, fineStatus: 'Paid' },
+    ];
+    const byLabel = Object.fromEntries(MODULE_REGISTRY.IssuedBooks.summary(rows).map((s) => [s.label, s.value]));
+    expect(byLabel.Overdue).toBe(1);
+    // A fine already collected is not outstanding.
+    expect(byLabel['Fines owed']).toBe(50);
+  });
+
+  it('tells a librarian where a book physically is', () => {
+    const meta = MODULE_REGISTRY.Books.row({
+      title: 'T', shelfLocation: 'Aisle 3', rackNumber: '7', category: 'Science',
+    }).meta;
+    expect(meta).toContain('Aisle 3');
+    expect(meta).toContain('Rack 7');
+  });
+
+  it('turns the single library-settings document into one row', () => {
+    expect(MODULE_REGISTRY.LibrarySettings.selectRows({ _id: 's', loanPeriodDays: 14 })).toHaveLength(1);
+    expect(MODULE_REGISTRY.LibrarySettings.selectRows(null)).toEqual([]);
+  });
+
+  it('warns that editing a fee structure does not rewrite bills already assigned', () => {
+    expect(MODULE_REGISTRY.FeeStructures.footerNote).toMatch(/already assigned/i);
+  });
+
+  it('will not approve an expense claim without the receipt in front of you', () => {
+    expect(MODULE_REGISTRY.Reimbursements.detail.actions).toBeUndefined();
+    const receipts = MODULE_REGISTRY.Reimbursements.detail
+      .fields({ attachments: [{}, {}] })
+      .find((f) => f.label === 'Receipts');
+    // Attachments are named, not opened — the app has no file viewer.
+    expect(receipts.value).toMatch(/2 attached/);
+    expect(receipts.value).toMatch(/web portal/i);
+  });
+
+  it('counts only claims still awaiting a decision as pending value', () => {
+    const rows = [
+      { status: 'pending_manager', amount: 100 },
+      { status: 'pending_finance', amount: 200 },
+      { status: 'approved', amount: 900 },
+    ];
+    const byLabel = Object.fromEntries(MODULE_REGISTRY.Reimbursements.summary(rows).map((s) => [s.label, s.value]));
+    expect(byLabel['Awaiting a decision']).toBe(2);
+    expect(byLabel['Value pending']).toBe(300);
+  });
+
+  it('sorts a teacher’s flat schedule into a readable week', () => {
+    const rows = [
+      { _id: '1', dayOfWeek: 'wednesday', timeSlotId: { order: 1 } },
+      { _id: '2', dayOfWeek: 'monday', timeSlotId: { order: 2 } },
+      { _id: '3', dayOfWeek: 'monday', timeSlotId: { order: 1 } },
+    ];
+    const sorted = MODULE_REGISTRY.TeacherTimetable.selectRows(rows).map((r) => r._id);
+    expect(sorted).toEqual(['3', '2', '1']);
+  });
+
+  it('keeps My Children to the parent it belongs to', () => {
+    expect(MODULE_REGISTRY.MyChildren.servesRole(ctxFor('Parent'))).toBe(true);
+    expect(MODULE_REGISTRY.MyChildren.servesRole(ctxFor('Teacher'))).toBe(false);
+  });
+});
+
+describe('Phase 9 — hostel and settings', () => {
+  it('counts urgent hostel faults separately from merely open ones', () => {
+    const rows = [
+      { status: 'open', priority: 'urgent' },
+      { status: 'open', priority: 'low' },
+      { status: 'resolved', priority: 'urgent' },
+    ];
+    const byLabel = Object.fromEntries(
+      MODULE_REGISTRY.Complaints.summary(rows).map((s) => [s.label, s.value])
+    );
+    expect(byLabel.Open).toBe(2);
+    // Already fixed does not count as urgent any more.
+    expect(byLabel.Urgent).toBe(1);
+  });
+
+  it('lets a warden act but keeps other viewers read-only', () => {
+    const actions = MODULE_REGISTRY.Complaints.detail.actions;
+    const resolve = actions.find((a) => a.key === 'resolve');
+    expect(resolve.allow(ctxFor('Hostel Warden'), { status: 'open' })).toBe(true);
+    // Principal can see the register but is not the one fixing taps.
+    expect(resolve.allow(ctxFor('Principal'), { status: 'open' })).toBe(false);
+    expect(resolve.allow(ctxFor('Hostel Warden'), { status: 'resolved' })).toBe(false);
+  });
+
+  it('will not close a complaint without saying what was done', () => {
+    const resolve = MODULE_REGISTRY.Complaints.detail.actions.find((a) => a.key === 'resolve');
+    expect(resolve.fields[0].required).toBe(true);
+    expect(resolve.buildArg({ _id: 'c1' }, ctxFor('Hostel Warden'), { resolution: ' new tap fitted ' })).toEqual({
+      id: 'c1',
+      status: 'resolved',
+      resolution: 'new tap fitted',
+    });
+  });
+
+  it('keeps every payroll rule version, because a payslip was computed against one of them', () => {
+    const data = { versions: [{ _id: 'v1', isActive: false }, { _id: 'v2', isActive: true }], current: { _id: 'v2' } };
+    expect(MODULE_REGISTRY.PayrollSettings.selectRows(data)).toHaveLength(2);
+    // Falls back to the current one if history is not returned.
+    expect(MODULE_REGISTRY.PayrollSettings.selectRows({ current: { _id: 'v2' } })).toHaveLength(1);
+    expect(MODULE_REGISTRY.PayrollSettings.selectRows({})).toEqual([]);
+  });
+
+  it('says plainly when no check-in radius is set, rather than showing a blank', () => {
+    const noRadius = MODULE_REGISTRY.GeofenceSettings.detail
+      .fields({ name: 'S' })
+      .find((f) => f.label === 'Check-in radius');
+    expect(noRadius.value).toMatch(/not checked/i);
+
+    const withRadius = MODULE_REGISTRY.GeofenceSettings.detail
+      .fields({ location: { geofenceRadius: 200 } })
+      .find((f) => f.label === 'Check-in radius');
+    expect(withRadius.value).toContain('200');
+  });
+});
