@@ -2193,6 +2193,27 @@ export const apiSlice = createApi({
       query: (params) => ({ url: '/compliance/readiness', params }),
       providesTags: ['Compliance'],
     }),
+
+    // ── Driver side of bus tracking. The driver's phone IS the position source — there is no
+    // hardware tracker — so these three endpoints are what puts a bus on a parent's screen.
+    getMyTrip: builder.query({
+      query: () => ({ url: '/transport/trips/mine' }),
+      providesTags: ['TransportTrip'],
+    }),
+    startTrip: builder.mutation({
+      query: (payload) => ({ url: '/transport/trips', method: 'post', data: payload }),
+      invalidatesTags: ['TransportTrip'],
+    }),
+    // Deliberately does NOT invalidate TransportTrip: a ping fires every few seconds while
+    // driving, and re-fetching the trip on each one would hammer the API for nothing. The screen
+    // already knows where it is; the server just needs to be told.
+    pingTrip: builder.mutation({
+      query: ({ id, ...fix }) => ({ url: `/transport/trips/${id}/ping`, method: 'post', data: fix }),
+    }),
+    endTrip: builder.mutation({
+      query: (id) => ({ url: `/transport/trips/${id}/end`, method: 'post' }),
+      invalidatesTags: ['TransportTrip'],
+    }),
   }),
 });
 
@@ -2627,4 +2648,8 @@ export const {
   useGetScholarshipAwardsQuery,
   useDecideScholarshipAwardMutation,
   useGetComplianceReadinessQuery,
+  useGetMyTripQuery,
+  useStartTripMutation,
+  usePingTripMutation,
+  useEndTripMutation,
 } = apiSlice;

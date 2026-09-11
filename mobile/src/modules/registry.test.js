@@ -913,3 +913,138 @@ describe('Phase 7 — the platform tier', () => {
     expect(MODULE_REGISTRY.Compliance.footerNote).not.toMatch(/integration/i);
   });
 });
+
+describe('Phase 8 — driver', () => {
+  it('routes the driver trip to a real screen', () => {
+    expect(moduleDescriptor('DriverTrip')).toBeNull();
+    expect(screenForModule({ key: 'DriverTrip' })).not.toBe(ModulePlaceholderScreen);
+    // A single screen, so the outer navigator still owns its header.
+    expect(isSelfHeadered({ key: 'DriverTrip' })).toBe(false);
+  });
+
+  it('gives Driver its own nav block instead of the permissions fallback', () => {
+    // Driver was missing from ROLE_NAMES entirely, so it had no NAV_CONFIG block and fell through
+    // to the permissions-derived nav — which would never contain DriverTrip.
+    const { ROLE_NAMES, NAV_CONFIG, MODULE_META } = require('../constants/roles');
+    expect(ROLE_NAMES.DRIVER).toBe('Driver');
+    expect(NAV_CONFIG[ROLE_NAMES.DRIVER]).toBeTruthy();
+    expect(NAV_CONFIG[ROLE_NAMES.DRIVER].items).toContain('DriverTrip');
+    expect(MODULE_META.DriverTrip).toBeTruthy();
+  });
+
+  it('keeps the driver trip out of every other role’s nav', () => {
+    const { NAV_CONFIG, ROLE_NAMES } = require('../constants/roles');
+    const carriers = Object.entries(NAV_CONFIG)
+      .filter(([, cfg]) => JSON.stringify(cfg.items).includes('"DriverTrip"'))
+      .map(([role]) => role);
+    expect(carriers).toEqual([ROLE_NAMES.DRIVER]);
+  });
+});
+
+describe('Phase 9 — the destinations every role has', () => {
+  it('keeps MY attendance separate from the family view of a STUDENT’s attendance', () => {
+    // Two keys, two endpoints, two audiences. Confusing them would show a teacher their child's
+    // record under their own name.
+    expect(screenForModule({ key: 'MyAttendance' })).not.toBe(screenForModule({ key: 'Attendance' }));
+    expect(MODULE_REGISTRY.MyAttendance.title).toMatch(/my/i);
+    // The family view is gated to Student/Parent; a staff member's own record is not.
+    expect(MODULE_REGISTRY.Attendance.servesRole(ctxFor('Teacher'))).toBe(false);
+    expect(MODULE_REGISTRY.MyAttendance.servesRole).toBeUndefined();
+  });
+
+  it('uses the same half-day arithmetic as the family view, so the two never disagree', () => {
+    const rows = [{ status: 'present' }, { status: 'present' }, { status: 'halfday' }, { status: 'absent' }];
+    const mine = MODULE_REGISTRY.MyAttendance.summary(rows).find((s) => s.label === 'Attendance');
+    const family = MODULE_REGISTRY.Attendance.summary(rows).find((s) => s.label === 'Attendance');
+    expect(mine.value).toBe(family.value);
+  });
+
+  it('resolves the duplicate sidebar labels to the same screens', () => {
+    for (const alias of ['MyMonthlyReport', 'ShiftAttendance']) {
+      expect(screenForModule({ key: alias })).toBe(screenForModule({ key: 'MyAttendance' }));
+    }
+    expect(screenForModule({ key: 'ContactSupport' })).toBe(screenForModule({ key: 'SupportTickets' }));
+    expect(screenForModule({ key: 'TaskManagement' })).toBe(screenForModule({ key: 'MyTasks' }));
+    // Self check-in has two labels too, and both are bespoke — not descriptors.
+    expect(screenForModule({ key: 'MyDailyAttendance' })).toBe(screenForModule({ key: 'GpsCheckInOut' }));
+    expect(moduleDescriptor('GpsCheckInOut')).toBeNull();
+  });
+
+  it('moves only MY status on a shared task, never the whole task', () => {
+    const actions = MODULE_REGISTRY.MyTasks.detail.actions;
+    // A task can be assigned to several people; `myStatus` is this assignee's own progress.
+    for (const a of actions) {
+      const arg = a.buildArg({ _id: 't1' });
+      expect(arg).toHaveProperty('myStatus');
+      expect(arg).not.toHaveProperty('status');
+    }
+    expect(actions.find((a) => a.key === 'start').allow(ctxFor('Teacher'), { status: 'todo' })).toBe(true);
+    expect(actions.find((a) => a.key === 'start').allow(ctxFor('Teacher'), { status: 'done' })).toBe(false);
+  });
+
+  it('counts an overdue task only while it is still open', () => {
+    const past = new Date(Date.now() - 86400000).toISOString();
+    const rows = [
+      { dueDate: past, status: 'todo' },
+      { dueDate: past, status: 'done' },
+    ];
+    const tile = MODULE_REGISTRY.MyTasks.summary(rows).find((s) => s.label === 'Overdue');
+    expect(tile.value).toBe(1);
+  });
+
+  it('lets anyone raise a support ticket but nobody close their own', () => {
+    expect(MODULE_REGISTRY.SupportTickets.create.allow(ctxFor('Driver'))).toBe(true);
+    expect(MODULE_REGISTRY.SupportTickets.create.allow(ctxFor('Parent'))).toBe(true);
+    // Closing is the support desk's call.
+    expect(MODULE_REGISTRY.SupportTickets.detail.actions).toBeUndefined();
+  });
+});
+
+describe('Phase 9c — the admin attendance cluster', () => {
+  it('serves five sidebar entries from one screen, separated by a role filter', () => {
+    // "Attendance Table", "Attendance Dashboard", "Student/Teacher/Staff Attendance" are all
+    // GET /attendance with a different role — one descriptor, not five files.
+    for (const alias of ['AttendanceDashboard', 'StudentAttendance', 'TeacherAttendance', 'StaffAttendance']) {
+      expect(screenForModule({ key: alias })).toBe(screenForModule({ key: 'AttendanceTable' }));
+    }
+    expect(MODULE_REGISTRY.AttendanceTable.filter.server).toBe(true);
+    expect(MODULE_REGISTRY.AttendanceTable.filter.options.map((o) => o.value)).toEqual([
+      'student', 'teacher', 'staff',
+    ]);
+  });
+
+  it('serves three report labels from one aggregate', () => {
+    for (const alias of ['MonthlyReport', 'AttendanceAnalytics']) {
+      expect(screenForModule({ key: alias })).toBe(screenForModule({ key: 'AttendanceReports' }));
+    }
+  });
+
+  it('flags who is actually below the attendance threshold', () => {
+    const rows = [
+      { name: 'A', attendancePercentage: 95, presentDays: 19, totalDays: 20 },
+      { name: 'B', attendancePercentage: 60, presentDays: 12, totalDays: 20 },
+    ];
+    const tile = MODULE_REGISTRY.AttendanceReports.summary(rows).find((s) => s.label === 'Below 75%');
+    expect(tile.value).toBe(1);
+    // And the row itself reads as needing attention.
+    expect(MODULE_REGISTRY.AttendanceReports.row(rows[1]).unread).toBe(true);
+    expect(MODULE_REGISTRY.AttendanceReports.row(rows[0]).unread).toBe(false);
+  });
+
+  it('shows the counts a percentage was computed from, so a disputed number can be checked', () => {
+    const fields = MODULE_REGISTRY.AttendanceReports.detail.fields({
+      name: 'A', attendancePercentage: 80, presentDays: 16, totalDays: 20,
+      statusBreakdown: { present: 16, absent: 3, late: 1 },
+    });
+    const labels = fields.map((f) => f.label);
+    expect(labels).toContain('Present');
+    expect(labels).toContain('Absent');
+    expect(labels).toContain('Late');
+  });
+
+  it('stays read-only — marking is a roster, correcting is an audited web action', () => {
+    expect(MODULE_REGISTRY.AttendanceTable.create).toBeUndefined();
+    expect(MODULE_REGISTRY.AttendanceTable.detail.actions).toBeUndefined();
+    expect(MODULE_REGISTRY.AttendanceReports.create).toBeUndefined();
+  });
+});

@@ -24,6 +24,7 @@ export const ROLE_NAMES = {
   LAB_TECHNICIAN: 'Lab Technician',
   MEDICAL_OFFICER: 'Medical Officer',
   CLASS_TEACHER: 'Class Teacher',
+  DRIVER: 'Driver',
 };
 
 // Label + icon (MaterialCommunityIcons) for every nav destination used below. Beyond the handful
@@ -70,6 +71,7 @@ export const MODULE_META = {
   Scholarships: { label: 'Scholarships', icon: 'school-outline' },
   ScholarshipAwards: { label: 'Scholarship Awards', icon: 'hand-heart-outline' },
   Compliance: { label: 'Compliance', icon: 'shield-check-outline' },
+  DriverTrip: { label: 'My Trip', icon: 'bus-marker' },
   Attendance: { label: 'Attendance', icon: 'clipboard-check-outline' },
   Fees: { label: 'Fees', icon: 'cash-multiple' },
   Finance: { label: 'Finance', icon: 'finance' },
@@ -521,6 +523,15 @@ export const NAV_CONFIG = {
   // ASSIGNMENT_SCOPED_ROLES set (added during the Sports Teacher batch, evidence-backed by
   // ClassTeacherAssignmentPage.jsx's own teacherOptions filter), so this role's MyStudents
   // screen will show real data whenever an admin has actually assigned them to a section.
+  [ROLE_NAMES.DRIVER]: {
+    unrestricted: true,
+    items: [
+      'Dashboard', 'DriverTrip', 'MyTasks', 'Payroll',
+      'MyAttendance', 'GpsCheckInOut', 'Leave', 'MyAppraisal',
+      { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars'] },
+      'Profile',
+    ],
+  },
   [ROLE_NAMES.CLASS_TEACHER]: {
     unrestricted: true,
     items: [

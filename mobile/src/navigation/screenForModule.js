@@ -5,6 +5,11 @@ import { MarkAttendanceScreen } from '../screens/custom/MarkAttendanceScreen';
 import { SurveysScreen } from '../screens/custom/SurveysScreen';
 import { PTMScreen } from '../screens/custom/PTMScreen';
 import { MyBusScreen } from '../screens/custom/MyBusScreen';
+import { DriverTripScreen } from '../screens/custom/DriverTripScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { NetworkStatusScreen } from '../screens/NetworkStatusScreen';
+import { SelfAttendanceScreen } from '../screens/custom/SelfAttendanceScreen';
+import { DocumentationScreen } from '../screens/custom/DocumentationScreen';
 import { GroupMenuScreen } from '../screens/GroupMenuScreen';
 import { ModulePlaceholderScreen } from '../screens/ModulePlaceholderScreen';
 import { MODULE_REGISTRY } from '../modules/registry';
@@ -32,6 +37,20 @@ const CUSTOM_SCREENS = {
   // A live-position state machine, not a record — and the map itself is a pending decision
   // (Google Maps API key vs a Leaflet WebView). See the screen header.
   MyTransport: MyBusScreen,
+  // Live device sensors driving a trip state machine — not a list of anything.
+  DriverTrip: DriverTripScreen,
+  // Both of these screens already existed (restored in Phase 0) but no nav key pointed at them,
+  // so three destinations sat on the placeholder for no reason at all.
+  Settings: SettingsScreen,
+  SchoolSettings: SettingsScreen,
+  NetworkStatus: NetworkStatusScreen,
+  // Today's one record, two buttons and a GPS read — not a list. 'My Daily Attendance' is the
+  // same screen under another sidebar label.
+  GpsCheckInOut: SelfAttendanceScreen,
+  MyDailyAttendance: SelfAttendanceScreen,
+  // Built from the caller's own resolved nav, so it cannot drift out of date — and it names the
+  // destinations that are still placeholders rather than quietly omitting them.
+  Documentation: DocumentationScreen,
 };
 
 // Screens that are themselves a nested navigator (Profile pushes to Settings) and so render their

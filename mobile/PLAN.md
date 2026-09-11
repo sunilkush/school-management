@@ -3,7 +3,8 @@
 React Native (Expo) app for the school ERP in this repo. One app, **all 24 roles**, driven by the
 same permission data the web portal uses.
 
-Status: **Phases 0–7 done.** Phase 8 next.
+Status: **Phase 9 in progress — 75 of 180 nav destinations have a real screen (~42%).**
+**105 still land on `ModulePlaceholderScreen`.** See §3a for the two coverage numbers.
 
 ---
 
@@ -74,6 +75,53 @@ mobile/
     theme/          tokens, ThemeProvider
     utils/          domain formatters
 ```
+
+## 3a. What is actually built
+
+Two different questions, and they have different answers.
+
+### Does the destination have a screen at all?
+
+```
+node scripts/audit-nav.mjs
+```
+
+| | |
+| --- | --- |
+| Destinations with a screen | **75** (61 registry keys + 14 bespoke screens) |
+| Destinations with **no** screen | **105** — they land on `ModulePlaceholderScreen` |
+
+The placeholder navigates and does not crash; it names the module and the caller's granted actions
+and shows no data. Phase 9 is the plan for these.
+
+> An earlier version of the audit script reported 67 built. That was wrong: its regex matched every
+> `key:` in a definitions file, including the `key` on each detail **action** — so 'approve',
+> 'reject' and friends were counted as finished destinations. Fixed; the 126 figure was never
+> affected, because action keys are lowercase and never collide with a nav key.
+
+### Of the screens that exist, how much can you do on them?
+
+```
+node scripts/audit-depth.mjs
+```
+
+| Depth | Count | Meaning |
+| --- | --- | --- |
+| List only | **2** | `Attendance`, `TrialBalance` — tapping a row does nothing |
+| List + detail, read-only | **27** | you can open a record but not act on it |
+| Can create or act | **15** | `AdmissionInquiries`, `Leave`, `VisitorLog`, `Circulars`, `Certificates`, `Discipline`, `HealthRecords`, `Assignments`, `Messages`, `Notifications`, `OnlineClasses`, `ScholarshipAwards`, `StudyMaterials` |
+
+**Most of the 26 read-only screens are read-only on purpose, not unfinished.** The ledger is
+immutable by design, payroll is run by accounts, a family cannot pay fees in-app, destructive
+platform actions stay on the web portal — each of those decisions is recorded in its phase below.
+Do not "complete" them by adding write actions without re-reading why they were left out.
+
+The two genuinely thin screens are:
+
+- **`Attendance`** — a list of daily records with no per-day detail. Low value to add; a day's
+  record is one line.
+- **`TrialBalance`** — no detail by design (it is a totals table), but its summary only covers the
+  rows on screen. See the Phase 6 note.
 
 ## 4. Phases
 
@@ -378,6 +426,129 @@ the word "integration".
 ### Phase 8 — Driver + release
 Driver trip start/stop with background location (`expo-location`). EAS build, icons, store
 listing.
+
+### Phase 9 — Fill the placeholders ⬜
+
+**126 nav destinations have no screen — but that is not 126 screens of work.**
+
+The web sidebar gives one feature several labels, so those 126 keys collapse into about **105
+distinct screens** (54 destinations are already covered by just 41 descriptors + 8 bespoke screens,
+for the same reason), and the first **nine** of them cover the ones every role actually bumps into.
+Sequenced so the loudest gaps close first, not alphabetically.
+
+Every endpoint needed for 9a and 9b already exists in `apiSlice.js` — **the highest-impact work
+needs no backend wiring at all.**
+
+#### 9a — Free wins ✅
+
+`SettingsScreen` and `NetworkStatusScreen` are already in the repo (restored in Phase 0) but no nav
+key points at them, so three destinations sit on the placeholder for no reason:
+
+| Key | Fix |
+| --- | --- |
+| `Settings`, `SchoolSettings` | wire to the existing `SettingsScreen` |
+| `NetworkStatus` | wire to the existing `NetworkStatusScreen` |
+
+#### 9b — The six that everyone sees — 5 of 6 done
+
+Do these before any tier ordering. They are why the app feels empty.
+
+| Screen | Covers | Roles | Endpoints |
+| --- | --- | --- | --- |
+| **Self check-in/out** ✅ | `GpsCheckInOut`, `MyDailyAttendance` | 20 | bespoke — today's record, two buttons, one GPS read |
+| **My attendance history** ✅ | `MyAttendance`, `MyMonthlyReport`, `ShiftAttendance` | 18 | descriptor |
+| **My tasks** ✅ | `MyTasks`, `TaskManagement` | 20 | descriptor |
+| **Support tickets** ✅ | `SupportTickets`, `ContactSupport` | 7 | descriptor |
+| **Documentation** ✅ | `Documentation` | 7 | bespoke — built from the caller's own resolved nav |
+| **Reports hub** ⏸ | `Reports` | 8 | **deferred on purpose — see below** |
+
+**Reports is deferred, not skipped.** On the web it is a hub that links to the individual report
+pages — and every one of those (`AttendanceReports`, `FeeReports`, `ExamReports`,
+`SchoolReports`, `RevenueAnalytics`, …) is still a placeholder. A hub whose every link lands on a
+placeholder is worse than the placeholder it replaced: it looks built and leads nowhere. Build it
+after the reports it points at exist.
+
+**Two decisions worth keeping:**
+
+- **Self check-in does not pre-judge the geofence.** The backend rejects a check-in outside school
+  hours or beyond the radius, and its message carries the actual distance. Re-implementing that
+  rule on the phone would either duplicate it or, worse, disagree with it — so the phone produces
+  an honest fix and shows whatever the server answers.
+- **`MyAttendance` is not `Attendance`.** One is a staff member's own punch record
+  (`/attendance/self/history`), the other is the family view of a *student's* record. A test
+  asserts they stay different screens, and that their percentage arithmetic stays identical so the
+  two never disagree in front of anyone.
+
+**The Documentation screen names what is NOT built.** It lists this role's destinations in two
+groups — working, and "in your menu but not built yet" — so a user who hits a placeholder knows it
+is unwritten rather than assuming the app is broken or that they lack a permission. It is generated
+from the resolved nav, so it cannot drift.
+
+Note `MyAttendance` is **not** the `Attendance` module built in Phase 3 — that one is the family
+view of a *student's* record. This is a staff member's own, and it is a different key and a
+different endpoint. Mixing them up would show a teacher their child's attendance.
+
+#### 9c — The admin attendance cluster ✅ (2 screens → 8 keys)
+
+| Screen | Covers |
+| --- | --- |
+| **Admin attendance browser** (role filter chips) | `AttendanceTable`, `AttendanceDashboard`, `StudentAttendance`, `TeacherAttendance`, `StaffAttendance` |
+| **Monthly attendance report** | `AttendanceReports`, `MonthlyReport`, `AttendanceAnalytics` |
+
+Five sidebar entries are one browser with a role filter, and three are one
+`GET /attendance/report/monthly` aggregate. Building them as one screen each is what keeps this
+from becoming eight files.
+
+#### 9d — Academics (mostly descriptors)
+
+Classes, Subjects, ClassSections, ClassTeacherAssignments, Boards, BoardClasses, AcademicYears,
+ChaptersTopics, SubjectResources, LessonPlans, QuestionBank, Assessments, ExamReports,
+ExamAnalytics, AdmitCard, MyStudents, MyClass, AssignedClasses, TeacherTimetable, Sports, PTM
+(staff side), MyAchievements, StudentMonthlyReport.
+
+Bespoke within this tier: **PaperBuilder**, **SeatPlan**, **Evaluation/GradeEntry** (a marks grid),
+**CreateExam/ExamSchedule** (one screen, two labels), **Calendar/AcademicCalendar**.
+
+#### 9e — Finance, payroll and HR (mostly descriptors)
+
+FeeCollection, FeeCategories, FeeStructures, FeeReports, AssignFees, FineManagement, Finance,
+FinanceSummary, PaymentHistory, Revenue, RevenueAnalytics, SalaryStructures, PayslipCenter,
+PayrollMonthlyReports, PayrollSettings, SalaryAdvance, BonusIncentives, Reimbursements.
+
+Bespoke: **MonthlyRun/SalaryRun** (one generate → lock → pay cycle screen, two labels),
+**CreateUser/CreateEmployee** (one two-call flow, two labels).
+
+#### 9f — Operations
+
+Parents, StudentProfiles, MyChildren, Alumni, Librarians, Books/BookCatalog, IssuedBooks,
+LibrarySettings, Complaints, CounselingSessions, Appointments, EmergencyAlerts,
+Broadcasts/Communication, PhoneCallsLog, EntryRegister/GateLogs/VisitorManagement (one screen,
+three labels), Allocations, Routes, Vehicles, Drivers, TransportUsers, TransportAssignments,
+Transport, FuelMaintenance, GeofenceSettings, Departments, Designations, Faqs, LeaveManagement,
+TaskManagement, RoleWorkspace.
+
+Bespoke: **StudentAdmission**, **StudentPromotion**, **SchoolSetup** (a five-step wizard).
+
+#### 9g — Platform (Super Admin)
+
+SchoolAdmins, Accountants, SchoolReports, SchoolWiseReports, PlatformUsage,
+PlatformAcademicSummary.
+
+#### Still deliberately NOT built
+
+`GlobalConfig`, `Permissions`, `Roles`, `SystemBackup`, `SystemMaintenance`, `SystemLogs`,
+`PlatformModules` — refused in Phase 7 and staying that way. A test asserts they never gain a
+screen.
+
+#### How to work through it
+
+1. Run `node scripts/audit-nav.mjs` first; the count should fall as screens land.
+2. Check `apiSlice.js` before writing anything — most endpoints are already mapped.
+3. Write a descriptor in `src/modules/definitions/` (contract at the top of
+   `src/modules/registry.js`). Use `aliases` for the duplicate labels above rather than a second
+   descriptor.
+4. Only reach for `screens/custom/` when the UI genuinely is not a list.
+
 
 ## 5. Constraints that will bite if forgotten
 

@@ -44,6 +44,10 @@ import {
   complianceModule,
 } from './definitions/platform';
 
+// Phase 9 — the destinations nearly every role has
+import { myAttendanceModule, myTasksModule, supportTicketsModule } from './definitions/selfService';
+import { adminAttendanceModule, attendanceReportModule } from './definitions/adminAttendance';
+
 /**
  * Declarative module registry — the reason this app is not 294 hand-written screens.
  *
@@ -127,6 +131,11 @@ const DEFINITIONS = [
   subscriptionPlansModule,
   auditLogsModule,
   complianceModule,
+  myAttendanceModule,
+  myTasksModule,
+  supportTicketsModule,
+  adminAttendanceModule,
+  attendanceReportModule,
 ];
 
 /**
