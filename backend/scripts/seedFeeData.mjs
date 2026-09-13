@@ -13,6 +13,9 @@ import path from "path";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
+const { DB_NAME } = await import("../src/constants.js");
+const { buildInstallments, periodsPerYear, normalizeFeeSettings } = await import("../src/services/feeSchedule.service.js");
+
 const URI = process.env.MONGOOSE_URI;
 if (!URI) { console.error("❌  MONGOOSE_URI not found in .env"); process.exit(1); }
 
@@ -24,12 +27,13 @@ const warn = (msg) => console.log(`  ⚠️  ${msg}`);
 const sep  = ()    => console.log("\n" + "─".repeat(56));
 
 /* ─── Fee catalogue ──────────────────────────────────────────────── */
+// amount is per period of frequency: Tuition ₹2,000 every month → ₹24,000 a year.
+// Total monthly ₹3,000 (Tuition + Transport); year total ₹41,000.
 const FEE_HEADS = [
-  { name: "Tuition Fee",   type: "recurring",  amount: 12000, frequency: "yearly"    },
-  { name: "Transport Fee", type: "recurring",  amount:  3600, frequency: "monthly"   },
-  { name: "Library Fee",   type: "recurring",  amount:  1200, frequency: "yearly"    },
-  { name: "Computer Fee",  type: "recurring",  amount:  2400, frequency: "quarterly" },
-  { name: "Sports Fee",    type: "one-time",   amount:  1200, frequency: "yearly"    },
+  { name: "Tuition Fee",   type: "recurring", amount: 2000, frequency: "monthly"   },
+  { name: "Transport Fee", type: "recurring", amount: 1000, frequency: "monthly"   },
+  { name: "Exam Fee",      type: "recurring", amount:  500, frequency: "quarterly" },
+  { name: "Annual Fee",    type: "recurring", amount: 3000, frequency: "yearly"    },
 ];
 
 /* ─── Main ──────────────────────────────────────────────────────── */
@@ -37,7 +41,7 @@ async function main() {
   console.log("\n🚀  Fee Module Demo Data Seeder");
   console.log("─".repeat(56));
 
-  await mongoose.connect(URI);
+  await mongoose.connect(URI, { dbName: DB_NAME });
   ok("Connected to MongoDB");
 
   const db = mongoose.connection.db;
@@ -158,6 +162,7 @@ async function main() {
         feeHeadId:     oid(fhId.toString()),
         amount:        fh.amount,
         frequency:     fh.frequency,
+        amountBasis:   "per_period",
         isActive:      true,
         createdAt:     new Date(),
         updatedAt:     new Date(),
@@ -216,22 +221,24 @@ async function main() {
         continue;
       }
 
+      const yearTotal = fh.amount * periodsPerYear(fh.frequency);
       const result = await studentFees.insertOne({
         schoolId:      oid(schoolId.toString()),
         academicYearId: oid(acYear._id.toString()),
         studentId:     oid(sId.toString()),
         feeStructureId: oid(structId.toString()),
         customAmount:  null,
-        totalAmount:   fh.amount,
+        totalAmount:   yearTotal,
+        fineAmount:    0,
         paidAmount:    0,
-        dueAmount:     fh.amount,
+        dueAmount:     yearTotal,
         status:        "pending",
         assignedBy:    adminUser._id,
         createdAt:     new Date(),
         updatedAt:     new Date(),
       });
 
-      studentFeeIds.push({ _id: result.insertedId, studentId: sId, totalAmount: fh.amount, feeStructureId: structId });
+      studentFeeIds.push({ _id: result.insertedId, studentId: sId, totalAmount: yearTotal, feeStructureId: structId });
       feeAssigned++;
     }
   }
@@ -256,42 +263,21 @@ async function main() {
     const struct = await feeStructs.findOne({ _id: oid(sf.feeStructureId.toString()) });
     const frequency = struct?.frequency || "yearly";
 
-    const count =
-      frequency === "monthly"   ? 12 :
-      frequency === "quarterly" ? 4  :
-      1;
-    const gapMonths =
-      frequency === "monthly"   ? 1  :
-      frequency === "quarterly" ? 3  :
-      12;
-
-    const instAmount = parseFloat((sf.totalAmount / count).toFixed(2));
-    const baseDate   = new Date();
-    const docs       = [];
-
-    for (let i = 1; i <= count; i++) {
-      const label =
-        frequency === "monthly"   ? baseDate.toLocaleString("default", { month: "short", year: "2-digit" }) :
-        frequency === "quarterly" ? `Q${i}` :
-        "Annual";
-
-      docs.push({
-        schoolId:      oid(schoolId.toString()),
+    // Same schedule the app generates on assignment: dated from the start of the academic year,
+    // on the school's due day.
+    const docs = buildInstallments({
+      studentFee: {
+        _id: oid(sf._id.toString()),
+        schoolId: oid(schoolId.toString()),
         academicYearId: oid(acYear._id.toString()),
-        studentId:     oid(sf.studentId.toString()),
-        studentFeeId:  oid(sf._id.toString()),
-        installmentType: frequency,
-        installmentName: label,
-        amount:        instAmount,
-        paidAmount:    0,
-        dueDate:       new Date(baseDate),
-        status:        "pending",
-        createdAt:     new Date(),
-        updatedAt:     new Date(),
-      });
-
-      baseDate.setMonth(baseDate.getMonth() + gapMonths);
-    }
+        studentId: oid(sf.studentId.toString()),
+        totalAmount: sf.totalAmount,
+      },
+      frequency,
+      academicYear: acYear,
+      dueDay: normalizeFeeSettings(school?.feeSettings).dueDay,
+      assignedAt: acYear.startDate,
+    }).map((d) => ({ ...d, createdAt: new Date(), updatedAt: new Date() }));
 
     if (docs.length) {
       await installments.insertMany(docs);

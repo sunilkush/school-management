@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 import { requireSchoolId } from "../utils/resolveSchoolId.js";
+import { summarizeFeeLines } from "../services/feeSchedule.service.js";
 
 /* ================= CREATE ================= */
 export const createFeeStructure = asyncHandler(async (req, res) => {
@@ -38,6 +39,8 @@ if (existing) {
     feeHeadId,
     amount,
     frequency,
+    // amount is per period of frequency (see FeeStructure.amount).
+    amountBasis: "per_period",
   });
 
   res.status(201).json(new ApiResponse(201, fee, "FeeStructure created"));
@@ -63,12 +66,51 @@ export const getFeeStructures = asyncHandler(async (req, res) => {
     filter.schoolId = req.user.schoolId?.toString();
   }
 
-  const data = await FeeStructure.find(filter)
-    .populate("feeHeadId", "name")
+  const docs = await FeeStructure.find(filter)
+    .populate("feeHeadId", "name type")
     .populate("schoolClassId", "name")
-    .populate("academicYearId", "name");
+    .populate("academicYearId", "name")
+    .lean();
+
+  // periods and yearlyAmount are worked out here so no screen has to calculate them.
+  const { rows } = summarizeFeeLines(docs.map((d) => ({ ...d, perPeriodAmount: d.amount })));
+  const data = rows.map(({ perPeriodAmount: _p, ...row }) => row);
 
   res.status(200).json(new ApiResponse(200, data, "Fetched"));
+});
+
+/* ================= CLASS SUMMARY =================
+   GET /fee-structures/summary?schoolClassId=&academicYearId=
+   What one student of a class pays: Fee Head | Amount | Frequency | Per year, the total per
+   frequency ("Total monthly ₹3,000") and the year total.
+*/
+export const getFeeStructureSummary = asyncHandler(async (req, res) => {
+  const schoolId = requireSchoolId(req.user);
+  const { schoolClassId, academicYearId } = req.query;
+
+  if (!mongoose.isValidObjectId(schoolClassId)) throw new ApiError(400, "Invalid schoolClassId");
+  if (academicYearId && !mongoose.isValidObjectId(academicYearId)) throw new ApiError(400, "Invalid academicYearId");
+
+  const docs = await FeeStructure.find({
+    schoolId,
+    schoolClassId,
+    ...(academicYearId ? { academicYearId } : {}),
+    isActive: { $ne: false },
+  })
+    .populate("feeHeadId", "name")
+    .sort({ createdAt: 1 })
+    .lean();
+
+  const summary = summarizeFeeLines(
+    docs.map((d) => ({
+      _id: d._id,
+      feeHeadName: d.feeHeadId?.name || "Fee",
+      frequency: d.frequency,
+      perPeriodAmount: d.amount,
+    }))
+  );
+
+  res.status(200).json(new ApiResponse(200, summary, "Fee summary"));
 });
 
 /* ================= UPDATE ================= */
@@ -81,7 +123,7 @@ export const updateFeeStructure = asyncHandler(async (req, res) => {
 
   // schoolId must not be attacker-settable via the body — Object.assign would otherwise let a
   // caller reassign their own fee structure into another school's namespace.
-  const { schoolId: _schoolId, _id, ...updates } = req.body;
+  const { schoolId: _schoolId, _id, amountBasis: _amountBasis, ...updates } = req.body;
   Object.assign(fee, updates);
   await fee.save();
 

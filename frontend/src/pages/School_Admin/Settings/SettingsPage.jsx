@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTheme } from "../../../context/ThemeContext";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { changePassword, updateUser } from "../../../features/authSlice";
-import { fetchRoles } from "../../../features/roleSlice";
 import {
   fetchAllAcademicYears,
   fetchActiveAcademicYear,
@@ -10,6 +10,8 @@ import {
   setSelectedAcademicYear,
 } from "../../../features/academicYearSlice";
 import apiClient from "../../../api/httpClient";
+import { fetch2FAStatus } from "../../../features/twoFactorSlice";
+import PaymentGatewaySettings from "../../../components/settings/PaymentGatewaySettings.jsx";
 
 import {
   Alert,
@@ -34,13 +36,8 @@ import {
 
 import {
   BankOutlined,
-  BellOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined,
-  CreditCardOutlined,
-  DatabaseOutlined,
   ExclamationCircleOutlined,
-  GlobalOutlined,
   LockOutlined,
   MessageOutlined,
   ReloadOutlined,
@@ -59,22 +56,18 @@ import { avatarStyle, iconWell, pageWrapper, sectionPanel } from "../../../style
 const { Text } = Typography;
 
 /* ── Constants ───────────────────────────────────────────────────── */
-const DEFAULT_SETTINGS = {
-  theme: "system",
-  language: "english",
-  timezone: "UTC",
-  notifications: true,
-  autoBackup: true,
-  backupFreq: "Weekly",
-};
-
+// Only settings that actually do something live on this page. Language, timezone, a
+// notifications switch, a "default role" and backup preferences used to be here too, but nothing
+// in the app ever read them — they were saved to this browser's localStorage and ignored.
 const TAB_FIELDS = {
   profile:     ["fullName", "email", "phone"],
-  preferences: ["theme", "language", "timezone", "notifications"],
-  school:      ["defaultRole", "academicYear"],
+  preferences: ["theme"],
+  school:      ["academicYear"],
   security:    ["currentPassword", "newPassword", "confirmPassword"],
-  backup:      ["autoBackup", "backupFreq"],
 };
+
+// Keys the removed settings were stored under; cleared so they stop lingering in the browser.
+const LEGACY_STORAGE_PREFIXES = ["schooladmin-settings", "schooladmin-defaultrole"];
 
 const TAB_COLORS = {
   profile:      "var(--primary)",
@@ -82,7 +75,6 @@ const TAB_COLORS = {
   school:       "var(--success)",
   communication:"var(--info)",
   security:     "var(--danger)",
-  backup:       "var(--accent)",
 };
 
 /* ── Password strength ───────────────────────────────────────────── */
@@ -141,17 +133,14 @@ const Settings = () => {
   const { themeMode, setThemeMode } = useTheme();
 
   const { user }                                         = useSelector((s) => s.auth || {});
-  const { roles = [], loading: roleLoading }             = useSelector((s) => s.role || {});
   const { academicYears = [], activeYear, loading: yearLoading } = useSelector((s) => s.academicYear || {});
 
   const schoolId = user?.school?._id;
 
   const [form]         = Form.useForm();
-  const [razorpayForm] = Form.useForm();
   const [commsForm]    = Form.useForm();
 
   const [isSaving,        setIsSaving]        = useState(false);
-  const [isRazorpaySaving, setIsRazorpaySaving] = useState(false);
   const [isCommsSaving,   setIsCommsSaving]   = useState(false);
   const [admissionsOpen,  setAdmissionsOpen]  = useState(true);
   const [isAdmissionsSaving, setIsAdmissionsSaving] = useState(false);
@@ -161,19 +150,27 @@ const Settings = () => {
   const [pwdStrength,     setPwdStrength]     = useState(0);
   const [activeTab,       setActiveTab]       = useState("profile");
   const [saveSuccess,     setSaveSuccess]     = useState(false);
-  const [langPreview,     setLangPreview]     = useState(null);
+  const [twoFactor,       setTwoFactor]       = useState({ loading: true, enabled: false });
 
   const isDirty = dirtyTabs.size > 0;
 
 
-  const localStorageKey = useMemo(() => {
-    const uid = user?._id || user?.id;
-    return uid ? `schooladmin-settings-${uid}` : "schooladmin-settings";
-  }, [user]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      Object.keys(localStorage)
+        .filter((k) => LEGACY_STORAGE_PREFIXES.some((prefix) => k.startsWith(prefix)))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch { /* storage unavailable */ }
+  }, []);
 
   /* ── Load data ─────────────────────────────────────────────────── */
   useEffect(() => {
-    dispatch(fetchRoles());
+    dispatch(fetch2FAStatus())
+      .unwrap()
+      .then((data) => setTwoFactor({ loading: false, enabled: Boolean(data?.twoFactorEnabled) }))
+      .catch(() => setTwoFactor({ loading: false, enabled: false }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -182,21 +179,6 @@ const Settings = () => {
       dispatch(fetchActiveAcademicYear(schoolId));
     }
   }, [dispatch, schoolId]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res    = await apiClient.get("/payments/razorpay/config");
-        const config = res?.data?.data || {};
-        razorpayForm.setFieldsValue({
-          keyId:     config.keyId     || "",
-          keySecret: "",
-          accountId: config.accountId || "",
-          isEnabled: Boolean(config.isEnabled),
-        });
-      } catch { /* config may not exist yet */ }
-    })();
-  }, [razorpayForm]);
 
   useEffect(() => {
     (async () => {
@@ -216,37 +198,25 @@ const Settings = () => {
     })();
   }, [commsForm]);
 
-  const safeRoles = Array.isArray(roles) ? roles : [];
-
-  const availableRoles = useMemo(
-    () => safeRoles.filter((r) => r?.name).map((r) => r.name),
-    [safeRoles]
-  );
-
-  /* populate form when user/roles/academic years are ready */
+  /* populate form when user / active academic year are ready */
+  // The academic year shown is always the school's active year as the server reports it — never
+  // a value remembered in this browser. A remembered year could be one another admin has since
+  // replaced, and saving an unrelated change here would silently switch the whole school back.
   useEffect(() => {
     if (!user) return;
-    let stored = {};
-    try { stored = JSON.parse(localStorage.getItem(localStorageKey) || "{}"); } catch { /**/ }
-
-    /* Default role: prefer stored localStorage preference, fallback to current JWT role */
-    const storedRole = localStorage.getItem(`schooladmin-defaultrole-${user._id || user.id}`) || "";
-
     form.setFieldsValue({
       fullName:        user?.name  || "",
       email:           user?.email || "",
       phone:           user?.phone || "",
-      defaultRole:     storedRole || user?.role?.name || "",
-      academicYear:    stored?.academicYear || activeYear?._id || null,
-      ...DEFAULT_SETTINGS,
-      ...stored,
-      theme:           stored?.theme || themeMode || "system",
+      academicYear:    activeYear?._id || null,
+      theme:           themeMode || "system",
       currentPassword: "",
       newPassword:     "",
       confirmPassword: "",
     });
     setDirtyTabs(new Set());
-  }, [user, form, localStorageKey, activeYear, themeMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, form, activeYear?._id]);
 
   /* keep theme field in sync if changed externally */
   useEffect(() => { form.setFieldValue("theme", themeMode); }, [themeMode, form]);
@@ -262,9 +232,6 @@ const Settings = () => {
 
     /* immediate theme preview */
     if (changedValues.theme !== undefined) setThemeMode(changedValues.theme);
-
-    /* live language preview */
-    if (changedValues.language !== undefined) setLangPreview(changedValues.language);
 
     /* live password strength */
     if (changedValues.newPassword !== undefined) {
@@ -300,29 +267,19 @@ const Settings = () => {
 
       await Promise.all(jobs);
 
-      /* persist non-sensitive settings */
-      // eslint-disable-next-line no-unused-vars
-      const { fullName, email, phone, currentPassword, newPassword, confirmPassword, defaultRole, academicYear, ...persist } = values;
-      localStorage.setItem(localStorageKey, JSON.stringify({ ...persist, academicYear }));
       setThemeMode(values.theme);
 
-      /* persist default role preference */
-      const uid = user?._id || user?.id;
-      if (uid && defaultRole) {
-        localStorage.setItem(`schooladmin-defaultrole-${uid}`, defaultRole);
-      }
-
-      /* activate the selected academic year globally */
-      if (academicYear) {
+      /* switch the school's active academic year — only when it was actually changed here */
+      const academicYear = values.academicYear;
+      if (academicYear && academicYear !== activeYear?._id && form.isFieldTouched("academicYear")) {
         const yearObj = academicYears.find((y) => y._id === academicYear);
-        if (yearObj) dispatch(setSelectedAcademicYear(yearObj));
-        if (yearObj && !yearObj.isActive) {
-          try {
-            await dispatch(setActiveAcademicYear(academicYear)).unwrap();
-            message.success("Academic year updated successfully.");
-          } catch (e) {
-            message.warning(`Settings saved, but academic year update failed: ${e?.message || "API error"}`);
-          }
+        try {
+          await dispatch(setActiveAcademicYear(academicYear)).unwrap();
+          if (yearObj) dispatch(setSelectedAcademicYear(yearObj));
+          if (schoolId) dispatch(fetchActiveAcademicYear(schoolId));
+          message.success("Academic year updated for the whole school.");
+        } catch (e) {
+          message.warning(`Profile saved, but the academic year could not be changed: ${e?.message || e || "API error"}`);
         }
       }
 
@@ -331,7 +288,6 @@ const Settings = () => {
       setAvatarFile(null);
       setDirtyTabs(new Set());
       setPwdStrength(0);
-      setLangPreview(null);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
       message.success("Settings saved successfully!");
@@ -342,18 +298,15 @@ const Settings = () => {
     }
   };
 
-  /* ── Reset ─────────────────────────────────────────────────────── */
+  /* ── Discard changes ───────────────────────────────────────────── */
   const handleReset = () => {
     if (!user) return;
-    localStorage.removeItem(localStorageKey);
     form.resetFields();
     form.setFieldsValue({
       fullName:        user?.name  || "",
       email:           user?.email || "",
       phone:           user?.phone || "",
-      defaultRole:     user?.role?.name || "",
       academicYear:    activeYear?._id || null,
-      ...DEFAULT_SETTINGS,
       theme:           themeMode || "system",
       currentPassword: "",
       newPassword:     "",
@@ -363,7 +316,7 @@ const Settings = () => {
     setAvatarFile(null);
     setAvatarPreview(null);
     setPwdStrength(0);
-    message.info("Settings reset to defaults.");
+    message.info("Unsaved changes discarded.");
   };
 
   /* ── Online admissions toggle ──────────────────────────────────── */
@@ -393,20 +346,6 @@ const Settings = () => {
       message.error(err?.response?.data?.message || "Unable to update admission settings.");
     } finally {
       setIsAdmissionsSaving(false);
-    }
-  };
-
-  /* ── Razorpay save ─────────────────────────────────────────────── */
-  const handleRazorpaySave = async (values) => {
-    setIsRazorpaySaving(true);
-    try {
-      await apiClient.put("/payments/razorpay/config", values);
-      message.success("Razorpay settings saved successfully.");
-      razorpayForm.setFieldValue("keySecret", "");
-    } catch (err) {
-      message.error(err?.response?.data?.message || "Unable to save Razorpay settings.");
-    } finally {
-      setIsRazorpaySaving(false);
     }
   };
 
@@ -457,7 +396,7 @@ const Settings = () => {
 
   const str = STRENGTH[Math.min(pwdStrength, 3)];
 
-  const isLoading = roleLoading || yearLoading;
+  const isLoading = yearLoading;
   const userName  = user?.name || "User";
   const userAvatarStyle = avatarStyle(userName, 64);
 
@@ -539,8 +478,8 @@ const Settings = () => {
         <div>
           <SectionTitle
             icon={<SettingOutlined />} color="var(--purple)"
-            label="Display & Regional"
-            description="Theme changes apply immediately. Language and timezone are saved with your profile."
+            label="Display"
+            description="Choose how the portal looks on this device. Changes apply immediately."
           />
           <Row gutter={[16, 0]}>
             <Col xs={24} md={8}>
@@ -555,65 +494,6 @@ const Settings = () => {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
-              <Form.Item label={<Flex align="center" gap={6}><GlobalOutlined />Language</Flex>} name="language">
-                <Select
-                  options={[
-                    { value: "english", label: "🇬🇧  English" },
-                    { value: "hindi",   label: "🇮🇳  Hindi" },
-                  ]}
-                />
-              </Form.Item>
-              {langPreview && (
-                <div style={{
-                  marginTop: -10, marginBottom: 16,
-                  background: `${TAB_COLORS.preferences}12`,
-                  border: `1px solid ${TAB_COLORS.preferences}30`,
-                  borderRadius: 10, padding: "8px 12px",
-                  display: "flex", alignItems: "center", gap: 8,
-                }}>
-                  <GlobalOutlined style={{ color: TAB_COLORS.preferences, fontSize: 13 }} />
-                  <Text style={{ fontSize: 12, color: TAB_COLORS.preferences }}>
-                    {langPreview === "hindi"
-                      ? "🇮🇳 Hindi selected — interface labels will switch after save & reload."
-                      : "🇬🇧 English selected — interface labels will switch after save & reload."}
-                  </Text>
-                </div>
-              )}
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item label={<Flex align="center" gap={6}><ClockCircleOutlined />Timezone</Flex>} name="timezone">
-                <Select
-                  showSearch optionFilterProp="label"
-                  options={[
-                    { value: "UTC",                  label: "UTC" },
-                    { value: "Asia/Kolkata",          label: "Asia/Kolkata (IST +5:30)" },
-                    { value: "America/New_York",       label: "America/New_York (EST -5:00)" },
-                    { value: "America/Chicago",        label: "America/Chicago (CST -6:00)" },
-                    { value: "America/Los_Angeles",    label: "America/Los_Angeles (PST -8:00)" },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24}>
-              <Divider style={{ margin: "4px 0 16px" }} />
-              <div style={{ background: "var(--surface-soft)", borderRadius: 12, padding: "16px 20px", border: "1px solid var(--border-muted)" }}>
-                <Flex align="center" justify="space-between" wrap="wrap" gap={12}>
-                  <div>
-                    <Flex align="center" gap={8} style={{ marginBottom: 2 }}>
-                      <BellOutlined style={{ color: "var(--warning)" }} />
-                      <Text strong style={{ color: "var(--text-primary)" }}>In-App Notifications</Text>
-                    </Flex>
-                    <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                      Receive real-time alerts, announcements, and system updates inside the portal.
-                    </Text>
-                  </div>
-                  <Form.Item name="notifications" valuePropName="checked" style={{ margin: 0 }}>
-                    <Switch />
-                  </Form.Item>
-                </Flex>
-              </div>
-            </Col>
           </Row>
         </div>
       ),
@@ -627,34 +507,26 @@ const Settings = () => {
           <SectionTitle
             icon={<BankOutlined />} color="var(--success)"
             label="School Configuration"
-            description="Set your default role view and active academic year for this session."
+            description="The academic year that reports, timetables, attendance and fees use across the school."
           />
           <Row gutter={[16, 0]}>
             <Col xs={24} md={12}>
-              <Form.Item label="Default Role" name="defaultRole"
-                extra="Applies on your next login — saved as your dashboard preference.">
-                <Select placeholder="Select role" allowClear
-                  options={availableRoles.map((r) => ({ value: r, label: r }))} />
-              </Form.Item>
-              <InfoBox icon={<UserOutlined />}>
-                This preference is saved locally. The dashboard you see after login will match this role if you have the corresponding access.
-              </InfoBox>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item label="Academic Year" name="academicYear"
-                extra="Sets the active year across reports, timetables, and fees.">
+              <Form.Item label="Active Academic Year" name="academicYear"
+                extra="Changing this and saving switches the active year for everyone in the school.">
                 <Select
                   placeholder={yearLoading ? "Loading academic years…" : "Select academic year"}
                   loading={yearLoading}
-                  allowClear
                   options={academicYears.map((y) => ({
                     value: y._id,
                     label: y.isActive ? `${y.name} (Active)` : y.name,
                   }))}
                 />
               </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
               <InfoBox icon={<BankOutlined />}>
-                Selecting a different year and saving will activate it school-wide — all reports and data will filter to that year.
+                Only a year you pick here and save is activated. Saving other changes on this page never
+                switches the academic year.
               </InfoBox>
             </Col>
           </Row>
@@ -693,41 +565,7 @@ const Settings = () => {
 
           <Divider style={{ margin: "20px 0" }} />
 
-          <SectionTitle
-            icon={<CreditCardOutlined />} color="var(--warning)"
-            label="Razorpay Integration"
-            description="Configure payment gateway credentials for online fee collection."
-          />
-          <Form form={razorpayForm} layout="vertical" onFinish={handleRazorpaySave}>
-            <Row gutter={[16, 0]}>
-              <Col xs={24} md={8}>
-                <Form.Item label="Key ID" name="keyId" rules={[{ required: true, message: "Key ID is required" }]}>
-                  <Input placeholder="rzp_live_xxxxxxxx" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item label="Key Secret" name="keySecret" extra="Leave blank to keep existing secret.">
-                  <Input.Password placeholder="Enter new key secret (optional)" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item label="Account ID" name="accountId">
-                  <Input placeholder="acc_xxxxxxxx" />
-                </Form.Item>
-              </Col>
-              <Col xs={24}>
-                <Flex align="center" justify="space-between" wrap="wrap" gap={12}>
-                  <Form.Item label="Enable Razorpay for this school" name="isEnabled" valuePropName="checked" style={{ margin: 0 }}>
-                    <Switch />
-                  </Form.Item>
-                  <Button type="primary" icon={<SaveOutlined />} onClick={() => razorpayForm.submit()}
-                    loading={isRazorpaySaving} style={{ background: "var(--warning)", borderColor: "var(--warning)" }}>
-                    Save Razorpay Settings
-                  </Button>
-                </Flex>
-              </Col>
-            </Row>
-          </Form>
+          <PaymentGatewaySettings />
         </div>
       ),
     },
@@ -735,6 +573,9 @@ const Settings = () => {
     {
       key: "communication",
       label: tabLabel("communication", <MessageOutlined />, "Communication"),
+      // Rendered up front: the saved settings are loaded into this tab's form on page load, and a
+      // form that is not mounted yet cannot receive them.
+      forceRender: true,
       children: (
         <div>
           <SectionTitle
@@ -742,7 +583,9 @@ const Settings = () => {
             label="SMS & WhatsApp Sender"
             description="Use your own Twilio account to send SMS and WhatsApp notifications under your school's own number. Leave disabled to keep using the platform's shared sender."
           />
-          <Form form={commsForm} layout="vertical" onFinish={handleCommsSave}>
+          {/* component={false}: this whole page already sits inside one <form>, and HTML does not
+              allow a <form> inside another. The Save button submits this form directly. */}
+          <Form form={commsForm} layout="vertical" onFinish={handleCommsSave} component={false}>
             <Row gutter={[16, 0]}>
               <Col xs={24} md={8}>
                 <Form.Item label="Provider" name="provider">
@@ -884,65 +727,32 @@ const Settings = () => {
           <SectionTitle
             icon={<SafetyOutlined />} color="var(--text-muted)"
             label="Two-Factor Authentication"
-            description=""
+            description="Turned on and off from Security Settings, where you confirm with a code."
           />
-          <InfoBox icon={<SafetyOutlined />}>
-            <span>
-              <strong>Two-Factor Authentication</strong> — Coming soon. Secure your account with an authenticator app.
-            </span>
-            <Tag color="default" style={{ marginLeft: 10, borderRadius: 99, fontSize: 11 }}>Coming Soon</Tag>
-          </InfoBox>
+          <Flex align="center" justify="space-between" wrap="wrap" gap={12}
+            style={{ background: "var(--surface-soft)", borderRadius: 12, padding: "16px 20px", border: "1px solid var(--border-muted)" }}>
+            <div>
+              <Flex align="center" gap={8} style={{ marginBottom: 2 }}>
+                <Text strong style={{ color: "var(--text-primary)" }}>Email one-time code at login</Text>
+                {twoFactor.loading
+                  ? <Spin size="small" />
+                  : <Tag color={twoFactor.enabled ? "success" : "default"} style={{ borderRadius: 99 }}>{twoFactor.enabled ? "On" : "Off"}</Tag>}
+              </Flex>
+              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                {twoFactor.enabled
+                  ? "A code sent to your email is required every time you log in."
+                  : "Protect this admin account: require a code from your email in addition to your password."}
+              </Text>
+            </div>
+            <Button icon={<SafetyOutlined />} onClick={() => navigate("/dashboard/security-settings")}>
+              {twoFactor.enabled ? "Manage" : "Turn on"}
+            </Button>
+          </Flex>
+
         </div>
       ),
     },
 
-    {
-      key: "backup",
-      label: tabLabel("backup", <DatabaseOutlined />, "Backup"),
-      children: (
-        <div>
-          <SectionTitle
-            icon={<DatabaseOutlined />} color="var(--accent)"
-            label="Backup & Data"
-            description="Configure automatic data backup preferences for your school."
-          />
-          <Row gutter={[16, 0]}>
-            <Col xs={24}>
-              <div style={{ background: "var(--surface-soft)", borderRadius: 12, padding: "16px 20px", border: "1px solid var(--border-muted)", marginBottom: 16 }}>
-                <Flex align="center" justify="space-between" wrap="wrap" gap={12}>
-                  <div>
-                    <Flex align="center" gap={8} style={{ marginBottom: 2 }}>
-                      <DatabaseOutlined style={{ color: "var(--accent)" }} />
-                      <Text strong style={{ color: "var(--text-primary)" }}>Enable Auto Backup</Text>
-                    </Flex>
-                    <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                      Automatically back up school data on the selected schedule.
-                    </Text>
-                  </div>
-                  <Form.Item name="autoBackup" valuePropName="checked" style={{ margin: 0 }}>
-                    <Switch style={{ "--ant-switch-color": "var(--accent)" }} />
-                  </Form.Item>
-                </Flex>
-              </div>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item label="Backup Frequency" name="backupFreq">
-                <Select
-                  options={[
-                    { value: "Daily",   label: "Daily" },
-                    { value: "Weekly",  label: "Weekly" },
-                    { value: "Monthly", label: "Monthly" },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <InfoBox icon={<DatabaseOutlined />}>
-            Backup preferences are saved locally on this device. Automated cloud backups are managed by your system administrator.
-          </InfoBox>
-        </div>
-      ),
-    },
   ];
 
   /* ── Render ────────────────────────────────────────────────────── */
@@ -1003,8 +813,8 @@ const Settings = () => {
         icon={<SettingOutlined />}
         extra={
           <Space wrap>
-            <Button icon={<ReloadOutlined />} onClick={handleReset} disabled={isSaving}>
-              Reset Defaults
+            <Button icon={<ReloadOutlined />} onClick={handleReset} disabled={isSaving || !isDirty}>
+              Discard Changes
             </Button>
             <Button
               type="primary"

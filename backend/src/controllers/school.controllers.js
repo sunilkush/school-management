@@ -9,6 +9,7 @@ import { SchoolSubscription } from '../models/schoolSubscription.model.js';
 import { SchoolBoard } from '../models/School_board.model.js';
 import { escapeRegex } from '../utils/escapeRegex.js';
 import { resolveSchoolId } from '../utils/resolveSchoolId.js';
+import mongoose from 'mongoose';
 
 
 const registerSchool = asyncHandler(async (req, res) => {
@@ -132,6 +133,17 @@ const getAllSchools = asyncHandler(async (req, res) => {
         name: { $regex: escapeRegex(search), $options: "i" },
       }
     : {};
+
+  // School Admin and Accountant reach this route too (their forms use it to fill a school
+  // picker), but the full list — every other school's name, contact and subscription — is
+  // Super Admin's alone. Everyone else only ever gets their own school back.
+  if ((req.userRole?.name || "").toLowerCase().trim() !== "super admin") {
+    const ownSchoolId = resolveSchoolId(req.user);
+    if (!ownSchoolId || !mongoose.Types.ObjectId.isValid(ownSchoolId)) {
+      throw new ApiError(403, "No school is linked to this account");
+    }
+    matchStage._id = new mongoose.Types.ObjectId(String(ownSchoolId));
+  }
 
   /* ================= PIPELINE ================= */
 
@@ -301,6 +313,14 @@ const updateSchool = asyncHandler(async (req, res) => {
 
     const school = await School.findById(schoolId)
     if (!school) throw new ApiError(404, 'School not found')
+
+    // Switching a school on or off locks every user of that school in or out, and is how the
+    // platform suspends a school (e.g. for an unpaid subscription). Only Super Admin decides that —
+    // a School Admin must not be able to deactivate their own school by accident, nor switch a
+    // suspended one back on.
+    if (isActive !== undefined && callerRole !== 'super admin') {
+        throw new ApiError(403, 'Only the platform administrator can activate or deactivate a school')
+    }
 
     // Update school details
     if (name) school.name = name

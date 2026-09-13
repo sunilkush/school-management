@@ -5,95 +5,94 @@ import apiClient from "../api/httpClient";
    ASYNC THUNKS
 ============================ */
 
-// Generate Installments
-export const generateInstallments = createAsyncThunk(
-  "feeInstallment/generate",
-  async (payload, { rejectWithValue }) => {
+/**
+ * A student's fee schedule for one academic year: every installment (fine and overdue status as
+ * of today), the per-head summary (Fee Head | Amount | Frequency | Yearly), totals per frequency
+ * ("Total monthly ₹3,000") and the year's totals.
+ */
+export const fetchFeeSchedule = createAsyncThunk(
+  "feeInstallment/fetchSchedule",
+  async ({ studentId, academicYearId }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post(
-        `/fee-installments/generate`,
-        payload,
-        {        }
-      );
-      return res.data;
+      const res = await apiClient.get(`/fee-installments`, { params: { studentId, academicYearId } });
+      return { studentId, data: res.data?.data };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to generate installments"
-      );
+      return rejectWithValue(error.response?.data?.message || "Failed to load fee schedule");
     }
   }
 );
 
-// Fetch Installments
-export const fetchFeeInstallments = createAsyncThunk(
-  "feeInstallment/fetchAll",
-  async (params = {}, { rejectWithValue }) => {
+/**
+ * What the chosen installments owe right now, fines included — worked out by the server. Returned
+ * to the caller rather than stored: it belongs to one selection on one screen.
+ */
+export const quoteInstallments = createAsyncThunk(
+  "feeInstallment/quote",
+  async ({ studentId, installmentIds }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/fee-installments`, {        params,
-      });
-      return res.data;
+      const res = await apiClient.post(`/fee-installments/quote`, { studentId, installmentIds });
+      return res.data?.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch installments"
-      );
+      return rejectWithValue(error.response?.data?.message || "Failed to work out the amount due");
     }
   }
 );
 
-// Installment payment goes through paymentSlice's createPayment (POST /payments) — see
-// backend/src/services/feePayment.service.js — which keeps the installment and its parent
-// StudentFee in sync in one call. The old /fee-installments/pay/:installmentId endpoint this
-// action hit is gone.
+/** Staff only: builds schedules for fee records assigned before schedules were automatic. */
+export const generateMissingSchedules = createAsyncThunk(
+  "feeInstallment/generateMissing",
+  async ({ studentId, academicYearId }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post(`/fee-installments/generate`, { studentId, academicYearId });
+      return res.data?.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to generate installments");
+    }
+  }
+);
 
 /* ============================
    SLICE
 ============================ */
 
+const EMPTY_SCHEDULE = {
+  installments: [],
+  heads: [],
+  perFrequency: {},
+  totals: null,
+  settings: null,
+};
+
 const feeInstallmentSlice = createSlice({
   name: "feeInstallment",
   initialState: {
-    installments: [],
+    ...EMPTY_SCHEDULE,
+    studentId: null,
     loading: false,
     error: null,
-    success: false,
   },
   reducers: {
-    resetInstallmentState: (state) => {
-      state.loading = false;
-      state.error = null;
-      state.success = false;
-    },
+    clearFeeSchedule: (state) => ({ ...state, ...EMPTY_SCHEDULE, studentId: null, error: null }),
   },
   extraReducers: (builder) => {
     builder
-      // GENERATE
-      .addCase(generateInstallments.pending, (state) => {
+      .addCase(fetchFeeSchedule.pending, (state, action) => {
         state.loading = true;
+        state.error = null;
+        // Switching student: never show the previous student's rows while the next load runs.
+        if (state.studentId !== action.meta.arg.studentId) Object.assign(state, EMPTY_SCHEDULE);
       })
-      .addCase(generateInstallments.fulfilled, (state, action) => {
+      .addCase(fetchFeeSchedule.fulfilled, (state, action) => {
         state.loading = false;
-        state.success = true;
-        state.installments = action.payload?.data || [];
+        state.studentId = action.payload.studentId;
+        Object.assign(state, EMPTY_SCHEDULE, action.payload.data || {});
       })
-      .addCase(generateInstallments.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // FETCH
-      .addCase(fetchFeeInstallments.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchFeeInstallments.fulfilled, (state, action) => {
-        state.loading = false;
-        state.installments = action.payload?.data || [];
-      })
-      .addCase(fetchFeeInstallments.rejected, (state, action) => {
+      .addCase(fetchFeeSchedule.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
   },
 });
 
-export const { resetInstallmentState } = feeInstallmentSlice.actions;
+export const { clearFeeSchedule } = feeInstallmentSlice.actions;
 export default feeInstallmentSlice.reducer;

@@ -77,6 +77,13 @@ export const allowPublic = (req, _res, next) => {
   // user — authenticity is instead enforced by HMAC signature verification inside
   // webhook.controllers.js, not a session/JWT.
   /^\/webhooks\/razorpay$/,
+  // Per-school gateway webhooks (Razorpay, Cashfree, PayU, PhonePe, Paytm, CCAvenue, Easebuzz):
+  // each is checked against that gateway's own signature with that school's credentials, and the
+  // payment is then confirmed by asking the gateway directly.
+  /^\/webhooks\/gateway\/[a-z]+\/[a-f\d]{24}$/,
+  // The payer's browser returning from a gateway. Carries no login; it only triggers a
+  // server-to-server status check (payment.controllers.js returnFromGateway).
+  /^\/payments\/return\/[a-f\d]{24}$/,
   // Public admission portal — a prospective parent has no account yet, so the whole
   // apply/track/upload flow runs unauthenticated. Abuse is bounded by per-route rate limits
   // (routes/publicAdmission.routes.js) and every lookup requires the application number *and*

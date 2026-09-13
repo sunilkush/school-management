@@ -21,7 +21,9 @@ const thunk = (name, fn, fallback) =>
 
 export const fetchLiveTrips = thunk(
   "fetchLiveTrips",
-  () => apiClient.get("/transport/trips/live"),
+  // Polled on a 10s timer by the live map: a cached read here would show a
+  // bus where it was, not where it is.
+  () => apiClient.get("/transport/trips/live", { noCache: true }),
   "Failed to load the buses that are running"
 );
 
@@ -33,7 +35,7 @@ export const fetchTrips = thunk(
 
 export const fetchTripTrail = thunk(
   "fetchTripTrail",
-  (id) => apiClient.get(`/transport/trips/${id}`),
+  (id) => apiClient.get(`/transport/trips/${id}`, { noCache: true }),
   "Failed to load the trip"
 );
 
@@ -57,7 +59,8 @@ export const sendPing = thunk(
 
 export const fetchMyBus = thunk(
   "fetchMyBus",
-  (params = {}) => apiClient.get("/transport/trips/my-bus", { params }),
+  // Polled every 15s by the parent/student live view — must never be cached.
+  (params = {}) => apiClient.get("/transport/trips/my-bus", { params, noCache: true }),
   "Failed to locate the bus"
 );
 

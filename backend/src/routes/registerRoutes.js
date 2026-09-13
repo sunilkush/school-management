@@ -31,6 +31,8 @@ import feeHeadRoutes from "./feeHead.routes.js";
 import feeStructureRoutes from "./feeStructure.routes.js";
 import studentFeeRoutes from "./studentFee.routes.js";
 import feeInstallmentRoutes from "./feeInstallment.routes.js";
+import feeSettingsRoutes from "./feeSettings.routes.js";
+import paymentGatewayRoutes from "./paymentGateway.routes.js";
 import paymentRoutes from "./payment.routes.js";
 import feeReportRoutes from "./feeReport.routes.js";
 import activityLogRoutes from "./activity.routes.js";
@@ -136,6 +138,8 @@ export const apiV1Routes = [
   ["/fee-structures", feeStructureRoutes],
   ["/student-fees", studentFeeRoutes],
   ["/fee-installments", feeInstallmentRoutes],
+  ["/fee-settings", feeSettingsRoutes],
+  ["/payment-gateways", paymentGatewayRoutes],
   ["/payments", paymentRoutes],
   ["/fees/report", feeReportRoutes],
   ["/activity-logs", activityLogRoutes],

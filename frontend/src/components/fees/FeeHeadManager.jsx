@@ -9,7 +9,7 @@ import PageHeader from "../layout/PageHeader.jsx";
 import { pageWrapper, sectionPanel, statGrid, iconWell, pill, tableContainer, tableHeadCss, modalTitle } from "../../styles/pageStyles";
 
 const FEE_HEAD_TYPES = [
-  "Admission Fee", "Tuition Fee", "Registration Fee", "Transport Fee",
+  "Admission Fee", "Annual Fee", "Tuition Fee", "Registration Fee", "Transport Fee",
   "Exam Fee", "Library Fee", "Computer Fee", "Hostel Fee", "Mess Fee",
   "Sports Fee", "Books Fee", "Uniform Fee", "Fine", "Late Fee Fine",
 ];

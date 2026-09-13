@@ -413,13 +413,20 @@ const updateUser = asyncHandler(async (req, res) => {
     emergencyContactName, emergencyContactPhone,
     departmentId, designationId,
   } = req.body
-  if (!name || !email) throw new ApiError(400, 'Name and email are required')
+  const cleanName = String(name || '').trim()
+  const cleanEmail = String(email || '').trim().toLowerCase()
+  if (!cleanName || !cleanEmail) throw new ApiError(400, 'Name and email are required')
+  // The email is what this user logs in with. A malformed one saved here would lock them out of
+  // their own account on the next login, so it is checked on the server, not only in the form.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
+    throw new ApiError(400, 'Enter a valid email address')
+  }
 
   const user = await User.findOne({ _id: req.user?._id, isActive: true, isDeleted: { $ne: true } })
   if (!user) throw new ApiError(404, 'User not found')
 
-  user.name  = name
-  user.email = email
+  user.name  = cleanName
+  user.email = cleanEmail
   if (phone !== undefined) user.phone = phone
 
   // Employee fields — save if provided

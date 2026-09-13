@@ -1,30 +1,35 @@
 import { z } from "zod";
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid ObjectId");
-const paymentModeEnum = z.enum(["cash", "online", "cheque", "razorpay"]);
+const paymentModeEnum = z.enum(["cash", "upi", "card", "bank_transfer", "cheque", "online", "gateway", "razorpay"]);
 
 export const createPaymentSchema = z.object({
   body: z
     .object({
-      studentId: objectId.optional(),
-      installmentId: objectId,
+      studentId: objectId,
+      // One receipt can pay several installments — April and May tuition, April transport.
+      installmentIds: z.array(objectId).min(1, "Select at least one installment").max(60),
+      // Required for counter modes (may be less than due: a partial payment); ignored for razorpay,
+      // which always charges what the selected installments owe.
       amount: z.coerce.number().positive().optional(),
       paymentMethod: paymentModeEnum.optional(),
       paymentMode: paymentModeEnum.optional(),
-      transactionId: z.string().trim().optional(),
-      razorpay: z
-        .object({
-          razorpay_order_id: z.string().min(1),
-          razorpay_payment_id: z.string().min(1),
-          razorpay_signature: z.string().min(1),
-        })
-        .optional(),
+      referenceNo: z.string().trim().max(100).optional(),
+      remarks: z.string().trim().max(500).optional(),
     })
     .refine((data) => data.paymentMethod || data.paymentMode, {
       message: "paymentMethod or paymentMode is required",
       path: ["paymentMode"],
     }),
   params: z.object({}).optional().default({}),
+  query: z.object({}).optional().default({}),
+});
+
+// The body is ignored — confirmation comes from asking the gateway — but a Razorpay popup's
+// handler response is still accepted as-is.
+export const verifyPaymentSchema = z.object({
+  body: z.object({}).passthrough().optional().default({}),
+  params: z.object({ id: objectId }),
   query: z.object({}).optional().default({}),
 });
 
@@ -37,6 +42,7 @@ export const paymentListQuerySchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
     paymentMode: z.string().optional(),
+    studentId: objectId.optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
   }),
@@ -46,7 +52,7 @@ export const refundPaymentSchema = z.object({
   body: z.object({
     amount: z.coerce.number().positive(),
     reason: z.string().trim().min(1, "reason is required"),
-    refundMode: z.enum(["cash", "online", "cheque", "bank_transfer", "upi", "adjustment"]).optional(),
+    refundMode: z.enum(["cash", "online", "cheque", "bank_transfer", "upi", "card", "adjustment"]).optional(),
     transactionId: z.string().trim().optional(),
   }),
   params: z.object({
@@ -64,15 +70,4 @@ export const refundListQuerySchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
   }),
-});
-
-export const razorpayConfigUpdateSchema = z.object({
-  body: z.object({
-    keyId: z.string().trim().min(1, "keyId is required"),
-    keySecret: z.string().trim().optional(),
-    accountId: z.string().trim().optional(),
-    isEnabled: z.coerce.boolean().default(false),
-  }),
-  params: z.object({}).optional().default({}),
-  query: z.object({}).optional().default({}),
 });

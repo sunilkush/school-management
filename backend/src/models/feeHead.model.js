@@ -14,6 +14,7 @@ const feeHeadSchema = new mongoose.Schema(
       required: true,
       trim: true,
       enum: ["Admission Fee",
+  "Annual Fee",
   "Tuition Fee",
   "Registration Fee",
   "Transport Fee",

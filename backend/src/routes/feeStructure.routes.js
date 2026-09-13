@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createFeeStructure,
   getFeeStructures,
+  getFeeStructureSummary,
   updateFeeStructure,
   deleteFeeStructure,
 } from "../controllers/feeStructure.controllers.js";
@@ -14,6 +15,7 @@ const ADMIN_ONLY = ["Super Admin", "School Admin", "Accountant"];
 
 router.post("/",roleMiddleware(ADMIN_ONLY), createFeeStructure);
 router.get("/",roleMiddleware(ADMIN_ONLY), getFeeStructures);
+router.get("/summary",roleMiddleware(["School Admin", "Accountant"]), getFeeStructureSummary);
 router.put("/:id",roleMiddleware(ADMIN_ONLY), updateFeeStructure);
 router.delete("/:id",roleMiddleware(ADMIN_ONLY), deleteFeeStructure);
 
