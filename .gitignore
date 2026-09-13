@@ -152,3 +152,31 @@ node_modules
 psd
 thumb
 sketch
+
+# ── Test files ─────────────────────────────────────────────────────────────
+# Tests are run locally and never committed. Anything below stays on the developer's machine.
+test/
+tests/
+__tests__/
+e2e/
+cypress/
+*.test.js
+*.test.jsx
+*.test.ts
+*.test.tsx
+*.test.mjs
+*.test.cjs
+*.spec.js
+*.spec.jsx
+*.spec.ts
+*.spec.tsx
+*.spec.mjs
+*.spec.cjs
+jest.config.*
+vitest.config.*
+playwright.config.*
+cypress.config.*
+.nyc_output/
+# One-off local check scripts (e.g. backend/__settings_check.mjs)
+__*_check.*
+__*_preview.*
