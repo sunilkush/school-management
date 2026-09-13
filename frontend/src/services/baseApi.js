@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { toast } from "react-toastify";
 import { clearAccessToken, getAccessToken } from "../api/authToken";
+import { clearHttpCache } from "../api/httpClient";
 
 const baseUrl = import.meta.env.VITE_API_URL || "/api/v1";
 
@@ -16,6 +17,11 @@ const rawBaseQuery = fetchBaseQuery({
 
 const baseQueryWithGlobalHandling = async (args, api, extraOptions) => {
   const result = await rawBaseQuery(args, api, extraOptions);
+
+  // RTK Query talks to the API over fetch, not the axios client, so its writes
+  // would otherwise leave that client's cached reads of the same data in place.
+  const method = (typeof args === "string" ? "GET" : args?.method || "GET").toUpperCase();
+  if (method !== "GET") clearHttpCache();
 
   if (result.error?.status === 401) {
     clearAccessToken();
