@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
 import { StudentFee } from "../models/studentFee.model.js";
-import { Payment } from "../models/payment.model.js";
 import { FeeStructure } from "../models/feeStructure.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
-import { applyFeePayment } from "../services/feePayment.service.js";
+import { generateSchedules, periodsPerYear, refreshInstallments, summarizeFeeLines } from "../services/feeSchedule.service.js";
 
 export const assignFeesToStudents = asyncHandler(async (req, res) => {
   const {
@@ -71,13 +71,20 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Fee structure not found for this school");
   }
 
-  // ✅ Amount validation
-  const hasCustomAmount = customAmount !== undefined && customAmount !== null;
-  const flatTotalAmount = hasCustomAmount ? Number(customAmount) : Number(feeStructure.amount);
+  const academicYear = await AcademicYear.findOne({ _id: academicYearId, schoolId }).select("startDate endDate").lean();
+  if (!academicYear) {
+    throw new ApiError(404, "Academic year not found for this school");
+  }
 
-  if (isNaN(flatTotalAmount) || flatTotalAmount < 0) {
+  // ✅ Amount validation — the structure (or customAmount) is the charge for one period, so the
+  // student's year fee is that × the number of periods: ₹2,000 monthly → ₹24,000.
+  const hasCustomAmount = customAmount !== undefined && customAmount !== null;
+  const perPeriodAmount = hasCustomAmount ? Number(customAmount) : Number(feeStructure.amount);
+
+  if (isNaN(perPeriodAmount) || perPeriodAmount < 0) {
     throw new ApiError(400, "Invalid amount");
   }
+  const flatTotalAmount = Number((perPeriodAmount * periodsPerYear(feeStructure.frequency)).toFixed(2));
 
   // ✅ Auto-apply each student's admission-time discount (StudentEnrollment.feeDiscount, a
   // percentage) unless the admin explicitly overrode the amount via customAmount — an explicit
@@ -140,19 +147,87 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
     };
   });
 
-  // ✅ Insert safely
-  await StudentFee.insertMany(records, { ordered: false });
+  // ✅ Insert the fee records and their dated installment schedule together — a fee with no
+  // schedule could not be paid or go overdue, so neither is kept without the other.
+  const session = await mongoose.startSession();
+  let installmentCount = 0;
+  try {
+    await session.withTransaction(async () => {
+      const created = await StudentFee.insertMany(records, { session });
+      installmentCount = await generateSchedules({
+        studentFees: created,
+        academicYear,
+        schoolId,
+        frequencyByStructureId: new Map([[String(feeStructure._id), feeStructure.frequency]]),
+        session,
+      });
+    });
+  } finally {
+    await session.endSession();
+  }
 
   return sendSuccess(res, {
     statusCode: 201,
     message: "Fees assigned successfully",
     data: {
       assignedCount: records.length,
+      installmentCount,
+      frequency: feeStructure.frequency,
+      perPeriodAmount,
+      yearlyAmount: flatTotalAmount,
       skipped: students.length - records.length,
       discounted: records
         .filter((r) => r.discountApplied)
         .map((r) => ({ studentId: r.studentId, discountApplied: r.discountApplied })),
     },
+  });
+});
+
+/**
+ * POST /student-fees/assign/preview — what assigning these fee structures will charge, before
+ * anything is saved. Body: { feeStructureIds: [], customAmounts: { [feeStructureId]: amount } }.
+ *
+ * The assign screen shows exactly these figures; it does no arithmetic of its own. A student's
+ * own concession (StudentEnrollment.feeDiscount) is applied on top when the fee is actually
+ * assigned, and the assign response reports it.
+ */
+export const previewFeeAssignment = asyncHandler(async (req, res) => {
+  const schoolId = req.user?.schoolId?._id || req.user?.schoolId;
+  const { feeStructureIds = [], customAmounts = {} } = req.body || {};
+
+  const ids = [...new Set((Array.isArray(feeStructureIds) ? feeStructureIds : []).map(String))];
+  if (ids.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+    throw new ApiError(400, "Invalid feeStructureId in selection");
+  }
+
+  const structures = ids.length
+    ? await FeeStructure.find({ _id: { $in: ids }, schoolId }).populate("feeHeadId", "name").lean()
+    : [];
+  const byId = new Map(structures.map((s) => [String(s._id), s]));
+
+  const lines = ids
+    .filter((id) => byId.has(id))
+    .map((id) => {
+      const s = byId.get(id);
+      const custom = customAmounts?.[id];
+      const hasCustom = custom !== undefined && custom !== null && custom !== "" && !Number.isNaN(Number(custom));
+      if (hasCustom && Number(custom) < 0) throw new ApiError(400, "Custom amount cannot be negative");
+      return {
+        feeStructureId: s._id,
+        feeHeadName: s.feeHeadId?.name || "Fee",
+        frequency: s.frequency,
+        listAmount: s.amount,
+        isCustom: hasCustom,
+        perPeriodAmount: hasCustom ? Number(custom) : s.amount,
+      };
+    });
+
+  const summary = summarizeFeeLines(lines);
+  const { yearlyTotal: listYearlyTotal } = summarizeFeeLines(lines.map((l) => ({ ...l, perPeriodAmount: l.listAmount })));
+
+  return sendSuccess(res, {
+    message: "Fee assignment preview",
+    data: { ...summary, listYearlyTotal },
   });
 });
 
@@ -226,10 +301,18 @@ export const getMyFees = asyncHandler(async (req, res) => {
     filter.academicYearId = new mongoose.Types.ObjectId(academicYearId);
   }
 
+  // Late fines and overdue status move with the calendar, not with writes — bring this student's
+  // up to date so the totals below are today's.
+  await refreshInstallments({
+    schoolId: schoolObjectId,
+    studentId: studentObjectId,
+    academicYearId: filter.academicYearId || null,
+  });
+
   const fees = await StudentFee.find(filter)
     .populate({
       path: "feeStructureId",
-      select: "name amount feeHeadId",
+      select: "name amount frequency feeHeadId",
       populate: {
         path: "feeHeadId",
         select: "name",
@@ -244,123 +327,6 @@ export const getMyFees = asyncHandler(async (req, res) => {
     data: fees,
   });
 });
-export const payStudentFee = asyncHandler(async (req, res) => {
-  const { paidAmount, paymentMode, referenceNo, remarks } = req.body;
-  const { id } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new ApiError(400, "Invalid fee record id");
-  }
-
-  const amount = Number(paidAmount);
-
-  if (!amount || amount <= 0) {
-    throw new ApiError(400, "Valid paidAmount required");
-  }
-
-  const feeRecord = await StudentFee.findOne({
-    _id: id,
-    schoolId: req.user.schoolId,
-  });
-
-  if (!feeRecord) {
-    throw new ApiError(404, "Fee record not found");
-  }
-
-  // 🔒 Ownership check — Student/Parent may only pay their own (or their linked child's) fee
-  // record. Without this, any authenticated Student/Parent in the school could pay — or mark
-  // fully paid via cash, no gateway involved — any other family's fee record just by guessing its
-  // _id. Mirrors the same check getMyFees already does correctly above.
-  const role = req.user?.roleId?.name?.toLowerCase();
-  if (role === "student") {
-    const owns = await Student.exists({
-      _id: feeRecord.studentId,
-      userId: req.user._id,
-      schoolId: req.user.schoolId,
-    });
-    if (!owns) throw new ApiError(403, "Access denied: this fee record does not belong to you");
-  } else if (role === "parent") {
-    const owns = await Student.exists({
-      _id: feeRecord.studentId,
-      schoolId: req.user.schoolId,
-      $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
-    });
-    if (!owns) throw new ApiError(403, "This student is not linked with this parent");
-  }
-
-  if (feeRecord.status === "paid" || Number(feeRecord.dueAmount) <= 0) {
-    throw new ApiError(400, "Fee already paid");
-  }
-
-  if (amount > Number(feeRecord.dueAmount)) {
-    throw new ApiError(400, "paidAmount cannot exceed dueAmount");
-  }
-
-  const paidAt = new Date();
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  let studentFee;
-  let payment;
-  try {
-    // Applies via the same shared service every other payment entry point uses, so this
-    // (staff-collected, cash/cheque/etc.) payment updates StudentFee exactly like a
-    // self-service Razorpay payment does — no separate ad hoc paidAmount/dueAmount/status math
-    // that could drift from the installment-aware path.
-    ({ studentFee } = await applyFeePayment({ studentFeeId: feeRecord._id, amount, session }));
-
-    studentFee.lastPayment = {
-      amount,
-      paymentMode: paymentMode || "cash",
-      referenceNo: referenceNo || "",
-      remarks: remarks || "",
-      paidAt,
-      collectedBy: req.user?._id || null,
-    };
-    await studentFee.save({ session });
-
-    // Mirror this into the Payment ledger too — Fee Reports' transaction history,
-    // payment-mode breakdown, and collection trend all read from Payment, not
-    // StudentFee, so without this an accountant's cash/cheque/UPI collections here
-    // would be invisible everywhere except the aggregate paid/due totals.
-    [payment] = await Payment.create(
-      [
-        {
-          schoolId: feeRecord.schoolId,
-          studentId: feeRecord.studentId,
-          academicYearId: feeRecord.academicYearId,
-          studentFeeId: feeRecord._id,
-          amountPaid: amount,
-          paymentMode: paymentMode || "cash",
-          transactionId: referenceNo || null,
-          paymentDate: paidAt,
-          status: "success",
-          receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          collectedBy: req.user?._id || null,
-        },
-      ],
-      { session }
-    );
-
-    await session.commitTransaction();
-  } catch (err) {
-    await session.abortTransaction();
-    throw err;
-  } finally {
-    session.endSession();
-  }
-
-  return sendSuccess(res, {
-    message:
-      studentFee.status === "paid"
-        ? "Fee paid successfully"
-        : "Partial fee payment successful",
-    // Include the created Payment ledger record (receiptNo etc.) alongside the updated
-    // StudentFee — the frontend's receipt view reads from this real, persisted record instead
-    // of re-deriving one from in-memory form state.
-    data: { studentFee, payment },
-  });
-});
-
 export const studentFeeSummary = asyncHandler(async (req, res) => {
   const summary = await StudentFee.aggregate([
     { $match: { schoolId: new mongoose.Types.ObjectId(req.user.schoolId) } },

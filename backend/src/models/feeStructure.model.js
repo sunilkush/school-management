@@ -30,16 +30,30 @@ const feeStructureSchema = new mongoose.Schema(
             index: true,
         },
 
+        // The charge for ONE period of `frequency`: Tuition ₹2,000 monthly is ₹2,000 every month,
+        // ₹24,000 for the year. (Before migrateFeesToPerPeriod.mjs this held the whole year's
+        // total instead.)
         amount: {
             type: Number,
             required: true,
             min: [0, "Amount cannot be negative"],
         },
 
+        // Keep in step with FEE_FREQUENCIES in services/feeSchedule.service.js.
         frequency: {
             type: String,
-            enum: ["monthly", "quarterly", "yearly"],
+            enum: ["monthly", "quarterly", "half_yearly", "yearly", "one_time"],
             required: true,
+        },
+
+        // Marks a structure whose amount is already per period. The migration only converts
+        // documents without it, so running it twice cannot divide an amount twice. Deliberately
+        // no default: Mongoose would write a default into an old document the first time it was
+        // saved, and the migration would then skip a record it still needed to convert.
+        // createFeeStructure sets it explicitly.
+        amountBasis: {
+            type: String,
+            enum: ["per_period"],
         },
 
         isActive: {
@@ -56,9 +70,8 @@ const feeStructureSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         },
-        // Real installment breakdown lives in the separate FeeInstallment collection
-        // (generated per-student via feeInstallment.controllers.js) — this embedded array was
-        // never written to by anything.
+        // A student's per-period schedule lives in the FeeInstallment collection, generated when
+        // the fee is assigned (services/feeSchedule.service.js).
     },
     {
         timestamps: true,

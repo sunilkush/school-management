@@ -36,7 +36,7 @@ const studentFeeSchema = new mongoose.Schema(
     },
 
     /**
-     * Custom amount overrides FeeStructure.amount
+     * Per-period amount that overrides FeeStructure.amount for this student
      * (Scholarship / Special case)
      */
     customAmount: {
@@ -61,9 +61,18 @@ const studentFeeSchema = new mongoose.Schema(
     },
 
     // 🔹 Payment Tracking
+    // The whole year's fee for this head: per-period amount × periods, after discount.
     totalAmount: {
       type: Number,
       required: true,
+      min: 0,
+    },
+
+    // Sum of late fines across this fee's installments — part of what is owed, on top of
+    // totalAmount. Kept current by refreshInstallments() in services/feeSchedule.service.js.
+    fineAmount: {
+      type: Number,
+      default: 0,
       min: 0,
     },
 
@@ -127,15 +136,18 @@ studentFeeSchema.index(
  * 🔄 Auto-update status before save
  */
 studentFeeSchema.pre("save", function (next) {
-  if (this.paidAmount >= this.totalAmount) {
+  const owed = Number(this.totalAmount || 0) + Number(this.fineAmount || 0);
+  const paid = Number(this.paidAmount || 0);
+
+  if (paid >= owed) {
     this.status = "paid";
     this.dueAmount = 0;
-  } else if (this.paidAmount > 0) {
+  } else if (paid > 0) {
     this.status = "partial";
-    this.dueAmount = this.totalAmount - this.paidAmount;
+    this.dueAmount = Math.round((owed - paid) * 100) / 100;
   } else {
     this.status = "pending";
-    this.dueAmount = this.totalAmount;
+    this.dueAmount = owed;
   }
   next();
 });

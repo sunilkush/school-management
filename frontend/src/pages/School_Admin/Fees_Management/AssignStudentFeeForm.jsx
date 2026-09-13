@@ -38,7 +38,9 @@ import { fetchFeeStructures } from "../../../features/feeStructureSlice";
 import {
   assignFeesToStudents,
   fetchMyFees,
+  previewFeeAssignment,
 } from "../../../features/studentFeeSlice";
+import { FREQUENCIES, FREQUENCY_ORDER, FrequencyTag, perPeriodLabel } from "../../../components/fees/feeUi.jsx";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper,
@@ -87,7 +89,7 @@ const getApiMessage = (err, fallback = "Something went wrong") => {
 };
 
 /* ── Fee card (mobile) ── */
-const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange }) => {
+const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange, previewRow }) => {
   const borderColor = "var(--border)";
   const bg = "var(--surface)";
   const accentColor = isSelected ? "var(--primary)" : borderColor;
@@ -116,9 +118,7 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 10 }}>
-          <Tag color="blue" style={{ margin: 0 }}>
-            {fee.frequency ? String(fee.frequency).toUpperCase() : "—"}
-          </Tag>
+          <FrequencyTag frequency={fee.frequency} />
           <div style={{
             width: 20, height: 20, borderRadius: "50%",
             border: `2px solid ${isSelected ? "var(--primary)" : borderColor}`,
@@ -139,7 +139,7 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
           border: `1px solid ${borderColor}`,
         }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Default</div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", marginTop: 2 }}>{money(fee.amount)}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text-primary)", marginTop: 2 }}>{perPeriodLabel(fee.amount, fee.frequency)}</div>
         </div>
         <div style={{
           flex: 1, textAlign: "center",
@@ -147,9 +147,9 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
           borderRadius: 10, padding: "8px 4px",
           border: "1px solid rgba(var(--success-rgb), 0.35)",
         }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Final</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Per year</div>
           <div style={{ fontSize: 13, fontWeight: 800, color: "var(--success)", marginTop: 2 }}>
-            {money(customAmount ?? fee.amount)}
+            {money(previewRow?.yearlyAmount ?? fee.yearlyAmount)}
           </div>
         </div>
       </div>
@@ -157,7 +157,7 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
       {isSelected && (
         <div onClick={(e) => e.stopPropagation()}>
           <InputNumber
-            placeholder="Custom amount (optional)"
+            placeholder={`Custom amount per ${FREQUENCIES[fee.frequency]?.per || "period"} (optional)`}
             style={{ width: "100%", borderRadius: 10 }}
             value={customAmount ?? null}
             formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
@@ -280,18 +280,26 @@ const AssignStudentFee = () => {
     [feeStructures, selectedFeeIds]
   );
 
-  const totalDefaultAmount = useMemo(
-    () => selectedFees.reduce((sum, fee) => sum + Number(fee.amount || 0), 0),
-    [selectedFees]
-  );
+  // Totals for the selection are worked out by the backend; this screen only shows them.
+  const [preview, setPreview] = useState(null);
+  useEffect(() => {
+    if (!selectedFeeIds.length) {
+      setPreview(null);
+      return undefined;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      dispatch(previewFeeAssignment({ feeStructureIds: selectedFeeIds, customAmounts }))
+        .unwrap()
+        .then((data) => { if (!cancelled) setPreview(data); })
+        .catch(() => { if (!cancelled) setPreview(null); });
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [dispatch, selectedFeeIds, customAmounts]);
 
-  const totalFinalAmount = useMemo(
-    () =>
-      selectedFees.reduce((sum, fee) => {
-        const custom = customAmounts[fee._id];
-        return sum + Number(custom ?? fee.amount ?? 0);
-      }, 0),
-    [selectedFees, customAmounts]
+  const previewById = useMemo(
+    () => new Map((preview?.rows || []).map((r) => [String(r.feeStructureId), r])),
+    [preview]
   );
 
   const targetStudentCount =
@@ -484,16 +492,14 @@ const AssignStudentFee = () => {
       title: "Frequency",
       dataIndex: "frequency",
       width: 140,
-      render: (value) => (
-        <Tag color="blue">{value ? String(value).toUpperCase() : "—"}</Tag>
-      ),
+      render: (value) => <FrequencyTag frequency={value} />,
     },
     {
-      title: "Default Amount",
+      title: "Amount",
       dataIndex: "amount",
-      width: 160,
-      render: (value) => (
-        <Text strong style={{ color: "var(--text-primary)" }}>{money(value)}</Text>
+      width: 170,
+      render: (value, record) => (
+        <Text strong style={{ color: "var(--text-primary)" }}>{perPeriodLabel(value, record.frequency)}</Text>
       ),
     },
     {
@@ -502,7 +508,7 @@ const AssignStudentFee = () => {
       render: (_, record) => (
         <InputNumber
           min={0}
-          placeholder="Optional"
+          placeholder={`Per ${FREQUENCIES[record.frequency]?.per || "period"} (optional)`}
           style={{ width: "100%", borderRadius: 8 }}
           value={customAmounts[record._id] ?? null}
           formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
@@ -512,11 +518,11 @@ const AssignStudentFee = () => {
       ),
     },
     {
-      title: "Final",
+      title: "Per Year",
       width: 140,
       render: (_, record) => (
         <Text strong style={{ color: "var(--success)" }}>
-          {money(customAmounts[record._id] ?? record.amount)}
+          {money(previewById.get(String(record._id))?.yearlyAmount ?? record.yearlyAmount)}
         </Text>
       ),
     },
@@ -606,8 +612,8 @@ const AssignStudentFee = () => {
       }}>
         <StatCard icon={<TeamOutlined />} label="Target Students" value={targetStudentCount} color="var(--purple-hover)" />
         <StatCard icon={<WalletOutlined />} label="Selected Fees" value={selectedFeeIds.length} color="var(--cyan)" />
-        <StatCard icon={<TagOutlined />} label="Default Total" value={money(totalDefaultAmount)} color="var(--warning-hover)" />
-        <StatCard icon={<RupeeIcon />} label="Final Total" value={money(totalFinalAmount)} color="var(--success)" />
+        <StatCard icon={<TagOutlined />} label="Standard / Year" value={money(preview?.listYearlyTotal)} color="var(--warning-hover)" />
+        <StatCard icon={<RupeeIcon />} label="Per Student / Year" value={money(preview?.yearlyTotal)} color="var(--success)" />
       </div>
 
       <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -803,6 +809,7 @@ const AssignStudentFee = () => {
                         onToggle={toggleFee}
                         customAmount={customAmounts[fee._id]}
                         onCustomChange={(id, val) => setCustomAmounts((prev) => ({ ...prev, [id]: val }))}
+                        previewRow={previewById.get(String(fee._id))}
                       />
                     ))
                   )}
@@ -871,7 +878,17 @@ const AssignStudentFee = () => {
             <div style={{ fontSize: 13, color: "var(--text-primary)" }}>
               Assigning <strong>{selectedFeeIds.length}</strong> fee structure{selectedFeeIds.length !== 1 ? "s" : ""} to{" "}
               <strong>{targetStudentCount}</strong> student{targetStudentCount !== 1 ? "s" : ""} ·{" "}
-              Total: <strong style={{ color: "var(--success)" }}>{money(totalFinalAmount)}</strong>
+              Per student: <strong style={{ color: "var(--success)" }}>{money(preview?.yearlyTotal)} a year</strong>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+              {FREQUENCY_ORDER.filter((f) => preview?.perFrequency?.[f] > 0).map((f) => (
+                <span key={f} style={{ padding: "4px 10px", borderRadius: 10, background: FREQUENCIES[f].bg, color: FREQUENCIES[f].color, fontSize: 12, fontWeight: 600 }}>
+                  Total {FREQUENCIES[f].label.toLowerCase()}: {money(preview.perFrequency[f])}
+                </span>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 6 }}>
+              A student's own concession, if any, is applied when the fee is assigned. Installments are created automatically.
             </div>
           </div>
 
@@ -892,19 +909,16 @@ const AssignStudentFee = () => {
                   <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>
                     {fee.feeHeadId?.name || fee.name || "—"}
                   </div>
-                  <Tag color="blue" style={{ marginTop: 4 }}>
-                    {fee.frequency ? String(fee.frequency).toUpperCase() : "—"}
-                  </Tag>
+                  <div style={{ marginTop: 4 }}><FrequencyTag frequency={fee.frequency} /></div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: "var(--success)" }}>
-                    {money(customAmounts[fee._id] ?? fee.amount)}
+                    {perPeriodLabel(previewById.get(String(fee._id))?.perPeriodAmount ?? fee.amount, fee.frequency)}
                   </div>
-                  {customAmounts[fee._id] && (
-                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                      Default: {money(fee.amount)}
-                    </div>
-                  )}
+                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    {money(previewById.get(String(fee._id))?.yearlyAmount ?? fee.yearlyAmount)} a year
+                    {previewById.get(String(fee._id))?.isCustom ? ` · standard ${perPeriodLabel(fee.amount, fee.frequency)}` : ""}
+                  </div>
                 </div>
               </div>
             ))}

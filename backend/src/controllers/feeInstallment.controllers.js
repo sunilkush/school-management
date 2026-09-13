@@ -1,19 +1,25 @@
 import mongoose from "mongoose";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
 import { StudentFee } from "../models/studentFee.model.js";
-import { FeeStructure } from "../models/feeStructure.model.js";
 import { Student } from "../models/student.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
 
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
+import {
+  FEE_FREQUENCIES,
+  generateSchedules,
+  getFeeSettings,
+  outstandingOf,
+  refreshInstallments,
+  round2,
+} from "../services/feeSchedule.service.js";
 
-// 🔒 Student/Parent may only ever read or generate installments for their own (or their linked
-// child's) records — filtering by {studentId, schoolId} alone (as both handlers below used to)
-// lets any authenticated Student/Parent/Accountant pass an arbitrary studentId and read or
-// generate installments for a completely unrelated student. Mirrors the ownership check already
-// used correctly elsewhere in this codebase (studentFee.controllers.js getMyFees/payStudentFee).
+// 🔒 Student/Parent may only ever read their own (or their linked child's) records — filtering by
+// {studentId, schoolId} alone would let any authenticated Student/Parent pass an arbitrary
+// studentId and read an unrelated student's fees.
 const assertOwnsStudentRecord = async ({ roleName, userId, studentId, schoolId }) => {
   const role = roleName?.toLowerCase();
   if (role === "student") {
@@ -27,177 +33,226 @@ const assertOwnsStudentRecord = async ({ roleName, userId, studentId, schoolId }
     });
     if (!owns) throw new ApiError(403, "This student is not linked with this parent");
   }
-  // Accountant / School Admin / Super Admin: no further restriction beyond the schoolId already in the query filter.
+  // Accountant / School Admin / Super Admin: no further restriction beyond schoolId in the query.
 };
 
-/* =====================================================
-   ✅ GENERATE INSTALLMENTS (Monthly | Quarterly | Yearly)
-===================================================== */
-const VALID_FREQUENCIES = ["monthly", "quarterly", "half_yearly", "yearly"];
-
-export const generateInstallments = asyncHandler(async (req, res) => {
-  const { studentId, academicYearId, frequency: requestedFrequency } = req.body;
-  const schoolId = resolveSchoolId(req.user);
-
-  if (requestedFrequency && !VALID_FREQUENCIES.includes(requestedFrequency)) {
-    throw new ApiError(400, `Invalid frequency. Must be one of: ${VALID_FREQUENCIES.join(", ")}`);
-  }
-
-  if (!schoolId) {
-    throw new ApiError(400, "School not found");
-  }
-
-  if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
-    throw new ApiError(400, "Invalid studentId");
-  }
-
+const validateIds = ({ schoolId, studentId, academicYearId }) => {
+  if (!schoolId) throw new ApiError(400, "School not found");
+  if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid studentId");
   if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
     throw new ApiError(400, "Invalid academicYearId");
   }
+};
 
-  await assertOwnsStudentRecord({ roleName: req.userRole?.name, userId: req.user._id, studentId, schoolId });
+/* =====================================================
+   ✅ GENERATE MISSING SCHEDULES (staff only)
+   Schedules are created when a fee is assigned. This only fills in fee records that have none —
+   ones assigned before schedules were generated automatically.
+===================================================== */
+export const generateInstallments = asyncHandler(async (req, res) => {
+  const { studentId, academicYearId } = req.body;
+  const schoolId = resolveSchoolId(req.user);
+  validateIds({ schoolId, studentId, academicYearId });
 
   const feeFilter = { studentId, schoolId };
   if (academicYearId) feeFilter.academicYearId = academicYearId;
 
   const studentFees = await StudentFee.find(feeFilter).populate("feeStructureId", "frequency");
+  if (!studentFees.length) throw new ApiError(404, "No fee records found for this student");
 
-  if (!studentFees.length) {
-    throw new ApiError(404, "No fee records found for this student");
-  }
-
-  const allInstallments = [];
-
-  // One batched lookup for every fee record's existing installments, instead of a separate
-  // FeeInstallment.exists() query per fee — studentFees here is small (one student's own fee
-  // records), but there's no reason to pay per-record round-trips for it.
-  const existingInstallments = await FeeInstallment.find({
-    studentFeeId: { $in: studentFees.map((f) => f._id) },
-    schoolId,
-  })
-    .select("studentFeeId academicYearId")
-    .lean();
-
-  const existingByFeeId = new Map();
-  for (const inst of existingInstallments) {
-    const key = String(inst.studentFeeId);
-    if (!existingByFeeId.has(key)) existingByFeeId.set(key, []);
-    existingByFeeId.get(key).push(inst.academicYearId ? String(inst.academicYearId) : null);
-  }
-  // Mirrors the original per-fee query's semantics: with no academicYearId filter, ANY
-  // existing installment for that fee counts; with one, only a matching year does.
-  const hasExistingInstallment = (feeId, effectiveAcademicYearId) => {
-    const years = existingByFeeId.get(String(feeId));
-    if (!years) return false;
-    return effectiveAcademicYearId ? years.includes(String(effectiveAcademicYearId)) : years.length > 0;
-  };
-
+  let created = 0;
+  const byYear = new Map();
   for (const fee of studentFees) {
-    const effectiveAcademicYearId = academicYearId || fee.academicYearId;
-
-    if (hasExistingInstallment(fee._id, effectiveAcademicYearId)) continue;
-
-    const frequency = requestedFrequency || fee?.feeStructureId?.frequency || "yearly";
-
-    const count =
-      frequency === "monthly" ? 12 :
-      frequency === "quarterly" ? 4 :
-      frequency === "half_yearly" ? 2 :
-      1;
-
-    const gap =
-      frequency === "monthly" ? 1 :
-      frequency === "quarterly" ? 3 :
-      frequency === "half_yearly" ? 6 :
-      12;
-
-    const amount = Number((fee.totalAmount / count).toFixed(2));
-    const baseDate = new Date();
-
-    for (let i = 1; i <= count; i++) {
-      allInstallments.push({
-        schoolId,
-        academicYearId: effectiveAcademicYearId,
-        studentId,
-        studentFeeId: fee._id,
-        installmentType: frequency,
-        installmentName:
-          frequency === "monthly"
-            ? baseDate.toLocaleString("default", { month: "short" })
-            : frequency === "quarterly"
-            ? `Q${i}`
-            : frequency === "half_yearly"
-            ? `H${i}`
-            : "Yearly",
-        amount,
-        paidAmount: 0,
-        dueDate: new Date(baseDate),
-        status: "pending",
-      });
-
-      baseDate.setMonth(baseDate.getMonth() + gap);
-    }
+    const key = String(fee.academicYearId);
+    if (!byYear.has(key)) byYear.set(key, []);
+    byYear.get(key).push(fee);
   }
 
-  if (!allInstallments.length) {
-    throw new ApiError(400, "Installments already generated");
+  for (const [yearId, fees] of byYear) {
+    // eslint-disable-next-line no-await-in-loop
+    const academicYear = await AcademicYear.findOne({ _id: yearId, schoolId }).select("startDate").lean();
+    // eslint-disable-next-line no-await-in-loop
+    created += await generateSchedules({
+      studentFees: fees,
+      academicYear,
+      schoolId,
+      // Back-filled schedules follow the academic year's calendar; whatever is already past due
+      // is genuinely late.
+      assignedAt: academicYear?.startDate || new Date(),
+    });
   }
 
-  const created = await FeeInstallment.insertMany(allInstallments);
+  if (!created) throw new ApiError(400, "Every fee for this student already has its installments");
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, created, "Installments generated successfully"));
+  return res.status(201).json(new ApiResponse(201, { created }, "Installments generated successfully"));
 });
 
-
 /* =====================================================
-   ✅ GET INSTALLMENTS + FEE HEAD NAMES (FIXED)
+   ✅ STUDENT FEE SCHEDULE
+   GET /fee-installments?studentId=&academicYearId=
+
+   Returns every installment (fine and status current as of today) plus the summary a fee
+   screen needs:
+     heads   — Fee Head | Amount | Frequency | Yearly, with paid/due per head
+     perFrequency — "Total monthly ₹3,000", quarterly, …
+     totals  — year fee, fine, paid, due, overdue
 ===================================================== */
 export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
   const { studentId, academicYearId } = req.query;
   const schoolId = resolveSchoolId(req.user);
-
-  if (!schoolId) {
-    throw new ApiError(400, "School not found");
-  }
-
-  if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
-    throw new ApiError(400, "Invalid studentId");
-  }
-
-  if (academicYearId && !mongoose.Types.ObjectId.isValid(academicYearId)) {
-    throw new ApiError(400, "Invalid academicYearId");
-  }
+  validateIds({ schoolId, studentId, academicYearId });
 
   await assertOwnsStudentRecord({ roleName: req.userRole?.name, userId: req.user._id, studentId, schoolId });
+
+  await refreshInstallments({ schoolId, studentId, academicYearId: academicYearId || null });
 
   const filter = { studentId, schoolId };
   if (academicYearId) filter.academicYearId = academicYearId;
 
-  const installments = await FeeInstallment.find(filter)
+  const [installments, studentFees, settings] = await Promise.all([
+    FeeInstallment.find(filter)
+      .populate({
+        path: "studentFeeId",
+        select: "feeStructureId",
+        populate: { path: "feeStructureId", select: "feeHeadId", populate: { path: "feeHeadId", select: "name" } },
+      })
+      .sort({ dueDate: 1, periodIndex: 1 })
+      .lean(),
+    StudentFee.find(filter)
+      .populate({ path: "feeStructureId", select: "amount frequency feeHeadId", populate: { path: "feeHeadId", select: "name type" } })
+      .sort({ createdAt: 1 })
+      .lean(),
+    getFeeSettings(schoolId),
+  ]);
+
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+
+  const rows = installments.map((inst) => ({
+    _id: inst._id,
+    studentFeeId: inst.studentFeeId?._id || inst.studentFeeId,
+    feeHeadName: inst.studentFeeId?.feeStructureId?.feeHeadId?.name || "Fee",
+    installmentName: inst.installmentName,
+    frequency: inst.installmentType || "yearly",
+    periodIndex: inst.periodIndex || 0,
+    dueDate: inst.dueDate,
+    amount: round2(inst.amount),
+    fineAmount: round2(inst.fineAmount),
+    paidAmount: round2(inst.paidAmount),
+    balance: outstandingOf(inst),
+    status: inst.status === "late" ? "overdue" : inst.status,
+    // Owed by today — what "Select all due" picks.
+    dueNow: outstandingOf(inst) > 0 && new Date(inst.dueDate) <= endOfToday,
+  }));
+
+  const instByFee = new Map();
+  for (const row of rows) {
+    const key = String(row.studentFeeId);
+    if (!instByFee.has(key)) instByFee.set(key, []);
+    instByFee.get(key).push(row);
+  }
+
+  const perFrequency = {};
+  const heads = studentFees.map((fee) => {
+    const structure = fee.feeStructureId || {};
+    const frequency = structure.frequency || "yearly";
+    const feeRows = instByFee.get(String(fee._id)) || [];
+    const periods = FEE_FREQUENCIES[frequency]?.periods || 1;
+    // What this student is charged per period, after discount — not the structure's list price.
+    const perPeriod = round2(fee.totalAmount / periods);
+    perFrequency[frequency] = round2((perFrequency[frequency] || 0) + perPeriod);
+
+    return {
+      studentFeeId: fee._id,
+      feeHeadName: structure.feeHeadId?.name || "Fee",
+      feeHeadType: structure.feeHeadId?.type || null,
+      frequency,
+      listAmount: round2(structure.amount),
+      perPeriodAmount: perPeriod,
+      yearlyAmount: round2(fee.totalAmount),
+      discountApplied: fee.discountApplied || null,
+      fineAmount: round2(fee.fineAmount),
+      paidAmount: round2(fee.paidAmount),
+      dueAmount: round2(fee.dueAmount),
+      status: fee.status,
+      overdueAmount: round2(feeRows.filter((r) => r.status === "overdue").reduce((s, r) => s + r.balance, 0)),
+      nextDueDate: feeRows.find((r) => r.balance > 0)?.dueDate || null,
+      hasSchedule: feeRows.length > 0,
+    };
+  });
+
+  const sum = (list, key) => round2(list.reduce((s, x) => s + Number(x[key] || 0), 0));
+  const totals = {
+    yearlyAmount: sum(heads, "yearlyAmount"),
+    fineAmount: sum(heads, "fineAmount"),
+    paidAmount: sum(heads, "paidAmount"),
+    dueAmount: sum(heads, "dueAmount"),
+    overdueAmount: sum(rows.filter((r) => r.status === "overdue"), "balance"),
+    // Due by today: everything overdue plus whatever falls due today.
+    dueNowAmount: sum(rows.filter((r) => r.dueNow), "balance"),
+    dueNowCount: rows.filter((r) => r.dueNow).length,
+    overdueCount: rows.filter((r) => r.status === "overdue").length,
+  };
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { installments: rows, heads, perFrequency, totals, settings },
+      "Fee schedule fetched successfully"
+    )
+  );
+});
+
+/* =====================================================
+   ✅ QUOTE
+   POST /fee-installments/quote   { studentId, installmentIds: [] }
+
+   What the chosen installments owe right now, fines included — the figure a fee screen shows
+   before collecting or paying. Screens never add balances themselves; the payment is checked
+   against the same figure again when it is recorded.
+===================================================== */
+export const quoteInstallments = asyncHandler(async (req, res) => {
+  const { studentId, installmentIds } = req.body || {};
+  const schoolId = resolveSchoolId(req.user);
+  validateIds({ schoolId, studentId });
+
+  const ids = [...new Set((Array.isArray(installmentIds) ? installmentIds : []).map(String))];
+  if (ids.some((id) => !mongoose.Types.ObjectId.isValid(id))) throw new ApiError(400, "Invalid installment id");
+
+  await assertOwnsStudentRecord({ roleName: req.userRole?.name, userId: req.user._id, studentId, schoolId });
+
+  if (!ids.length) {
+    return res.status(200).json(new ApiResponse(200, { total: 0, count: 0, installments: [] }, "Quote"));
+  }
+
+  await refreshInstallments({ schoolId, studentId });
+
+  const installments = await FeeInstallment.find({ _id: { $in: ids }, schoolId, studentId })
     .populate({
       path: "studentFeeId",
-      select: "totalAmount paidAmount dueAmount status feeStructureId",
-      populate: {
-        path: "feeStructureId",
-        select: "amount feeHeadId frequency",
-        populate: {
-          path: "feeHeadId",
-          select: "name",
-        },
-      },
+      select: "feeStructureId",
+      populate: { path: "feeStructureId", select: "feeHeadId", populate: { path: "feeHeadId", select: "name" } },
     })
-    .populate("academicYearId", "name")
-    .sort({ dueDate: 1 })
+    .sort({ dueDate: 1, periodIndex: 1 })
     .lean();
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, installments, "Installments fetched successfully"));
+  if (installments.length !== ids.length) {
+    throw new ApiError(404, "Some selected installments were not found for this student");
+  }
+
+  const lines = installments.map((inst) => ({
+    _id: inst._id,
+    feeHeadName: inst.studentFeeId?.feeStructureId?.feeHeadId?.name || "Fee",
+    installmentName: inst.installmentName,
+    fineAmount: round2(inst.fineAmount),
+    balance: outstandingOf(inst),
+  }));
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { total: round2(lines.reduce((s, l) => s + l.balance, 0)), count: lines.length, installments: lines },
+      "Quote"
+    )
+  );
 });
-// A payInstallment endpoint used to live here (POST /fee-installments/pay/:installmentId),
-// duplicating money-movement logic now centralized in services/feePayment.service.js's
-// applyFeePayment, which every real payment entry point (payment.controllers.js's
-// createPayment, studentFee.controllers.js's payStudentFee) goes through instead. Removed as
-// dead code — confirmed zero frontend callers.

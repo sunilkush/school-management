@@ -27,14 +27,44 @@ academicYearId: {
       default: null,
       index: true,
     },
+    // Older single-installment payments only. A payment now usually settles several installments
+    // at once and records them in `allocations` instead, leaving this and studentFeeId null.
     installmentId: {
-      // Optional: only set for payments made against the FeeInstallment/self-service
-      // flow. Payments recorded directly against a StudentFee (e.g. Accountant "Collect
-      // Fees") have no matching installment, so this must stay nullable.
       type: mongoose.Schema.Types.ObjectId,
       ref: "FeeInstallment",
       default: null,
       index: true,
+    },
+
+    // The installments this payment settled and how much went to each (base first, then fine).
+    // One receipt can cover April + May tuition and April transport together; a refund walks
+    // this list to reverse exactly what was applied.
+    allocations: {
+      type: [
+        {
+          _id: false,
+          installmentId: { type: mongoose.Schema.Types.ObjectId, ref: "FeeInstallment", required: true },
+          studentFeeId: { type: mongoose.Schema.Types.ObjectId, ref: "StudentFee", required: true },
+          amount: { type: Number, required: true, min: 0 },
+          refundedAmount: { type: Number, default: 0, min: 0 },
+        },
+      ],
+      default: [],
+    },
+
+    // Online checkout only: the installments the payer chose, fixed when the order is created and
+    // applied once the gateway confirms the money arrived.
+    requestedInstallmentIds: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "FeeInstallment" }],
+      default: [],
+    },
+
+    // Money received that no installment could take — the installments were settled some other
+    // way while the payer was at the gateway. The office refunds or adjusts it.
+    unallocatedAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
 
     amountPaid: {
@@ -45,11 +75,62 @@ academicYearId: {
 
     paymentMode: {
       type: String,
-      enum: ["cash", "online", "cheque", "razorpay", "bank_transfer", "upi"],
+      enum: ["cash", "online", "cheque", "razorpay", "bank_transfer", "upi", "card"],
       required: true,
     },
 
+    // Gateway payment id. Globally unique (see the index below), so never put a counter
+    // reference such as a cheque number here — that goes in referenceNo.
     transactionId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    // Online checkouts only: the school's gateway this payment was made through. Settlement always
+    // asks this gateway, even if the school has switched to another since. Older Razorpay
+    // payments have paymentMode "razorpay" and no value here.
+    gateway: {
+      type: String,
+      enum: ["razorpay", "cashfree", "payu", "phonepe", "paytm", "ccavenue", "easebuzz", null],
+      default: null,
+    },
+
+    // The gateway's order id for an online checkout (for most gateways, this Payment's own id).
+    gatewayOrderId: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
+
+    // Values a gateway needs again to look the checkout up (Easebuzz: email, phone, amount).
+    gatewayMeta: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    // What the gateway reported when the payment was confirmed or failed — kept for disputes.
+    gatewayResponse: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    // Where the payer's browser is sent back to after paying on the gateway, set from their role.
+    checkoutReturnPath: {
+      type: String,
+      default: null,
+    },
+
+    // What the collector typed at the counter — cheque number, UPI or card reference. Two schools
+    // can both receive cheque no. 000123, so this is not unique.
+    referenceNo: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    remarks: {
       type: String,
       trim: true,
       default: null,
@@ -111,8 +192,8 @@ paymentSchema.index(
   { unique: true, partialFilterExpression: { transactionId: { $exists: true, $type: "string" } } }
 );
 
-// Installment status is updated atomically alongside the Payment write inside
-// the same transaction (see recordPayment() in payment.controllers.js) —
-// a post-save hook here would run outside that transaction and race it.
+// Installment and StudentFee balances are updated atomically alongside the Payment write inside
+// the same transaction (see services/feePayment.service.js) — a post-save hook here would run
+// outside that transaction and race it.
 
 export const Payment = mongoose.model("Payment", paymentSchema);

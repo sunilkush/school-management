@@ -129,6 +129,32 @@ const schoolSchema = new Schema(
       },
     },
 
+    /* ================= FEE COLLECTION ================= */
+
+    // Each school runs its own fee calendar. Read through getFeeSettings() in
+    // services/feeSchedule.service.js, which fills in the defaults for schools created before
+    // these existed.
+    feeSettings: {
+      // Day of the month every installment falls due on — the 10th of each month for monthly
+      // fees, the 10th of each quarter's first month for quarterly ones. Capped at 28 so it exists
+      // in every month.
+      dueDay: { type: Number, min: 1, max: 28, default: 10 },
+
+      lateFine: {
+        // Off until the school turns it on — no school should find fines on its students' bills
+        // it never asked for.
+        enabled: { type: Boolean, default: false },
+        // "fixed": charged once when an installment goes late. "per_day": charged for every day
+        // it stays late, up to maxAmount.
+        type: { type: String, enum: ["fixed", "per_day"], default: "fixed" },
+        amount: { type: Number, min: 0, default: 0 },
+        // Days after the due date before any fine starts.
+        graceDays: { type: Number, min: 0, max: 90, default: 0 },
+        // Ceiling on the fine for one installment; 0 means no ceiling.
+        maxAmount: { type: Number, min: 0, default: 0 },
+      },
+    },
+
     /* ================= ACADEMIC ================= */
 
     activeAcademicYearId: {

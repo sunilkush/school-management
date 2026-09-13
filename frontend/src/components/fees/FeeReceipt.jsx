@@ -1,4 +1,5 @@
 import React from "react";
+import { paymentModeLabel } from "./feeUi.jsx";
 
 const money = (v) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(
@@ -18,12 +19,14 @@ const formatDate = (d) =>
  * the moment of payment rather than what was actually saved.
  *
  * Props:
- *  - payment: { receiptNo, amountPaid, paymentMode, paymentDate, transactionId }
- *  - description: what this payment was for (e.g. fee head name, installment name)
+ *  - payment: { receiptNo, amountPaid, paymentMode, paymentDate, transactionId, referenceNo, unallocatedAmount }
+ *  - lines: [{ label, amount }] — one per installment paid ("Tuition Fee · Apr 2026"); see
+ *    receiptLines() in feeUi.jsx
+ *  - description: fallback "For" text when there are no lines
  *  - student: { name, className, section }
  *  - school: { name, address }
  */
-const FeeReceipt = React.forwardRef(({ payment, description, student, school }, ref) => (
+const FeeReceipt = React.forwardRef(({ payment, lines = [], description, student, school }, ref) => (
   <div ref={ref} style={{ padding: 32, fontFamily: "Georgia, serif", maxWidth: 480, margin: "0 auto" }}>
     <div style={{ textAlign: "center", borderBottom: "2px solid #1a1a2e", paddingBottom: 16, marginBottom: 20 }}>
       <div style={{ fontSize: 22, fontWeight: 800, color: "#1a1a2e", letterSpacing: "-0.01em" }}>
@@ -53,8 +56,8 @@ const FeeReceipt = React.forwardRef(({ payment, description, student, school }, 
         ["Date", formatDate(payment?.paymentDate)],
         ["Student", student?.name || "—"],
         student?.className ? ["Class", `${student.className}${student.section ? ` — ${student.section}` : ""}`] : null,
-        ["For", description || "—"],
-        payment?.transactionId ? ["Reference", payment.transactionId] : null,
+        lines.length ? null : ["For", description || "—"],
+        payment?.referenceNo || payment?.transactionId ? ["Reference", payment.referenceNo || payment.transactionId] : null,
       ]
         .filter(Boolean)
         .map(([k, v]) => (
@@ -64,6 +67,35 @@ const FeeReceipt = React.forwardRef(({ payment, description, student, school }, 
           </React.Fragment>
         ))}
     </div>
+
+    {lines.length > 0 && (
+      <table style={{ width: "100%", marginTop: 18, borderCollapse: "collapse", fontSize: 13 }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: "left", padding: "6px 0", borderBottom: "1px solid #CBD5E1", color: "#64748B", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+              Fee
+            </th>
+            <th style={{ textAlign: "right", padding: "6px 0", borderBottom: "1px solid #CBD5E1", color: "#64748B", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+              Amount
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((line, i) => (
+            <tr key={`${line.label}-${i}`}>
+              <td style={{ padding: "6px 0", color: "#111827", borderBottom: "1px dashed #E2E8F0" }}>{line.label}</td>
+              <td style={{ padding: "6px 0", color: "#111827", textAlign: "right", borderBottom: "1px dashed #E2E8F0" }}>{money(line.amount)}</td>
+            </tr>
+          ))}
+          {Number(payment?.unallocatedAmount) > 0 && (
+            <tr>
+              <td style={{ padding: "6px 0", color: "#B45309" }}>Not adjusted (refundable)</td>
+              <td style={{ padding: "6px 0", color: "#B45309", textAlign: "right" }}>{money(payment.unallocatedAmount)}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    )}
 
     <div
       style={{
@@ -88,7 +120,7 @@ const FeeReceipt = React.forwardRef(({ payment, description, student, school }, 
           Method
         </div>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", textTransform: "capitalize" }}>
-          {(payment?.paymentMode || "—").replace("_", " ")}
+          {paymentModeLabel(payment)}
         </div>
       </div>
     </div>

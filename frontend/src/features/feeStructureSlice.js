@@ -75,11 +75,51 @@ export const deleteFeeStructure = createAsyncThunk(
     }
 );
 
+/* ================= CLASS SUMMARY (per frequency, year total — computed server-side) ================= */
+export const fetchFeeStructureSummary = createAsyncThunk(
+    "feeStructure/summary",
+    async ({ schoolClassId, academicYearId }, { rejectWithValue }) => {
+        try {
+            const res = await apiClient.get(`/fee-structures/summary`, { params: { schoolClassId, academicYearId } });
+            return res.data.data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Failed to load fee summary");
+        }
+    }
+);
+
+/* ================= FEE SETTINGS (due day, late fine) ================= */
+export const fetchFeeSettings = createAsyncThunk(
+    "feeStructure/fetchSettings",
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await apiClient.get(`/fee-settings`);
+            return res.data.data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Failed to load fee settings");
+        }
+    }
+);
+
+export const saveFeeSettings = createAsyncThunk(
+    "feeStructure/saveSettings",
+    async (settings, { rejectWithValue }) => {
+        try {
+            const res = await apiClient.put(`/fee-settings`, settings);
+            return res.data.data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Failed to save fee settings");
+        }
+    }
+);
+
 /* ================= SLICE ================= */
 const feeStructureSlice = createSlice({
     name: "feeStructure",
     initialState: {
         feeStructures: [],
+        settings: null,
+        settingsSaving: false,
         loading: false,
         error: null,
     },
@@ -121,6 +161,21 @@ const feeStructureSlice = createSlice({
                 if (index !== -1) {
                     state.feeStructures[index] = action.payload;
                 }
+            })
+
+            /* ===== SETTINGS ===== */
+            .addCase(fetchFeeSettings.fulfilled, (state, action) => {
+                state.settings = action.payload;
+            })
+            .addCase(saveFeeSettings.pending, (state) => {
+                state.settingsSaving = true;
+            })
+            .addCase(saveFeeSettings.fulfilled, (state, action) => {
+                state.settingsSaving = false;
+                state.settings = action.payload;
+            })
+            .addCase(saveFeeSettings.rejected, (state) => {
+                state.settingsSaving = false;
             })
 
             /* ===== DELETE ===== */

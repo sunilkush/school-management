@@ -33,6 +33,21 @@ export const assignFeesToStudents = createAsyncThunk(
 /* =====================================================
    ✅ GET MY FEES (Student / Parent)
 ===================================================== */
+/* =====================================================
+   ✅ ASSIGNMENT PREVIEW — figures come from the server
+===================================================== */
+export const previewFeeAssignment = createAsyncThunk(
+  "studentFee/assignPreview",
+  async ({ feeStructureIds, customAmounts }, { rejectWithValue }) => {
+    try {
+      const { data } = await apiClient.post(`/student-fees/assign/preview`, { feeStructureIds, customAmounts });
+      return data.data;
+    } catch (err) {
+      return rejectWithValue(getApiMessage(err, "Failed to preview fees"));
+    }
+  }
+);
+
 export const fetchMyFees = createAsyncThunk(
   "studentFee/fetchMyFees",
   async ({ studentId, enrollmentId, academicYearId }, { rejectWithValue }) => {
@@ -60,28 +75,6 @@ export const fetchMyFees = createAsyncThunk(
   }
 );
 
-
-/* =====================================================
-   ✅ PAY STUDENT FEE
-===================================================== */
-export const payStudentFee = createAsyncThunk(
-  "studentFee/pay",
-  async ({ id, payload }, { rejectWithValue }) => {
-    try {
-      const { data } = await apiClient.put(
-        `/student-fees/pay/${id}`,
-        payload,
-        {
-          headers: {
-          },
-        }
-      );
-      return data.data;
-    } catch (err) {
-      return rejectWithValue(getApiMessage(err, "Payment failed"));
-    }
-  }
-);
 
 /* =====================================================
    ✅ FEES SUMMARY (School Admin)
@@ -147,28 +140,6 @@ const studentFeeSlice = createSlice({
         state.myFees = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchMyFees.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      /* ===== PAY ===== */
-      .addCase(payStudentFee.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(payStudentFee.fulfilled, (state, action) => {
-        state.loading = false;
-
-        // Response is { studentFee, payment } — payment is the ledger record (receiptNo etc.)
-        // for building a receipt; studentFee is the updated fee doc for local state sync.
-        const updatedFee = action.payload?.studentFee;
-        if (updatedFee) {
-          const index = state.myFees.findIndex((f) => f._id === updatedFee._id);
-          if (index !== -1) {
-            state.myFees[index] = updatedFee;
-          }
-        }
-      })
-      .addCase(payStudentFee.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

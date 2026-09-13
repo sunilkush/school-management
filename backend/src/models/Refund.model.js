@@ -13,7 +13,7 @@ const refundSchema = new Schema({
   reason: { type: String, required: true, trim: true },
   refundMode: {
     type: String,
-    enum: ["cash", "online", "cheque", "bank_transfer", "upi", "adjustment"],
+    enum: ["cash", "online", "cheque", "bank_transfer", "upi", "card", "adjustment"],
     required: true,
   },
   transactionId: { type: String, trim: true, default: null },

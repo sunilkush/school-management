@@ -43,6 +43,7 @@ import { FeeHead }             from "./models/feeHead.model.js";
 import { FeeStructure }        from "./models/feeStructure.model.js";
 import { StudentFee }          from "./models/studentFee.model.js";
 import { FeeInstallment }      from "./models/feeInstallment.model.js";
+import { buildInstallments, statusOf } from "./services/feeSchedule.service.js";
 import { TimeSlot }            from "./models/TimeSlot.model.js";
 import { Timetable }           from "./models/Timetable.model.js";
 import { Teacher }             from "./models/teacherAssignment.model.js";
@@ -1136,7 +1137,7 @@ async function seed() {
       let fs = await FeeStructure.findOne({ schoolId, academicYearId: ayId, schoolClassId: cls._id, feeHeadId: head._id });
       if (!fs) {
         try {
-          fs = await FeeStructure.create({ schoolId, academicYearId: ayId, schoolClassId: cls._id, feeHeadId: head._id, amount, frequency: freq, isActive: true, createdBy: adminId });
+          fs = await FeeStructure.create({ schoolId, academicYearId: ayId, schoolClassId: cls._id, feeHeadId: head._id, amount, frequency: freq, amountBasis: "per_period", isActive: true, createdBy: adminId });
           fsCount++;
         } catch (e) { if (e.code !== 11000) throw e; fs = await FeeStructure.findOne({ schoolId, academicYearId: ayId, schoolClassId: cls._id, feeHeadId: head._id }); }
       }
@@ -1146,38 +1147,35 @@ async function seed() {
   ok(`Fee Structures: ${fsCount}`);
 
   // ── 24. Student Fees + Installments ─────────────────────────────────────────
-  // Only seed Tuition Fee for first 8 students
+  // Only seed Tuition Fee for first 8 students. The structure amount is per quarter, so the year
+  // fee is × 4; the first two quarters are marked paid.
   let sfCount = 0; let instCount = 0;
-  const INSTALLMENT_NAMES = ["Q1 (Apr–Jun)", "Q2 (Jul–Sep)", "Q3 (Oct–Dec)", "Q4 (Jan–Mar)"];
-  for (const { stuProfile, def, cls } of studentObjects.slice(0, 8)) {
+  for (const { stuProfile, cls } of studentObjects.slice(0, 8)) {
     const fsKey = `${cls._id}_Tuition Fee`;
     const fs = feeStructureMap[fsKey]; if (!fs) continue;
     const totalAmount = fs.amount * 4; // quarterly × 4
+    const paidAmount = fs.amount * 2;
 
     let sf = await StudentFee.findOne({ schoolId, academicYearId: ayId, studentId: stuProfile._id, feeStructureId: fs._id });
     if (!sf) {
       try {
-        sf = await StudentFee.create({ schoolId, academicYearId: ayId, studentId: stuProfile._id, feeStructureId: fs._id, totalAmount, paidAmount: fs.amount * 2, dueAmount: fs.amount * 2, assignedBy: adminId });
+        sf = await StudentFee.create({ schoolId, academicYearId: ayId, studentId: stuProfile._id, feeStructureId: fs._id, totalAmount, paidAmount, dueAmount: totalAmount - paidAmount, assignedBy: adminId });
         sfCount++;
       } catch (e) { if (e.code !== 11000) throw e; sf = await StudentFee.findOne({ schoolId, academicYearId: ayId, studentId: stuProfile._id, feeStructureId: fs._id }); }
     }
     if (!sf) continue;
+    if (await FeeInstallment.exists({ studentFeeId: sf._id })) continue;
 
-    for (let qi = 0; qi < 4; qi++) {
-      const instName = INSTALLMENT_NAMES[qi];
-      const dueMon   = (qi * 3) + 4;
-      const dueDate  = dueMon > 12
-        ? new Date(`2026-${String(dueMon - 12).padStart(2, "0")}-10`)
-        : new Date(`2025-${String(dueMon).padStart(2, "0")}-10`);
-      const isPaid   = qi < 2;
-      const exists = await FeeInstallment.findOne({ studentFeeId: sf._id, installmentName: instName });
-      if (!exists) {
-        try {
-          await FeeInstallment.create({ schoolId, academicYearId: ayId, studentId: stuProfile._id, studentFeeId: sf._id, installmentName: instName, amount: fs.amount, paidAmount: isPaid ? fs.amount : 0, dueDate, status: isPaid ? "paid" : qi === 2 ? "late" : "pending" });
-          instCount++;
-        } catch (e) { if (e.code !== 11000) throw e; }
-      }
+    // Same schedule the app generates on assignment, with the paid amount spread oldest first.
+    const docs = buildInstallments({ studentFee: sf, frequency: fs.frequency, academicYear: ay, dueDay: 10, assignedAt: ay.startDate });
+    let remaining = sf.paidAmount;
+    for (const d of docs) {
+      d.paidAmount = Math.min(remaining, d.amount);
+      remaining -= d.paidAmount;
+      d.status = statusOf(d);
     }
+    await FeeInstallment.insertMany(docs);
+    instCount += docs.length;
   }
   ok(`Student Fees: ${sfCount}, Installments: ${instCount}`);
 

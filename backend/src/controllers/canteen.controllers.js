@@ -10,7 +10,7 @@ import { StudentWallet } from "../models/StudentWallet.model.js";
 import { WalletTransaction } from "../models/WalletTransaction.model.js";
 import { CanteenOrder } from "../models/CanteenOrder.model.js";
 import { Student } from "../models/student.model.js";
-import { School } from "../models/school.model.js";
+import { getActiveGateway } from "../services/schoolPaymentGateway.service.js";
 
 const resolveSchoolId = (req) =>
   req.user.roleId?.name === "Super Admin" ? req.query.schoolId || req.body.schoolId || req.user.schoolId : req.user.schoolId;
@@ -25,21 +25,20 @@ const ensureAccess = (doc, user, notFoundMessage) => {
   }
 };
 
+// Online wallet top-up uses Razorpay's popup checkout, so it is available only while Razorpay is the
+// school's active gateway (Settings → Online Payment Gateway).
 const getRazorpayInstance = async (schoolId) => {
   if (!mongoose.Types.ObjectId.isValid(schoolId)) throw new ApiError(400, "Invalid school ID");
 
-  const school = await School.findById(schoolId).select("+razorpay.keyId +razorpay.keySecret razorpay.isEnabled");
-  if (!school || !school.razorpay?.keyId || !school.razorpay?.keySecret) {
-    throw new ApiError(400, "Razorpay not configured for this school. Please add Key ID and Key Secret in Settings.");
-  }
-  if (!school.razorpay.isEnabled) {
-    throw new ApiError(400, "Razorpay is disabled for this school. Please enable it in Settings → School → Razorpay Integration.");
+  const active = await getActiveGateway(schoolId);
+  if (!active || active.provider !== "razorpay") {
+    throw new ApiError(400, "Online wallet top-up needs Razorpay as the school's active payment gateway.");
   }
 
   return {
-    razorpay: new Razorpay({ key_id: school.razorpay.keyId, key_secret: school.razorpay.keySecret }),
-    keySecret: school.razorpay.keySecret,
-    keyId: school.razorpay.keyId,
+    razorpay: new Razorpay({ key_id: active.creds.keyId, key_secret: active.creds.keySecret }),
+    keySecret: active.creds.keySecret,
+    keyId: active.creds.keyId,
   };
 };
 

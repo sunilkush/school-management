@@ -7,7 +7,7 @@ const pathToModule = (path = "") => {
     user: "Users", student: "Students", school: "School",
     role: "Roles", employee: "Employees", attendance: "Attendance",
     "fee-structures": "Fee Structures", "student-fees": "Student Fees",
-    "fee-installments": "Fee Installments", payments: "Payments",
+    "fee-installments": "Fee Installments", "fee-settings": "Fee Settings", "payment-gateways": "Payment Gateways", payments: "Payments",
     exams: "Exams", transport: "Transport", hostel: "Hostel",
     "leave-requests": "Leave Requests", "audit-logs": "Audit Logs",
     books: "Library", "issuedBooks": "Library", payroll: "Payroll",

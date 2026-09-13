@@ -1,12 +1,9 @@
-import Razorpay from "razorpay";
-import crypto from "crypto";
 import mongoose from "mongoose";
 
 import { Payment } from "../models/payment.model.js";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
 import { StudentFee } from "../models/studentFee.model.js";
 import { Refund } from "../models/Refund.model.js";
-import { School } from "../models/school.model.js";
 import { Student } from "../models/student.model.js";
 
 import { ApiError } from "../utils/ApiError.js";
@@ -14,229 +11,225 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 import { requireSchoolId } from "../utils/resolveSchoolId.js";
-import { applyFeePayment } from "../services/feePayment.service.js";
+import { applyInstallmentPayment, reverseAllocations } from "../services/feePayment.service.js";
+import { outstandingOf, refreshInstallments, round2 } from "../services/feeSchedule.service.js";
+import { confirmOnlinePayment, frontendBaseUrl, startOnlineCheckout } from "../services/onlinePayment.service.js";
 
-const REFUND_MODES = ["cash", "online", "cheque", "bank_transfer", "upi", "adjustment"];
+const REFUND_MODES = ["cash", "online", "cheque", "bank_transfer", "upi", "card", "adjustment"];
 
-const getRazorpayInstance = async (schoolId) => {
-  if (!mongoose.Types.ObjectId.isValid(schoolId)) throw new ApiError(400, "Invalid school ID");
+/** Modes a staff member records at the counter — each just a record that money was received. */
+const COUNTER_PAYMENT_MODES = ["cash", "upi", "card", "bank_transfer", "cheque", "online"];
 
-  const school = await School.findById(schoolId).select("+razorpay.keyId +razorpay.keySecret razorpay.isEnabled");
-  if (!school || !school.razorpay?.keyId || !school.razorpay?.keySecret) {
-    throw new ApiError(400, "Razorpay not configured for this school. Please add Key ID and Key Secret in Settings.");
-  }
+/** Online checkout through the school's active gateway. "razorpay" is accepted from older clients. */
+const GATEWAY_MODES = ["gateway", "razorpay"];
 
-  if (!school.razorpay.isEnabled) {
-    throw new ApiError(400, "Razorpay is disabled for this school. Please enable it in Settings → School → Razorpay Integration.");
-  }
+const newReceiptNo = () => `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-  return {
-    razorpay: new Razorpay({ key_id: school.razorpay.keyId, key_secret: school.razorpay.keySecret }),
-    keySecret: school.razorpay.keySecret,
-    keyId: school.razorpay.keyId,
-  };
-};
+/**
+ * Student/Parent may only pay their own (or their linked child's) fees — route middleware checks
+ * the role name, not record ownership. Staff may pay for any student of their own school.
+ */
+const assertCanPayForStudent = async ({ studentId, schoolId, user }) => {
+  if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid studentId");
 
-const ensureInstallmentAccess = async ({ installmentId, schoolId, user }) => {
-  const installment = await FeeInstallment.findById(installmentId);
-  if (!installment) throw new ApiError(404, "Installment not found");
-  if (installment.schoolId.toString() !== schoolId.toString()) throw new ApiError(403, "Unauthorized access");
-
-  // Student/Parent may only ever act on their own (or their linked child's) installment —
-  // route middleware only checks role name, not record ownership, so it has to happen here.
   const roleName = user?.roleId?.name?.toLowerCase();
-  if (roleName === "student") {
-    const owns = await Student.exists({ _id: installment.studentId, userId: user._id, schoolId });
-    if (!owns) throw new ApiError(403, "Access denied: this installment does not belong to you");
-  } else if (roleName === "parent") {
-    const owns = await Student.exists({
-      _id: installment.studentId,
-      schoolId,
-      $or: [{ fatherId: user._id }, { motherId: user._id }, { guardianId: user._id }],
-    });
-    if (!owns) throw new ApiError(403, "This student is not linked with this parent");
+  const filter = { _id: studentId, schoolId };
+  if (roleName === "student") filter.userId = user._id;
+  if (roleName === "parent") {
+    filter.$or = [{ fatherId: user._id }, { motherId: user._id }, { guardianId: user._id }];
   }
 
-  return installment;
-};
-
-
-// Atomically creates the Payment record and updates both the installment AND its parent
-// StudentFee (via applyFeePayment) so a crash — or just a code path that used to forget one of
-// the two — can never leave the payment ledger, the installment, and the fee summary disagreeing
-// with each other. This previously only updated the installment, leaving StudentFee.paidAmount/
-// dueAmount/status stale after every self-service Razorpay payment.
-//
-// Idempotent on paymentData.transactionId (the gateway's payment id): the fee-payment webhook
-// (webhook.controllers.js) and this same client-side verify path can both race to record the
-// same real-world Razorpay payment. Checking first — rather than relying solely on the unique
-// index to reject the loser — means whichever call comes second gets back the payment that was
-// already recorded instead of an error.
-export const recordPayment = async ({ installment, paymentData }) => {
-  if (paymentData.transactionId) {
-    const existing = await Payment.findOne({ transactionId: paymentData.transactionId });
-    if (existing) {
-      const studentFee = await StudentFee.findById(existing.studentFeeId);
-      return { payment: existing, installment, studentFee, alreadyRecorded: true };
-    }
-  }
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const [payment] = await Payment.create([paymentData], { session });
-    const { studentFee, installment: updatedInstallment } = await applyFeePayment({
-      installment,
-      amount: paymentData.amountPaid,
-      session,
-    });
-
-    payment.studentFeeId = studentFee._id;
-    await payment.save({ session });
-
-    await session.commitTransaction();
-    return { payment, installment: updatedInstallment, studentFee };
-  } catch (err) {
-    await session.abortTransaction();
-    // Lost the race between the pre-check above and this insert (webhook + client-verify firing
-    // within milliseconds of each other) — the unique index on transactionId rejected us, so
-    // whoever won already recorded this exact payment. Return their result instead of erroring.
-    if (err?.code === 11000 && paymentData.transactionId) {
-      const existing = await Payment.findOne({ transactionId: paymentData.transactionId });
-      if (existing) {
-        const studentFee = await StudentFee.findById(existing.studentFeeId);
-        return { payment: existing, installment, studentFee, alreadyRecorded: true };
-      }
-    }
-    throw err;
-  } finally {
-    session.endSession();
+  if (!(await Student.exists(filter))) {
+    throw new ApiError(
+      403,
+      roleName === "parent" ? "This student is not linked with this parent" : "Access denied for this student"
+    );
   }
 };
+
+/**
+ * POST /payments — pays one or more of a student's installments.
+ *
+ * Body: { studentId, installmentIds: [], paymentMode, amount?, referenceNo?, remarks? }
+ *
+ *   - Counter modes (cash, UPI, card, bank transfer, cheque): records the payment now. `amount`
+ *     may be less than what the selected installments owe (Partial Paid) but never more.
+ *   - "gateway": starts an online checkout for everything the selected installments owe, on
+ *     whichever gateway the school has active. Nothing is applied until the gateway confirms it
+ *     (POST /payments/:id/verify, the return from the gateway, or its webhook).
+ */
 export const createPayment = asyncHandler(async (req, res) => {
-  const { studentId, installmentId, amount, paymentMethod, paymentMode, transactionId, razorpay } = req.body;
+  const { studentId, installmentIds, amount, paymentMethod, paymentMode, referenceNo, remarks } = req.body;
   const schoolId = requireSchoolId(req.user);
 
-  const installment = await ensureInstallmentAccess({ installmentId, schoolId, user: req.user });
+  await assertCanPayForStudent({ studentId, schoolId, user: req.user });
   const mode = String(paymentMethod || paymentMode || "cash").toLowerCase();
+  const isGateway = GATEWAY_MODES.includes(mode);
 
-  // The "cash"/"cheque"/"online" branch below records payment.amount straight from the request
-  // body with no real-money verification (only the razorpay branch cryptographically verifies
-  // anything actually happened). PAYMENT_CREATE_ROLES (payment.routes.js) includes Student/Parent
-  // for self-service online payment, but with no mode restriction either of those roles could
-  // submit a fabricated "cash" payment for their own installment and have it marked paid/partial
-  // without paying anything at all.
-  const selfServiceRoleName = req.user?.roleId?.name?.toLowerCase();
-  if ((selfServiceRoleName === "student" || selfServiceRoleName === "parent") && mode !== "razorpay") {
+  // Every counter mode is just a claim that money changed hands. Student/Parent could otherwise
+  // mark their own fee paid without paying anything.
+  const roleName = req.user?.roleId?.name?.toLowerCase();
+  if ((roleName === "student" || roleName === "parent") && !isGateway) {
     throw new ApiError(403, "Only online payment is available for self-service fee payment");
   }
 
-  if (mode === "razorpay") {
-    const dueAmount = installment.amount - installment.paidAmount;
-    if (dueAmount <= 0) throw new ApiError(400, "Installment already paid");
+  const ids = [...new Set((installmentIds || []).map(String))];
+  if (!ids.length || ids.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+    throw new ApiError(400, "Select at least one valid installment to pay");
+  }
 
-    if (razorpay?.razorpay_order_id && razorpay?.razorpay_payment_id && razorpay?.razorpay_signature) {
-      const { keySecret } = await getRazorpayInstance(schoolId);
-      const body = `${razorpay.razorpay_order_id}|${razorpay.razorpay_payment_id}`;
-      const expectedSignature = crypto.createHmac("sha256", keySecret).update(body).digest("hex");
+  if (isGateway) {
+    // Charge today's figure, fines included.
+    await refreshInstallments({ schoolId, studentId });
 
-      if (expectedSignature !== razorpay.razorpay_signature) {
-        throw new ApiError(400, "Payment verification failed");
-      }
-
-      const { payment, studentFee } = await recordPayment({
-        installment,
-        paymentData: {
-          schoolId,
-          studentId: installment.studentId,
-          installmentId,
-          amountPaid: dueAmount,
-          paymentMode: "razorpay",
-          status: "success",
-          razorpay,
-          transactionId: razorpay.razorpay_payment_id,
-          receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        },
-      });
-
-      return sendSuccess(res, {
-        statusCode: 201,
-        message: "Payment verified and captured",
-        data: { payment, studentFee },
-      });
+    const installments = await FeeInstallment.find({ _id: { $in: ids }, schoolId, studentId });
+    if (installments.length !== ids.length) {
+      throw new ApiError(404, "Some selected installments were not found for this student");
     }
 
-    const { razorpay: razorpayClient, keyId } = await getRazorpayInstance(schoolId);
-    const order = await razorpayClient.orders.create({
-      amount: Math.round(dueAmount * 100),
-      currency: "INR",
-      receipt: `INST-${installmentId}`,
-      notes: {
-        schoolId: schoolId.toString(),
-        installmentId,
-        requestId: req.requestId,
-      },
+    const payable = round2(installments.reduce((sum, inst) => sum + outstandingOf(inst), 0));
+    if (payable <= 0) throw new ApiError(400, "The selected installments are already paid");
+
+    const checkout = await startOnlineCheckout({ req, schoolId, studentId, installments, payable, user: req.user });
+    return sendSuccess(res, { message: "Checkout started", data: checkout });
+  }
+
+  if (!COUNTER_PAYMENT_MODES.includes(mode)) {
+    throw new ApiError(400, `paymentMode must be one of: gateway, ${COUNTER_PAYMENT_MODES.join(", ")}`);
+  }
+
+  const numericAmount = round2(amount);
+  if (!(numericAmount > 0)) throw new ApiError(400, "Valid amount is required");
+
+  const session = await mongoose.startSession();
+  let payment;
+  let result;
+  try {
+    await session.withTransaction(async () => {
+      result = await applyInstallmentPayment({
+        schoolId,
+        studentId,
+        installmentIds: ids,
+        amount: numericAmount,
+        session,
+      });
+
+      const paidAt = new Date();
+      [payment] = await Payment.create(
+        [
+          {
+            schoolId,
+            studentId,
+            academicYearId: result.installments[0]?.academicYearId || null,
+            allocations: result.allocations,
+            amountPaid: numericAmount,
+            paymentMode: mode,
+            status: "success",
+            referenceNo: referenceNo?.trim() || null,
+            remarks: remarks?.trim() || null,
+            paymentDate: paidAt,
+            receiptNo: newReceiptNo(),
+            collectedBy: req.user._id,
+          },
+        ],
+        { session }
+      );
+
+      for (const fee of result.studentFees) {
+        fee.lastPayment = {
+          amount: round2(result.allocations.filter((a) => String(a.studentFeeId) === String(fee._id)).reduce((s, a) => s + a.amount, 0)),
+          paymentMode: mode,
+          referenceNo: referenceNo?.trim() || "",
+          remarks: remarks?.trim() || "",
+          paidAt,
+          collectedBy: req.user._id,
+        };
+        await fee.save({ session });
+      }
     });
-
-    return sendSuccess(res, {
-      message: "Razorpay order created",
-      data: {
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        keyId,
-      },
-    });
+  } finally {
+    await session.endSession();
   }
 
-  const numericAmount = Number(amount);
-  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-    throw new ApiError(400, "Valid amount is required");
-  }
-
-  if (numericAmount > installment.amount - installment.paidAmount) {
-    throw new ApiError(400, "Amount exceeds remaining due");
-  }
-
-  const { payment, studentFee } = await recordPayment({
-    installment,
-    paymentData: {
-      schoolId,
-      studentId: studentId || installment.studentId,
-      installmentId,
-      amountPaid: numericAmount,
-      paymentMode: mode,
-      status: "success",
-      transactionId: transactionId || null,
-      receiptNo: `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    },
-  });
-
+  const leftUnpaid = result.installments.some((inst) => inst.status !== "paid");
   return sendSuccess(res, {
     statusCode: 201,
-    message: "Payment created successfully",
-    data: { payment, studentFee },
+    message: leftUnpaid ? "Partial payment recorded" : "Payment recorded successfully",
+    data: { payment, partial: leftUnpaid, installments: result.installments, studentFees: result.studentFees },
   });
 });
 
-// createRazorpayOrder/verifyRazorpayPayment (standalone order-create + verify) used to exist as
-// separate endpoints here, duplicating exactly what createPayment's own "mode: razorpay" branch
-// already does in one place (create an order when no gateway response is present yet, verify +
-// capture when it is). Removed as dead code — confirmed zero frontend callers; RazorpayButton.jsx
-// imports identically-named actions from superAdminBillingSlice.js, a different, unrelated
-// platform-billing feature that hits its own backend endpoints, not these.
+/**
+ * POST /payments/:id/verify — the payer's browser reports that an online checkout finished (the
+ * Razorpay popup closed with a result, or the payer landed back on the fee page).
+ *
+ * Nothing the browser sends is trusted: the server asks the checkout's own gateway what happened
+ * and settles only what it reports as paid. Safe to call any number of times.
+ */
+export const verifyPayment = asyncHandler(async (req, res) => {
+  const schoolId = requireSchoolId(req.user);
+
+  const payment = await Payment.findOne({ _id: req.params.id, schoolId });
+  if (!payment) throw new ApiError(404, "Payment not found");
+  await assertCanPayForStudent({ studentId: payment.studentId, schoolId, user: req.user });
+
+  if (!payment.gatewayOrderId && payment.status === "pending") {
+    throw new ApiError(400, "This payment is not an online checkout");
+  }
+
+  const { state, payment: current } = await confirmOnlinePayment(payment);
+  const messages = {
+    paid: "Payment received",
+    pending: "The payment is still being processed by the gateway. It will update automatically.",
+    failed: "The payment did not go through. No money was taken for these installments.",
+  };
+
+  return sendSuccess(res, { message: messages[state], data: { state, payment: current } });
+});
+
+/**
+ * GET|POST /payments/return/:paymentId — PUBLIC. Where a gateway sends the payer's browser back
+ * after paying (PayU, Paytm and CCAvenue post a form here; Cashfree, PhonePe and Easebuzz
+ * redirect). The browser carries no login token on that hop.
+ *
+ * Whatever the gateway posted is ignored for the decision: the server asks the gateway directly,
+ * settles if paid, then sends the browser on to the fee page, which re-checks with the payer's own
+ * login. A forged post here can at most make the server ask a gateway about a real checkout.
+ */
+export const returnFromGateway = async (req, res) => {
+  const base = frontendBaseUrl();
+  const { paymentId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(paymentId)) return res.redirect(303, `${base}/dashboard`);
+
+  const payment = await Payment.findById(paymentId).catch(() => null);
+  if (!payment) return res.redirect(303, `${base}/dashboard`);
+
+  let state = "pending";
+  try {
+    ({ state } = await confirmOnlinePayment(payment));
+  } catch (err) {
+    console.error(`[payments] return confirm failed for ${paymentId}:`, err.message);
+  }
+
+  const target = new URL(`${base}${payment.checkoutReturnPath || "/dashboard"}`);
+  target.searchParams.set("paymentId", String(payment._id));
+  target.searchParams.set("payment", state);
+  // 303 so a gateway's form POST becomes a plain GET of the fee page.
+  return res.redirect(303, target.toString());
+};
 
 export const getPayments = asyncHandler(async (req, res) => {
   const schoolId = requireSchoolId(req.user);
   const { id } = req.params;
-  const { page = 1, limit = 20, paymentMode, startDate, endDate } = req.query;
+  const { page = 1, limit = 20, paymentMode, startDate, endDate, studentId } = req.query;
 
-  const filter = { schoolId };
+  // Pending rows are online checkouts nobody finished; they are not payments.
+  const filter = { schoolId, status: { $ne: "pending" } };
   if (id) filter._id = id;
 
   // Payment.studentId refs the Student model, not User — req.user._id can never match it directly,
-  // so Student/Parent callers need their actual Student._id(s) resolved first (see also
-  // ensureInstallmentAccess above, which had the same User-vs-Student id mismatch).
+  // so Student/Parent callers need their actual Student._id(s) resolved first.
   const roleName = req.userRole?.name;
   if (roleName === "Student") {
     const student = await Student.findOne({ userId: req.user._id, schoolId }).select("_id");
@@ -246,7 +239,10 @@ export const getPayments = asyncHandler(async (req, res) => {
       schoolId,
       $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
     }).select("_id");
-    filter.studentId = { $in: children.map((c) => c._id) };
+    const childIds = children.map((c) => String(c._id));
+    filter.studentId = studentId && childIds.includes(String(studentId)) ? studentId : { $in: childIds };
+  } else if (studentId) {
+    filter.studentId = studentId;
   }
   if (paymentMode) filter.paymentMode = paymentMode;
   if (startDate || endDate) {
@@ -259,9 +255,18 @@ export const getPayments = asyncHandler(async (req, res) => {
 
   const [payments, total] = await Promise.all([
     Payment.find(filter)
-      .select("studentId installmentId amountPaid refundedAmount paymentMode status paymentDate receiptNo createdAt")
+      .select("studentId allocations unallocatedAmount amountPaid refundedAmount paymentMode gateway status paymentDate receiptNo referenceNo remarks transactionId createdAt")
       .populate({ path: "studentId", select: "userId", populate: { path: "userId", select: "name email" } })
-      .populate("installmentId", "amount dueDate")
+      .populate({
+        path: "allocations.installmentId",
+        select: "installmentName dueDate studentFeeId",
+        populate: {
+          path: "studentFeeId",
+          select: "feeStructureId",
+          populate: { path: "feeStructureId", select: "feeHeadId", populate: { path: "feeHeadId", select: "name" } },
+        },
+      })
+      .populate("collectedBy", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
@@ -280,10 +285,10 @@ export const getPayments = asyncHandler(async (req, res) => {
 });
 
 /**
- * Refunds all or part of a successful payment. Reverses the linked FeeInstallment and/or
- * StudentFee ledgers so the student's outstanding balance is correct again, and records an
- * append-only Refund doc for the audit trail — the original Payment is never edited beyond its
- * own refundedAmount/status bookkeeping.
+ * Refunds all or part of a successful payment. Reverses the installment and StudentFee balances it
+ * paid, so the student's outstanding balance is correct again, and records an append-only Refund
+ * doc for the audit trail — the original Payment is never edited beyond its own
+ * refundedAmount/status/allocation bookkeeping.
  */
 export const refundPayment = asyncHandler(async (req, res) => {
   const { id: paymentId } = req.params;
@@ -355,35 +360,46 @@ export const refundPayment = asyncHandler(async (req, res) => {
       refundedBy: req.user._id,
     }], { session });
 
-    // Reverse the installment ledger first (if this payment was installment-linked), then its
-    // parent StudentFee — same $max-clamped floor as payInstallment's forward-direction $inc, so
-    // a refund can never push either balance below zero even under odd historical data.
-    if (payment.installmentId) {
-      const installment = await FeeInstallment.findOneAndUpdate(
-        { _id: payment.installmentId, schoolId },
-        [{ $set: { paidAmount: { $max: [{ $subtract: ["$paidAmount", numericAmount] }, 0] } } }],
-        { new: true, session }
-      );
-      if (installment) {
-        installment.status =
-          installment.paidAmount >= installment.amount ? "paid" :
-          installment.paidAmount > 0 ? "partial" : "pending";
-        await installment.save({ session });
-      }
-    }
+    if (payment.allocations?.length) {
+      // Money that never reached an installment is refunded first — returning it touches no
+      // balance. Only the rest is taken back out of the installments it paid.
+      const alreadyRefunded = Number(payment.refundedAmount || 0);
+      const allocatedRefunded = round2(payment.allocations.reduce((s, a) => s + Number(a.refundedAmount || 0), 0));
+      const unallocatedLeft = Math.max(round2(Number(payment.unallocatedAmount || 0) - (alreadyRefunded - allocatedRefunded)), 0);
+      const fromInstallments = round2(numericAmount - Math.min(numericAmount, unallocatedLeft));
 
-    if (payment.studentFeeId) {
-      const studentFee = await StudentFee.findOneAndUpdate(
-        { _id: payment.studentFeeId, schoolId },
-        [{ $set: { paidAmount: { $max: [{ $subtract: ["$paidAmount", numericAmount] }, 0] } } }],
-        { new: true, session }
-      );
-      if (studentFee) {
-        studentFee.dueAmount = Math.max(studentFee.totalAmount - studentFee.paidAmount, 0);
-        studentFee.status =
-          studentFee.paidAmount >= studentFee.totalAmount ? "paid" :
-          studentFee.paidAmount > 0 ? "partial" : "pending";
-        await studentFee.save({ session });
+      if (fromInstallments > 0) {
+        const { allocations } = await reverseAllocations({
+          schoolId,
+          allocations: payment.allocations,
+          amount: fromInstallments,
+          session,
+        });
+        await Payment.updateOne({ _id: paymentId, schoolId }, { $set: { allocations } }, { session });
+      }
+    } else {
+      // Older payments recorded against a single installment and/or fee head.
+      if (payment.installmentId) {
+        const installment = await FeeInstallment.findOneAndUpdate(
+          { _id: payment.installmentId, schoolId },
+          [{ $set: { paidAmount: { $max: [{ $subtract: ["$paidAmount", numericAmount] }, 0] } } }],
+          { new: true, session }
+        );
+        if (installment) {
+          installment.status =
+            installment.paidAmount >= installment.amount + (installment.fineAmount || 0) ? "paid" :
+            installment.paidAmount > 0 ? "partial" : "pending";
+          await installment.save({ session });
+        }
+      }
+
+      if (payment.studentFeeId) {
+        const studentFee = await StudentFee.findOne({ _id: payment.studentFeeId, schoolId }).session(session);
+        if (studentFee) {
+          studentFee.paidAmount = Math.max(round2(studentFee.paidAmount - numericAmount), 0);
+          // pre-save recomputes dueAmount/status
+          await studentFee.save({ session });
+        }
       }
     }
 
@@ -399,6 +415,7 @@ export const refundPayment = asyncHandler(async (req, res) => {
     session.endSession();
   }
 });
+
 
 export const getRefunds = asyncHandler(async (req, res) => {
   const schoolId = requireSchoolId(req.user);
@@ -447,7 +464,8 @@ export const paymentSummary = asyncHandler(async (req, res) => {
 const schoolId = requireSchoolId(req.user);
 
   const [summary] = await Payment.aggregate([
-    { $match: { schoolId: new mongoose.Types.ObjectId(schoolId) } },
+    // Pending rows are unfinished online checkouts and failed ones moved no money.
+    { $match: { schoolId: new mongoose.Types.ObjectId(schoolId), status: { $in: ["success", "refunded"] } } },
     {
       $group: {
         _id: null,
@@ -462,60 +480,5 @@ const schoolId = requireSchoolId(req.user);
   return sendSuccess(res, {
     message: "Payment summary fetched",
     data: summary || { totalAmount: 0, totalTransactions: 0 },
-  });
-});
-
-export const getRazorpayConfig = asyncHandler(async (req, res) => {
-  const schoolId = requireSchoolId(req.user);
-
-  const school = await School.findById(schoolId).select("+razorpay.keyId razorpay.accountId razorpay.isEnabled +razorpay.webhookSecret");
-  if (!school) throw new ApiError(404, "School not found");
-
-  return sendSuccess(res, {
-    message: "Razorpay config fetched",
-    data: {
-      keyId: school.razorpay?.keyId || "",
-      accountId: school.razorpay?.accountId || "",
-      isEnabled: Boolean(school.razorpay?.isEnabled),
-      hasKeySecret: Boolean(school.razorpay?.keySecret),
-      hasWebhookSecret: Boolean(school.razorpay?.webhookSecret),
-    },
-  });
-});
-
-export const updateRazorpayConfig = asyncHandler(async (req, res) => {
-  const schoolId = requireSchoolId(req.user);
-
-  const { keyId, keySecret, webhookSecret, accountId, isEnabled } = req.body;
-  const school = await School.findById(schoolId).select("+razorpay.keyId +razorpay.keySecret +razorpay.webhookSecret razorpay.accountId razorpay.isEnabled");
-  if (!school) throw new ApiError(404, "School not found");
-
-  school.razorpay = school.razorpay || {};
-  school.razorpay.keyId = keyId?.trim();
-  school.razorpay.accountId = accountId?.trim() || "";
-  school.razorpay.isEnabled = Boolean(isEnabled);
-
-  if (keySecret?.trim()) {
-    school.razorpay.keySecret = keySecret.trim();
-  }
-  if (webhookSecret?.trim()) {
-    school.razorpay.webhookSecret = webhookSecret.trim();
-  }
-
-  if (school.razorpay.isEnabled && (!school.razorpay.keyId || !school.razorpay.keySecret)) {
-    throw new ApiError(400, "Key ID and Key Secret are required to enable Razorpay");
-  }
-
-  await school.save();
-
-  return sendSuccess(res, {
-    message: "Razorpay config updated successfully",
-    data: {
-      keyId: school.razorpay?.keyId || "",
-      accountId: school.razorpay?.accountId || "",
-      isEnabled: Boolean(school.razorpay?.isEnabled),
-      hasKeySecret: Boolean(school.razorpay?.keySecret),
-      hasWebhookSecret: Boolean(school.razorpay?.webhookSecret),
-    },
   });
 });

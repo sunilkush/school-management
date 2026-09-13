@@ -27,6 +27,21 @@ export const createPayment = createAsyncThunk(
     }
 );
 
+// ✅ Finish an online checkout: send Razorpay's handler response for the pending payment
+export const verifyPayment = createAsyncThunk(
+    "payment/verify",
+    async ({ paymentId, razorpay }, { rejectWithValue }) => {
+        try {
+            const res = await apiClient.post(`/payments/${paymentId}/verify`, razorpay);
+            return res.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Payment verification failed"
+            );
+        }
+    }
+);
+
 // ✅ Get All Payments
 export const fetchPayments = createAsyncThunk(
     "payment/fetchAll",
@@ -139,9 +154,8 @@ const paymentSlice = createSlice({
             .addCase(createPayment.fulfilled, (state, action) => {
                 state.loading = false;
                 state.success = true;
-                // A captured payment returns { payment, studentFee }; a razorpay order-creation
-                // call (no gateway response yet) returns { orderId, amount, currency, keyId }
-                // instead — only the former has an actual Payment doc to add to local state.
+                // A counter payment returns { payment, ... }; starting an online checkout returns
+                // { paymentId, orderId, amount, keyId, notes } — only the former is a recorded payment.
                 const createdPayment = action.payload?.data?.payment;
                 if (createdPayment?._id) {
                     state.payments.unshift(createdPayment);
@@ -150,6 +164,14 @@ const paymentSlice = createSlice({
             .addCase(createPayment.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+
+            // VERIFY
+            .addCase(verifyPayment.fulfilled, (state, action) => {
+                const verified = action.payload?.data?.payment;
+                if (verified?._id && !state.payments.some((p) => p._id === verified._id)) {
+                    state.payments.unshift(verified);
+                }
             })
 
             // GET ALL
