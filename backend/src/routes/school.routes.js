@@ -14,6 +14,9 @@ import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 const ADMIN_ROLE = ["Super Admin", "School Admin","Accountant"];
+// Changing a school's own details (name, contact, logo, online admissions) is the school's
+// administrator's job — not an Accountant's.
+const SCHOOL_EDIT_ROLE = ["Super Admin", "School Admin"];
 
 const TEACHER_ROLE = ["Super Admin", "School Admin", "Teacher"];
 const STUDENT_ROLE = ["Super Admin", "School Admin", "Teacher", "Student"];
@@ -34,7 +37,7 @@ router.post(
 router.post(
     "/update/:schoolId",
     auth,
-    roleMiddleware(ADMIN_ROLE),
+    roleMiddleware(SCHOOL_EDIT_ROLE),
     upload.fields([{ name: "logo", maxCount: 1 }]),
     updateSchool
 );
@@ -47,10 +50,13 @@ router.get("/getAllSchool", auth, roleMiddleware(ADMIN_ROLE), getAllSchools);
 router.get("/:schoolId", auth, roleMiddleware(STUDENT_ROLE), getSchoolById);
 router.get("/getRoleBySchool:schoolId", auth,roleMiddleware("Super Admin"), getSchoolById);
 
-// ✅ Activate School (Super Admin & Admin)
+// ✅ Activate School (Super Admin only)
 // Route param must be named `schoolId` — activateSchool reads req.params.schoolId, so a mismatched
 // `:id` here silently made every activate request 404 ("School not found").
-router.put("/activate/:schoolId", auth, roleMiddleware(ADMIN_ROLE), activateSchool);
+// Super Admin only, like deactivate: activateSchool is not scoped to the caller's school, so any
+// School Admin or Accountant could otherwise switch on any school — including one the platform
+// suspended.
+router.put("/activate/:schoolId", auth, roleMiddleware(["Super Admin"]), activateSchool);
 
 // ✅ Deactivate School (Super Admin only)
 router.put("/deactivate/:schoolId", auth, roleMiddleware(["Super Admin"]), deactivateSchool);
