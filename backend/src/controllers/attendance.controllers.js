@@ -67,6 +67,14 @@ const SELF_ATTENDANCE_ROLES = [
   COUNSELOR,
   SECURITY,
   ACCOUNTANT,
+  // The route's SELF_ATTENDANCE_ROLES (routes/attendance.routes.js) admits these to mark-bulk, but
+  // without them here they got past the route and were refused marking even their own attendance.
+  // Recorded as "staff" — see getAttendanceRoleForUser.
+  "Sports Teacher",
+  "Lab Technician",
+  "Medical Officer",
+  "Class Teacher",
+  "Driver",
 ];
 const ALL_ATTENDANCE_ROLES = [
   SUPER_ADMIN,
@@ -182,10 +190,11 @@ const assertCanChangeRecord = (req, attendance) => {
 export const markBulkAttendance = asyncHandler(async (req, res) => {
   const { schoolId, date, role, schoolClassId, sectionId, subjectId, remarks, records } = req.body;
 
-  const userRole = req.userRole?.name;
-  const canSelfMark = SELF_ATTENDANCE_ROLES.includes(userRole) && isSelfAttendancePayload(req, role, records);
-  const canMarkStudents = STUDENT_ATTENDANCE_MARKERS.includes(userRole) && role === "student";
-  const canMarkStaffLike = STAFF_ATTENDANCE_MARKERS.includes(userRole) && role !== "student";
+  // Any held role grants what it grants, as on the route: a Driver who is also a Teacher marks
+  // students.
+  const canSelfMark = holdsAnyRole(req, SELF_ATTENDANCE_ROLES) && isSelfAttendancePayload(req, role, records);
+  const canMarkStudents = holdsAnyRole(req, STUDENT_ATTENDANCE_MARKERS) && role === "student";
+  const canMarkStaffLike = holdsAnyRole(req, STAFF_ATTENDANCE_MARKERS) && role !== "student";
 
   if (!canSelfMark && !canMarkStudents && !canMarkStaffLike) {
     throw new ApiError(403, "You are not allowed to mark attendance for this role");
@@ -218,7 +227,11 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
     return doc;
   });
 
-  if (SELF_ATTENDANCE_ROLES.includes(userRole) && !ADMIN_ATTENDANCE_ROLES.includes(userRole) && !canMarkStudents) {
+  // Only someone whose one permission here is marking themselves is held to their own record. This
+  // used to fire for every self-attendance role that was not marking students — Accountant is one,
+  // so the staff attendance STAFF_ATTENDANCE_MARKERS gives an Accountant was refused whenever it
+  // named anyone else.
+  if (!canMarkStudents && !canMarkStaffLike) {
     docs.forEach((doc) => {
       if (doc.userId.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You can mark only your own attendance");

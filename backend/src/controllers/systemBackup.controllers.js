@@ -26,8 +26,15 @@ const ensureBackupsDir = () => {
 };
 
 const SUPER_ADMIN_ROLE = "Super Admin";
-const IT_SUPPORT_ROLE = "IT Support";
 const SCHOOL_ADMIN_ROLE = "School Admin";
+
+// Backups hold every school's data. The router (routes/systemBackup.routes.js) admits Super Admin only,
+// and only Super Admin has the backup screen. The handlers below used to name IT Support and School
+// Admin as well: unreachable, but they said otherwise, and IT Support was given unscoped listing and
+// download of every school's backups the moment anyone widened the router to match. One list, the
+// router's. Do not widen it as a whole — it also gates restore and delete. Opening a handler to another
+// role is a per-handler decision; the School Admin scoping already inside some handlers is there for it.
+const BACKUP_ROLES = [SUPER_ADMIN_ROLE];
 
 const resolveRoleName = (req) => req.userRole?.name || req.user?.roleId?.name || "";
 
@@ -91,7 +98,7 @@ const collectBackupData = async ({ scope, schoolId, academicYearId, modules }) =
 };
 
 export const getSystemBackupSummary = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
 
   const [totalBackups, successfulBackups, failedBackups, lastBackup, nextSchedule, totalStorage, pendingRestores] =
     await Promise.all([
@@ -122,7 +129,7 @@ export const getSystemBackupSummary = asyncHandler(async (req, res) => {
 });
 
 export const createManualBackup = asyncHandler(async (req, res) => {
-  const roleName = ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE, SCHOOL_ADMIN_ROLE]);
+  const roleName = ensureRole(req, BACKUP_ROLES);
 
   const {
     type = "full",
@@ -219,7 +226,7 @@ export const createManualBackup = asyncHandler(async (req, res) => {
 });
 
 export const listSystemBackups = asyncHandler(async (req, res) => {
-  const roleName = ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE, SCHOOL_ADMIN_ROLE]);
+  const roleName = ensureRole(req, BACKUP_ROLES);
 
   const { status, type, scope, schoolId, page = 1, limit = 20 } = req.query;
   const query = {};
@@ -257,7 +264,7 @@ export const listSystemBackups = asyncHandler(async (req, res) => {
 });
 
 export const getSystemBackupById = asyncHandler(async (req, res) => {
-  const roleName = ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE, SCHOOL_ADMIN_ROLE]);
+  const roleName = ensureRole(req, BACKUP_ROLES);
 
   const backup = await SystemBackup.findById(req.params.id).populate("createdBy", "name email").lean();
   if (!backup) throw new ApiError(404, "Backup not found");
@@ -274,7 +281,7 @@ export const getSystemBackupById = asyncHandler(async (req, res) => {
 
 /* ── Download backup file ───────────────────────────────────── */
 export const downloadBackupFile = asyncHandler(async (req, res) => {
-  const roleName = ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE, SCHOOL_ADMIN_ROLE]);
+  const roleName = ensureRole(req, BACKUP_ROLES);
 
   const backup = await SystemBackup.findById(req.params.id).lean();
   if (!backup) throw new ApiError(404, "Backup not found");
@@ -314,7 +321,7 @@ export const downloadBackupFile = asyncHandler(async (req, res) => {
 export const getSystemBackupDownloadUrl = downloadBackupFile;
 
 export const deleteSystemBackup = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
   const deleted = await SystemBackup.findByIdAndDelete(req.params.id).lean();
   if (!deleted) throw new ApiError(404, "Backup not found");
 
@@ -335,7 +342,7 @@ export const deleteSystemBackup = asyncHandler(async (req, res) => {
 });
 
 export const createBackupSchedule = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
 
   const schedule = await BackupSchedule.create({
     ...req.body,
@@ -350,27 +357,27 @@ export const createBackupSchedule = asyncHandler(async (req, res) => {
 });
 
 export const listBackupSchedules = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
   const schedules = await BackupSchedule.find().sort({ createdAt: -1 }).lean();
   return sendSuccess(res, { message: "Backup schedules fetched successfully", data: schedules });
 });
 
 export const updateBackupSchedule = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
   const updated = await BackupSchedule.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true }).lean();
   if (!updated) throw new ApiError(404, "Backup schedule not found");
   return sendSuccess(res, { message: "Backup schedule updated successfully", data: updated });
 });
 
 export const deleteBackupSchedule = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
   const deleted = await BackupSchedule.findByIdAndDelete(req.params.id).lean();
   if (!deleted) throw new ApiError(404, "Backup schedule not found");
   return sendSuccess(res, { message: "Backup schedule deleted successfully", data: deleted });
 });
 
 export const requestRestoreJob = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
   const { backupId, restoreType, schoolId, modules = [], dryRun = true } = req.body;
 
   const backup = await SystemBackup.findById(backupId).lean();
@@ -399,7 +406,7 @@ export const requestRestoreJob = asyncHandler(async (req, res) => {
 });
 
 export const approveRestoreJob = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
 
   const { mfaToken } = req.body;
   if (!mfaToken || mfaToken.length < 6) {
@@ -427,7 +434,7 @@ export const approveRestoreJob = asyncHandler(async (req, res) => {
 });
 
 export const runRestoreJob = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
 
   const restoreJob = await RestoreJob.findById(req.params.id);
   if (!restoreJob) throw new ApiError(404, "Restore job not found");
@@ -452,7 +459,7 @@ export const runRestoreJob = asyncHandler(async (req, res) => {
 });
 
 export const listRestoreJobs = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
 
   const jobs = await RestoreJob.find()
     .sort({ createdAt: -1 })
@@ -465,7 +472,7 @@ export const listRestoreJobs = asyncHandler(async (req, res) => {
 });
 
 export const listBackupAuditLogs = asyncHandler(async (req, res) => {
-  ensureRole(req, [SUPER_ADMIN_ROLE, IT_SUPPORT_ROLE]);
+  ensureRole(req, BACKUP_ROLES);
 
   const { backupId, restoreJobId, action, page = 1, limit = 20 } = req.query;
   const query = {};

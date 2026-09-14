@@ -263,11 +263,16 @@ export const getExamsService = async ({ query, user }) => {
 };
 
 export const assignExamToClassService = async ({ body, user }) => {
-  const exam = await Exam.findById(body.examId).select("schoolId totalMarks passingMarks").lean();
+  const exam = await Exam.findById(body.examId).select("schoolId totalMarks passingMarks createdBy").lean();
   if (!exam) throw new ApiError(404, "Exam not found");
 
   if (user.roleId?.name !== "Super Admin" && `${exam.schoolId}` !== `${user.schoolId}`) {
     throw new ApiError(403, "Forbidden for this school exam");
+  }
+  // Setting which class sits an exam, and its marks there, is changing the exam: a Teacher only for
+  // exams they created, as for editing and deleting one (see ensureCanChangeExam in the controller).
+  if (actingRoleName(user, EXAM_STAFF_ROLES) === "Teacher" && `${exam.createdBy}` !== `${user._id}`) {
+    throw new ApiError(403, "Teachers can change only exams they created");
   }
 
   const assignment = await ExamClass.findOneAndUpdate(

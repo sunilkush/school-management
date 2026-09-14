@@ -1,5 +1,7 @@
+import mongoose from "mongoose";
 import { LeaveRequest } from "../models/LeaveRequest.model.js";
 import { Student } from "../models/student.model.js";
+import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -32,18 +34,35 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
   if (!totalDays) throw new ApiError(400, "Total days is required");
   if (!reason?.trim()) throw new ApiError(400, "Reason is required");
 
-  // Privileged roles can submit leave on behalf of another user outright;
-  // a Parent may only do so for a child verified as their own.
-  const canActOnBehalf = ["Super Admin", "HR", "School Admin"].includes(req.userRole?.name);
-  const isParent = holdsParent(req);
+  // Who the leave is for. A School Admin may file for anyone in their own school (a primary Super
+  // Admin for anyone), a Parent for a child verified as their own, everyone else only for
+  // themselves. What this replaced had three holes:
+  //   - the on-behalf user was never looked up, so a School Admin could file leave against a user of
+  //     another school — and a non-ObjectId (the admin form's field says "User ID / Name") was a 500;
+  //   - anyone else naming a userId was silently ignored and the leave filed for the CALLER instead;
+  //   - it listed "HR", which is not a role in this system.
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const canActOnBehalf = isSuperAdmin || holdsRole(req.user, "School Admin");
   let resolvedUserId = req.user._id;
-  if (canActOnBehalf && userId) {
-    resolvedUserId = userId;
-  } else if (isParent && userId) {
-    await verifyParentChild(req.user._id, userId);
+  let schoolId = req.user.school?._id || req.user.schoolId;
+
+  if (userId && String(userId) !== String(req.user._id)) {
+    if (!mongoose.isValidObjectId(userId)) throw new ApiError(400, "userId must be a valid user id");
+
+    if (canActOnBehalf) {
+      const target = await User.findOne({ _id: userId, isDeleted: { $ne: true } }).select("schoolId").lean();
+      if (!target || (!isSuperAdmin && String(target.schoolId) !== String(schoolId))) {
+        throw new ApiError(404, "User not found in your school");
+      }
+      // The leave belongs to the user's school — a Super Admin usually has none of their own.
+      if (isSuperAdmin) schoolId = target.schoolId;
+    } else if (holdsParent(req)) {
+      await verifyParentChild(req.user._id, userId);
+    } else {
+      throw new ApiError(403, "You can only request leave for yourself");
+    }
     resolvedUserId = userId;
   }
-  const schoolId = req.user.school?._id || req.user.schoolId;
 
   if (!schoolId) throw new ApiError(400, "School context not found");
 

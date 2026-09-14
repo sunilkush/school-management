@@ -46,6 +46,32 @@ const ensureExamAccess = (exam, user) => {
     }
 }
 
+// Editing, publishing or deleting an exam. EXAM_MANAGE_ROLES lets a plain Teacher in, and the only
+// check here was the school — so any Teacher could rewrite, unpublish or delete a colleague's or the
+// Exam Coordinator's exam. A Teacher is held to exams they created, the same rule that already limits
+// which attempts a Teacher sees and evaluates; coordinators and admins manage the school's exams.
+const ensureCanChangeExam = (exam, user) => {
+    ensureExamAccess(exam, user)
+    if (actingRoleName(user, EXAM_STAFF_ROLES) === 'Teacher' && `${exam.createdBy}` !== `${user._id}`) {
+        throw new ApiError(403, 'Teachers can change only exams they created')
+    }
+}
+
+/** Acting as a Student or Parent here — or holding none of the roles the read routes admit. */
+const isLearner = (user) => {
+    const role = actingRoleName(user, EXAM_READ_ROLES)
+    return !role || role === 'Student' || role === 'Parent'
+}
+
+// The read routes (READ_ROLES) include Student and Parent. The exam list already hides drafts from
+// them, but opening an exam by id — or its admit cards or seat plan — did not, so an exam still
+// being set up was visible to every student and parent in the school who had its id. A draft is
+// reported as not found: its existence is not theirs to know yet.
+const ensureExamVisibleToCaller = (exam, user) => {
+    ensureExamAccess(exam, user)
+    if (exam.status === 'draft' && isLearner(user)) throw new ApiError(404, 'Exam not found')
+}
+
 export const createExam = asyncHandler(async (req, res) => {
     const exam = await createExamService({ body: req.body, user: req.user })
     return res
@@ -68,7 +94,7 @@ export const getExamById = asyncHandler(async (req, res) => {
         .populate('createdBy', 'name email')
         .lean()
 
-    ensureExamAccess(exam, req.user)
+    ensureExamVisibleToCaller(exam, req.user)
     return res
         .status(200)
         .json(new ApiResponse(200, exam, 'Exam fetched successfully'))
@@ -86,10 +112,15 @@ export const getExamAnalytics = asyncHandler(async (req, res) => {
 
 export const updateExam = asyncHandler(async (req, res) => {
     const exam = await Exam.findById(req.params.id)
-    ensureExamAccess(exam, req.user)
+    ensureCanChangeExam(exam, req.user)
 
+    // Ownership and tenancy are never editable here. The whole body used to be copied onto the exam,
+    // so a Teacher could send `createdBy: <themselves>` on a colleague's exam — and "a Teacher sees
+    // and evaluates attempts only for exams they created" is decided by exactly that field — or a
+    // different `schoolId`, moving the exam out of this school and into another one.
+    const { _id, schoolId, createdBy, createdAt, updatedAt, __v, ...editable } = req.body || {}
     const payload = {
-        ...req.body,
+        ...editable,
         title: req.body.name || req.body.title,
         totalMarks:
             req.body.totalMarks !== undefined
@@ -133,9 +164,9 @@ export const updateExam = asyncHandler(async (req, res) => {
 
 export const deleteExam = asyncHandler(async (req, res) => {
     const existing = await Exam.findById(req.params.id)
-        .select('schoolId')
+        .select('schoolId createdBy')
         .lean()
-    ensureExamAccess(existing, req.user)
+    ensureCanChangeExam(existing, req.user)
 
     const exam = await Exam.findByIdAndDelete(req.params.id).lean()
     return res
@@ -150,9 +181,9 @@ export const publishExam = asyncHandler(async (req, res) => {
     }
 
     const existing = await Exam.findById(req.params.id)
-        .select('schoolId')
+        .select('schoolId createdBy')
         .lean()
-    ensureExamAccess(existing, req.user)
+    ensureCanChangeExam(existing, req.user)
 
     const exam = await Exam.findByIdAndUpdate(
         req.params.id,
@@ -482,7 +513,7 @@ const getExamForAdmitCards = (examId) => Exam.findById(examId)
 
 export const getExamAdmitCards = asyncHandler(async (req, res) => {
     const exam = await getExamForAdmitCards(req.params.id).lean()
-    ensureExamAccess(exam, req.user)
+    ensureExamVisibleToCaller(exam, req.user)
 
     const admitCards = await scopeAdmitCardsToCaller(await getStoredAdmitCards(req.params.id), req.user)
 
@@ -538,7 +569,7 @@ export const generateExamAdmitCards = asyncHandler(async (req, res) => {
 })
 export const getExamSeatPlan = asyncHandler(async (req, res) => {
     const exam = await Exam.findById(req.params.id).lean()
-    ensureExamAccess(exam, req.user)
+    ensureExamVisibleToCaller(exam, req.user)
 
     const enrollmentFilter = {
         schoolId: exam.schoolId,
@@ -575,7 +606,11 @@ export const getExamSeatPlan = asyncHandler(async (req, res) => {
                 roomCapacity,
                 totalStudents: enrollments.length,
                 totalRooms: Math.ceil(enrollments.length / roomCapacity),
-                seatPlan,
+                // Seats are numbered over the whole class first, so a student's seat is the real one;
+                // then a Student or Parent is given only their own (or their child's) row — the same
+                // rule as admit cards. The whole class's names and roll numbers went to anyone
+                // the read route admits, students and parents of any class included.
+                seatPlan: await scopeAdmitCardsToCaller(seatPlan, req.user),
             },
             'Seat plan generated successfully'
         )
@@ -584,7 +619,7 @@ export const getExamSeatPlan = asyncHandler(async (req, res) => {
 
 export const downloadAdmitCardPdf = asyncHandler(async (req, res) => {
     const exam = await getExamForAdmitCards(req.params.id).lean()
-    ensureExamAccess(exam, req.user)
+    ensureExamVisibleToCaller(exam, req.user)
 
     let cards = await getStoredAdmitCards(req.params.id)
     if (!cards.length) {

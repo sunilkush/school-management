@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Tabs,
@@ -30,8 +30,25 @@ import {
 } from "../../../features/leaveRequestSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
+import apiClient from "../../../api/httpClient";
 
 const { TextArea } = Input;
+
+// LeaveRequest.role in the backend model: each role name in snake_case.
+const LEAVE_ROLES = [
+  "student", "teacher", "class_teacher", "sports_teacher", "staff", "support_staff", "accountant",
+  "librarian", "receptionist", "it_support", "counselor", "security", "hostel_warden",
+  "transport_manager", "principal", "vice_principal", "subject_coordinator", "exam_coordinator",
+  "school_admin", "lab_technician", "medical_officer", "driver",
+];
+const LEAVE_ROLE_OPTIONS = LEAVE_ROLES.map((value) => ({
+  value,
+  label: value.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" "),
+}));
+const toLeaveRole = (roleName = "") => roleName.toLowerCase().trim().replace(/\s+/g, "_");
+
+// Nobody files leave on behalf of these.
+const NOT_ON_LEAVE = new Set(["parent", "super_admin"]);
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 const LEAVE_TYPE_COLOR = {
@@ -180,6 +197,54 @@ const LeaveManagement = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [form] = Form.useForm();
 
+  /* ── Person picker ──
+     This used to be a free-text "User ID / Name" box, but the server needs the user's id: a typed
+     name was rejected, and an admin had no way to find anyone's id. Search the school's users by
+     name, email or registration id instead, and take their role from the account. */
+  const [userOptions, setUserOptions] = useState([]);
+  const [userSearching, setUserSearching] = useState(false);
+  const searchTimer = useRef(null);
+  const latestSearch = useRef("");
+
+  const searchUsers = (term) => {
+    clearTimeout(searchTimer.current);
+    latestSearch.current = term;
+    searchTimer.current = setTimeout(async () => {
+      setUserSearching(true);
+      try {
+        const res = await apiClient.get("/user/all", { params: { search: term, limit: 20 } });
+        if (latestSearch.current !== term) return; // a newer search is on its way
+        const users = Array.isArray(res?.data?.data) ? res.data.data : [];
+        setUserOptions(
+          users
+            .filter((u) => !NOT_ON_LEAVE.has(toLeaveRole(u?.role?.name)))
+            .map((u) => ({
+              value: u._id,
+              label: `${u.name}${u.role?.name ? ` · ${u.role.name}` : ""}${u.email ? ` (${u.email})` : ""}`,
+              leaveRole: toLeaveRole(u?.role?.name),
+            }))
+        );
+      } catch {
+        if (latestSearch.current === term) setUserOptions([]);
+      } finally {
+        if (latestSearch.current === term) setUserSearching(false);
+      }
+    }, 300);
+  };
+
+  useEffect(() => () => clearTimeout(searchTimer.current), []);
+
+  const openCreate = () => {
+    form.resetFields();
+    setUserOptions([]);
+    setCreateModalOpen(true);
+    searchUsers("");
+  };
+
+  const onPickUser = (_value, option) => {
+    if (LEAVE_ROLES.includes(option?.leaveRole)) form.setFieldsValue({ role: option.leaveRole });
+  };
+
   /* ── Fetch ── */
   useEffect(() => {
     if (!schoolId) return;
@@ -310,7 +375,7 @@ const LeaveManagement = () => {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => setCreateModalOpen(true)}
+            onClick={openCreate}
           >
             Create Leave
           </Button>
@@ -438,22 +503,20 @@ const LeaveManagement = () => {
         width={480}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item label="User ID / Name" name="userId" rules={[{ required: true, message: "Required" }]}>
-            <Input placeholder="Enter user ID" />
+          <Form.Item label="Person" name="userId" rules={[{ required: true, message: "Choose who the leave is for" }]}>
+            <Select
+              showSearch
+              placeholder="Search by name, email or registration id"
+              filterOption={false}
+              onSearch={searchUsers}
+              onChange={onPickUser}
+              options={userOptions}
+              loading={userSearching}
+              notFoundContent={userSearching ? <Spin size="small" /> : "No matching user in this school"}
+            />
           </Form.Item>
           <Form.Item label="Role" name="role" rules={[{ required: true, message: "Required" }]}>
-            <Select
-              placeholder="Select role"
-              options={[
-                { value: "teacher",       label: "Teacher"        },
-                { value: "staff",         label: "Staff"          },
-                { value: "student",       label: "Student"        },
-                { value: "accountant",    label: "Accountant"     },
-                { value: "librarian",     label: "Librarian"      },
-                { value: "hostel_warden", label: "Hostel Warden"  },
-                { value: "principal",     label: "Principal"      },
-              ]}
-            />
+            <Select placeholder="Filled in from the person — change if needed" options={LEAVE_ROLE_OPTIONS} />
           </Form.Item>
           <Form.Item label="Leave Type" name="leaveType" rules={[{ required: true, message: "Required" }]}>
             <Select
