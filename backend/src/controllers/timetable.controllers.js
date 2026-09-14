@@ -9,8 +9,21 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { generateTimetable, commitGeneratedTimetable } from "../services/timetableGenerator.service.js";
 
-const CRUD_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Academic Coordinator", "Exam Coordinator"];
-const READ_ROLES = [...CRUD_ROLES, "Teacher", "Student", "Parent", "Staff", "Support Staff"];
+// These controller-level lists are a SECOND gate: every route in timetable.routes.js already runs
+// roleMiddleware(TIMETABLE_MANAGE | TIMETABLE_READ) first, so the effective access is the overlap.
+//
+// "Academic Coordinator" was removed from here — no such role exists, and writes are restricted to
+// the four admin roles by TIMETABLE_MANAGE regardless, so it granted nothing.
+const CRUD_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator"];
+// READ_ROLES must cover everyone TIMETABLE_READ lets in, or they pass the route and get a 403 here.
+// Subject Coordinator, Accountant, Librarian, Hostel Warden, Transport Manager and Receptionist
+// were missing — the route explicitly admits them ("broad: all school members") and this list then
+// turned them away, so the time-slot, room and class-section timetable views all 403'd for them.
+const READ_ROLES = [
+  ...CRUD_ROLES,
+  "Teacher", "Student", "Parent", "Staff", "Support Staff",
+  "Subject Coordinator", "Accountant", "Librarian", "Hostel Warden", "Transport Manager", "Receptionist",
+];
 const DAY_ORDER = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 const TEACHING_TYPES = ["regular", "substitution", "activity"];
 
@@ -18,8 +31,19 @@ const id = (value) => value?._id?.toString?.() || value?.toString?.() || "";
 const compact = (obj) => Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined && value !== null && value !== ""));
 const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 const roleName = (req) => req.userRole?.name || req.user?.roleId?.name || "";
+// Must agree with the route-level gate it sits behind. requireRoles (auth.middleware.js) matches
+// case-insensitively and counts a user's ADDITIONAL roles, but this checked only the primary role,
+// exactly. So a user granted a timetable role as an additional role passed the route and was then
+// 403'd here. Same rules as the route now.
 const requireRole = (req, allowed) => {
-  if (!allowed.includes(roleName(req))) throw new ApiError(403, "Forbidden. Insufficient role access.");
+  const normalizedAllowed = allowed.map((r) => r.toLowerCase().trim());
+  const held = [
+    roleName(req),
+    ...(req.userAdditionalRoles || []).map((r) => r?.name || ""),
+  ].map((r) => r.toLowerCase().trim());
+  if (!normalizedAllowed.some((r) => held.includes(r))) {
+    throw new ApiError(403, "Forbidden. Insufficient role access.");
+  }
 };
 const success = (res, status, data, message) => res.status(status).json(new ApiResponse(status, data, message));
 

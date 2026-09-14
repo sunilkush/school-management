@@ -37,7 +37,10 @@ const router = Router();
 
 const FULL_ACCESS_ROLES = ["Super Admin", "School Admin", "Accountant"];
 const REVIEW_ROLES = ["Super Admin", "School Admin", "Accountant", "Principal", "Admin"];
-const EMPLOYEE_SELF_ROLES = ["Principal", "School Admin","Accountant", "Teacher", "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer", "Employee", "Staff", "Support Staff", "Vice Principal", "Librarian", "Hostel Warden", "Transport Manager", "Exam Coordinator", "Receptionist", "IT Support", "Counselor", "Security", "Driver"];
+// Subject Coordinator was missing, so the web sidebar's "My Payroll" link for that role opened a
+// page whose summary and payslip calls both 403'd. PAYSLIP_SELF_ROLES spreads this list, so the
+// download is fixed by the same change.
+const EMPLOYEE_SELF_ROLES = ["Principal", "School Admin","Accountant", "Teacher", "Class Teacher", "Sports Teacher", "Lab Technician", "Medical Officer", "Employee", "Staff", "Support Staff", "Vice Principal", "Librarian", "Hostel Warden", "Transport Manager", "Exam Coordinator", "Subject Coordinator", "Receptionist", "IT Support", "Counselor", "Security", "Driver"];
 // Whoever can see their own payroll summary must also be able to view/download the payslip
 // it's built from — this used to be a separate, narrower list that fell out of sync and
 // silently 403'd the download button for Security, Vice Principal, Librarian, and others.

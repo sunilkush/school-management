@@ -82,8 +82,29 @@ const parseOS = (ua = "") => {
 };
 
 /* ── API: Create log (manual / from client) ─────────────────────────────── */
+// This used to be `LoginLog.create(req.body)` on a route open to every role, so any signed-in user
+// — a Student included — could write a login entry for ANY userId, in ANY school, with any IP and
+// device they liked. A login audit trail the client can author is not an audit trail.
+//
+// The trustworthy writer is recordLoginEvent above, called from loginUser. This endpoint now takes
+// nothing identifying from the body: who, which school, which role, the IP and the device all come
+// from the authenticated request. The only thing a caller may state is the outcome.
 export const createLoginLog = asyncHandler(async (req, res) => {
-  const log = await LoginLog.create(req.body);
+  const status = req.body?.status === "failed" ? "failed" : "success";
+  const ua = req.headers["user-agent"] || "";
+
+  const log = await LoginLog.create({
+    userId: req.user._id,
+    schoolId: req.user.schoolId || null,
+    userRole: req.userRole?.name,
+    academicYearId: req.user.academicYearId || null,
+    ipAddress: req.ip || req.connection?.remoteAddress || "",
+    deviceInfo: ua.slice(0, 250),
+    browser: parseBrowser(ua),
+    os: parseOS(ua),
+    loginTime: new Date(),
+    status,
+  });
   res.status(201).json(new ApiResponse(201, log, "Login log created"));
 });
 
@@ -99,6 +120,11 @@ export const getLoginLogsByUser = asyncHandler(async (req, res) => {
   }
 
   const query = { userId };
+  // "Anyone's" means anyone in the admin's OWN school. The query was only `{ userId }`, so a School
+  // Admin could pass another school's user id and read that person's login history — IP address,
+  // device and times. Only Super Admin spans schools; getLoginLogsBySchool and getLoginLogs already
+  // scope this way, this one had been missed.
+  if (req.userRole?.name !== "Super Admin") query.schoolId = req.user.schoolId;
   const skip = (Number(page) - 1) * Number(limit);
 
   const [logs, total] = await Promise.all([

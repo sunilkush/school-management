@@ -100,7 +100,17 @@ const updateTopic = asyncHandler(async (req, res) => {
   if (!existing) throw new ApiError(404, "Topic not found");
   assertTopicWriteAccess(req, existing);
 
-  const topic = await Topic.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }).populate(
+  // Same hole as updateChapter: the guard checks you may edit THIS topic, then the raw body let a
+  // School Admin set `isGlobal: true` (Super-Admin-only per the guard) or re-home it to another
+  // school via `schoolId`. Scope is Super Admin's to change.
+  const updates = { ...req.body };
+  if (!isSuperAdmin(req)) {
+    delete updates.isGlobal;
+    delete updates.schoolId;
+  }
+  delete updates.createdByRole;
+
+  const topic = await Topic.findByIdAndUpdate(id, updates, { new: true, runValidators: true }).populate(
     topicPopulate
   );
   if (!topic) throw new ApiError(404, "Topic not found");

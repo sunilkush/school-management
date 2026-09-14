@@ -276,7 +276,15 @@ export const updateQuestion = asyncHandler(async (req, res) => {
       }
     }
 
-    const question = await Question.findByIdAndUpdate(id, req.body, {
+    // The check above proves the question is in your school; it did not stop the raw body from
+    // changing that. A School Admin could send another school's `schoolId` and move the question —
+    // correct answers included — into a different school's bank. Which school owns a question is
+    // not an editable field for anyone below Super Admin, and nobody rewrites who authored it.
+    const updates = { ...req.body };
+    if (req.user?.roleId?.name !== "Super Admin") delete updates.schoolId;
+    delete updates.createdBy;
+
+    const question = await Question.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
     });

@@ -143,7 +143,20 @@ const updateChapter = asyncHandler(async (req, res) => {
   if (!existing) throw new ApiError(404, "Chapter not found");
   assertChapterWriteAccess(req, existing);
 
-  const chapter = await Chapter.findByIdAndUpdate(id, req.body, { new: true, runValidators: true }).populate(chapterPopulate);
+  // The guard above only decides whether you may touch THIS chapter; it said nothing about which
+  // fields. The raw body then went straight into the update, so a School Admin editing their own
+  // chapter could send `isGlobal: true` — the very thing assertChapterWriteAccess reserves for
+  // Super Admin — or a different `schoolId`, moving the chapter into another school's syllabus.
+  // Ownership and scope are Super Admin's to change, never a school's.
+  const updates = { ...req.body };
+  if (!isSuperAdmin(req)) {
+    delete updates.isGlobal;
+    delete updates.schoolId;
+  }
+  delete updates.createdBy;
+  delete updates.createdByRole;
+
+  const chapter = await Chapter.findByIdAndUpdate(id, updates, { new: true, runValidators: true }).populate(chapterPopulate);
   if (!chapter) throw new ApiError(404, "Chapter not found");
 
   return res.status(200).json(new ApiResponse(200, formatChapter(chapter), "Chapter updated"));
