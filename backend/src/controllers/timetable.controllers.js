@@ -35,16 +35,20 @@ const roleName = (req) => req.userRole?.name || req.user?.roleId?.name || "";
 // case-insensitively and counts a user's ADDITIONAL roles, but this checked only the primary role,
 // exactly. So a user granted a timetable role as an additional role passed the route and was then
 // 403'd here. Same rules as the route now.
+const heldRoles = (req) =>
+  [roleName(req), ...(req.userAdditionalRoles || []).map((r) => r?.name || "")].map((r) =>
+    r.toLowerCase().trim()
+  );
+/** True if the user holds `name` as their primary OR an additional role. */
+const holdsRole = (req, name) => heldRoles(req).includes(name.toLowerCase().trim());
 const requireRole = (req, allowed) => {
-  const normalizedAllowed = allowed.map((r) => r.toLowerCase().trim());
-  const held = [
-    roleName(req),
-    ...(req.userAdditionalRoles || []).map((r) => r?.name || ""),
-  ].map((r) => r.toLowerCase().trim());
-  if (!normalizedAllowed.some((r) => held.includes(r))) {
+  if (!allowed.some((r) => holdsRole(req, r))) {
     throw new ApiError(403, "Forbidden. Insufficient role access.");
   }
 };
+// WARNING for anything after a requireRole call: once additional roles pass the gate, a later
+// `roleName(req) === "X"` check only sees the PRIMARY role and can be skipped. Branch on what the
+// user holds (holdsRole) instead — see childTimetable.
 const success = (res, status, data, message) => res.status(status).json(new ApiResponse(status, data, message));
 
 const normalizeDay = (day) => (typeof day === "string" ? day.toLowerCase() : day);
@@ -348,15 +352,23 @@ export const childTimetable = asyncHandler(async (req, res) => {
   validateIds({ studentId: req.params.studentId, academicYearId });
   const student = await Student.findById(req.params.studentId).lean();
   if (!student) throw new ApiError(404, "Student not found");
-  if (roleName(req) === "Parent" && ![id(student.fatherId), id(student.motherId), id(student.guardianId)].includes(id(req.user._id))) {
+
+  // Decide the capacity the caller is acting in from what they HOLD, not their primary role alone.
+  // requireRole admits additional roles, so a user whose primary role is e.g. Driver but who also
+  // holds Parent gets in — and the old `roleName(req) === "Parent"` check, seeing only "Driver",
+  // skipped the ownership test entirely, exposing every child's timetable in the school. Anyone
+  // without a staff role got in as a Parent and must be that child's parent.
+  const actingAsStaff = CRUD_ROLES.some((r) => holdsRole(req, r));
+  if (!actingAsStaff && ![id(student.fatherId), id(student.motherId), id(student.guardianId)].includes(id(req.user._id))) {
     throw new ApiError(403, "You are not allowed to view this child's timetable");
   }
   const enrollment = await StudentEnrollment.findOne(compact({ studentId: student._id, academicYearId, status: "Active" })).sort({ createdAt: -1 }).lean();
   if (!enrollment) throw new ApiError(404, "Active student enrollment not found");
-  // CRUD_ROLES (School Admin, Principal, ...) had no ownership check at all here — only the
-  // Parent branch above was scoped, so any school-scoped staff role could view another school's
-  // student's timetable just by knowing/guessing a studentId.
-  if (roleName(req) !== "Parent" && roleName(req) !== "Super Admin" && id(enrollment.schoolId) !== id(req.user?.schoolId ?? req.user?.school?._id)) {
+  // Staff are school-scoped rather than ownership-scoped: they may see any student in their own
+  // school, never another school's. Only a PRIMARY Super Admin spans schools — deliberately not
+  // holdsRole here, so granting "Super Admin" as an additional role does not quietly unlock every
+  // school; that was never possible before and is not this fix's call to make.
+  if (actingAsStaff && roleName(req) !== "Super Admin" && id(enrollment.schoolId) !== id(req.user?.schoolId ?? req.user?.school?._id)) {
     throw new ApiError(403, "You are not allowed to access another school's timetable");
   }
   const rows = await populateTimetable(Timetable.find({ schoolId: enrollment.schoolId, academicYearId: enrollment.academicYearId, schoolClassId: enrollment.schoolClassId, sectionId: enrollment.sectionId, status: "active" }));

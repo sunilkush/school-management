@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
+import { actingRoleName } from "../utils/actingRole.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
@@ -935,7 +936,15 @@ const getStudentById = asyncHandler(async (req, res) => {
   // Restoring the parameter's actual purpose: Student still only ever gets their own profile
   // (ignore :id entirely, same as before — no regression); every other allowed role looks up the
   // requested student by id, scoped to their school (or to their own linked child, for Parent).
-  const roleName = req.userRole?.name;
+  //
+  // The branch is chosen from every role the caller holds (STUDENT_ROLE in routes/student.routes.js,
+  // broadest first). The route admits additional roles, so a Librarian holding "Parent" as an
+  // additional role got in as a Parent, matched no primary-role branch below, and took the staff
+  // branch: any student in the school.
+  const roleName = actingRoleName(req.user, [
+    "Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher", "Student", "Parent",
+  ]);
+  if (!roleName) throw new ApiError(403, "You are not authorized to view this student");
   const schoolId = req.user?.schoolId?._id || req.user?.schoolId;
 
   let query;
@@ -950,7 +959,8 @@ const getStudentById = asyncHandler(async (req, res) => {
   } else {
     // Super Admin / School Admin / Teacher / Principal / Vice Principal
     query = { _id: id };
-    if (roleName !== "Super Admin") query.schoolId = schoolId;
+    // Cross-school reach stays with a PRIMARY Super Admin.
+    if (req.userRole?.name !== "Super Admin") query.schoolId = schoolId;
   }
 
   const student = await Student.findOne(query)

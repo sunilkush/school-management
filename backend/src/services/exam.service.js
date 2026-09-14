@@ -8,8 +8,22 @@ import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ExamAttempt } from "../models/ExamAttempts.model.js";
 import { getGradeBands, resolveGrade } from "./gradingScale.service.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
+import { actingRoleName } from "../utils/actingRole.js";
 
 const OBJECT_ID = mongoose.Types.ObjectId;
+
+// Student/Parent scoping below branches on actingRoleName, not the primary role: the exam routes
+// admit additional roles, so a Librarian holding "Parent" as an additional role got in on it,
+// matched no primary-role branch, and was scoped like staff — every exam in the school, drafts
+// included. Broadest first; mirrors the role lists in routes/exam.routes.js.
+const EXAM_STAFF_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator", "Teacher"];
+const EXAM_SCOPE_ROLES = [...EXAM_STAFF_ROLES, "Accountant", "Staff", "Support Staff", "Student", "Parent"];
+const examScopeRole = (user) => {
+  const role = actingRoleName(user, EXAM_SCOPE_ROLES);
+  if (!role) throw new ApiError(403, "Forbidden. Insufficient role access.");
+  return role;
+};
 const getActiveEnrollmentForStudentUser = async ({ userId, academicYearId }) => {
   const student = await Student.findOne({ userId }).select("_id").lean();
   if (!student) return null;
@@ -90,11 +104,12 @@ const validateExamPayload = (payload) => {
 };
 
 const resolveScope = async ({ user, studentId }) => {
-  if (user?.roleId?.name === "Student") {
+  const role = examScopeRole(user);
+  if (role === "Student") {
     return { studentId: user._id };
   }
 
-  if (user?.roleId?.name === "Parent") {
+  if (role === "Parent") {
     const query = { $or: [{ fatherId: user._id }, { motherId: user._id }, { guardianId: user._id }] };
     if (studentId) query.userId = new OBJECT_ID(studentId);
 
@@ -167,15 +182,21 @@ export const getExamsService = async ({ query, user }) => {
   if (query.subjectId) filters.subjectId = query.subjectId;
   if (query.status) filters.status = query.status;
 
-  if (query.search) {
-    const searchTerm = query.search.trim();
+  // Every other search in the codebase escapes its input; this one did not. The raw term went into
+  // $regex, so a search like `(a+)+$` could backtrack catastrophically and stall the event loop for
+  // every request, and `.` or `*` silently matched things the user never typed. A repeated query
+  // param (`?search=a&search=b`) also arrives as an array, and `.trim()` on it threw — a 500 for
+  // what is just bad input. Only a string is searched.
+  if (typeof query.search === "string" && query.search.trim()) {
+    const searchTerm = escapeRegex(query.search.trim());
     filters.$or = [
       { title: { $regex: searchTerm, $options: "i" } },
       { examCode: { $regex: searchTerm, $options: "i" } },
     ];
   }
 
-  if (user.roleId?.name === "Student") {
+  const role = examScopeRole(user);
+  if (role === "Student") {
     const enrollment = await getActiveEnrollmentForStudentUser({
       userId: user._id,
       academicYearId: query.academicYearId,
@@ -196,7 +217,7 @@ export const getExamsService = async ({ query, user }) => {
     }
   }
 
-  if (user.roleId?.name === "Parent") {
+  if (role === "Parent") {
     const enrollment = await getParentChildEnrollment({
       parentId: user._id,
       studentUserId: query.studentId,
@@ -645,7 +666,8 @@ export const getStudentResultService = async ({ query, user, studentId }) => {
   if (scope.schoolId) filters.schoolId = scope.schoolId;
 
   if (query.examId) filters.examId = query.examId;
-  if (user.roleId?.name === "Student" || user.roleId?.name === "Parent") {
+  const role = examScopeRole(user);
+  if (role === "Student" || role === "Parent") {
     filters.isPublished = true;
   }
 

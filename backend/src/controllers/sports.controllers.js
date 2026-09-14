@@ -6,6 +6,7 @@ import { SportsEvent, SPORTS_EVENT_TYPES } from "../models/SportsEvent.model.js"
 import { Achievement, ACHIEVEMENT_HOLDER_TYPES, ACHIEVEMENT_LEVELS } from "../models/Achievement.model.js";
 import { Student } from "../models/student.model.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
+import { actingRoleName } from "../utils/actingRole.js";
 
 const resolveSchoolId = (req) =>
   req.user.roleId?.name === "Super Admin" ? req.query.schoolId || req.body.schoolId || req.user.schoolId : req.user.schoolId;
@@ -23,8 +24,11 @@ const ensureAccess = (doc, user, notFoundMessage) => {
 // Resolves the calling Student/Parent to the set of Student._id's they're allowed to see —
 // their own record for a Student, or their linked children for a Parent. Used only by the /my
 // self-service endpoint; admin endpoints above scope by schoolId, not by holder identity.
+// The role comes from every role held: a Teacher whose child studies here holds "Parent" as an
+// additional role, gets past the Student/Parent route on it, and must see that child's records —
+// a primary-role check read "Teacher" and returned nothing.
 const resolveMyStudentIds = async (req) => {
-  const roleName = req.user.roleId?.name;
+  const roleName = actingRoleName(req.user, ["Student", "Parent"]);
   if (roleName === "Student") {
     const student = await Student.findOne({ userId: req.user._id }).select("_id").lean();
     return student ? [student._id] : [];

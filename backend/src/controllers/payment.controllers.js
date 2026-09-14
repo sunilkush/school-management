@@ -11,11 +11,23 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
 import { requireSchoolId } from "../utils/resolveSchoolId.js";
+import { actingRoleName } from "../utils/actingRole.js";
 import { applyInstallmentPayment, reverseAllocations } from "../services/feePayment.service.js";
 import { outstandingOf, refreshInstallments, round2 } from "../services/feeSchedule.service.js";
 import { confirmOnlinePayment, frontendBaseUrl, startOnlineCheckout } from "../services/onlinePayment.service.js";
 
 const REFUND_MODES = ["cash", "online", "cheque", "bank_transfer", "upi", "card", "adjustment"];
+
+// The roles the payment routes admit (PAYMENT_READ_ROLES and PAYMENT_CREATE_ROLES in
+// routes/payment.routes.js, which are the same list), broadest first. Branching on the primary role
+// alone let a Teacher holding "Parent" as an additional role pass the route and land in the staff
+// branch: every payment in the school, and a counter "cash" payment marking any student's fee paid.
+const PAYMENT_ROLES = ["Super Admin", "School Admin", "Accountant", "Student", "Parent"];
+const paymentRole = (user) => {
+  const role = actingRoleName(user, PAYMENT_ROLES);
+  if (!role) throw new ApiError(403, "Forbidden. Insufficient role access.");
+  return role;
+};
 
 /** Modes a staff member records at the counter — each just a record that money was received. */
 const COUNTER_PAYMENT_MODES = ["cash", "upi", "card", "bank_transfer", "cheque", "online"];
@@ -32,17 +44,17 @@ const newReceiptNo = () => `RCPT-${Date.now()}-${Math.floor(Math.random() * 1000
 const assertCanPayForStudent = async ({ studentId, schoolId, user }) => {
   if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid studentId");
 
-  const roleName = user?.roleId?.name?.toLowerCase();
+  const roleName = paymentRole(user);
   const filter = { _id: studentId, schoolId };
-  if (roleName === "student") filter.userId = user._id;
-  if (roleName === "parent") {
+  if (roleName === "Student") filter.userId = user._id;
+  if (roleName === "Parent") {
     filter.$or = [{ fatherId: user._id }, { motherId: user._id }, { guardianId: user._id }];
   }
 
   if (!(await Student.exists(filter))) {
     throw new ApiError(
       403,
-      roleName === "parent" ? "This student is not linked with this parent" : "Access denied for this student"
+      roleName === "Parent" ? "This student is not linked with this parent" : "Access denied for this student"
     );
   }
 };
@@ -68,8 +80,8 @@ export const createPayment = asyncHandler(async (req, res) => {
 
   // Every counter mode is just a claim that money changed hands. Student/Parent could otherwise
   // mark their own fee paid without paying anything.
-  const roleName = req.user?.roleId?.name?.toLowerCase();
-  if ((roleName === "student" || roleName === "parent") && !isGateway) {
+  const roleName = paymentRole(req.user);
+  if ((roleName === "Student" || roleName === "Parent") && !isGateway) {
     throw new ApiError(403, "Only online payment is available for self-service fee payment");
   }
 
@@ -230,7 +242,7 @@ export const getPayments = asyncHandler(async (req, res) => {
 
   // Payment.studentId refs the Student model, not User — req.user._id can never match it directly,
   // so Student/Parent callers need their actual Student._id(s) resolved first.
-  const roleName = req.userRole?.name;
+  const roleName = paymentRole(req.user);
   if (roleName === "Student") {
     const student = await Student.findOne({ userId: req.user._id, schoolId }).select("_id");
     filter.studentId = student?._id ?? null; // null → deliberately matches nothing rather than every payment
@@ -425,7 +437,7 @@ export const getRefunds = asyncHandler(async (req, res) => {
 
   // Same User-vs-Student id mismatch guarded elsewhere in this file (getPayments) — Student/Parent
   // callers only ever see their own (or their linked child's) refund history.
-  const roleName = req.userRole?.name;
+  const roleName = paymentRole(req.user);
   if (roleName === "Student") {
     const student = await Student.findOne({ userId: req.user._id, schoolId }).select("_id");
     filter.studentId = student?._id ?? null;

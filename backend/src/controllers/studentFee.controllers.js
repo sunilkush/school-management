@@ -7,6 +7,7 @@ import { AcademicYear } from "../models/AcademicYear.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
+import { actingRoleName } from "../utils/actingRole.js";
 import { generateSchedules, periodsPerYear, refreshInstallments, summarizeFeeLines } from "../services/feeSchedule.service.js";
 
 export const assignFeesToStudents = asyncHandler(async (req, res) => {
@@ -231,13 +232,21 @@ export const previewFeeAssignment = asyncHandler(async (req, res) => {
   });
 });
 
+// The roles GET /my and /my/:studentId admit (STUDENT_PARENT in routes/studentFee.routes.js),
+// broadest first.
+const MY_FEES_ROLES = ["School Admin", "Accountant", "Student", "Parent"];
+
 export const getMyFees = asyncHandler(async (req, res) => {
   let studentId = req.params.studentId || req.query.studentId;
   const academicYearId = req.params.academicYearId || req.query.academicYearId;
 
   const schoolId = req.user?.schoolId || req.user?.school?._id;
   const userId = req.user?._id;
-  const role = req.user?.roleId?.name?.toLowerCase();
+  // From every role held, not the primary one: the route admits additional roles, so a Teacher
+  // holding "Parent" as an additional role got in as a Parent — and a primary-role check read
+  // "teacher", ran neither ownership test below, and returned any student's fees.
+  const role = actingRoleName(req.user, MY_FEES_ROLES)?.toLowerCase();
+  if (!role) throw new ApiError(403, "Forbidden. Insufficient role access.");
 
   // ✅ Validate IDs
   if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {

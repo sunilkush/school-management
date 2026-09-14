@@ -8,6 +8,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { actingRoleName } from "../utils/actingRole.js";
 import {
   FEE_FREQUENCIES,
   generateSchedules,
@@ -20,8 +21,16 @@ import {
 // 🔒 Student/Parent may only ever read their own (or their linked child's) records — filtering by
 // {studentId, schoolId} alone would let any authenticated Student/Parent pass an arbitrary
 // studentId and read an unrelated student's fees.
-const assertOwnsStudentRecord = async ({ roleName, userId, studentId, schoolId }) => {
-  const role = roleName?.toLowerCase();
+//
+// The role is worked out from every role the caller holds, not the primary one: the routes admit
+// additional roles, so a Teacher holding "Parent" as an additional role got in as a Parent, and a
+// primary-role check then read "teacher" and skipped the ownership test for any student.
+// Mirrors the roles on GET / and POST /quote in routes/feeInstallment.routes.js, broadest first.
+const INSTALLMENT_READ_ROLES = ["Super Admin", "School Admin", "Accountant", "Student", "Parent"];
+const assertOwnsStudentRecord = async ({ user, studentId, schoolId }) => {
+  const userId = user._id;
+  const role = actingRoleName(user, INSTALLMENT_READ_ROLES)?.toLowerCase();
+  if (!role) throw new ApiError(403, "Forbidden. Insufficient role access.");
   if (role === "student") {
     const owns = await Student.exists({ _id: studentId, userId, schoolId });
     if (!owns) throw new ApiError(403, "Access denied: this student record does not belong to you");
@@ -102,7 +111,7 @@ export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req.user);
   validateIds({ schoolId, studentId, academicYearId });
 
-  await assertOwnsStudentRecord({ roleName: req.userRole?.name, userId: req.user._id, studentId, schoolId });
+  await assertOwnsStudentRecord({ user: req.user, studentId, schoolId });
 
   await refreshInstallments({ schoolId, studentId, academicYearId: academicYearId || null });
 
@@ -219,7 +228,7 @@ export const quoteInstallments = asyncHandler(async (req, res) => {
   const ids = [...new Set((Array.isArray(installmentIds) ? installmentIds : []).map(String))];
   if (ids.some((id) => !mongoose.Types.ObjectId.isValid(id))) throw new ApiError(400, "Invalid installment id");
 
-  await assertOwnsStudentRecord({ roleName: req.userRole?.name, userId: req.user._id, studentId, schoolId });
+  await assertOwnsStudentRecord({ user: req.user, studentId, schoolId });
 
   if (!ids.length) {
     return res.status(200).json(new ApiResponse(200, { total: 0, count: 0, installments: [] }, "Quote"));

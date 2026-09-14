@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
+import { holdsRole } from "../utils/actingRole.js";
 
 const SUPER_ADMIN = "Super Admin";
 const SCHOOL_ADMIN = "School Admin";
@@ -88,7 +89,23 @@ const ALL_ATTENDANCE_ROLES = [
   IT_SUPPORT,
   COUNSELOR,
   SECURITY,
+  // GET /my admits these too (MY_ATTENDANCE_ROLES in routes/attendance.routes.js); missing here,
+  // they passed the route and were then refused their own attendance.
+  "Sports Teacher",
+  "Lab Technician",
+  "Medical Officer",
+  "Class Teacher",
+  "Driver",
 ];
+
+// Every scope check below looks at all the roles a user holds, as the route gates do — a primary-
+// role check is skipped by anyone who got past the route on an additional role.
+const holdsAnyRole = (req, roles) => roles.some((role) => holdsRole(req.user, role));
+
+/** May read every record in the school. */
+const READ_ALL_ROLES = [...ADMIN_ATTENDANCE_ROLES, ACCOUNTANT, HOSTEL_WARDEN];
+/** Mark students' attendance: see what they marked, plus their own record. */
+const MARKER_SCOPE_ROLES = [TEACHER, "Class Teacher", "Sports Teacher"];
 
 const getAttendanceRoleForUser = (roleName) => ROLE_TO_ATTENDANCE_ROLE[roleName] || "staff";
 
@@ -98,18 +115,19 @@ const isSelfAttendancePayload = (req, role, records = []) => {
   return Boolean(myUserId) && role === myAttendanceRole && records.every((record) => record.userId?.toString() === myUserId);
 };
 
+// This used to end "and if the role is on none of my lists, add no filter at all". GET / admits
+// Driver, Class Teacher, Sports Teacher, Lab Technician and Medical Officer, none of which were on
+// those lists, so each of them could browse every attendance record in the school. Anyone not
+// explicitly allowed more now sees only their own records.
 const applyReadScope = (req, filter) => {
-  const userRole = req.userRole?.name;
-  if (ADMIN_ATTENDANCE_ROLES.includes(userRole) || [ACCOUNTANT, HOSTEL_WARDEN].includes(userRole)) return;
+  if (holdsAnyRole(req, READ_ALL_ROLES)) return;
 
-  if (userRole === TEACHER) {
+  if (holdsAnyRole(req, MARKER_SCOPE_ROLES)) {
     filter.$or = [{ markedBy: req.user._id }, { userId: req.user._id }];
     return;
   }
 
-  if (SELF_ATTENDANCE_ROLES.includes(userRole) || userRole === STUDENT) {
-    filter.userId = req.user._id;
-  }
+  filter.userId = req.user._id;
 };
 
 const normalizeDateStart = (value) => {
@@ -146,16 +164,19 @@ const ensureSchoolAccess = (req, requestedSchoolId) => {
   return mySchoolId;
 };
 
-const assertTeacherScope = (req, payload = {}) => {
-  const userRole = req.userRole?.name;
-  if (userRole !== TEACHER) return;
+// Who may edit or delete an existing record. PUT and DELETE admit every self-attendance role
+// (MANAGE_ROLES), but the only limit here used to be for a primary Teacher — so a Driver, Security
+// guard or Receptionist could rewrite or delete any student's or colleague's attendance in the
+// school. Admins may change any record, an Accountant any staff record (the records they are
+// allowed to mark), and everyone else only a record they marked themselves.
+const assertCanChangeRecord = (req, attendance) => {
+  if (holdsAnyRole(req, ADMIN_ATTENDANCE_ROLES)) return;
+  if (holdsRole(req.user, ACCOUNTANT) && attendance.role !== "student") return;
 
-  const teacherId = req.user?._id?.toString();
-  if (!teacherId) throw new ApiError(403, "Invalid teacher identity");
+  const myId = req.user?._id?.toString();
+  if (myId && attendance.markedBy && attendance.markedBy.toString() === myId) return;
 
-  if (payload.markedBy && payload.markedBy.toString() !== teacherId) {
-    throw new ApiError(403, "Teachers can only manage attendance marked by themselves");
-  }
+  throw new ApiError(403, "You can only change attendance you marked yourself");
 };
 
 export const markBulkAttendance = asyncHandler(async (req, res) => {
@@ -319,9 +340,9 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
   if (schoolClassId) match.schoolClassId = new mongoose.Types.ObjectId(schoolClassId);
   if (sectionId) match.sectionId = new mongoose.Types.ObjectId(sectionId);
   if (role) match.role = role;
-  if (req.userRole?.name === TEACHER) {
-    match.$or = [{ markedBy: req.user._id }, { userId: req.user._id }];
-  }
+  // Same scope as the list. This checked only for a primary Teacher, so anyone reaching the report
+  // on an additional Teacher role got the whole school's.
+  applyReadScope(req, match);
 
   const pipeline = [
     { $match: match },
@@ -451,7 +472,7 @@ export const updateAttendance = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Not allowed to edit this attendance record");
   }
 
-  assertTeacherScope(req, { markedBy: attendance.markedBy });
+  assertCanChangeRecord(req, attendance);
 
   // Identity fields must not be attacker-settable via the body — an unfiltered $set would let a
   // caller reassign this (already-verified) record to a different school/student/marker.
@@ -469,7 +490,7 @@ export const deleteAttendance = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Not allowed to delete this attendance record");
   }
 
-  assertTeacherScope(req, { markedBy: attendance.markedBy });
+  assertCanChangeRecord(req, attendance);
 
   await attendance.deleteOne();
   return res.status(200).json(new ApiResponse(200, null, "Attendance deleted"));
@@ -479,7 +500,10 @@ export const getMyAttendance = asyncHandler(async (req, res) => {
   const { month, year, childId, schoolId, limit } = req.query;
 
   let targetUserId = req.user._id;
-  if (req.userRole?.name === PARENT) {
+  // A Parent by primary role always views a child. Someone holding Parent as an additional role
+  // (a Teacher whose child studies here) views a child when they name one, and their own record
+  // otherwise — the old primary-only check ignored their childId and silently returned their own.
+  if (req.userRole?.name === PARENT || (childId && holdsRole(req.user, PARENT))) {
     if (!childId) {
       throw new ApiError(400, "childId is required for parent attendance view");
     }
@@ -499,7 +523,7 @@ export const getMyAttendance = asyncHandler(async (req, res) => {
     targetUserId = childId;
   }
 
-  if (!ALL_ATTENDANCE_ROLES.includes(req.userRole?.name)) {
+  if (!holdsAnyRole(req, ALL_ATTENDANCE_ROLES)) {
     throw new ApiError(403, "Not allowed to access this endpoint");
   }
 

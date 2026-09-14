@@ -3,6 +3,12 @@ import { Student } from "../models/student.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { holdsRole } from "../utils/actingRole.js";
+
+// Parent checks below look at every role held. A Teacher whose child studies here holds "Parent"
+// as an additional role; a primary-role check never saw it, so a leave they filed for their child
+// was silently filed for themselves, and they could not see or cancel their child's requests.
+const holdsParent = (req) => holdsRole(req.user, "Parent");
 
 /* Verify the given child userId is actually linked to this parent as
    father/mother/guardian — same check used across the parent portal. */
@@ -29,7 +35,7 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
   // Privileged roles can submit leave on behalf of another user outright;
   // a Parent may only do so for a child verified as their own.
   const canActOnBehalf = ["Super Admin", "HR", "School Admin"].includes(req.userRole?.name);
-  const isParent = req.userRole?.name === "Parent";
+  const isParent = holdsParent(req);
   let resolvedUserId = req.user._id;
   if (canActOnBehalf && userId) {
     resolvedUserId = userId;
@@ -112,7 +118,7 @@ export const getMyLeaveRequests = asyncHandler(async (req, res) => {
   // child's userId explicitly and have it verified — otherwise this
   // always falls back to the caller's own requests.
   let targetUserId = req.user._id;
-  if (req.userRole?.name === "Parent" && userId) {
+  if (holdsParent(req) && userId) {
     await verifyParentChild(req.user._id, userId);
     targetUserId = userId;
   }
@@ -193,7 +199,7 @@ export const deleteLeaveRequest = asyncHandler(async (req, res) => {
   const isSameSchool = leaveRequest.schoolId?.toString() === req.user.schoolId?.toString();
   // A Parent may cancel a leave request that belongs to their own verified child
   let isOwnChild = false;
-  if (!isOwner && req.userRole?.name === "Parent") {
+  if (!isOwner && holdsParent(req)) {
     const child = await Student.findOne({
       userId: leaveRequest.userId,
       $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],

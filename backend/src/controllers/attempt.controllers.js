@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { actingRoleName } from "../utils/actingRole.js";
 
 const assertObjectId = (id, label) => {
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, `Invalid ${label}`);
@@ -21,11 +22,19 @@ const isWithinExamWindow = (now, startTime, endTime) => {
   return nowTs >= startTs && nowTs <= endTs;
 };
 
+// The roles GET / and GET /:id admit (routes/attempt.routes.js), broadest first. Branch on
+// actingRoleName, not the primary role: the routes admit additional roles, so a Librarian holding
+// "Parent" as an additional role got in as a Parent and then, matching no primary-role branch,
+// was handed every attempt in the school.
+const STAFF_ATTEMPT_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator", "Teacher"];
+const ATTEMPT_READ_ROLES = [...STAFF_ATTEMPT_ROLES, "Student", "Parent"];
+
 const enforceAttemptReadAccess = async (attempt, req) => {
- const role = req.userRole?.name || req.user?.roleId?.name;
-  const isPrivileged = ["Super Admin", "School Admin", "Teacher", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator"].includes(role);
+  const role = actingRoleName(req.user, ATTEMPT_READ_ROLES);
+  const isPrivileged = STAFF_ATTEMPT_ROLES.includes(role);
   if (isPrivileged) {
-    if (role !== "Super Admin" && `${attempt.schoolId}` !== `${req.user.schoolId}`) {
+    // Cross-school reach stays with a PRIMARY Super Admin, as everywhere else.
+    if (req.userRole?.name !== "Super Admin" && `${attempt.schoolId}` !== `${req.user.schoolId}`) {
       throw new ApiError(403, "Forbidden access outside your school");
     }
     return;
@@ -332,10 +341,12 @@ export const getAttempts = asyncHandler(async (req, res) => {
   if (examId) filters.examId = examId;
   if (status) filters.status = status;
 
-  if (req.userRole?.name === "Student") {
+  const role = actingRoleName(req.user, ATTEMPT_READ_ROLES);
+  if (!role) throw new ApiError(403, "Forbidden. Insufficient role access.");
+  if (role === "Student") {
     filters.studentId = req.user._id;
   }
-  if (req.userRole?.name === "Teacher") {
+  if (role === "Teacher") {
     // A plain Teacher (unlike Exam/Subject Coordinators, Principal, etc.) may only
     // see attempts for exams they themselves created — not the whole school's.
     if (examId) {
@@ -346,7 +357,7 @@ export const getAttempts = asyncHandler(async (req, res) => {
       filters.examId = { $in: ownExamIds.map((e) => e._id) };
     }
   }
-  if (req.userRole?.name === "Parent") {
+  if (role === "Parent") {
     const childQuery = {
       $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
     };

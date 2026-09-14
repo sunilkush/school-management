@@ -26,6 +26,15 @@ import {
     exportResultSheetExcel,
     exportResultSheetPdf,
 } from '../utils/exportService.js'
+import { actingRoleName } from '../utils/actingRole.js'
+
+// Mirrors the role lists in routes/exam.routes.js, broadest first. Handlers below that treat
+// Student/Parent differently branch on actingRoleName, not the primary role: the routes admit
+// additional roles, so a Librarian holding "Student" or "Parent" as an additional role got in on
+// it, matched no primary-role branch, and was treated as staff.
+const EXAM_STAFF_ROLES = ['Super Admin', 'School Admin', 'Principal', 'Vice Principal', 'Exam Coordinator', 'Subject Coordinator', 'Teacher']
+const EXAM_ATTEMPT_ROLES = [...EXAM_STAFF_ROLES, 'Student']
+const EXAM_READ_ROLES = [...EXAM_STAFF_ROLES, 'Accountant', 'Staff', 'Support Staff', 'Student', 'Parent']
 
 const ensureExamAccess = (exam, user) => {
     if (!exam) throw new ApiError(404, 'Exam not found')
@@ -242,7 +251,10 @@ export const startExamAttempt = asyncHandler(async (req, res) => {
     if (!exam) throw new ApiError(404, 'Exam not found')
 
     const role = req.userRole?.name
-    const isStudent = role === 'Student'
+    const actingRole = actingRoleName(req.user, EXAM_ATTEMPT_ROLES)
+    if (!actingRole) throw new ApiError(403, 'Forbidden. Insufficient role access.')
+    // Anyone acting as a Student starts their own attempt; only staff may name a student.
+    const isStudent = actingRole === 'Student'
     const resolvedStudentId = isStudent ? req.user._id : requestedStudentId
 
     if (
@@ -287,7 +299,9 @@ export const submitExamAttempt = asyncHandler(async (req, res) => {
     )
     if (!attempt) throw new ApiError(404, 'Attempt not found')
     const role = req.userRole?.name
-    if (role === 'Student' && `${attempt.studentId}` !== `${req.user._id}`) {
+    const actingRole = actingRoleName(req.user, EXAM_ATTEMPT_ROLES)
+    if (!actingRole) throw new ApiError(403, 'Forbidden. Insufficient role access.')
+    if (actingRole === 'Student' && `${attempt.studentId}` !== `${req.user._id}`) {
         throw new ApiError(403, "Forbidden to submit another student's attempt")
     }
     if (
@@ -397,7 +411,8 @@ const getStoredAdmitCards = async (examId) => AdmitCard.find({ examId })
 // Admit cards cover an entire class/exam — Students and Parents must only ever
 // see their own (or their linked child's) card, never classmates'.
 const scopeAdmitCardsToCaller = async (admitCards, user) => {
-    const roleName = user.roleId?.name
+    const roleName = actingRoleName(user, EXAM_READ_ROLES)
+    if (!roleName) return []
     if (roleName === 'Student') {
         return admitCards.filter((c) => `${c.studentId}` === `${user._id}`)
     }

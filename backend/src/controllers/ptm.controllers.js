@@ -5,6 +5,14 @@ import { PTMSession } from "../models/PTMSession.model.js";
 import { PTMSlot } from "../models/PTMSlot.model.js";
 import { Student } from "../models/student.model.js";
 import { notifyUser } from "../utils/notifyService.js";
+import { actingRoleName } from "../utils/actingRole.js";
+
+// The roles the parent booking routes admit (PTM_PARENT_ROLES in routes/ptm.routes.js), broadest
+// first. Anyone not acting as an admin got in as a Parent and is held to a parent's rules — even
+// when "Parent" is only an additional role on, say, a Teacher.
+const PTM_BOOKING_ROLES = ["Super Admin", "School Admin", "Parent"];
+const actsAsParent = (user) =>
+  !["Super Admin", "School Admin"].includes(actingRoleName(user, PTM_BOOKING_ROLES));
 
 const resolveSchoolId = (req) =>
   req.user.roleId?.name === "Super Admin" ? req.query.schoolId || req.body.schoolId || req.user.schoolId : req.user.schoolId;
@@ -175,7 +183,7 @@ export const bookSlot = asyncHandler(async (req, res) => {
   const { studentId } = req.body;
   const parentId = req.user._id;
 
-  if (req.user.roleId?.name === "Parent") {
+  if (actsAsParent(req.user)) {
     await ensureParentOwnsStudent(studentId, parentId);
   }
 
@@ -225,7 +233,7 @@ export const cancelBooking = asyncHandler(async (req, res) => {
 
   if (slot.status !== "Booked") throw new ApiError(400, "Only a booked slot can be cancelled");
 
-  if (req.user.roleId?.name === "Parent" && `${slot.parentId}` !== `${req.user._id}`) {
+  if (actsAsParent(req.user) && `${slot.parentId}` !== `${req.user._id}`) {
     throw new ApiError(403, "You can only cancel your own booking");
   }
 
@@ -241,7 +249,7 @@ export const cancelBooking = asyncHandler(async (req, res) => {
 });
 
 export const getMyBookings = asyncHandler(async (req, res) => {
-  const filter = req.user.roleId?.name === "Parent"
+  const filter = actsAsParent(req.user)
     ? { parentId: req.user._id }
     : { schoolId: resolveSchoolId(req) };
 

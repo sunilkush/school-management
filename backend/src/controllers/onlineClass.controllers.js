@@ -9,6 +9,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { actingRoleName } from "../utils/actingRole.js";
 
 /**
  * Live online classes.
@@ -25,8 +26,19 @@ const requireSchool = (req) => {
 };
 
 const roleName = (req) => (req.userRole?.name || req.user?.role?.name || "").trim();
-const isStudent = (req) => roleName(req).toLowerCase() === "student";
-const isParent = (req) => roleName(req).toLowerCase() === "parent";
+
+// HOSTS in routes/onlineClass.routes.js, broadest first. Everyone else the route lets in (ATTENDEES)
+// is a learner: a Student, or a Parent attending for their child.
+//
+// The capacity comes from every role the user holds, not the primary one. The route admits
+// additional roles, so a Librarian holding "Parent" as an additional role got in as a Parent and,
+// matching no primary-role check, was served like a host: raw meeting links for every class.
+const HOST_ROLES = [
+  "Super Admin", "School Admin", "Principal", "Vice Principal",
+  "Exam Coordinator", "Subject Coordinator", "Teacher", "Class Teacher",
+];
+const actingRole = (req) => actingRoleName(req.user, [...HOST_ROLES, "Student", "Parent"]);
+const isHostRole = (role) => HOST_ROLES.includes(role);
 
 const parseDate = (value, label) => {
   if (!value) return null;
@@ -47,6 +59,36 @@ const myEnrollment = async (req, schoolId) => {
   if (!enrollment) throw new ApiError(404, "Enrollment not found");
   return enrollment;
 };
+
+/**
+ * The class of each child linked to this parent, latest enrollment per child as for a student.
+ *
+ * Parents used to get no scoping at all: the list showed every class in the school, and joining
+ * handed over any class's link at any hour — the visibility window only ever applied to students.
+ */
+const childEnrollments = async (req, schoolId) => {
+  const children = await Student.find({
+    $or: [{ fatherId: req.user._id }, { motherId: req.user._id }, { guardianId: req.user._id }],
+  })
+    .select("_id")
+    .lean();
+  if (!children.length) return [];
+
+  const rows = await StudentEnrollment.find({ studentId: { $in: children.map((c) => c._id) }, schoolId })
+    .select("studentId schoolClassId sectionId")
+    .sort({ createdAt: -1 })
+    .lean();
+  const latest = new Map();
+  for (const row of rows) {
+    if (!latest.has(String(row.studentId))) latest.set(String(row.studentId), row);
+  }
+  return [...latest.values()];
+};
+
+/** A session for the whole class (no section) reaches every section of it. */
+const sessionReaches = (session, enrollment) =>
+  String(enrollment.schoolClassId) === String(session.schoolClassId) &&
+  (!session.sectionId || String(enrollment.sectionId) === String(session.sectionId));
 
 /**
  * Whether the meeting link may be shown yet.
@@ -180,12 +222,25 @@ export const listOnlineClasses = asyncHandler(async (req, res) => {
   const { from, to, status, schoolClassId, sectionId, subjectId, teacherId } = req.query;
 
   const filter = { schoolId };
+  const role = actingRole(req);
+  const host = isHostRole(role);
 
-  if (isStudent(req)) {
+  if (role === "Student") {
     const enrollment = await myEnrollment(req, schoolId);
     filter.schoolClassId = enrollment.schoolClassId;
     // A session for the whole class (sectionId null) reaches every section.
     filter.$or = [{ sectionId: null }, { sectionId: enrollment.sectionId }];
+  } else if (!host) {
+    // A parent sees their own children's classes only.
+    const enrollments = await childEnrollments(req, schoolId);
+    if (enrollments.length) {
+      filter.$or = enrollments.map((e) => ({
+        schoolClassId: e.schoolClassId,
+        $or: [{ sectionId: null }, { sectionId: e.sectionId }],
+      }));
+    } else {
+      filter._id = { $in: [] };
+    }
   } else {
     if (schoolClassId) filter.schoolClassId = schoolClassId;
     if (sectionId) filter.sectionId = sectionId;
@@ -210,7 +265,7 @@ export const listOnlineClasses = asyncHandler(async (req, res) => {
     .lean();
 
   const now = new Date();
-  const payload = isStudent(req) || isParent(req) ? sessions.map((s) => forLearner(s, now)) : sessions;
+  const payload = host ? sessions : sessions.map((s) => forLearner(s, now));
 
   return res.json(new ApiResponse(200, payload, "Online classes fetched"));
 });
@@ -232,11 +287,15 @@ export const joinOnlineClass = asyncHandler(async (req, res) => {
   if (!session) throw new ApiError(404, "Online class not found");
   if (session.status === "cancelled") throw new ApiError(400, "That class was cancelled");
 
-  if (isStudent(req)) {
-    const enrollment = await myEnrollment(req, schoolId);
-    const sameClass = String(enrollment.schoolClassId) === String(session.schoolClassId);
-    const sameSection = !session.sectionId || String(enrollment.sectionId) === String(session.sectionId);
-    if (!sameClass || !sameSection) throw new ApiError(403, "This class is not for your section");
+  const role = actingRole(req);
+  if (!isHostRole(role)) {
+    // Learners — a student, or a parent attending for their child — only get a class meant for
+    // them, and only once its link is visible. Hosts always get it; they have to set the room up.
+    const isStudent = role === "Student";
+    const enrollments = isStudent ? [await myEnrollment(req, schoolId)] : await childEnrollments(req, schoolId);
+    if (!enrollments.some((e) => sessionReaches(session, e))) {
+      throw new ApiError(403, isStudent ? "This class is not for your section" : "This class is not for your child's section");
+    }
 
     if (!linkIsVisible(session)) {
       const opensAt = new Date(new Date(session.scheduledStart).getTime() - (session.linkVisibleBeforeMin ?? 15) * 60000);

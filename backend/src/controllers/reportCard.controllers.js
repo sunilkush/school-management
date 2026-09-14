@@ -8,6 +8,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { actingRoleName } from "../utils/actingRole.js";
 import { generateReportCards } from "../services/reportCard.service.js";
 import { renderReportCardPdf } from "../services/reportCardPdf.service.js";
 
@@ -217,6 +218,13 @@ export const publishReportCards = asyncHandler(async (req, res) => {
    Staff read any card in their own school; a student or parent only their
    own, and only once it is published. Both paths converge here so the
    rendering can't drift between them. */
+// Card staff (CARD_STAFF in routes/reportCard.routes.js) first, then the two self-service roles.
+const PDF_ROLES = [
+  "Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator",
+  "Teacher", "Class Teacher", "Subject Coordinator",
+  "Student", "Parent",
+];
+
 export const downloadReportCardPdf = asyncHandler(async (req, res) => {
   const card = await ReportCard.findById(req.params.id)
     .populate("studentId", "name email regId")
@@ -225,10 +233,19 @@ export const downloadReportCardPdf = asyncHandler(async (req, res) => {
     .lean();
   if (!card) throw new ApiError(404, "Report card not found");
 
-  const roleName = (req.userRole?.name || "").toLowerCase().trim();
+  // GET /:id/pdf is the one card route with no role gate (students and parents use it too), so this
+  // handler is the only gate. Its last branch used to be "everyone else", which meant a Driver,
+  // Librarian or Security guard could download any card in the school — unpublished ones included.
+  // Only card staff (CARD_STAFF in routes/reportCard.routes.js) get the school-wide branch now.
+  //
+  // The role also comes from every role held, broadest first: a Librarian holding "Parent" as an
+  // additional role is a parent here, never staff.
+  const roleName = (actingRoleName(req.user, PDF_ROLES) || "").toLowerCase();
   const viewerId = String(req.user._id);
 
-  if (roleName === "student") {
+  if (!roleName) {
+    throw new ApiError(403, "You are not allowed to view report cards");
+  } else if (roleName === "student") {
     if (String(card.studentId?._id) !== viewerId) throw new ApiError(403, "This report card is not yours");
     if (!card.isPublished) throw new ApiError(403, "This report card has not been published yet");
   } else if (roleName === "parent") {
@@ -238,7 +255,8 @@ export const downloadReportCardPdf = asyncHandler(async (req, res) => {
     const linked = [student?.fatherId, student?.motherId, student?.guardianId].filter(Boolean).map(String);
     if (!linked.includes(viewerId)) throw new ApiError(403, "You are not allowed to view this report card");
     if (!card.isPublished) throw new ApiError(403, "This report card has not been published yet");
-  } else if (roleName !== "super admin") {
+  } else if (!isSuperAdmin(req)) {
+    // Cross-school reach stays with a PRIMARY Super Admin.
     if (String(card.schoolId) !== String(requireSchool(req))) {
       throw new ApiError(403, "This report card belongs to another school");
     }
