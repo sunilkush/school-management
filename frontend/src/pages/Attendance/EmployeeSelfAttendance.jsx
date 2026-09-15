@@ -19,6 +19,11 @@ import AttendanceMap from "./AttendanceMap";
 /* ─── Constants ─────────────────────────────────────────────── */
 const GPS_STATE = { IDLE: "idle", LOCATING: "locating", READY: "ready", ERROR: "error" };
 
+// A phone's GPS is typically within 5–30m. A reading much looser than this is an estimate from
+// Wi-Fi or the IP address, not a position to judge a 200–300m school zone with.
+const COARSE_FIX_METRES = 100;
+const formatAccuracy = (m) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`);
+
 const STATUS_CFG = {
   present: { color: "var(--success)", bg: "var(--success-light)", border: "var(--success-light)", label: "Present"  },
   absent:  { color: "var(--danger)", bg: "var(--danger-light)", border: "var(--danger-light)", label: "Absent"   },
@@ -408,9 +413,21 @@ const EmployeeSelfAttendance = () => {
 
             {/* Map (togglable) */}
             {mapOpen && gpsState === GPS_STATE.READY && position && (
-              <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--border-muted)", marginBottom: 14, height: 200 }}>
-                <AttendanceMap userPosition={position} schoolCoords={schoolCoords} distanceInfo={distanceInfo} />
+              <div style={{ marginBottom: 14 }}>
+                <AttendanceMap userPosition={position} schoolCoords={schoolCoords} distanceInfo={distanceInfo} height={240} />
               </div>
+            )}
+
+            {/* A browser on a laptop or desktop has no GPS chip: it estimates from Wi-Fi or the
+                internet connection and can be kilometres off. Without saying so, someone standing
+                inside the school sees "you are 4 km away" and assumes the app is broken. */}
+            {gpsState === GPS_STATE.READY && position?.accuracy > COARSE_FIX_METRES && (
+              <Alert
+                type="warning" showIcon
+                style={{ marginBottom: 14, borderRadius: 10, fontSize: 12 }}
+                message={`Your location is only approximate (±${formatAccuracy(position.accuracy)})`}
+                description="This device is estimating where you are from Wi-Fi or the internet connection, not GPS, so the dot can be far from where you actually are. Check in from a phone with location turned on."
+              />
             )}
 
             {/* Distance bar — only when geofence is configured */}

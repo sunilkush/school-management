@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Drawer, Empty, Input, InputNumber, Space, Table, Tooltip, message } from "antd";
 import { AimOutlined, DeleteOutlined, DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
-import { MapContainer, Marker, Polyline, TileLayer, Tooltip as MapTooltip, useMapEvents } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Tooltip as MapTooltip, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { DEFAULT_CENTRE } from "../maps/osm";
+import OsmTileLayer from "../maps/OsmTileLayer";
 import { pill, sectionPanel } from "../../styles/pageStyles";
 
 /**
@@ -90,7 +91,7 @@ const RouteStopMapper = ({ open, route, onClose, onSave, saving }) => {
     onSave(named.map((r, i) => ({ ...r, sequence: i, name: r.name.trim() })));
   };
 
-  const centre = placed.length ? [placed[0].lat, placed[0].lng] : [26.9124, 75.7873];
+  const centre = placed.length ? [placed[0].lat, placed[0].lng] : DEFAULT_CENTRE;
 
   const columns = [
     { title: "#", width: 44, render: (_, __, i) => <b>{i + 1}</b> },
@@ -157,10 +158,7 @@ const RouteStopMapper = ({ open, route, onClose, onSave, saving }) => {
 
       <div style={{ ...sectionPanel, padding: 0, overflow: "hidden", marginBottom: 16 }}>
         <MapContainer center={centre} zoom={13} style={{ height: 320, width: "100%" }} scrollWheelZoom>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <OsmTileLayer />
           <ClickToPlace onPick={(lat, lng) => patch(activeIndex, { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) })} />
           {placed.length > 1 && (
             <Polyline positions={placed.map((s) => [s.lat, s.lng])} pathOptions={{ color: "#2563EB", weight: 3, dashArray: "6 8" }} />

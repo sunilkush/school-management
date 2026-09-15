@@ -8,6 +8,8 @@ import { StatusPill } from '../../components/ui/StatusPill';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { formatTime, timeAgo } from '../../utils/format';
 import { useGetMyBusQuery } from '../../store/api/apiSlice';
+import { LeafletMap } from '../../components/map/LeafletMap';
+import { MAP_COLORS } from '../../components/map/leafletHtml';
 
 // Past this, a position is old enough that presenting it as "where the bus is" would be a lie.
 // Matches the backend's own view that a stale fix is worse than no fix.
@@ -22,6 +24,63 @@ function Line({ label, value, tone }) {
       <Text style={[typography.body, { color: tone ?? colors.text, marginTop: 2 }]}>{value}</Text>
     </View>
   );
+}
+
+/**
+ * What the map draws for a running trip: the route's stops (reached ones ticked, the child's own
+ * starred and labelled), the planned route, and the bus.
+ *
+ * An out-of-date position is drawn grey and labelled with its age, and the map does not follow it —
+ * the words above say "this position is out of date", and the map must not contradict them by
+ * presenting it as where the bus is now. Returns null when there is nothing to put on a map.
+ */
+export function busMapLayers(data, isStale) {
+  const stops = (data?.stops ?? [])
+    .filter((s) => Number.isFinite(s?.lat) && Number.isFinite(s?.lng))
+    .sort((a, b) => a.sequence - b.sequence);
+  const fix = data?.lastLocation;
+  const bus = Number.isFinite(fix?.lat) && Number.isFinite(fix?.lng) ? { lat: fix.lat, lng: fix.lng } : null;
+  if (!stops.length && !bus) return null;
+
+  const reached = new Set((data?.stopArrivals ?? []).map((s) => s.sequence));
+  const mine = data?.stopSequence;
+
+  const markers = stops.map((stop) => {
+    const isMine = stop.sequence === mine;
+    const done = reached.has(stop.sequence);
+    return {
+      lat: stop.lat,
+      lng: stop.lng,
+      color: isMine ? MAP_COLORS.warning : done ? MAP_COLORS.success : MAP_COLORS.muted,
+      glyph: isMine ? '★' : done ? '✓' : String(stop.sequence + 1),
+      size: isMine ? 30 : 22,
+      label: isMine ? `Your stop: ${stop.name}` : `${stop.sequence + 1}. ${stop.name}`,
+      labelAlways: isMine,
+    };
+  });
+  if (bus) {
+    markers.push({
+      ...bus,
+      color: isStale ? MAP_COLORS.stale : MAP_COLORS.primary,
+      glyph: '\u{1F68C}',
+      size: 34,
+      label: isStale ? `Last known position · ${timeAgo(fix.recordedAt)}` : 'Bus',
+      labelAlways: isStale,
+    });
+  }
+
+  return {
+    markers,
+    circles: stops.map((stop) => ({
+      lat: stop.lat,
+      lng: stop.lng,
+      radius: stop.radiusMeters || 150,
+      color: reached.has(stop.sequence) ? MAP_COLORS.success : MAP_COLORS.muted,
+      weight: 1,
+    })),
+    lines: stops.length > 1 ? [{ points: stops, color: MAP_COLORS.muted, dashed: true }] : [],
+    follow: bus && !isStale ? bus : null,
+  };
 }
 
 function Centered({ icon, title, body }) {
@@ -42,12 +101,10 @@ function Centered({ icon, title, body }) {
 /**
  * Where my child's bus is.
  *
- * **There is no map yet, and that is a deliberate stopping point, not an oversight.** Drawing one
- * needs a native maps dependency and a decision that is the school's to make — Google Maps on
- * Android wants an API key per build, while the web portal draws its map with Leaflet on
- * OpenStreetMap, which would mean a WebView here instead. Until that is settled, this screen
- * answers the question a parent actually opens it for — *has it left, where is it, when will it
- * reach my stop* — in words, which needs no map at all.
+ * It answers the question a parent opens it for — *has it left, where is it, when will it reach my
+ * stop* — in words first, then on a map. The map is Leaflet on OpenStreetMap inside a WebView, the
+ * same map the web portal draws (decided 2026-09-15: no Google Maps API key). The words stay on top
+ * because they still work when the map cannot load.
  *
  * Everything shown here comes from the backend's own honest reporting, and none of it is
  * embellished:
@@ -69,6 +126,8 @@ export function MyBusScreen() {
     ? Math.round((Date.now() - new Date(data.lastLocation.recordedAt).getTime()) / 1000)
     : null;
   const isStale = ageSeconds != null && ageSeconds > STALE_AFTER_SECONDS;
+
+  const map = busMapLayers(data, isStale);
 
   return (
     <ScreenContainer scrollable>
@@ -125,6 +184,17 @@ export function MyBusScreen() {
                   </>
                 )}
               </Panel>
+
+              {map ? (
+                <LeafletMap
+                  markers={map.markers}
+                  circles={map.circles}
+                  lines={map.lines}
+                  follow={map.follow}
+                  height={280}
+                  style={{ marginBottom: spacing.lg }}
+                />
+              ) : null}
 
               <Panel>
                 <Line

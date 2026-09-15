@@ -10,6 +10,8 @@ import { StatusPill } from '../../components/ui/StatusPill';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useModuleContext } from '../../modules/useModuleContext';
 import { formatTime, timeAgo } from '../../utils/format';
+import { LeafletMap } from '../../components/map/LeafletMap';
+import { MAP_COLORS } from '../../components/map/leafletHtml';
 import {
   useGetMyTripQuery,
   useGetTransportRoutesQuery,
@@ -59,6 +61,9 @@ export function DriverTripScreen() {
   const [sent, setSent] = useState(0);
   const [lastSentAt, setLastSentAt] = useState(null);
   const [trackingError, setTrackingError] = useState(null);
+  // The phone's own latest fix, so the driver's map moves as soon as the phone does rather than
+  // waiting for the trip to be fetched again.
+  const [lastFix, setLastFix] = useState(null);
 
   const watcher = useRef(null);
   const activeTrip = trip.data;
@@ -66,6 +71,16 @@ export function DriverTripScreen() {
 
   const routeList = Array.isArray(routes.data) ? routes.data : routes.data?.routes ?? [];
   const vehicleList = Array.isArray(vehicles.data) ? vehicles.data : vehicles.data?.vehicles ?? [];
+
+  // The route this trip runs on, for its stops. The trip itself carries only the route's id.
+  const tripRoute = activeTrip ? routeList.find((r) => String(r._id) === String(activeTrip.routeId)) : null;
+  const stops = (tripRoute?.stopPoints ?? [])
+    .filter((s) => Number.isFinite(s?.lat) && Number.isFinite(s?.lng))
+    .sort((a, b) => a.sequence - b.sequence);
+  const reached = new Set((activeTrip?.stopArrivals ?? []).map((s) => s.sequence));
+  const serverFix = activeTrip?.lastLocation;
+  const busAt =
+    lastFix ?? (Number.isFinite(serverFix?.lat) && Number.isFinite(serverFix?.lng) ? { lat: serverFix.lat, lng: serverFix.lng } : null);
 
   const stopWatching = useCallback(() => {
     watcher.current?.remove();
@@ -91,6 +106,7 @@ export function DriverTripScreen() {
         timeInterval: PING_INTERVAL_MS,
       },
       (position) => {
+        setLastFix({ lat: position.coords.latitude, lng: position.coords.longitude });
         pingTrip({
           id: tripId,
           lat: position.coords.latitude,
@@ -141,6 +157,7 @@ export function DriverTripScreen() {
       .then(() => {
         setSent(0);
         setLastSentAt(null);
+        setLastFix(null);
       })
       // errorMiddleware.js already alerts on a rejected mutation — "this vehicle is not assigned
       // to you" surfaces there.
@@ -149,6 +166,7 @@ export function DriverTripScreen() {
 
   const onEnd = () => {
     stopWatching();
+    setLastFix(null);
     endTrip(tripId).unwrap().catch(() => {});
   };
 
@@ -185,6 +203,33 @@ export function DriverTripScreen() {
                 {activeTrip.startedAt ? ` · started ${formatTime(activeTrip.startedAt)}` : ''}
               </Text>
             </Panel>
+
+            {stops.length || busAt ? (
+              <LeafletMap
+                markers={[
+                  ...stops.map((stop) => ({
+                    lat: stop.lat,
+                    lng: stop.lng,
+                    color: reached.has(stop.sequence) ? MAP_COLORS.success : MAP_COLORS.muted,
+                    glyph: reached.has(stop.sequence) ? '✓' : String(stop.sequence + 1),
+                    size: 22,
+                    label: `${stop.sequence + 1}. ${stop.name}`,
+                  })),
+                  ...(busAt ? [{ ...busAt, color: MAP_COLORS.primary, glyph: '\u{1F68C}', size: 34, label: 'You' }] : []),
+                ]}
+                circles={stops.map((stop) => ({
+                  lat: stop.lat,
+                  lng: stop.lng,
+                  radius: stop.radiusMeters || 150,
+                  color: reached.has(stop.sequence) ? MAP_COLORS.success : MAP_COLORS.muted,
+                  weight: 1,
+                }))}
+                lines={stops.length > 1 ? [{ points: stops, color: MAP_COLORS.muted, dashed: true }] : []}
+                follow={busAt}
+                height={260}
+                style={{ marginBottom: spacing.lg }}
+              />
+            ) : null}
 
             {permission !== 'granted' && permission !== 'unknown' ? (
               <Panel>

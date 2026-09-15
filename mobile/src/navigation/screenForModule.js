@@ -34,8 +34,7 @@ const CUSTOM_SCREENS = {
   // Two endpoints with different shapes, and booking means picking one of many live slots
   // grouped by session — more than a descriptor can express.
   PTMBooking: PTMScreen,
-  // A live-position state machine, not a record — and the map itself is a pending decision
-  // (Google Maps API key vs a Leaflet WebView). See the screen header.
+  // A live-position state machine, not a record, with a Leaflet map (components/map/LeafletMap).
   MyTransport: MyBusScreen,
   // Live device sensors driving a trip state machine — not a list of anything.
   DriverTrip: DriverTripScreen,

@@ -73,6 +73,21 @@ Three rules that come from real bugs, not style:
 3. **Reuse `apiSlice.js`** — ~400 endpoints are already mapped. Add one only if the route genuinely
    has no hook.
 
+## Maps are Leaflet, everywhere
+
+Decided by the project owner 2026-09-15: every map — web and mobile — is **Leaflet on
+OpenStreetMap**. Do not add `react-native-maps`, Google Maps or Mapbox.
+
+- Draw with `src/components/map/LeafletMap.jsx` (a WebView running `leafletHtml.js`). Give it
+  `markers` / `circles` / `lines`; it never reloads the page for new data, so a moving bus is cheap.
+- A descriptor gets a map through `detail.map(record, ctx)` returning those layers — keep
+  descriptors data; do not import the component into one.
+- Leaflet loads from unpkg with SRI hashes checked against the web portal's `leaflet@1.9.4`. If you
+  change the version, recompute both hashes from the real files.
+- `jest.setup.js` mocks `react-native-webview`: it reaches for its native module at import time.
+- The web portal's equivalent is `frontend/src/components/maps/` (`osm.js`, `OsmTileLayer.jsx`,
+  `GeofenceMap.jsx`); colours and tiles match on purpose.
+
 ## Verifying a change
 
 ```bash

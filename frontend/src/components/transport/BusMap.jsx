@@ -1,31 +1,19 @@
 import React, { useEffect, useMemo } from "react";
-import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { Circle, MapContainer, Marker, Polyline, Popup, Tooltip, useMap } from "react-leaflet";
+import { DEFAULT_CENTRE, MAP_COLORS, pinIcon } from "../maps/osm";
+import OsmTileLayer from "../maps/OsmTileLayer";
 
 /**
  * The one map every bus view uses — office, driver and parent — so the three never draw the same
  * trip differently.
  *
- * Tiles come from OpenStreetMap: no API key, no billing account, nothing for a school to set up.
- * The trade-off is that it needs an internet connection and the tiles are not India-specific.
+ * Tiles and markers come from the shared Leaflet / OpenStreetMap setup in components/maps/osm.js,
+ * which every map in the portal uses: no API key, but it needs an internet connection.
  */
 
-/* Leaflet's default marker images are resolved relative to the CSS, which a bundler rewrites and
-   breaks. Inline SVG markers avoid the whole problem and let the bus read at a glance. */
-const pin = (color, glyph, size = 34) =>
-  L.divIcon({
-    className: "",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};
-      border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);display:flex;
-      align-items:center;justify-content:center;font-size:${size * 0.5}px;line-height:1">${glyph}</div>`,
-  });
-
-const BUS_ICON = pin("#2563EB", "\u{1F68C}");
-const STOP_DONE_ICON = pin("#16A34A", "✓", 26);
-const STOP_ICON = pin("#94A3B8", "", 20);
+const BUS_ICON = pinIcon(MAP_COLORS.primary, "\u{1F68C}");
+const STOP_DONE_ICON = pinIcon(MAP_COLORS.success, "✓", 26);
+const STOP_ICON = pinIcon(MAP_COLORS.muted, "", 20);
 
 /** Keeps the bus in view as it moves, without fighting a user who has panned deliberately. */
 const FollowBus = ({ position, follow }) => {
@@ -69,15 +57,12 @@ const BusMap = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stops.length, trailPositions.length, busPos?.[0], busPos?.[1]]);
 
-  const centre = busPos || (stops.length ? [stops[0].lat, stops[0].lng] : [26.9124, 75.7873]);
+  const centre = busPos || (stops.length ? [stops[0].lat, stops[0].lng] : DEFAULT_CENTRE);
 
   return (
     <div style={{ borderRadius: 18, overflow: "hidden", border: "1px solid var(--border-muted)" }}>
       <MapContainer center={centre} zoom={13} style={{ height, width: "100%" }} scrollWheelZoom>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <OsmTileLayer />
 
         <FitOnce bounds={bounds} />
         <FollowBus position={busPos} follow={follow} />

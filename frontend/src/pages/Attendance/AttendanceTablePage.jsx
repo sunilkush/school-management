@@ -14,12 +14,14 @@ import dayjs from "dayjs";
 
 import {
   fetchAttendance, deleteAttendanceRecord, updateAttendanceRecord,
-  setAttendanceFilters,
+  setAttendanceFilters, fetchGeofenceSettings,
 } from "../../features/attendanceSlice";
 import { fetchSchoolClasses }      from "../../features/schoolClassSlice";
 import { fetchSchools }            from "../../features/schoolSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import PageHeader                  from "../../components/layout/PageHeader";
+import GeofenceMap                 from "../../components/maps/GeofenceMap";
+import { MAP_COLORS }              from "../../components/maps/osm";
 import {
   pageWrapper, sectionPanel, tableHeadCss,
 } from "../../styles/pageStyles";
@@ -96,7 +98,7 @@ const AttendanceTablePage = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
-  const { list, filters, pagination, loading } = useSelector((s) => s.attendance);
+  const { list, filters, pagination, loading, geofenceSettings } = useSelector((s) => s.attendance);
   const { user }               = useSelector((s) => s.auth || {});
   const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
   const { schools = [] }       = useSelector((s) => s.school || {});
@@ -109,6 +111,33 @@ const AttendanceTablePage = () => {
   const [yearLoading,      setYearLoading]       = useState(false);
   const [editRecord,       setEditRecord]        = useState(null);
   const [editLoading,      setEditLoading]       = useState(false);
+
+  // Where the open record's check-in and check-out were actually taken. The row only ever said
+  // "GPS: Yes · 40m"; the map shows the spot, the school's zone and how far off the fix could be.
+  const gpsPoints = useMemo(() => {
+    if (!editRecord) return [];
+    const points = [];
+    const add = (key, gps, label, color, glyph) => {
+      if (Number.isFinite(gps?.lat) && Number.isFinite(gps?.lng)) {
+        points.push({ key, lat: gps.lat, lng: gps.lng, accuracy: gps.accuracy, label, color, glyph });
+      }
+    };
+    const at = (time) => (time ? ` · ${dayjs(time).format("hh:mm A")}` : "");
+    add("in", editRecord.checkInGps, `Check-in${at(editRecord.checkInAt)}`, MAP_COLORS.success, "→");
+    add("out", editRecord.checkOutGps, `Check-out${at(editRecord.checkOutAt)}`, MAP_COLORS.warning, "←");
+    return points;
+  }, [editRecord]);
+
+  // The zone comes from the viewer's own school settings. A Super Admin has no school of their own
+  // to read it from, so they see the points without the circle rather than someone else's zone.
+  useEffect(() => {
+    if (gpsPoints.length && !isSuperAdmin && !geofenceSettings) dispatch(fetchGeofenceSettings());
+  }, [gpsPoints.length, isSuperAdmin, geofenceSettings, dispatch]);
+
+  const schoolZone =
+    !isSuperAdmin && Number.isFinite(geofenceSettings?.location?.lat) && Number.isFinite(geofenceSettings?.location?.lng)
+      ? { lat: geofenceSettings.location.lat, lng: geofenceSettings.location.lng, radius: geofenceSettings.location.geofenceRadius || 200 }
+      : null;
 
   const schoolId       = isSuperAdmin ? saSchoolId       : (user?.school?._id || null);
   const academicYearId = isSuperAdmin ? saAcademicYearId : (selectedAcademicYear?._id || null);
@@ -645,6 +674,20 @@ const AttendanceTablePage = () => {
                     <div style={{ fontSize: 12, color: C.text, fontWeight: 600 }}>{value}</div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Where it was marked from */}
+          {gpsPoints.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
+                Marked From
+              </div>
+              <GeofenceMap school={schoolZone} points={gpsPoints} height={240} />
+              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>
+                Green: check-in{gpsPoints.some((p) => p.key === "out") ? " · Amber: check-out" : ""}
+                {schoolZone ? ` · Circle: the ${schoolZone.radius}m check-in zone` : ""}
               </div>
             </div>
           )}

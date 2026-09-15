@@ -9,6 +9,7 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { useModuleContext } from '../../modules/useModuleContext';
 import { toneColor } from '../../modules/tone';
 import { confirmDelete } from '../../utils/confirm';
+import { LeafletMap } from '../../components/map/LeafletMap';
 
 function Field({ label, value }) {
   const { colors, typography, spacing } = useAppTheme();
@@ -59,6 +60,8 @@ export function createDetailScreen(descriptor) {
     // calling them all unconditionally is what keeps hook order stable.
     const actionRunners = actions.map((action) => action.useMutation());
 
+    const mapLayers = record && detail.map ? detail.map(record, ctx) : null;
+
     return (
       <ScreenContainer scrollable>
         <QueryState
@@ -88,6 +91,19 @@ export function createDetailScreen(descriptor) {
                   <Field key={field.label} label={field.label} value={field.value} />
                 ))}
               </Panel>
+
+              {/* `detail.map(record, ctx)` returns what to draw ({ markers, circles, lines, fit }) or
+                  null — descriptors stay data, and every map is the same LeafletMap. */}
+              {mapLayers ? (
+                <LeafletMap
+                  markers={mapLayers.markers}
+                  circles={mapLayers.circles}
+                  lines={mapLayers.lines}
+                  fit={mapLayers.fit}
+                  height={260}
+                  style={{ marginBottom: spacing.lg }}
+                />
+              ) : null}
 
               {actions.map((action, index) => {
                 if (!action.allow(ctx, record)) return null;

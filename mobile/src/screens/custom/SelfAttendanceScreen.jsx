@@ -8,11 +8,45 @@ import { Panel } from '../../components/ui/Panel';
 import { StatusPill } from '../../components/ui/StatusPill';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { formatTime } from '../../utils/format';
+import { LeafletMap } from '../../components/map/LeafletMap';
+import { MAP_COLORS } from '../../components/map/leafletHtml';
 import {
   useGetSelfAttendanceStatusQuery,
   useCheckInSelfAttendanceMutation,
   useCheckOutSelfAttendanceMutation,
 } from '../../store/api/apiSlice';
+
+/** What the map draws: the school's zone and today's recorded check-in / check-out. See below. */
+export function attendanceMapLayers(school, record) {
+  const zone = school?.location;
+  const hasZone = Number.isFinite(zone?.lat) && Number.isFinite(zone?.lng);
+  const markers = [];
+  const circles = [];
+
+  if (hasZone) {
+    circles.push({ lat: zone.lat, lng: zone.lng, radius: zone.geofenceRadius || 200, color: MAP_COLORS.school });
+    markers.push({
+      lat: zone.lat,
+      lng: zone.lng,
+      color: MAP_COLORS.school,
+      glyph: '\u{1F3EB}',
+      size: 32,
+      label: `School · check in within ${zone.geofenceRadius || 200}m`,
+    });
+  }
+
+  const addFix = (gps, time, what, color, glyph) => {
+    if (!Number.isFinite(gps?.lat) || !Number.isFinite(gps?.lng)) return;
+    // How far off the phone said the fix could be — "outside by 20m" with ±50m accuracy is not
+    // clearly outside, and this makes that visible instead of hiding it.
+    if (gps.accuracy > 0) circles.push({ lat: gps.lat, lng: gps.lng, radius: gps.accuracy, color, weight: 1, dashed: true });
+    markers.push({ lat: gps.lat, lng: gps.lng, color, glyph, size: 26, label: `${what}${time ? ` · ${formatTime(time)}` : ''}` });
+  };
+  addFix(record?.checkInGps, record?.checkInAt, 'Checked in here', MAP_COLORS.success, '→');
+  addFix(record?.checkOutGps, record?.checkOutAt, 'Checked out here', MAP_COLORS.warning, '←');
+
+  return markers.length ? { markers, circles, fit: 'always' } : null;
+}
 
 /**
  * Marking yourself present — the staff equivalent of a punch clock, and the single most-reached
@@ -26,6 +60,11 @@ import {
  * the message. So nothing here pre-judges whether you are close enough — that would either
  * duplicate the rule or, worse, disagree with it. The phone's job is to produce an honest fix and
  * show whatever the server says back.
+ *
+ * The map follows the same rule. It shows the school's zone and where today's check-in and
+ * check-out were **recorded** — the positions the server already judged — and no live "you are
+ * here" dot, which would be a second, unofficial verdict and would mean reading location while the
+ * screen is merely open.
  */
 export function SelfAttendanceScreen() {
   const { colors, typography, spacing } = useAppTheme();
@@ -38,6 +77,7 @@ export function SelfAttendanceScreen() {
   const record = data?.record ?? null;
   const school = data?.school ?? null;
   const busy = checkingIn || checkingOut || locating;
+  const map = attendanceMapLayers(school, record);
 
   const withPosition = async (run) => {
     setLocationError(null);
@@ -101,6 +141,10 @@ export function SelfAttendanceScreen() {
               </View>
             ) : null}
           </Panel>
+
+          {map ? (
+            <LeafletMap markers={map.markers} circles={map.circles} fit={map.fit} height={240} style={{ marginBottom: spacing.lg }} />
+          ) : null}
 
           {locationError ? (
             <Text style={[typography.caption, { color: colors.danger, marginBottom: spacing.md }]}>

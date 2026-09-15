@@ -5,6 +5,7 @@ import {
   useGetGeofenceSettingsQuery,
 } from '../../store/api/apiSlice';
 import { formatCurrency, formatDate, timeAgo } from '../../utils/format';
+import { MAP_COLORS } from '../../components/map/leafletHtml';
 
 // hostel.routes.js VIEW_ROLES / WARDEN_ROLES.
 const HOSTEL_VIEW = ['Super Admin', 'School Admin', 'Hostel Warden', 'Principal', 'Vice Principal'];
@@ -233,5 +234,17 @@ export const geofenceModule = {
             : 'Not set',
       },
     ],
+    // The coordinates alone explain nothing to someone told "you are 340m from school"; the circle
+    // on a map shows where the line actually is.
+    map: (row) => {
+      const { lat, lng, geofenceRadius } = row.location ?? {};
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+      const radius = geofenceRadius || 200;
+      return {
+        markers: [{ lat, lng, color: MAP_COLORS.school, glyph: '\u{1F3EB}', size: 32, label: row.name ?? 'School' }],
+        circles: [{ lat, lng, radius, color: MAP_COLORS.school }],
+        fit: 'always',
+      };
+    },
   },
 };

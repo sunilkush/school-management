@@ -12,6 +12,7 @@ import {
   fetchGeofenceSettings, updateGeofenceSettings, fetchLiveDashboard,
 } from "../../../features/attendanceSlice";
 import PageHeader from "../../../components/layout/PageHeader";
+import GeofenceMap from "../../../components/maps/GeofenceMap";
 import { pageWrapper } from "../../../styles/pageStyles";
 
 // Shared design tokens (frontend/src/index.css) — replaces a local hardcoded
@@ -44,6 +45,16 @@ const GeofenceSettings = () => {
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [dashLoading, setDashLoading] = useState(false);
+
+  // The map and the number fields are two views of the same value: typing moves the pin, and
+  // clicking the map (or dragging the pin) fills the fields. Nothing is saved until Save.
+  const watchedLat = Form.useWatch("lat", form);
+  const watchedLng = Form.useWatch("lng", form);
+  const watchedRadius = Form.useWatch("geofenceRadius", form);
+  const mapSchool =
+    Number.isFinite(watchedLat) && Number.isFinite(watchedLng)
+      ? { lat: watchedLat, lng: watchedLng, radius: Number(watchedRadius) || 200 }
+      : null;
 
   const loadDashboard = useCallback(async () => {
     setDashLoading(true);
@@ -88,7 +99,18 @@ const GeofenceSettings = () => {
           lng: parseFloat(pos.coords.longitude.toFixed(6)),
         });
         setLocating(false);
-        message.success("Location detected successfully");
+        // This spot becomes the centre every check-in is measured from. Detected on an office PC
+        // it is an estimate from the internet connection, often kilometres off — saved as-is, it
+        // turns away staff who are standing inside the school. Say how good the reading was.
+        const accuracy = Math.round(pos.coords.accuracy || 0);
+        if (accuracy > 50) {
+          message.warning({
+            content: `Location detected, but only accurate to ±${accuracy >= 1000 ? `${(accuracy / 1000).toFixed(1)} km` : `${accuracy} m`}. This device is estimating, not using GPS — check the pin is on the school building and drag it there before saving.`,
+            duration: 10,
+          });
+        } else {
+          message.success(`Location detected (±${accuracy} m)`);
+        }
       },
       (err) => {
         setLocating(false);
@@ -243,6 +265,19 @@ const GeofenceSettings = () => {
           >
             Auto-Detect My Location
           </Button>
+
+          <div style={{ marginBottom: 16 }}>
+            <GeofenceMap
+              school={mapSchool}
+              editable
+              onPick={(lat, lng) => form.setFieldsValue({ lat, lng })}
+              height={340}
+            />
+            <div style={{ fontSize: 12, color: C.textMuted, marginTop: 6 }}>
+              Click the map, or drag the school pin, to set the location. The shaded circle is the
+              area staff must be inside to check in — it follows the radius below.
+            </div>
+          </div>
 
           <Form.Item
             label="Geofence Radius (metres)"
