@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Chapter } from "../models/Chapter.model.js";
 import { SchoolClass } from "../models/schoolClass.model.js";
+import { Textbook } from "../models/Textbook.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -156,8 +157,22 @@ const updateChapter = asyncHandler(async (req, res) => {
   delete updates.createdBy;
   delete updates.createdByRole;
 
+  // The textbook link is set by import and by naming a book's chapter, never by a plain edit.
+  delete updates.textbookId;
+  delete updates.bookChapterNo;
+  delete updates.pdfUrl;
+
   const chapter = await Chapter.findByIdAndUpdate(id, updates, { new: true, runValidators: true }).populate(chapterPopulate);
   if (!chapter) throw new ApiError(404, "Chapter not found");
+
+  // A chapter that is also a textbook chapter carries its title in two places; keep them the same,
+  // or the Textbooks page and the curriculum would name one chapter two ways.
+  if (chapter.textbookId && typeof updates.name === "string" && updates.name.trim()) {
+    await Textbook.updateOne(
+      { _id: chapter.textbookId, "chapters.chapterId": chapter._id },
+      { $set: { "chapters.$.name": chapter.name, "chapters.$.nameVerified": true } }
+    );
+  }
 
   return res.status(200).json(new ApiResponse(200, formatChapter(chapter), "Chapter updated"));
 });

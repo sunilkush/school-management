@@ -110,6 +110,7 @@ export const MODULE_META = {
   Boards: { label: 'Boards', icon: 'certificate-outline' },
   BoardClasses: { label: 'Board Classes', icon: 'certificate-outline' },
   ChaptersTopics: { label: 'Chapters & Topics', icon: 'format-list-bulleted' },
+  Textbooks: { label: 'Textbooks', icon: 'bookshelf' },
   AttendanceDashboard: { label: 'Attendance Dashboard', icon: 'view-dashboard-outline' },
   MarkAttendance: { label: 'Mark Attendance', icon: 'clipboard-check-outline' },
   AttendanceTable: { label: 'Attendance Table', icon: 'table' },
@@ -249,7 +250,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.SUPER_ADMIN]: {
     unrestricted: true,
     items: [
-      'Dashboard',
+      'Dashboard', 'Textbooks',
       { group: 'Schools', icon: 'domain', items: ['Schools', 'SchoolReports'] },
       { group: 'Subscription & Billing', icon: 'credit-card-outline', items: ['SubscriptionPlans', 'PaymentHistory', 'Revenue', 'RevenueAnalytics'] },
       { group: 'Users', icon: 'account-group-outline', items: ['SchoolAdmins', 'Teachers', 'StaffUsers', 'Students', 'Parents', 'Accountants', 'Librarians', 'TransportUsers'] },
@@ -268,7 +269,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.SCHOOL_ADMIN]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'SchoolSetup',
+      'Dashboard', 'Textbooks', 'SchoolSetup',
       { group: 'Users', icon: 'account-group-outline', items: ['StudentAdmission', 'AdmissionInquiries', 'Students', 'StudentPromotion', 'Parents', 'Teachers', 'CreateUser', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'Sports', 'Alumni', 'Canteen'] },
       // Timetable's own tabs already cover Time Slots and Rooms (see SchoolAdminTimetableView.jsx),
       // so those two web sidebar entries aren't repeated here as separate destinations — and
@@ -299,7 +300,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.PRINCIPAL]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'StaffUsers', 'Students', 'AcademicReports', 'Timetable',
+      'Dashboard', 'Textbooks', 'StaffUsers', 'Students', 'AcademicReports', 'Timetable',
       'AttendanceReports', 'MarkAttendance', 'AttendanceTable', 'Exams', 'Library', 'Transport', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
@@ -311,7 +312,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.VICE_PRINCIPAL]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'Timetable', 'Exams', 'StudentAttendance', 'TeacherAttendance', 'AttendanceTable', 'Reports', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
+      'Dashboard', 'Textbooks', 'Timetable', 'Exams', 'StudentAttendance', 'TeacherAttendance', 'AttendanceTable', 'Reports', 'HealthRecords', 'Certificates', 'IDCards', 'Discipline', 'PTM', 'Sports', 'Alumni', 'Canteen',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
       'Recruitment', 'MyAppraisal', 
@@ -322,7 +323,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.TEACHER]: {
     unrestricted: true,
     items: [
-      'Dashboard',
+      'Dashboard', 'Textbooks',
       { group: 'Classroom', icon: 'book-open-variant', items: ['AssignedClasses', 'Assignments', 'SubjectResources', 'LessonPlans', 'Timetable', 'Discipline', 'PTM'] },
       { group: 'Attendance', icon: 'clipboard-check-outline', items: ['MarkAttendance', 'Attendance', 'StudentMonthlyReport', 'MyDailyAttendance', 'MyMonthlyReport', 'GpsCheckInOut'] },
       { group: 'Exams & Questions', icon: 'pencil-box-outline', items: ['Exams', 'QuestionBank', 'Evaluation', 'ExamReports'] },
@@ -334,7 +335,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.STUDENT]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'Assignments', 'Attendance', 'Grades', 'ProgressReport', 'Timetable', 'Library', 'StudyMaterials',
+      'Dashboard', 'Textbooks', 'Assignments', 'Attendance', 'Grades', 'ProgressReport', 'Timetable', 'Library', 'StudyMaterials',
       'Hostel', 'MyTransport', 'Fees', 'Leave', 'Exams', 'AcademicCalendar', 'MyCertificates', 'MyIdCard', 'MyAchievements',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
       'Profile',
@@ -344,7 +345,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.PARENT]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'MyChildren', 'Attendance', 'Grades', 'Assignments', 'Fees', 'Timetable', 'Exams',
+      'Dashboard', 'Textbooks', 'MyChildren', 'Attendance', 'Grades', 'Assignments', 'Fees', 'Timetable', 'Exams',
       // 'Events' reused for "Calendar" — EventsScreen already renders AgendaEventsView for Parent.
       'Leave', 'MyTransport', 'Hostel', 'Library', 'Events', 'ProgressReport', 'MyCertificates', 'MyIdCard', 'PTMBooking', 'MyAchievements',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
@@ -367,7 +368,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.LIBRARIAN]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'BookCatalog', 'IssuedBooks', 'Members', 'FineManagement', 'Reports', 'LibrarySettings',
+      'Dashboard', 'Textbooks', 'BookCatalog', 'IssuedBooks', 'Members', 'FineManagement', 'Reports', 'LibrarySettings',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave', 'RoleWorkspace',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
       'MyAppraisal', 'Profile',
@@ -403,7 +404,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.EXAM_COORDINATOR]: {
     unrestricted: true,
     items: [
-      'Dashboard',
+      'Dashboard', 'Textbooks',
       // 'PaperBuilder' omitted — the backend gap that originally justified this (Exam.model.js
       // had no paperBlueprint schema path) is now fixed and School Admin has the real screen
       // (see screenForModule.js's PaperBuilderView). Not extended to Exam Coordinator in that
@@ -418,7 +419,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.SUBJECT_COORDINATOR]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'Subjects', 'Teachers', 'Classes', 'Assessments', 'Reports',
+      'Dashboard', 'Textbooks', 'Subjects', 'Teachers', 'Classes', 'Assessments', 'Reports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Support Center', icon: 'help-circle-outline', items: ['SupportTickets', 'Documentation'] },
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
@@ -486,7 +487,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.SPORTS_TEACHER]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'AssignedClasses', 'MyStudents', 'MarkAttendance', 'Attendance', 'Assignments', 'Sports',
+      'Dashboard', 'Textbooks', 'AssignedClasses', 'MyStudents', 'MarkAttendance', 'Attendance', 'Assignments', 'Sports',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys'] },
       'MyAppraisal', 'Profile',
@@ -535,7 +536,7 @@ export const NAV_CONFIG = {
   [ROLE_NAMES.CLASS_TEACHER]: {
     unrestricted: true,
     items: [
-      'Dashboard', 'MyClass', 'MyStudents', 'MarkAttendance', 'Attendance', 'Assignments', 'Timetable', 'Discipline', 'PTM',
+      'Dashboard', 'Textbooks', 'MyClass', 'MyStudents', 'MarkAttendance', 'Attendance', 'Assignments', 'Timetable', 'Discipline', 'PTM',
       'MyTasks', 'Payroll', 'GpsCheckInOut', 'MyAttendance', 'Leave',
       { group: 'Communication', icon: 'message-text-outline', items: ['Messages', 'Notifications', 'Circulars', 'Surveys', 'OnlineClasses'] },
       'MyAppraisal', 'Profile',

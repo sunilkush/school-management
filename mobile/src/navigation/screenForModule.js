@@ -6,6 +6,7 @@ import { SurveysScreen } from '../screens/custom/SurveysScreen';
 import { PTMScreen } from '../screens/custom/PTMScreen';
 import { MyBusScreen } from '../screens/custom/MyBusScreen';
 import { DriverTripScreen } from '../screens/custom/DriverTripScreen';
+import { TextbooksScreen } from '../screens/custom/TextbooksScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { NetworkStatusScreen } from '../screens/NetworkStatusScreen';
 import { SelfAttendanceScreen } from '../screens/custom/SelfAttendanceScreen';
@@ -38,6 +39,9 @@ const CUSTOM_SCREENS = {
   MyTransport: MyBusScreen,
   // Live device sensors driving a trip state machine — not a list of anything.
   DriverTrip: DriverTripScreen,
+  // Class → subject → book → chapter, each chapter opening its NCERT PDF — pickers and one open
+  // book at a time, not a list of records.
+  Textbooks: TextbooksScreen,
   // Both of these screens already existed (restored in Phase 0) but no nav key pointed at them,
   // so three destinations sat on the placeholder for no reason at all.
   Settings: SettingsScreen,

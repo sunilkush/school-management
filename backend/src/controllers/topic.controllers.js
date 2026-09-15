@@ -57,6 +57,14 @@ const getAllTopics = asyncHandler(async (req, res) => {
 
   if (req.query.chapterId) {
     filter.chapterId = req.query.chapterId;
+  } else if (typeof req.query.chapterIds === "string" && req.query.chapterIds.trim()) {
+    // A whole subject's topics in one request (e.g. to show a count on every chapter), rather than
+    // one request per chapter.
+    const ids = req.query.chapterIds.split(",").map((s) => s.trim()).filter(Boolean);
+    if (ids.length > 300 || ids.some((s) => !mongoose.Types.ObjectId.isValid(s))) {
+      throw new ApiError(400, "chapterIds must be up to 300 valid ids");
+    }
+    filter.chapterId = { $in: ids };
   }
 
   if (req.query.isGlobal !== undefined) {

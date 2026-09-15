@@ -6,6 +6,7 @@ import {
   Settings,
   Users,
   BookOpen,
+  BookOpenText,
   CalendarClock,
   ClipboardCheck,
   Bus,
@@ -102,6 +103,7 @@ export const sidebarMenu = {
   /* ================= SUPER ADMIN ================= */
   "super admin": [
     { title: "Platform Overview", path: "superadmin", icon: LayoutDashboard },
+    { title: "Textbooks", path: "superadmin/textbooks", icon: BookOpenText },
     {
       title: "Schools",
       icon: School,
@@ -212,6 +214,7 @@ export const sidebarMenu = {
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [
     { title: "Overview", path: "schooladmin", icon: LayoutDashboard },
+    { title: "Textbooks", path: "schooladmin/textbooks", icon: BookOpenText },
     {
       title: "Users",
       icon: Users,
@@ -383,6 +386,7 @@ export const sidebarMenu = {
   /* ================= TEACHER ================= */
   teacher: [
     { title: "Overview", path: "teacher", icon: LayoutDashboard },
+    { title: "Textbooks", path: "teacher/textbooks", icon: BookOpenText },
     {
       title: "Classroom",
       icon: BookOpen,
@@ -431,6 +435,7 @@ export const sidebarMenu = {
   /* ================= STUDENT ================= */
   student: [
     { title: "Overview", path: "student", icon: LayoutDashboard },
+    { title: "Textbooks", path: "student/textbooks", icon: BookOpenText },
     { title: "Homework", path: "student/homework", icon: ClipboardCheck },
     { title: "Attendance", path: "student/attendance", icon: UserCheck },
     { title: "Timetable", path: "student/timetable", icon: CalendarClock },
@@ -458,6 +463,7 @@ export const sidebarMenu = {
   /* ================= PARENT ================= */
   parent: [
     { title: "Overview",          path: "parent",              icon: LayoutDashboard },
+    { title: "Textbooks", path: "parent/textbooks", icon: BookOpenText },
     { title: "My Children",       path: "parent/children",     icon: Users },
     { title: "Attendance",        path: "parent/attendance",   icon: UserCheck },
     { title: "Homework",          path: "parent/homework",     icon: ClipboardCheck },
@@ -533,6 +539,7 @@ export const sidebarMenu = {
   /* ================= PRINCIPAL ================= */
   principal: [
     { title: "Overview", path: "principal", icon: LayoutDashboard },
+    { title: "Textbooks", path: "principal/textbooks", icon: BookOpenText },
     { title: "Students", path: "principal/students", icon: GraduationCap },
     { title: "Staff",    path: "principal/staff",    icon: Briefcase    },
     { title: "Attendance Reports", path: "principal/reports/attendance", icon: UserCheck },
@@ -562,6 +569,7 @@ export const sidebarMenu = {
   /* ================= VICE PRINCIPAL ================= */
   "vice principal": [
     { title: "Overview", path: "viceprincipal", icon: LayoutDashboard },
+    { title: "Textbooks", path: "viceprincipal/textbooks", icon: BookOpenText },
     { title: "Discipline", path: "viceprincipal/discipline", icon: ShieldAlert },
     { title: "PTM", path: "viceprincipal/ptm", icon: CalendarClock },
     { title: "Timetable", path: "viceprincipal/timetable", icon: CalendarClock },
@@ -582,6 +590,7 @@ export const sidebarMenu = {
   /* ================= EXAM COORDINATOR ================= */
   "exam coordinator": [
     { title: "Overview", path: "examcoordinator", icon: LayoutDashboard },
+    { title: "Textbooks", path: "examcoordinator/textbooks", icon: BookOpenText },
     {
       title: "Exam Operations",
       icon: GraduationCap,
@@ -609,6 +618,7 @@ export const sidebarMenu = {
   /* ================= SUBJECT COORDINATOR ================= */
   "subject coordinator": [
     { title: "Overview", path: "subjectcoordinator", icon: LayoutDashboard },
+    { title: "Textbooks", path: "subjectcoordinator/textbooks", icon: BookOpenText },
     { title: "Subjects Overview", path: "subjectcoordinator/subjects", icon: BookOpen },
     { title: "Teachers", path: "subjectcoordinator/teachers", icon: Users },
     { title: "Classes", path: "subjectcoordinator/classes", icon: Book },
@@ -624,6 +634,7 @@ export const sidebarMenu = {
   /* ================= LIBRARIAN ================= */
   librarian: [
     { title: "Dashboard", path: "librarian", icon: LayoutDashboard },
+    { title: "Textbooks", path: "librarian/textbooks", icon: BookOpenText },
     { title: "Book Catalog", path: "librarian/book-catalog", icon: Book },
     { title: "Issue / Return", path: "librarian/issue-return", icon: ClipboardCheck },
     { title: "Members", path: "librarian/members", icon: Users },
@@ -761,6 +772,7 @@ export const sidebarMenu = {
   /* ================= SPORTS TEACHER ================= */
   "sports teacher": [
     { title: "Dashboard",        path: "sportsteacher",                  icon: LayoutDashboard },
+    { title: "Textbooks", path: "sportsteacher/textbooks", icon: BookOpenText },
     { title: "Sports",           path: "sportsteacher/sports",           icon: Trophy          },
     { title: "My Classes",       path: "sportsteacher/classes",          icon: BookOpen        },
     { title: "Mark Attendance",  path: "sportsteacher/attendance/students", icon: ClipboardCheck },
@@ -797,6 +809,7 @@ export const sidebarMenu = {
   /* ================= CLASS TEACHER ================= */
   "class teacher": [
     { title: "Dashboard",        path: "classteacher",                   icon: LayoutDashboard },
+    { title: "Textbooks", path: "classteacher/textbooks", icon: BookOpenText },
     { title: "My Class",         path: "classteacher/my-class",          icon: BookOpen        },
     { title: "My Students",      path: "classteacher/students",          icon: Users           },
     { title: "Discipline",       path: "classteacher/discipline",        icon: ShieldAlert     },

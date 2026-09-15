@@ -432,6 +432,7 @@ const CounselorDashboard      = lazy(() => import("./pages/Counselor/CounselorPa
 const SecurityDashboard       = lazy(() => import("./pages/Security/SecurityDashboard.jsx"));
 const ExamCoordinatorDashboard = lazy(() => import("./pages/Exam_Coordinator/ExamCoordinatorDashboard.jsx"));
 const SubjectCoordinatorDashboard = lazy(() => import("./pages/Subject_Coordinator/SubjectCoordinatorDashboard.jsx"));
+const TextbooksPage = lazy(() => import("./pages/Textbooks/TextbooksPage.jsx"));
 
 // Routes helpers (NO lazy)
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
@@ -685,6 +686,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <SuperAdminDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "schools", element: <Schools /> },
               { path: "subscriptions", element: <SubscriptionPlans /> },
              // { path: "subscriptions/:id/logs", element: <PlanLogs /> },
@@ -750,6 +752,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <SchoolAdminDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               //{ path: "users/student/add", element: <AddStudent /> },
               //{ path: "users/teacher/add", element: <AddTeacher /> },
               { path: "parents-register", element: <ParentList /> },
@@ -873,6 +876,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <TeacherDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "my-class", element: <MyClassPage /> },
               { path: "classes", element: <AssignedClasses /> },
               { path: "classes/:classId", element: <ClassDetails /> },
@@ -922,6 +926,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <StudentDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "profile", element: <Profile /> },
               { path: "homework", element: <StudentHomework /> },
               { path: "attendance", element: <StudentAttendancePage /> },
@@ -961,6 +966,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <ParentDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "children",   element: <MyChildren /> },
               { path: "ptm",        element: <PTMBooking /> },
               { path: "certificates", element: <ChildCertificates /> },
@@ -1045,6 +1051,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <SchoolAdminDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "overview", element: <SchoolAdminDashboard /> },
               { path: "staff", element: <TeacherList /> },
               { path: "students", element: <StudentList /> },
@@ -1094,6 +1101,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,                      element: <SchoolAdminDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "discipline",               element: <DisciplinePage /> },
               { path: "ptm",                       element: <PTMSessionsPage /> },
               { path: "reports",                  element: <VicePrincipalReports /> },
@@ -1134,6 +1142,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,             element: <SubjectCoordinatorDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "subjects",        element: <Subjects /> },
               { path: "teachers",        element: <TeacherList /> },
               { path: "classes",         element: <Classes /> },
@@ -1162,6 +1171,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,              element: <LibraryDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "book-catalog",     element: <Books /> },
               { path: "issue-return",     element: <IssueBook /> },
               { path: "members",          element: <LibraryMembers /> },
@@ -1261,6 +1271,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true, element: <ExamCoordinatorDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "exams", element: <ExamsPage /> },
               { path: "exams/list", element: <ExamsPage /> },
               { path: "exams/create", element: <ExamCreate /> },
@@ -1392,6 +1403,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,                        element: <TeacherDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "sports",                     element: <SportsPage /> },
               { path: "classes",                    element: <AssignedClasses /> },
               { path: "classes/:classId",           element: <ClassDetails /> },
@@ -1468,6 +1480,7 @@ const router = createBrowserRouter([
             ),
             children: [
               { index: true,                        element: <TeacherDashboard /> },
+              { path: "textbooks", element: <TextbooksPage /> },
               { path: "my-class",                   element: <MyClassPage /> },
               { path: "classes",                    element: <AssignedClasses /> },
               { path: "classes/:classId",           element: <ClassDetails /> },

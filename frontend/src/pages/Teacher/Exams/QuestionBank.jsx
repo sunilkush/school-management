@@ -259,7 +259,10 @@ const QuestionBank = () => {
   useEffect(() => {
     if (!classId || !subjectId) { setChapterOpts([]); return; }
     setChapterLoading(true);
-    apiClient.get("/chapters", { params: { schoolClassId: classId, subjectId, limit: 500 } })
+    // Active chapters only: deleting a chapter only marks it inactive, and chapters dropped from the
+    // current textbooks are kept inactive for the questions already filed under them. Neither should
+    // be offered for a new question.
+    apiClient.get("/chapters", { params: { schoolClassId: classId, subjectId, isActive: "true", limit: 500 } })
       .then((r) => setChapterOpts(
         (r?.data?.data || []).map((ch) => ({
           value: ch._id,

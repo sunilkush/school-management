@@ -1313,6 +1313,15 @@ export const apiSlice = createApi({
       query: (params) => ({ url: '/chapters', params }),
       providesTags: ['Chapter'],
     }),
+
+    // Textbooks (NCERT), class-wise: the list carries no chapters; one book carries its chapters,
+    // each with the official PDF link on ncert.nic.in.
+    getTextbooks: builder.query({
+      query: ({ classNo, subjectId } = {}) => ({ url: '/textbooks', params: { classNo, subjectId } }),
+    }),
+    getTextbook: builder.query({
+      query: (id) => ({ url: `/textbooks/${id}` }),
+    }),
     createChapter: builder.mutation({
       query: (payload) => ({ url: '/chapters', method: 'post', data: payload }),
       invalidatesTags: ['Chapter'],
@@ -2480,6 +2489,8 @@ export const {
   useActivateAcademicYearMutation,
   useArchiveAcademicYearMutation,
   useGetChaptersQuery,
+  useGetTextbooksQuery,
+  useGetTextbookQuery,
   useCreateChapterMutation,
   useUpdateChapterMutation,
   useDeleteChapterMutation,

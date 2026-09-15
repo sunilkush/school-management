@@ -43,6 +43,29 @@ const chapterSchema = new Schema(
       index: true,
     },
 
+    /* ================= TEXTBOOK ================= */
+
+    // Set for chapters imported from a published textbook (see Textbook.model.js). chapterNo stays
+    // the running number within the class and subject — unique across all of that subject's books —
+    // while bookChapterNo is the chapter's number inside its own book, the one printed on it.
+    textbookId: {
+      type: Schema.Types.ObjectId,
+      ref: "Textbook",
+      default: null,
+      index: true,
+    },
+    bookChapterNo: {
+      type: Number,
+      min: 1,
+      default: null,
+    },
+    // The official chapter PDF, linked rather than copied.
+    pdfUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
     /* ================= OWNERSHIP ================= */
 
     isGlobal: {
