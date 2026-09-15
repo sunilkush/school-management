@@ -11,6 +11,7 @@ import {
   pill, tableHeadCss, emptyState,
 } from "../../styles/pageStyles.js";
 import { fmt, Avatar, StatCard, RefreshBtn, VISITOR_COLORS } from "./receptionistShared.jsx";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const ReceptionistDashboard = () => {
   const dispatch = useDispatch();
@@ -82,6 +83,7 @@ const ReceptionistDashboard = () => {
         icon={<LayoutDashboard size={20} />}
         extra={<RefreshBtn onClick={refresh} />}
       />
+      <MyAttendanceSection />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
         <StatCard icon={Users}       label="Today's Visitors"   value={stats?.todayEntries ?? 0} color="var(--purple)" loading={loading} />

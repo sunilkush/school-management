@@ -17,6 +17,7 @@ import {
   createMaintenanceRecord, updateMaintenanceRecord, deleteMaintenanceRecord,
 } from "../../features/vehicleMaintenanceSlice";
 import { getEmployees, updateEmployee } from "../../features/employeeSlice";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const { Title, Text } = Typography;
 
@@ -75,6 +76,7 @@ export const TransportManagerDashboard = () => {
         <Title level={3} style={{ marginBottom: 4 }}>Transport Manager Dashboard</Title>
         <Text type="secondary">Fleet overview — vehicles, routes, and maintenance status.</Text>
       </Card>
+      <MyAttendanceSection style={{ marginBottom: 0 }} />
 
       <Spin spinning={tLoading}>
         <Row gutter={[16, 16]}>

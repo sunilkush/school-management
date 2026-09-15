@@ -15,6 +15,7 @@ import { fetchHostelDashboard } from "../../features/hostelWardenSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const KpiCard = ({ icon, label, value, color, sub, onClick }) => (
   <div
@@ -83,6 +84,7 @@ const HostelDashboard = () => {
           </div>
         }
       />
+      <MyAttendanceSection />
 
       {/* ── KPI Grid ─────────────────────────────────────────── */}
       <div style={statGrid(160)}>

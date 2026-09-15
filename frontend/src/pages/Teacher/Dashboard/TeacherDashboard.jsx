@@ -16,6 +16,7 @@ import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 import { getRoleName, getRolePath } from "../../../utils/roles";
+import MyAttendanceSection from "../../../components/attendance/MyAttendanceSection";
 
 const STAT_COLORS = ["var(--primary)", "var(--accent)", "var(--success)", "var(--warning)"];
 const STAT_ACCENT_BARS = ["var(--primary-light)", "rgba(var(--accent-rgb),0.15)", "var(--success-light)", "var(--warning-light)"];
@@ -118,6 +119,7 @@ const TeacherDashboard = () => {
         icon={<DashboardOutlined />}
       />
       <div style={pageWrapper}>
+        <MyAttendanceSection />
         <Spin spinning={isLoading}>
           {/* KPI stats */}
           <div className="stat-grid" style={statGrid(180)}>
@@ -236,7 +238,7 @@ const TeacherDashboard = () => {
           <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
             <Col xs={24} md={12}>
               <div style={sectionPanel}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>My Attendance</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>Attendance Rate</div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>Present days from last {myAttendance.length} records</div>
                 <Progress
                   percent={dashboardData.attendancePercent}

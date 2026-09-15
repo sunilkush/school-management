@@ -14,6 +14,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper, sectionPanel, statGrid, iconWell, pill,
 } from "../../../styles/pageStyles";
+import MyAttendanceSection from "../../../components/attendance/MyAttendanceSection";
 
 const PRIORITY_COLOR = {
   low:    ["var(--text-secondary)", "var(--border-muted)"],
@@ -80,6 +81,7 @@ const StaffDashboard = () => {
           </Button>
         }
       />
+      <MyAttendanceSection />
 
       <div style={{ ...statGrid(190), marginTop: 20 }}>
         <StatCard icon={<ScheduleOutlined />} label="My Attendance (Month)" value={`${metrics.attendance}%`} color="var(--primary)" />
@@ -129,10 +131,10 @@ const StaffDashboard = () => {
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Quick Actions</div>
           <Space direction="vertical" style={{ width: "100%" }} size={8}>
             <Button block icon={<IdcardOutlined />} onClick={() => navigate("/dashboard/staff/attendance/self")}>
-              GPS Check-In / Check-Out
+              My Attendance
             </Button>
             <Button block icon={<ScheduleOutlined />} onClick={() => navigate("/dashboard/staff/attendance")}>
-              My Attendance
+              My Attendance History
             </Button>
             <Button block icon={<ClockCircleOutlined />} onClick={() => navigate("/dashboard/staff/tasks")}>
               My Tasks

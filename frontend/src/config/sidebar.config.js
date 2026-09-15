@@ -61,11 +61,12 @@ const commonSelfService = (basePath) => [
   { title: "Security Settings", path: "security-settings", icon: ShieldCheck },
 ];
 
-/* Attendance + leave items for every employee role */
+/* Attendance + leave items for every employee role.
+   "My Attendance" is the check-in page (GPS + map); the list of past days is "My Attendance History". */
 const employeeAttendance = (basePath, opts = {}) => {
   const items = [];
-  if (!opts.skipGps)  items.push({ title: "GPS Check-In/Out", path: `${basePath}/attendance/self`, icon: MapPinned });
-  if (!opts.skipMy)   items.push({ title: "My Attendance",    path: `${basePath}/attendance/my`,   icon: Clock });
+  if (!opts.skipGps)  items.push({ title: "My Attendance",      path: `${basePath}/attendance/self`, icon: MapPinned });
+  if (!opts.skipMy)   items.push({ title: "My Attendance History", path: `${basePath}/attendance/my`,   icon: Clock });
   if (!opts.skipLeave) items.push({ title: "Leave Requests",  path: `${basePath}/leave`,           icon: CalendarClock });
   return items;
 };
@@ -404,9 +405,9 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Student Attendance", path: "teacher/attendance/students" },
         { title: "Student Monthly Report", path: "teacher/attendance" },
-        { title: "My Daily Attendance", path: "teacher/attendance/my" },
+        { title: "My Attendance History", path: "teacher/attendance/my" },
         { title: "My Monthly Report", path: "teacher/attendance/my/monthly" },
-        { title: "GPS Check-In/Out", path: "teacher/attendance/self" },
+        { title: "My Attendance", path: "teacher/attendance/self" },
       ],
     },
     {
@@ -519,8 +520,8 @@ export const sidebarMenu = {
         { title: "My Payroll",        path: "accountant/payroll" },
       ],
     },
-    { title: "My Attendance",      path: "accountant/attendance",         icon: UserCheck     },
-    { title: "GPS Check-In/Out",  path: "accountant/attendance/self",    icon: MapPinned     },
+    { title: "My Attendance",      path: "accountant/attendance/self",    icon: MapPinned     },
+    { title: "My Attendance History", path: "accountant/attendance",         icon: UserCheck     },
     { title: "Attendance Reports",path: "accountant/attendance/monthly", icon: FileBarChart2 },
     { title: "Leave Requests",    path: "accountant/leave",              icon: CalendarClock },
     { title: "My Tasks",          path: "accountant/tasks",              icon: ListChecks    },
@@ -738,8 +739,8 @@ export const sidebarMenu = {
   staff: [
     { title: "Overview",         path: "staff",                icon: LayoutDashboard },
     { title: "Tasks & Schedule", path: "staff/tasks",          icon: CalendarClock   },
-    { title: "My Attendance",    path: "staff/attendance",     icon: Clock           },
-    { title: "GPS Check-In/Out", path: "staff/attendance/self",icon: MapPinned       },
+    { title: "My Attendance",      path: "staff/attendance/self", icon: MapPinned     },
+    { title: "My Attendance History", path: "staff/attendance",      icon: Clock         },
     { title: "Leave Requests",   path: "staff/leave",          icon: CalendarClock   },
     { title: "My Payroll",       path: "staff/payroll",        icon: IndianRupee     },
     communicationMenu("staff"),
@@ -748,8 +749,8 @@ export const sidebarMenu = {
   "support staff": [
     { title: "Overview",         path: "staff",                icon: LayoutDashboard },
     { title: "Tasks & Schedule", path: "staff/tasks",          icon: CalendarClock   },
-    { title: "My Attendance",    path: "staff/attendance",     icon: Clock           },
-    { title: "GPS Check-In/Out", path: "staff/attendance/self",icon: MapPinned       },
+    { title: "My Attendance",      path: "staff/attendance/self", icon: MapPinned     },
+    { title: "My Attendance History", path: "staff/attendance",      icon: Clock         },
     { title: "Leave Requests",   path: "staff/leave",          icon: CalendarClock   },
     { title: "My Payroll",       path: "staff/payroll",        icon: IndianRupee     },
     communicationMenu("staff"),

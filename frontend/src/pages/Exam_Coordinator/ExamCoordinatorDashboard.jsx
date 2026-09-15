@@ -15,6 +15,7 @@ import { getExams } from "../../features/examSlice";
 import apiClient from "../../api/httpClient";
 import { useState } from "react";
 import dayjs from "dayjs";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const { Title, Text } = Typography;
 
@@ -92,6 +93,7 @@ const ExamCoordinatorDashboard = () => {
           </Col>
         </Row>
       </Card>
+      <MyAttendanceSection style={{ marginBottom: 0 }} />
 
       {error && <Alert type="error" message={`Failed to load exams: ${error}`} showIcon />}
 

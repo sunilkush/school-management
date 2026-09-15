@@ -14,6 +14,7 @@ import { getAllSubjects } from "../../features/subjectSlice";
 import { getExams } from "../../features/examSlice";
 import apiClient from "../../api/httpClient";
 import dayjs from "dayjs";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const { Title, Text } = Typography;
 
@@ -140,6 +141,7 @@ const SubjectCoordinatorDashboard = () => {
           </Col>
         </Row>
       </Card>
+      <MyAttendanceSection style={{ marginBottom: 0 }} />
 
       <Spin spinning={loading}>
         <Row gutter={[16, 16]}>

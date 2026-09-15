@@ -17,6 +17,7 @@ import {
 import { fetchAccountantDashboard } from "../../../features/financeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../../../styles/pageStyles";
+import MyAttendanceSection from "../../../components/attendance/MyAttendanceSection";
 
 const { Text } = Typography;
 
@@ -241,6 +242,7 @@ const AccountantDashboard = () => {
           </Button>
         }
       />
+      <MyAttendanceSection />
 
       {/* ── Financial Health Banner ────────────────────────────────── */}
       <div style={{

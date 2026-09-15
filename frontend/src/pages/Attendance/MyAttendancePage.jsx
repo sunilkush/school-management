@@ -172,8 +172,8 @@ const MyAttendancePage = () => {
   return (
     <div style={pageWrapper}>
       <PageHeader
-        title="My Attendance"
-        subtitle="Monthly attendance history with GPS check-in/out times"
+        title="My Attendance History"
+        subtitle="Your attendance month by month, with check-in and check-out times"
         icon={<CalendarOutlined />}
         extra={
           <DatePicker
@@ -319,12 +319,12 @@ const MyAttendancePage = () => {
                     color: C.textSub, borderColor: C.border,
                   }}
                 >
-                  View GPS Page  <ArrowRightOutlined />
+                  Open My Attendance  <ArrowRightOutlined />
                 </Button>
               )}
               <div style={{ fontSize: 11, color: C.textMuted, textAlign: "right" }}>
                 {!checkedIn
-                  ? "Use GPS Check-In/Out to mark attendance"
+                  ? "Check in from My Attendance"
                   : !checkedOut
                   ? "Remember to punch out when leaving"
                   : "Attendance complete for today"}

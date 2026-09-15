@@ -195,7 +195,6 @@ const EmployeeSelfAttendance = () => {
   const [gpsError,  setGpsError]  = useState(null);
   const [actLoading, setActLoad]  = useState(false);
   const [calMonth,   setCalMonth] = useState(dayjs());
-  const [mapOpen,    setMapOpen]  = useState(false);
   const watchRef = useRef(null);
 
   /* ── GPS ── */
@@ -208,6 +207,8 @@ const EmployeeSelfAttendance = () => {
     setGpsState(GPS_STATE.LOCATING);
     setGpsError(null);
     dispatch(clearAttendanceFeedback());
+    // Retrying after an error must replace the old watch, not run a second one beside it.
+    if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
     watchRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
@@ -217,12 +218,6 @@ const EmployeeSelfAttendance = () => {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
     );
   }, [dispatch]);
-
-  const stopGPS = useCallback(() => {
-    if (watchRef.current != null) { navigator.geolocation.clearWatch(watchRef.current); watchRef.current = null; }
-    setGpsState(GPS_STATE.IDLE);
-    setPosition(null);
-  }, []);
 
   useEffect(() => {
     dispatch(clearAttendanceFeedback());
@@ -375,8 +370,8 @@ const EmployeeSelfAttendance = () => {
           {/* ── Punch Card ── */}
           <div style={card}>
 
-            {/* GPS status + map toggle */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            {/* GPS status */}
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 14 }}>
               <GpsPill
                 gpsState={gpsState}
                 distanceInfo={distanceInfo}
@@ -384,21 +379,6 @@ const EmployeeSelfAttendance = () => {
                 onEnable={startGPS}
                 onRetry={startGPS}
               />
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                {gpsState === GPS_STATE.READY && position && (
-                  <button
-                    onClick={() => setMapOpen((v) => !v)}
-                    style={{ fontSize: 11, color: "var(--text-muted)", background: "none", border: "1px solid var(--border-muted)", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontWeight: 600 }}
-                  >
-                    {mapOpen ? "Hide Map" : "View Map"}
-                  </button>
-                )}
-                {gpsState === GPS_STATE.READY && (
-                  <button onClick={stopGPS} style={{ fontSize: 11, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600, textDecoration: "underline" }}>
-                    Disable
-                  </button>
-                )}
-              </div>
             </div>
 
             {/* Error from last punch attempt */}
@@ -411,8 +391,9 @@ const EmployeeSelfAttendance = () => {
               />
             )}
 
-            {/* Map (togglable) */}
-            {mapOpen && gpsState === GPS_STATE.READY && position && (
+            {/* Map — always shown once there is a position; it is how someone sees where they are
+                against the school zone, so it is not something to hide or switch off. */}
+            {gpsState === GPS_STATE.READY && position && (
               <div style={{ marginBottom: 14 }}>
                 <AttendanceMap userPosition={position} schoolCoords={schoolCoords} distanceInfo={distanceInfo} height={240} />
               </div>

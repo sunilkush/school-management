@@ -182,7 +182,7 @@ const MyClassPage = () => {
           />
           <QuickCard
             icon={MapPinned}
-            label="GPS Check-In"
+            label="My Attendance"
             color="var(--warning)"
             onClick={() => navigate(`/dashboard/${rolePath}/attendance/self`)}
           />

@@ -12,6 +12,7 @@ import {
   fetchCounselingSessions, fetchCounselingStats,
   createCounselingSession, updateCounselingSession, deleteCounselingSession,
 } from "../../features/counselingSessionSlice";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const { Title, Text } = Typography;
 
@@ -56,6 +57,7 @@ export const CounselorDashboard = () => {
         <Title level={3} style={{ marginBottom: 4 }}>Counselor Dashboard</Title>
         <Text type="secondary">Student wellbeing overview — sessions, appointments, and resolved cases.</Text>
       </Card>
+      <MyAttendanceSection style={{ marginBottom: 0 }} />
       <Spin spinning={loading}>
         <Row gutter={[16, 16]}>
           {statCards.map((s) => (

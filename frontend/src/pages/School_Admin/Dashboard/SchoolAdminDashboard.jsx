@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { useGetSchoolAdminDashboardAnalyticsQuery } from "../../../services/schoolDashboardApi";
 import {
   Row,
@@ -20,6 +21,7 @@ import {
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useTheme } from "../../../context/ThemeContext.jsx";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
+import MyAttendanceSection from "../../../components/attendance/MyAttendanceSection";
 
 // ── Lazy components ──
 const SummaryCards      = lazy(() => import("./components/SummaryCards.jsx"));
@@ -165,6 +167,10 @@ const SectionHeader = ({ icon, title, tag, tagColor = "blue" }) => {
 const SchoolAdminDashboard = () => {
   const { isDark } = useTheme();
   const t = tokens;
+  // Principal and Vice Principal share this dashboard and check in like other staff; a School Admin
+  // has no My Attendance page, so the section is theirs only.
+  const { pathname } = useLocation();
+  const ownsSelfAttendance = ["principal", "viceprincipal"].includes(pathname.split("/")[2]);
   const schoolId = useSelector(
     (state) =>
       state?.auth?.user?.school?._id ||
@@ -194,6 +200,7 @@ const SchoolAdminDashboard = () => {
           </Tag>
         }
       />
+      {ownsSelfAttendance && <MyAttendanceSection style={{ marginTop: 16 }} />}
 
     <div style={{ padding: "clamp(12px, 3vw, 24px)" }}>
       <style>{`

@@ -14,6 +14,7 @@ import {
   pageWrapper, statGrid, sectionPanel, iconWell, tableHeadCss,
 } from "../../styles/pageStyles";
 import { severityColor } from "./securityShared";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const { Text } = Typography;
 
@@ -131,6 +132,7 @@ const SecurityDashboard = () => {
           </Button>
         }
       />
+      <MyAttendanceSection />
 
       {/* ── KPI Cards ──────────────────────────────────────────────── */}
       <div style={{ ...statGrid(180), marginBottom: 16 }}>

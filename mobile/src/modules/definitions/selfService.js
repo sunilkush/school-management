@@ -23,7 +23,7 @@ import { STATUS_META, summarizeAttendance } from '../../utils/attendance';
  */
 export const myAttendanceModule = {
   key: 'MyAttendance',
-  title: 'My Attendance',
+  title: 'My Attendance History',
   icon: 'calendar-account-outline',
   // The web sidebar calls the same screen three different things.
   aliases: ['MyMonthlyReport', 'ShiftAttendance'],

@@ -195,7 +195,7 @@ export const MODULE_META = {
   StudentMonthlyReport: { label: 'Student Monthly Report', icon: 'file-chart-outline' },
   MyDailyAttendance: { label: 'My Daily Attendance', icon: 'clock-check-outline' },
   MyMonthlyReport: { label: 'My Monthly Report', icon: 'calendar-month-outline' },
-  GpsCheckInOut: { label: 'GPS Check-In/Out', icon: 'map-marker-outline' },
+  GpsCheckInOut: { label: 'My Attendance', icon: 'map-marker-outline' },
   QuestionBank: { label: 'Question Bank', icon: 'help-box-outline' },
   Evaluation: { label: 'Evaluation', icon: 'clipboard-check-multiple-outline' },
   MyTasks: { label: 'My Tasks', icon: 'format-list-checks' },
@@ -211,7 +211,7 @@ export const MODULE_META = {
   FeeReports: { label: 'Fee Reports', icon: 'file-chart-outline' },
   Income: { label: 'Income', icon: 'cash-plus' },
   SalaryRun: { label: 'Salary Run', icon: 'cash-multiple' },
-  MyAttendance: { label: 'My Attendance', icon: 'clock-outline' },
+  MyAttendance: { label: 'My Attendance History', icon: 'clock-outline' },
 
   // ── Librarian ──
   BookCatalog: { label: 'Book Catalog', icon: 'book-outline' },

@@ -17,6 +17,7 @@ import { fetchLibraryDashboard, fetchLibraryBooks, fetchIssuedBooks } from "../.
 import PageHeader from "../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, statGrid, iconWell } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 dayjs.extend(relativeTime);
 
@@ -180,6 +181,7 @@ const LibraryDashboard = () => {
           </div>
         }
       />
+      <MyAttendanceSection />
 
       {/* ── KPI Row ─────────────────────────────────────────────── */}
       <div style={statGrid(170)}>

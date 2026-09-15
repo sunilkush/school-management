@@ -9,6 +9,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchTickets } from "../../features/supportTicketSlice";
 import PageHeader from "../../components/layout/PageHeader";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const PRIORITY_COLOR = { low: "green", medium: "orange", high: "red" };
 const STATUS_COLOR = { Open: "orange", "In Progress": "blue", Resolved: "green" };
@@ -44,6 +45,7 @@ const ITSupportDashboard = () => {
         subtitle="System health, tickets, maintenance, and logs in one place"
         icon={<ToolOutlined />}
       />
+      <MyAttendanceSection />
       <div style={{ padding: "clamp(12px,3vw,24px)", display: "flex", flexDirection: "column", gap: 16 }}>
 
         {/* KPI row */}

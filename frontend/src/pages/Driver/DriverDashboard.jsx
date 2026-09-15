@@ -9,6 +9,7 @@ import {
 import { fetchMyVehicles } from "../../features/transportSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, iconWell, pill } from "../../styles/pageStyles";
+import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const STATUS_COLOR = {
   Available: ["var(--success-hover)", "rgba(var(--success-rgb), 0.5)"],
@@ -66,6 +67,7 @@ const DriverDashboard = () => {
         subtitle={`Welcome back, ${user?.name || "Driver"}`}
         icon={<DashboardOutlined />}
       />
+      <MyAttendanceSection />
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginTop: 20 }} className="driver-dash-grid">
         <div>
@@ -88,10 +90,10 @@ const DriverDashboard = () => {
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Quick Actions</div>
           <Space direction="vertical" style={{ width: "100%" }} size={8}>
             <Button block icon={<CarOutlined />} onClick={() => navigate("/dashboard/driver/attendance/self")}>
-              GPS Check-In / Check-Out
+              My Attendance
             </Button>
             <Button block icon={<ClockCircleOutlined />} onClick={() => navigate("/dashboard/driver/attendance/my")}>
-              My Attendance
+              My Attendance History
             </Button>
             <Button block icon={<TeamOutlined />} onClick={() => navigate("/dashboard/driver/leave")}>
               Apply Leave
