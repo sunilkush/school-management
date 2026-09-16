@@ -1,16 +1,14 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Button, Select, Input, Tag, Drawer, Popconfirm,
-  Space, Empty, Spin, Table, Tooltip, Switch, Modal,
+  Button, Empty, Input, Modal, Popconfirm, Segmented, Select, Skeleton,
+  Space, Switch, Tag, Tooltip, message,
 } from "antd";
 import {
-  PlusOutlined, DeleteOutlined, EditOutlined, EyeOutlined,
-  UploadOutlined, ReloadOutlined, SearchOutlined, FilterOutlined,
-  CheckCircleOutlined, CloseCircleOutlined,
+  DeleteOutlined, DownOutlined, EditOutlined, PlusOutlined, ReloadOutlined,
+  RightOutlined, SearchOutlined, UploadOutlined,
 } from "@ant-design/icons";
-import { BookOpen, BarChart3, CheckSquare, AlignLeft } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { BookOpen } from "lucide-react";
 
 import { getQuestions, deleteQuestion, toggleQuestionStatus } from "../../../features/questionSlice";
 import { fetchAssignedClasses } from "../../../features/classSlice";
@@ -22,785 +20,629 @@ import apiClient from "../../../api/httpClient";
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, pageCard, tableHeadCss, statGrid,
-  statCard, statLabel, statValue, toolbarRow, iconWell, pill,
-} from "../../../styles/pageStyles";
+import { modalTitle, pageWrapper, pill, sectionPanel } from "../../../styles/pageStyles";
 
-/* ── colour helpers ────────────────────────────────────────────── */
+/**
+ * Question Bank — pick a class and a subject, and every question filed under it is on one screen,
+ * grouped by chapter, with the answer one click away.
+ *
+ * The old page put six dropdowns in a row (school, year, class, subject, chapter, search) above a
+ * dense table, so you had to make five choices before seeing anything and there was no way to tell
+ * which class or subject actually had questions. The chips below carry their own counts, so the
+ * gaps are visible before you click.
+ */
+
+const QUESTION_LIMIT = 1000;
+
 const TYPE_STYLE = {
-  mcq_single: { label: "MCQ·Single",   color: "var(--primary)", bg: "var(--primary-light)" },
-  mcq_multi:  { label: "MCQ·Multi",    color: "var(--purple)", bg: "rgba(var(--purple-rgb),0.12)" },
-  true_false: { label: "True/False",   color: "var(--accent-hover)", bg: "var(--accent-light)" },
-  fill_blank: { label: "Fill Blank",   color: "var(--warning-hover)", bg: "var(--warning-light)" },
-  match:      { label: "Match",        color: "var(--danger-hover)", bg: "var(--danger-light)" },
+  mcq_single: { label: "MCQ", color: "var(--primary)", bg: "var(--primary-light)" },
+  mcq_multi: { label: "MCQ · multi", color: "var(--purple)", bg: "rgba(var(--purple-rgb),0.12)" },
+  true_false: { label: "True / False", color: "var(--accent-hover)", bg: "var(--accent-light)" },
+  fill_blank: { label: "Fill in the blank", color: "var(--warning-hover)", bg: "var(--warning-light)" },
+  match: { label: "Match", color: "var(--danger-hover)", bg: "var(--danger-light)" },
 };
 const DIFF_STYLE = {
-  easy:   { color: "var(--success-hover)", bg: "var(--success-light)" },
+  easy: { color: "var(--success-hover)", bg: "var(--success-light)" },
   medium: { color: "var(--warning-hover)", bg: "var(--warning-light)" },
-  hard:   { color: "var(--danger-hover)", bg: "var(--danger-light)" },
+  hard: { color: "var(--danger-hover)", bg: "var(--danger-light)" },
 };
-const typePill  = (t) => { const s = TYPE_STYLE[t] || { label: t, color: "var(--text-secondary)", bg: "var(--surface-soft)" }; return <span style={{ ...pill(s.color, s.bg), fontSize: 11 }}>{s.label}</span>; };
-const diffPill  = (d) => { const s = DIFF_STYLE[(d||"").toLowerCase()] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" }; return <span style={{ ...pill(s.color, s.bg), fontSize: 11, textTransform: "capitalize" }}>{d || "—"}</span>; };
 
-/* ── QuestionPreviewDrawer ─────────────────────────────────────── */
-const QuestionPreviewDrawer = ({ question: q, open, onClose }) => {
-  if (!q) return null;
-  const typeStyle = TYPE_STYLE[q.questionType] || { label: q.questionType, color: "var(--text-secondary)", bg: "var(--surface-soft)" };
-  const diffStyle = DIFF_STYLE[(q.difficulty || "").toLowerCase()] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" };
+const classNumber = (name = "") => Number(String(name).match(/\d+/)?.[0]) || 99;
+const titleCase = (s = "") => String(s).toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+const idOf = (v) => (!v ? "" : typeof v === "object" ? String(v._id || "") : String(v));
+const errorText = (e, fallback) => e?.response?.data?.message || fallback;
 
-  const Field = ({ label, children }) => (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 14, color: "var(--text-primary)" }}>{children}</div>
-    </div>
-  );
+const label = (text) => (
+  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+    {text}
+  </div>
+);
+
+const typePill = (t) => {
+  const s = TYPE_STYLE[t] || { label: t, color: "var(--text-secondary)", bg: "var(--surface-soft)" };
+  return <span style={{ ...pill(s.color, s.bg), fontSize: 11 }}>{s.label}</span>;
+};
+const diffPill = (d) => {
+  const s = DIFF_STYLE[String(d || "").toLowerCase()] || { color: "var(--text-secondary)", bg: "var(--surface-soft)" };
+  return <span style={{ ...pill(s.color, s.bg), fontSize: 11, textTransform: "capitalize" }}>{d || "—"}</span>;
+};
+
+/* ─────────────────── one question, with its answer underneath ─────────────────── */
+const QuestionRow = ({ question: q, index, open, onToggleOpen, onEdit, onDelete, onToggleActive, selected, onSelect }) => {
+  const options = Array.isArray(q.options) ? q.options : [];
+  const answers = (Array.isArray(q.correctAnswers) ? q.correctAnswers : []).map(String);
+  const isCorrect = (opt, i) => answers.includes(String(opt?.key ?? "")) || answers.includes(String(opt?.text ?? "")) || answers.includes(String(i));
 
   return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      title={
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ ...iconWell("var(--primary)", 32), borderRadius: 9 }}><EyeOutlined /></div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>Question Preview</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>
-              {q.schoolClassId?.name || "—"} &nbsp;·&nbsp; {q.subjectId?.name || "—"}
-            </div>
-          </div>
-        </div>
-      }
-      width={520}
-      styles={{ body: { padding: 20 } }}
-    >
-      {/* Type & Difficulty badges */}
-      <Space style={{ marginBottom: 16 }}>
-        <span style={{ ...pill(typeStyle.color, typeStyle.bg) }}>{typeStyle.label}</span>
-        <span style={{ ...pill(diffStyle.color, diffStyle.bg), textTransform: "capitalize" }}>{q.difficulty || "—"}</span>
-        <span style={{ ...pill("var(--success-hover)", "var(--success-light)") }}>+{q.marks ?? 0} marks</span>
-        {(q.negativeMarks > 0) && <span style={{ ...pill("var(--danger-hover)", "var(--danger-light)") }}>−{q.negativeMarks}</span>}
-        {q.isActive
-          ? <Tag color="green" icon={<CheckCircleOutlined />}>Active</Tag>
-          : <Tag color="red"   icon={<CloseCircleOutlined />}>Inactive</Tag>
-        }
-      </Space>
+    <div style={{ borderTop: index === 0 ? "none" : "1px solid var(--border-muted)", padding: "10px 0" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={() => onSelect(q._id)}
+          aria-label={`Select question ${index + 1}`}
+          style={{ marginTop: 6, cursor: "pointer" }}
+        />
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={onToggleOpen}
+          style={{
+            flex: 1, display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left",
+            background: "none", border: "none", padding: 0, cursor: "pointer", color: "inherit",
+          }}
+        >
+          <span style={{ color: "var(--text-muted)", fontSize: 11, marginTop: 4, width: 22, flexShrink: 0 }}>
+            {open ? <DownOutlined /> : <RightOutlined />}
+          </span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.45 }}>
+              {q.statement || "—"}
+            </span>
+            <span style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6, alignItems: "center" }}>
+              {typePill(q.questionType)}
+              {diffPill(q.difficulty)}
+              <span style={{ ...pill("var(--success-hover)", "var(--success-light)"), fontSize: 11 }}>
+                {q.marks ?? 0} mark{(q.marks ?? 0) === 1 ? "" : "s"}
+                {q.negativeMarks > 0 ? ` · −${q.negativeMarks}` : ""}
+              </span>
+              {q.chapterId?.name && <Tag color="blue" style={{ margin: 0 }}>{q.chapterId.name}</Tag>}
+              {q.isActive === false && <Tag style={{ margin: 0 }}>Hidden</Tag>}
+            </span>
+          </span>
+        </button>
 
-      {/* Statement */}
-      <div style={{
-        ...pageCard, padding: 16, marginBottom: 16,
-        fontSize: 15, fontWeight: 500, lineHeight: 1.6,
-        color: "var(--text-primary)",
-      }}>
-        {q.statement || "No statement"}
+        <Space size={2}>
+          <Tooltip title={q.isActive === false ? "Hidden from exams — turn on to use it" : "In use — turn off to hide it"}>
+            <Switch size="small" checked={q.isActive !== false} onChange={() => onToggleActive(q._id)} />
+          </Tooltip>
+          <Tooltip title="Edit">
+            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => onEdit(q)} />
+          </Tooltip>
+          <Popconfirm
+            title="Delete this question?"
+            description="It is removed for good."
+            okText="Delete"
+            okType="danger"
+            onConfirm={() => onDelete(q._id)}
+          >
+            <Tooltip title="Delete"><Button type="text" size="small" danger icon={<DeleteOutlined />} /></Tooltip>
+          </Popconfirm>
+        </Space>
       </div>
 
-      <Field label="Class · Subject · Chapter">
-        {[q.schoolClassId?.name, q.subjectId?.name, q.chapterId?.name || q.topic]
-          .filter(Boolean).join(" → ") || "—"}
-      </Field>
-
-      {/* Options */}
-      {Array.isArray(q.options) && q.options.length > 0 && (
-        <Field label={`Options (${q.options.length})`}>
-          <Space direction="vertical" style={{ width: "100%" }}>
-            {q.options.map((opt, i) => {
-              const isCorrect = (q.correctAnswers || []).includes(opt.key);
-              return (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  padding: "8px 12px", borderRadius: 10,
-                  background: isCorrect ? "var(--success-light)" : "var(--surface-soft)",
-                  border: `1px solid ${isCorrect ? "rgba(var(--success-rgb),0.27)" : "var(--border-muted)"}`,
-                }}>
-                  <span style={{
-                    width: 26, height: 26, borderRadius: 7, flexShrink: 0,
-                    background: isCorrect ? "var(--success)" : "var(--border)",
-                    color: isCorrect ? "#fff" : "var(--text-muted)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 700, fontSize: 12,
-                  }}>
-                    {opt.key}
-                  </span>
-                  <span style={{ fontSize: 13, color: isCorrect ? "var(--success-hover)" : "var(--text-primary)", fontWeight: isCorrect ? 600 : 400 }}>
-                    {opt.text}
-                  </span>
-                  {isCorrect && <CheckCircleOutlined style={{ color: "var(--success)", marginLeft: "auto" }} />}
+      {open && (
+        <div style={{ margin: "10px 0 4px 42px", padding: "12px 14px", background: "var(--surface-soft)", borderRadius: 10 }}>
+          {options.length > 0 ? (
+            <div style={{ display: "grid", gap: 6 }}>
+              {options.map((opt, i) => (
+                <div
+                  key={opt?.key ?? i}
+                  style={{
+                    fontSize: 13,
+                    color: isCorrect(opt, i) ? "var(--success-hover)" : "var(--text-secondary)",
+                    fontWeight: isCorrect(opt, i) ? 700 : 500,
+                  }}
+                >
+                  <span style={{ opacity: 0.7, marginRight: 8 }}>{opt?.key ?? String.fromCharCode(65 + i)}.</span>
+                  {opt?.text || "—"}
+                  {isCorrect(opt, i) && <span style={{ marginLeft: 8, fontSize: 11 }}>✓ correct</span>}
                 </div>
-              );
-            })}
-          </Space>
-        </Field>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: 13 }}>
+              <span style={{ color: "var(--text-muted)", marginRight: 8 }}>Answer:</span>
+              <span style={{ color: "var(--success-hover)", fontWeight: 700 }}>{answers.join(", ") || "—"}</span>
+            </div>
+          )}
+          {q.explanation && (
+            <div style={{ marginTop: 10, fontSize: 13, color: "var(--text-secondary)" }}>
+              <span style={{ color: "var(--text-muted)", marginRight: 6 }}>Why:</span>{q.explanation}
+            </div>
+          )}
+          {Array.isArray(q.tags) && q.tags.length > 0 && (
+            <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {q.tags.map((t) => <Tag key={t} style={{ margin: 0 }}>{t}</Tag>)}
+            </div>
+          )}
+        </div>
       )}
-
-      {/* Correct Answers (non-MCQ) */}
-      {(!Array.isArray(q.options) || !q.options.length) && Array.isArray(q.correctAnswers) && q.correctAnswers.length > 0 && (
-        <Field label="Correct Answers">
-          <Space wrap>
-            {q.correctAnswers.map((a, i) => (
-              <Tag key={i} color="green">{a}</Tag>
-            ))}
-          </Space>
-        </Field>
-      )}
-
-      {/* Tags */}
-      {Array.isArray(q.tags) && q.tags.length > 0 && (
-        <Field label="Tags">
-          <Space wrap>{q.tags.map((t) => <Tag key={t}>{t}</Tag>)}</Space>
-        </Field>
-      )}
-    </Drawer>
+    </div>
   );
 };
 
-/* ════════════════════════════════════════════════════════════════
-   Main Component
-═══════════════════════════════════════════════════════════════ */
+/* ────────────────────────────────── page ────────────────────────────────── */
 const QuestionBank = () => {
-  const dispatch  = useDispatch();
-  const location  = useLocation();
+  const dispatch = useDispatch();
 
-  const { questions = [], loading }         = useSelector((s) => s.questions || {});
+  const { questions = [], pagination, loading } = useSelector((s) => s.questions || {});
   const { classAssignTeacher = [], loading: classLoading } = useSelector((s) => s.class || {});
   const { schoolClasses = [], loading: schoolClassLoading } = useSelector((s) => s.schoolClass || {});
-  const { schools = [] }                    = useSelector((s) => s.school || {});
+  const { schools = [] } = useSelector((s) => s.school || {});
   const { academicYears = [], selectedAcademicYear } = useSelector((s) => s.academicYear || {});
-  const { user }                            = useSelector((s) => s.auth || {});
+  const { user } = useSelector((s) => s.auth || {});
 
-  const schoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
-  const userRoleName = (user?.role?.name || user?.roleId?.name || "").toLowerCase();
-  const isSuperAdmin = userRoleName === "super admin";
+  const ownSchoolId = user?.schoolId?._id || user?.schoolId || user?.school?._id;
+  const roleName = (user?.role?.name || user?.roleId?.name || "").toLowerCase();
+  const isSuperAdmin = roleName === "super admin";
 
-  // Super Admin isn't tied to one school, so it doesn't have its own schoolId — it picks one via
-  // the School filter below. Everything downstream (classes, subjects, questions, AYs) keys off
-  // this instead of the plain `schoolId` so normal (single-school) users are completely unaffected.
+  /* Super Admin belongs to no single school, so it picks one; every other role uses its own. */
   const [selectedSchool, setSelectedSchool] = useState("");
-  const effectiveSchoolId = isSuperAdmin ? selectedSchool : schoolId;
-  const classListForFilters = isSuperAdmin ? schoolClasses : classAssignTeacher;
+  const schoolId = isSuperAdmin ? selectedSchool : ownSchoolId;
+  const classList = isSuperAdmin ? schoolClasses : classAssignTeacher;
 
-  /* ── UI state ── */
-  const [modal,          setModal]          = useState(null);   // null | "add" | "edit" | "bulk"
-  const [editQuestion,   setEditQuestion]   = useState(null);
-  const [previewQ,       setPreviewQ]       = useState(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-
-  /* ── Filters ── */
-  const [filterAyId, setFilterAyId] = useState(() => selectedAcademicYear?._id || "");
-  const [classId,    setClassId]    = useState("");
-  const [subjectId,  setSubjectId]  = useState("");
-  const [chapterId,  setChapterId]  = useState("");
-  const [search,     setSearch]     = useState("");
-  const [searchInput,setSearchInput]= useState("");
-
-  /* ── Chapters ── */
-  const [chapterOpts,    setChapterOpts]    = useState([]);
+  const [ayId, setAyId] = useState(() => selectedAcademicYear?._id || "");
+  const [classId, setClassId] = useState(null);
+  const [subjectId, setSubjectId] = useState(null);
+  const [chapterId, setChapterId] = useState("all");   // "all" | "none" | a chapter id
+  const [search, setSearch] = useState("");
+  const [openQuestion, setOpenQuestion] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [modal, setModal] = useState(null);            // null | "add" | "edit" | "bulk"
+  const [editQuestion, setEditQuestion] = useState(null);
+  const [chapterOpts, setChapterOpts] = useState([]);
   const [chapterLoading, setChapterLoading] = useState(false);
 
-  /* ── Pagination ── */
-  const [page,     setPage]     = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-
-  /* ── Super Admin: load the school list once (School filter options) ── */
+  /* Super Admin: the school list feeds the picker in the header */
   useEffect(() => {
-    if (isSuperAdmin && !schools.length) {
-      dispatch(fetchSchools());
-    }
+    if (isSuperAdmin && !schools.length) dispatch(fetchSchools());
   }, [dispatch, isSuperAdmin, schools.length]);
 
-  /* ── Sync filterAyId with global AY on first load (non-Super-Admin only — Super Admin picks
-     a school first, and its AY list depends on that choice) ── */
   useEffect(() => {
-    if (!isSuperAdmin && selectedAcademicYear?._id && !filterAyId) {
-      setFilterAyId(selectedAcademicYear._id);
-    }
-  }, [isSuperAdmin, selectedAcademicYear?._id]);
+    if (!isSuperAdmin && selectedAcademicYear?._id && !ayId) setAyId(selectedAcademicYear._id);
+  }, [isSuperAdmin, selectedAcademicYear?._id, ayId]);
 
-  /* ── Fetch AY list whenever the effective school changes ── */
   useEffect(() => {
-    if (!effectiveSchoolId) return;
-    dispatch(fetchAllAcademicYears(effectiveSchoolId));
+    if (!schoolId) return;
+    dispatch(fetchAllAcademicYears(schoolId));
     if (isSuperAdmin) {
-      // Switching schools invalidates whatever AY/class/subject/chapter was picked for the old one.
-      setFilterAyId("");
-      setClassId(""); setSubjectId(""); setChapterId("");
+      setAyId("");
+      setClassId(null); setSubjectId(null); setChapterId("all");
     }
-  }, [dispatch, effectiveSchoolId, isSuperAdmin]);
+  }, [dispatch, schoolId, isSuperAdmin]);
 
-  /* ── Load classes by selected AY filter ── */
+  /* The academic year decides which classes exist */
   useEffect(() => {
-    if (!filterAyId) return;
+    if (!ayId) return;
     if (isSuperAdmin) {
-      if (!effectiveSchoolId) return;
-      dispatch(getClassData({ schoolId: effectiveSchoolId, academicYearId: filterAyId }));
+      if (!schoolId) return;
+      dispatch(getClassData({ schoolId, academicYearId: ayId }));
     } else {
-      dispatch(fetchAssignedClasses({ academicYearId: filterAyId }));
+      dispatch(fetchAssignedClasses({ academicYearId: ayId }));
     }
-    setClassId("");
-    setSubjectId("");
-    setChapterId("");
-  }, [dispatch, filterAyId, isSuperAdmin, effectiveSchoolId]);
+    setClassId(null); setSubjectId(null); setChapterId("all");
+  }, [dispatch, ayId, isSuperAdmin, schoolId]);
 
-  /* ── Load questions ── */
-  useEffect(() => {
-    if (!effectiveSchoolId) return;
-    dispatch(getQuestions({ schoolId: effectiveSchoolId, limit: 500 }));
-  }, [dispatch, effectiveSchoolId]);
+  const reload = useCallback(() => {
+    if (schoolId) dispatch(getQuestions({ schoolId, limit: QUESTION_LIMIT }));
+  }, [dispatch, schoolId]);
 
-  /* ── Search debounce ── */
-  useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput.trim()), 350);
-    return () => clearTimeout(t);
-  }, [searchInput]);
+  useEffect(() => { reload(); }, [reload]);
 
-  /* ── Load chapters on class+subject change ── */
+  /* Chapters of the chosen class + subject, used both as a filter and on the new-question form */
   useEffect(() => {
     if (!classId || !subjectId) { setChapterOpts([]); return; }
+    let cancelled = false;
     setChapterLoading(true);
-    // Active chapters only: deleting a chapter only marks it inactive, and chapters dropped from the
-    // current textbooks are kept inactive for the questions already filed under them. Neither should
-    // be offered for a new question.
+    // Active chapters only: a deleted chapter is kept (questions still point at it) but must not
+    // be offered for new ones.
     apiClient.get("/chapters", { params: { schoolClassId: classId, subjectId, isActive: "true", limit: 500 } })
-      .then((r) => setChapterOpts(
-        (r?.data?.data || []).map((ch) => ({
-          value: ch._id,
-          label: ch.chapterNo ? `${ch.chapterNo}. ${ch.name}` : ch.name,
-        }))
-      ))
-      .catch(() => setChapterOpts([]))
-      .finally(() => setChapterLoading(false));
+      .then((r) => { if (!cancelled) setChapterOpts(r?.data?.data || []); })
+      .catch(() => { if (!cancelled) setChapterOpts([]); })
+      .finally(() => { if (!cancelled) setChapterLoading(false); });
+    return () => { cancelled = true; };
   }, [classId, subjectId]);
 
-  /* ── Helper: get id from populated or plain value ── */
-  const getId = (v) => (!v ? "" : typeof v === "object" ? v._id : v);
-
-  /* ── Permission map: only show questions for assigned classes (Teacher/etc.). Super Admin isn't
-     restricted to "assigned" classes — classListForFilters is already every class in the selected
-     school, and subjectsByClass is deliberately left empty per class below (schoolClasses' subject
-     entries carry no `.subjectId` wrapper), which the filter below reads as "no subject restriction". ── */
-  const permissionMap = useMemo(() => {
-    const classIds = new Set();
-    const subjectsByClass = new Map();
-    classListForFilters.forEach((cls) => {
-      const cId = String(getId(cls?._id) || "");
-      if (!cId) return;
-      classIds.add(cId);
-      const subs = new Set();
-      [...(cls?.subjects || []), ...(cls?.sections || []).flatMap((s) => s?.subjects || [])].forEach((sub) => {
-        const sId = String(getId(sub?.subjectId) || "");
-        if (sId) subs.add(sId);
-      });
-      subjectsByClass.set(cId, subs);
+  /* ── classes, with how many questions each one has ── */
+  const classes = useMemo(() => {
+    const counts = new Map();
+    questions.forEach((q) => {
+      const k = idOf(q.schoolClassId);
+      counts.set(k, (counts.get(k) || 0) + 1);
     });
-    return { classIds, subjectsByClass };
-  }, [classListForFilters]);
+    return [...classList]
+      .filter((c) => c?._id)
+      .sort((a, b) => classNumber(a?.name) - classNumber(b?.name))
+      .map((c) => ({ id: String(c._id), name: c.name, raw: c, questions: counts.get(String(c._id)) || 0 }));
+  }, [classList, questions]);
 
-  /* ── Subject options for selected class ── */
-  const selectedClassObj = useMemo(() =>
-    classListForFilters.find((c) => String(getId(c?._id)) === String(classId)) || null,
-    [classListForFilters, classId]
+  const currentClass = useMemo(
+    () => classes.find((c) => c.id === String(classId)) || null,
+    [classes, classId],
   );
-  const subjectOptions = useMemo(() => {
-    if (!selectedClassObj) return [];
-    const map = new Map();
-    const addSub = (s) => {
-      const id   = String(getId(s?.subjectId || s?._id) || "");
-      const name = s?.subjectId?.name || s?.name || "";
-      if (id && name && !map.has(id)) map.set(id, { value: id, label: name });
-    };
-    (selectedClassObj?.subjects || []).forEach(addSub);
-    (selectedClassObj?.sections || []).forEach((sec) => (sec?.subjects || []).forEach(addSub));
-    return Array.from(map.values());
-  }, [selectedClassObj]);
 
-  /* ── Filtered questions (client-side) ── */
-  const filteredQuestions = useMemo(() => {
-    const q = search.toLowerCase();
-    return questions.filter((item) => {
-      const qClassId   = String(getId(item.schoolClassId) || "");
-      const qSubjectId = String(getId(item.subjectId)     || "");
-      const qChapterId = String(getId(item.chapterId)     || "");
-      if (!permissionMap.classIds.has(qClassId)) return false;
-      const allowedSubs = permissionMap.subjectsByClass.get(qClassId);
-      if (allowedSubs?.size && !allowedSubs.has(qSubjectId)) return false;
-      if (classId   && qClassId   !== String(classId))   return false;
-      if (subjectId && qSubjectId !== String(subjectId)) return false;
-      if (chapterId && qChapterId !== String(chapterId)) return false;
-      if (q && !item.statement?.toLowerCase().includes(q)) return false;
+  /* ── subjects of that class, with their counts ── */
+  const subjects = useMemo(() => {
+    if (!currentClass) return [];
+    const map = new Map();
+    const add = (s) => {
+      const id = idOf(s?.subjectId || s?._id);
+      const name = s?.subjectId?.name || s?.name || "";
+      if (id && name && !map.has(id)) map.set(id, { id, name, questions: 0 });
+    };
+    (currentClass.raw?.subjects || []).forEach(add);
+    (currentClass.raw?.sections || []).forEach((sec) => (sec?.subjects || []).forEach(add));
+    questions.forEach((q) => {
+      if (idOf(q.schoolClassId) !== currentClass.id) return;
+      const sid = idOf(q.subjectId);
+      // A question can sit under a subject the class no longer lists — still show it.
+      if (!map.has(sid) && sid) map.set(sid, { id: sid, name: q.subjectId?.name || "Other", questions: 0 });
+      if (map.has(sid)) map.get(sid).questions += 1;
+    });
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [currentClass, questions]);
+
+  /* ── the questions of the chosen class + subject ── */
+  const subjectQuestions = useMemo(() => {
+    if (!classId || !subjectId) return [];
+    return questions.filter((q) => idOf(q.schoolClassId) === String(classId) && idOf(q.subjectId) === String(subjectId));
+  }, [questions, classId, subjectId]);
+
+  /* ── chapter chips: every chapter of the subject plus whatever the questions point at ── */
+  const chapters = useMemo(() => {
+    const counts = new Map();
+    let unfiled = 0;
+    subjectQuestions.forEach((q) => {
+      const cid = idOf(q.chapterId);
+      if (!cid) unfiled += 1;
+      else counts.set(cid, (counts.get(cid) || 0) + 1);
+    });
+    const known = chapterOpts.map((ch) => ({
+      id: String(ch._id),
+      name: ch.chapterNo ? `${ch.chapterNo}. ${ch.name}` : ch.name,
+      no: ch.chapterNo ?? 999,
+      questions: counts.get(String(ch._id)) || 0,
+    }));
+    subjectQuestions.forEach((q) => {
+      const cid = idOf(q.chapterId);
+      if (cid && !known.some((k) => k.id === cid)) {
+        known.push({ id: cid, name: q.chapterId?.name || "Chapter", no: 999, questions: counts.get(cid) || 0 });
+      }
+    });
+    known.sort((a, b) => a.no - b.no);
+    return { known, unfiled };
+  }, [chapterOpts, subjectQuestions]);
+
+  const shown = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return subjectQuestions.filter((q) => {
+      if (chapterId === "none" && idOf(q.chapterId)) return false;
+      if (chapterId !== "all" && chapterId !== "none" && idOf(q.chapterId) !== chapterId) return false;
+      if (term && !String(q.statement || "").toLowerCase().includes(term)
+        && !(q.tags || []).some((t) => String(t).toLowerCase().includes(term))) return false;
       return true;
     });
-  }, [questions, classId, subjectId, chapterId, search, permissionMap]);
+  }, [subjectQuestions, chapterId, search]);
 
-  /* ── Stats ── */
-  const stats = useMemo(() => ({
-    total:  filteredQuestions.length,
-    mcq:    filteredQuestions.filter((q) => q.questionType?.startsWith("mcq")).length,
-    tf:     filteredQuestions.filter((q) => q.questionType === "true_false").length,
-    fill:   filteredQuestions.filter((q) => q.questionType === "fill_blank").length,
-  }), [filteredQuestions]);
+  const totalMarks = shown.reduce((n, q) => n + (Number(q.marks) || 0), 0);
+  const hiddenCount = shown.filter((q) => q.isActive === false).length;
 
-  /* ── Handlers ── */
-  const handleEdit = (record) => {
-    setEditQuestion(record);
-    setModal("edit");
-  };
+  /* how many exist in total, so a truncated load is admitted rather than hidden */
+  const loadedAll = !pagination?.total || pagination.total <= questions.length;
 
-  const handleDelete = useCallback((id) => {
-    dispatch(deleteQuestion(id));
+  /* ── actions ── */
+  const handleDelete = useCallback(async (id) => {
+    try {
+      await dispatch(deleteQuestion(id)).unwrap();
+    } catch (e) {
+      message.error(errorText(e, "Could not delete the question"));
+    }
   }, [dispatch]);
 
-  const handleBulkDelete = () => {
+  const handleToggleActive = useCallback((id) => { dispatch(toggleQuestionStatus(id)); }, [dispatch]);
+
+  const deleteSelected = () => {
     Modal.confirm({
-      title: `${selectedRowKeys.length} questions delete karein?`,
-      content: "Yeh action undo nahi ho sakta.",
+      title: `Delete ${selectedIds.length} question${selectedIds.length === 1 ? "" : "s"}?`,
+      content: "They are removed for good.",
       okText: "Delete",
       okType: "danger",
       centered: true,
-      onOk: () => {
-        selectedRowKeys.forEach((id) => dispatch(deleteQuestion(id)));
-        setSelectedRowKeys([]);
+      onOk: async () => {
+        await Promise.all(selectedIds.map((id) => dispatch(deleteQuestion(id))));
+        setSelectedIds([]);
       },
     });
   };
 
-  const handleToggle = useCallback((id) => {
-    dispatch(toggleQuestionStatus(id));
-  }, [dispatch]);
+  const toggleSelect = (id) => setSelectedIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
-  const closeModal = () => {
-    setModal(null);
-    setEditQuestion(null);
-  };
+  const closeModal = () => { setModal(null); setEditQuestion(null); };
+  const afterSave = () => { closeModal(); reload(); };
 
-  const handleSuccess = () => {
-    closeModal();
-    dispatch(getQuestions({ schoolId, limit: 500 }));
-  };
+  /* A new question starts in the class, subject and chapter already on screen. */
+  const prefill = useMemo(() => {
+    if (!classId || !subjectId) return null;
+    return {
+      schoolClassId: classId,
+      subjectId,
+      chapterId: chapterId !== "all" && chapterId !== "none" ? chapterId : undefined,
+      difficulty: "medium",
+      marks: 1,
+      negativeMarks: 0,
+      isActive: true,
+    };
+  }, [classId, subjectId, chapterId]);
 
-  const clearFilters = () => {
-    setClassId(""); setSubjectId(""); setChapterId(""); setSearchInput(""); setSearch("");
-  };
-
-  const activeFilters = [classId, subjectId, chapterId, search].filter(Boolean).length;
-
-  /* ── Table columns ── */
-  const columns = [
-    {
-      title: "#",
-      key:   "idx",
-      width: 52,
-      render: (_, __, i) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>
-          {(page - 1) * pageSize + i + 1}
-        </span>
-      ),
-    },
-    {
-      title:     "Question",
-      dataIndex: "statement",
-      key:       "statement",
-      ellipsis:  true,
-      render:    (text, r) => (
-        <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13, lineHeight: 1.4, marginBottom: 4 }}>
-            {text || "—"}
-          </div>
-          <Space size={4} wrap>
-            {typePill(r.questionType)}
-            {diffPill(r.difficulty)}
-            {r.chapterId?.name && <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.chapterId.name}</span>}
-          </Space>
-        </div>
-      ),
-    },
-    {
-      title:  "Class",
-      key:    "class",
-      width:  110,
-      render: (_, r) => (
-        <div style={{ fontSize: 12 }}>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{r.schoolClassId?.name || "—"}</div>
-          <div style={{ color: "var(--text-muted)" }}>{r.subjectId?.name || "—"}</div>
-        </div>
-      ),
-    },
-    {
-      title:  "Marks",
-      key:    "marks",
-      width:  80,
-      align:  "center",
-      render: (_, r) => (
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--primary)" }}>+{r.marks ?? 0}</div>
-          {r.negativeMarks > 0 && <div style={{ fontSize: 11, color: "var(--danger-hover)" }}>−{r.negativeMarks}</div>}
-        </div>
-      ),
-    },
-    {
-      title:  "Status",
-      key:    "status",
-      width:  80,
-      align:  "center",
-      render: (_, r) => (
-        <Tooltip title={r.isActive ? "Active — click to deactivate" : "Inactive — click to activate"}>
-          <Switch
-            size="small"
-            checked={!!r.isActive}
-            onChange={() => handleToggle(r._id)}
-          />
-        </Tooltip>
-      ),
-    },
-    {
-      title:  "Actions",
-      key:    "actions",
-      width:  110,
-      align:  "right",
-      render: (_, r) => (
-        <Space size={4}>
-          <Tooltip title="Preview">
-            <Button
-              type="text" size="small" icon={<EyeOutlined />}
-              style={{ color: "var(--primary)" }}
-              onClick={() => setPreviewQ(r)}
-            />
-          </Tooltip>
-          <Tooltip title="Edit">
-            <Button
-              type="text" size="small" icon={<EditOutlined />}
-              style={{ color: "var(--warning-hover)" }}
-              onClick={() => handleEdit(r)}
-            />
-          </Tooltip>
-          <Popconfirm
-            title="Delete karein?"
-            description="Yeh question permanently delete ho jaayega."
-            okText="Delete"
-            okType="danger"
-            cancelText="Cancel"
-            onConfirm={() => handleDelete(r._id)}
-          >
-            <Tooltip title="Delete">
-              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
-
-  const statMeta = [
-    { label: "Total Questions",  value: stats.total, color: "var(--primary)", icon: <BookOpen size={18} /> },
-    { label: "MCQ",              value: stats.mcq,   color: "var(--purple)", icon: <CheckSquare size={18} /> },
-    { label: "True / False",     value: stats.tf,    color: "var(--accent-hover)", icon: <CheckSquare size={18} /> },
-    { label: "Fill in the Blank",value: stats.fill,  color: "var(--warning-hover)", icon: <AlignLeft size={18} /> },
-  ];
+  const canAdd = Boolean(schoolId && ayId);
+  const subjectName = subjects.find((s) => s.id === String(subjectId))?.name || "";
 
   return (
     <div style={pageWrapper}>
-      <style>{tableHeadCss("qb-table")}</style>
-
       <PageHeader
         title="Question Bank"
-        subtitle="Questions manage, filter aur organize karein — class, subject, chapter ke hisab se."
+        subtitle="Pick a class and a subject — every question filed under it is on one screen"
         icon={<BookOpen size={20} />}
         extra={
-          <Space size={8}>
-            <Tooltip title="Refresh">
-              <Button icon={<ReloadOutlined />} onClick={() => effectiveSchoolId && dispatch(getQuestions({ schoolId: effectiveSchoolId, limit: 500 }))} />
+          <Space size={8} wrap>
+            {isSuperAdmin && (
+              <Select
+                style={{ minWidth: 200 }}
+                placeholder="School"
+                showSearch
+                optionFilterProp="label"
+                value={selectedSchool || undefined}
+                onChange={(v) => setSelectedSchool(v || "")}
+                options={schools.map((s) => ({ value: s._id, label: s.name }))}
+              />
+            )}
+            <Select
+              style={{ minWidth: 150 }}
+              placeholder="Academic year"
+              disabled={!schoolId}
+              value={ayId || undefined}
+              onChange={(v) => setAyId(v || "")}
+              options={academicYears.map((ay) => ({ value: ay._id, label: ay.name }))}
+            />
+            <Tooltip title="Reload">
+              <Button icon={<ReloadOutlined />} onClick={reload} disabled={!schoolId} />
             </Tooltip>
-            <Button
-              icon={<UploadOutlined />}
-              disabled={isSuperAdmin && !selectedSchool}
-              onClick={() => setModal("bulk")}
-            >
-              Bulk Upload
-            </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              disabled={isSuperAdmin && !selectedSchool}
-              onClick={() => setModal("add")}
-            >
-              Add Question
+            <Button icon={<UploadOutlined />} disabled={!canAdd} onClick={() => setModal("bulk")}>
+              Upload a file
             </Button>
           </Space>
         }
       />
 
-      <div style={{ marginTop: 20 }}>
-        {isSuperAdmin && !selectedSchool && (
-          <div style={{ ...pageCard, padding: 16, marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-              Question Bank school-specific hai — pehle neeche <strong>School</strong> select karein.
-            </span>
-          </div>
-        )}
-
-        {/* ── Stat cards ── */}
-        <div style={{ ...statGrid(170), marginBottom: 20 }}>
-          {statMeta.map((s) => (
-            <div key={s.label} style={statCard({ color: s.color })}>
-              <div>
-                <div style={statLabel(s.color)}>{s.label}</div>
-                <div style={statValue(s.color)}>{s.value}</div>
+      {isSuperAdmin && !selectedSchool ? (
+        <div style={sectionPanel}>
+          <Empty description="Questions belong to a school — choose one at the top to begin" />
+        </div>
+      ) : !ayId ? (
+        <div style={sectionPanel}>
+          <Empty description="Choose an academic year at the top — classes belong to one" />
+        </div>
+      ) : (
+        <>
+          {/* ── Step 1 & 2: class and subject ── */}
+          <div style={sectionPanel}>
+            {label("Class")}
+            {(isSuperAdmin ? schoolClassLoading : classLoading) && !classes.length ? (
+              <Skeleton.Button active size="small" style={{ width: 320 }} />
+            ) : classes.length ? (
+              <div style={{ overflowX: "auto", paddingBottom: 4 }}>
+                <Segmented
+                  value={classId}
+                  onChange={(v) => { setClassId(v); setSubjectId(null); setChapterId("all"); setSearch(""); setOpenQuestion(null); }}
+                  options={classes.map((c) => ({
+                    value: c.id,
+                    label: (
+                      <span>
+                        {titleCase(c.name)}{" "}
+                        <span style={{ opacity: 0.6 }}>{c.questions}</span>
+                      </span>
+                    ),
+                  }))}
+                />
               </div>
-              <span style={{ fontSize: 28, color: s.color, opacity: 0.55 }}>{s.icon}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Filter toolbar ── */}
-        <div style={{ ...pageCard, padding: 16, marginBottom: 16 }}>
-          <div style={{ ...toolbarRow, marginBottom: 10 }}>
-            {isSuperAdmin && (
-              <Select
-                placeholder="School"
-                showSearch
-                optionFilterProp="children"
-                value={selectedSchool || undefined}
-                style={{ minWidth: 180 }}
-                onChange={(v) => setSelectedSchool(v || "")}
-              >
-                {schools.map((sc) => (
-                  <Select.Option key={sc._id} value={sc._id}>{sc.name}</Select.Option>
-                ))}
-              </Select>
+            ) : (
+              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>This year has no classes yet.</div>
             )}
 
-            <Select
-              placeholder="Academic Year"
-              showSearch
-              optionFilterProp="children"
-              disabled={isSuperAdmin && !selectedSchool}
-              value={filterAyId || undefined}
-              style={{ minWidth: 160 }}
-              onChange={(v) => { setFilterAyId(v || ""); }}
-            >
-              {academicYears.map((ay) => (
-                <Select.Option key={ay._id} value={ay._id}>{ay.name}</Select.Option>
-              ))}
-            </Select>
-
-            <Select
-              placeholder="Class"
-              allowClear
-              showSearch
-              optionFilterProp="children"
-              loading={isSuperAdmin ? schoolClassLoading : classLoading}
-              disabled={isSuperAdmin && !selectedSchool}
-              value={classId || undefined}
-              style={{ minWidth: 130 }}
-              onChange={(v) => { setClassId(v || ""); setSubjectId(""); setChapterId(""); }}
-            >
-              {classListForFilters.map((c) => (
-                <Select.Option key={c._id} value={c._id}>{c.name}</Select.Option>
-              ))}
-            </Select>
-
-            <Select
-              placeholder="Subject"
-              allowClear
-              showSearch
-              optionFilterProp="children"
-              disabled={!classId}
-              value={subjectId || undefined}
-              style={{ minWidth: 140 }}
-              onChange={(v) => { setSubjectId(v || ""); setChapterId(""); }}
-            >
-              {subjectOptions.map((s) => (
-                <Select.Option key={s.value} value={s.value}>{s.label}</Select.Option>
-              ))}
-            </Select>
-
-            <Select
-              placeholder="Chapter"
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              disabled={!subjectId}
-              loading={chapterLoading}
-              value={chapterId || undefined}
-              style={{ minWidth: 160 }}
-              options={chapterOpts}
-              onChange={(v) => setChapterId(v || "")}
-            />
-
-            <Input
-              allowClear
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
-              placeholder="Question search karein..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              style={{ minWidth: 200, flex: 1 }}
-            />
-
-            {activeFilters > 0 && (
-              <Button icon={<FilterOutlined />} onClick={clearFilters}>
-                Clear ({activeFilters})
-              </Button>
+            <div style={{ height: 16 }} />
+            {label("Subject")}
+            {!classId ? (
+              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Pick a class first.</div>
+            ) : subjects.length ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {subjects.map((s) => (
+                  <Tag.CheckableTag
+                    key={s.id}
+                    checked={String(subjectId) === s.id}
+                    onChange={() => { setSubjectId(s.id); setChapterId("all"); setSearch(""); setOpenQuestion(null); }}
+                    style={{ padding: "5px 12px", borderRadius: 99, fontSize: 13 }}
+                  >
+                    {titleCase(s.name)} <span style={{ opacity: 0.7 }}>{s.questions}</span>
+                  </Tag.CheckableTag>
+                ))}
+              </div>
+            ) : (
+              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>This class has no subjects yet.</div>
             )}
           </div>
 
-          {/* Bulk delete bar */}
-          {selectedRowKeys.length > 0 && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "8px 12px", borderRadius: 8,
-              background: "var(--danger-light)", border: "1px solid rgba(var(--danger-rgb),0.19)",
-            }}>
-              <span style={{ fontWeight: 600, color: "var(--danger-hover)", fontSize: 13 }}>
-                {selectedRowKeys.length} questions selected
-              </span>
-              <Button danger size="small" icon={<DeleteOutlined />} onClick={handleBulkDelete}>
-                Delete Selected
-              </Button>
-              <Button size="small" onClick={() => setSelectedRowKeys([])}>Cancel</Button>
-            </div>
-          )}
-        </div>
+          {/* ── Step 3: the questions ── */}
+          {!subjectId ? (
+            <div style={sectionPanel}><Empty description="Pick a subject to see its questions" /></div>
+          ) : (
+            <div style={sectionPanel}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 12 }}>
+                <div style={{ flex: "1 1 220px" }}>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>
+                    {titleCase(subjectName)}{" "}
+                    <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>· {titleCase(currentClass?.name || "")}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 2 }}>
+                    {shown.length} question{shown.length === 1 ? "" : "s"} · {totalMarks} mark{totalMarks === 1 ? "" : "s"}
+                    {hiddenCount > 0 ? ` · ${hiddenCount} hidden` : ""}
+                  </div>
+                </div>
+                <Input
+                  allowClear
+                  prefix={<SearchOutlined />}
+                  placeholder="Search questions"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{ maxWidth: 280 }}
+                />
+                <Button type="primary" icon={<PlusOutlined />} disabled={!canAdd} onClick={() => setModal("add")}>
+                  Add question
+                </Button>
+              </div>
 
-        {/* ── Table ── */}
-        <div style={pageCard}>
-          <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>Questions</span>
-              <span style={{
-                marginLeft: 10, fontSize: 11, fontWeight: 600,
-                background: "var(--primary-light)", color: "var(--primary-hover)",
-                padding: "2px 8px", borderRadius: 99,
-              }}>
-                {filteredQuestions.length} records
-              </span>
-              {selectedAcademicYear?.name && (
-                <span style={{
-                  marginLeft: 8, fontSize: 11, fontWeight: 600,
-                  background: "rgba(var(--purple-rgb),0.12)", color: "var(--purple-hover)",
-                  padding: "2px 8px", borderRadius: 99,
+              {/* chapter filter */}
+              {chapterLoading ? (
+                <Skeleton.Button active size="small" style={{ width: 280, marginBottom: 12 }} />
+              ) : (chapters.known.length > 0 || chapters.unfiled > 0) && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                  <Tag.CheckableTag
+                    checked={chapterId === "all"}
+                    onChange={() => setChapterId("all")}
+                    style={{ padding: "3px 10px", borderRadius: 99, fontSize: 12 }}
+                  >
+                    All chapters <span style={{ opacity: 0.7 }}>{subjectQuestions.length}</span>
+                  </Tag.CheckableTag>
+                  {chapters.known.map((ch) => (
+                    <Tag.CheckableTag
+                      key={ch.id}
+                      checked={chapterId === ch.id}
+                      onChange={() => setChapterId(ch.id)}
+                      style={{ padding: "3px 10px", borderRadius: 99, fontSize: 12 }}
+                    >
+                      {ch.name} <span style={{ opacity: 0.7 }}>{ch.questions}</span>
+                    </Tag.CheckableTag>
+                  ))}
+                  {chapters.unfiled > 0 && (
+                    <Tag.CheckableTag
+                      checked={chapterId === "none"}
+                      onChange={() => setChapterId("none")}
+                      style={{ padding: "3px 10px", borderRadius: 99, fontSize: 12 }}
+                    >
+                      No chapter <span style={{ opacity: 0.7 }}>{chapters.unfiled}</span>
+                    </Tag.CheckableTag>
+                  )}
+                </div>
+              )}
+
+              {selectedIds.length > 0 && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 12, marginBottom: 12,
+                  padding: "8px 12px", borderRadius: 8,
+                  background: "var(--danger-light)", border: "1px solid rgba(var(--danger-rgb),0.19)",
                 }}>
-                  {selectedAcademicYear.name}
-                </span>
+                  <span style={{ fontWeight: 600, color: "var(--danger-hover)", fontSize: 13 }}>
+                    {selectedIds.length} selected
+                  </span>
+                  <Button danger size="small" icon={<DeleteOutlined />} onClick={deleteSelected}>Delete</Button>
+                  <Button size="small" onClick={() => setSelectedIds([])}>Cancel</Button>
+                </div>
+              )}
+
+              {loading ? (
+                <Skeleton active paragraph={{ rows: 4 }} />
+              ) : shown.length === 0 ? (
+                <Empty
+                  description={
+                    search || chapterId !== "all"
+                      ? "Nothing matches — clear the search or pick another chapter"
+                      : "No questions here yet"
+                  }
+                >
+                  <Button type="primary" icon={<PlusOutlined />} disabled={!canAdd} onClick={() => setModal("add")}>
+                    Add the first one
+                  </Button>
+                </Empty>
+              ) : (
+                <div>
+                  {shown.map((q, i) => (
+                    <QuestionRow
+                      key={q._id}
+                      question={q}
+                      index={i}
+                      open={openQuestion === q._id}
+                      onToggleOpen={() => setOpenQuestion(openQuestion === q._id ? null : q._id)}
+                      onEdit={(row) => { setEditQuestion(row); setModal("edit"); }}
+                      onDelete={handleDelete}
+                      onToggleActive={handleToggleActive}
+                      selected={selectedIds.includes(q._id)}
+                      onSelect={toggleSelect}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {!loadedAll && (
+                <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-muted)" }}>
+                  Showing the {questions.length} most recent of {pagination.total} questions in this school.
+                </div>
               )}
             </div>
-          </div>
-
-          {loading ? (
-            <div style={{ padding: "60px 0", textAlign: "center" }}>
-              <Spin size="large" />
-            </div>
-          ) : filteredQuestions.length === 0 ? (
-            <div style={{ padding: "60px 24px", textAlign: "center" }}>
-              <Empty
-                description={<span style={{ color: "var(--text-muted)" }}>
-                  {activeFilters ? "Filter clear karein ya naye questions add karein" : "Koi question nahi mila"}
-                </span>}
-              >
-                <Space>
-                  {activeFilters > 0 && <Button onClick={clearFilters}>Filters Clear Karein</Button>}
-                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setModal("add")}>
-                    Add Question
-                  </Button>
-                </Space>
-              </Empty>
-            </div>
-          ) : (
-            <Table
-              className="qb-table"
-              rowKey="_id"
-              dataSource={filteredQuestions}
-              columns={columns}
-              loading={loading}
-              scroll={{ x: 700 }}
-              rowSelection={{
-                selectedRowKeys,
-                onChange: setSelectedRowKeys,
-                preserveSelectedRowKeys: true,
-              }}
-              pagination={{
-                current:    page,
-                pageSize,
-                total:      filteredQuestions.length,
-                showSizeChanger: true,
-                pageSizeOptions: ["10", "20", "50", "100"],
-                showTotal:  (total, range) => (
-                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                    {range[0]}–{range[1]} of {total} questions
-                  </span>
-                ),
-                onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-              }}
-              style={{ background: "transparent" }}
-            />
           )}
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* ── Add / Edit Modal ── */}
+      {/* ── add / edit ── */}
       <Modal
         open={modal === "add" || modal === "edit"}
         footer={null}
         width={780}
         destroyOnClose
         centered
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ ...iconWell(modal === "edit" ? "var(--warning-hover)" : "var(--primary)", 32), borderRadius: 9 }}>
-              {modal === "edit" ? <EditOutlined /> : <PlusOutlined />}
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>
-                {modal === "edit" ? "Question Edit Karein" : "Naya Question Add Karein"}
-              </div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>
-                {modal === "edit" ? "Existing question update karein" : "Question bank mein naya question add karein"}
-              </div>
-            </div>
-          </div>
-        }
+        title={modalTitle(
+          modal === "edit" ? <EditOutlined /> : <PlusOutlined />,
+          modal === "edit" ? "Edit question" : "New question",
+          modal === "edit"
+            ? "Change what this question asks or how it is marked"
+            : `${titleCase(currentClass?.name || "")}${subjectName ? ` · ${titleCase(subjectName)}` : ""}`,
+        )}
         onCancel={closeModal}
         styles={{ body: { padding: 20, maxHeight: "80vh", overflowY: "auto" } }}
       >
         <CreateQuestion
-          initialData={modal === "edit" ? editQuestion : null}
-          onSuccess={handleSuccess}
+          initialData={modal === "edit" ? editQuestion : prefill}
+          onSuccess={afterSave}
           schoolId={isSuperAdmin ? selectedSchool : undefined}
         />
       </Modal>
 
-      {/* ── Bulk Upload Modal ── */}
+      {/* ── bulk upload ── */}
       <Modal
         open={modal === "bulk"}
         footer={null}
         width={720}
         destroyOnClose
         centered
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ ...iconWell("var(--purple)", 32), borderRadius: 9 }}><UploadOutlined /></div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>Bulk Upload Questions</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>Excel file se multiple questions ek saath add karein</div>
-            </div>
-          </div>
-        }
+        title={modalTitle(<UploadOutlined />, "Upload questions", "Add many at once from a spreadsheet")}
         onCancel={closeModal}
         styles={{ body: { padding: 20 } }}
       >
         <BulkUploadQuestions
-          onSuccess={handleSuccess}
+          onSuccess={afterSave}
           schoolId={isSuperAdmin ? selectedSchool : undefined}
           classOptions={isSuperAdmin ? schoolClasses : undefined}
         />
       </Modal>
-
-      {/* ── Preview Drawer ── */}
-      <QuestionPreviewDrawer
-        question={previewQ}
-        open={!!previewQ}
-        onClose={() => setPreviewQ(null)}
-      />
     </div>
   );
 };

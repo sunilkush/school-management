@@ -44,6 +44,10 @@ import { assignSchoolPlan } from "../../../features/superAdminBillingSlice.js";
 import { fetchSchools } from "../../../features/schoolSlice";
 
 import PlanForm from "../../../components/forms/PlanForm.jsx";
+import {
+  PLAN_MODULE_DESCRIPTIONS as MODULE_DESCRIPTIONS,
+  PLAN_MODULE_KEYS as ALL_MODULES,
+} from "../../../constants/planModules.js";
 import PlanLogs from "./PlanLogs.jsx";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
@@ -66,29 +70,7 @@ const LIMIT_META = [
   { key: "maxSchools", label: "Schools", icon: <BankOutlined /> },
 ];
 
-// Full module catalog, same list/order as PlanForm.jsx's moduleOptions — shown
-// in full on every card (with a +/- indicator) so a plan's gaps are as visible
-// as its inclusions, not just whatever subset happens to be in plan.features.
-const ALL_MODULES = [
-  "Attendance", "Fees", "Exam", "Online Exam", "Transport",
-  "Hostel", "Library", "Payroll", "Reports", "AI Features",
-];
-
-// One-line explanation of what each module actually covers — the backend only
-// stores a bare module name per feature, so this is presentation-only context
-// to answer "what do I actually get" on the pricing card.
-const MODULE_DESCRIPTIONS = {
-  "Attendance": "Daily attendance for students & staff",
-  "Fees": "Fee collection, invoices & payment tracking",
-  "Exam": "Exam scheduling, grading & report cards",
-  "Online Exam": "Online tests with auto-evaluation",
-  "Transport": "Bus routes, vehicles & driver tracking",
-  "Hostel": "Room allocation & resident management",
-  "Library": "Book catalog, issue & return tracking",
-  "Payroll": "Staff salary processing & payslips",
-  "Reports": "Academic & administrative analytics",
-  "AI Features": "AI-powered insights & automation",
-};
+// The module catalogue lives with the plan form, so the cards and the form never drift apart.
 
 // ─── Plan Card ──────────────────────────────────────────────
 const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
@@ -406,12 +388,18 @@ const SubscriptionPlans = () => {
 
       {/* ══ ADD / EDIT MODAL ══ */}
       <Modal
-        title={modalTitle(editingPlan ? <EditOutlined /> : <PlusOutlined />, editingPlan ? "Edit Subscription Plan" : "Add New Plan")}
+        title={modalTitle(
+          editingPlan ? <EditOutlined /> : <PlusOutlined />,
+          editingPlan ? "Edit plan" : "New plan",
+          editingPlan ? editingPlan.name : "What it costs, what it includes, and its limits",
+        )}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         destroyOnClose
         centered
+        width={720}
+        styles={{ body: { maxHeight: "72vh", overflowY: "auto", paddingRight: 8 } }}
       >
         <PlanForm
           initialValues={editingPlan}

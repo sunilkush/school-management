@@ -1,268 +1,281 @@
-import { useEffect } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import {
-  Form,
-  Input,
-  InputNumber,
-  Switch,
-  Button,
-  Select,
-  Card,
-  Space,
-  Divider,
-  Typography,
+  Alert, Button, Checkbox, Divider, Form, Input, InputNumber, Segmented, Space, Switch, Tag, Tooltip,
 } from "antd";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createSubscriptionPlan,
   updateSubscriptionPlan,
 } from "../../features/subscriptionPlanSlice.js";
+import { DURATION_PRESETS, PLAN_LIMITS, PLAN_MODULES } from "../../constants/planModules.js";
 
-const { Title, Text } = Typography;
+/**
+ * Build or edit a subscription plan.
+ *
+ * The old form asked for the modules one at a time — add a card, pick the module from a dropdown,
+ * then type a "Limit Key" like `maxStudents` from memory — so a plan with eight modules meant eight
+ * cards and eight chances to mistype a key nothing validated. Here the whole catalogue is a list of
+ * tick boxes, and the caps live in one place, which is also the only place the backend reads them
+ * from. Per-module limits an older plan already carries are kept as they are.
+ */
 
+const CATEGORIES = ["Starter", "Premium", "Enterprise", "Custom"];
+
+const money = (n) => (Number.isFinite(Number(n)) ? Number(n).toLocaleString("en-IN") : "0");
+
+const sectionTitle = (text, hint) => (
+  <div style={{ marginBottom: 12 }}>
+    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>{text}</div>
+    {hint && <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{hint}</div>}
+  </div>
+);
 
 const PlanForm = ({ initialValues, onClose }) => {
   const [form] = Form.useForm();
- 
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.subscriptionPlans);
 
-  const moduleOptions = [
-    "Attendance",
-    "Fees",
-    "Exam",
-    "Online Exam",
-    "Transport",
-    "Hostel",
-    "Library",
-    "Payroll",
-    "Reports",
-    "AI Features",
-  ];
+  const isEdit = Boolean(initialValues?._id);
+  const [modules, setModules] = useState([]);
+  const [isTrial, setIsTrial] = useState(false);
+  const [error, setError] = useState(null);
 
-  // 🔹 Prefill for edit
+  /* Per-module limits are shown on the plan card but nothing enforces them, so the form does not
+     ask for them — it just carries forward whatever an existing plan already has. */
+  const keptModuleLimits = useMemo(() => {
+    const kept = {};
+    (initialValues?.features || []).forEach((f) => {
+      if (f?.module && f.limits && Object.keys(f.limits).length) kept[f.module] = f.limits;
+    });
+    return kept;
+  }, [initialValues]);
+
   useEffect(() => {
+    setError(null);
     if (initialValues) {
-      const features =
-        initialValues.features?.map((f) => ({
-          module: f.module,
-          allowed: f.allowed ?? true,
-          limitKey: f.limits ? Object.keys(f.limits)[0] : "",
-          limitValue: f.limits ? Object.values(f.limits)[0] : undefined,
-        })) || [];
-
-      form.setFieldsValue({ ...initialValues, features });
+      const allowed = (initialValues.features || [])
+        .filter((f) => f?.module && f.allowed !== false)
+        .map((f) => f.module);
+      setModules(allowed);
+      setIsTrial(Boolean(initialValues.isTrialPlan));
+      form.setFieldsValue({
+        name: initialValues.name,
+        category: initialValues.category || "Starter",
+        price: initialValues.price,
+        durationInDays: initialValues.durationInDays,
+        isTrialPlan: Boolean(initialValues.isTrialPlan),
+        trialDurationInDays: initialValues.trialDurationInDays ?? undefined,
+        limits: initialValues.limits || {},
+        isActive: initialValues.isActive !== false,
+      });
     } else {
       form.resetFields();
+      setModules([]);
+      setIsTrial(false);
     }
   }, [initialValues, form]);
 
-  // 🔹 Submit
-  const onFinish = (values) => {
-    const features =
-      values.features?.map((f) => ({
-        module: f.module,
-        allowed: f.allowed ?? true,
-        limits: f.limitKey ? { [f.limitKey]: f.limitValue } : {},
-      })) || [];
+  const price = Form.useWatch("price", form);
+  const durationInDays = Form.useWatch("durationInDays", form);
 
-    const payload = { ...values, features };
+  const onFinish = async (values) => {
+    setError(null);
+    const payload = {
+      ...values,
+      trialDurationInDays: values.isTrialPlan ? values.trialDurationInDays ?? null : null,
+      features: modules.map((module) => ({
+        module,
+        allowed: true,
+        limits: keptModuleLimits[module] || {},
+      })),
+    };
 
-    if (initialValues?._id) {
-      dispatch(
-        updateSubscriptionPlan({
-          id: initialValues._id,
-          formData: payload,
-        })
-      );
-    } else {
-      dispatch(createSubscriptionPlan(payload));
+    try {
+      if (isEdit) {
+        await dispatch(updateSubscriptionPlan({ id: initialValues._id, formData: payload })).unwrap();
+      } else {
+        await dispatch(createSubscriptionPlan(payload)).unwrap();
+      }
+      onClose();
+    } catch (e) {
+      // The slice rejects with a plain message string, so a thrown object is the unusual case.
+      const text = typeof e === "string" ? e : e?.message || e?.response?.data?.message;
+      setError(text || "The plan could not be saved. Please try again.");
     }
-
-    onClose();
   };
 
+  const allModuleKeys = PLAN_MODULES.map((m) => m.key);
+  const allOn = modules.length === allModuleKeys.length;
+
   return (
-    <Form form={form} layout="vertical" onFinish={() => onFinish(form.getFieldsValue(true))}>
-      {/* PLAN DETAILS */}
-      <Card>
-        <Title level={4}>Plan Details</Title>
+    <Form
+      form={form}
+      layout="vertical"
+      requiredMark={false}
+      initialValues={{ category: "Starter", isActive: true, isTrialPlan: false, limits: {} }}
+      onFinish={onFinish}
+    >
+      {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
 
+      {/* ── the plan itself ── */}
+      {sectionTitle("Plan")}
+      <Form.Item
+        label="Name"
+        name="name"
+        rules={[{ required: true, message: "Give the plan a name" }]}
+      >
+        <Input size="large" placeholder="Starter, Premium, Enterprise…" autoFocus />
+      </Form.Item>
+
+      <Form.Item label="Category" name="category">
+        <Segmented options={CATEGORIES} />
+      </Form.Item>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         <Form.Item
-          label="Plan Name"
-          name="name"
-          rules={[{ required: true, message: "Plan name is required" }]}
+          label="Price"
+          name="price"
+          rules={[{ required: true, message: "Set a price (0 for a free plan)" }]}
+          style={{ flex: "1 1 180px" }}
         >
-          <Input size="large" placeholder="Premium / Enterprise / Starter" />
+          <InputNumber
+            min={0}
+            size="large"
+            style={{ width: "100%" }}
+            prefix="₹"
+            formatter={(v) => (v === undefined || v === "" ? "" : `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ","))}
+            parser={(v) => (v || "").replace(/,/g, "")}
+          />
         </Form.Item>
 
+        <Form.Item
+          label="Billing period"
+          name="durationInDays"
+          rules={[{ required: true, message: "How many days does the plan run for?" }]}
+          style={{ flex: "1 1 180px" }}
+        >
+          <InputNumber min={1} size="large" style={{ width: "100%" }} addonAfter="days" />
+        </Form.Item>
+      </div>
 
-        <Space size="large" style={{ display: "flex" }}>
-          <Form.Item
-            label="Plan Category"
-            name="category"
-            initialValue="Starter"
-            style={{ flex: 1 }}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: -8, marginBottom: 12 }}>
+        {DURATION_PRESETS.map((p) => (
+          <Tag.CheckableTag
+            key={p.days}
+            checked={Number(durationInDays) === p.days}
+            onChange={() => form.setFieldValue("durationInDays", p.days)}
+            style={{ padding: "3px 10px", borderRadius: 99, fontSize: 12 }}
           >
-            <Select
-              options={["Starter", "Premium", "Enterprise", "Custom"].map((v) => ({ label: v, value: v }))}
-            />
-          </Form.Item>
+            {p.label} · {p.days}d
+          </Tag.CheckableTag>
+        ))}
+      </div>
 
-          <Form.Item label="Trial Plan" name="isTrialPlan" valuePropName="checked" style={{ flex: 1 }}>
-            <Switch />
-          </Form.Item>
-        </Space>
+      {Number(price) >= 0 && Number(durationInDays) > 0 && (
+        <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>
+          A school pays <strong>₹{money(price)}</strong> every <strong>{durationInDays}</strong> days
+          {Number(durationInDays) >= 28 && (
+            <> — about ₹{money(Math.round((Number(price) / Number(durationInDays)) * 30))} a month</>
+          )}
+          .
+        </div>
+      )}
 
-        <Space size="large" style={{ display: "flex" }}>
-          <Form.Item
-            label="Price (₹)"
-            name="price"
-            rules={[{ required: true }]}
-            style={{ flex: 1 }}
-          >
-            <InputNumber min={1} size="large" className="w-full" />
-          </Form.Item>
+      <Form.Item name="isTrialPlan" valuePropName="checked" style={{ marginBottom: isTrial ? 8 : 0 }}>
+        <Checkbox onChange={(e) => setIsTrial(e.target.checked)}>
+          This is a trial plan
+        </Checkbox>
+      </Form.Item>
 
-          <Form.Item
-            label="Duration (Days)"
-            name="durationInDays"
-            rules={[{ required: true }]}
-            style={{ flex: 1 }}
-          >
-            <InputNumber min={1} size="large" className="w-full" />
-          </Form.Item>
-        </Space>
-
-        <Space size="large" style={{ display: "flex" }}>
-          <Form.Item
-            label="Trial Duration (Days)"
-            name="trialDurationInDays"
-            style={{ flex: 1 }}
-          >
-            <InputNumber min={1} size="large" className="w-full" />
-          </Form.Item>
-        </Space>
-      </Card>
+      {isTrial && (
+        <Form.Item
+          label="Trial length"
+          name="trialDurationInDays"
+          rules={[{ required: true, message: "How long does the trial last?" }]}
+          style={{ maxWidth: 220 }}
+        >
+          <InputNumber min={1} style={{ width: "100%" }} addonAfter="days" />
+        </Form.Item>
+      )}
 
       <Divider />
 
-      <Card title="Plan Limits">
-        <Space size="large" style={{ display: "flex", flexWrap: "wrap" }}>
-          <Form.Item label="Max Schools" name={["limits", "maxSchools"]}><InputNumber min={0} className="w-full" /></Form.Item>
-          <Form.Item label="Max Students" name={["limits", "maxStudents"]}><InputNumber min={0} className="w-full" /></Form.Item>
-          <Form.Item label="Max Teachers" name={["limits", "maxTeachers"]}><InputNumber min={0} className="w-full" /></Form.Item>
-          <Form.Item label="Max Storage (MB)" name={["limits", "maxStorage"]}><InputNumber min={0} className="w-full" /></Form.Item>
-          <Form.Item label="Max SMS" name={["limits", "maxSMS"]}><InputNumber min={0} className="w-full" /></Form.Item>
-          <Form.Item label="Max Users" name={["limits", "maxUsers"]}><InputNumber min={0} className="w-full" /></Form.Item>
-        </Space>
-      </Card>
-
-      <Divider />
-
-      {/* FEATURES */}
-      <Form.List name="features">
-        {(fields, { add, remove }) => (
-          <Card
-            title="Features & Modules"
-            extra={
-              <Button type="primary" icon={<PlusOutlined />} onClick={add}>
-                Add Module
-              </Button>
-            }
-          >
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              {fields.map(({ key, name }) => (
-                <Card
-                  key={key}
-                  size="small"
-                  type="inner"
-                  title={`Module ${name + 1}`}
-                  extra={
-                    <Button
-                      danger
-                      type="text"
-                      icon={<DeleteOutlined />}
-                      onClick={() => remove(name)}
-                    />
-                  }
-                >
-                  <Space size="large" style={{ display: "flex" }}>
-                    <Form.Item
-                      label="Module"
-                      name={[name, "module"]}
-                      rules={[{ required: true }]}
-                      style={{ flex: 2 }}
-                    >
-                      <Select
-                        placeholder="Select module"
-                        options={moduleOptions.map((m) => ({
-                          label: m,
-                          value: m,
-                        }))}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label="Allowed"
-                      name={[name, "allowed"]}
-                      valuePropName="checked"
-                      style={{ flex: 1 }}
-                    >
-                      <Switch />
-                    </Form.Item>
-                  </Space>
-
-                  <Space size="large" style={{ display: "flex" }}>
-                    <Form.Item
-                      label="Limit Key"
-                      name={[name, "limitKey"]}
-                      style={{ flex: 1 }}
-                    >
-                      <Input placeholder="e.g. maxStudents" />
-                    </Form.Item>
-
-                    <Form.Item
-                      label="Limit Value"
-                      name={[name, "limitValue"]}
-                      style={{ flex: 1 }}
-                    >
-                      <InputNumber className="w-full" />
-                    </Form.Item>
-                  </Space>
-                </Card>
-              ))}
-
-              {fields.length === 0 && (
-                <Text type="secondary">
-                  No modules added yet. Click “Add Module” to begin.
-                </Text>
-              )}
-            </Space>
-          </Card>
+      {/* ── modules ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        {sectionTitle(
+          "What the plan includes",
+          `${modules.length} of ${allModuleKeys.length} modules switched on`,
         )}
-      </Form.List>
+        <Button
+          type="link"
+          size="small"
+          onClick={() => setModules(allOn ? [] : allModuleKeys)}
+        >
+          {allOn ? "Clear all" : "Select all"}
+        </Button>
+      </div>
+
+      <Checkbox.Group
+        value={modules}
+        onChange={setModules}
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8, width: "100%" }}
+      >
+        {PLAN_MODULES.map((m) => {
+          const on = modules.includes(m.key);
+          return (
+            <label
+              key={m.key}
+              style={{
+                display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer",
+                padding: "10px 12px", borderRadius: 10,
+                border: `1px solid ${on ? "var(--primary)" : "var(--border-muted)"}`,
+                background: on ? "var(--primary-light)" : "transparent",
+              }}
+            >
+              <Checkbox value={m.key} />
+              <span>
+                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                  {m.key}
+                </span>
+                <span style={{ display: "block", fontSize: 12, color: "var(--text-muted)", lineHeight: 1.4 }}>
+                  {m.description}
+                </span>
+              </span>
+            </label>
+          );
+        })}
+      </Checkbox.Group>
 
       <Divider />
 
-      {/* STATUS & ACTIONS */}
-      <Card>
-        <Form.Item
-          label="Plan Status"
-          name="isActive"
-          valuePropName="checked"
-        >
-          <Switch />
-        </Form.Item>
+      {/* ── limits ── */}
+      {sectionTitle("Limits", "Leave a box empty and the plan does not cap it")}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+        {PLAN_LIMITS.map((l) => (
+          <Form.Item key={l.key} label={l.label} name={["limits", l.key]} style={{ marginBottom: 0 }}>
+            <InputNumber min={0} placeholder="Unlimited" style={{ width: "100%" }} />
+          </Form.Item>
+        ))}
+      </div>
 
-        <Space style={{ justifyContent: "flex-end", width: "100%" }}>
-          <Button onClick={() => form.resetFields()}>Reset</Button>
+      <Divider />
+
+      {/* ── status and actions ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <Form.Item name="isActive" valuePropName="checked" style={{ marginBottom: 0 }}>
+          <Switch checkedChildren="Live" unCheckedChildren="Draft" />
+        </Form.Item>
+        <Tooltip title="A draft plan stays out of the list schools can be put on">
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Schools can be put on a live plan</span>
+        </Tooltip>
+
+        <Space style={{ marginLeft: "auto" }}>
+          <Button onClick={onClose}>Cancel</Button>
           <Button type="primary" htmlType="submit" loading={loading}>
-            {initialValues ? "Update Plan" : "Create Plan"}
+            {isEdit ? "Save changes" : "Create plan"}
           </Button>
         </Space>
-      </Card>
+      </div>
     </Form>
   );
 };

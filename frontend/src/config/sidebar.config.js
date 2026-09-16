@@ -103,7 +103,6 @@ export const sidebarMenu = {
   /* ================= SUPER ADMIN ================= */
   "super admin": [
     { title: "Platform Overview", path: "superadmin", icon: LayoutDashboard },
-    { title: "Textbooks", path: "superadmin/textbooks", icon: BookOpenText },
     {
       title: "Schools",
       icon: School,
@@ -147,6 +146,7 @@ export const sidebarMenu = {
         { title: "Boards", path: "superadmin/academics/boards" },
         { title: "Board Classes", path: "superadmin/academics/boards-class" },
         { title: "Chapters & Topics", path: "superadmin/academics/chapters-topics" },
+        { title: "Textbooks", path: "superadmin/textbooks" },
         { title: "Question Bank", path: "superadmin/academics/question-bank" },
       ],
     },
@@ -214,7 +214,6 @@ export const sidebarMenu = {
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [
     { title: "Overview", path: "schooladmin", icon: LayoutDashboard },
-    { title: "Textbooks", path: "schooladmin/textbooks", icon: BookOpenText },
     {
       title: "Users",
       icon: Users,
@@ -273,6 +272,7 @@ export const sidebarMenu = {
       subMenu: [
         { title: "Classes", path: "schooladmin/classes" },
         { title: "Subjects", path: "schooladmin/subjects" },
+        { title: "Textbooks", path: "schooladmin/textbooks" },
         { title: "Timetable Planner", path: "schooladmin/timetable" },
         { title: "Time Slots", path: "schooladmin/timetable/time-slots" },
         { title: "Rooms", path: "schooladmin/timetable/rooms" },
