@@ -1,277 +1,318 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Button,
-  Table,
-  Select,
-  Space,
-  Input,
-  Popconfirm,
-  Tooltip,
-  message,
+  Button, Checkbox, Empty, Input, Popconfirm, Segmented, Select, Skeleton, Switch, Tooltip, message,
 } from "antd";
 import {
-  PlusOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  SearchOutlined,
-  ApartmentOutlined,
-  AppstoreOutlined,
-  DeleteOutlined,
-  SwapOutlined,
+  ApartmentOutlined, DeleteOutlined, PlusOutlined, SearchOutlined,
 } from "@ant-design/icons";
-import AddBoardClassModal from "../../../components/forms/AddBoardClassModal.jsx";
-import { getBoardClass, updateBoardClass, deleteBoardClass } from "../../../features/boardClassSlice.js";
-import { getBoards } from "../../../features/boardSlice.js";
 import { useDispatch, useSelector } from "react-redux";
-import PageHeader from "../../../components/layout/PageHeader";
+
 import {
-  pageWrapper,
-  pageCard,
-  toolbarRow,
-  tableHeadCss,
-  statGrid,
-  statCard,
-  statLabel,
-  statValue,
-  pill,
-} from "../../../styles/pageStyles";
+  createBoardClass, getBoardClass, updateBoardClass, deleteBoardClass,
+} from "../../../features/boardClassSlice.js";
+import { getBoards } from "../../../features/boardSlice.js";
+import { fetchAllClasses } from "../../../features/classSlice.js";
+import PageHeader from "../../../components/layout/PageHeader";
+import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 
-const { Option } = Select;
+/**
+ * Board Classes — which classes each exam board runs.
+ *
+ * There are about 480 of these pairs, and the page used to list all of them in one table, ten rows
+ * at a time, repeating the board's name down every row: 48 pages to read to answer "does this
+ * board have Class 9 yet?". Now one board is on screen at a time, its classes are cards you can
+ * switch on or off, and the classes it does not have yet are ticked and added together.
+ */
 
-function StatusBadge({ status }) {
-  const isActive = status === "active";
-  return (
-    <span style={pill(isActive ? "var(--success)" : "var(--danger)", isActive ? "rgba(220,252,231,0.2)" : "rgba(254,226,226,0.2)")}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isActive ? "var(--success)" : "var(--danger)", display: "inline-block", marginRight: 5 }} />
-      {isActive ? "Active" : "Inactive"}
-    </span>
-  );
-}
+const STORE_KEY = "boardClasses.board";
+const readBoard = () => { try { return localStorage.getItem(STORE_KEY) || null; } catch { return null; } };
+const saveBoard = (id) => { try { if (id) localStorage.setItem(STORE_KEY, id); } catch { /* a convenience only */ } };
 
-function BoardChip({ name }) {
-  if (!name) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-      <div style={{ width: 28, height: 28, borderRadius: 7, background: "var(--surface-soft)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <ApartmentOutlined style={{ color: "var(--primary)", fontSize: 12 }} />
-      </div>
-      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{name}</span>
-    </div>
-  );
-}
+const classNumber = (name = "") => Number(String(name).match(/\d+/)?.[0]) || 99;
+const titleCase = (s = "") => String(s).toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+const idOf = (v) => (!v ? "" : typeof v === "object" ? String(v._id || "") : String(v));
+const errorText = (e, fallback) => (typeof e === "string" ? e : e?.response?.data?.message) || fallback;
 
-function ClassCell({ name }) {
-  return (
-    <span style={pill("var(--primary)", "var(--surface-soft)")}>
-      {name}
-    </span>
-  );
-}
+const label = (text) => (
+  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+    {text}
+  </div>
+);
 
 export default function BoardClassPage() {
   const dispatch = useDispatch();
 
   const { boardClass = [], loading } = useSelector((state) => state.boardClass);
   const boardsState = useSelector((state) => state.boards || {});
-  const boards = boardsState?.boards?.boards || boardsState?.boards || [];
+  const { classList = [] } = useSelector((state) => state.class || {});
 
-  const [selectedBoard, setSelectedBoard] = useState(null);
+  const [boardId, setBoardId] = useState(readBoard);
+  const [show, setShow] = useState("all");      // all | active | inactive
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [open, setOpen] = useState(false);
+  const [toAdd, setToAdd] = useState([]);
+  const [adding, setAdding] = useState(false);
 
-  useEffect(() => {
-    dispatch(getBoards());
-  }, [dispatch]);
+  useEffect(() => { dispatch(getBoards()); dispatch(fetchAllClasses()); }, [dispatch]);
+  useEffect(() => { dispatch(getBoardClass({})); }, [dispatch]);
 
-  useEffect(() => {
-    dispatch(getBoardClass(selectedBoard ? { boardId: selectedBoard } : {}));
-  }, [selectedBoard, dispatch]);
+  // The boards slice has been seen holding either the array itself or { boards: [...] }.
+  const boardList = useMemo(() => {
+    const raw = boardsState?.boards?.boards || boardsState?.boards || [];
+    return Array.isArray(raw) ? raw : [];
+  }, [boardsState]);
 
-  const filtered = useMemo(() => {
-    return boardClass.filter((item) => {
-      const matchSearch =
-        !search ||
-        item.boardId?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        item.name?.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "" ? true : item.status === statusFilter;
-      return matchSearch && matchStatus;
+  /* every board with the classes it runs, so the gaps show before you pick one */
+  const byBoard = useMemo(() => {
+    const map = new Map();
+    boardClass.forEach((row) => {
+      const id = idOf(row.boardId);
+      if (!map.has(id)) map.set(id, []);
+      map.get(id).push(row);
     });
-  }, [boardClass, search, statusFilter]);
+    return map;
+  }, [boardClass]);
 
-  const totalClasses = boardClass.length;
-  const activeClasses = boardClass.filter((c) => c.status === "active").length;
-  const inactiveClasses = totalClasses - activeClasses;
-  const boardCount = new Set(boardClass.map((c) => c.boardId?._id).filter(Boolean)).size;
+  useEffect(() => {
+    if (!boardId && boardList.length) {
+      const cbse = boardList.find((b) => /cbse/i.test(b.code || b.name || ""));
+      setBoardId(String((cbse || boardList[0])._id));
+    }
+  }, [boardId, boardList]);
+  useEffect(() => { saveBoard(boardId); setToAdd([]); }, [boardId]);
 
-  const refresh = () => dispatch(getBoardClass(selectedBoard ? { boardId: selectedBoard } : {}));
+  const board = boardList.find((b) => String(b._id) === String(boardId)) || null;
+  const rows = useMemo(() => {
+    const list = (byBoard.get(String(boardId)) || []).slice();
+    return list.sort((a, b) => classNumber(a.name) - classNumber(b.name));
+  }, [byBoard, boardId]);
 
-  const handleToggleStatus = async (record) => {
-    const nextStatus = record.status === "active" ? "inactive" : "active";
+  const shown = useMemo(() => rows.filter((r) => {
+    if (show === "active" && r.status !== "active") return false;
+    if (show === "inactive" && r.status === "active") return false;
+    if (search && !String(r.name || "").toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }), [rows, show, search]);
+
+  /* the classes this board does not run yet */
+  const missing = useMemo(() => {
+    const taken = new Set(rows.map((r) => idOf(r.classId)));
+    return classList
+      .filter((c) => c?._id && !taken.has(String(c._id)))
+      .sort((a, b) => classNumber(a.name) - classNumber(b.name));
+  }, [classList, rows]);
+
+  const activeCount = rows.filter((r) => r.status === "active").length;
+
+  const toggleStatus = async (record) => {
+    const status = record.status === "active" ? "inactive" : "active";
     try {
-      await dispatch(
-        updateBoardClass({ id: record._id, data: { status: nextStatus } })
-      ).unwrap();
-      message.success(`Marked as ${nextStatus}`);
-    } catch (err) {
-      message.error(typeof err === "string" ? err : "Failed to update status");
+      await dispatch(updateBoardClass({ id: record._id, data: { status } })).unwrap();
+      dispatch(getBoardClass({}));
+    } catch (e) {
+      message.error(errorText(e, "Could not change the status"));
     }
   };
 
-  const handleDelete = async (record) => {
+  const remove = async (record) => {
     try {
       await dispatch(deleteBoardClass(record._id)).unwrap();
-      message.success("Board class deleted");
-    } catch (err) {
-      message.error(typeof err === "string" ? err : "Failed to delete board class");
+      message.success(`${record.name} removed from ${board?.name || "this board"}`);
+      dispatch(getBoardClass({}));
+    } catch (e) {
+      message.error(errorText(e, "Could not remove the class"));
     }
   };
 
-  const columns = [
-    {
-      title: "Board Name",
-      render: (_, record) => <BoardChip name={record.boardId?.name} />,
-    },
-    {
-      title: "Class",
-      dataIndex: "name",
-      render: (name) => <ClassCell name={name} />,
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => <StatusBadge status={status} />,
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      width: 100,
-      render: (_, record) => (
-        <Space size={4}>
-          <Tooltip title={record.status === "active" ? "Mark Inactive" : "Mark Active"}>
-            <Button size="small" icon={<SwapOutlined />} onClick={() => handleToggleStatus(record)} />
-          </Tooltip>
-          <Popconfirm
-            title="Delete this board class?"
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => handleDelete(record)}
-          >
-            <Tooltip title="Delete">
-              <Button size="small" danger icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const addChosen = async () => {
+    if (!boardId || !toAdd.length) return;
+    setAdding(true);
+    // The endpoint takes one pair at a time, so a whole board is filled in one pass of small calls.
+    const failures = [];
+    for (const classId of toAdd) {
+      try {
+        await dispatch(createBoardClass({ boardId, classId, status: "active" })).unwrap();
+      } catch {
+        failures.push(classList.find((c) => String(c._id) === String(classId))?.name || classId);
+      }
+    }
+    setAdding(false);
+    setToAdd([]);
+    dispatch(getBoardClass({}));
+    if (failures.length) message.error(`Could not add: ${failures.join(", ")}`);
+    else message.success(`Added ${toAdd.length} class${toAdd.length === 1 ? "" : "es"} to ${board?.name}`);
+  };
 
   return (
     <div style={pageWrapper}>
-      <style>{tableHeadCss("bc-table")}</style>
-
       <PageHeader
         title="Board Classes"
-        subtitle="Manage classes assigned to each exam board"
+        subtitle="Which classes each exam board runs"
         icon={<ApartmentOutlined />}
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)} style={{ fontWeight: 600, borderRadius: 10 }}>
-            Add Board Class
-          </Button>
+          <Select
+            style={{ minWidth: 280 }}
+            showSearch
+            optionFilterProp="label"
+            value={boardId || undefined}
+            onChange={(v) => setBoardId(v)}
+            placeholder="Board"
+            options={boardList.map((b) => ({
+              value: String(b._id),
+              label: `${b.code ? `${b.code} — ` : ""}${titleCase(b.name)}  ·  ${(byBoard.get(String(b._id)) || []).length} classes`,
+            }))}
+          />
         }
       />
 
-      <div className="stat-grid" style={statGrid(160)}>
-        <div style={statCard({ color: "var(--primary)" })}>
-          <div>
-            <div style={statLabel("var(--primary)")}>Total Classes</div>
-            <div style={statValue("var(--primary)")}>{totalClasses}</div>
-          </div>
-          <AppstoreOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
-        </div>
-        <div style={statCard({ color: "var(--success)" })}>
-          <div>
-            <div style={statLabel("var(--success)")}>Active Classes</div>
-            <div style={statValue("var(--success)")}>{activeClasses}</div>
-          </div>
-          <CheckCircleOutlined style={{ fontSize: 26, color: "var(--success)", opacity: 0.4 }} />
-        </div>
-        <div style={statCard({ color: "var(--danger)" })}>
-          <div>
-            <div style={statLabel("var(--danger)")}>Inactive Classes</div>
-            <div style={statValue("var(--danger)")}>{inactiveClasses}</div>
-          </div>
-          <StopOutlined style={{ fontSize: 26, color: "var(--danger)", opacity: 0.4 }} />
-        </div>
-        <div style={statCard({ color: "var(--info)" })}>
-          <div>
-            <div style={statLabel("var(--info)")}>Boards Linked</div>
-            <div style={statValue("var(--info)")}>{boardCount}</div>
-          </div>
-          <ApartmentOutlined style={{ fontSize: 26, color: "var(--info)", opacity: 0.4 }} />
-        </div>
-      </div>
+      {!board ? (
+        <div style={sectionPanel}><Empty description="Pick a board to see the classes it runs" /></div>
+      ) : (
+        <>
+          <div style={sectionPanel}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
+              <div style={{ flex: "1 1 220px" }}>
+                <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>
+                  {titleCase(board.name)}
+                  {board.code && <span style={{ color: "var(--text-muted)", fontWeight: 600 }}> · {board.code}</span>}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 2 }}>
+                  {rows.length} class{rows.length === 1 ? "" : "es"} · {activeCount} active
+                  {missing.length > 0 && ` · ${missing.length} not added yet`}
+                </div>
+              </div>
+              <Segmented
+                value={show}
+                onChange={setShow}
+                options={[
+                  { value: "all", label: `All ${rows.length}` },
+                  { value: "active", label: `Active ${activeCount}` },
+                  { value: "inactive", label: `Inactive ${rows.length - activeCount}` },
+                ]}
+              />
+              <Input
+                allowClear
+                prefix={<SearchOutlined />}
+                placeholder="Search a class"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ maxWidth: 220 }}
+              />
+            </div>
 
-      <div style={pageCard}>
-        <div className="page-toolbar" style={{ ...toolbarRow, padding: "14px 20px", borderBottom: "1px solid var(--border-muted)" }}>
-          <Space wrap>
-            <Input
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
-              placeholder="Search board or class name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ width: 240 }}
-              allowClear
-            />
-            <Select
-              placeholder="Filter by Board"
-              allowClear
-              value={selectedBoard || undefined}
-              onChange={(v) => setSelectedBoard(v || null)}
-              showSearch
-              optionFilterProp="children"
-              style={{ width: 200 }}
-              suffixIcon={<ApartmentOutlined style={{ fontSize: 11 }} />}
-            >
-              {(Array.isArray(boards) ? boards : []).map((board) => (
-                <Option key={board._id} value={board._id}>{board.name}</Option>
-              ))}
-            </Select>
-            <Select
-              placeholder="All Status"
-              allowClear
-              value={statusFilter || undefined}
-              onChange={(v) => setStatusFilter(v ?? "")}
-              style={{ width: 140 }}
-            >
-              <Option value="active">Active</Option>
-              <Option value="inactive">Inactive</Option>
-            </Select>
-          </Space>
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            Showing <strong>{filtered.length}</strong> of <strong>{totalClasses}</strong> classes
-          </span>
-        </div>
+            {loading && !rows.length ? (
+              <Skeleton active paragraph={{ rows: 3 }} />
+            ) : shown.length === 0 ? (
+              <Empty description={rows.length ? "Nothing matches" : "This board has no classes yet — add some below"} />
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 10 }}>
+                {shown.map((row) => {
+                  const on = row.status === "active";
+                  return (
+                    <div
+                      key={row._id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "10px 12px", borderRadius: 10,
+                        border: `1px solid ${on ? "var(--border-muted)" : "rgba(var(--danger-rgb),0.25)"}`,
+                        background: on ? "transparent" : "var(--danger-light)",
+                      }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+                        {titleCase(row.name)}
+                        {!on && <span style={{ display: "block", fontSize: 11, color: "var(--danger-hover)", fontWeight: 500 }}>Inactive</span>}
+                      </span>
+                      <Tooltip title={on ? "In use — switch off to retire it" : "Retired — switch on to use it"}>
+                        <Switch size="small" checked={on} onChange={() => toggleStatus(row)} />
+                      </Tooltip>
+                      <Popconfirm
+                        title={`Remove ${row.name} from ${board.name}?`}
+                        description="Anything already filed under it keeps pointing at it."
+                        okText="Remove"
+                        okButtonProps={{ danger: true }}
+                        onConfirm={() => remove(row)}
+                      >
+                        <Tooltip title="Remove"><Button type="text" size="small" danger icon={<DeleteOutlined />} /></Tooltip>
+                      </Popconfirm>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-        <Table
-          className="bc-table"
-          rowKey="_id"
-          columns={columns}
-          dataSource={filtered}
-          loading={loading}
-          scroll={{ x: "max-content" }}
-          pagination={{ pageSize: 10, size: "small", showSizeChanger: false, style: { padding: "12px 20px" } }}
-        />
-      </div>
+          {/* ── what this board is missing ── */}
+          <div style={sectionPanel}>
+            {label(`Not added to ${board.name} yet`)}
+            {missing.length === 0 ? (
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                This board already runs every class on the list.
+              </div>
+            ) : (
+              <>
+                <Checkbox.Group
+                  value={toAdd}
+                  onChange={setToAdd}
+                  style={{ display: "flex", flexWrap: "wrap", gap: 8 }}
+                >
+                  {missing.map((c) => (
+                    <Checkbox key={c._id} value={String(c._id)} style={{ marginInlineStart: 0 }}>
+                      {titleCase(c.name)}
+                    </Checkbox>
+                  ))}
+                </Checkbox.Group>
+                <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    disabled={!toAdd.length}
+                    loading={adding}
+                    onClick={addChosen}
+                  >
+                    {toAdd.length ? `Add ${toAdd.length} to ${board.name}` : "Add to this board"}
+                  </Button>
+                  {toAdd.length > 0 && <Button onClick={() => setToAdd([])}>Clear</Button>}
+                  <Button type="link" onClick={() => setToAdd(missing.map((c) => String(c._id)))}>
+                    Select all
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
 
-      <AddBoardClassModal
-        open={open}
-        setOpen={setOpen}
-        onSuccess={() => {
-          setOpen(false);
-          refresh();
-        }}
-      />
+          {/* ── how the other boards stand ── */}
+          <div style={sectionPanel}>
+            {label("Every board")}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
+              {boardList.map((b) => {
+                const list = byBoard.get(String(b._id)) || [];
+                const active = list.filter((r) => r.status === "active").length;
+                const current = String(b._id) === String(boardId);
+                return (
+                  <button
+                    key={b._id}
+                    type="button"
+                    onClick={() => setBoardId(String(b._id))}
+                    style={{
+                      textAlign: "left", cursor: "pointer",
+                      padding: "9px 12px", borderRadius: 10,
+                      border: `1px solid ${current ? "var(--primary)" : "var(--border-muted)"}`,
+                      background: current ? "var(--primary-light)" : "transparent",
+                      color: "inherit", font: "inherit",
+                    }}
+                  >
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                      {titleCase(b.name)}
+                    </span>
+                    <span style={{ display: "block", fontSize: 12, color: list.length ? "var(--text-muted)" : "var(--warning-hover)" }}>
+                      {list.length ? `${list.length} classes · ${active} active` : "no classes yet"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

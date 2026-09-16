@@ -34,8 +34,12 @@ const DIFFICULTY = [
  *                 no schoolId of their own (not tied to one school) — the parent page resolves
  *                 which school is currently selected and passes it down. Omit for every other role,
  *                 which falls back to the logged-in user's own school as before.
+ *  academicYear — the year the parent page is working in, as { _id, name }. A page that lets the
+ *                 user pick a year must pass it: the year picked there is not the same thing as
+ *                 the one in the header, and the form used to read only the header's, which is
+ *                 why it could ask for a year that had already been chosen.
  */
-const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp }) => {
+const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp, academicYear: academicYearProp }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
 
@@ -47,7 +51,8 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp 
   const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
 
   const schoolId       = schoolIdProp || user?.schoolId?._id || user?.schoolId || user?.school?._id;
-  const academicYearId = selectedAcademicYear?._id || null;
+  const academicYear   = academicYearProp || selectedAcademicYear || null;
+  const academicYearId = academicYear?._id || null;
 
   const [saving,          setSaving]          = useState(false);
   const [options,         setOptions]         = useState([]);
@@ -166,6 +171,9 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp 
     const payload = {
       ...values,
       schoolId,
+      // Kept on the question so a year can be filtered on directly; until now nothing sent it and
+      // every question was saved without one.
+      academicYearId,
       chapterId:      values.chapterId      || null,
       options,
       correctAnswers: correctAnswers.filter(Boolean),
@@ -206,9 +214,9 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp 
         border: "1px solid rgba(var(--warning-rgb),0.25)", color: "var(--warning-hover)",
       }}>
         <div style={{ fontSize: 20, marginBottom: 8 }}>⚠️</div>
-        <div style={{ fontWeight: 700 }}>Academic Year select karein</div>
+        <div style={{ fontWeight: 700 }}>Pick an academic year first</div>
         <div style={{ fontSize: 13, marginTop: 4 }}>
-          Classes tabhi load hongi jab academic year select ho.
+          Classes belong to one, so there is nothing to choose from until a year is set.
         </div>
       </div>
     );
@@ -228,7 +236,7 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp 
         {isEditMode ? <EditOutlined /> : <PlusOutlined />}
         <span>{isEditMode ? "Edit Mode" : "New Question"}</span>
         <span style={{ marginLeft: "auto", opacity: 0.7 }}>
-          {selectedAcademicYear?.name || academicYearId}
+          {academicYear?.name || academicYearId}
         </span>
       </div>
 

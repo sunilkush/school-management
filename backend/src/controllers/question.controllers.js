@@ -43,7 +43,9 @@ export const createQuestion = asyncHandler(async (req, res) => {
     marks,
     negativeMarks,
     tags,
-    isActive
+    isActive,
+    academicYearId,
+    boardId
   } = req.body;
 
   // 🔐 Basic required checks
@@ -69,6 +71,11 @@ export const createQuestion = asyncHandler(async (req, res) => {
       .json(new ApiResponse(400, null, "Invalid schoolClassId or subjectId"));
   }
 
+  // The class a question belongs to already sits in one academic year, but storing the year on the
+  // question too is what lets a year be filtered on directly. An id that is not one is ignored
+  // rather than rejected — it is not worth failing a question over.
+  const validId = (value) => (value && mongoose.Types.ObjectId.isValid(value) ? value : null);
+
   const payload = {
     schoolId,
     schoolClassId,
@@ -84,6 +91,8 @@ export const createQuestion = asyncHandler(async (req, res) => {
     negativeMarks,
     tags,
     isActive,
+    academicYearId: validId(academicYearId),
+    boardId: validId(boardId),
     createdBy: user._id
   };
 
@@ -146,8 +155,10 @@ export const bulkCreateQuestionsFromExcel = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, null, "Questions payload is empty"));
     }
 
+    const bulkYearId = mongoose.Types.ObjectId.isValid(req.body?.academicYearId) ? req.body.academicYearId : null;
     const questions = rows.map((row) => ({
       schoolId,
+      academicYearId: mongoose.Types.ObjectId.isValid(row.academicYearId) ? row.academicYearId : bulkYearId,
       subjectId: row.subjectId,
       schoolClassId: row.schoolClassId,
       chapterId: row.chapterId || row.chapter || null,
@@ -204,6 +215,9 @@ export const getQuestions = asyncHandler(async (req, res) => {
 
     if (difficulty) filters.difficulty = difficulty;
     if (subjectId) filters.subjectId = subjectId;
+    // Questions written before the year was stored on them have none, so this only narrows when
+    // it is actually asked for.
+    if (req.query.academicYearId) filters.academicYearId = req.query.academicYearId;
     if (questionType) filters.questionType = questionType;
     if (schoolClassId) filters.schoolClassId = schoolClassId;
     if (chapterId) filters.chapterId = chapterId;

@@ -317,7 +317,7 @@ const downloadTemplate = (classAssignTeacher = []) => {
  *                  downloadable template — classAssignTeacher (this teacher's assigned classes)
  *                  doesn't apply to Super Admin, who isn't assigned to any class
  */
-const BulkUploadQuestions = ({ onSuccess, schoolId, classOptions: classOptionsProp }) => {
+const BulkUploadQuestions = ({ onSuccess, schoolId, academicYearId, classOptions: classOptionsProp }) => {
   const dispatch = useDispatch();
 
   const { classAssignTeacher = [] } = useSelector((s) => s.class || {});
@@ -383,7 +383,11 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, classOptions: classOptionsPr
     setError(null);
     try {
       const parsed = parseRows(rows);
-      await dispatch(bulkCreateQuestions(schoolId ? { questions: parsed, schoolId } : parsed)).unwrap();
+      const body = { questions: parsed };
+      if (schoolId) body.schoolId = schoolId;
+      // Stamp the year the page is working in on every row, the same as a single question gets.
+      if (academicYearId) body.academicYearId = academicYearId;
+      await dispatch(bulkCreateQuestions(schoolId || academicYearId ? body : parsed)).unwrap();
       setDone(true);
       setRows([]);
       onSuccess?.();

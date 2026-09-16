@@ -254,10 +254,40 @@ const QuestionBank = () => {
     return () => { cancelled = true; };
   }, [classId, subjectId]);
 
+  /**
+   * What this user is allowed to see: class id → the subjects they hold in it.
+   *
+   * A Super Admin sees the whole school. A teacher only gets the classes they are assigned to, and
+   * within each one only the subjects they teach — the assigned-classes endpoint already narrows
+   * the list that way (a class teacher gets the whole section, a subject teacher only their own),
+   * so the page must not widen it again from whatever the questions happen to mention.
+   */
+  const allowed = useMemo(() => {
+    if (isSuperAdmin) return null;
+    const map = new Map();
+    classList.forEach((c) => {
+      const id = String(c?._id || '');
+      if (!id) return;
+      const subs = new Set();
+      [...(c?.subjects || []), ...(c?.sections || []).flatMap((s) => s?.subjects || [])]
+        .forEach((s) => { const sid = idOf(s?.subjectId || s?._id); if (sid) subs.add(sid); });
+      map.set(id, subs);
+    });
+    return map;
+  }, [isSuperAdmin, classList]);
+
+  const canSee = useCallback((q) => {
+    if (!allowed) return true;
+    const subs = allowed.get(idOf(q.schoolClassId));
+    if (!subs) return false;
+    return subs.size === 0 || subs.has(idOf(q.subjectId));
+  }, [allowed]);
+
   /* ── classes, with how many questions each one has ── */
   const classes = useMemo(() => {
     const counts = new Map();
     questions.forEach((q) => {
+      if (!canSee(q)) return;
       const k = idOf(q.schoolClassId);
       counts.set(k, (counts.get(k) || 0) + 1);
     });
@@ -265,7 +295,7 @@ const QuestionBank = () => {
       .filter((c) => c?._id)
       .sort((a, b) => classNumber(a?.name) - classNumber(b?.name))
       .map((c) => ({ id: String(c._id), name: c.name, raw: c, questions: counts.get(String(c._id)) || 0 }));
-  }, [classList, questions]);
+  }, [classList, questions, canSee]);
 
   const currentClass = useMemo(
     () => classes.find((c) => c.id === String(classId)) || null,
@@ -286,18 +316,21 @@ const QuestionBank = () => {
     questions.forEach((q) => {
       if (idOf(q.schoolClassId) !== currentClass.id) return;
       const sid = idOf(q.subjectId);
-      // A question can sit under a subject the class no longer lists — still show it.
-      if (!map.has(sid) && sid) map.set(sid, { id: sid, name: q.subjectId?.name || "Other", questions: 0 });
+      // A question can sit under a subject the class no longer lists. Show it to whoever runs the
+      // school; do not use it to hand a teacher a subject they were never given.
+      if (!map.has(sid) && sid && isSuperAdmin) map.set(sid, { id: sid, name: q.subjectId?.name || "Other", questions: 0 });
       if (map.has(sid)) map.get(sid).questions += 1;
     });
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [currentClass, questions]);
+  }, [currentClass, questions, isSuperAdmin]);
 
   /* ── the questions of the chosen class + subject ── */
   const subjectQuestions = useMemo(() => {
     if (!classId || !subjectId) return [];
-    return questions.filter((q) => idOf(q.schoolClassId) === String(classId) && idOf(q.subjectId) === String(subjectId));
-  }, [questions, classId, subjectId]);
+    return questions.filter((q) => idOf(q.schoolClassId) === String(classId)
+      && idOf(q.subjectId) === String(subjectId)
+      && canSee(q));
+  }, [questions, classId, subjectId, canSee]);
 
   /* ── chapter chips: every chapter of the subject plus whatever the questions point at ── */
   const chapters = useMemo(() => {
@@ -387,6 +420,11 @@ const QuestionBank = () => {
 
   const canAdd = Boolean(schoolId && ayId);
   const subjectName = subjects.find((s) => s.id === String(subjectId))?.name || "";
+  // The form needs the year chosen here, not the one in the header — they are not the same thing.
+  const currentYear = useMemo(
+    () => academicYears.find((y) => String(y._id) === String(ayId)) || null,
+    [academicYears, ayId],
+  );
 
   return (
     <div style={pageWrapper}>
@@ -623,6 +661,7 @@ const QuestionBank = () => {
           initialData={modal === "edit" ? editQuestion : prefill}
           onSuccess={afterSave}
           schoolId={isSuperAdmin ? selectedSchool : undefined}
+          academicYear={currentYear}
         />
       </Modal>
 
@@ -640,6 +679,7 @@ const QuestionBank = () => {
         <BulkUploadQuestions
           onSuccess={afterSave}
           schoolId={isSuperAdmin ? selectedSchool : undefined}
+          academicYearId={ayId || undefined}
           classOptions={isSuperAdmin ? schoolClasses : undefined}
         />
       </Modal>

@@ -12,6 +12,7 @@ import {
 } from "../../features/attendanceSlice";
 import { fetchSchoolClasses }     from "../../features/schoolClassSlice";
 import { fetchSchools }           from "../../features/schoolSlice";
+import { fetchAllAcademicYears }  from "../../features/academicYearSlice";
 import BulkAttendanceTable        from "../../components/attendance/BulkAttendanceTable";
 import { ATTENDANCE_ROLE_OPTIONS } from "../../utils/attendanceRoles";
 import PageHeader                 from "../../components/layout/PageHeader";
@@ -36,13 +37,30 @@ const MarkAttendancePage = () => {
   const { user }                 = useSelector((s) => s.auth || {});
   const { schoolClasses = [] }   = useSelector((s) => s.schoolClass || {});
   const { schools = [] }         = useSelector((s) => s.school || {});
-  const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+  const { selectedAcademicYear, academicYears = [] } = useSelector((s) => s.academicYear || {});
 
   const isSuperAdmin = user?.role?.name === "Super Admin";
   const [saSchoolId, setSaSchoolId] = useState(null);
 
-  const schoolId       = isSuperAdmin ? saSchoolId : (user?.school?._id || null);
-  const academicYearId = selectedAcademicYear?._id || selectedAcademicYear || null;
+  const schoolId = isSuperAdmin ? saSchoolId : (user?.school?._id || null);
+
+  /**
+   * The year to work in: the chosen school's own running year.
+   *
+   * The header's year belongs to whoever is signed in, which for a Super Admin is nobody's school
+   * in particular — so using it here loaded the classes of some other school's year, or of none.
+   * The school's active year is the one its classes, sections and enrolments are filed under.
+   */
+  const academicYear = useMemo(() => {
+    if (!schoolId) return null;   // nothing to say until a school is chosen
+    const ofThisSchool = academicYears.filter((y) => String(y.schoolId?._id || y.schoolId || "") === String(schoolId));
+    const pool = ofThisSchool.length ? ofThisSchool : academicYears;
+    return pool.find((y) => y.isActive)
+      || (String(selectedAcademicYear?.schoolId || "") === String(schoolId) ? selectedAcademicYear : null)
+      || pool[0]
+      || null;
+  }, [academicYears, selectedAcademicYear, schoolId]);
+  const academicYearId = academicYear?._id || null;
 
   /* time state: { [userId]: dayjs | null } */
   const [checkIns,  setCheckIns]  = useState({});
@@ -63,10 +81,17 @@ const MarkAttendancePage = () => {
 
   useEffect(() => { if (isSuperAdmin) dispatch(fetchSchools()); }, [isSuperAdmin, dispatch]);
 
+  /* A school's years have to be in hand before its running one can be picked. */
+  useEffect(() => {
+    if (schoolId) dispatch(fetchAllAcademicYears(schoolId));
+  }, [schoolId, dispatch]);
+
   useEffect(() => {
     if (!schoolId) return;
-    dispatch(setAttendanceFilters({ schoolId }));
-    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+    // A class picked under one year does not exist under another, so it goes when the year moves.
+    dispatch(setAttendanceFilters({ schoolId, classId: null, sectionId: null }));
+    // Without a year this would return every class the school has ever had, across all years.
+    if (academicYearId) dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
   }, [schoolId, academicYearId, dispatch]);
 
   /* Reset times when role changes (student ↔ staff) */
@@ -160,11 +185,27 @@ const MarkAttendancePage = () => {
             </div>
           )}
 
+          {/* Which year everything below comes from — the school's own, not the header's. */}
+          <div>
+            <FilterLabel>Academic year</FilterLabel>
+            <div style={{
+              height: 32, display: "flex", alignItems: "center", padding: "0 11px",
+              border: "1px solid var(--border-muted)", borderRadius: 6,
+              fontSize: 14, color: academicYear ? "var(--text-primary)" : "var(--text-muted)",
+              background: "var(--surface-soft)",
+            }}>
+              {academicYear
+                ? `${academicYear.name}${academicYear.isActive ? " · running" : ""}`
+                : (schoolId ? "This school has no year set up" : "Pick a school")}
+            </div>
+          </div>
+
           <div>
             <FilterLabel>Class</FilterLabel>
             <Select
-              placeholder="Select class" style={{ width: "100%" }}
-              value={filters.classId || undefined} allowClear disabled={!schoolId}
+              placeholder={academicYearId ? "Select class" : "Pick a school first"}
+              style={{ width: "100%" }}
+              value={filters.classId || undefined} allowClear disabled={!schoolId || !academicYearId}
               options={classes.map((c) => ({ value: c._id, label: c.name }))}
               onChange={(val) => dispatch(setAttendanceFilters({ classId: val || null, sectionId: null }))}
             />
