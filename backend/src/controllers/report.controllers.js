@@ -26,7 +26,8 @@ export const getSchoolOverviewReport = async (req, res, next) => {
     const schoolObjId = new mongoose.Types.ObjectId(schoolId);
     const academicObjId = new mongoose.Types.ObjectId(academicYearId);
     const academicYear = await AcademicYear.findById(academicObjId);
-    if (!academicYear) throw new ApiError(404, "Academic Year not found");
+    // A year of some other school would report this school's staff under that school's year name.
+    if (!academicYear || String(academicYear.schoolId) !== String(schoolId)) throw new ApiError(404, "Academic Year not found");
     const roleWise = await User.aggregate([
       { $match: { schoolId: schoolObjId, isActive: true, isDeleted: { $ne: true } } },
       { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleData" } },
@@ -35,14 +36,20 @@ export const getSchoolOverviewReport = async (req, res, next) => {
     ]);
     
     
-    const totalStudents = await StudentEnrollment.countDocuments({
+    // Who studied in the school that year. Counting only "Active" gave a finished year no students
+    // at all once its classes were promoted, and the class and gender splits counted everyone —
+    // left and transferred too — so they never added up to the total beside them. All four now
+    // count the same students: those still there, and those who finished the year.
+    const studiedThatYear = {
       schoolId: schoolObjId,
       academicYearId: academicObjId,
-      status: "Active",
-    });
+      status: { $in: ["Active", "Promoted", "Alumni"] },
+    };
+
+    const totalStudents = await StudentEnrollment.countDocuments(studiedThatYear);
 
     const classWise = await StudentEnrollment.aggregate([
-      { $match: { schoolId: schoolObjId, academicYearId: academicObjId } },
+      { $match: studiedThatYear },
       { $lookup: { from: "schoolclasses", localField: "schoolClassId", foreignField: "_id", as: "classData" } },
       { $unwind: "$classData" },
       { $group: { _id: "$classData.name", count: { $sum: 1 } } },
@@ -50,23 +57,24 @@ export const getSchoolOverviewReport = async (req, res, next) => {
     ]);
 
     const sectionWise = await StudentEnrollment.aggregate([
-      { $match: { schoolId: schoolObjId, academicYearId: academicObjId } },
+      { $match: studiedThatYear },
       { $lookup: { from: "sections", localField: "sectionId", foreignField: "_id", as: "sectionData" } },
       { $unwind: "$sectionData" },
       { $group: { _id: "$sectionData.name", count: { $sum: 1 } } },
       { $sort: { _id: 1 } },
     ]);
 
-    const genderStats = await Student.aggregate([
-      { $lookup: { from: "studentenrollments", localField: "_id", foreignField: "studentId", as: "enroll" } },
-      { $unwind: "$enroll" },
-      { $match: { "enroll.schoolId": schoolObjId, "enroll.academicYearId": academicObjId } },
-      { $group: { _id: "$gender", count: { $sum: 1 } } },
+    // Starts from this school's enrolments, not from every student on the platform.
+    const genderStats = await StudentEnrollment.aggregate([
+      { $match: studiedThatYear },
+      { $lookup: { from: Student.collection.name, localField: "studentId", foreignField: "_id", as: "student" } },
+      { $unwind: "$student" },
+      { $group: { _id: "$student.gender", count: { $sum: 1 } } },
     ]);
     const genderMap = { Male: "Male", Female: "Female", Other: "Other" };
     const genderStatsFormatted = genderStats.map((g) => ({
       ...g,
-      _id: genderMap[g._id] || g._id,
+      _id: genderMap[g._id] || g._id || null,
     }));
     
 
@@ -97,7 +105,9 @@ export const getReport = async (req, res, next) => {
     const reportQuery = req.userRole?.name === "Super Admin" ? Report.find() : Report.find({ school: req.user.schoolId });
 
     const features = new APIFeatures(
-      reportQuery.populate("school", "name").populate("generatedBy", "name"),
+      // The list shows each report's session, so it has to be populated — it came back as a bare id
+      // and every row read "-".
+      reportQuery.populate("school", "name").populate("session", "name startDate endDate").populate("generatedBy", "name"),
       req.query
     )
       .filter()
@@ -156,7 +166,10 @@ export const deleteReport = async (req, res, next) => {
 
 export const viewReport = async (req, res, next) => {
   try {
-    const report = await Report.findById(req.params.id).populate("school", "name").populate("generatedBy", "name");
+    const report = await Report.findById(req.params.id)
+      .populate("school", "name")
+      .populate("session", "name startDate endDate")
+      .populate("generatedBy", "name");
 
     if (!report) throw new ApiError(404, "Report not found");
     if (req.userRole?.name !== "Super Admin") ensureSchoolAccess(req, report.school);

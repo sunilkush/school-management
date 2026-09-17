@@ -131,6 +131,7 @@ const schoolSlice = createSlice({
       // ✅ Fetch All
       .addCase(fetchSchools.pending, (state) => {
         state.loading = true;
+        state.error = null;
         state.status = "loading";
       })
       .addCase(fetchSchools.fulfilled, (state, action) => {

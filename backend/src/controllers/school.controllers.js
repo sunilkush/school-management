@@ -10,6 +10,15 @@ import { SchoolBoard } from '../models/School_board.model.js';
 import { escapeRegex } from '../utils/escapeRegex.js';
 import { resolveSchoolId } from '../utils/resolveSchoolId.js';
 import mongoose from 'mongoose';
+import { User } from '../models/user.model.js';
+import { Student } from '../models/student.model.js';
+import { SchoolClass } from '../models/schoolClass.model.js';
+import { StudentEnrollment } from '../models/StudentEnrollment.model.js';
+import { SubscriptionInvoice } from '../models/SubscriptionInvoice.model.js';
+import { SubscriptionPayment } from '../models/SubscriptionPayment.model.js';
+import { AcademicYear } from '../models/AcademicYear.model.js';
+import { Role } from '../models/Roles.model.js';
+import { forgetSchoolAccess } from '../utils/schoolAccess.js';
 
 
 const registerSchool = asyncHandler(async (req, res) => {
@@ -245,6 +254,15 @@ const getAllSchools = asyncHandler(async (req, res) => {
 
         subscriptionPlan: "$subscription.plan",
 
+        // The list shows whose subscription needs attention, so it needs the state and the end
+        // date as well as the plan — not one request per school to find out.
+        subscription: {
+          status: "$subscription.status",
+          startDate: "$subscription.startDate",
+          endDate: "$subscription.endDate",
+          paymentStatus: "$subscription.paymentStatus",
+        },
+
         createdAt: 1,
       },
     },
@@ -342,6 +360,7 @@ const updateSchool = asyncHandler(async (req, res) => {
     }
 
     await school.save()
+    forgetSchoolAccess(schoolId)
     res.status(200).json(
         new ApiResponse(200, school, 'School updated successfully')
     )
@@ -354,6 +373,7 @@ const activateSchool = asyncHandler(async (req, res) => {
         { new: true }
     )
     if (!school) throw new ApiError(404, 'School not found')
+    forgetSchoolAccess(req.params.schoolId)
 
     res.status(200).json(
         new ApiResponse(200, school, 'School activated successfully')
@@ -373,6 +393,7 @@ const deactivateSchool = asyncHandler(async (req, res) => {
   if (!school) {
     throw new ApiError(404, 'School not found');
   }
+  forgetSchoolAccess(schoolId);
 
   return res.status(200).json(
     new ApiResponse(200, school, 'School deactivated successfully')
@@ -380,14 +401,54 @@ const deactivateSchool = asyncHandler(async (req, res) => {
 });
 
 // ✅ Delete School
+//
+// Deleting used to remove only the school document, leaving its users, students, classes and
+// billing records pointing at nothing — and its users locked out with "your school is deactivated".
+// A school that has been used is now refused, with what it holds, and switched off instead; only a
+// school with nothing but its automatic setup (roles, a first academic year, boards, a plan) can go,
+// and that setup goes with it.
 const deleteSchool = asyncHandler(async (req, res) => {
   const { schoolId } = req.params;
 
-  const school = await School.findByIdAndDelete(schoolId);
+  if (!mongoose.Types.ObjectId.isValid(schoolId)) throw new ApiError(400, 'Invalid school id');
+
+  const school = await School.findById(schoolId);
 
   if (!school) {
     throw new ApiError(404, 'School not found');
   }
+
+  const [users, students, classes, enrolments, invoices, payments] = await Promise.all([
+    User.countDocuments({ schoolId }),
+    Student.countDocuments({ schoolId }),
+    SchoolClass.countDocuments({ schoolId }),
+    StudentEnrollment.countDocuments({ schoolId }),
+    SubscriptionInvoice.countDocuments({ schoolId }),
+    SubscriptionPayment.countDocuments({ schoolId }),
+  ]);
+  const held = [
+    [users, 'user', 'users'],
+    [students, 'student', 'students'],
+    [classes, 'class', 'classes'],
+    [enrolments, 'enrolment', 'enrolments'],
+    [invoices + payments, 'billing record', 'billing records'],
+  ].filter(([n]) => n > 0).map(([n, one, many]) => `${n} ${n === 1 ? one : many}`);
+
+  if (held.length) {
+    throw new ApiError(
+      409,
+      `${school.name} has ${held.join(', ')}. Switch the school off instead — nobody can sign in, and its records are kept.`
+    );
+  }
+
+  await Promise.all([
+    AcademicYear.deleteMany({ schoolId }),
+    Role.deleteMany({ schoolId }),
+    SchoolBoard.deleteMany({ schoolId }),
+    SchoolSubscription.deleteMany({ schoolId }),
+  ]);
+  await school.deleteOne();
+  forgetSchoolAccess(schoolId);
 
   return res.status(200).json(
     new ApiResponse(200, null, 'School deleted successfully')

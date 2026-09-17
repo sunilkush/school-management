@@ -1,18 +1,51 @@
-import { AcademicYear } from "../models/AcademicYear.model.js";
+import { AcademicYear, academicYearCode, academicYearName } from "../models/AcademicYear.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { Exam } from "../models/Exam.model.js";
+import { FeeStructure } from "../models/feeStructure.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
-// ✅ Helper to parse dd/mm/yyyy to Date
-function parseDateString(dateStr) {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(`${year}-${month}-${day}`);
+
+const formatDay = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+/**
+ * Another year of the same school whose dates overlap these, if there is one.
+ *
+ * Two years covering the same days make "which year is today in?" ambiguous for every screen that
+ * works it out from the date, so they are refused rather than stored.
+ */
+async function findOverlap(schoolId, startDate, endDate, exceptId = null) {
+  return AcademicYear.findOne({
+    schoolId,
+    ...(exceptId ? { _id: { $ne: exceptId } } : {}),
+    startDate: { $lte: endDate },
+    endDate: { $gte: startDate },
+  });
 }
 
-// ✅ Auto-generate academic year name (e.g., "2025-2026")
-function generateAcademicYearName(startDate, endDate) {
-  return `${new Date(startDate).getFullYear()}-${new Date(endDate).getFullYear()}`;
+/** What is filed under a year — a year with any of this cannot simply be deleted. */
+async function usageOf(year) {
+  const where = { academicYearId: year._id };
+  const [classes, sections, students, exams, feeStructures] = await Promise.all([
+    SchoolClass.countDocuments(where),
+    Section.countDocuments(where),
+    StudentEnrollment.countDocuments(where),
+    Exam.countDocuments(where),
+    FeeStructure.countDocuments(where),
+  ]);
+  return { classes, sections, students, exams, feeStructures };
 }
+
+const describeUsage = (usage) => [
+  [usage.classes, "class", "classes"],
+  [usage.sections, "section", "sections"],
+  [usage.students, "student enrolment", "student enrolments"],
+  [usage.exams, "exam", "exams"],
+  [usage.feeStructures, "fee structure", "fee structures"],
+].filter(([n]) => n > 0).map(([n, one, many]) => `${n} ${n === 1 ? one : many}`).join(", ");
 
 // ✅ CREATE academic year
 export const createAcademicYear = asyncHandler(async (req, res) => {
@@ -39,8 +72,16 @@ export const createAcademicYear = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Start date must be before end date");
   }
 
-  const name = generateAcademicYearName(startDateF, endDateF);
-  const codeValue = code || `AY${startDateF.getFullYear()}`;
+  const name = academicYearName(startDateF, endDateF);
+  const codeValue = code || academicYearCode(startDateF, endDateF);
+
+  const overlap = await findOverlap(schoolId, startDateF, endDateF);
+  if (overlap) {
+    throw new ApiError(
+      409,
+      `These dates overlap ${overlap.name} (${formatDay(overlap.startDate)} – ${formatDay(overlap.endDate)}). A school's years cannot share days.`,
+    );
+  }
 
   if (isActive) {
     await AcademicYear.updateMany(
@@ -113,7 +154,30 @@ export const updateAcademicYear = asyncHandler(async (req, res) => {
 
   // schoolId/_id must not be attacker-settable via the body — otherwise a caller could reassign
   // this academic year into another school's namespace despite the read-scope check above.
-  const { schoolId: _schoolId, _id, ...updates } = req.body;
+  // The active flag and status have their own endpoints (activate/archive), which also switch the
+  // school's other years off; setting them here would skip that.
+  const { schoolId: _schoolId, _id, isActive: _isActive, status: _status, ...updates } = req.body;
+
+  if (updates.startDate || updates.endDate) {
+    const start = new Date(updates.startDate || existingYear.startDate);
+    const end = new Date(updates.endDate || existingYear.endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) throw new ApiError(400, "Invalid date format");
+    if (start >= end) throw new ApiError(400, "Start date must be before end date");
+
+    const overlap = await findOverlap(existingYear.schoolId, start, end, existingYear._id);
+    if (overlap) {
+      throw new ApiError(
+        409,
+        `These dates overlap ${overlap.name} (${formatDay(overlap.startDate)} – ${formatDay(overlap.endDate)}). A school's years cannot share days.`,
+      );
+    }
+    // findByIdAndUpdate skips the model's save hook, so the name and code are worked out here —
+    // otherwise moving the dates left the old name on the year.
+    updates.startDate = start;
+    updates.endDate = end;
+    updates.name = academicYearName(start, end);
+    updates.code = academicYearCode(start, end);
+  }
 
   const updatedAcademicYear = await AcademicYear.findByIdAndUpdate(id, updates, {
     new: true,
@@ -131,11 +195,24 @@ export const updateAcademicYear = asyncHandler(async (req, res) => {
 export const deleteAcademicYear = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const academicYear = await AcademicYear.findOneAndDelete(buildSchoolAccessFilter(req, { _id: id }));
-
+  const academicYear = await AcademicYear.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!academicYear) {
     throw new ApiError(404, "Academic year not found");
   }
+
+  if (academicYear.isActive) {
+    throw new ApiError(409, `${academicYear.name} is the running year. Set another year running before deleting it.`);
+  }
+
+  // Classes, enrolments, exams and fees all point at their year by id. Deleting a year they point
+  // at leaves them attached to nothing, so a year in use is archived instead.
+  const usage = await usageOf(academicYear);
+  const inUse = describeUsage(usage);
+  if (inUse) {
+    throw new ApiError(409, `${academicYear.name} still has ${inUse} filed under it. Archive it instead — archiving keeps them.`);
+  }
+
+  await academicYear.deleteOne();
 
   res.status(200).json({
     success: true,
@@ -149,6 +226,11 @@ export const setActiveAcademicYear = asyncHandler(async (req, res) => {
 
   const academicYear = await AcademicYear.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!academicYear) throw new ApiError(404, "Academic year not found");
+
+  // Setting an archived year running would quietly un-archive it.
+  if (academicYear.status === "archived") {
+    throw new ApiError(409, `${academicYear.name} is archived and cannot be set running.`);
+  }
 
   // Deactivate others
   await AcademicYear.updateMany(
@@ -174,6 +256,12 @@ export const archiveAcademicYear = asyncHandler(async (req, res) => {
 
   const academicYear = await AcademicYear.findOne(buildSchoolAccessFilter(req, { _id: id }));
   if (!academicYear) throw new ApiError(404, "Academic year not found");
+
+  // Archiving the running year would leave the school with no running year at all, and every
+  // screen that defaults to it with nothing to show.
+  if (academicYear.isActive) {
+    throw new ApiError(409, `${academicYear.name} is the running year. Set the next year running before archiving it.`);
+  }
 
   academicYear.status = "archived";
   academicYear.isActive = false;

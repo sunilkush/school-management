@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendEmail } from "../utils/mailServices.js";
 import crypto from "crypto";
+import { billingOnlyMessage, canUseBillingOnly, findSchoolAccessProblem, isSuperAdminUser } from "../utils/schoolAccess.js";
 
 const OTP_EXPIRY_MINUTES = 10;
 
@@ -138,6 +139,14 @@ export const verifyLogin2FA = asyncHandler(async (req, res) => {
   if (!user || !user.isActive) throw new ApiError(401, "User not found or inactive");
   if (!user.twoFactorEnabled) throw new ApiError(400, "2FA is not enabled for this user");
 
+  // Password login checked the school; it may have been switched off or suspended since the OTP went out.
+  let billingOnly = null;
+  if (!isSuperAdminUser(user)) {
+    const problem = await findSchoolAccessProblem(user.schoolId?._id, { fresh: true });
+    if (problem && !canUseBillingOnly(problem, user)) throw new ApiError(403, problem.message);
+    if (problem) billingOnly = { reason: billingOnlyMessage(problem) };
+  }
+
   const record = await OTP.findOne({
     emailOrPhone: user.email,
     purpose: "login",
@@ -166,7 +175,7 @@ export const verifyLogin2FA = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" })
     .cookie("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" })
-    .json(new ApiResponse(200, { accessToken, refreshToken }, "2FA verified. Login successful."));
+    .json(new ApiResponse(200, { accessToken, refreshToken, billingOnly }, "2FA verified. Login successful."));
 });
 
 /* ── Get 2FA status for current user ───────────────────────────────────── */

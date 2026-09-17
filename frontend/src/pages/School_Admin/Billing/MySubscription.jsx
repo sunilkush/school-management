@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Tag, Button, message, Descriptions } from "antd";
-import { CreditCardOutlined, DownloadOutlined, CrownOutlined } from "@ant-design/icons";
+import { Alert, Table, Tag, Button, message, Descriptions } from "antd";
+import { CreditCardOutlined, DownloadOutlined, CrownOutlined, FileAddOutlined } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import PageHeader from "../../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles";
@@ -14,6 +14,11 @@ import {
 } from "../../../features/schoolBillingSlice";
 
 const money = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
+const day = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+const sameMoment = (a, b) => a && b && Math.abs(new Date(a) - new Date(b)) < 60 * 1000;
+const OPEN = ["draft", "unpaid", "overdue"];
+/** A plan this close to its end can ask for its renewal invoice (the server allows the same). */
+const RENEWAL_WINDOW_DAYS = 30;
 
 const STATUS_COLOR = {
   active: "success", trial: "processing", expired: "error", cancelled: "default", suspended: "warning",
@@ -32,18 +37,47 @@ const loadRazorpay = () =>
 
 const MySubscription = () => {
   const dispatch = useDispatch();
-  const { subscription, invoices, loading, paying } = useSelector((s) => s.schoolBilling || {});
+  const { subscription, invoices = [], loading, paying } = useSelector((s) => s.schoolBilling || {});
+  const [asking, setAsking] = useState(false);
+  const [reopenedUntil, setReopenedUntil] = useState(null);
 
   const refresh = () => {
     dispatch(fetchMySubscription());
     dispatch(fetchMyInvoices());
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { refresh(); }, [dispatch]);
+
+  const endDate = subscription?.endDate ? new Date(subscription.endDate) : null;
+  const expired = Boolean(subscription && (subscription.status === "expired" || (endDate && endDate <= new Date())));
+  const blockedByAdmin = ["suspended", "cancelled"].includes(subscription?.status);
+  const daysLeft = endDate ? Math.ceil((endDate - Date.now()) / 86400000) : null;
+
+  // The unpaid invoice that renews the plan: one billing the period after it ends, or one made the
+  // old way (billing the period that is ending).
+  const renewal = subscription && invoices.find((i) => OPEN.includes(i.status) && (
+    i.period === "next" ? sameMoment(i.billingPeriodStart, subscription.endDate)
+      : !i.period && sameMoment(i.billingPeriodEnd, subscription.endDate)
+  ));
+
+  const askForRenewal = async () => {
+    setAsking(true);
+    try {
+      await apiClient.post("/school-billing/renewal-invoice");
+      message.success("Renewal invoice ready — pay it below");
+      refresh();
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Could not make the renewal invoice");
+    } finally {
+      setAsking(false);
+    }
+  };
 
   const handlePay = async (invoice) => {
     const loaded = await loadRazorpay();
     if (!loaded) { message.error("Razorpay SDK failed to load"); return; }
+    const wasExpired = expired;
 
     try {
       const order = await dispatch(createMyPaymentIntent(invoice._id)).unwrap();
@@ -56,13 +90,15 @@ const MySubscription = () => {
         description: `Invoice ${order.invoiceNumber}`,
         handler: async (response) => {
           try {
-            await dispatch(verifyMyPayment({
+            const result = await dispatch(verifyMyPayment({
               invoiceId: invoice._id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             })).unwrap();
-            message.success("Payment successful — invoice marked paid");
+            const until = result?.subscription?.endDate;
+            message.success(until ? `Payment received — your plan now runs until ${day(until)}` : "Payment successful — invoice marked paid");
+            if (wasExpired && until && new Date(until) > new Date()) setReopenedUntil(until);
             refresh();
           } catch (err) {
             message.error(typeof err === "string" ? err : "Payment verification failed");
@@ -108,10 +144,48 @@ const MySubscription = () => {
     },
   ];
 
+  const renewalAction = renewal ? (
+    <Button type="primary" icon={<CreditCardOutlined />} loading={paying} onClick={() => handlePay(renewal)}>
+      Pay {money(renewal.totalAmount)}
+    </Button>
+  ) : (
+    <Button type="primary" icon={<FileAddOutlined />} loading={asking} onClick={askForRenewal}>
+      Get the renewal invoice
+    </Button>
+  );
+
   return (
     <div style={pageWrapper}>
       <style>{tableHeadCss("my-sub-invoices-tbl")}</style>
       <PageHeader title="My Subscription" subtitle="View your school's plan and pay subscription invoices" icon={<CrownOutlined />} />
+
+      {reopenedUntil ? (
+        <Alert
+          type="success" showIcon style={{ marginTop: 16 }}
+          message={`Your school is open again — the plan runs until ${day(reopenedUntil)}`}
+          action={<Button type="primary" onClick={() => window.location.assign("/dashboard/schooladmin")}>Open the dashboard</Button>}
+        />
+      ) : blockedByAdmin ? (
+        <Alert
+          type="warning" showIcon style={{ marginTop: 16 }}
+          message={`Your school's subscription is ${subscription.status}`}
+          description="Please contact the administrator to reopen it."
+        />
+      ) : expired ? (
+        <Alert
+          type="error" showIcon style={{ marginTop: 16 }}
+          message={`Your plan ended on ${day(subscription.endDate)}`}
+          description="Everything except this page is closed for your school until the renewal is paid. Paying renews the plan straight away."
+          action={renewalAction}
+        />
+      ) : subscription && daysLeft != null && daysLeft <= RENEWAL_WINDOW_DAYS ? (
+        <Alert
+          type="info" showIcon style={{ marginTop: 16 }}
+          message={`Your plan ends on ${day(subscription.endDate)} — ${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
+          description="Pay the renewal before then to keep the school open without a break."
+          action={renewalAction}
+        />
+      ) : null}
 
       {subscription && (
         <div style={{ ...sectionPanel, marginTop: 16 }}>

@@ -9,6 +9,7 @@ import { PlanUpdateLog } from "../models/planUpdateLog.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { forgetSchoolAccess } from "../utils/schoolAccess.js";
 
 const buildSnapshotFromPlan = (plan) => ({
   price: plan.price,
@@ -134,6 +135,7 @@ export const assignPlanToSchool = asyncHandler(async (req, res) => {
     new: true,
     runValidators: true,
   });
+  forgetSchoolAccess(schoolId);
 
   return res.status(200).json(new ApiResponse(200, subscription, "Plan assigned to school"));
 });
@@ -158,6 +160,7 @@ export const changeSchoolPlan = asyncHandler(async (req, res) => {
   subscription.endDate = buildEndDate(new Date(), plan.durationInDays);
   subscription.status = "active";
   await subscription.save();
+  forgetSchoolAccess(schoolId);
 
   return res
     .status(200)
@@ -174,6 +177,7 @@ export const renewSubscription = asyncHandler(async (req, res) => {
   subscription.endDate = buildEndDate(fromDate, subscription.snapshot.durationInDays);
   subscription.status = "active";
   await subscription.save();
+  forgetSchoolAccess(schoolId);
 
   return res.status(200).json(new ApiResponse(200, subscription, "Subscription renewed"));
 });
@@ -185,6 +189,7 @@ export const cancelSubscription = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!subscription) throw new ApiError(404, "Subscription not found");
+  forgetSchoolAccess(req.params.schoolId);
   return res.status(200).json(new ApiResponse(200, subscription, "Subscription cancelled"));
 });
 
@@ -195,6 +200,7 @@ export const suspendSubscription = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!subscription) throw new ApiError(404, "Subscription not found");
+  forgetSchoolAccess(req.params.schoolId);
   return res.status(200).json(new ApiResponse(200, subscription, "Subscription suspended"));
 });
 
@@ -205,6 +211,7 @@ export const reactivateSubscription = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!subscription) throw new ApiError(404, "Subscription not found");
+  forgetSchoolAccess(req.params.schoolId);
   return res.status(200).json(new ApiResponse(200, subscription, "Subscription reactivated"));
 });
 
@@ -227,9 +234,19 @@ export const getSchoolSubscription = asyncHandler(async (req, res) => {
  * subscriptionExpiry.job.js's renewal-reminder step, so both stay in sync rather than the cron
  * job duplicating (and inevitably drifting from) this math.
  */
-export const createInvoiceForSubscription = async (subscription, { discount = 0, taxGst = 0, dueDate, status = "unpaid" } = {}) => {
+export const createInvoiceForSubscription = async (
+  subscription,
+  { discount = 0, taxGst = 0, dueDate, status = "unpaid", period = "current" } = {}
+) => {
+  if (!["current", "next"].includes(period)) throw new ApiError(400, 'period must be "current" or "next"');
   const invoiceNumber = await nextInvoiceNumber();
   const planPrice = subscription.snapshot.price;
+  // A renewal bills the period after the current one. It used to print the current period, so
+  // paying it could not say how far the plan should now run.
+  const billingPeriodStart = period === "next" ? subscription.endDate : subscription.startDate;
+  const billingPeriodEnd = period === "next"
+    ? buildEndDate(subscription.endDate, subscription.snapshot.durationInDays)
+    : subscription.endDate;
   let normalizedDueDate = subscription.endDate;
 
   if (dueDate) {
@@ -244,8 +261,9 @@ export const createInvoiceForSubscription = async (subscription, { discount = 0,
     schoolId: subscription.schoolId,
     subscriptionId: subscription._id,
     invoiceNumber,
-    billingPeriodStart: subscription.startDate,
-    billingPeriodEnd: subscription.endDate,
+    billingPeriodStart,
+    billingPeriodEnd,
+    period,
     planPrice,
     discount,
     taxGst,
@@ -257,12 +275,14 @@ export const createInvoiceForSubscription = async (subscription, { discount = 0,
 
 export const generateInvoice = asyncHandler(async (req, res) => {
   const { schoolId } = req.params;
-  const { discount, taxGst, dueDate, status } = req.body;
+  const { discount, taxGst, dueDate, status, period } = req.body;
 
   const subscription = await SchoolSubscription.findOne({ schoolId });
   if (!subscription) throw new ApiError(404, "Subscription not found");
 
-  const invoice = await createInvoiceForSubscription(subscription, { discount, taxGst, dueDate, status });
+  const invoice = await createInvoiceForSubscription(subscription, { discount, taxGst, dueDate, status, period });
+  // An invoice entered as already paid counts as paid.
+  if (invoice.status === "paid") await applyPaidInvoice(invoice);
 
   return res.status(201).json(new ApiResponse(201, invoice, "Invoice generated"));
 });
@@ -321,6 +341,7 @@ export const addManualPayment = asyncHandler(async (req, res) => {
     invoice.status = "paid";
     invoice.paidDate = new Date();
     await invoice.save();
+    await applyPaidInvoice(invoice);
   }
 
   return res.status(201).json(new ApiResponse(201, payment, "Payment added"));
@@ -403,8 +424,65 @@ export const recordSubscriptionPayment = async ({
     invoice.paidDate = new Date();
     await invoice.save();
   }
+  await applyPaidInvoice(invoice);
 
   return { payment, invoice };
+};
+
+/**
+ * What a paid invoice does to the school's plan.
+ *
+ * Paying used to mark the invoice paid and nothing else — the plan still ran out on its old end
+ * date, and the school was locked out unless someone also pressed Renew. An invoice now pays for
+ * its billing period: when that period runs past the plan's end date, the plan runs to the end of
+ * it. The dates are absolute, so recording the same payment twice, or paying after someone already
+ * pressed Renew, cannot add the period a second time.
+ *
+ * An expired plan that now runs into the future, and a trial that has been paid for, become
+ * active. A suspended or cancelled plan keeps that status: the dates move, but letting the school
+ * back in is still the Super Admin's call (Reactivate).
+ */
+const LEGACY_RENEWAL_WINDOW_MS = 8 * 24 * 60 * 60 * 1000;
+
+/**
+ * The date a paid invoice pays the plan up to.
+ *
+ * Invoices made before invoices recorded their `period` all printed the period the plan was
+ * already in — including the renewal invoices the nightly job made in a plan's last week. Paying
+ * one of those would renew nothing. Such an invoice is read as the renewal it was meant to be
+ * when it was made in the last 8 days of that period and the plan still ends where the invoice's
+ * period ends (so it has not been renewed some other way since): it pays one more plan length.
+ */
+const paidUntil = (invoice, subscription) => {
+  if (!invoice?.billingPeriodEnd) return null;
+  const periodEnd = new Date(invoice.billingPeriodEnd);
+  if (invoice.period) return periodEnd;
+
+  const createdAt = invoice.createdAt ? new Date(invoice.createdAt) : null;
+  const madeInLastWeek = createdAt && createdAt <= periodEnd && periodEnd - createdAt <= LEGACY_RENEWAL_WINDOW_MS;
+  const planStillEndsThere = Math.abs(new Date(subscription.endDate) - periodEnd) < 60 * 1000;
+  const days = Number(subscription.snapshot?.durationInDays);
+  if (madeInLastWeek && planStillEndsThere && days > 0) return buildEndDate(periodEnd, days);
+  return periodEnd;
+};
+
+export const applyPaidInvoice = async (invoice) => {
+  const subscription = await SchoolSubscription.findOne({ schoolId: invoice.schoolId });
+  if (!subscription) return { subscription: null, extended: false };
+
+  let extended = false;
+  const renewsTo = paidUntil(invoice, subscription);
+  if (renewsTo && renewsTo > new Date(subscription.endDate)) {
+    subscription.endDate = renewsTo;
+    extended = true;
+  }
+  if (subscription.status === "trial") subscription.status = "active";
+  if (subscription.status === "expired" && new Date(subscription.endDate) > new Date()) subscription.status = "active";
+  subscription.paymentStatus = "completed";
+  await subscription.save();
+
+  forgetSchoolAccess(invoice.schoolId);
+  return { subscription, extended };
 };
 
 export const verifyRazorpayPayment = asyncHandler(async (req, res) => {

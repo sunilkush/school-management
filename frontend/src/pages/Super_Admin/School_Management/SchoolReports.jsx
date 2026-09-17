@@ -1,456 +1,259 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchSchoolReports } from "../../../features/reportSlice.js";
-import { fetchActiveAcademicYear } from "../../../features/academicYearSlice.js";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Alert, Button, Empty, Select, Skeleton, Table, Tag } from "antd";
+import { BankOutlined, CalendarOutlined, ReloadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+
+import apiClient from "../../../api/httpClient";
 import { fetchSchools } from "../../../features/schoolSlice.js";
-import { Select, Table, Button, Empty, Tooltip, Drawer, Descriptions, Tag } from "antd";
-import {
-  UserOutlined,
-  TeamOutlined,
-  BookOutlined,
-  SolutionOutlined,
-  EyeOutlined,
-  BankOutlined,
-  BarChartOutlined,
-  CalendarOutlined,
-  LoadingOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  statGrid,
-  iconWell,
-  tableContainer,
-  tableHeadCss,
-  modalTitle,
-} from "../../../styles/pageStyles";
+import { FilterGrid, FilterField } from "../../../components/attendance/FilterGrid";
+import { FULL_WIDTH } from "../../../components/attendance/filterStyles";
+import SchoolOverview, { InlineBar } from "../../../components/reports/SchoolOverview";
+import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 
-const { Option } = Select;
+/**
+ * School Reports — one school, any of its years, and how its roll has changed year to year.
+ *
+ * The page used to show only the running year, as four numbers, then the same four numbers again
+ * as a one-row table, and a third time in a drawer behind a "View" button; a school without a
+ * running year got a warning and nothing else. The class-by-class and boys-and-girls figures the
+ * server sends were never drawn. Now every year can be opened, the school and year stay in the
+ * address so a refresh or a shared link comes back to the same report, and the table compares
+ * the years instead of repeating one of them.
+ */
 
-/* ─── Accent palette (category color-coding, kept as brand accents) ───── */
-const t = {
-  purple:       "var(--accent)",
-  purpleRgb:    "var(--accent-rgb)",
-  purpleLight:  "rgba(var(--accent-rgb), 0.2)",
-  purpleMid:    "rgba(var(--accent-rgb), 0.5)",
+const DAY = "D MMM YYYY";
+/** Years whose numbers are worked out up front for the comparison; older ones load when opened. */
+const COMPARE_YEARS = 8;
+const errorText = (e, fallback) => e?.response?.data?.message || e?.message || fallback;
+const count = (n) => Number(n || 0).toLocaleString("en-IN");
 
-  blue:         "var(--primary)",
-  blueRgb:      "var(--primary-rgb)",
-  blueLight:    "rgba(219,234,254,0.2)",
-
-  green:        "var(--success)",
-  greenRgb:     "var(--success-rgb)",
-  greenLight:   "rgba(220,252,231,0.2)",
-
-  pink:         "var(--danger)",
-  pinkRgb:      "var(--danger-rgb)",
-  pinkLight:    "rgba(254,226,226,0.2)",
-
-  amber:        "var(--warning)",
-  amberRgb:     "var(--warning-rgb)",
-  amberLight:   "rgba(254,243,199,0.25)",
+const yearTag = (year) => {
+  if (year.status === "archived") return <Tag>Archived</Tag>;
+  if (year.isActive) return <Tag color="green">Running</Tag>;
+  if (dayjs(year.startDate).isAfter(dayjs(), "day")) return <Tag color="blue">Upcoming</Tag>;
+  return null;
 };
 
-/* ─── Stat Card ───────────────────────────────────────────────── */
-const StatCard = ({ icon, label, value, color, lightColor }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 16, padding: "20px 22px", marginBottom: 0 }}>
-    <div style={{ ...iconWell(color, 48), background: lightColor }}>
-      {icon}
-    </div>
-    <div>
-      <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1 }}>
-        {(value ?? 0).toLocaleString()}
-      </div>
-    </div>
-  </div>
-);
-
-/* ─── Stat Pill (table) ───────────────────────────────────────── */
-const StatPill = ({ value, color, colorRgb, lightColor }) => (
-  <span
-    style={{
-      display: "inline-block",
-      background: lightColor,
-      color,
-      border: `1px solid rgba(${colorRgb}, 0.33)`,
-      borderRadius: 6,
-      padding: "3px 14px",
-      fontWeight: 700,
-      fontSize: 14,
-      minWidth: 40,
-      textAlign: "center",
-    }}
-  >
-    {(value ?? 0).toLocaleString()}
-  </span>
-);
-
-/* ─── Main Component ──────────────────────────────────────────── */
 const SchoolReports = () => {
   const dispatch = useDispatch();
-  const { schoolReports, loading } = useSelector((state) => state.reports);
-  const { schools } = useSelector((state) => state.school);
+  const navigate = useNavigate();
+  const { schools = [] } = useSelector((s) => s.school || {});
+  const [params, setParams] = useSearchParams();
+  const schoolId = params.get("school");
+  const yearParam = params.get("year");
 
-  const [schoolId, setSchoolId] = useState(null);
-  const [selectedSchoolName, setSelectedSchoolName] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerRecord, setDrawerRecord] = useState(null);
+  const [years, setYears] = useState([]);
+  const [yearsLoading, setYearsLoading] = useState(false);
+  const [yearsError, setYearsError] = useState(null);
+  const [overviews, setOverviews] = useState({});   // yearId → { loading } | { data } | { error }
+  const token = useRef(0);                           // a newer school choice wins over late replies
 
-  useEffect(() => {
-    dispatch(fetchSchools());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchSchools()); }, [dispatch]);
 
-  const handleSchoolChange = async (id) => {
-    setSchoolId(id);
-    const school = schools.find((s) => s._id === id);
-    setSelectedSchoolName(school?.name || null);
-    if (!id) return;
+  const loadOverview = useCallback(async (sid, yid, tok) => {
+    setOverviews((o) => ({ ...o, [yid]: { loading: true } }));
     try {
-      const res = await dispatch(fetchActiveAcademicYear(id)).unwrap();
-      const academicYearId = res?._id;
-      if (academicYearId) {
-        dispatch(fetchSchoolReports({ schoolId: id, academicYearId }));
-      }
-    } catch (err) {
-      console.error("Error fetching report:", err);
+      const res = await apiClient.get(`/report/school/${sid}/academic-year/${yid}`);
+      if (tok === token.current) setOverviews((o) => ({ ...o, [yid]: { data: res?.data?.data || null } }));
+    } catch (e) {
+      if (tok === token.current) setOverviews((o) => ({ ...o, [yid]: { error: errorText(e, "Could not work out the report") } }));
     }
-  };
+  }, []);
 
-  const handleViewRecord = (record) => {
-    setDrawerRecord(record);
-    setDrawerOpen(true);
-  };
+  const loadYears = useCallback(async () => {
+    const tok = ++token.current;
+    setYears([]); setOverviews({}); setYearsError(null);
+    if (!schoolId) { setYearsLoading(false); return; }
+    setYearsLoading(true);
+    try {
+      const res = await apiClient.get(`/academicYear/school/${schoolId}`);
+      if (tok !== token.current) return;
+      const list = (Array.isArray(res?.data?.data) ? res.data.data : [])
+        .sort((a, b) => dayjs(b.startDate).valueOf() - dayjs(a.startDate).valueOf());
+      setYears(list);
+      list.slice(0, COMPARE_YEARS).forEach((y) => loadOverview(schoolId, y._id, tok));
+    } catch (e) {
+      if (tok === token.current) setYearsError(errorText(e, "Could not load the school's academic years"));
+    } finally {
+      if (tok === token.current) setYearsLoading(false);
+    }
+  }, [schoolId, loadOverview]);
 
-  const summary = schoolReports?.summary;
-  const tableData = schoolReports ? [schoolReports] : [];
+  useEffect(() => { loadYears(); }, [loadYears]);
+
+  const school = schools.find((s) => s._id === schoolId);
+  const year = years.find((y) => y._id === yearParam) || years.find((y) => y.isActive) || years[0] || null;
+  const current = year ? overviews[year._id] : null;
+
+  /* A year older than the compared ones is worked out when it is opened. */
+  useEffect(() => {
+    if (schoolId && year && !overviews[year._id]) loadOverview(schoolId, year._id, token.current);
+  }, [schoolId, year, overviews, loadOverview]);
+
+  const choose = (patch) => setParams((p) => {
+    const next = new URLSearchParams(p);
+    Object.entries(patch).forEach(([k, v]) => (v ? next.set(k, v) : next.delete(k)));
+    return next;
+  }, { replace: true });
+
+  /* ── year by year ── */
+  const compared = useMemo(() => years.slice(0, COMPARE_YEARS), [years]);
+  const rows = useMemo(() => compared.map((y, i) => {
+    const students = overviews[y._id]?.data?.summary?.studentCount;
+    const older = compared[i + 1] && overviews[compared[i + 1]._id]?.data?.summary?.studentCount;
+    return { year: y, students, change: students != null && older != null ? students - older : null, olderName: compared[i + 1]?.name };
+  }), [compared, overviews]);
+  const maxStudents = Math.max(1, ...rows.map((r) => r.students || 0));
 
   const columns = [
     {
-      title: "Academic Year",
-      render: (_, record) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <CalendarOutlined style={{ color: t.purple, fontSize: 14 }} />
-          <span
-            style={{
-              background: t.purpleLight,
-              color: t.purple,
-              border: `1px solid ${t.purpleMid}`,
-              borderRadius: 6,
-              padding: "3px 10px",
-              fontWeight: 600,
-              fontSize: 13,
-            }}
-          >
-            {record.academicYear}
-          </span>
+      title: "Year",
+      key: "year",
+      render: (_, r) => (
+        <div>
+          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{r.year.name}</span>{" "}
+          {yearTag(r.year)}
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            {dayjs(r.year.startDate).format(DAY)} – {dayjs(r.year.endDate).format(DAY)}
+          </div>
         </div>
       ),
     },
     {
-      title: "Admins",
-      align: "center",
-      render: (_, record) => (
-        <StatPill value={record.summary?.adminCount} color={t.purple} colorRgb={t.purpleRgb} lightColor={t.purpleLight} />
-      ),
-    },
-    {
-      title: "Teachers",
-      align: "center",
-      render: (_, record) => (
-        <StatPill value={record.summary?.teacherCount} color={t.blue} colorRgb={t.blueRgb} lightColor={t.blueLight} />
-      ),
-    },
-    {
       title: "Students",
-      align: "center",
-      render: (_, record) => (
-        <StatPill value={record.summary?.studentCount} color={t.green} colorRgb={t.greenRgb} lightColor={t.greenLight} />
-      ),
+      key: "students",
+      width: "40%",
+      render: (_, r) => (overviews[r.year._id]?.error ? (
+        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Could not load</span>
+      ) : r.students == null ? (
+        <Skeleton.Input active size="small" style={{ width: 160, minWidth: 0 }} />
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 64px", alignItems: "center", gap: 10 }}>
+          <InlineBar value={r.students} max={maxStudents} />
+          <span style={{ fontWeight: 600, color: "var(--text-primary)", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{count(r.students)}</span>
+        </div>
+      )),
     },
     {
-      title: "Parents",
-      align: "center",
-      render: (_, record) => (
-        <StatPill value={record.summary?.parentCount} color={t.pink} colorRgb={t.pinkRgb} lightColor={t.pinkLight} />
-      ),
-    },
-    {
-      title: "Action",
-      align: "center",
-      render: (_, record) => (
-        <Tooltip title="View full report">
-          <Button
-            onClick={() => handleViewRecord(record)}
-            style={{
-              background: t.purpleLight,
-              border: `1px solid ${t.purpleMid}`,
-              color: t.purple,
-              borderRadius: 8,
-              fontWeight: 600,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <EyeOutlined />
-            View
-          </Button>
-        </Tooltip>
-      ),
+      title: "Change",
+      key: "change",
+      align: "right",
+      render: (_, r) => (r.change == null ? (
+        <span style={{ color: "var(--text-muted)" }}>—</span>
+      ) : (
+        <span style={{ color: "var(--text-secondary)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }} title={`Compared with ${r.olderName}`}>
+          {r.change > 0 ? "+" : r.change < 0 ? "−" : ""}{count(Math.abs(r.change))}
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}> vs {r.olderName}</span>
+        </span>
+      )),
     },
   ];
 
   return (
     <div style={pageWrapper}>
+      <style>{`.sr-open td { background: var(--primary-light) !important; } .sr-row { cursor: pointer; }`}</style>
       <PageHeader
         title="School Reports"
-        subtitle="Select a school to view academic year statistics"
-        icon={<BarChartOutlined />}
+        subtitle="Pick a school to see its students class by class — for this year or any year before"
+        icon={<BankOutlined />}
       />
 
-      {/* ── School Selector ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 7,
-            fontSize: 11,
-            color: "var(--text-muted)",
-            marginBottom: 10,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.07em",
-          }}
-        >
-          <BankOutlined style={{ color: t.purple }} />
-          Select School
-        </label>
-        <Select
-          placeholder="Search and select a school..."
-          style={{ width: "100%" }}
-          value={schoolId}
-          onChange={handleSchoolChange}
-          allowClear
-          showSearch
-          filterOption={(input, option) =>
-            option?.children?.toLowerCase().includes(input.toLowerCase())
-          }
-        >
-          {schools.map((school) => (
-            <Option key={school._id} value={school._id}>
-              {school.name}
-            </Option>
-          ))}
-        </Select>
+      <div style={sectionPanel}>
+        <FilterGrid>
+          <FilterField label="School">
+            <Select
+              style={FULL_WIDTH} showSearch optionFilterProp="label" placeholder="Pick a school"
+              value={schoolId || undefined}
+              onChange={(v) => choose({ school: v, year: null })}
+              options={schools.map((s) => ({ value: s._id, label: s.name }))}
+            />
+          </FilterField>
+          <FilterField label="Academic year">
+            <Select
+              style={FULL_WIDTH}
+              placeholder={!schoolId ? "Pick a school first" : yearsLoading ? "Loading…" : "No years set up"}
+              disabled={!years.length}
+              value={year?._id}
+              onChange={(v) => choose({ year: v })}
+              options={years.map((y) => ({ value: y._id, label: `${y.name}${y.isActive ? " · running" : ""}` }))}
+            />
+          </FilterField>
+        </FilterGrid>
       </div>
 
-      {/* ── Warning ── */}
-      {schoolId && !loading && !summary && (
-        <div
-          style={{
-            background: t.amberLight,
-            border: `1px solid rgba(${t.amberRgb}, 0.33)`,
-            borderRadius: 8,
-            padding: "11px 16px",
-            color: t.amber,
-            fontSize: 13,
-            fontWeight: 500,
-            marginBottom: 20,
-          }}
-        >
-          ⚠ No active academic year found for this school.
-        </div>
-      )}
-
-      {/* ── Stat Cards ── */}
-      {summary && (
-        <div style={{ ...statGrid(190), marginBottom: 20 }}>
-          <StatCard icon={<UserOutlined />}     label="Admins"   value={summary.adminCount}   color={t.purple} lightColor={t.purpleLight} />
-          <StatCard icon={<SolutionOutlined />} label="Teachers" value={summary.teacherCount} color={t.blue}   lightColor={t.blueLight}   />
-          <StatCard icon={<BookOutlined />}     label="Students" value={summary.studentCount} color={t.green}  lightColor={t.greenLight}  />
-          <StatCard icon={<TeamOutlined />}     label="Parents"  value={summary.parentCount}  color={t.pink}   lightColor={t.pinkLight}   />
-        </div>
-      )}
-
-      <style>{tableHeadCss("school-reports-tbl")}</style>
-
-      {/* ── Table ── */}
-      <div style={{ ...sectionPanel, padding: 0 }}>
-        {selectedSchoolName && (
-          <div
-            style={{
-              padding: "14px 22px",
-              borderBottom: "1px solid var(--border-muted)",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "var(--surface-soft)",
-            }}
-          >
-            <BankOutlined style={{ color: t.purple, fontSize: 14 }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-              {selectedSchoolName}
-            </span>
-          </div>
-        )}
-
-        <div className="school-reports-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
-          <Table
-            loading={{
-              spinning: loading,
-              indicator: <LoadingOutlined style={{ fontSize: 24, color: t.purple }} spin />,
-            }}
-            columns={columns}
-            dataSource={tableData}
-            rowKey={(r) => r.academicYearId}
-            pagination={false}
-            locale={{
-              emptyText: (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    <span style={{ color: "var(--text-muted)" }}>
-                      Select a school to load report instantly
-                    </span>
-                  }
-                />
-              ),
-            }}
-          />
-        </div>
-      </div>
-
-      {/* ── Detail Drawer ── */}
-      <Drawer
-        title={modalTitle(<BarChartOutlined />, "School Report Details")}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        width={440}
-        closeIcon={<CloseOutlined />}
-        styles={{ body: { padding: "24px 20px" } }}
-      >
-        {drawerRecord && (
-          <>
-            {/* School name */}
-            {selectedSchoolName && (
-              <div
-                style={{
-                  background: t.purpleLight,
-                  border: `1px solid ${t.purpleMid}`,
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  marginBottom: 20,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <BankOutlined style={{ color: t.purple, fontSize: 16 }} />
-                <span style={{ fontWeight: 700, fontSize: 14, color: t.purple }}>
-                  {selectedSchoolName}
-                </span>
+      {!schoolId ? (
+        <div style={sectionPanel}><Empty description="Pick a school to see its report" /></div>
+      ) : yearsError ? (
+        <Alert
+          type="error" showIcon style={{ marginBottom: 16 }} message={yearsError}
+          action={<Button size="small" icon={<ReloadOutlined />} onClick={loadYears}>Try again</Button>}
+        />
+      ) : yearsLoading ? (
+        <div style={sectionPanel}><Skeleton active paragraph={{ rows: 6 }} /></div>
+      ) : !years.length ? (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={`${school?.name || "This school"} has no academic years yet`}
+          description="A report counts the students enrolled in a year, so the school needs one set up first."
+          action={(
+            <Button size="small" type="primary" icon={<CalendarOutlined />} onClick={() => navigate("/dashboard/superadmin/academics/academic-years")}>
+              Set up years
+            </Button>
+          )}
+        />
+      ) : (
+        <>
+          <div style={sectionPanel}>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
+                {school?.name || "School"} · {year.name} {yearTag(year)}
               </div>
-            )}
-
-            {/* Academic Year */}
-            <Descriptions
-              column={1}
-              size="small"
-              bordered
-              style={{ marginBottom: 20 }}
-              labelStyle={{ fontWeight: 600, color: "var(--text-muted)", width: 140 }}
-              contentStyle={{ color: "var(--text-primary)" }}
-            >
-              <Descriptions.Item label={<span><CalendarOutlined style={{ marginRight: 6 }} />Academic Year</span>}>
-                <Tag color="purple" style={{ borderRadius: 6, fontWeight: 600 }}>
-                  {drawerRecord.academicYear || "—"}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-
-            {/* Stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div
-                style={{
-                  background: t.purpleLight,
-                  border: `1px solid ${t.purpleMid}`,
-                  borderRadius: 10,
-                  padding: "16px 14px",
-                  textAlign: "center",
-                }}
-              >
-                <UserOutlined style={{ fontSize: 20, color: t.purple, marginBottom: 6, display: "block" }} />
-                <div style={{ fontSize: 24, fontWeight: 700, color: t.purple, lineHeight: 1 }}>
-                  {(drawerRecord.summary?.adminCount ?? 0).toLocaleString()}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Admins
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: t.blueLight,
-                  border: `1px solid rgba(${t.blueRgb}, 0.33)`,
-                  borderRadius: 10,
-                  padding: "16px 14px",
-                  textAlign: "center",
-                }}
-              >
-                <SolutionOutlined style={{ fontSize: 20, color: t.blue, marginBottom: 6, display: "block" }} />
-                <div style={{ fontSize: 24, fontWeight: 700, color: t.blue, lineHeight: 1 }}>
-                  {(drawerRecord.summary?.teacherCount ?? 0).toLocaleString()}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Teachers
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: t.greenLight,
-                  border: `1px solid rgba(${t.greenRgb}, 0.33)`,
-                  borderRadius: 10,
-                  padding: "16px 14px",
-                  textAlign: "center",
-                }}
-              >
-                <BookOutlined style={{ fontSize: 20, color: t.green, marginBottom: 6, display: "block" }} />
-                <div style={{ fontSize: 24, fontWeight: 700, color: t.green, lineHeight: 1 }}>
-                  {(drawerRecord.summary?.studentCount ?? 0).toLocaleString()}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Students
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: t.pinkLight,
-                  border: `1px solid rgba(${t.pinkRgb}, 0.33)`,
-                  borderRadius: 10,
-                  padding: "16px 14px",
-                  textAlign: "center",
-                }}
-              >
-                <TeamOutlined style={{ fontSize: 20, color: t.pink, marginBottom: 6, display: "block" }} />
-                <div style={{ fontSize: 24, fontWeight: 700, color: t.pink, lineHeight: 1 }}>
-                  {(drawerRecord.summary?.parentCount ?? 0).toLocaleString()}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Parents
-                </div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                {dayjs(year.startDate).format(DAY)} – {dayjs(year.endDate).format(DAY)}
               </div>
             </div>
-          </>
-        )}
-      </Drawer>
+            {current?.error ? (
+              <Alert
+                type="error" showIcon message={current.error}
+                action={<Button size="small" icon={<ReloadOutlined />} onClick={() => loadOverview(schoolId, year._id, token.current)}>Try again</Button>}
+              />
+            ) : !current?.data ? (
+              <Skeleton active paragraph={{ rows: 6 }} />
+            ) : (
+              <SchoolOverview data={current.data} yearName={year.name} />
+            )}
+          </div>
+
+          {years.length > 1 && (
+            <div style={sectionPanel}>
+              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>Year by year</div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 12 }}>
+                Students who studied in each year{years.length > COMPARE_YEARS ? ` — the latest ${COMPARE_YEARS}` : ""}. Pick a year to open it above.
+              </div>
+              <Table
+                rowKey={(r) => r.year._id}
+                columns={columns}
+                dataSource={rows}
+                pagination={false}
+                size="middle"
+                scroll={{ x: 560 }}
+                rowClassName={(r) => `sr-row${r.year._id === year._id ? " sr-open" : ""}`}
+                onRow={(r) => ({
+                  onClick: () => {
+                    choose({ year: r.year._id });
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  },
+                })}
+              />
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

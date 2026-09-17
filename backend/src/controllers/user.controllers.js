@@ -16,6 +16,7 @@ import { Teacher } from '../models/teacherAssignment.model.js'
 import { escapeRegex } from '../utils/escapeRegex.js'
 import { SchoolSubscription } from '../models/schoolSubscription.model.js'
 import { recordLoginEvent, recordLogoutByUserId } from './loginLog.controllers.js'
+import { billingOnlyMessage, canUseBillingOnly, findSchoolAccessProblem, isSuperAdminUser } from '../utils/schoolAccess.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -205,35 +206,28 @@ const loginUser = asyncHandler(async (req, res) => {
   const isSuperAdmin =
     user.roleId?.name?.toLowerCase() === "super admin";
 
-  // 4️⃣ School active + email verification check (non super admin)
+  // 4️⃣ School switched off, or its subscription expired, suspended or cancelled (non super admin).
+  // Decided in utils/schoolAccess.js, which token refresh and every request also ask.
+  // An expired plan's School Admin is let in to the billing pages only, to pay the renewal.
+  let billingOnly = null;
   if (!isSuperAdmin) {
-    if (!user.schoolId || user.schoolId.isActive === false) {
-      throw new ApiError(
-        403,
-        "Your school is deactivated. Contact administrator."
-      );
-    }
+    const problem = await findSchoolAccessProblem(user.schoolId?._id, { fresh: true });
+    if (problem && !canUseBillingOnly(problem, user)) throw new ApiError(403, problem.message);
+    if (problem) billingOnly = { reason: billingOnlyMessage(problem) };
 
     /* if (!user.isEmailVerified) {
       throw new ApiError(403, "Email is not verified. Please verify before login.");
     } */
   }
 
-  // 4b️⃣ Subscription check for school-level roles
+  // 4b️⃣ Warn when the subscription ends within 30 days
   let subscriptionWarning = null;
-  if (!isSuperAdmin && user.schoolId?._id) {
+  if (!isSuperAdmin && !billingOnly && user.schoolId?._id) {
     const sub = await SchoolSubscription.findOne({ schoolId: user.schoolId._id }).lean();
     if (sub) {
       const now = new Date();
       const end = new Date(sub.endDate);
       const daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
-
-      if (sub.status === "expired" || daysLeft <= 0) {
-        throw new ApiError(
-          403,
-          `Your school's subscription has expired on ${end.toLocaleDateString("en-IN")}. Please contact the administrator to renew.`
-        );
-      }
 
       if (daysLeft <= 30) {
         subscriptionWarning = {
@@ -392,6 +386,7 @@ const loginUser = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
           subscriptionWarning,
+          billingOnly,
         },
         "User logged in successfully"
       )
@@ -1223,9 +1218,19 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, 'Invalid refresh token');
   }
 
-  const user = await User.findOne({ _id: decoded?._id, isActive: true, isDeleted: { $ne: true } }).select("+refreshToken");
+  const user = await User.findOne({ _id: decoded?._id, isActive: true, isDeleted: { $ne: true } })
+    .select("+refreshToken")
+    .populate("roleId", "name");
   if (!user || user.refreshToken !== incomingRefreshToken) {
     throw new ApiError(401, 'Refresh token expired or mismatched');
+  }
+
+  // A refresh used to be granted whatever had happened to the school since sign-in, so a switched-off
+  // school's users stayed in for as long as their refresh token lasted. 403, not 401: the browser
+  // treats a failed refresh as the end of the session and shows this message on the sign-in page.
+  if (!isSuperAdminUser(user) && user.schoolId) {
+    const problem = await findSchoolAccessProblem(user.schoolId, { fresh: true });
+    if (problem && !canUseBillingOnly(problem, user)) throw new ApiError(403, problem.message);
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);

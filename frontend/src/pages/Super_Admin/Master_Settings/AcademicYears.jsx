@@ -1,563 +1,517 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
 import {
-  fetchAllAcademicYears,
-  fetchActiveAcademicYear,
-  setActiveAcademicYear,
-  createAcademicYear,
-  archiveAcademicYear,
-  deleteAcademicYear,
-  updateAcademicYear,
-} from "../../../features/academicYearSlice";
-
-import { fetchSchools } from "../../../features/schoolSlice";
-
-import {
-  Table,
-  Select,
-  DatePicker,
-  Button,
-  Space,
-  Tag,
-  Drawer,
-  message,
-  Popconfirm,
-  Tooltip,
-  Empty,
-  Alert,
-  Form,
+  Alert, Button, Checkbox, DatePicker, Drawer, Dropdown, Empty, Form, Modal, Progress, Select, Skeleton, Tag, message,
 } from "antd";
-
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  CalendarOutlined,
-  BookOutlined,
-  InboxOutlined,
-  CheckCircleFilled,
-  EditOutlined,
-  DeleteOutlined,
-  ClockCircleOutlined,
-  SafetyCertificateOutlined,
-  ExclamationCircleOutlined,
+  CalendarOutlined, CheckCircleFilled, DeleteOutlined, EditOutlined, InboxOutlined, MoreOutlined, PlusOutlined,
 } from "@ant-design/icons";
-
 import dayjs from "dayjs";
+
+import apiClient from "../../../api/httpClient";
+import { fetchSchools } from "../../../features/schoolSlice";
+import { fetchActiveAcademicYear, setSelectedAcademicYear } from "../../../features/academicYearSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  sectionPanel,
-  toolbarRow,
-  tableHeadCss,
-  statGrid,
-  statCard,
-  statLabel,
-  statValue,
-} from "../../../styles/pageStyles";
+import { modalTitle, pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 
-const { Option } = Select;
+/**
+ * Academic Years — a school's sessions, which one is running, and the next one.
+ *
+ * The page used to open empty for a Super Admin, with the school picker below three stat cards
+ * that showed whatever year some other page had last loaded, a New Year button that only
+ * complained after you had filled the form, and a six-column table for what is usually three
+ * rows. Now the school comes first, the running year is at the top with how far through it the
+ * school is, and the list says of every year whether it is running, upcoming, finished or
+ * archived.
+ *
+ * It keeps its own list rather than the shared one: activating a year through the shared slice
+ * also changes the year in the header, which for a Super Admin managing some other school is the
+ * wrong year to switch to.
+ */
 
-const StatusTag = ({ record, activeYear }) => {
-  if (record.status === "archived")
-    return (
-      <Tag
-        icon={<InboxOutlined />}
-        style={{
-          background: "var(--surface-soft)",
-          color: "var(--text-muted)",
-          border: "1px solid var(--border-muted)",
-          borderRadius: 20,
-          fontWeight: 600,
-          padding: "2px 10px",
-        }}
-      >
-        Archived
-      </Tag>
-    );
-  if (activeYear?._id === record._id)
-    return (
-      <Tag
-        icon={<CheckCircleFilled />}
-        style={{
-          background: "rgba(220,252,231,0.2)",
-          color: "var(--success)",
-          border: "1px solid rgba(220,252,231,0.5)",
-          borderRadius: 20,
-          fontWeight: 600,
-          padding: "2px 10px",
-        }}
-      >
-        Active
-      </Tag>
-    );
+const DAY = "D MMM YYYY";
+const errorText = (e, fallback) => e?.response?.data?.message || e?.message || fallback;
+
+/** Noon, so the date is the same calendar day on the server whatever the browser's time zone. */
+const atNoon = (d) => dayjs(d).hour(12).minute(0).second(0).millisecond(0).toISOString();
+
+const yearName = (start, end) => {
+  const a = dayjs(start).year();
+  const b = dayjs(end).year();
+  return a === b ? String(a) : `${a}-${b}`;
+};
+
+/** Whole months, counting the last day: 1 Apr – 31 Mar is 12 months, not the 11 a month diff gives. */
+const monthsBetween = (start, end) => Math.max(1, Math.round((dayjs(end).add(1, "day").diff(dayjs(start), "day")) / 30.44));
+
+function statusOf(year, today = dayjs()) {
+  if (year.status === "archived") return { key: "archived", label: "Archived", color: "default" };
+  if (year.isActive) return { key: "running", label: "Running", color: "green" };
+  if (dayjs(year.startDate).isAfter(today, "day")) return { key: "upcoming", label: "Upcoming", color: "blue" };
+  if (dayjs(year.endDate).isBefore(today, "day")) return { key: "finished", label: "Finished", color: "default" };
+  return { key: "current", label: "In session · not running", color: "orange" };
+}
+
+/** Common session shapes, starting from the day after the latest year ends (or this year). */
+function presetsAfter(years) {
+  const latestEnd = years.reduce((max, y) => (!max || dayjs(y.endDate).isAfter(max) ? dayjs(y.endDate) : max), null);
+  // A school with no years yet needs the session it is in now, not next year's.
+  const from = latestEnd ? latestEnd.add(1, "day") : dayjs().subtract(11, "month");
+  const next = (month) => {
+    let start = from.month(month).date(1);
+    if (start.isBefore(from, "day")) start = start.add(1, "year");
+    return [start, start.add(1, "year").subtract(1, "day")];
+  };
+  return [
+    { label: "April – March", value: next(3) },
+    { label: "June – May", value: next(5) },
+    { label: "January – December", value: next(0) },
+  ];
+}
+
+/* ─────────────────────────── the running year ─────────────────────────── */
+const RunningYear = ({ year, onPlanNext }) => {
+  const today = dayjs();
+  const start = dayjs(year.startDate);
+  const end = dayjs(year.endDate);
+  const total = Math.max(1, end.diff(start, "day") + 1);
+  const done = Math.min(total, Math.max(0, today.diff(start, "day") + 1));
+  const ended = today.isAfter(end, "day");
+  const notStarted = today.isBefore(start, "day");
+  const left = end.diff(today, "day");
+
   return (
-    <Tag
-      icon={<ClockCircleOutlined />}
-      style={{
-        background: "var(--surface-soft)",
-        color: "var(--primary)",
-        border: "1px solid var(--border-muted)",
-        borderRadius: 20,
-        fontWeight: 600,
-        padding: "2px 10px",
-      }}
-    >
-      Inactive
-    </Tag>
+    <div style={{ ...sectionPanel, borderLeft: `4px solid ${ended ? "var(--warning)" : "var(--success)"}` }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
+        <div style={{ flex: "1 1 260px" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--success-hover)" }}>
+            <CheckCircleFilled /> Running year
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", marginTop: 2 }}>{year.name}</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            {start.format(DAY)} – {end.format(DAY)} · {monthsBetween(start, end)} months
+          </div>
+        </div>
+        <div style={{ flex: "2 1 320px" }}>
+          <Progress
+            percent={Math.round((done / total) * 100)}
+            status={ended ? "exception" : "active"}
+            showInfo={false}
+            strokeColor={ended ? "var(--warning)" : "var(--success)"}
+          />
+          <div style={{ fontSize: 13, color: ended ? "var(--warning-hover)" : "var(--text-secondary)", marginTop: 4 }}>
+            {ended
+              ? `It ended ${today.diff(end, "day")} day${today.diff(end, "day") === 1 ? "" : "s"} ago — classes, attendance and fees still default to it.`
+              : notStarted
+                ? `Starts in ${start.diff(today, "day")} days`
+                : `Day ${done} of ${total} · ${left} day${left === 1 ? "" : "s"} left`}
+          </div>
+        </div>
+        {(ended || left <= 60) && (
+          <Button type={ended ? "primary" : "default"} icon={<PlusOutlined />} onClick={onPlanNext}>
+            Set up the next year
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };
 
+/* ─────────────────────────── one year in the list ─────────────────────────── */
+const YearRow = ({ year, onSetRunning, onEdit, onArchive, onDelete, busy }) => {
+  const s = statusOf(year);
+  const start = dayjs(year.startDate);
+  const end = dayjs(year.endDate);
+  const archived = s.key === "archived";
+  // Going back to a finished year is rare and easy to click by mistake, so for those it sits in the menu.
+  const runnable = !archived && !year.isActive;
+  const runButton = runnable && (s.key === "upcoming" || s.key === "current");
+
+  const menu = [
+    runnable && !runButton && { key: "run", icon: <CheckCircleFilled />, label: "Set running", onClick: () => onSetRunning(year) },
+    !archived && { key: "edit", icon: <EditOutlined />, label: "Change dates", onClick: () => onEdit(year) },
+    !archived && !year.isActive && { key: "archive", icon: <InboxOutlined />, label: "Archive", onClick: () => onArchive(year) },
+    !year.isActive && { type: "divider" },
+    !year.isActive && { key: "delete", icon: <DeleteOutlined />, label: "Delete", danger: true, onClick: () => onDelete(year) },
+  ].filter(Boolean);
+
+  return (
+    <div
+      style={{
+        display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+        padding: "12px 4px", borderTop: "1px solid var(--border-muted)",
+        opacity: archived ? 0.7 : 1,
+      }}
+    >
+      <div style={{
+        width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: year.isActive ? "var(--success-light)" : "var(--surface-soft)",
+        color: year.isActive ? "var(--success-hover)" : "var(--text-muted)",
+      }}>
+        <CalendarOutlined />
+      </div>
+      <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
+          {year.name} <Tag color={s.color} style={{ marginLeft: 6 }}>{s.label}</Tag>
+        </div>
+        <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          {start.format(DAY)} – {end.format(DAY)} · {monthsBetween(start, end)} months
+        </div>
+      </div>
+      {runButton && (
+        <Button size="small" onClick={() => onSetRunning(year)} loading={busy === year._id}>
+          Set running
+        </Button>
+      )}
+      {menu.length > 0 && (
+        <Dropdown menu={{ items: menu }} trigger={["click"]} placement="bottomRight">
+          <Button type="text" size="small" icon={<MoreOutlined />} aria-label={`More for ${year.name}`} />
+        </Dropdown>
+      )}
+    </div>
+  );
+};
+
+/* ────────────────────────────────── page ────────────────────────────────── */
 const AcademicYearPage = () => {
   const dispatch = useDispatch();
+  const { user } = useSelector((s) => s.auth || {});
+  const { schools = [] } = useSelector((s) => s.school || {});
 
-  const { user } = useSelector((state) => state.auth);
-  const { schools } = useSelector((state) => state.school);
-  const {
-    academicYears = [],
-    activeYear = null,
-    loading,
-  } = useSelector((state) => state.academicYear);
-
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editId, setEditId] = useState(null);
+  const isSuperAdmin = user?.role?.name === "Super Admin";
+  const [schoolId, setSchoolId] = useState(isSuperAdmin ? null : (user?.school?._id || user?.schoolId || null));
+  const [years, setYears] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(null);
+  const [drawer, setDrawer] = useState(null);         // null | { mode: "create" } | { mode: "edit", year }
+  const [saving, setSaving] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [form] = Form.useForm();
 
-  const [selectedSchoolId, setSelectedSchoolId] = useState(
-    user?.role?.name === "Super Admin" ? "" : user?.school?._id
+  useEffect(() => { if (isSuperAdmin) dispatch(fetchSchools()); }, [dispatch, isSuperAdmin]);
+
+  const load = useCallback(async () => {
+    if (!schoolId) { setYears([]); return; }
+    setLoading(true);
+    try {
+      const res = await apiClient.get(`/academicYear/school/${schoolId}`);
+      setYears(Array.isArray(res?.data?.data) ? res.data.data : []);
+    } catch (e) {
+      message.error(errorText(e, "Could not load the academic years"));
+      setYears([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const sorted = useMemo(
+    () => [...years].sort((a, b) => dayjs(b.startDate).valueOf() - dayjs(a.startDate).valueOf()),
+    [years],
   );
+  const running = sorted.find((y) => y.isActive) || null;
+  const archivedCount = sorted.filter((y) => y.status === "archived").length;
+  const listed = sorted.filter((y) => !y.isActive && (showArchived || y.status !== "archived"));
+  const inSessionButIdle = !running && sorted.find((y) => statusOf(y).key === "current");
 
-  useEffect(() => {
-    if (user?.role?.name === "Super Admin") dispatch(fetchSchools());
-  }, [dispatch, user?.role?.name]);
-
-  useEffect(() => {
-    if (selectedSchoolId) {
-      dispatch(fetchAllAcademicYears(selectedSchoolId));
-      dispatch(fetchActiveAcademicYear(selectedSchoolId));
-    }
-  }, [selectedSchoolId, dispatch]);
-
-  const generateYearName = (start, end) =>
-    `${dayjs(start).year()}-${dayjs(end).year()}`;
-
-  const resetForm = () => {
-    setEditId(null);
-    form.resetFields();
+  /* After a change to the running year, a school's own staff see it in their header too. */
+  const syncHeader = async () => {
+    if (isSuperAdmin || !schoolId) return;
+    const result = await dispatch(fetchActiveAcademicYear(schoolId));
+    if (result?.payload) dispatch(setSelectedAcademicYear(result.payload));
   };
 
-  const closeDrawer = () => {
-    setDrawerOpen(false);
-    resetForm();
+  /* ── drawer ── */
+  const openCreate = () => {
+    const [start, end] = presetsAfter(sorted)[0].value;
+    form.setFieldsValue({ dateRange: [start, end], setRunning: !running });
+    setDrawer({ mode: "create" });
   };
+  const openEdit = (year) => {
+    form.setFieldsValue({ dateRange: [dayjs(year.startDate), dayjs(year.endDate)], setRunning: false });
+    setDrawer({ mode: "edit", year });
+  };
+  const closeDrawer = () => { setDrawer(null); form.resetFields(); };
 
-  const handleSubmit = async () => {
+  const range = Form.useWatch("dateRange", form);
+  const overlap = useMemo(() => {
+    if (!range?.[0] || !range?.[1]) return null;
+    return sorted.find((y) => y._id !== drawer?.year?._id
+      && !dayjs(y.startDate).isAfter(range[1], "day")
+      && !dayjs(y.endDate).isBefore(range[0], "day")) || null;
+  }, [range, sorted, drawer]);
+
+  const save = async () => {
+    const { dateRange, setRunning } = await form.validateFields();
+    const [start, end] = dateRange;
+    setSaving(true);
     try {
-      const values = await form.validateFields();
-      const { dateRange } = values;
-      const startDate = dateRange[0];
-      const endDate = dateRange[1];
-
-      if (user?.role?.name === "Super Admin" && !selectedSchoolId) {
-        message.error("Please select a school first");
-        return;
-      }
-
-      const name = generateYearName(startDate, endDate);
-
-      if (editId) {
-        await dispatch(
-          updateAcademicYear({ id: editId, data: { schoolId: selectedSchoolId, name, startDate, endDate } })
-        ).unwrap();
-        message.success("Academic year updated successfully");
+      if (drawer.mode === "edit") {
+        await apiClient.put(`/academicYear/${drawer.year._id}`, { startDate: atNoon(start), endDate: atNoon(end) });
+        message.success(`${yearName(start, end)} updated`);
       } else {
-        await dispatch(
-          createAcademicYear({ schoolId: selectedSchoolId, name, startDate, endDate })
-        ).unwrap();
-        message.success("Academic year created successfully");
+        await apiClient.post("/academicYear/create", {
+          schoolId, startDate: atNoon(start), endDate: atNoon(end), isActive: Boolean(setRunning),
+        });
+        message.success(`${yearName(start, end)} created${setRunning ? " and set running" : ""}`);
       }
-
       closeDrawer();
-    } catch (error) {
-      if (error?.message) message.error(error.message);
+      await load();
+      if (drawer.mode === "edit" ? drawer.year.isActive : setRunning) await syncHeader();
+    } catch (e) {
+      message.error(errorText(e, "Could not save the academic year"));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleEdit = (record) => {
-    setEditId(record._id);
-    form.setFieldsValue({
-      dateRange: [dayjs(record.startDate), dayjs(record.endDate)],
+  /* ── row actions ── */
+  const setRunningYear = (year) => {
+    Modal.confirm({
+      title: `Set ${year.name} running?`,
+      content: running
+        ? `${running.name} stops being the running year. Classes, attendance, fees and every page that starts on "this year" switch to ${year.name}.`
+        : `Classes, attendance, fees and every page that starts on "this year" will use ${year.name}.`,
+      okText: "Set running",
+      centered: true,
+      onOk: async () => {
+        setBusy(year._id);
+        try {
+          await apiClient.post(`/academicYear/activate/${year._id}`);
+          message.success(`${year.name} is now the running year`);
+          await load();
+          await syncHeader();
+        } catch (e) {
+          message.error(errorText(e, "Could not set the year running"));
+        } finally {
+          setBusy(null);
+        }
+      },
     });
-    setDrawerOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await dispatch(deleteAcademicYear(id)).unwrap();
-      message.success("Academic year deleted");
-    } catch (error) {
-      message.error(error || "Failed to delete");
-    }
-  };
-
-  const handleArchive = async (id) => {
-    try {
-      await dispatch(archiveAcademicYear(id)).unwrap();
-      message.success("Academic year archived");
-    } catch (error) {
-      message.error(error || "Failed to archive");
-    }
-  };
-
-  const handleSetActive = async (id) => {
-    try {
-      await dispatch(setActiveAcademicYear(id)).unwrap();
-      message.success("Active year updated");
-    } catch (error) {
-      message.error(error || "Failed to set active");
-    }
-  };
-
-  const total = academicYears.length;
-  const archivedTotal = academicYears.filter((a) => a.status === "archived").length;
-  const inactiveTotal = academicYears.filter(
-    (a) => a.status !== "archived" && activeYear?._id !== a._id
-  ).length;
-
-  const columns = [
-    {
-      title: "Academic Year",
-      dataIndex: "name",
-      render: (name, record) => (
-        <Space>
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              background: activeYear?._id === record._id ? "rgba(220,252,231,0.2)" : "var(--surface-soft)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: activeYear?._id === record._id ? "var(--success)" : "var(--primary)",
-              fontSize: 16,
-            }}
-          >
-            <CalendarOutlined />
-          </div>
-          <div>
-            <span style={{ fontWeight: 600, color: "var(--text-primary)", display: "block" }}>
-              {name}
-            </span>
-            {activeYear?._id === record._id && (
-              <span style={{ fontSize: 11, color: "var(--success)" }}>Currently active</span>
-            )}
-          </div>
-        </Space>
-      ),
-    },
-    {
-      title: "Start Date",
-      dataIndex: "startDate",
-      render: (d) => (
-        <span style={{ color: "var(--text-muted)" }}>{dayjs(d).format("DD MMM YYYY")}</span>
-      ),
-    },
-    {
-      title: "End Date",
-      dataIndex: "endDate",
-      render: (d) => (
-        <span style={{ color: "var(--text-muted)" }}>{dayjs(d).format("DD MMM YYYY")}</span>
-      ),
-    },
-    {
-      title: "Duration",
-      render: (_, record) => {
-        const months = dayjs(record.endDate).diff(dayjs(record.startDate), "month");
-        return <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{months} months</span>;
+  const archiveYear = (year) => {
+    Modal.confirm({
+      title: `Archive ${year.name}?`,
+      content: "It stays on record with everything filed under it, but can no longer be changed or set running.",
+      okText: "Archive",
+      centered: true,
+      onOk: async () => {
+        try {
+          await apiClient.post(`/academicYear/archive/${year._id}`);
+          message.success(`${year.name} archived`);
+          await load();
+        } catch (e) {
+          message.error(errorText(e, "Could not archive the year"));
+        }
       },
-    },
-    {
-      title: "Status",
-      render: (_, record) => <StatusTag record={record} activeYear={activeYear} />,
-    },
-    {
-      title: "Actions",
-      align: "right",
-      render: (_, record) => {
-        const isActive = activeYear?._id === record._id;
-        return (
-          <Space size={4}>
-            {!isActive && record.status !== "archived" && (
-              <Tooltip title="Set as active year">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<SafetyCertificateOutlined />}
-                  style={{ color: "var(--success)", fontWeight: 600 }}
-                  onClick={() => handleSetActive(record._id)}
-                >
-                  Set Active
-                </Button>
-              </Tooltip>
-            )}
-            {record.status !== "archived" && (
-              <Tooltip title="Archive this year">
-                <Popconfirm
-                  title="Archive this academic year?"
-                  description="Archived years remain visible but cannot be set active."
-                  icon={<ExclamationCircleOutlined style={{ color: "var(--warning)" }} />}
-                  onConfirm={() => handleArchive(record._id)}
-                  okText="Archive"
-                  cancelText="Cancel"
-                >
-                  <Button type="text" size="small" icon={<InboxOutlined />} style={{ color: "var(--text-muted)", fontWeight: 600 }}>
-                    Archive
-                  </Button>
-                </Popconfirm>
-              </Tooltip>
-            )}
-            <Tooltip title={isActive ? "Cannot edit the active year" : "Edit"}>
-              <Button
-                type="text"
-                size="small"
-                icon={<EditOutlined />}
-                disabled={isActive}
-                onClick={() => handleEdit(record)}
-                style={{ color: isActive ? undefined : "var(--primary)", fontWeight: 600 }}
-              >
-                Edit
-              </Button>
-            </Tooltip>
-            <Popconfirm
-              title="Delete Academic Year?"
-              description="This action is permanent and cannot be undone."
-              icon={<ExclamationCircleOutlined style={{ color: "var(--danger, #ef4444)" }} />}
-              onConfirm={() => handleDelete(record._id)}
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-              cancelText="Cancel"
-              disabled={isActive}
-            >
-              <Tooltip title={isActive ? "Cannot delete the active year" : "Delete"}>
-                <Button type="text" size="small" icon={<DeleteOutlined />} danger disabled={isActive} style={{ fontWeight: 600 }}>
-                  Delete
-                </Button>
-              </Tooltip>
-            </Popconfirm>
-          </Space>
-        );
+    });
+  };
+
+  const deleteYear = (year) => {
+    Modal.confirm({
+      title: `Delete ${year.name}?`,
+      content: "Only a year with nothing filed under it can be deleted — if it has classes, students, exams or fees, archive it instead.",
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      centered: true,
+      onOk: async () => {
+        try {
+          await apiClient.delete(`/academicYear/${year._id}`);
+          message.success(`${year.name} deleted`);
+          await load();
+        } catch (e) {
+          // The server says what is filed under it; that is the useful part.
+          Modal.warning({ title: `${year.name} was not deleted`, content: errorText(e, "Could not delete the year"), centered: true });
+        }
       },
-    },
-  ];
+    });
+  };
+
+  const presets = useMemo(() => presetsAfter(sorted), [sorted]);
 
   return (
     <div style={pageWrapper}>
-      <style>{tableHeadCss("ay-table")}</style>
-
       <PageHeader
-        title="Academic Year Management"
-        subtitle="Manage academic sessions, set active years, and archive past records"
-        icon={<BookOutlined />}
+        title="Academic Years"
+        subtitle="A school's sessions — which one is running, and the next one to set up"
+        icon={<CalendarOutlined />}
         extra={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="large"
-            onClick={() => setDrawerOpen(true)}
-            style={{ fontWeight: 600, borderRadius: 10 }}
-          >
-            New Academic Year
-          </Button>
+          <>
+            {isSuperAdmin && (
+              <Select
+                style={{ minWidth: 240, marginRight: 8 }}
+                showSearch
+                optionFilterProp="label"
+                placeholder="Pick a school"
+                value={schoolId || undefined}
+                onChange={(v) => setSchoolId(v || null)}
+                options={schools.map((s) => ({ value: s._id, label: s.name }))}
+              />
+            )}
+            <Button type="primary" icon={<PlusOutlined />} disabled={!schoolId} onClick={openCreate}>
+              New year
+            </Button>
+          </>
         }
       />
 
-      {activeYear && (
-        <Alert
-          type="success"
-          showIcon
-          icon={<CheckCircleFilled style={{ color: "var(--success)" }} />}
-          message={
-            <span>
-              Active Year: <strong style={{ color: "var(--success)" }}>{activeYear.name}</strong>
-              {"  "}
-              <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                {dayjs(activeYear.startDate).format("DD MMM YYYY")} → {dayjs(activeYear.endDate).format("DD MMM YYYY")}
-              </span>
-            </span>
-          }
-          style={{ borderRadius: 12, marginBottom: 20, background: "rgba(220,252,231,0.2)", border: "1.5px solid rgba(220,252,231,0.5)" }}
-        />
+      {!schoolId ? (
+        <div style={sectionPanel}>
+          <Empty description={isSuperAdmin ? "Pick a school at the top to see its academic years" : "Your account is not linked to a school"} />
+        </div>
+      ) : loading && !years.length ? (
+        <div style={sectionPanel}><Skeleton active paragraph={{ rows: 4 }} /></div>
+      ) : (
+        <>
+          {running ? (
+            <RunningYear year={running} onPlanNext={openCreate} />
+          ) : sorted.length > 0 ? (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16, borderRadius: 12 }}
+              message="No year is running"
+              description={inSessionButIdle
+                ? `Today falls in ${inSessionButIdle.name}, but it is not set running. Classes, attendance and fees have no year to start from until one is.`
+                : "Classes, attendance and fees have no year to start from until one is set running."}
+              action={inSessionButIdle && (
+                <Button size="small" type="primary" onClick={() => setRunningYear(inSessionButIdle)}>
+                  Set {inSessionButIdle.name} running
+                </Button>
+              )}
+            />
+          ) : null}
+
+          <div style={sectionPanel}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
+              <div style={{ flex: 1, fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>
+                {running ? "Other years" : "Years"}
+                <span style={{ marginLeft: 8, fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>
+                  {sorted.length} in all{archivedCount ? ` · ${archivedCount} archived` : ""}
+                </span>
+              </div>
+              {archivedCount > 0 && (
+                <Checkbox checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)}>
+                  Show archived
+                </Checkbox>
+              )}
+            </div>
+
+            {sorted.length === 0 ? (
+              <Empty description="This school has no academic years yet">
+                <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Create the first one</Button>
+              </Empty>
+            ) : listed.length === 0 ? (
+              <div style={{ padding: "16px 4px", fontSize: 13, color: "var(--text-muted)" }}>
+                {archivedCount ? "Only archived years besides the running one — tick “Show archived” to see them." : "The running year is the only one."}
+              </div>
+            ) : (
+              listed.map((year) => (
+                <YearRow
+                  key={year._id}
+                  year={year}
+                  busy={busy}
+                  onSetRunning={setRunningYear}
+                  onEdit={openEdit}
+                  onArchive={archiveYear}
+                  onDelete={deleteYear}
+                />
+              ))
+            )}
+
+            {running && (
+              <div style={{ paddingTop: 12, borderTop: "1px solid var(--border-muted)", display: "flex", gap: 8 }}>
+                <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(running)}>
+                  Change {running.name}'s dates
+                </Button>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      <div className="stat-grid" style={statGrid(180)}>
-        <div style={statCard({ color: "var(--primary)" })}>
-          <div>
-            <div style={statLabel("var(--primary)")}>Total Years</div>
-            <div style={statValue("var(--primary)")}>{total}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>{inactiveTotal} inactive</div>
-          </div>
-          <CalendarOutlined style={{ fontSize: 26, color: "var(--primary)", opacity: 0.4 }} />
-        </div>
-        <div style={statCard({ color: "var(--success)" })}>
-          <div>
-            <div style={statLabel("var(--success)")}>Active Year</div>
-            <div style={{ ...statValue("var(--success)"), fontSize: 18 }}>{activeYear?.name || "—"}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>{activeYear ? "Currently running" : "None set"}</div>
-          </div>
-          <CheckCircleFilled style={{ fontSize: 26, color: "var(--success)", opacity: 0.4 }} />
-        </div>
-        <div style={statCard({ color: "var(--warning)" })}>
-          <div>
-            <div style={statLabel("var(--warning)")}>Archived</div>
-            <div style={statValue("var(--warning)")}>{archivedTotal}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>Historical records</div>
-          </div>
-          <InboxOutlined style={{ fontSize: 26, color: "var(--warning)", opacity: 0.4 }} />
-        </div>
-      </div>
-
-      <div className="page-toolbar" style={{ ...toolbarRow, marginBottom: 16 }}>
-        {user?.role?.name === "Super Admin" && (
-          <Select
-            placeholder="Filter by School"
-            style={{ width: 240 }}
-            value={selectedSchoolId || undefined}
-            onChange={setSelectedSchoolId}
-            allowClear
-            showSearch
-            optionFilterProp="children"
-          >
-            {schools.map((s) => (
-              <Option key={s._id} value={s._id}>{s.name}</Option>
-            ))}
-          </Select>
-        )}
-        <Tooltip title="Refresh data">
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={() => selectedSchoolId && dispatch(fetchAllAcademicYears(selectedSchoolId))}
-          >
-            Refresh
-          </Button>
-        </Tooltip>
-      </div>
-
-      <div style={pageCard}>
-        {!selectedSchoolId && user?.role?.name === "Super Admin" ? (
-          <div style={{ padding: "60px 20px" }}>
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Select a school to view academic years" />
-          </div>
-        ) : (
-          <Table
-            className="ay-table"
-            columns={columns}
-            dataSource={academicYears}
-            rowKey="_id"
-            loading={loading}
-            scroll={{ x: "max-content" }}
-            pagination={{
-              pageSize: 8,
-              showSizeChanger: false,
-              showTotal: (t) => `${t} academic year${t !== 1 ? "s" : ""}`,
-              style: { padding: "12px 20px" },
-            }}
-            locale={{
-              emptyText: (
-                <div style={{ padding: "48px 20px" }}>
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No academic years found. Create one to get started." />
-                </div>
-              ),
-            }}
-            onRow={(record) => ({
-              style: { background: activeYear?._id === record._id ? "var(--success-light)" : undefined, transition: "background 0.15s" },
-            })}
-          />
-        )}
-      </div>
-
       <Drawer
-        title={
-          <Space>
-            <div
-              style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: "var(--primary-light, #e0e7ff)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "var(--primary)",
-              }}
-            >
-              {editId ? <EditOutlined /> : <PlusOutlined />}
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>
-                {editId ? "Edit Academic Year" : "Create Academic Year"}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>
-                {editId ? "Update the date range for this year" : "Define a new academic session by selecting a date range"}
-              </div>
-            </div>
-          </Space>
-        }
-        width={400}
-        open={drawerOpen}
+        open={Boolean(drawer)}
         onClose={closeDrawer}
+        width={440}
+        title={modalTitle(
+          drawer?.mode === "edit" ? <EditOutlined /> : <PlusOutlined />,
+          drawer?.mode === "edit" ? `Change ${drawer.year.name}` : "New academic year",
+          drawer?.mode === "edit" ? "Its name follows the dates" : "Pick the first and last day of the session",
+        )}
         footer={
-          <Space style={{ width: "100%", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
             <Button onClick={closeDrawer}>Cancel</Button>
-            <Button type="primary" loading={loading} onClick={handleSubmit} style={{ fontWeight: 600 }}>
-              {editId ? "Update Year" : "Create Year"}
+            <Button type="primary" loading={saving} disabled={Boolean(overlap)} onClick={save}>
+              {drawer?.mode === "edit" ? "Save dates" : "Create year"}
             </Button>
-          </Space>
+          </div>
         }
-        styles={{ body: { padding: "28px 24px" }, footer: { padding: "14px 24px", borderTop: "1px solid var(--border-muted)" } }}
       >
         <Form form={form} layout="vertical" requiredMark={false}>
+          {drawer?.mode === "create" && (
+            <Form.Item label="Session shape" style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {presets.map((p) => (
+                  <Button key={p.label} size="small" onClick={() => form.setFieldValue("dateRange", p.value)}>
+                    {p.label} {yearName(p.value[0], p.value[1])}
+                  </Button>
+                ))}
+              </div>
+            </Form.Item>
+          )}
+
           <Form.Item
             name="dateRange"
-            label={<span style={{ fontWeight: 600, color: "var(--text-primary)" }}>Academic Year Period</span>}
+            label="First and last day"
             rules={[
-              { required: true, message: "Please select the start and end dates" },
-              () => ({
-                validator(_, value) {
-                  if (!value || !value[0] || !value[1]) return Promise.resolve();
-                  if (dayjs(value[1]).isBefore(dayjs(value[0]))) {
-                    return Promise.reject(new Error("End date must be after start date"));
-                  }
-                  if (dayjs(value[0]).isSame(dayjs(value[1]), "year")) {
-                    return Promise.reject(new Error("Start and end must span different years"));
-                  }
+              { required: true, message: "Pick the first and last day of the session" },
+              {
+                validator: (_, value) => {
+                  if (!value?.[0] || !value?.[1]) return Promise.resolve();
+                  if (!dayjs(value[1]).isAfter(value[0], "day")) return Promise.reject(new Error("The last day has to come after the first"));
+                  if (dayjs(value[1]).diff(value[0], "month") > 18) return Promise.reject(new Error("That is longer than a year and a half — check the dates"));
                   return Promise.resolve();
                 },
-              }),
+              },
             ]}
           >
-            <DatePicker.RangePicker style={{ width: "100%" }} placeholder={["Start Date", "End Date"]} format="DD MMM YYYY" size="large" />
+            <DatePicker.RangePicker style={{ width: "100%" }} format={DAY} allowClear={false} />
           </Form.Item>
 
-          <div style={{ background: "var(--surface-soft)", borderRadius: 10, padding: "14px 16px", border: "1px solid var(--border-muted)" }}>
-            <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", fontWeight: 700, marginBottom: 8 }}>
-              Preview
+          {range?.[0] && range?.[1] && (
+            <div style={{ padding: "12px 14px", borderRadius: 12, background: "var(--surface-soft)", marginBottom: 16 }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "var(--primary)" }}>{yearName(range[0], range[1])}</div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                {monthsBetween(range[0], range[1])} months · {dayjs(range[0]).format(DAY)} – {dayjs(range[1]).format(DAY)}
+              </div>
             </div>
-            <Form.Item noStyle shouldUpdate>
-              {({ getFieldValue }) => {
-                const dr = getFieldValue("dateRange");
-                if (!dr?.[0] || !dr?.[1])
-                  return <span style={{ color: "var(--text-muted)", fontSize: 13 }}>Select dates to preview year name</span>;
-                const name = generateYearName(dr[0], dr[1]);
-                const months = dayjs(dr[1]).diff(dayjs(dr[0]), "month");
-                return (
-                  <Space direction="vertical" size={4}>
-                    <span style={{ fontSize: 18, fontWeight: 700, color: "var(--primary)" }}>{name}</span>
-                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                      {months} months · {dayjs(dr[0]).format("DD MMM YYYY")} → {dayjs(dr[1]).format("DD MMM YYYY")}
-                    </span>
-                  </Space>
-                );
-              }}
+          )}
+
+          {overlap && (
+            <Alert
+              type="error"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message={`These dates overlap ${overlap.name}`}
+              description={`${overlap.name} runs ${dayjs(overlap.startDate).format(DAY)} – ${dayjs(overlap.endDate).format(DAY)}. A school's years cannot share days.`}
+            />
+          )}
+
+          {drawer?.mode === "create" && (
+            <Form.Item name="setRunning" valuePropName="checked" style={{ marginBottom: 0 }}>
+              <Checkbox>
+                Set it running straight away
+                {running && <span style={{ color: "var(--text-muted)" }}> (instead of {running.name})</span>}
+              </Checkbox>
             </Form.Item>
-          </div>
+          )}
+          {drawer?.mode === "edit" && drawer.year.isActive && (
+            <Alert type="info" showIcon message="This is the running year — its new dates apply everywhere straight away." />
+          )}
         </Form>
       </Drawer>
     </div>

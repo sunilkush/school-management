@@ -5,6 +5,7 @@ import {
   downloadMyInvoicePdf,
   createMyPaymentIntent,
   verifyMyPayment,
+  getMyRenewalInvoice,
 } from "../controllers/schoolBilling.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -21,5 +22,6 @@ router.get("/invoices", getMyInvoices);
 router.get("/invoices/:invoiceId/pdf", downloadMyInvoicePdf);
 router.post("/invoices/:invoiceId/pay/intent", createMyPaymentIntent);
 router.post("/invoices/:invoiceId/pay/verify", verifyMyPayment);
+router.post("/renewal-invoice", getMyRenewalInvoice);
 
 export default router;

@@ -11,7 +11,11 @@ import dayjs from "dayjs";
 import { fetchMonthlyReport } from "../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 import { fetchSchools }       from "../../features/schoolSlice";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import PageHeader             from "../../components/layout/PageHeader";
+import { FilterGrid, FilterField } from "../../components/attendance/FilterGrid";
+import { FULL_WIDTH }         from "../../components/attendance/filterStyles";
+import YearField              from "../../components/attendance/YearField";
 import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
@@ -38,11 +42,6 @@ const ROLE_OPTIONS = [
 const PAGE_SIZE = 15;
 
 /* ── helpers ── */
-const FL = ({ children }) => (
-  <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
-    {children}
-  </div>
-);
 
 const avatarColor = (name = "") => {
   const color = CATEGORICAL_COLORS[(name.charCodeAt(0) || 65) % CATEGORICAL_COLORS.length];
@@ -159,6 +158,8 @@ const MonthlyReportPage = () => {
 
   const isSuperAdmin = user?.role?.name === "Super Admin";
   const [saSchoolId,  setSaSchoolId]  = useState(null);
+  const [saAcademicYear, setSaAcademicYear] = useState(null);
+  const [yearLoading, setYearLoading] = useState(false);
   const schoolId = isSuperAdmin ? saSchoolId : (user?.school?._id || null);
 
   const [month,     setMonth]     = useState(dayjs());
@@ -168,7 +169,9 @@ const MonthlyReportPage = () => {
   const [page,      setPage]      = useState(1);
   const [sortAsc,   setSortAsc]   = useState(null); // null | true | false
 
-  const academicYearId = selectedAcademicYear?._id || null;
+  // A Super Admin works in the chosen school's running year; the header's year is nobody's school.
+  const academicYear   = isSuperAdmin ? saAcademicYear : (selectedAcademicYear || null);
+  const academicYearId = academicYear?._id || null;
 
   const schoolOptions = useMemo(
     () => schools.map((s) => ({ value: s._id, label: s.name })).filter((s) => s.label),
@@ -187,8 +190,24 @@ const MonthlyReportPage = () => {
 
   useEffect(() => { if (isSuperAdmin) dispatch(fetchSchools()); }, [isSuperAdmin, dispatch]);
 
+  /* The chosen school's running year, for a Super Admin who has no school of their own. */
   useEffect(() => {
-    if (role === "student" && schoolId) {
+    if (!isSuperAdmin) return undefined;
+    setSaAcademicYear(null);
+    if (!saSchoolId) return undefined;
+    let cancelled = false;
+    setYearLoading(true);
+    dispatch(fetchActiveAcademicYear(saSchoolId))
+      .unwrap()
+      .then((year) => { if (!cancelled) setSaAcademicYear(year?._id ? year : null); })
+      .catch(() => { if (!cancelled) setSaAcademicYear(null); })
+      .finally(() => { if (!cancelled) setYearLoading(false); });
+    return () => { cancelled = true; };
+  }, [isSuperAdmin, saSchoolId, dispatch]);
+
+  useEffect(() => {
+    // Classes only from the running year — without one this returned every class the school ever had.
+    if (role === "student" && schoolId && academicYearId) {
       dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
     }
   }, [role, schoolId, academicYearId, dispatch]);
@@ -260,65 +279,63 @@ const MonthlyReportPage = () => {
 
       {/* ── Filter Panel ── */}
       <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 14, alignItems: "end" }}>
-
+        <FilterGrid>
           {isSuperAdmin && (
-            <div>
-              <FL>School</FL>
+            <FilterField label="School">
               <Select
-                showSearch placeholder="Select school" style={{ width: "100%" }}
+                showSearch placeholder="Select school" style={FULL_WIDTH}
                 value={saSchoolId || undefined} options={schoolOptions} allowClear
                 filterOption={(inp, opt) => opt.label.toLowerCase().includes(inp.toLowerCase())}
                 onChange={(val) => { setSaSchoolId(val || null); setClassId(null); setSectionId(null); }}
                 suffixIcon={<BankOutlined />}
               />
-            </div>
+            </FilterField>
           )}
 
-          <div>
-            <FL>Month</FL>
-            <DatePicker picker="month" style={{ width: "100%" }} value={month} onChange={(v) => setMonth(v || dayjs())} />
-          </div>
+          <FilterField label="Academic year">
+            <YearField year={academicYear} schoolChosen={Boolean(schoolId)} loading={yearLoading} />
+          </FilterField>
 
-          <div>
-            <FL>Role</FL>
+          <FilterField label="Role">
             <Select
-              style={{ width: "100%" }} value={role} options={ROLE_OPTIONS}
+              style={FULL_WIDTH} value={role} options={ROLE_OPTIONS}
               onChange={(v) => { setRole(v); setClassId(null); setSectionId(null); }}
             />
-          </div>
+          </FilterField>
 
-          <div>
-            <FL>Class</FL>
+          <FilterField label="Class">
             <Select
-              placeholder="All classes" style={{ width: "100%" }} allowClear
-              disabled={role !== "student" || !schoolId}
+              placeholder={role !== "student" ? "Students only" : academicYearId ? "All classes" : "Pick a school first"}
+              style={FULL_WIDTH} allowClear
+              disabled={role !== "student" || !schoolId || !academicYearId}
               value={classId || undefined} options={classOptions}
               onChange={(v) => { setClassId(v || null); setSectionId(null); }}
             />
-          </div>
+          </FilterField>
 
-          <div>
-            <FL>Section</FL>
+          <FilterField label="Section">
             <Select
-              placeholder="All sections" style={{ width: "100%" }} allowClear
+              placeholder="All sections" style={FULL_WIDTH} allowClear
               disabled={!classId || role !== "student"}
               value={sectionId || undefined} options={sectionOptions}
               onChange={(v) => setSectionId(v || null)}
             />
-          </div>
+          </FilterField>
 
-          <div>
-            <FL>&nbsp;</FL>
+          <FilterField label="Month">
+            <DatePicker picker="month" style={FULL_WIDTH} value={month} onChange={(v) => setMonth(v || dayjs())} />
+          </FilterField>
+
+          <FilterField>
             <Button
-              type="primary" icon={<SearchOutlined />} style={{ width: "100%" }}
+              type="primary" icon={<SearchOutlined />} style={FULL_WIDTH}
               loading={reportLoading} disabled={!schoolId}
               onClick={handleGenerate}
             >
               Generate
             </Button>
-          </div>
-        </div>
+          </FilterField>
+        </FilterGrid>
       </div>
 
       {/* ── Stats Row ── */}

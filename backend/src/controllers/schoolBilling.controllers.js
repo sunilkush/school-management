@@ -4,7 +4,7 @@ import { SubscriptionInvoice } from "../models/SubscriptionInvoice.model.js";
 import { School } from "../models/school.model.js";
 import { GlobalConfig } from "../models/GlobalConfig.model.js";
 import { createOrder, verifyPaymentSignature } from "../services/paymentGateway/razorpayGateway.js";
-import { recordSubscriptionPayment } from "./superAdminBilling.controllers.js";
+import { createInvoiceForSubscription, recordSubscriptionPayment } from "./superAdminBilling.controllers.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -115,5 +115,51 @@ export const verifyMyPayment = asyncHandler(async (req, res) => {
     gatewayOrderId: razorpay_order_id,
   });
 
-  return res.status(200).json(new ApiResponse(200, { payment }, "Payment verified and recorded"));
+  // Paying renews the plan (applyPaidInvoice); send the plan back so the page can say until when.
+  const subscription = await SchoolSubscription.findOne({ schoolId }).populate("planId");
+  return res.status(200).json(new ApiResponse(200, { payment, subscription }, "Payment verified and recorded"));
+});
+
+/** How close to its end a plan has to be before the school can ask for its renewal invoice. */
+const RENEWAL_WINDOW_DAYS = 30;
+
+/**
+ * The invoice that renews this school's plan — the one already waiting, or a new one.
+ *
+ * The nightly job makes it a week before the plan ends, but a school whose plan has run out (and
+ * whose admin can now sign in only to the billing pages) may have none to pay: the job did not
+ * run, or the invoice was cancelled. Rather than being stuck, the School Admin can ask for it.
+ */
+export const getMyRenewalInvoice = asyncHandler(async (req, res) => {
+  const schoolId = resolveSchoolId(req.user);
+  const subscription = await SchoolSubscription.findOne({ schoolId });
+  if (!subscription) throw new ApiError(404, "Your school has no plan yet. Please contact the administrator.");
+  if (["suspended", "cancelled"].includes(subscription.status)) {
+    throw new ApiError(409, `Your school's subscription is ${subscription.status}. Please contact the administrator.`);
+  }
+
+  const waiting = await SubscriptionInvoice.findOne({
+    schoolId,
+    status: { $in: ["draft", "unpaid", "overdue"] },
+    $or: [
+      { billingPeriodStart: subscription.endDate, period: "next" },
+      { billingPeriodEnd: subscription.endDate, period: { $exists: false } },
+    ],
+  });
+  if (waiting) return res.status(200).json(new ApiResponse(200, waiting, "Renewal invoice fetched"));
+
+  const daysLeft = Math.ceil((new Date(subscription.endDate) - Date.now()) / 86400000);
+  if (daysLeft > RENEWAL_WINDOW_DAYS) {
+    throw new ApiError(
+      409,
+      `Your plan runs until ${new Date(subscription.endDate).toLocaleDateString("en-IN")}. A renewal invoice can be made in its last ${RENEWAL_WINDOW_DAYS} days.`
+    );
+  }
+
+  const invoice = await createInvoiceForSubscription(subscription, {
+    period: "next",
+    // A plan that has already ended is due now, not on a date in the past.
+    dueDate: new Date(Math.max(new Date(subscription.endDate).getTime(), Date.now())),
+  });
+  return res.status(201).json(new ApiResponse(201, invoice, "Renewal invoice created"));
 });

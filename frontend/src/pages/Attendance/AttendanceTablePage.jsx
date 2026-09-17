@@ -20,6 +20,9 @@ import { fetchSchoolClasses }      from "../../features/schoolClassSlice";
 import { fetchSchools }            from "../../features/schoolSlice";
 import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import PageHeader                  from "../../components/layout/PageHeader";
+import { FilterGrid, FilterField } from "../../components/attendance/FilterGrid";
+import { FULL_WIDTH } from "../../components/attendance/filterStyles";
+import YearField                   from "../../components/attendance/YearField";
 import GeofenceMap                 from "../../components/maps/GeofenceMap";
 import { MAP_COLORS }              from "../../components/maps/osm";
 import {
@@ -64,11 +67,6 @@ const ROLE_OPTIONS = [
 ];
 
 /* ── helpers ── */
-const FL = ({ children }) => (
-  <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
-    {children}
-  </div>
-);
 
 function fmtTime(d) { return d ? dayjs(d).format("hh:mm A") : null; }
 
@@ -107,7 +105,7 @@ const AttendanceTablePage = () => {
   const isSuperAdmin = user?.role?.name === "Super Admin";
 
   const [saSchoolId,       setSaSchoolId]       = useState(null);
-  const [saAcademicYearId, setSaAcademicYearId] = useState(null);
+  const [saAcademicYear,   setSaAcademicYear]   = useState(null);
   const [yearLoading,      setYearLoading]       = useState(false);
   const [editRecord,       setEditRecord]        = useState(null);
   const [editLoading,      setEditLoading]       = useState(false);
@@ -140,7 +138,8 @@ const AttendanceTablePage = () => {
       : null;
 
   const schoolId       = isSuperAdmin ? saSchoolId       : (user?.school?._id || null);
-  const academicYearId = isSuperAdmin ? saAcademicYearId : (selectedAcademicYear?._id || null);
+  const academicYear   = isSuperAdmin ? saAcademicYear   : (selectedAcademicYear || null);
+  const academicYearId = academicYear?._id || null;
 
   const schoolOptions = useMemo(() => schools.map((s) => ({ value: s._id, label: s.name })).filter((s) => s.label), [schools]);
   const classes = useMemo(() => { if (Array.isArray(schoolClasses)) return schoolClasses; if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes; return []; }, [schoolClasses]);
@@ -157,16 +156,17 @@ const AttendanceTablePage = () => {
 
   const handleSASchoolChange = async (val) => {
     setSaSchoolId(val || null);
-    setSaAcademicYearId(null);
+    setSaAcademicYear(null);
     dispatch(setAttendanceFilters({ schoolId: val || null, classId: null, sectionId: null, page: 1 }));
     if (!val) return;
     setYearLoading(true);
     try {
       const result = await dispatch(fetchActiveAcademicYear(val)).unwrap();
-      const yearId = result?._id || null;
-      setSaAcademicYearId(yearId);
-      dispatch(fetchSchoolClasses({ schoolId: val, academicYearId: yearId }));
-    } catch { dispatch(fetchSchoolClasses({ schoolId: val })); }
+      setSaAcademicYear(result?._id ? result : null);
+      // Classes only from the running year. A school with no running year shows none, rather than
+      // every class it has ever had across all its years.
+      if (result?._id) dispatch(fetchSchoolClasses({ schoolId: val, academicYearId: result._id }));
+    } catch { setSaAcademicYear(null); }
     finally { setYearLoading(false); }
   };
 
@@ -374,76 +374,70 @@ const AttendanceTablePage = () => {
 
       {/* ── Filters ── */}
       <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 14, alignItems: "end" }}>
-
+        <FilterGrid>
           {isSuperAdmin && (
-            <div>
-              <FL>School</FL>
+            <FilterField label="School">
               <Select
-                showSearch placeholder="Select school" style={{ width: "100%" }}
+                showSearch placeholder="Select school" style={FULL_WIDTH}
                 value={saSchoolId || undefined} options={schoolOptions}
-                allowClear loading={yearLoading}
+                allowClear
                 filterOption={(inp, opt) => opt.label.toLowerCase().includes(inp.toLowerCase())}
                 onChange={handleSASchoolChange}
                 suffixIcon={<BankOutlined />}
               />
-              {saAcademicYearId === null && saSchoolId && !yearLoading && (
-                <div style={{ fontSize: 11, color: C.warning, marginTop: 4 }}>No active academic year</div>
-              )}
-            </div>
+            </FilterField>
           )}
 
-          <div>
-            <FL>Role</FL>
+          <FilterField label="Academic year">
+            <YearField year={academicYear} schoolChosen={Boolean(schoolId)} loading={yearLoading} />
+          </FilterField>
+
+          <FilterField label="Role">
             <Select
-              style={{ width: "100%" }} placeholder="All roles" allowClear
+              style={FULL_WIDTH} placeholder="All roles" allowClear
               value={filters.role || undefined} options={ROLE_OPTIONS}
               onChange={(v) => dispatch(setAttendanceFilters({ role: v || null, page: 1 }))}
               suffixIcon={<TeamOutlined />}
             />
-          </div>
+          </FilterField>
 
-          <div>
-            <FL>Class</FL>
+          <FilterField label="Class">
             <Select
-              style={{ width: "100%" }} placeholder="All classes" allowClear
-              disabled={!schoolId} value={filters.classId || undefined} options={classOptions}
+              style={FULL_WIDTH} placeholder={academicYearId ? "All classes" : "Pick a school first"} allowClear
+              disabled={!schoolId || !academicYearId} value={filters.classId || undefined} options={classOptions}
               onChange={(v) => dispatch(setAttendanceFilters({ classId: v || null, sectionId: null, page: 1 }))}
             />
-          </div>
+          </FilterField>
 
-          <div>
-            <FL>Section</FL>
+          <FilterField label="Section">
             <Select
-              style={{ width: "100%" }} placeholder="All sections" allowClear
+              style={FULL_WIDTH} placeholder="All sections" allowClear
               disabled={!filters.classId} value={filters.sectionId || undefined} options={sectionOptions}
               onChange={(v) => dispatch(setAttendanceFilters({ sectionId: v || null, page: 1 }))}
             />
-          </div>
+          </FilterField>
 
-          <div>
-            <FL>Date</FL>
+          <FilterField label="Date">
             <DatePicker
-              style={{ width: "100%" }}
+              style={FULL_WIDTH}
               value={filters.date ? dayjs(filters.date) : null}
               allowClear placeholder="Any date"
               onChange={(v) => dispatch(setAttendanceFilters({ date: v?.toISOString() || null, page: 1 }))}
               suffixIcon={<CalendarOutlined />}
             />
-          </div>
+          </FilterField>
 
-          <div>
-            <FL>&nbsp;</FL>
+          <FilterField>
             <Button
               type="primary" icon={<SearchOutlined />}
-              style={{ width: "100%" }}
+              style={FULL_WIDTH}
               disabled={!schoolId} loading={loading}
               onClick={() => dispatch(fetchAttendance(filters))}
             >
               Search
             </Button>
-          </div>
-        </div>
+          </FilterField>
+        </FilterGrid>
       </div>
 
       {/* ── Stats bar ── */}

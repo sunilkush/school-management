@@ -1,936 +1,679 @@
-import React, { useEffect, useCallback, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchSchools, deleteSchool } from "../../../features/schoolSlice";
-import { fetchSubscriptionPlans } from "../../../features/subscriptionPlanSlice";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
-  fetchSchoolSubscription, renewSchoolSubscription,
-  cancelSchoolSubscription, suspendSchoolSubscription,
-  reactivateSchoolSubscription, changeSchoolPlan, assignSchoolPlan,
-  clearBillingMessages,
-} from "../../../features/superAdminBillingSlice";
-import AddSchoolForm from "../../../components/forms/AddSchoolForm";
-import apiClient from "../../../api/httpClient";
-import {
-  Button,
-  Modal,
-  Spin,
-  Tag,
-  Empty,
-  Popconfirm,
-  message,
-  Typography,
-  Space,
-  Input,
-  Row,
-  Col,
-  Segmented,
-  Tooltip,
-  Divider,
-  Form,
-  Select,
-  Pagination,
-  Drawer,
-  Alert,
-  Descriptions,
-  Upload,
-  Switch,
+  Alert, Button, Checkbox, Drawer, Empty, Form, Input, Modal, Popconfirm, Progress, Segmented, Select,
+  Skeleton, Switch, Table, Tag, Upload, message,
 } from "antd";
 import {
-  PlusOutlined,
-  DeleteOutlined,
-  BankOutlined,
-  SearchOutlined,
-  EnvironmentOutlined,
-  CrownOutlined,
-  BookOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
-  TeamOutlined,
-  ApartmentOutlined,
-  EditOutlined,
-  ReloadOutlined,
-  StopOutlined,
-  PauseCircleOutlined,
-  PlayCircleOutlined,
-  SwapOutlined,
-  SettingOutlined,
-  ExclamationCircleOutlined,
-  UploadOutlined,
+  ApartmentOutlined, BarChartOutlined, CrownOutlined, DeleteOutlined, EditOutlined, PlusOutlined,
+  ReloadOutlined, SearchOutlined, SwapOutlined, UploadOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
+
+import apiClient from "../../../api/httpClient";
+import { fetchSchools } from "../../../features/schoolSlice";
+import { fetchSubscriptionPlans } from "../../../features/subscriptionPlanSlice";
+import { getBoards } from "../../../features/boardSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  toolbarRow, modalTitle, emptyState,
-} from "../../../styles/pageStyles";
+import { avatarStyle, modalTitle, pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 
-const { Text } = Typography;
-const { Option } = Select;
+/**
+ * Schools — every school on the platform, whether it can sign in, and whose subscription needs
+ * looking at.
+ *
+ * The page used to be a grid of cards showing each school's plan price but not whether that plan
+ * had run out, so finding the schools to chase meant opening them one by one. Delete sat beside
+ * Edit on every card behind a one-click confirm, and removed only the school record. Creating a
+ * school blanked the whole list behind a spinner, and the new school did not appear until a reload.
+ *
+ * Now the list says what state each school's subscription is in, "Needs attention" gathers the
+ * ones to act on, sign-in is a switch on the row, and everything else about a school — details,
+ * plan, report, delete — is in one drawer.
+ */
 
-// ─── SchoolCard ────────────────────────────────────────────────────────────────
-const SchoolCard = ({ school, onDelete, onEdit, onManageSub }) => {
-  return (
-    <div
-      style={{
-        ...sectionPanel,
-        padding: 0,
-        marginBottom: 0,
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
-      {/* ── TOP ACCENT BAR ── */}
-      <div
-        style={{
-          height: 4,
-          background: school.isActive
-            ? "linear-gradient(90deg, var(--primary), rgba(var(--primary-rgb), 0.4))"
-            : "linear-gradient(90deg, var(--text-disabled), var(--border))",
-        }}
-      />
+const DAY = "D MMM YYYY";
+const SOON_DAYS = 30;
+const errorText = (e, fallback) => e?.response?.data?.message || e?.message || fallback;
+const rupees = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+const initials = (name = "") => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "S";
 
-      {/* ── CARD BODY ── */}
-      <div style={{ padding: "16px 18px 0", flex: 1 }}>
-        {/* Header row */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-          <Space align="start" size={10}>
-            <div style={iconWell("var(--primary)", 40)}>
-              <BankOutlined />
+/**
+ * Where a school's subscription stands. "Expired" is worked out from the end date as well as the
+ * stored status, because the stored one is only brought up to date by a nightly job.
+ */
+function subscriptionState(sub) {
+  if (!sub?.status) return { key: "none", label: "No plan", color: "warning", attention: true };
+  const daysLeft = dayjs(sub.endDate).startOf("day").diff(dayjs().startOf("day"), "day");
+  if (sub.status === "cancelled") return { key: "cancelled", label: "Cancelled", color: "default", attention: true, daysLeft };
+  if (sub.status === "suspended") return { key: "suspended", label: "Suspended", color: "warning", attention: true, daysLeft };
+  if (sub.status === "expired" || daysLeft < 0) return { key: "expired", label: "Expired", color: "error", attention: true, daysLeft };
+  const trial = sub.status === "trial";
+  if (daysLeft <= SOON_DAYS) {
+    return { key: "ending", label: daysLeft === 0 ? "Ends today" : `Ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`, color: "orange", attention: true, daysLeft, trial };
+  }
+  return { key: trial ? "trial" : "active", label: trial ? "Trial" : "Active", color: trial ? "processing" : "success", attention: false, daysLeft, trial };
+}
+
+const SchoolMark = ({ school, size = 38 }) => (school.logo ? (
+  <img src={school.logo} alt="" width={size} height={size} style={{ borderRadius: 10, objectFit: "cover", flexShrink: 0, border: "1px solid var(--border-muted)" }} />
+) : (
+  <div style={{ ...avatarStyle(school.name, size), borderRadius: 10 }}>{initials(school.name)}</div>
+));
+
+const Section = ({ title, extra, children }) => (
+  <div style={{ padding: "14px 0", borderTop: "1px solid var(--border-muted)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+      <div style={{ flex: 1, fontWeight: 700, color: "var(--text-primary)" }}>{title}</div>
+      {extra}
+    </div>
+    {children}
+  </div>
+);
+
+const Fact = ({ label, children }) => (
+  <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 10, padding: "4px 0", fontSize: 13 }}>
+    <span style={{ color: "var(--text-muted)" }}>{label}</span>
+    <span style={{ color: "var(--text-primary)", wordBreak: "break-word" }}>{children || <span style={{ color: "var(--text-muted)" }}>—</span>}</span>
+  </div>
+);
+
+/* ─────────────────────────── subscription ─────────────────────────── */
+const SubscriptionPanel = ({ school, plans, onChanged }) => {
+  const [sub, setSub] = useState(undefined);        // undefined = loading, null = none
+  const [loadError, setLoadError] = useState(null);
+  const [busy, setBusy] = useState(null);
+  const [newPlanId, setNewPlanId] = useState(null);
+  const [trial, setTrial] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoadError(null);
+    try {
+      const res = await apiClient.get(`/super-admin/billing/schools/${school._id}/subscription`);
+      setSub(res?.data?.data || null);
+    } catch (e) {
+      if (e?.response?.status === 404) setSub(null);       // no plan yet — not an error
+      else { setSub(null); setLoadError(errorText(e, "Could not load the subscription")); }
+    }
+  }, [school._id]);
+
+  useEffect(() => { setSub(undefined); setNewPlanId(null); setTrial(false); load(); }, [load]);
+
+  // Plans made for another school are not offered here.
+  const offered = plans.filter((p) => p.isActive !== false && (!p.customForSchoolId || String(p.customForSchoolId) === String(school._id)));
+  const planLabel = (p) => `${p.name} · ${rupees(p.price)} / ${p.durationInDays} days`;
+  const picked = offered.find((p) => p._id === newPlanId);
+
+  const run = async (key, request, done) => {
+    setBusy(key);
+    try {
+      await request();
+      message.success(done);
+      setNewPlanId(null);
+      setTrial(false);
+      await load();
+      onChanged();
+    } catch (e) {
+      message.error(errorText(e, "That did not work"));
+    } finally {
+      setBusy(null);
+    }
+  };
+  const base = `/super-admin/billing/schools/${school._id}`;
+
+  if (sub === undefined) return <Skeleton active paragraph={{ rows: 3 }} />;
+  if (loadError) {
+    return <Alert type="error" showIcon message={loadError} action={<Button size="small" onClick={load}>Try again</Button>} />;
+  }
+
+  if (!sub) {
+    const days = picked ? (trial ? picked.trialDurationInDays || picked.durationInDays : picked.durationInDays) : 0;
+    return (
+      <div>
+        <Alert type="warning" showIcon style={{ marginBottom: 12 }} message="No plan yet" description="Pick the plan this school is on." />
+        <Select
+          style={{ width: "100%" }} placeholder="Pick a plan" value={newPlanId || undefined} onChange={setNewPlanId}
+          options={offered.map((p) => ({ value: p._id, label: planLabel(p) }))}
+          notFoundContent="No active plans — create one under Subscription Plans"
+        />
+        {picked && (
+          <>
+            <Checkbox style={{ marginTop: 10 }} checked={trial} onChange={(e) => setTrial(e.target.checked)}>Start as a trial</Checkbox>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", margin: "8px 0 12px" }}>
+              Runs {dayjs().format(DAY)} – {dayjs().add(days, "day").format(DAY)} ({days} days)
             </div>
-            <div style={{ minWidth: 0 }}>
-              <Text
-                strong
-                style={{ display: "block", fontSize: 14, color: "var(--text-primary)", lineHeight: 1.3, letterSpacing: "-0.2px" }}
-                ellipsis
-              >
-                {school.name}
-              </Text>
-              <Space size={4} style={{ marginTop: 2 }}>
-                <EnvironmentOutlined style={{ color: "var(--text-muted)", fontSize: 11 }} />
-                <Text style={{ fontSize: 11, color: "var(--text-secondary)" }} ellipsis>
-                  {school.address || "No address provided"}
-                </Text>
-              </Space>
-            </div>
-          </Space>
-
-          <Space size={4}>
-            <Tooltip title="Edit school">
-              <Button
-                type="text"
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => onEdit(school)}
-                style={{ color: "var(--primary)", borderRadius: 8, flexShrink: 0 }}
-              />
-            </Tooltip>
-            <Popconfirm
-              title="Delete this school?"
-              description="This action cannot be undone."
-              okText="Delete"
-              cancelText="Cancel"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => onDelete(school._id)}
-              placement="topRight"
+            <Button
+              type="primary" block icon={<CrownOutlined />} loading={busy === "assign"}
+              onClick={() => run("assign", () => apiClient.post(`${base}/assign-plan`, { planId: picked._id, isTrial: trial }), `${picked.name} started for ${school.name}`)}
             >
-              <Tooltip title="Delete school">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<DeleteOutlined />}
-                  style={{ color: "var(--text-muted)", borderRadius: 8, flexShrink: 0 }}
-                  danger
-                />
-              </Tooltip>
-            </Popconfirm>
-          </Space>
-        </div>
+              Start {picked.name}{trial ? " as a trial" : ""}
+            </Button>
+          </>
+        )}
+      </div>
+    );
+  }
 
-        <Divider style={{ margin: "10px 0" }} />
+  const state = subscriptionState(sub);
+  const start = dayjs(sub.startDate);
+  const end = dayjs(sub.endDate);
+  const total = Math.max(1, end.diff(start, "day"));
+  const used = Math.min(total, Math.max(0, dayjs().diff(start, "day")));
+  const renewedEnd = (end.isAfter(dayjs()) ? end : dayjs()).add(sub.snapshot?.durationInDays || 0, "day");
+  const currentPrice = Number(sub.snapshot?.price ?? sub.planId?.price ?? 0);
+  const changeTo = offered.filter((p) => p._id !== (sub.planId?._id || sub.planId));
+  const upgrade = picked ? Number(picked.price) >= currentPrice : true;
 
-        {/* Boards */}
-        <div style={{ marginBottom: 10 }}>
-          <Space size={6} align="center" style={{ marginBottom: 6 }}>
-            <BookOutlined style={{ fontSize: 11, color: "var(--text-muted)" }} />
-            <Text style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>
-              Boards
-            </Text>
-          </Space>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-            {school.boards?.length ? (
-              school.boards.map((board) => (
-                <span key={board._id} style={pill("var(--primary)", "var(--primary-light-rgb)")}>
-                  {board.name}
-                </span>
-              ))
-            ) : (
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>—</Text>
-            )}
-          </div>
+  return (
+    <div>
+      <div style={{ padding: "12px 14px", borderRadius: 12, background: "var(--surface-soft)", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>{sub.planId?.name || "Plan"}</span>
+          <Tag color={state.color}>{state.label}</Tag>
+          {sub.status === "trial" && state.key === "ending" && <Tag color="processing">Trial</Tag>}
         </div>
-
-        {/* Subscription Plan */}
-        <div style={{ marginBottom: 10 }}>
-          <Space size={6} align="center" style={{ marginBottom: 6 }}>
-            <CrownOutlined style={{ fontSize: 11, color: "var(--text-muted)" }} />
-            <Text style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>
-              Plan
-            </Text>
-          </Space>
-          {school.subscriptionPlan ? (
-            <Space size={5} wrap>
-              <span style={pill("var(--accent)", "rgba(var(--accent-rgb), 0.15)")}>{school.subscriptionPlan.name}</span>
-              <span style={pill("var(--warning-hover)", "var(--warning-light)")}>₹{school.subscriptionPlan.price}</span>
-              <span style={pill("var(--primary)", "var(--primary-light-rgb)")}>{school.subscriptionPlan.durationInDays}d</span>
-            </Space>
-          ) : (
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>No plan assigned</Text>
-          )}
+        <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          {rupees(currentPrice)} for {sub.snapshot?.durationInDays} days · {start.format(DAY)} – {end.format(DAY)}
         </div>
+        {["cancelled", "suspended"].includes(state.key) && (
+          <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 6 }}>Its users cannot sign in until it is reactivated.</div>
+        )}
+        {!["cancelled", "suspended"].includes(state.key) && (
+          <>
+            <Progress percent={Math.round((used / total) * 100)} showInfo={false} size="small" strokeColor={state.attention ? "var(--warning)" : "var(--primary)"} style={{ margin: "8px 0 0" }} />
+            <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+              {state.key === "expired" ? `Ended ${Math.abs(state.daysLeft ?? 0)} days ago — its users cannot sign in until it is renewed` : `${state.daysLeft} days left`}
+            </div>
+          </>
+        )}
+        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>Payment: {sub.paymentStatus || "—"}</div>
       </div>
 
-      {/* ── FOOTER ── */}
-      <div
-        style={{
-          padding: "10px 18px 14px",
-          marginTop: "auto",
-          background: "var(--surface-soft)",
-          borderTop: "1px solid var(--border-muted)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Space size={6} align="center">
-          {school.isActive ? (
-            <CheckCircleFilled style={{ color: "var(--primary)", fontSize: 13 }} />
-          ) : (
-            <CloseCircleFilled style={{ color: "var(--danger)", fontSize: 13 }} />
-          )}
-          <Text
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: school.isActive ? "var(--primary)" : "var(--danger)",
-            }}
-          >
-            {school.isActive ? "Active" : "Inactive"}
-          </Text>
-        </Space>
-
-        <Button
-          size="small"
-          icon={<SettingOutlined />}
-          onClick={() => onManageSub(school)}
-          style={{ fontSize: 11, borderRadius: 7, height: 26 }}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+        <Popconfirm
+          title={`Renew ${sub.planId?.name || "the plan"}?`}
+          description={`Adds ${sub.snapshot?.durationInDays} days — it will run until ${renewedEnd.format(DAY)}.`}
+          okText="Renew"
+          onConfirm={() => run("renew", () => apiClient.post(`${base}/renew`), `Renewed until ${renewedEnd.format(DAY)}`)}
         >
-          Manage Subscription
-        </Button>
+          <Button type="primary" icon={<ReloadOutlined />} loading={busy === "renew"}>Renew</Button>
+        </Popconfirm>
+        {["suspended", "cancelled"].includes(sub.status) ? (
+          <Popconfirm
+            title="Make the subscription active again?"
+            description={state.daysLeft != null && state.daysLeft < 0 ? "Its end date has passed, so it also needs renewing before anyone can sign in." : "Its users can sign in again."}
+            okText="Reactivate"
+            onConfirm={() => run("reactivate", () => apiClient.post(`${base}/reactivate`), "Subscription active again")}
+          >
+            <Button loading={busy === "reactivate"}>Reactivate</Button>
+          </Popconfirm>
+        ) : (
+          <Popconfirm
+            title="Suspend the subscription?"
+            description="Everyone at the school is signed out and cannot sign in until you reactivate it."
+            okText="Suspend"
+            onConfirm={() => run("suspend", () => apiClient.post(`${base}/suspend`), "Subscription suspended")}
+          >
+            <Button loading={busy === "suspend"}>Suspend</Button>
+          </Popconfirm>
+        )}
+        {sub.status !== "cancelled" && (
+          <Popconfirm
+            title="Cancel the subscription?"
+            description="Everyone at the school is signed out and cannot sign in until you reactivate it or start a plan."
+            okText="Cancel subscription" cancelText="Keep it" okButtonProps={{ danger: true }}
+            onConfirm={() => run("cancel", () => apiClient.post(`${base}/cancel`), "Subscription cancelled")}
+          >
+            <Button danger loading={busy === "cancel"}>Cancel subscription</Button>
+          </Popconfirm>
+        )}
       </div>
+
+      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>Move to another plan</div>
+      <Select
+        style={{ width: "100%" }} placeholder="Pick a plan" value={newPlanId || undefined} onChange={setNewPlanId} allowClear
+        options={changeTo.map((p) => ({ value: p._id, label: planLabel(p) }))}
+        notFoundContent="No other active plan"
+      />
+      {picked && (
+        <>
+          <div style={{ fontSize: 13, color: "var(--text-muted)", margin: "8px 0" }}>
+            {upgrade ? "Upgrade" : "Downgrade"} to {picked.name}: starts today and runs until {dayjs().add(picked.durationInDays, "day").format(DAY)}.
+            Days left on the current plan are not carried over.
+          </div>
+          <Popconfirm
+            title={`${upgrade ? "Upgrade" : "Downgrade"} to ${picked.name}?`} okText={upgrade ? "Upgrade" : "Downgrade"}
+            onConfirm={() => run("change", () => apiClient.post(`${base}/change-plan`, { planId: picked._id, action: upgrade ? "upgrade" : "downgrade" }), `Moved to ${picked.name}`)}
+          >
+            <Button block icon={<SwapOutlined />} loading={busy === "change"}>{upgrade ? "Upgrade" : "Downgrade"} to {picked.name}</Button>
+          </Popconfirm>
+        </>
+      )}
     </div>
   );
 };
 
-// ─── Schools Page ──────────────────────────────────────────────────────────────
-const PAGE_SIZE = 9;
-
-const STATUS_COLOR = {
-  active:    { color: "var(--success-hover)", bg: "var(--success-light)", border: "rgba(var(--success-rgb), 0.4)" },
-  trial:     { color: "var(--primary-hover)", bg: "var(--primary-light)", border: "rgba(var(--primary-rgb), 0.4)" },
-  expired:   { color: "var(--danger-hover)", bg: "var(--danger-light)", border: "var(--danger-light)" },
-  suspended: { color: "var(--warning-hover)", bg: "var(--warning-light)", border: "var(--warning)" },
-  cancelled: { color: "var(--text-secondary)", bg: "var(--surface-soft)", border: "var(--border)" },
-};
-
-const Schools = () => {
-  const dispatch = useDispatch();
-  const { schools, loading, error } = useSelector((state) => state.school);
-  const { plans = [] } = useSelector((state) => state.subscriptionPlans);
-  const { schoolSubscription, actionLoading, successMessage, error: billingError } =
-    useSelector((state) => state.superAdminBilling);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Edit modal state
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingSchool, setEditingSchool] = useState(null);
-  const [editSaving, setEditSaving] = useState(false);
-  const [editForm] = Form.useForm();
-  const [editLogoFile, setEditLogoFile] = useState(null);
-  const [editLogoPreview, setEditLogoPreview] = useState(null);
-
-  // Subscription drawer state
-  const [subDrawerOpen, setSubDrawerOpen] = useState(false);
-  const [subSchool, setSubSchool] = useState(null);
-  const [changePlanId, setChangePlanId] = useState(null);
-  const [changePlanAction, setChangePlanAction] = useState("upgrade");
-  const [assignPlanId, setAssignPlanId] = useState(null);
-  const [assignAsTrial, setAssignAsTrial] = useState(false);
+/* ─────────────────────────── add / edit ─────────────────────────── */
+const SchoolForm = ({ open, school, boards, plans, onClose, onSaved }) => {
+  const [form] = Form.useForm();
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [serverError, setServerError] = useState(null);
+  const editing = Boolean(school);
 
   useEffect(() => {
-    dispatch(fetchSchools());
-    dispatch(fetchSubscriptionPlans());
-  }, [dispatch]);
+    if (!open) return;
+    setServerError(null);
+    setLogoFile(null);
+    setLogoPreview(school?.logo || null);
+    form.resetFields();
+    form.setFieldsValue(editing
+      ? { name: school.name, email: school.email, phone: school.phone, website: school.website, address: school.address }
+      : { isActive: true, boards: [] });
+  }, [open, school, editing, form]);
 
-  // Show billing success/error messages
-  useEffect(() => {
-    if (successMessage) {
-      message.success(successMessage);
-      dispatch(clearBillingMessages());
-    }
-    if (billingError) {
-      message.error(billingError);
-      dispatch(clearBillingMessages());
-    }
-  }, [successMessage, billingError, dispatch]);
-
-  const handleManageSub = useCallback((school) => {
-    setSubSchool(school);
-    setSubDrawerOpen(true);
-    dispatch(fetchSchoolSubscription(school._id));
-  }, [dispatch]);
-
-  const handleSubDrawerClose = useCallback(() => {
-    setSubDrawerOpen(false);
-    setSubSchool(null);
-    setChangePlanId(null);
-    setAssignPlanId(null);
-    setAssignAsTrial(false);
-  }, []);
-
-  const handleRenew = useCallback(async () => {
-    if (!subSchool?._id) return;
-    await dispatch(renewSchoolSubscription(subSchool._id));
-    dispatch(fetchSchools());
-  }, [subSchool, dispatch]);
-
-  const handleSuspend = useCallback(async () => {
-    if (!subSchool?._id) return;
-    await dispatch(suspendSchoolSubscription(subSchool._id));
-    dispatch(fetchSchools());
-  }, [subSchool, dispatch]);
-
-  const handleReactivate = useCallback(async () => {
-    if (!subSchool?._id) return;
-    await dispatch(reactivateSchoolSubscription(subSchool._id));
-    dispatch(fetchSchools());
-  }, [subSchool, dispatch]);
-
-  const handleCancel = useCallback(async () => {
-    if (!subSchool?._id) return;
-    await dispatch(cancelSchoolSubscription(subSchool._id));
-    dispatch(fetchSchools());
-  }, [subSchool, dispatch]);
-
-  const handleChangePlan = useCallback(async () => {
-    if (!subSchool?._id || !changePlanId) return;
-    await dispatch(changeSchoolPlan({ schoolId: subSchool._id, planId: changePlanId, action: changePlanAction }));
-    dispatch(fetchSchools());
-  }, [subSchool, changePlanId, changePlanAction, dispatch]);
-
-  const handleAssignPlan = useCallback(async () => {
-    if (!subSchool?._id || !assignPlanId) return;
-    await dispatch(assignSchoolPlan({ schoolId: subSchool._id, payload: { planId: assignPlanId, isTrial: assignAsTrial } }));
-    dispatch(fetchSchoolSubscription(subSchool._id));
-    dispatch(fetchSchools());
-    setAssignPlanId(null);
-    setAssignAsTrial(false);
-  }, [subSchool, assignPlanId, assignAsTrial, dispatch]);
-
-  const handleDeleteSchool = useCallback(
-    async (id) => {
-      try {
-        await dispatch(deleteSchool(id)).unwrap();
-        message.success("School deleted successfully");
-        dispatch(fetchSchools());
-      } catch (err) {
-        message.error(typeof err === "string" ? err : "Failed to delete school");
-      }
-    },
-    [dispatch]
-  );
-
-  const handleOpenEdit = useCallback((school) => {
-    setEditingSchool(school);
-    editForm.setFieldsValue({
-      name: school.name || "",
-      address: school.address || "",
-      email: school.email || "",
-      phone: school.phone || "",
-      website: school.website || "",
-      isActive: school.isActive ? "active" : "inactive",
-    });
-    setEditLogoFile(null);
-    setEditLogoPreview(school.logo || null);
-    setEditModalOpen(true);
-  }, [editForm]);
-
-  const handleCloseEdit = useCallback(() => {
-    setEditModalOpen(false);
-    setEditingSchool(null);
-    setEditLogoFile(null);
-    setEditLogoPreview(null);
-    editForm.resetFields();
-  }, [editForm]);
-
-  const handleEditLogoChange = useCallback(({ file }) => {
+  const pickLogo = ({ file }) => {
     if (!file) return;
+    if (file.size > 50 * 1024) { message.error("The logo has to be 50 KB or smaller"); return; }
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
 
-    if (file.size > 50 * 1024) {
-      message.error("Logo size must be less than or equal to 50KB");
-      return;
+  const save = async () => {
+    let values;
+    try { values = await form.validateFields(); } catch { return; }
+    const data = new FormData();
+    ["name", "email", "phone", "website", "address"].forEach((k) => {
+      if (values[k] != null) data.append(k, String(values[k]).trim());
+    });
+    if (!editing) {
+      (values.boards || []).forEach((b) => data.append("boards", b));
+      if (values.subscriptionPlan) data.append("subscriptionPlan", values.subscriptionPlan);
+      data.append("isActive", values.isActive ? "true" : "false");
     }
+    if (logoFile) data.append("logo", logoFile);
 
-    setEditLogoFile(file);
-    setEditLogoPreview(URL.createObjectURL(file));
-  }, []);
-
-  const handleEditSubmit = useCallback(async (values) => {
-    if (!editingSchool?._id) return;
+    setSaving(true);
+    setServerError(null);
     try {
-      setEditSaving(true);
-      const formData = new FormData();
-      formData.append("name", values.name || "");
-      formData.append("address", values.address || "");
-      formData.append("email", values.email || "");
-      formData.append("phone", values.phone || "");
-      formData.append("website", values.website || "");
-      formData.append("isActive", values.isActive === "active" ? "true" : "false");
-      if (editLogoFile) formData.append("logo", editLogoFile);
-
-      await apiClient.post(`/school/update/${editingSchool._id}`, formData);
-      message.success("School updated successfully");
-      dispatch(fetchSchools());
-      handleCloseEdit();
-    } catch (err) {
-      message.error(err?.response?.data?.message || "Failed to update school");
+      const res = editing
+        ? await apiClient.post(`/school/update/${school._id}`, data)
+        : await apiClient.post("/school/register", data);
+      message.success(editing ? `${values.name} saved` : `${values.name} added`);
+      onSaved(res?.data?.data?._id || school?._id);
+    } catch (e) {
+      setServerError(errorText(e, editing ? "Could not save the school" : "Could not add the school"));
     } finally {
-      setEditSaving(false);
+      setSaving(false);
     }
-  }, [editingSchool, editLogoFile, dispatch, handleCloseEdit]);
-
-  const openModal = useCallback(() => setIsModalOpen(true), []);
-  const closeModal = useCallback(() => setIsModalOpen(false), []);
-
-  // Derived stats
-  const totalSchools = schools?.length || 0;
-  const activeSchools = schools?.filter((s) => s.isActive).length || 0;
-  const inactiveSchools = totalSchools - activeSchools;
-  const totalBoards = new Set(schools?.flatMap((s) => s.boards?.map((b) => b.name) || [])).size;
-
-  // Filtered list
-  const filteredSchools = schools?.filter((school) => {
-    const matchSearch =
-      !searchText ||
-      school.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      (school.address || "").toLowerCase().includes(searchText.toLowerCase());
-    const matchStatus =
-      filterStatus === "All" ||
-      (filterStatus === "Active" ? school.isActive : !school.isActive);
-    return matchSearch && matchStatus;
-  });
-
-  // Paginated list
-  const paginatedSchools = filteredSchools?.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
-
-  // Reset to page 1 when filters change
-  const handleSearch = (e) => {
-    setSearchText(e.target.value);
-    setCurrentPage(1);
   };
-  const handleFilterStatus = (val) => {
-    setFilterStatus(val);
-    setCurrentPage(1);
-  };
+
+  const offered = plans.filter((p) => p.isActive !== false && !p.customForSchoolId);
 
   return (
-    <>
-      <PageHeader
-        title="Schools Management"
-        subtitle="Manage all registered institutions and their subscriptions"
-        icon={<ApartmentOutlined />}
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={openModal}>
-            Add School
-          </Button>
-        }
-      />
-      <div style={pageWrapper}>
-        {/* ══════════ STATS ROW ══════════ */}
-        <div className="stat-grid" style={statGrid(170)}>
-          {[
-            { title: "Total Schools", value: totalSchools, icon: <TeamOutlined />, color: "var(--primary)" },
-            { title: "Active", value: activeSchools, icon: <CheckCircleFilled />, color: "var(--success)" },
-            { title: "Inactive", value: inactiveSchools, icon: <CloseCircleFilled />, color: "var(--danger)" },
-            { title: "Board Types", value: totalBoards, icon: <BookOutlined />, color: "var(--primary)" },
-          ].map((stat) => (
-            <div key={stat.title} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, marginBottom: 0, padding: "16px 20px" }}>
-              <div style={iconWell(stat.color, 38)}>{stat.icon}</div>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-                  {stat.title}
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{stat.value}</div>
-              </div>
-            </div>
-          ))}
+    <Drawer
+      open={open}
+      onClose={onClose}
+      width={480}
+      destroyOnClose
+      title={modalTitle(editing ? <EditOutlined /> : <PlusOutlined />, editing ? `Edit ${school.name}` : "Add a school", editing ? "Contact details and logo" : "Name and email are all that is needed to start")}
+      footer={(
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="primary" loading={saving} onClick={save}>{editing ? "Save" : "Add school"}</Button>
         </div>
-
-        {/* ══════════ TOOLBAR ══════════ */}
-        <div style={toolbarRow}>
-          <Input
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
-            placeholder="Search schools by name or city..."
-            value={searchText}
-            onChange={handleSearch}
-            allowClear
-            style={{ maxWidth: 320 }}
-          />
-
-          <Segmented
-            options={["All", "Active", "Inactive"]}
-            value={filterStatus}
-            onChange={handleFilterStatus}
-          />
+      )}
+    >
+      {serverError && <Alert type="error" showIcon message={serverError} style={{ marginBottom: 16 }} />}
+      <Form form={form} layout="vertical" requiredMark={false}>
+        <Form.Item name="name" label="School name" rules={[{ required: true, whitespace: true, message: "Enter the school's name" }]}>
+          <Input placeholder="Sunrise Public School" maxLength={120} />
+        </Form.Item>
+        <Form.Item name="email" label="Email" rules={[{ required: true, message: "Enter the school's email" }, { type: "email", message: "That is not an email address" }]}>
+          <Input placeholder="office@sunrise.edu.in" />
+        </Form.Item>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0 12px" }}>
+          <Form.Item name="phone" label="Phone"><Input placeholder="+91 98765 43210" /></Form.Item>
+          <Form.Item name="website" label="Website"><Input placeholder="https://sunrise.edu.in" /></Form.Item>
         </div>
+        <Form.Item name="address" label="Address"><Input.TextArea rows={2} placeholder="Street, city, state" /></Form.Item>
 
-        {/* ══════════ CONTENT ══════════ */}
-        {loading ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "96px 0",
-              gap: 16,
-            }}
-          >
-            <Spin size="large" />
-            <Text style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading schools...</Text>
-          </div>
-        ) : error ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "64px 0",
-            }}
-          >
-            <div
-              style={{
-                background: "var(--danger-light)",
-                border: "1px solid rgba(var(--danger-rgb), 0.4)",
-                borderRadius: 12,
-                padding: "16px 24px",
-                textAlign: "center",
-              }}
-            >
-              <CloseCircleFilled style={{ color: "var(--danger)", fontSize: 28, marginBottom: 8 }} />
-              <Text style={{ display: "block", color: "var(--danger)", fontWeight: 600 }}>
-                {typeof error === "string" ? error : "Something went wrong. Please try again."}
-              </Text>
-            </div>
-          </div>
-        ) : !filteredSchools?.length ? (
-          <div style={emptyState}>
-            <Empty
-              description={
-                <Text style={{ color: "var(--text-secondary)" }}>
-                  {searchText || filterStatus !== "All"
-                    ? "No schools match your filters"
-                    : "No schools added yet"}
-                </Text>
-              }
-            >
-              {!searchText && filterStatus === "All" && (
-                <Button type="primary" icon={<PlusOutlined />} onClick={openModal}>
-                  Add your first school
-                </Button>
-              )}
-            </Empty>
-          </div>
-        ) : (
+        {!editing && (
           <>
-            <Text style={{ fontSize: 12, color: "var(--text-muted)", display: "block", marginBottom: 12 }}>
-              Showing {Math.min((currentPage - 1) * PAGE_SIZE + 1, filteredSchools.length)}–{Math.min(currentPage * PAGE_SIZE, filteredSchools.length)} of {filteredSchools.length} schools
-            </Text>
-            <Row gutter={[14, 14]}>
-              {paginatedSchools.map((school) => (
-                <Col key={school._id} xs={24} sm={12} lg={8}>
-                  <SchoolCard
-                    school={school}
-                    onDelete={handleDeleteSchool}
-                    onEdit={handleOpenEdit}
-                    onManageSub={handleManageSub}
-                  />
-                </Col>
-              ))}
-            </Row>
-
-            {filteredSchools.length > PAGE_SIZE && (
-              <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
-                <Pagination
-                  current={currentPage}
-                  pageSize={PAGE_SIZE}
-                  total={filteredSchools.length}
-                  onChange={setCurrentPage}
-                  showSizeChanger={false}
-                />
-              </div>
-            )}
+            <Form.Item name="boards" label="Boards" extra="The first one you pick is the school's main board.">
+              <Select mode="multiple" placeholder="CBSE, ICSE…" optionFilterProp="label" options={boards.map((b) => ({ value: b._id, label: b.name }))} />
+            </Form.Item>
+            <Form.Item name="subscriptionPlan" label="Plan" extra="Optional — you can start a plan later from the school.">
+              <Select allowClear placeholder="No plan yet" options={offered.map((p) => ({ value: p._id, label: `${p.name} · ${rupees(p.price)} / ${p.durationInDays} days` }))} />
+            </Form.Item>
+            <Form.Item name="isActive" valuePropName="checked" style={{ marginBottom: 12 }}>
+              <Checkbox>Let the school sign in straight away</Checkbox>
+            </Form.Item>
           </>
         )}
 
-        {/* ══════════ ADD SCHOOL MODAL ══════════ */}
-        <Modal
-          title={modalTitle(<PlusOutlined />, "Add New School")}
-          open={isModalOpen}
-          onCancel={closeModal}
-          footer={null}
-          centered
-          width={600}
-          destroyOnClose
-        >
-          <AddSchoolForm onClose={closeModal} />
-        </Modal>
+        <Form.Item label="Logo" extra="PNG or JPG, 50 KB at most." style={{ marginBottom: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {logoPreview && <img src={logoPreview} alt="" width={48} height={48} style={{ borderRadius: 10, objectFit: "cover", border: "1px solid var(--border-muted)" }} />}
+            <Upload accept="image/*" showUploadList={false} beforeUpload={() => false} onChange={pickLogo}>
+              <Button icon={<UploadOutlined />}>{logoPreview ? "Change logo" : "Upload logo"}</Button>
+            </Upload>
+          </div>
+        </Form.Item>
+      </Form>
+    </Drawer>
+  );
+};
 
-        {/* ══════════ EDIT SCHOOL MODAL ══════════ */}
-        <Modal
-          title={modalTitle(<EditOutlined />, "Edit School")}
-          open={editModalOpen}
-          onCancel={handleCloseEdit}
-          onOk={() => editForm.submit()}
-          okText="Save Changes"
-          okButtonProps={{ loading: editSaving }}
-          centered
-          width={560}
-          destroyOnClose
-        >
-          <Form
-            form={editForm}
-            layout="vertical"
-            onFinish={handleEditSubmit}
-            style={{ marginTop: 4 }}
-          >
-            <Row gutter={[14, 0]}>
-              <Col xs={24}>
-                <Form.Item
-                  name="name"
-                  label="School Name"
-                  rules={[{ required: true, message: "School name is required" }]}
-                >
-                  <Input placeholder="e.g. Sunrise Public School" />
-                </Form.Item>
-              </Col>
+/* ─────────────────────────── delete ─────────────────────────── */
+const DeleteSchool = ({ school, onClose, onDeleted, onSwitchOff }) => {
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [refusal, setRefusal] = useState(null);
+  useEffect(() => { setTyped(""); setRefusal(null); }, [school]);
+  const matches = school && typed.trim().toLowerCase() === school.name.trim().toLowerCase();
 
-              <Col xs={24}>
-                <Form.Item name="address" label="Address">
-                  <Input placeholder="e.g. 123 Main Street, Mumbai" />
-                </Form.Item>
-              </Col>
+  const remove = async () => {
+    setBusy(true);
+    try {
+      await apiClient.delete(`/school/delete/${school._id}`);
+      message.success(`${school.name} deleted`);
+      onDeleted();
+    } catch (e) {
+      setRefusal(errorText(e, "Could not delete the school"));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-              <Col xs={24} sm={12}>
-                <Form.Item
-                  name="email"
-                  label="Email"
-                  rules={[{ type: "email", message: "Enter a valid email" }]}
-                >
-                  <Input placeholder="school@example.com" />
-                </Form.Item>
-              </Col>
+  return (
+    <Modal
+      open={Boolean(school)}
+      onCancel={onClose}
+      centered
+      title={school && `Delete ${school.name}?`}
+      okText="Delete school"
+      okButtonProps={{ danger: true, disabled: !matches || Boolean(refusal), loading: busy }}
+      onOk={remove}
+    >
+      {refusal ? (
+        <Alert
+          type="warning" showIcon message="This school was not deleted" description={refusal}
+          action={school?.isActive && <Button size="small" onClick={() => onSwitchOff(school)}>Switch it off</Button>}
+        />
+      ) : (
+        <>
+          <p style={{ color: "var(--text-secondary)" }}>
+            Only a school nobody has used yet can be deleted — one with users, students, classes or billing records is kept, and can be switched off instead.
+          </p>
+          <div style={{ fontSize: 13, marginBottom: 6 }}>Type <strong>{school?.name}</strong> to confirm</div>
+          <Input value={typed} onChange={(e) => setTyped(e.target.value)} onPressEnter={() => matches && remove()} autoFocus />
+        </>
+      )}
+    </Modal>
+  );
+};
 
-              <Col xs={24} sm={12}>
-                <Form.Item name="phone" label="Phone">
-                  <Input placeholder="+91 9XXXXXXXXX" />
-                </Form.Item>
-              </Col>
+/* ────────────────────────────────── page ────────────────────────────────── */
+const Schools = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { schools = [], loading, error } = useSelector((s) => s.school || {});
+  const { plans = [] } = useSelector((s) => s.subscriptionPlans || {});
+  const boards = useSelector((s) => s.boards?.boards || []);
 
-              <Col xs={24} sm={12}>
-                <Form.Item name="website" label="Website">
-                  <Input placeholder="https://school.edu" />
-                </Form.Item>
-              </Col>
+  const [view, setView] = useState("all");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("name");
+  const [openId, setOpenId] = useState(null);
+  const [formFor, setFormFor] = useState(null);      // null | { school: null } (add) | { school } (edit)
+  const [deleting, setDeleting] = useState(null);
+  const [toggling, setToggling] = useState(null);
 
-              <Col xs={24} sm={12}>
-                <Form.Item name="isActive" label="Status">
-                  <Select>
-                    <Option value="active">Active</Option>
-                    <Option value="inactive">Inactive</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
+  const reload = useCallback(() => dispatch(fetchSchools()), [dispatch]);
+  useEffect(() => {
+    reload();
+    dispatch(fetchSubscriptionPlans());
+    dispatch(getBoards());
+  }, [dispatch, reload]);
 
-              <Col xs={24}>
-                <Form.Item label="School Logo (Max 50 KB)">
-                  <Upload
-                    accept="image/*"
-                    showUploadList={false}
-                    beforeUpload={() => false}
-                    onChange={handleEditLogoChange}
-                  >
-                    <Button icon={<UploadOutlined />}>
-                      {editLogoPreview ? "Change Logo" : "Upload Logo"}
-                    </Button>
-                  </Upload>
+  const rows = useMemo(() => (Array.isArray(schools) ? schools : []).map((s) => ({ ...s, sub: subscriptionState(s.subscription) })), [schools]);
+  const counts = useMemo(() => ({
+    all: rows.length,
+    attention: rows.filter((s) => s.isActive && s.sub.attention).length,
+    off: rows.filter((s) => !s.isActive).length,
+  }), [rows]);
 
-                  {editLogoPreview && (
-                    <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                      <img
-                        src={editLogoPreview}
-                        alt="Logo Preview"
-                        width={56}
-                        height={56}
-                        style={{ borderRadius: 8, border: "1px solid var(--border-muted)", objectFit: "cover" }}
-                      />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {editLogoFile ? "New logo (unsaved)" : "Current logo"}
-                      </Text>
-                    </div>
-                  )}
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
-        </Modal>
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = rows.filter((s) => (view === "attention" ? s.isActive && s.sub.attention : view === "off" ? !s.isActive : true))
+      .filter((s) => !q || [s.name, s.address, s.email, s.phone].some((v) => String(v || "").toLowerCase().includes(q)));
+    const endOf = (s) => (s.subscription?.endDate ? dayjs(s.subscription.endDate).valueOf() : Number.MAX_SAFE_INTEGER);
+    return [...list].sort(sort === "newest"
+      ? (a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()
+      : sort === "ending"
+        ? (a, b) => endOf(a) - endOf(b)
+        : (a, b) => a.name.localeCompare(b.name));
+  }, [rows, view, search, sort]);
 
-        {/* ══════════ SUBSCRIPTION MANAGEMENT DRAWER ══════════ */}
-        <Drawer
-          open={subDrawerOpen}
-          onClose={handleSubDrawerClose}
-          title={modalTitle(<CrownOutlined />, "Manage Subscription", subSchool?.name)}
-          width={440}
-          destroyOnClose
-        >
-          {actionLoading && !schoolSubscription ? (
-            <div style={{ textAlign: "center", padding: 48 }}><Spin size="large" /></div>
-          ) : !schoolSubscription ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <Alert
-                type="warning"
-                showIcon
-                message="No subscription assigned"
-                description="Pick a plan below to activate a subscription for this school."
-              />
+  const open = rows.find((s) => s._id === openId) || null;
 
-              <div style={{ ...sectionPanel, marginBottom: 0, background: "var(--surface-soft)" }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <CrownOutlined style={{ color: "var(--primary)" }} />
-                  Assign Plan
-                </div>
-                <Select
-                  placeholder="Select a plan"
-                  style={{ width: "100%", marginBottom: 10 }}
-                  value={assignPlanId}
-                  onChange={setAssignPlanId}
-                  options={plans.filter(p => p.isActive !== false).map(p => ({
-                    value: p._id,
-                    label: `${p.name} — ₹${p.price} / ${p.durationInDays}d`,
-                  }))}
-                />
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                  <Switch size="small" checked={assignAsTrial} onChange={setAssignAsTrial} />
-                  <Text style={{ fontSize: 12, color: "var(--text-secondary)" }}>Start as trial</Text>
-                </div>
-                <Popconfirm
-                  title="Assign this plan?"
-                  description="Activates a new subscription for this school starting today."
-                  onConfirm={handleAssignPlan}
-                  disabled={!assignPlanId}
-                  okText="Assign"
-                >
-                  <Button
-                    block type="primary" icon={<CrownOutlined />}
-                    disabled={!assignPlanId}
-                    loading={actionLoading}
-                    style={{ borderRadius: 8, height: 38, fontWeight: 600 }}
-                  >
-                    Assign Plan
-                  </Button>
-                </Popconfirm>
-              </div>
+  const setSignIn = (school, on) => {
+    Modal.confirm({
+      title: on ? `Switch ${school.name} on?` : `Switch ${school.name} off?`,
+      content: on
+        ? "Its staff, students and parents can sign in again."
+        : "Nobody at the school can sign in until it is switched back on. Its records are kept.",
+      okText: on ? "Switch on" : "Switch off",
+      okButtonProps: on ? {} : { danger: true },
+      centered: true,
+      onOk: async () => {
+        setToggling(school._id);
+        try {
+          await apiClient.put(`/school/${on ? "activate" : "deactivate"}/${school._id}`);
+          message.success(`${school.name} switched ${on ? "on" : "off"}`);
+          await reload();
+        } catch (e) {
+          message.error(errorText(e, "Could not change sign-in"));
+        } finally {
+          setToggling(null);
+        }
+      },
+    });
+  };
+
+  const columns = [
+    {
+      title: "School",
+      key: "school",
+      render: (_, s) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+          <SchoolMark school={s} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{s.name}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>
+              {[s.address, s.email].filter(Boolean).join(" · ") || "No contact details"}
             </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Boards",
+      key: "boards",
+      render: (_, s) => (s.boards?.length
+        ? s.boards.map((b) => <Tag key={b._id}>{b.name}</Tag>)
+        : <span style={{ color: "var(--text-muted)" }}>—</span>),
+    },
+    {
+      title: "Subscription",
+      key: "subscription",
+      render: (_, s) => (
+        <div>
+          <Tag color={s.sub.color}>{s.sub.label}</Tag>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+            {s.subscriptionPlan?.name ? `${s.subscriptionPlan.name}${s.subscription?.endDate ? ` · until ${dayjs(s.subscription.endDate).format(DAY)}` : ""}` : "Pick a plan in the school"}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Sign-in",
+      key: "signin",
+      width: 110,
+      render: (_, s) => (
+        <span onClick={(e) => e.stopPropagation()} role="presentation">
+          <Switch checked={Boolean(s.isActive)} loading={toggling === s._id} checkedChildren="On" unCheckedChildren="Off" onChange={(on) => setSignIn(s, on)} aria-label={`Sign-in for ${s.name}`} />
+        </span>
+      ),
+    },
+  ];
 
-              {/* ── Status badge ── */}
-              {(() => {
-                const sc = STATUS_COLOR[schoolSubscription.status] || STATUS_COLOR.cancelled;
-                const end = new Date(schoolSubscription.endDate);
-                const daysLeft = Math.ceil((end - new Date()) / 86400000);
-                return (
-                  <div style={{
-                    background: sc.bg, border: `1px solid ${sc.border}`,
-                    borderRadius: 12, padding: "14px 16px",
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                  }}>
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: sc.color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-                        {schoolSubscription.status}
-                      </div>
-                      <div style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 600 }}>
-                        {schoolSubscription.planId?.name || "—"}
-                      </div>
-                    </div>
-                    {["active", "trial"].includes(schoolSubscription.status) && (
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: daysLeft <= 7 ? "var(--danger-hover)" : daysLeft <= 30 ? "var(--warning-hover)" : sc.color }}>
-                          {daysLeft > 0 ? daysLeft : 0}
-                        </div>
-                        <div style={{ fontSize: 10, color: "var(--text-muted)" }}>days left</div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+  const segment = (key, label) => ({ value: key, label: `${label} ${counts[key]}` });
 
-              {/* ── Details ── */}
-              <Descriptions column={1} size="small" bordered
-                styles={{ label: { fontWeight: 600, fontSize: 12, width: 130 }, content: { fontSize: 12 } }}>
-                <Descriptions.Item label="Plan">
-                  {schoolSubscription.planId?.name || "—"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Price">
-                  ₹{schoolSubscription.snapshot?.price?.toLocaleString("en-IN") || "—"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Start Date">
-                  {new Date(schoolSubscription.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                </Descriptions.Item>
-                <Descriptions.Item label="End Date">
-                  {new Date(schoolSubscription.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                </Descriptions.Item>
-                <Descriptions.Item label="Duration">
-                  {schoolSubscription.snapshot?.durationInDays} days
-                </Descriptions.Item>
-                <Descriptions.Item label="Payment">
-                  <Tag color={schoolSubscription.paymentStatus === "completed" ? "success" : schoolSubscription.paymentStatus === "failed" ? "error" : "warning"}>
-                    {schoolSubscription.paymentStatus}
-                  </Tag>
-                </Descriptions.Item>
-              </Descriptions>
+  return (
+    <div style={pageWrapper}>
+      <PageHeader
+        title="Schools"
+        subtitle="Every school on the platform — who can sign in, and whose subscription needs attention"
+        icon={<ApartmentOutlined />}
+        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setFormFor({ school: null })}>Add school</Button>}
+      />
 
-              {/* ── Actions ── */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={sectionPanel}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
+          <Segmented
+            value={view}
+            onChange={setView}
+            options={[segment("all", "All"), segment("attention", "Needs attention"), segment("off", "Switched off")]}
+          />
+          <Input
+            allowClear prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            placeholder="Search by name, city, email or phone"
+            value={search} onChange={(e) => setSearch(e.target.value)}
+            style={{ flex: "1 1 240px", maxWidth: 360 }}
+          />
+          <Select
+            value={sort} onChange={setSort} style={{ width: 200 }} aria-label="Sort"
+            options={[
+              { value: "name", label: "Name A–Z" },
+              { value: "ending", label: "Plan ends soonest" },
+              { value: "newest", label: "Newest first" },
+            ]}
+          />
+        </div>
 
-                {/* Renew */}
-                <Popconfirm
-                  title="Renew subscription?"
-                  description={`Extends by ${schoolSubscription.snapshot?.durationInDays} days from the current end date.`}
-                  onConfirm={handleRenew}
-                  okText="Renew"
-                  icon={<ReloadOutlined style={{ color: "var(--primary)" }} />}
-                >
-                  <Button
-                    block icon={<ReloadOutlined />}
-                    loading={actionLoading}
-                    style={{ borderRadius: 8, height: 38, fontWeight: 600, borderColor: "var(--primary-light)", color: "var(--primary)", background: "var(--primary-light)" }}
-                  >
-                    Renew Subscription
-                  </Button>
-                </Popconfirm>
+        {view === "attention" && counts.attention > 0 && (
+          <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10 }}>
+            Schools that are on, with no plan, or a plan that has ended, is ending within {SOON_DAYS} days, or was suspended or cancelled.
+          </div>
+        )}
 
-                {/* Suspend / Reactivate */}
-                {["active", "trial"].includes(schoolSubscription.status) ? (
-                  <Popconfirm
-                    title="Suspend subscription?"
-                    description="School admins will be blocked from logging in."
-                    onConfirm={handleSuspend}
-                    okText="Suspend" okButtonProps={{ danger: true }}
-                    icon={<ExclamationCircleOutlined style={{ color: "var(--warning-hover)" }} />}
-                  >
-                    <Button block danger icon={<PauseCircleOutlined />} loading={actionLoading}
-                      style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "var(--warning-light)", borderColor: "var(--warning)", color: "var(--warning-hover)" }}>
-                      Suspend
-                    </Button>
-                  </Popconfirm>
-                ) : schoolSubscription.status === "suspended" ? (
-                  <Popconfirm
-                    title="Reactivate subscription?"
-                    onConfirm={handleReactivate}
-                    okText="Reactivate"
-                    icon={<PlayCircleOutlined style={{ color: "var(--success-hover)" }} />}
-                  >
-                    <Button block icon={<PlayCircleOutlined />} loading={actionLoading}
-                      style={{ borderRadius: 8, height: 38, fontWeight: 600, background: "var(--success-light)", borderColor: "rgba(var(--success-rgb), 0.4)", color: "var(--success-hover)" }}>
-                      Reactivate
-                    </Button>
-                  </Popconfirm>
-                ) : null}
+        {error && (
+          <Alert type="error" showIcon style={{ marginBottom: 12 }} message={typeof error === "string" ? error : "Could not load the schools"}
+            action={<Button size="small" onClick={reload}>Try again</Button>} />
+        )}
 
-                {/* Cancel */}
-                {schoolSubscription.status !== "cancelled" && (
-                  <Popconfirm
-                    title="Cancel subscription?"
-                    description="This will permanently cancel the school's subscription."
-                    onConfirm={handleCancel}
-                    okText="Yes, Cancel" okButtonProps={{ danger: true }}
-                    icon={<ExclamationCircleOutlined style={{ color: "var(--danger-hover)" }} />}
-                  >
-                    <Button block danger icon={<StopOutlined />} loading={actionLoading}
-                      style={{ borderRadius: 8, height: 38, fontWeight: 600 }}>
-                      Cancel Subscription
-                    </Button>
-                  </Popconfirm>
-                )}
-              </div>
-
-              {/* ── Change Plan ── */}
-              <div style={{ ...sectionPanel, marginBottom: 0, background: "var(--surface-soft)" }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <SwapOutlined style={{ color: "var(--primary)" }} />
-                  Change Plan
-                </div>
-                <Space.Compact style={{ width: "100%", marginBottom: 10 }}>
-                  <Select
-                    placeholder="Select new plan"
-                    style={{ flex: 1 }}
-                    value={changePlanId}
-                    onChange={setChangePlanId}
-                    options={plans.filter(p => p.isActive !== false && p._id !== schoolSubscription.planId?._id).map(p => ({
-                      value: p._id,
-                      label: `${p.name} — ₹${p.price} / ${p.durationInDays}d`,
-                    }))}
-                  />
-                  <Select
-                    value={changePlanAction}
-                    onChange={setChangePlanAction}
-                    style={{ width: 130 }}
-                    options={[
-                      { value: "upgrade", label: "Upgrade" },
-                      { value: "downgrade", label: "Downgrade" },
-                    ]}
-                  />
-                </Space.Compact>
-                <Popconfirm
-                  title={`${changePlanAction === "upgrade" ? "Upgrade" : "Downgrade"} plan?`}
-                  description="This will reset the subscription start/end dates."
-                  onConfirm={handleChangePlan}
-                  disabled={!changePlanId}
-                  okText="Confirm"
-                >
-                  <Button
-                    block icon={<SwapOutlined />}
-                    disabled={!changePlanId}
-                    loading={actionLoading}
-                    style={{ borderRadius: 8, height: 36, fontWeight: 600, borderColor: "var(--primary-light)", color: "var(--primary)" }}
-                  >
-                    Apply Plan Change
-                  </Button>
-                </Popconfirm>
-              </div>
-            </div>
-          )}
-        </Drawer>
+        <Table
+          rowKey="_id"
+          columns={columns}
+          dataSource={shown}
+          loading={loading}
+          size="middle"
+          scroll={{ x: 760 }}
+          pagination={{ pageSize: 20, hideOnSinglePage: true, showSizeChanger: false }}
+          onRow={(s) => ({ onClick: () => setOpenId(s._id), style: { cursor: "pointer" } })}
+          locale={{
+            emptyText: loading ? " " : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={search || view !== "all"
+                  ? (view === "attention" && !search ? "Nothing needs attention" : "No school matches")
+                  : "No schools yet"}
+              >
+                {!search && view === "all" && <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormFor({ school: null })}>Add the first school</Button>}
+              </Empty>
+            ),
+          }}
+        />
       </div>
-    </>
+
+      {/* ── one school ── */}
+      <Drawer
+        open={Boolean(open)}
+        onClose={() => setOpenId(null)}
+        width={520}
+        title={open && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <SchoolMark school={open} size={40} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{open.name}</div>
+              <div style={{ fontSize: 12, fontWeight: 400, color: "var(--text-muted)" }}>
+                {open.isActive ? "Can sign in" : "Switched off — nobody can sign in"} · added {dayjs(open.createdAt).format(DAY)}
+              </div>
+            </div>
+          </div>
+        )}
+      >
+        {open && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 14 }}>
+              <span style={{ flex: 1, color: "var(--text-secondary)" }}>Sign-in</span>
+              <Switch checked={Boolean(open.isActive)} loading={toggling === open._id} checkedChildren="On" unCheckedChildren="Off" onChange={(on) => setSignIn(open, on)} />
+            </div>
+
+            <Section title="Details" extra={<Button size="small" icon={<EditOutlined />} onClick={() => setFormFor({ school: open })}>Edit</Button>}>
+              <Fact label="Email">{open.email}</Fact>
+              <Fact label="Phone">{open.phone}</Fact>
+              <Fact label="Website">{open.website && <a href={open.website} target="_blank" rel="noreferrer">{open.website}</a>}</Fact>
+              <Fact label="Address">{open.address}</Fact>
+              <Fact label="Boards">
+                {open.boards?.length ? open.boards.map((b) => <Tag key={b._id}>{b.name}</Tag>) : null}
+              </Fact>
+              <Button type="link" size="small" style={{ padding: 0 }} onClick={() => navigate("/dashboard/superadmin/academics/boards")}>Change boards</Button>
+            </Section>
+
+            <Section title="Subscription">
+              <SubscriptionPanel school={open} plans={plans} onChanged={reload} />
+            </Section>
+
+            <Section title="Reports">
+              <Button icon={<BarChartOutlined />} onClick={() => navigate(`/dashboard/superadmin/reports/schools?school=${open._id}`)}>
+                Students, class by class
+              </Button>
+            </Section>
+
+            <Section title="Delete">
+              <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10 }}>
+                For a school added by mistake. A school that has been used is switched off instead.
+              </div>
+              <Button danger icon={<DeleteOutlined />} onClick={() => setDeleting(open)}>Delete school</Button>
+            </Section>
+          </>
+        )}
+      </Drawer>
+
+      <SchoolForm
+        open={Boolean(formFor)}
+        school={formFor?.school || null}
+        boards={boards}
+        plans={plans}
+        onClose={() => setFormFor(null)}
+        onSaved={async (id) => {
+          setFormFor(null);
+          await reload();
+          if (id) setOpenId(id);
+        }}
+      />
+
+      <DeleteSchool
+        school={deleting}
+        onClose={() => setDeleting(null)}
+        onDeleted={async () => { setDeleting(null); setOpenId(null); await reload(); }}
+        onSwitchOff={(s) => { setDeleting(null); setSignIn(s, false); }}
+      />
+    </div>
   );
 };
 

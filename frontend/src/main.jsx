@@ -86,6 +86,17 @@ export const ThemedAntWrapper = ({ children }) => {
             borderRadius: 12,
             controlHeight: 42,
           },
+          // Without this a date picker kept the stock 32px height and 6px corners, and stood
+          // visibly shorter than the selects beside it in every filter row.
+          DatePicker: {
+            borderRadius: 12,
+            controlHeight: 42,
+          },
+          // Same for number fields — they stood 32px tall beside 42px text inputs in the same form.
+          InputNumber: {
+            borderRadius: 12,
+            controlHeight: 42,
+          },
           Modal: {
             borderRadiusLG: 24,
           },

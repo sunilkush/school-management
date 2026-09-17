@@ -130,6 +130,10 @@ export default function RevenuePage() {
             })
           : "-",
         status: invoice.status || "draft",
+        period: invoice.period,
+        periodEnd: invoice.billingPeriodEnd
+          ? new Date(invoice.billingPeriodEnd).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+          : null,
       })),
     [invoices]
   );
@@ -163,6 +167,7 @@ export default function RevenuePage() {
               ? values.dueDate.toDate().toISOString()
               : undefined,
             status: values.status || "unpaid",
+            period: values.period || "next",
           },
         })
       ).unwrap();
@@ -338,7 +343,7 @@ export default function RevenuePage() {
         width={620}
         destroyOnClose
       >
-        <Form form={invoiceForm} layout="vertical" style={{ marginTop: 18 }}>
+        <Form form={invoiceForm} layout="vertical" style={{ marginTop: 18 }} initialValues={{ period: "next" }}>
           <Form.Item
             label="School"
             name="schoolId"
@@ -352,6 +357,19 @@ export default function RevenuePage() {
                 label: school?.name || "Unnamed School",
                 value: school?._id,
               }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Bills for"
+            name="period"
+            extra="When a next-period invoice is paid, the school's plan runs to the end of that period on its own — nobody needs to press Renew."
+          >
+            <Select
+              options={[
+                { value: "next", label: "The next period — a renewal" },
+                { value: "current", label: "The period the plan is in now" },
+              ]}
             />
           </Form.Item>
 
@@ -428,7 +446,14 @@ export default function RevenuePage() {
             <Input placeholder="Optional proof link" />
           </Form.Item>
 
-          <Form.Item label="Status" name="status" initialValue="success">
+          <Form.Item
+            label="Status"
+            name="status"
+            initialValue="success"
+            extra={selectedInvoice?.periodEnd
+              ? `A successful payment marks the invoice paid and, if the plan ends before ${selectedInvoice.periodEnd}, runs it to that date.`
+              : "A successful payment marks the invoice paid."}
+          >
             <Select
               options={[
                 { label: "Success", value: "success" },

@@ -11,6 +11,10 @@ const subscriptionInvoiceSchema = new mongoose.Schema(
     invoiceNumber: { type: String, required: true, unique: true, trim: true },
     billingPeriodStart: { type: Date, required: true },
     billingPeriodEnd: { type: Date, required: true },
+    // "next" bills the period after the plan's current end date (a renewal); paying it extends the
+    // plan to billingPeriodEnd. "current" bills the period the plan is already in. Invoices made
+    // before this field existed have neither.
+    period: { type: String, enum: ["current", "next"] },
     planPrice: { type: Number, required: true, min: 0 },
     discount: { type: Number, default: 0, min: 0 },
     taxGst: { type: Number, default: 0, min: 0 },

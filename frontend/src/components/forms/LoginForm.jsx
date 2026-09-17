@@ -4,6 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, resetState, verify2FALogin } from "../../features/authSlice";
+import { BILLING_PAGE, SIGNED_OUT_REASON_KEY } from "../../api/httpClient";
 import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Checkbox, Modal } from "antd";
 import {
@@ -72,6 +73,16 @@ const LoginForm = () => {
   const [pendingNav,  setPendingNav]  = useState(null);
   const [otpValue,    setOtpValue]    = useState("");
   const [otpError,    setOtpError]    = useState("");
+  // Why the last session was ended (school switched off, subscription suspended…), shown once.
+  const [signedOutReason] = useState(() => {
+    try {
+      const reason = window.sessionStorage.getItem(SIGNED_OUT_REASON_KEY);
+      window.sessionStorage.removeItem(SIGNED_OUT_REASON_KEY);
+      return reason;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 40);
@@ -103,6 +114,8 @@ const LoginForm = () => {
       const res = await dispatch(loginUser(values)).unwrap();
       // If 2FA is required, show OTP input — navigation happens after OTP
       if (res?.requiresTwoFactor) return;
+      // An expired plan's School Admin is let in to the billing page only.
+      if (res?.billingOnly) { navigate(BILLING_PAGE, { replace: true }); return; }
       const role = typeof res?.user?.role === "string"
         ? res.user.role.toLowerCase()
         : res?.user?.role?.name?.toLowerCase();
@@ -122,7 +135,7 @@ const LoginForm = () => {
     try {
       const res = await dispatch(verify2FALogin({ userId: twoFactorUserId, otp: otpValue })).unwrap();
       // After 2FA, user data is fetched by the auth initialization
-      navigate("/dashboard", { replace: true });
+      navigate(res?.billingOnly ? BILLING_PAGE : "/dashboard", { replace: true });
     } catch (err) {
       setOtpError(err || "Invalid OTP");
       setOtpValue("");
@@ -350,6 +363,13 @@ const LoginForm = () => {
                   />
                   <Link to="/forgot-password" className="lf-forgot">Forgot password?</Link>
                 </div>
+
+                {signedOutReason && !showError && (
+                  <div className="lf-err" role="alert" aria-live="assertive">
+                    <span style={{ fontSize: 15, flexShrink: 0 }}>⚠</span>
+                    You were signed out. {signedOutReason}
+                  </div>
+                )}
 
                 {showError && (
                   <div className="lf-err" role="alert" aria-live="assertive">

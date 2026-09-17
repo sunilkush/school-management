@@ -280,6 +280,18 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text) !important;
 }
 
+/* The rule above pins every field's border in every state, focus included, so nothing on the field
+   itself showed that it had focus — the only sign was a square browser ring around the hidden
+   <input> inside a select. A focused field now shows it on its own rounded border instead. */
+.ant-select-focused .ant-select-selector,
+.ant-select-open .ant-select-selector,
+.ant-picker.ant-picker-focused,
+.ant-input-affix-wrapper.ant-input-affix-wrapper-focused,
+.ant-input:focus,
+.ant-input-number.ant-input-number-focused {
+  border-color: var(--primary) !important;
+}
+
 .ant-input::placeholder,
 .ant-select-selection-placeholder {
   color: var(--text-muted) !important;
@@ -1588,6 +1600,18 @@ body {
 :focus-visible {
   outline: 2px solid var(--primary, #2563EB) !important;
   outline-offset: 2px !important;
+}
+
+/* Ant Design's form controls show focus on their own wrapper — the border turns primary — so the
+   ring above only added a square box around the hidden <input> inside them. A text input counts as
+   :focus-visible even when clicked with a mouse, which is why every searchable select (School on
+   the attendance pages, for one) showed a hard blue rectangle over its rounded border. */
+.ant-select-selection-search-input:focus-visible,
+.ant-picker-input > input:focus-visible,
+.ant-input:focus-visible,
+.ant-input-affix-wrapper > input:focus-visible,
+.ant-input-number-input:focus-visible {
+  outline: none !important;
 }
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {

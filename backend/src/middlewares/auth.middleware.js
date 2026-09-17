@@ -3,6 +3,9 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { Role } from "../models/Roles.model.js";
 import jwt from "jsonwebtoken";
+import {
+  BILLING_ONLY_STATUS, billingOnlyMessage, canUseBillingOnly, findSchoolAccessProblem, isBillingOnlyPath, isSuperAdminUser,
+} from "../utils/schoolAccess.js";
 
 const resolveRoleId = (user) => {
   if (!user) return null;
@@ -49,6 +52,20 @@ export const auth = asyncHandler(async (req, _res, next) => {
 
   if (!user || user.isDeleted || !user.isActive) {
     throw new ApiError(401, "Unauthorized. User is invalid or inactive.");
+  }
+
+  // Switching a school off, or its subscription expiring or being suspended or cancelled, now ends
+  // its users' sessions instead of waiting for their tokens to run out. 401 so the browser tries a
+  // refresh, which is refused with the reason and signs them out.
+  // An expired plan's School Admin keeps the billing pages so the school can pay its way back in
+  // (utils/schoolAccess.js); anything else they ask for is answered 402, which opens that page.
+  if (user.schoolId && !isSuperAdminUser(user)) {
+    const problem = await findSchoolAccessProblem(user.schoolId);
+    if (problem) {
+      if (!canUseBillingOnly(problem, user)) throw new ApiError(401, problem.message);
+      if (!isBillingOnlyPath(req.originalUrl || req.url)) throw new ApiError(BILLING_ONLY_STATUS, billingOnlyMessage(problem));
+      req.billingOnly = true;
+    }
   }
 
   req.user = user;

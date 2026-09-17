@@ -10,6 +10,16 @@ const httpClient = axios.create({
 
 let authStore;
 
+/** Where the reason a session was ended is kept for the sign-in page to show. */
+export const SIGNED_OUT_REASON_KEY = "signedOutReason";
+
+/**
+ * A School Admin whose plan has expired may use only the billing page; the server answers 402 to
+ * anything else. Such an answer takes them to that page instead of leaving a half-loaded screen.
+ */
+export const BILLING_ONLY_STATUS = 402;
+export const BILLING_PAGE = "/dashboard/schooladmin/billing/subscription";
+
 export const attachAuthStore = (store) => {
   authStore = store;
 };
@@ -31,6 +41,12 @@ httpClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    if (error.response?.status === BILLING_ONLY_STATUS && typeof window !== "undefined") {
+      if (!window.location.pathname.startsWith(BILLING_PAGE)) window.location.assign(BILLING_PAGE);
+      return Promise.reject(error);
+    }
+
     const isUnauthorized = error.response?.status === 401;
 
     if (!isUnauthorized || !originalRequest || originalRequest._retry) {
@@ -71,6 +87,13 @@ httpClient.interceptors.response.use(
       clearAccessToken();
       clearHttpCache(); // never let the next session read this one's cached responses
       authStore?.dispatch({ type: "auth/forceLogout" });
+
+      // A refused refresh (403) carries the reason — the school was switched off, or its
+      // subscription expired, was suspended or cancelled. The sign-in page shows it once.
+      const reason = refreshError?.response?.status === 403 ? refreshError.response.data?.message : null;
+      if (reason && typeof window !== "undefined") {
+        try { window.sessionStorage.setItem(SIGNED_OUT_REASON_KEY, reason); } catch { /* storage blocked */ }
+      }
 
       if (typeof window !== "undefined") {
         window.location.assign("/login");

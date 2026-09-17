@@ -17,15 +17,9 @@ import BulkAttendanceTable        from "../../components/attendance/BulkAttendan
 import { ATTENDANCE_ROLE_OPTIONS } from "../../utils/attendanceRoles";
 import PageHeader                 from "../../components/layout/PageHeader";
 import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
-
-const FilterLabel = ({ children }) => (
-  <div style={{
-    fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
-    textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5,
-  }}>
-    {children}
-  </div>
-);
+import { FilterGrid, FilterField } from "../../components/attendance/FilterGrid";
+import { FULL_WIDTH } from "../../components/attendance/filterStyles";
+import YearField from "../../components/attendance/YearField";
 
 /* Roles that support check-in / check-out time tracking */
 const TIME_ROLES = new Set(["teacher", "staff", "support_staff", "accountant", "principal", "vice_principal", "librarian", "hostel_warden", "transport_manager"]);
@@ -165,15 +159,13 @@ const MarkAttendancePage = () => {
         icon={<EditOutlined />}
       />
 
-      {/* ── Filter panel ── */}
+      {/* ── Filter panel — same fields, same order, same sizes as Records and Monthly ── */}
       <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 16 }}>
-
+        <FilterGrid>
           {isSuperAdmin && (
-            <div>
-              <FilterLabel>School</FilterLabel>
+            <FilterField label="School">
               <Select
-                showSearch placeholder="Select school" style={{ width: "100%" }}
+                showSearch placeholder="Select school" style={FULL_WIDTH}
                 value={saSchoolId || undefined} options={schoolOptions}
                 filterOption={(inp, opt) => opt.label.toLowerCase().includes(inp.toLowerCase())}
                 onChange={(val) => {
@@ -182,75 +174,61 @@ const MarkAttendancePage = () => {
                 }}
                 suffixIcon={<BankOutlined />}
               />
-            </div>
+            </FilterField>
           )}
 
           {/* Which year everything below comes from — the school's own, not the header's. */}
-          <div>
-            <FilterLabel>Academic year</FilterLabel>
-            <div style={{
-              height: 32, display: "flex", alignItems: "center", padding: "0 11px",
-              border: "1px solid var(--border-muted)", borderRadius: 6,
-              fontSize: 14, color: academicYear ? "var(--text-primary)" : "var(--text-muted)",
-              background: "var(--surface-soft)",
-            }}>
-              {academicYear
-                ? `${academicYear.name}${academicYear.isActive ? " · running" : ""}`
-                : (schoolId ? "This school has no year set up" : "Pick a school")}
-            </div>
-          </div>
+          <FilterField label="Academic year">
+            <YearField year={academicYear} schoolChosen={Boolean(schoolId)} />
+          </FilterField>
 
-          <div>
-            <FilterLabel>Class</FilterLabel>
+          <FilterField label="Role">
             <Select
-              placeholder={academicYearId ? "Select class" : "Pick a school first"}
-              style={{ width: "100%" }}
-              value={filters.classId || undefined} allowClear disabled={!schoolId || !academicYearId}
-              options={classes.map((c) => ({ value: c._id, label: c.name }))}
-              onChange={(val) => dispatch(setAttendanceFilters({ classId: val || null, sectionId: null }))}
-            />
-          </div>
-
-          <div>
-            <FilterLabel>Section</FilterLabel>
-            <Select
-              placeholder="Select section" style={{ width: "100%" }}
-              value={filters.sectionId || undefined} allowClear disabled={!filters.classId}
-              options={classes.find((c) => c._id === filters.classId)?.sections?.map((s) => ({ value: s._id, label: s.name })) || []}
-              onChange={(val) => dispatch(setAttendanceFilters({ sectionId: val || null }))}
-            />
-          </div>
-
-          <div>
-            <FilterLabel>Date</FilterLabel>
-            <DatePicker
-              style={{ width: "100%" }}
-              value={filters.date ? dayjs(filters.date) : dayjs()}
-              onChange={(v) => dispatch(setAttendanceFilters({ date: v?.toISOString() || null }))}
-              suffixIcon={<CalendarOutlined />}
-            />
-          </div>
-
-          <div>
-            <FilterLabel>Role</FilterLabel>
-            <Select
-              style={{ width: "100%" }}
+              style={FULL_WIDTH}
               value={filters.role || "student"}
               options={ATTENDANCE_ROLE_OPTIONS}
               onChange={(v) => dispatch(setAttendanceFilters({ role: v }))}
               suffixIcon={<TeamOutlined />}
             />
-          </div>
-        </div>
+          </FilterField>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-          <Button
-            type="primary" icon={<TeamOutlined />}
-            onClick={handleLoad} loading={loading} disabled={!schoolId}
-          >
-            Load Users
-          </Button>
-        </div>
+          <FilterField label="Class">
+            <Select
+              placeholder={academicYearId ? "Select class" : "Pick a school first"}
+              style={FULL_WIDTH}
+              value={filters.classId || undefined} allowClear disabled={!schoolId || !academicYearId}
+              options={classes.map((c) => ({ value: c._id, label: c.name }))}
+              onChange={(val) => dispatch(setAttendanceFilters({ classId: val || null, sectionId: null }))}
+            />
+          </FilterField>
+
+          <FilterField label="Section">
+            <Select
+              placeholder="Select section" style={FULL_WIDTH}
+              value={filters.sectionId || undefined} allowClear disabled={!filters.classId}
+              options={classes.find((c) => c._id === filters.classId)?.sections?.map((s) => ({ value: s._id, label: s.name })) || []}
+              onChange={(val) => dispatch(setAttendanceFilters({ sectionId: val || null }))}
+            />
+          </FilterField>
+
+          <FilterField label="Date">
+            <DatePicker
+              style={FULL_WIDTH}
+              value={filters.date ? dayjs(filters.date) : dayjs()}
+              onChange={(v) => dispatch(setAttendanceFilters({ date: v?.toISOString() || null }))}
+              suffixIcon={<CalendarOutlined />}
+            />
+          </FilterField>
+
+          <FilterField>
+            <Button
+              type="primary" icon={<TeamOutlined />} style={FULL_WIDTH}
+              onClick={handleLoad} loading={loading} disabled={!schoolId}
+            >
+              Load Users
+            </Button>
+          </FilterField>
+        </FilterGrid>
       </div>
 
       {/* ── Attendance table ── */}

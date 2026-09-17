@@ -49,14 +49,26 @@ const academicYearSchema = new mongoose.Schema(
   }
 );
 
+/**
+ * A year's name comes from its dates: "2025-2026" for a session that crosses New Year, and just
+ * "2026" for one that runs January to December — "2026-2026" says nothing the single year does not.
+ */
+export const academicYearName = (startDate, endDate) => {
+  const startYear = new Date(startDate).getFullYear();
+  const endYear = new Date(endDate).getFullYear();
+  return startYear === endYear ? String(startYear) : `${startYear}-${endYear}`;
+};
+
+export const academicYearCode = (startDate, endDate) => {
+  const startYear = new Date(startDate).getFullYear();
+  const endYear = new Date(endDate).getFullYear();
+  return startYear === endYear ? `AY${startYear}` : `AY${startYear}${endYear}`;
+};
+
 // Auto-generate 'name' & 'code' from startDate and endDate before saving
 academicYearSchema.pre("save", function (next) {
-  const startYear = this.startDate.getFullYear();
-  const endYear = this.endDate.getFullYear();
-
-  this.name = `${startYear}-${endYear}`;
-  this.code = `AY${startYear}${endYear}`;
-
+  this.name = academicYearName(this.startDate, this.endDate);
+  this.code = academicYearCode(this.startDate, this.endDate);
   next();
 });
 
