@@ -83,6 +83,9 @@ export const allowPublic = (req, _res, next) => {
    const PUBLIC_API_ROUTE_PATTERNS = [
   /^\/user\/login$/,
   /^\/user\/refresh-token$/,
+  // The code step of a two-factor sign-in: the user has no token until it succeeds. Missing from
+  // this list, it answered 401 and nobody with 2FA turned on could sign in.
+  /^\/2fa\/verify-login$/,
   /^\/user\/forgot-password$/,
   /^\/user\/reset-password\/[^/]+$/,
   /^\/user\/verify-email\/[^/]+$/,

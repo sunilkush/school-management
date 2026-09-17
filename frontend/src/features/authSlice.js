@@ -282,6 +282,13 @@ const authSlice = createSlice({
       state.error = null;
       state.success = false;
     },
+    // "Back to login" from the code step. It used to call resetState, which leaves
+    // requiresTwoFactor set, so the button did nothing.
+    leaveTwoFactor: (state) => {
+      state.requiresTwoFactor = false;
+      state.twoFactorUserId = null;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -391,6 +398,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { startAuthInitialization, completeAuthInitialization, setCredentials, forceLogout, resetState } =
+export const { startAuthInitialization, completeAuthInitialization, setCredentials, forceLogout, resetState, leaveTwoFactor } =
   authSlice.actions;
 export default authSlice.reducer;

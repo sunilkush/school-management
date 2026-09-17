@@ -16,7 +16,8 @@ const otpSchema = new Schema(
 
     purpose: {
       type: String,
-      enum: ["login", "signup", "forgot_password", "verify_email", "verify_phone"],
+      // enable_2fa / disable_2fa: turning two-factor sign-in on or off has its own code, apart from signing in.
+      enum: ["login", "signup", "forgot_password", "verify_email", "verify_phone", "enable_2fa", "disable_2fa"],
       required: true,
       index: true,
     },

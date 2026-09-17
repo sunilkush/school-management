@@ -29,6 +29,9 @@ const designationSchema = new Schema(
     },
     status: {
       type: String,
+      // Stored in lower case whatever spelling arrives ("Active" was refused outright).
+      lowercase: true,
+      trim: true,
       enum: ["active", "inactive"],
       default: "active",
     },

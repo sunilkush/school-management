@@ -98,7 +98,8 @@ export default function Departments() {
 
   /* Fetch on mount */
   useEffect(() => {
-    dispatch(fetchDepartments());
+    // The server sends 20 at a time unless asked; the page filters and pages the whole list itself.
+    dispatch(fetchDepartments({ limit: 1000 }));
   }, [dispatch]);
 
   /* Show API errors */
@@ -135,7 +136,7 @@ export default function Departments() {
     setIsEdit(false);
     setEditingId(null);
     form.resetFields();
-    form.setFieldsValue({ status: "Active" });
+    form.setFieldsValue({ status: "active" });
     setOpen(true);
   };
 
@@ -147,7 +148,7 @@ export default function Departments() {
       code: record.code,
       head: record.head,
       description: record.description,
-      status: record.status,
+      status: String(record.status || "active").toLowerCase(),
     });
     setOpen(true);
   };
@@ -355,8 +356,8 @@ export default function Departments() {
               onChange={(v) => setStatusFilter(v ?? "")}
               style={{ width: 140 }}
             >
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
+              <Option value="active">Active</Option>
+              <Option value="inactive">Inactive</Option>
             </Select>
           </Space>
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
@@ -407,7 +408,7 @@ export default function Departments() {
           form={form}
           onFinish={onFinish}
           style={{ marginTop: 16 }}
-          initialValues={{ status: "Active" }}
+          initialValues={{ status: "active" }}
         >
           <Form.Item
             name="name"
@@ -447,8 +448,8 @@ export default function Departments() {
             rules={[{ required: true, message: "Status is required" }]}
           >
             <Select>
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
+              <Option value="active">Active</Option>
+              <Option value="inactive">Inactive</Option>
             </Select>
           </Form.Item>
 

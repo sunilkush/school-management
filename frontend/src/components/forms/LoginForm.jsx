@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, resetState, verify2FALogin } from "../../features/authSlice";
+import { currentUser, leaveTwoFactor, loginUser, resetState, verify2FALogin } from "../../features/authSlice";
 import { BILLING_PAGE, SIGNED_OUT_REASON_KEY } from "../../api/httpClient";
 import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Checkbox, Modal } from "antd";
@@ -132,13 +132,22 @@ const LoginForm = () => {
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     if (otpValue.length !== 6) { setOtpError("Enter the 6-digit OTP"); return; }
+    let res;
     try {
-      const res = await dispatch(verify2FALogin({ userId: twoFactorUserId, otp: otpValue })).unwrap();
-      // After 2FA, user data is fetched by the auth initialization
-      navigate(res?.billingOnly ? BILLING_PAGE : "/dashboard", { replace: true });
+      res = await dispatch(verify2FALogin({ userId: twoFactorUserId, otp: otpValue })).unwrap();
     } catch (err) {
       setOtpError(err || "Invalid OTP");
       setOtpValue("");
+      return;
+    }
+    // The code step returns tokens but no user, and nothing loaded one: every protected page saw
+    // "no user" and sent the person back here. Load them, then go to their own dashboard.
+    try {
+      const me = await dispatch(currentUser()).unwrap();
+      const role = String(typeof me?.role === "string" ? me.role : me?.role?.name || "").toLowerCase();
+      navigate(res?.billingOnly ? BILLING_PAGE : roleRoutes[role] || "/dashboard", { replace: true });
+    } catch {
+      window.location.assign(res?.billingOnly ? BILLING_PAGE : "/dashboard");
     }
   };
 
@@ -283,10 +292,13 @@ const LoginForm = () => {
                   >
                     Verify & Sign In
                   </Button>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", margin: "4px 0 0" }}>
+                    No code? It can take a minute. Otherwise go back and sign in again for a new one.
+                  </p>
                   <Button
                     type="link"
                     block
-                    onClick={() => { dispatch(resetState()); setOtpValue(""); setOtpError(""); }}
+                    onClick={() => { dispatch(leaveTwoFactor()); setOtpValue(""); setOtpError(""); }}
                   >
                     Back to login
                   </Button>

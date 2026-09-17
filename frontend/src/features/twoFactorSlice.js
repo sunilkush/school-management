@@ -63,6 +63,12 @@ const twoFactorSlice = createSlice({
       state.success = null;
       state.otpSent = false;
     },
+    // Clears the messages only. The page used resetTwoFactorState for this 3 seconds after "code
+    // sent", which also hid the box the code goes in — leaving 3 seconds to type it.
+    clearTwoFactorMessages: (state) => {
+      state.error = null;
+      state.success = null;
+    },
   },
   extraReducers: (builder) => {
     const pending = (state) => { state.loading = true; state.error = null; state.success = null; };
@@ -79,7 +85,7 @@ const twoFactorSlice = createSlice({
       .addCase(fetch2FAStatus.rejected, failed)
 
       .addCase(enable2FA.pending, pending)
-      .addCase(enable2FA.fulfilled, (state) => { state.loading = false; state.otpSent = true; state.success = "OTP sent to your email"; })
+      .addCase(enable2FA.fulfilled, (state) => { state.loading = false; state.otpSent = true; state.success = "Code sent to your email"; })
       .addCase(enable2FA.rejected, failed)
 
       .addCase(confirm2FA.pending, pending)
@@ -87,7 +93,7 @@ const twoFactorSlice = createSlice({
       .addCase(confirm2FA.rejected, failed)
 
       .addCase(requestDisableOTP.pending, pending)
-      .addCase(requestDisableOTP.fulfilled, (state) => { state.loading = false; state.otpSent = true; state.success = "OTP sent to your email"; })
+      .addCase(requestDisableOTP.fulfilled, (state) => { state.loading = false; state.otpSent = true; state.success = "Code sent to your email"; })
       .addCase(requestDisableOTP.rejected, failed)
 
       .addCase(disable2FA.pending, pending)
@@ -96,5 +102,5 @@ const twoFactorSlice = createSlice({
   },
 });
 
-export const { resetTwoFactorState } = twoFactorSlice.actions;
+export const { resetTwoFactorState, clearTwoFactorMessages } = twoFactorSlice.actions;
 export default twoFactorSlice.reducer;

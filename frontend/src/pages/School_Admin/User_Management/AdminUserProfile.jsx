@@ -75,8 +75,8 @@ const AdminUserProfile = () => {
   useEffect(() => { load(); }, [id]);
   useEffect(() => {
     if (schoolId) {
-      dispatch(fetchDepartments({ schoolId }));
-      dispatch(fetchDesignations({ schoolId }));
+      dispatch(fetchDepartments({ schoolId, limit: 1000 }));
+      dispatch(fetchDesignations({ schoolId, limit: 1000 }));
     }
   }, [dispatch, schoolId]);
 

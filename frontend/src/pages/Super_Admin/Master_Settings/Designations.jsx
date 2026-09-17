@@ -29,6 +29,7 @@ import {
   updateDesignation,
   deleteDesignation,
 } from "../../../features/designationSlice";
+import { fetchDepartments } from "../../../features/departmentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import {
   pageWrapper,
@@ -97,10 +98,12 @@ function DesignationCell({ title }) {
 export default function Designations() {
   const dispatch = useDispatch();
   const { designations, loading, error } = useSelector((s) => s.designations);
+  const { departments = [] } = useSelector((s) => s.departments || {});
 
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -109,7 +112,9 @@ export default function Designations() {
 
   /* Fetch on mount */
   useEffect(() => {
-    dispatch(fetchDesignations());
+    // The server sends 20 at a time unless asked; the page filters and pages the whole list itself.
+    dispatch(fetchDesignations({ limit: 1000 }));
+    dispatch(fetchDepartments({ limit: 1000 }));
   }, [dispatch]);
 
   /* Show API errors */
@@ -127,12 +132,19 @@ export default function Designations() {
         d.title?.toLowerCase().includes(q) ||
         d.description?.toLowerCase().includes(q);
       const matchLevel = !levelFilter || d.level === levelFilter;
+      const matchDepartment = !departmentFilter || (d.departmentId?._id || d.departmentId) === departmentFilter;
       const matchStatus =
         !statusFilter ||
         d.status?.toLowerCase() === statusFilter.toLowerCase();
-      return matchSearch && matchLevel && matchStatus;
+      return matchSearch && matchLevel && matchStatus && matchDepartment;
     });
-  }, [designations, search, levelFilter, statusFilter]);
+  }, [designations, search, levelFilter, statusFilter, departmentFilter]);
+
+  /* Departments a designation can be put under: the active ones, plus its current one if that was since made inactive. */
+  const editingDepartmentId = Form.useWatch("departmentId", form);
+  const departmentOptions = (Array.isArray(departments) ? departments : [])
+    .filter((d) => String(d.status).toLowerCase() === "active" || d._id === editingDepartmentId)
+    .map((d) => ({ value: d._id, label: d.code ? `${d.name} (${d.code})` : d.name }));
 
   /* Stat counts */
   const total = Array.isArray(designations) ? designations.length : 0;
@@ -149,7 +161,7 @@ export default function Designations() {
     setIsEdit(false);
     setEditingId(null);
     form.resetFields();
-    form.setFieldsValue({ status: "Active", level: "Mid" });
+    form.setFieldsValue({ status: "active", level: "Mid", departmentId: undefined });
     setOpen(true);
   };
 
@@ -160,7 +172,8 @@ export default function Designations() {
       title: record.title,
       level: record.level,
       description: record.description,
-      status: record.status,
+      departmentId: record.departmentId?._id || record.departmentId || undefined,
+      status: String(record.status || "active").toLowerCase(),
     });
     setOpen(true);
   };
@@ -211,6 +224,13 @@ export default function Designations() {
     {
       title: "Designation",
       render: (_, record) => <DesignationCell title={record.title} />,
+    },
+    {
+      title: "Department",
+      key: "department",
+      render: (_, record) => (record.departmentId?.name
+        ? <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{record.departmentId.name}</span>
+        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>),
     },
     {
       title: "Level",
@@ -376,14 +396,24 @@ export default function Designations() {
               <Option value="Junior">Junior</Option>
             </Select>
             <Select
+              placeholder="All Departments"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              value={departmentFilter || undefined}
+              onChange={(v) => setDepartmentFilter(v ?? "")}
+              style={{ width: 180 }}
+              options={(Array.isArray(departments) ? departments : []).map((d) => ({ value: d._id, label: d.name }))}
+            />
+            <Select
               placeholder="All Status"
               allowClear
               value={statusFilter || undefined}
               onChange={(v) => setStatusFilter(v ?? "")}
               style={{ width: 140 }}
             >
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
+              <Option value="active">Active</Option>
+              <Option value="inactive">Inactive</Option>
             </Select>
           </Space>
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
@@ -434,7 +464,7 @@ export default function Designations() {
           form={form}
           onFinish={onFinish}
           style={{ marginTop: 16 }}
-          initialValues={{ status: "Active", level: "Mid" }}
+          initialValues={{ status: "active", level: "Mid" }}
         >
           <Form.Item
             name="title"
@@ -456,6 +486,20 @@ export default function Designations() {
             </Select>
           </Form.Item>
 
+          <Form.Item
+            name="departmentId"
+            label="Department"
+            extra={departmentOptions.length ? undefined : "No active departments yet — add them on the Departments page."}
+          >
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Which department is this job in? (optional)"
+              options={departmentOptions}
+            />
+          </Form.Item>
+
           <Form.Item name="description" label="Description">
             <TextArea
               rows={3}
@@ -471,8 +515,8 @@ export default function Designations() {
             rules={[{ required: true, message: "Status is required" }]}
           >
             <Select>
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
+              <Option value="active">Active</Option>
+              <Option value="inactive">Inactive</Option>
             </Select>
           </Form.Item>
 

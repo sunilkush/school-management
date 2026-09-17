@@ -7,6 +7,7 @@ import {
   requestDisableOTP,
   disable2FA,
   resetTwoFactorState,
+  clearTwoFactorMessages,
 } from "../../features/twoFactorSlice";
 
 export default function TwoFactorAuth() {
@@ -21,15 +22,16 @@ export default function TwoFactorAuth() {
 
   useEffect(() => {
     if (success) {
-      const t = setTimeout(() => dispatch(resetTwoFactorState()), 3000);
+      const t = setTimeout(() => dispatch(clearTwoFactorMessages()), 4000);
       return () => clearTimeout(t);
     }
   }, [success, dispatch]);
 
+  // If the code could not be sent, go back to the button instead of leaving an empty screen.
   const handleStartEnable = () => {
     setFlow("enable");
     setOtp("");
-    dispatch(enable2FA());
+    dispatch(enable2FA()).then((res) => { if (res.error) setFlow(null); });
   };
 
   const handleConfirmEnable = (e) => {
@@ -42,7 +44,12 @@ export default function TwoFactorAuth() {
   const handleStartDisable = () => {
     setFlow("disable");
     setOtp("");
-    dispatch(requestDisableOTP());
+    dispatch(requestDisableOTP()).then((res) => { if (res.error) setFlow(null); });
+  };
+
+  const handleResend = () => {
+    setOtp("");
+    dispatch(flow === "enable" ? enable2FA() : requestDisableOTP());
   };
 
   const handleConfirmDisable = (e) => {
@@ -74,7 +81,7 @@ export default function TwoFactorAuth() {
           <p className="font-medium text-gray-800">2FA is currently <span className={enabled ? "text-green-600" : "text-gray-500"}>{enabled ? "enabled" : "disabled"}</span></p>
           {enabled && email && <p className="text-sm text-gray-500">Codes are sent to: <strong>{email}</strong></p>}
         </div>
-        {!flow && (
+        {!(flow && otpSent) && (
           <button
             onClick={enabled ? handleStartDisable : handleStartEnable}
             disabled={loading}
@@ -84,7 +91,7 @@ export default function TwoFactorAuth() {
                 : "bg-indigo-600 text-white hover:bg-indigo-700"
             } disabled:opacity-50`}
           >
-            {loading ? "..." : enabled ? "Disable 2FA" : "Enable 2FA"}
+            {loading && flow ? "Sending code…" : enabled ? "Disable 2FA" : "Enable 2FA"}
           </button>
         )}
       </div>
@@ -121,6 +128,12 @@ export default function TwoFactorAuth() {
               Cancel
             </button>
           </form>
+          <p className="text-xs text-indigo-700 mt-3">
+            No code yet? It can take a minute.{" "}
+            <button type="button" onClick={handleResend} disabled={loading} className="underline font-medium disabled:opacity-50">
+              Send a new code
+            </button>
+          </p>
         </div>
       )}
 

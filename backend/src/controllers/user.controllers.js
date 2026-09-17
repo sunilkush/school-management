@@ -17,6 +17,7 @@ import { escapeRegex } from '../utils/escapeRegex.js'
 import { SchoolSubscription } from '../models/schoolSubscription.model.js'
 import { recordLoginEvent, recordLogoutByUserId } from './loginLog.controllers.js'
 import { billingOnlyMessage, canUseBillingOnly, findSchoolAccessProblem, isSuperAdminUser } from '../utils/schoolAccess.js'
+import { issueOtp } from '../utils/otpCodes.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -241,17 +242,14 @@ const loginUser = asyncHandler(async (req, res) => {
 
   // 5️⃣ Check if 2FA is required
   if (user.twoFactorEnabled) {
-    // Send OTP email for 2FA step
-    const { OTP } = await import("../models/otpVerifications.model.js");
-    const { sendEmail } = await import("../utils/mailServices.js");
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    await OTP.findOneAndUpdate(
-      { emailOrPhone: user.email, purpose: "login" },
-      { code, expiresAt, verifiedAt: null },
-      { upsert: true, new: true }
-    );
-    await sendEmail(user.email, "Login OTP — School Management", `Your login OTP is: ${code}\n\nExpires in 10 minutes.`);
+    // Send the sign-in code (utils/otpCodes.js: a fresh code with its own attempt count, and a
+    // clear error if the email cannot be sent rather than "OTP sent").
+    await issueOtp({
+      email: user.email,
+      purpose: "login",
+      subject: "Your sign-in code",
+      intro: "Someone (hopefully you) signed in to your account with your password. Enter this code to finish signing in.",
+    });
     return res.status(200).json(new ApiResponse(200, {
       requiresTwoFactor: true,
       userId: user._id,
