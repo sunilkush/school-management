@@ -1,6 +1,6 @@
 import React, { lazy, memo, Suspense } from "react";
 import { Typography, Spin, Avatar, Tooltip } from "antd";
-import { LoadingOutlined } from "@ant-design/icons";
+import { LoadingOutlined, SearchOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../../features/authSlice";
+import { isMacPlatform, openGlobalSearch } from "../../utils/globalSearch";
 
 const SidebarMenu = lazy(() => import("./SidebarMenu"));
 const { Text } = Typography;
@@ -194,6 +195,25 @@ const Sidebar = ({ collapsed, onToggle }) => {
           color: var(--danger);
         }
 
+        /* Page search (opens GlobalSearch, mounted once in the top bar) */
+        .sb-search {
+          display: flex; align-items: center; gap: 8px; width: 100%; height: 38px; padding: 0 8px 0 12px;
+          background: var(--surface-soft); border: 1px solid ${t.border}; border-radius: 10px;
+          color: ${t.textMuted}; font: inherit; font-size: 13px; cursor: pointer; text-align: left;
+          transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .sb-search:hover, .sb-search:focus-visible {
+          border-color: ${t.accent}; box-shadow: 0 0 0 3px ${t.accentBg}; outline: none;
+        }
+        .sb-search-icon {
+          display: flex; align-items: center; justify-content: center; width: 40px; height: 36px; margin: 0 auto;
+          border-radius: 10px; border: 1px solid ${t.border}; background: var(--surface-soft);
+          color: ${t.textMuted}; cursor: pointer; transition: all 0.18s ease;
+        }
+        .sb-search-icon:hover, .sb-search-icon:focus-visible {
+          border-color: ${t.accentBorder}; background: ${t.accentBg}; color: ${t.accent}; outline: none;
+        }
+
         /* Online pulse */
         @keyframes onlineDot {
           0%,100% { box-shadow: 0 0 0 2px rgba(var(--success-rgb), 0.15); }
@@ -257,6 +277,28 @@ const Sidebar = ({ collapsed, onToggle }) => {
           {!collapsed && onToggle && (
             <button className="sb-toggle" onClick={onToggle} title="Collapse sidebar">
               <ChevronLeft size={15} />
+            </button>
+          )}
+        </div>
+
+        {/* ── SEARCH (above the menu it searches) ──────────── */}
+        <div style={{ padding: collapsed ? "12px 0 8px" : "12px 14px 0", flexShrink: 0 }}>
+          {collapsed ? (
+            <Tooltip title={`Search pages (${isMacPlatform() ? "⌘K" : "Ctrl K"})`} placement="right">
+              <button type="button" className="sb-search-icon" onClick={openGlobalSearch} aria-label="Search pages">
+                <SearchOutlined style={{ fontSize: 15 }} />
+              </button>
+            </Tooltip>
+          ) : (
+            <button type="button" className="sb-search" onClick={openGlobalSearch} aria-label="Search pages">
+              <SearchOutlined style={{ fontSize: 14 }} />
+              <span style={{ flex: 1 }}>Search pages…</span>
+              <span style={{
+                fontSize: 10, fontWeight: 600, letterSpacing: "0.03em", color: t.textMuted,
+                background: t.bg, border: `1px solid ${t.border}`, padding: "1px 6px", borderRadius: 5,
+              }}>
+                {isMacPlatform() ? "⌘K" : "Ctrl K"}
+              </span>
             </button>
           )}
         </div>

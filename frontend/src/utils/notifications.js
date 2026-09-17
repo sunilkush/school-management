@@ -20,13 +20,31 @@ export const saveNotifications = async (payload) => {
   return response.data?.data;
 };
 
+/**
+ * The bell in the top bar listens for this, so reading a notification anywhere (the dropdown, the
+ * Notifications page, the Communication hub) updates its count at once rather than on its next check.
+ */
+export const NOTIFICATIONS_CHANGED = "notifications:changed";
+const announceChange = () => {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED));
+};
+
+/** Unread count and the newest few — polled by the bell. Never served from the GET cache. */
+export const getUnreadNotifications = async () => {
+  const response = await httpClient.get("/notifications/unread", { noCache: true });
+  const data = response.data?.data || {};
+  return { count: Number(data.count) || 0, latest: Array.isArray(data.latest) ? data.latest : [] };
+};
+
 export const markNotificationAsRead = async (id) => {
   const response = await httpClient.patch(`/notifications/${id}/read`);
+  announceChange();
   return response.data?.data;
 };
 
 export const markAllNotificationsAsRead = async () => {
   const response = await httpClient.patch("/notifications/read-all");
+  announceChange();
   return response.data?.data;
 };
 

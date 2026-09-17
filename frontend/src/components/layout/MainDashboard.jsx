@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { Layout, Drawer, Skeleton } from "antd";
 import { useSelector } from "react-redux";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import Loader from "../Loader/Loader";
 import BottomNav from "../mobile/BottomNav";
 
@@ -75,6 +75,10 @@ const Dashboard = () => {
   const [isMobile,         setIsMobile]         = useState(() => getWindowWidth() < 1024);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => getWindowWidth() < 1280);
   const [drawerOpen,       setDrawerOpen]       = useState(false);
+  const location = useLocation();
+
+  // On a phone the menu is a drawer; going to a page (from the menu or from search) closes it.
+  useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
 
   useEffect(() => {
     const handle = () => {

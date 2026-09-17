@@ -1,7 +1,6 @@
 import React, { useState, memo, lazy, Suspense } from "react";
-import { Input, Grid, Drawer, Spin, Badge, Tooltip, Dropdown } from "antd";
+import { Grid, Spin, Badge, Tooltip, Dropdown } from "antd";
 import {
-  SearchOutlined,
   BellOutlined,
   MoonOutlined,
   SunOutlined,
@@ -11,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import { useTheme } from "../../context/ThemeContext";
 import { useSelector } from "react-redux";
+import GlobalSearch from "./GlobalSearch";
 
 const UserDropdown         = lazy(() => import("./UserDropdown"));
 const NotificationDropdown = lazy(() => import("./NotificationDropdown"));
@@ -72,9 +72,7 @@ const IconBtn = memo(({ icon, tooltip, onClick, badge, ariaLabel, active }) => {
 const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
   const { user }                                 = useSelector((s) => s.auth);
   const screens                                  = useBreakpoint();
-  const { isDark, toggleTheme, themeMode, setThemeMode } = useTheme();
-  const [mobileSearch, setMobileSearch]          = useState(false);
-  const [searchVal, setSearchVal]                = useState("");
+  const { isDark, themeMode, setThemeMode } = useTheme();
   const mobile = !screens.md;
 
   const topbarBg     = "var(--glass-bg)";
@@ -84,26 +82,6 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
   return (
     <>
       <style>{`
-        .tb-search.ant-input-affix-wrapper {
-          background: var(--surface-soft) !important;
-          border-color: var(--border) !important;
-          border-radius: 10px !important;
-          box-shadow: none !important;
-          transition: border-color 0.2s, box-shadow 0.2s !important;
-        }
-        .tb-search.ant-input-affix-wrapper:hover,
-        .tb-search.ant-input-affix-wrapper-focused {
-          border-color: var(--primary) !important;
-          box-shadow: 0 0 0 3px rgba(var(--primary-rgb),0.12) !important;
-        }
-        .tb-search .ant-input {
-          background: transparent !important;
-          color: var(--text) !important;
-          font-size: 13px !important;
-        }
-        .tb-search .ant-input::placeholder {
-          color: var(--text-muted) !important;
-        }
       `}</style>
 
       {/* Topbar */}
@@ -166,41 +144,10 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
             </div>
           )}
 
-          {/* Search — desktop only */}
-          {!mobile && (
-            <Input
-              className="tb-search"
-              placeholder="Search…"
-              allowClear
-              value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />}
-              suffix={
-                <span style={{
-                  fontSize: 10, fontWeight: 600, letterSpacing: "0.03em",
-                  color: "var(--text-muted)",
-                  background: "var(--surface-soft)",
-                  padding: "1px 5px", borderRadius: 5,
-                }}>
-                  ⌘K
-                </span>
-              }
-              style={{ width: 240 }}
-            />
-          )}
         </div>
 
         {/* ── RIGHT ── */}
         <div style={{ display: "flex", alignItems: "center", gap: mobile ? 4 : 8, flexShrink: 0 }}>
-
-          {/* Mobile search icon */}
-          {mobile && (
-            <IconBtn
-              icon={<SearchOutlined style={{ fontSize: 17 }} />}
-              tooltip="Search"
-              onClick={() => setMobileSearch(true)}
-            />
-          )}
 
           {/* Academic Year — desktop only */}
           {!mobile && user?.role?.name !== "Super Admin" && (
@@ -260,52 +207,9 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
         </div>
       </div>
 
-      {/* ── Mobile Search Drawer ── */}
-      <Drawer
-        placement="top"
-        height={72}
-        onClose={() => setMobileSearch(false)}
-        open={mobileSearch}
-        closable={false}
-        styles={{
-          body: {
-            padding: "16px",
-            background: "var(--surface)",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-          },
-        }}
-      >
-        <Input
-          autoFocus
-          placeholder="Search anything…"
-          allowClear
-          className="tb-search"
-          value={searchVal}
-          onChange={(e) => setSearchVal(e.target.value)}
-          onPressEnter={() => setMobileSearch(false)}
-          prefix={<SearchOutlined style={{ color: "var(--text-muted)", fontSize: 14 }} />}
-          style={{ borderRadius: 10, flex: 1 }}
-        />
-        <button
-          onClick={() => { setSearchVal(""); setMobileSearch(false); }}
-          style={{
-            flexShrink: 0,
-            width: 36, height: 36,
-            borderRadius: 10,
-            border: `1px solid ${topbarBorder}`,
-            background: "var(--surface-soft)",
-            color: "var(--text-secondary)",
-            cursor: "pointer",
-            fontSize: 13,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          ✕
-        </button>
-      </Drawer>
+      {/* Page search — opened from the search box above the sidebar menu, Ctrl+K / ⌘K or "/".
+          Mounted here, once: the sidebar can be on screen twice (desktop and the mobile drawer). */}
+      <GlobalSearch />
     </>
   );
 };

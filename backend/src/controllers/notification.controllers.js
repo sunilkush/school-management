@@ -214,6 +214,43 @@ export const listNotifications = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * What the bell needs, cheaply and often: how many notifications this user has not read, and the
+ * newest few to announce. The bell used to fetch only when it was opened, so its unread count read
+ * 0 until someone happened to click it and nobody learned a notification had arrived.
+ *
+ * Drafts, and notifications the user sent themselves (which the full list shows them so their sent
+ * history is complete), are not news to them and are left out.
+ */
+export const unreadNotifications = asyncHandler(async (req, res) => {
+  const me = String(req.user?._id || "");
+  const rows = await Notification.find({ ...getSchoolScopeFilter(req), status: { $ne: "draft" } })
+    .sort({ createdAt: -1 })
+    .limit(500)
+    .select("title message level status scheduledAt createdAt createdBy createdById targetRoles targetLevels targetUserIds readBy schoolId")
+    .lean();
+
+  const unread = mapWithReadState(
+    rows.filter((row) => String(row.createdById || "") !== me && isVisibleToUser(row, req.user)),
+    req.user
+  ).filter((row) => !row.isRead);
+
+  return sendSuccess(res, {
+    message: "Unread notifications fetched",
+    data: {
+      count: unread.length,
+      latest: unread.slice(0, 5).map((row) => ({
+        _id: row._id,
+        title: row.title,
+        message: row.message,
+        level: row.level,
+        createdBy: row.createdBy,
+        createdAt: row.createdAt,
+      })),
+    },
+  });
+});
+
 export const createNotification = asyncHandler(async (req, res) => {
   const roleName = getRoleName(req.user);
 
