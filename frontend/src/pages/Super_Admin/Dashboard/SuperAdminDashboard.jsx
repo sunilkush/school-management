@@ -1,1049 +1,545 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  Row,
-  Col,
-  Table,
-  Tag,
-  Badge,
-  Avatar,
-  Button,
-  Progress,
-  List,
-  Typography,
-  Space,
-  Dropdown,
-  Tooltip,
-  Divider,
-  Timeline,
-  Segmented,
-  message,
-  Spin,
-  Alert,
-  Empty,
-} from "antd";
-import {
-  BankOutlined,
-  TeamOutlined,
-  RiseOutlined,
-  WarningOutlined,
-  CheckCircleFilled,
-  ClockCircleFilled,
-  BellOutlined,
-  MoreOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  EyeOutlined,
-  EditOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  UserOutlined,
-  ThunderboltFilled,
-  SafetyCertificateOutlined,
-  LinkOutlined,
-  DashboardOutlined,
-} from "@ant-design/icons";
-import RupeeIcon from "../../../components/icons/RupeeIcon";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { Alert, Button, Empty, Skeleton, Table, Tag, Tooltip } from "antd";
 import {
-  useGetSuperAdminDashboardSummaryQuery,
-  useGetSuperAdminSchoolsQuery,
-} from "../../../services/schoolDashboardApi";
-import { fetchActivityLogs } from "../../../features/activitySlice";
+  AppstoreOutlined, ArrowRightOutlined, AuditOutlined, BankOutlined, BarChartOutlined, CheckCircleFilled,
+  ClockCircleOutlined, CloseCircleOutlined, DashboardOutlined, ExclamationCircleOutlined, FileTextOutlined,
+  PieChartOutlined, PlusOutlined, ReloadOutlined, RightOutlined, SettingOutlined, StopOutlined, TeamOutlined,
+  WalletOutlined, WarningOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
+
+import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper,
-  sectionPanel,
-  statGrid,
-  iconWell,
-  pill,
-  tableContainer,
-  tableHeadCss,
-} from "../../../styles/pageStyles";
+import RupeeIcon from "../../../components/icons/RupeeIcon";
+import { avatarStyle, iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles";
 
-const { Text } = Typography;
+/**
+ * Platform overview — the Super Admin's home: what needs doing first, then how the platform stands.
+ *
+ * The page it replaces looked busy but said little that was true: "Revenue" was the fees schools
+ * collect from their own students, "Expiring soon" counted switched-off schools, plan counts only
+ * knew plans named "Premium" or "Standard", every school's health was 100% or 0%, the "System
+ * health" panel was fixed numbers, and the row menu's Renew and Suspend did nothing. Two of its
+ * quick actions led to pages that do not exist.
+ *
+ * Everything shown now comes from GET /dashboard/platform, and everything that can be acted on
+ * links to the page where it is done.
+ */
 
-// ---------------------------------------------------------------------------
-// Status config
-// ---------------------------------------------------------------------------
-const statusConfig = {
-  active: { color: "success", label: "Active" },
-  suspended: { color: "error", label: "Suspended" },
-  pending: { color: "warning", label: "Pending" },
+const SCHOOLS = "/dashboard/superadmin/schools";
+const REVENUE = "/dashboard/superadmin/revenue";
+const money = (n) => `₹${Math.round(Number(n || 0)).toLocaleString("en-IN")}`;
+/** ₹950, ₹12K, ₹1.2L, ₹3.4Cr — written out, because browsers disagree on compact Indian notation ("12T" in some). */
+const compactMoney = (n) => {
+  const v = Math.round(Number(n || 0));
+  const short = (x) => String(Number(x.toFixed(1)));
+  if (v >= 1e7) return `₹${short(v / 1e7)}Cr`;
+  if (v >= 1e5) return `₹${short(v / 1e5)}L`;
+  if (v >= 1e3) return `₹${short(v / 1e3)}K`;
+  return `₹${v}`;
+};
+const count = (n) => Number(n || 0).toLocaleString("en-IN");
+const day = (d) => dayjs(d).format("D MMM YYYY");
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const initials = (name = "") => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "S";
+
+/* Plan states are statuses, so they wear status colours — always beside their written label. */
+const PLAN = {
+  active: { text: "Active", tag: "success", color: "var(--success)", means: "running normally" },
+  trial: { text: "Trial", tag: "processing", color: "var(--primary)", means: "on a trial" },
+  ending: { text: "Ending soon", tag: "orange", color: "var(--warning)", means: "end within 30 days" },
+  expired: { text: "Expired", tag: "error", color: "var(--danger)", means: "locked out until renewed" },
+  suspended: { text: "Suspended", tag: "warning", color: "var(--purple)", means: "locked out by you" },
+  cancelled: { text: "Cancelled", tag: "default", color: "var(--text-muted)", means: "locked out by you" },
+  none: { text: "No plan", tag: "warning", color: "var(--cyan)", means: "not billed yet" },
+};
+const PLAN_ORDER = ["active", "trial", "ending", "expired", "suspended", "cancelled", "none"];
+
+const planTag = (plan) => {
+  const label = plan.state === "ending"
+    ? (plan.daysLeft <= 0 ? "Ends today" : `Ends in ${plural(plan.daysLeft, "day")}`)
+    : PLAN[plan.state]?.text;
+  return <Tag color={PLAN[plan.state]?.tag} style={{ marginInlineEnd: 0 }}>{label}</Tag>;
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-const formatMoney = (value = 0) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number(value) || 0);
+/* Hover and focus states cannot be written inline. */
+const CSS = `
+  .pov-lift { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .pov-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-strong); }
+  .pov-lift:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .pov-tile .pov-go { opacity: 0; transform: translateX(-4px); transition: opacity .18s ease, transform .18s ease; }
+  .pov-tile:hover .pov-go, .pov-tile:focus-visible .pov-go { opacity: 1; transform: none; }
+  .pov-shortcut:hover { border-color: var(--primary) !important; }
+  .pov-attn:hover { background: var(--surface-soft); }
+  @media (max-width: 560px) {
+    .pov-attn { flex-wrap: wrap; }
+    .pov-attn .pov-attn-action { width: 100%; }
+  }
+  ${tableHeadCss("pov-table")}
+`;
 
-// Map an activity-log action string to a reasonable icon + color
-const getActivityMeta = (action = "") => {
-  const a = action.toLowerCase();
-  if (a.includes("school") || a.includes("register"))
-    return { icon: <BankOutlined />, color: "var(--success)" };
-  if (a.includes("subscri") || a.includes("payment") || a.includes("fee"))
-    return { icon: <RupeeIcon />, color: "var(--primary)" };
-  if (a.includes("user") || a.includes("admin") || a.includes("teacher"))
-    return { icon: <UserOutlined />, color: "var(--purple)" };
-  if (a.includes("backup") || a.includes("system"))
-    return { icon: <ThunderboltFilled />, color: "var(--cyan)" };
-  if (a.includes("warn") || a.includes("expir") || a.includes("suspend"))
-    return { icon: <WarningOutlined />, color: "var(--warning)" };
-  return { icon: <ThunderboltFilled />, color: "var(--text-muted)" };
-};
-
-const timeAgo = (dateStr) => {
-  if (!dateStr) return "";
-  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-};
-
-// ---------------------------------------------------------------------------
-// StatCard — KPI card built on the shared sectionPanel/iconWell tokens
-// ---------------------------------------------------------------------------
-const StatCard = ({ title, value, icon, color, delta, deltaType, suffix }) => (
-  <div style={{ ...sectionPanel, marginBottom: 0, height: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-        {title}
+/* ─────────────────────────── pieces ─────────────────────────── */
+const Tile = ({ label, value, note, icon, color, onClick, tone }) => {
+  const Tag_ = onClick ? "button" : "div";
+  return (
+    <Tag_
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={onClick ? "pov-lift pov-tile" : undefined}
+      style={{
+        ...sectionPanel, marginBottom: 0, padding: "18px 20px", textAlign: "left", width: "100%",
+        cursor: onClick ? "pointer" : "default", font: "inherit", color: "inherit",
+        borderTop: `3px solid ${color}`, display: "flex", flexDirection: "column", gap: 6,
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={iconWell(color, 34)}>{icon}</span>
+        <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>{label}</span>
+        {onClick && <ArrowRightOutlined className="pov-go" style={{ color: "var(--text-muted)", fontSize: 12 }} />}
       </span>
-      <div style={iconWell(color, 36)}>{icon}</div>
+      <span style={{ fontSize: 30, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>{value}</span>
+      <span style={{ fontSize: 12, color: tone === "warn" ? "var(--danger)" : "var(--text-muted)", fontWeight: tone === "warn" ? 600 : 400 }}>{note}</span>
+    </Tag_>
+  );
+};
+
+const Panel = ({ icon, color = "var(--primary)", title, extra, children, style }) => (
+  <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", flexDirection: "column", ...style }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+      {icon && <span style={iconWell(color, 32)}>{icon}</span>}
+      {/* The title keeps its line; badges and links wrap under it on a narrow screen. */}
+      <div style={{ flex: "1 1 180px", minWidth: 0, fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>{title}</div>
+      {extra}
     </div>
-    <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.15 }}>
-      {value}
-      {suffix}
-    </div>
-    {delta && (
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: deltaType === "up" ? "var(--success)" : "var(--danger)" }}>
-        {deltaType === "up" ? <ArrowUpOutlined style={{ fontSize: 10 }} /> : <ArrowDownOutlined style={{ fontSize: 10 }} />}
-        {delta}
-      </span>
-    )}
+    {children}
   </div>
 );
 
-// ---------------------------------------------------------------------------
-// PanelHeader — consistent section-panel header (icon + title + extra)
-// ---------------------------------------------------------------------------
-const PanelHeader = ({ icon, color, title, extra }) => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
-    <Space size={8}>
-      <span style={{ color }}>{icon}</span>
-      <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{title}</span>
-    </Space>
-    {extra}
-  </div>
+const LinkButton = ({ children, onClick }) => (
+  <Button type="link" size="small" onClick={onClick} style={{ paddingInline: 0, fontWeight: 600 }}>
+    {children} <RightOutlined style={{ fontSize: 10 }} />
+  </Button>
 );
 
-// ---------------------------------------------------------------------------
-// Quick-action route map (pastel accents)
-// ---------------------------------------------------------------------------
-const QUICK_ACTIONS = [
-  {
-    label: "Add New School",
-    icon: <BankOutlined />,
-    color: "var(--primary)",
-    route: "/dashboard/superadmin/schools",
-  },
-  {
-    label: "Manage Subscriptions",
-    icon: <SafetyCertificateOutlined />,
-    color: "var(--accent)",
-    route: "/dashboard/superadmin/subscriptions",
-  },
-  {
-    label: "View All Users",
-    icon: <TeamOutlined />,
-    color: "var(--success)",
-    route: "/dashboard/superadmin/users",
-  },
-  {
-    label: "Financial Reports",
-    icon: <RupeeIcon />,
-    color: "var(--success)",
-    route: "/dashboard/superadmin/reports/revenue",
-  },
-  {
-    label: "System Logs",
-    icon: <ThunderboltFilled />,
-    color: "var(--warning)",
-    route: "/dashboard/superadmin/settings/audit",
-  },
-  {
-    label: "Send Notification",
-    icon: <BellOutlined />,
-    color: "var(--danger)",
-    route: "/dashboard/superadmin/notifications",
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-const SuperAdminDashboard = () => {
-  const [statusFilter, setStatusFilter] = useState("all");
-
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  // Activity slice
-  const {
-    logs: activityLogs = [],
-    loading: activityLoading,
-  } = useSelector((state) => state.activity || {});
-
-  // School dashboard API (RTK Query)
-  const {
-    data: summaryData,
-    isLoading: summaryLoading,
-    isFetching: summaryFetching,
-    error: summaryError,
-    refetch: refetchSummary,
-  } = useGetSuperAdminDashboardSummaryQuery();
-
-  const {
-    data: schoolsApiData,
-    isLoading: schoolsLoading,
-    isFetching: schoolsFetching,
-    error: schoolsError,
-    refetch: refetchSchools,
-  } = useGetSuperAdminSchoolsQuery({ page: 1, limit: 100 });
-
-  // Fetch activity logs on mount
-  useEffect(() => {
-    dispatch(fetchActivityLogs());
-  }, [dispatch]);
-
-  // ---------------------------------------------------------------------------
-  // Derived data
-  // ---------------------------------------------------------------------------
-  const schoolsData = useMemo(() => {
-    return (schoolsApiData?.schools || []).map((school, index) => {
-      const plan = school?.subscriptionPlan?.name || "Unassigned";
-      const endDate = school?.subscriptionPlan?.endDate;
-
+/** One thing to act on, worded as what is wrong and what it means. */
+function describe(item) {
+  switch (item.kind) {
+    case "expired":
       return {
-        key: school?._id || String(index),
-        _id: school?._id,
-        name: school?.name || "School",
-        city: school?.address || "N/A",
-        students: Number(school?.studentsCount || 0),
-        teachers: Number(school?.teachersCount || 0),
-        status: school?.isActive ? "active" : "suspended",
-        subscription: plan,
-        subExpiry: endDate
-          ? new Date(endDate).toLocaleDateString("en-IN", {
-              month: "short",
-              year: "numeric",
-            })
-          : "N/A",
-        revenue: Number(school?.revenue || 0),
-        health: school?.isActive ? 100 : 0,
+        icon: <CloseCircleOutlined />, color: "var(--danger)", urgent: true,
+        title: `Plan expired ${item.daysAgo === 0 ? "today" : `${plural(item.daysAgo, "day")} ago`}`,
+        detail: "Its users are locked out. The School Admin can still pay the renewal from Billing.",
+        action: "Open school",
       };
-    });
-  }, [schoolsApiData]);
+    case "suspended":
+    case "cancelled":
+      return {
+        icon: <StopOutlined />, color: "var(--purple)", urgent: true,
+        title: `Subscription ${item.kind}`,
+        detail: "Nobody at the school can sign in until it is reactivated.",
+        action: "Open school",
+      };
+    case "overdue":
+      return {
+        icon: <FileTextOutlined />, color: "var(--danger)", urgent: true,
+        title: `Invoice ${item.invoiceNumber} is ${plural(item.overdueDays, "day")} overdue`,
+        detail: `${money(item.amount)} unpaid.`,
+        action: "Open invoices",
+      };
+    case "ending":
+      return {
+        icon: <ClockCircleOutlined />, color: "var(--warning)",
+        title: item.daysLeft <= 0 ? "Plan ends today" : `Plan ends in ${plural(item.daysLeft, "day")}`,
+        detail: `On ${day(item.endDate)}. A renewal invoice goes out 7 days before.`,
+        action: "Open school",
+      };
+    default:
+      return {
+        icon: <ExclamationCircleOutlined />, color: "var(--cyan)",
+        title: "No plan",
+        detail: "The school is not billed for anything yet.",
+        action: "Open school",
+      };
+  }
+}
 
-  const filteredSchools = useMemo(() => {
-    return statusFilter === "all"
-      ? schoolsData
-      : schoolsData.filter((school) => school.status === statusFilter);
-  }, [schoolsData, statusFilter]);
+/** A round top for the axis: 1, 2 or 5 times a power of ten. */
+const niceCeiling = (value) => {
+  if (value <= 0) return 1;
+  const power = 10 ** Math.floor(Math.log10(value));
+  const step = [1, 2, 2.5, 5, 10].find((s) => s * power >= value);
+  return step * power;
+};
 
-  const metrics = useMemo(() => {
-    const totalSchools = Number(summaryData?.schools ?? schoolsData.length);
-    const activeSchools = schoolsData.filter((s) => s.status === "active").length;
-    const totalStudents =
-      Number(summaryData?.students) ||
-      schoolsData.reduce((sum, s) => sum + (s.students || 0), 0);
-    const totalRevenue =
-      Number(summaryData?.feesCollected) ||
-      schoolsData.reduce((sum, s) => sum + (s.revenue || 0), 0);
+/** Plan payments by month: one series, so one colour and no legend; amounts labelled on the bars. */
+const MonthlyColumns = ({ months }) => {
+  const top = niceCeiling(Math.max(...months.map((m) => m.total)));
+  const HEIGHT = 170;
+  const lastIndex = months.length - 1;
+  return (
+    <div role="img" aria-label={months.map((m) => `${m.label}: ${money(m.total)}`).join(", ")} style={{ display: "flex", gap: 10 }}>
+      {/* axis */}
+      <div aria-hidden style={{ position: "relative", width: 40, height: HEIGHT, flexShrink: 0 }}>
+        {[1, 0.5, 0].map((f) => (
+          <span key={f} style={{ position: "absolute", right: 0, top: `${(1 - f) * 100}%`, transform: "translateY(-50%)", fontSize: 11, color: "var(--text-muted)" }}>
+            {compactMoney(top * f)}
+          </span>
+        ))}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ position: "relative", height: HEIGHT }}>
+          {[1, 0.5].map((f) => (
+            <div key={f} aria-hidden style={{ position: "absolute", left: 0, right: 0, top: `${(1 - f) * 100}%`, borderTop: "1px dashed var(--border-muted)" }} />
+          ))}
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, borderTop: "1px solid var(--border)" }} aria-hidden />
+          <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: `repeat(${months.length}, 1fr)`, alignItems: "end" }}>
+            {months.map((m, i) => (
+              <Tooltip key={m.label} title={`${m.label}: ${money(m.total)}`}>
+                <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center", cursor: "default" }}>
+                  {m.total > 0 && (
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4, whiteSpace: "nowrap" }}>
+                      {compactMoney(m.total)}
+                    </span>
+                  )}
+                  <div style={{
+                    width: "min(40px, 60%)", height: `${(m.total / top) * 100}%`, minHeight: m.total ? 4 : 0,
+                    background: "var(--primary)", borderRadius: "4px 4px 0 0", opacity: i === lastIndex ? 1 : 0.85,
+                  }}
+                  />
+                </div>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${months.length}, 1fr)`, marginTop: 8 }}>
+          {months.map((m, i) => (
+            <div key={m.label} style={{ textAlign: "center", fontSize: 12, color: i === lastIndex ? "var(--text-primary)" : "var(--text-muted)", fontWeight: i === lastIndex ? 700 : 400 }}>
+              {m.label.split(" ")[0]}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
-    const expiringSoon = schoolsData.filter(
-      (s) => s.subscription !== "Trial" && s.status !== "active"
-    ).length;
+/** All schools in one bar, split by plan state — the list below it is the legend. */
+const PlanSplit = ({ plans }) => {
+  const total = PLAN_ORDER.reduce((sum, key) => sum + (plans[key] || 0), 0);
+  if (!total) return null;
+  return (
+    <div style={{ display: "flex", height: 12, borderRadius: 6, overflow: "hidden", gap: 2, marginBottom: 14, background: "var(--surface)" }}>
+      {PLAN_ORDER.filter((key) => plans[key] > 0).map((key) => (
+        <Tooltip key={key} title={`${PLAN[key].text}: ${plans[key]}`}>
+          <span style={{ width: `${(plans[key] / total) * 100}%`, background: PLAN[key].color }} />
+        </Tooltip>
+      ))}
+    </div>
+  );
+};
 
-    const avgHealth = Math.round(
-      schoolsData.reduce((sum, s) => sum + (s.health || 0), 0) /
-        Math.max(schoolsData.length, 1)
-    );
+const SchoolMark = ({ name, logo, size = 36 }) => (logo ? (
+  <img src={logo} alt="" width={size} height={size} style={{ borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+) : (
+  <div style={{ ...avatarStyle(name, size), borderRadius: 10 }}>{initials(name)}</div>
+));
 
-    return {
-      totalSchools,
-      activeSchools,
-      totalStudents,
-      totalRevenue,
-      expiringSoon,
-      avgHealth,
-    };
-  }, [schoolsData, summaryData]);
+/* ────────────────────────────────── page ────────────────────────────────── */
+const SuperAdminDashboard = () => {
+  const navigate = useNavigate();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showAll, setShowAll] = useState(false);
 
-  const topSchools = useMemo(() => {
-    return [...schoolsData]
-      .sort((a, b) => b.students - a.students)
-      .slice(0, 4)
-      .map((school, index) => ({
-        ...school,
-        color: ["var(--primary)", "var(--accent)", "var(--success)", "var(--warning)"][index],
-      }));
-  }, [schoolsData]);
+  const load = useCallback(async (fresh = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiClient.get("/dashboard/platform", fresh ? { noCache: true } : undefined);
+      setData(res?.data?.data || null);
+    } catch (e) {
+      setError(e?.response?.data?.message || "Could not load the overview");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const maxStudents = topSchools[0]?.students || 1;
+  useEffect(() => { load(); }, [load]);
 
-  const subscriptionCounts = useMemo(
-    () => [
-      {
-        label: "Premium Plans",
-        count: schoolsData.filter((s) => s.subscription === "Premium").length,
-        color: "var(--primary)",
-        textColor: "#2E6A9A",
-        bg: "rgba(219,234,254,0.18)",
-        border: "rgba(219,234,254,0.4)",
-      },
-      {
-        label: "Standard Plans",
-        count: schoolsData.filter((s) => s.subscription === "Standard").length,
-        color: "var(--accent)",
-        textColor: "var(--purple-hover)",
-        bg: "rgba(20,184,166,0.18)",
-        border: "rgba(20,184,166,0.4)",
-      },
-      {
-        label: "Trial Active",
-        count: schoolsData.filter((s) => s.subscription === "Trial").length,
-        color: "var(--success)",
-        textColor: "var(--success-hover)",
-        bg: "rgba(220,252,231,0.18)",
-        border: "rgba(220,252,231,0.4)",
-      },
-      {
-        label: "Suspended",
-        count: schoolsData.filter((s) => s.status === "suspended").length,
-        color: "var(--danger)",
-        textColor: "var(--danger-hover)",
-        bg: "rgba(254,226,226,0.18)",
-        border: "rgba(254,226,226,0.4)",
-      },
-    ],
-    [schoolsData]
+  const openSchool = (id) => navigate(`${SCHOOLS}?open=${id}`);
+  const attention = data?.attention || [];
+  const shownAttention = showAll ? attention : attention.slice(0, 6);
+  const urgentCount = attention.filter((a) => describe(a).urgent).length;
+  const billing = data?.billing;
+
+  const schoolRows = useMemo(
+    () => [...(data?.schoolRows || [])].sort((a, b) => a.name.localeCompare(b.name)),
+    [data],
   );
 
-  // ---------------------------------------------------------------------------
-  // Table columns — with navigation handlers
-  // ---------------------------------------------------------------------------
   const columns = [
     {
       title: "School",
-      dataIndex: "name",
-      key: "name",
-      render: (name, row) => (
-        <Space>
-          <Avatar
-            size={36}
-            style={{
-              background: `hsl(${(name?.charCodeAt(0) || 65) * 7 % 360}, 60%, 50%)`,
-              fontSize: 14,
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            {name?.[0] || "S"}
-          </Avatar>
-          <Space direction="vertical" size={0}>
-            <Text strong style={{ fontSize: 13 }}>
-              {name}
-            </Text>
-            <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
-              {row.city}
-            </Text>
-          </Space>
-        </Space>
+      key: "school",
+      render: (_, s) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+          <SchoolMark name={s.name} logo={s.logo} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{s.name}</div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 260 }}>
+              {s.address || "No address"}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    { title: "Students", key: "students", align: "right", render: (_, s) => <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{count(s.students)}</span> },
+    { title: "Teachers", key: "teachers", align: "right", render: (_, s) => <span style={{ fontVariantNumeric: "tabular-nums" }}>{count(s.teachers)}</span> },
+    {
+      title: "Plan",
+      key: "plan",
+      render: (_, s) => (
+        <div>
+          {planTag(s.plan)}
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+            {s.plan.name ? `${s.plan.name}${s.plan.endDate ? ` · until ${day(s.plan.endDate)}` : ""}` : "—"}
+          </div>
+        </div>
       ),
     },
     {
-      title: "Students",
-      dataIndex: "students",
-      key: "students",
-      render: (v) => <Text strong>{Number(v || 0).toLocaleString("en-IN")}</Text>,
-      sorter: (a, b) => a.students - b.students,
-    },
-    {
-      title: "Teachers",
-      dataIndex: "teachers",
-      key: "teachers",
-      render: (v) => <Text>{Number(v || 0).toLocaleString("en-IN")}</Text>,
-    },
-    {
-      title: "Subscription",
-      dataIndex: "subscription",
-      key: "subscription",
-      render: (sub, row) => (
-        <Space direction="vertical" size={0}>
-          <Tag
-            color={
-              sub === "Premium"
-                ? "geekblue"
-                : sub === "Standard"
-                ? "cyan"
-                : sub === "Trial"
-                ? "purple"
-                : "default"
-            }
-          >
-            {sub}
-          </Tag>
-          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
-            Exp: {row.subExpiry}
-          </Text>
-        </Space>
-      ),
-    },
-    {
-      title: "Health",
-      dataIndex: "health",
-      key: "health",
-      render: (v) => (
-        <Space direction="vertical" size={2} style={{ width: 80 }}>
-          <Progress
-            percent={v}
-            size="small"
-            showInfo={false}
-            strokeColor={
-              v >= 90
-                ? "var(--success)"
-                : v >= 60
-                ? "var(--warning)"
-                : "var(--danger)"
-            }
-          />
-          <Text
-            style={{
-              fontSize: 11,
-              color: v >= 90 ? "var(--success)" : "var(--warning)",
-            }}
-          >
-            {v}%
-          </Text>
-        </Space>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => {
-        const cfg = statusConfig[status] || statusConfig.pending;
-        return (
-          <Badge
-            status={cfg.color}
-            text={<Text style={{ fontSize: 12 }}>{cfg.label}</Text>}
-          />
-        );
-      },
-    },
-    {
-      title: "Revenue",
-      dataIndex: "revenue",
-      key: "revenue",
-      render: (v) => (
-        <Text
-          strong
-          style={{
-            color: Number(v) === 0 ? "var(--text-muted)" : "var(--success)",
-          }}
-        >
-          {formatMoney(v)}
-        </Text>
-      ),
-    },
-    {
-      title: "",
-      key: "actions",
-      render: (_, row) => (
-        <Space size={4}>
-          <Tooltip title="View Details">
-            <Button
-              type="text"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() =>
-                navigate(`/dashboard/superadmin/schools`, {
-                  state: { schoolId: row._id || row.key },
-                })
-              }
-            />
-          </Tooltip>
-          <Tooltip title="Edit">
-            <Button
-              type="text"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() =>
-                navigate(`/dashboard/superadmin/schools`, {
-                  state: { schoolId: row._id || row.key, mode: "edit" },
-                })
-              }
-            />
-          </Tooltip>
-          <Dropdown
-            menu={{
-              items: [
-                { key: "1", label: "Send Notice" },
-                { key: "2", label: "Renew Subscription" },
-                { key: "3", label: "Suspend School", danger: true },
-              ],
-            }}
-            trigger={["click"]}
-          >
-            <Button type="text" size="small" icon={<MoreOutlined />} />
-          </Dropdown>
-        </Space>
+      title: "Sign-in",
+      key: "signin",
+      render: (_, s) => (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: s.isActive ? "var(--text-primary)" : "var(--text-muted)" }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: s.isActive ? "var(--success)" : "var(--text-muted)" }} />
+          {s.isActive ? "On" : "Off"}
+        </span>
       ),
     },
   ];
 
-  // ---------------------------------------------------------------------------
-  // Refresh handler
-  // ---------------------------------------------------------------------------
-  const handleRefresh = async () => {
-    try {
-      await Promise.all([refetchSummary(), refetchSchools()]);
-      dispatch(fetchActivityLogs());
-      message.success("Dashboard refreshed");
-    } catch {
-      message.error("Refresh failed");
-    }
-  };
+  const SHORTCUTS = [
+    { label: "Add a school", icon: <PlusOutlined />, color: "var(--primary)", to: `${SCHOOLS}?add=1` },
+    { label: "Plans", icon: <AppstoreOutlined />, color: "var(--accent)", to: "/dashboard/superadmin/subscriptions" },
+    { label: "Invoices & payments", icon: <FileTextOutlined />, color: "var(--success)", to: REVENUE },
+    { label: "School reports", icon: <BarChartOutlined />, color: "var(--purple)", to: "/dashboard/superadmin/reports/schools" },
+    { label: "Global settings", icon: <SettingOutlined />, color: "var(--cyan)", to: "/dashboard/superadmin/settings/global" },
+    { label: "Audit logs", icon: <AuditOutlined />, color: "var(--warning)", to: "/dashboard/superadmin/settings/audit" },
+  ];
 
-  const isLoading = summaryLoading || schoolsLoading;
-  const isFetching = summaryFetching || schoolsFetching;
-  const hasError = summaryError || schoolsError;
+  const twoColumns = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(360px, 100%), 1fr))", gap: 16, marginBottom: 16 };
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
   return (
-    <>
+    <div style={pageWrapper}>
+      <style>{CSS}</style>
       <PageHeader
-        title="Super Admin Dashboard"
-        subtitle="Platform-wide overview — schools, subscriptions and revenue"
+        title="Platform overview"
+        subtitle={data ? `What needs doing, and how the platform stands — updated ${dayjs(data.generatedAt).format("h:mm A")}` : "What needs doing, and how the platform stands"}
         icon={<DashboardOutlined />}
-        extra={
-          isFetching ? (
-            <Spin size="small" />
-          ) : (
-            <Button
-              size="small"
-              icon={<ReloadOutlined />}
-              onClick={handleRefresh}
-            >
-              Refresh
-            </Button>
-          )
-        }
-      />
-      <div style={pageWrapper}>
-        {hasError && (
-          <Alert
-            type="error"
-            showIcon
-            message="Some dashboard data failed to load."
-            description="Statistics may be incomplete. Try refreshing."
-            action={
-              <Button size="small" icon={<ReloadOutlined />} onClick={handleRefresh}>
-                Retry
-              </Button>
-            }
-            style={{ marginBottom: 16, borderRadius: 10 }}
-          />
+        extra={(
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Button icon={<ReloadOutlined />} loading={loading && Boolean(data)} onClick={() => load(true)}>Refresh</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`${SCHOOLS}?add=1`)}>Add school</Button>
+          </div>
         )}
+      />
 
-        {/* KPI cards */}
-        <div className="stat-grid" style={statGrid(170)}>
-          <StatCard
-            title="Total Schools"
-            value={metrics.totalSchools}
-            icon={<BankOutlined />}
-            color="var(--primary)"
-            delta="Live"
-            deltaType="up"
-          />
-          <StatCard
-            title="Active Schools"
-            value={metrics.activeSchools}
-            icon={<CheckCircleFilled />}
-            color="var(--success)"
-            delta={`${Math.round((metrics.activeSchools / Math.max(metrics.totalSchools, 1)) * 100)}% active`}
-            deltaType="up"
-          />
-          <StatCard
-            title="Total Students"
-            value={metrics.totalStudents}
-            icon={<TeamOutlined />}
-            color="var(--accent)"
-            delta="Live count"
-            deltaType="up"
-          />
-          <StatCard
-            title="Revenue (YTD)"
-            value={formatMoney(metrics.totalRevenue)}
-            icon={<RupeeIcon />}
-            color="var(--success)"
-            delta="Collected"
-            deltaType="up"
-          />
-          <StatCard
-            title="Expiring Soon"
-            value={Math.max(metrics.expiringSoon, 0)}
-            icon={<WarningOutlined />}
-            color="var(--warning)"
-            delta="Needs follow-up"
-            deltaType="down"
-          />
-          <StatCard
-            title="System Health"
-            value={metrics.avgHealth}
-            suffix="%"
-            icon={<ThunderboltFilled />}
-            color="var(--primary)"
-            delta="Live average"
-            deltaType="up"
-          />
+      {error && (
+        <Alert
+          type="error" showIcon style={{ margin: "16px 0" }} message={error}
+          action={<Button size="small" onClick={() => load(true)}>Try again</Button>}
+        />
+      )}
+
+      {!data && loading ? (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 16, marginBottom: 16 }}>
+            {[0, 1, 2, 3].map((i) => <div key={i} style={{ ...sectionPanel, marginBottom: 0 }}><Skeleton active paragraph={{ rows: 1 }} /></div>)}
+          </div>
+          <div style={sectionPanel}><Skeleton active paragraph={{ rows: 6 }} /></div>
         </div>
+      ) : data && (
+        <div style={{ marginTop: 16 }}>
+          {/* ── headline numbers ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 16, marginBottom: 16 }}>
+            <Tile
+              label="Schools" value={count(data.schools.total)} icon={<BankOutlined />} color="var(--primary)"
+              onClick={() => navigate(SCHOOLS)}
+              note={`${data.schools.on} can sign in${data.schools.off ? ` · ${data.schools.off} switched off` : ""}`}
+            />
+            <Tile
+              label="Students" value={count(data.students)} icon={<TeamOutlined />} color="var(--accent)"
+              note={`active, with ${plural(data.teachers, "teacher")}`}
+            />
+            <Tile
+              label="Collected this year" value={money(billing.collectedThisYear)} icon={<RupeeIcon />} color="var(--success)"
+              onClick={() => navigate(REVENUE)}
+              note={`${plural(billing.paymentsThisYear, "plan payment")} since ${day(billing.financialYearStart)}`}
+            />
+            <Tile
+              label="Outstanding" value={money(billing.outstanding)} icon={<WalletOutlined />}
+              color={billing.overdueInvoices ? "var(--danger)" : "var(--warning)"}
+              onClick={() => navigate(REVENUE)}
+              tone={billing.overdueInvoices ? "warn" : undefined}
+              note={billing.openInvoices
+                ? `${plural(billing.openInvoices, "unpaid invoice")}${billing.overdueInvoices ? ` · ${billing.overdueInvoices} overdue` : ""}`
+                : "Nothing unpaid"}
+            />
+          </div>
 
-        {/* System Health / Subscription / Top Schools row */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-          <Col xs={24} md={8}>
-            <div style={{ ...sectionPanel, height: "100%", marginBottom: 0 }}>
-              <PanelHeader
-                icon={<ThunderboltFilled />}
-                color="var(--cyan)"
-                title="System Health"
-                extra={<Tag color="orange">Static Preview</Tag>}
-              />
-              <Space direction="vertical" style={{ width: "100%" }} size={16}>
-                {[
-                  { label: "API Server", val: 99, color: "var(--success)" },
-                  { label: "Database", val: 97, color: "var(--success)" },
-                  { label: "File Storage", val: 92, color: "var(--success)" },
-                  { label: "Email Service", val: 85, color: "var(--warning)" },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <Space
+          {/* ── needs attention ── */}
+          <Panel
+            style={{ marginBottom: 16 }}
+            icon={attention.length ? <WarningOutlined /> : <CheckCircleFilled />}
+            color={attention.length ? (urgentCount ? "var(--danger)" : "var(--warning)") : "var(--success)"}
+            title="Needs your attention"
+            extra={attention.length > 0 && (
+              <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {urgentCount > 0 && <Tag color="error" style={{ marginInlineEnd: 0 }}>{urgentCount} urgent</Tag>}
+                {attention.length - urgentCount > 0 && <Tag color="warning" style={{ marginInlineEnd: 0 }}>{attention.length - urgentCount} coming up</Tag>}
+              </span>
+            )}
+          >
+            {attention.length === 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--text-secondary)", padding: "14px 16px", borderRadius: 12, background: "var(--success-light)" }}>
+                <CheckCircleFilled style={{ color: "var(--success)", fontSize: 18 }} />
+                Nothing needs attention — every school that can sign in is on a running plan, and no invoice is overdue.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {shownAttention.map((item) => {
+                  const d = describe(item);
+                  return (
+                    <div
+                      key={`${item.kind}-${item.invoiceId || item.schoolId}`}
+                      className="pov-attn"
                       style={{
-                        justifyContent: "space-between",
-                        width: "100%",
-                        marginBottom: 4,
+                        display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", borderRadius: 12,
+                        border: "1px solid var(--border-muted)", borderLeft: `4px solid ${d.color}`, transition: "background .15s ease",
                       }}
                     >
-                      <Text style={{ fontSize: 13, color: "var(--text-primary)" }}>
-                        {item.label}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: item.color,
-                          fontWeight: 600,
-                        }}
+                      <span style={{ ...iconWell(d.color, 34), borderRadius: "50%" }}>{d.icon}</span>
+                      <div style={{ flex: "1 1 240px", minWidth: 0 }}>
+                        <div style={{ color: "var(--text-primary)", lineHeight: 1.4 }}>
+                          <strong>{item.schoolName}</strong> — {d.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{d.detail}</div>
+                      </div>
+                      <Button
+                        className="pov-attn-action"
+                        type={d.urgent ? "primary" : "default"}
+                        onClick={() => (item.kind === "overdue" ? navigate(REVENUE) : openSchool(item.schoolId))}
                       >
-                        {item.val}%
-                      </Text>
-                    </Space>
-                    <Progress
-                      percent={item.val}
-                      showInfo={false}
-                      size="small"
-                      strokeColor={item.color}
-                    />
+                        {d.action}
+                      </Button>
+                    </div>
+                  );
+                })}
+                {attention.length > 6 && (
+                  <Button type="link" style={{ paddingInline: 0, alignSelf: "flex-start" }} onClick={() => setShowAll((v) => !v)}>
+                    {showAll ? "Show fewer" : `Show all ${attention.length}`}
+                  </Button>
+                )}
+              </div>
+            )}
+          </Panel>
+
+          {/* ── money and plans ── */}
+          <div style={twoColumns}>
+            <Panel icon={<RupeeIcon />} color="var(--success)" title="Plan payments" extra={<LinkButton onClick={() => navigate(REVENUE)}>Invoices & payments</LinkButton>}>
+              <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 14 }}>
+                Last 6 months · <strong style={{ color: "var(--text-primary)" }}>{money(billing.monthly.reduce((sum, m) => sum + m.total, 0))}</strong> in all
+              </div>
+              <MonthlyColumns months={billing.monthly} />
+            </Panel>
+
+            <Panel icon={<PieChartOutlined />} color="var(--purple)" title="Plans" extra={<LinkButton onClick={() => navigate(SCHOOLS)}>All schools</LinkButton>}>
+              <PlanSplit plans={data.plans} />
+              {PLAN_ORDER
+                .filter((key) => data.plans[key] > 0 || ["active", "ending", "expired"].includes(key))
+                .map((key) => (
+                  <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderTop: "1px solid var(--border-muted)" }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 3, background: PLAN[key].color, flexShrink: 0 }} />
+                    <span style={{ width: 96, fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{PLAN[key].text}</span>
+                    <span style={{ flex: 1, fontSize: 12, color: "var(--text-muted)" }}>{PLAN[key].means}</span>
+                    <strong style={{ fontSize: 16, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>{data.plans[key]}</strong>
                   </div>
                 ))}
-              </Space>
-            </div>
-          </Col>
+            </Panel>
+          </div>
 
-          <Col xs={24} md={8}>
-            <div style={{ ...sectionPanel, height: "100%", marginBottom: 0 }}>
-              <PanelHeader
-                icon={<SafetyCertificateOutlined />}
-                color="var(--primary)"
-                title="Subscription Status"
+          {/* ── schools ── */}
+          <Panel
+            style={{ marginBottom: 16 }}
+            icon={<BankOutlined />}
+            title={<span>Schools <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>{schoolRows.length}</span></span>}
+            extra={<LinkButton onClick={() => navigate(SCHOOLS)}>Manage schools</LinkButton>}
+          >
+            <div className="pov-table" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid var(--border-muted)" }}>
+              <Table
+                rowKey="_id"
+                size="middle"
+                columns={columns}
+                dataSource={schoolRows}
+                pagination={{ pageSize: 8, hideOnSinglePage: true, showSizeChanger: false }}
+                scroll={{ x: 720 }}
+                onRow={(s) => ({ onClick: () => openSchool(s._id), style: { cursor: "pointer" } })}
+                locale={{
+                  emptyText: (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No schools yet">
+                      <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`${SCHOOLS}?add=1`)}>Add the first school</Button>
+                    </Empty>
+                  ),
+                }}
               />
-              <Space direction="vertical" style={{ width: "100%" }} size={10}>
-                {subscriptionCounts.map((item) => (
-                  <div
-                    key={item.label}
+            </div>
+          </Panel>
+
+          {/* ── payments and shortcuts ── */}
+          <div style={{ ...twoColumns, marginBottom: 0 }}>
+            <Panel icon={<WalletOutlined />} color="var(--success)" title="Latest plan payments" extra={<LinkButton onClick={() => navigate("/dashboard/superadmin/payments")}>All payments</LinkButton>}>
+              {data.recentPayments.length === 0 ? (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No plan payments yet" />
+              ) : data.recentPayments.map((p, i) => (
+                <div key={p._id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: i ? "1px solid var(--border-muted)" : "none" }}>
+                  <SchoolMark name={p.schoolName} size={34} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{p.schoolName}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{day(p.paymentDate)}</div>
+                  </div>
+                  <Tag style={{ marginInlineEnd: 0 }}>{p.paymentMode}</Tag>
+                  <strong style={{ color: "var(--text-primary)", fontVariantNumeric: "tabular-nums", minWidth: 80, textAlign: "right" }}>{money(p.amount)}</strong>
+                </div>
+              ))}
+            </Panel>
+
+            <Panel icon={<AppstoreOutlined />} color="var(--accent)" title="Shortcuts">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+                {SHORTCUTS.map((s) => (
+                  <button
+                    key={s.label}
+                    type="button"
+                    onClick={() => navigate(s.to)}
+                    className="pov-lift pov-shortcut"
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 14px",
-                      background: item.bg,
-                      border: `1px solid ${item.border}`,
-                      borderRadius: 10,
+                      display: "flex", alignItems: "center", gap: 10, padding: "12px", borderRadius: 12, cursor: "pointer",
+                      border: "1px solid var(--border-muted)", background: "var(--surface)", color: "var(--text-primary)",
+                      font: "inherit", fontWeight: 600, fontSize: 13, textAlign: "left",
                     }}
                   >
-                    <Text style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{item.label}</Text>
-                    <span
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 14,
-                        color: item.textColor,
-                        background: "var(--surface)",
-                        padding: "2px 10px",
-                        borderRadius: 99,
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                      }}
-                    >
-                      {item.count}
-                    </span>
-                  </div>
+                    <span style={iconWell(s.color, 32)}>{s.icon}</span>
+                    {s.label}
+                  </button>
                 ))}
-              </Space>
-            </div>
-          </Col>
-
-          <Col xs={24} md={8}>
-            <div style={{ ...sectionPanel, height: "100%", marginBottom: 0 }}>
-              <PanelHeader
-                icon={<RiseOutlined />}
-                color="var(--purple)"
-                title="Top Schools by Students"
-              />
-              <Space direction="vertical" style={{ width: "100%" }} size={14}>
-                {topSchools.map((school, i) => (
-                  <div key={school.key}>
-                    <Space
-                      style={{
-                        justifyContent: "space-between",
-                        width: "100%",
-                        marginBottom: 5,
-                      }}
-                    >
-                      <Space>
-                        <Text
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: "50%",
-                            background: school.color,
-                            color: "#fff",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {i + 1}
-                        </Text>
-                        <div>
-                          <Text
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 500,
-                              display: "block",
-                              color: "var(--text-primary)",
-                            }}
-                          >
-                            {school.name}
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: 11,
-                              color: "var(--text-muted)",
-                            }}
-                          >
-                            {school.city}
-                          </Text>
-                        </div>
-                      </Space>
-                      <Text style={{ fontWeight: 700 }}>
-                        {school.students.toLocaleString("en-IN")}
-                      </Text>
-                    </Space>
-                    <Progress
-                      percent={Math.round((school.students / maxStudents) * 100)}
-                      showInfo={false}
-                      size="small"
-                      strokeColor={school.color}
-                    />
-                  </div>
-                ))}
-              </Space>
-            </div>
-          </Col>
-        </Row>
-
-        <style>{tableHeadCss("sa-dash-tbl")}</style>
-
-        {/* Schools table + Activity log */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-          <Col xs={24} xl={16}>
-            <div style={{ ...sectionPanel, padding: 0, marginBottom: 0 }}>
-              <div
-                style={{
-                  padding: "16px 20px",
-                  borderBottom: "1px solid var(--border-muted)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: 10,
-                }}
-              >
-                <Space size={8}>
-                  <BankOutlined style={{ color: "var(--primary)" }} />
-                  <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Schools</span>
-                  <span style={pill("var(--primary)")}>{filteredSchools.length} shown</span>
-                </Space>
-                <Space wrap>
-                  <Segmented
-                    value={statusFilter}
-                    onChange={setStatusFilter}
-                    options={[
-                      { label: "All", value: "all" },
-                      { label: "Active", value: "active" },
-                      { label: "Pending", value: "pending" },
-                      { label: "Suspended", value: "suspended" },
-                    ]}
-                  />
-                  <Button
-                    size="small"
-                    icon={<ReloadOutlined />}
-                    onClick={handleRefresh}
-                  >
-                    Refresh
-                  </Button>
-                  <Button
-                    size="small"
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => navigate("/dashboard/superadmin/schools")}
-                  >
-                    Add School
-                  </Button>
-                </Space>
               </div>
-              <div className="sa-dash-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
-                <Table
-                  columns={columns}
-                  dataSource={filteredSchools}
-                  loading={isLoading}
-                  pagination={{ pageSize: 5, size: "small" }}
-                  size="small"
-                  scroll={{ x: 900 }}
-                />
-              </div>
-            </div>
-          </Col>
-
-          <Col xs={24} xl={8}>
-            <div style={{ ...sectionPanel, height: "100%", marginBottom: 0 }}>
-              <PanelHeader
-                icon={<ClockCircleFilled />}
-                color="var(--orange)"
-                title="Recent Activity"
-                extra={
-                  activityLoading ? (
-                    <Spin size="small" />
-                  ) : (
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={() =>
-                        navigate("/dashboard/superadmin/reports/activity")
-                      }
-                    >
-                      View All
-                    </Button>
-                  )
-                }
-              />
-              {activityLoading ? (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    padding: "40px 0",
-                  }}
-                >
-                  <Spin tip="Loading activity..." />
-                </div>
-              ) : activityLogs.length === 0 ? (
-                <Empty
-                  description="No recent activity"
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                />
-              ) : (
-                <Timeline
-                  items={activityLogs.slice(0, 8).map((item) => {
-                    const meta = getActivityMeta(item.action || item.type || "");
-                    return {
-                      dot: (
-                        <div style={iconWell(meta.color, 28)}>
-                          {meta.icon}
-                        </div>
-                      ),
-                      children: (
-                        <div style={{ paddingBottom: 6 }}>
-                          <Text
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 500,
-                              display: "block",
-                              color: "var(--text-primary)",
-                            }}
-                          >
-                            {item.action || item.type || "Activity"}
-                          </Text>
-                          <Space size={8}>
-                            <Text
-                              style={{
-                                fontSize: 12,
-                                color: "var(--text-muted)",
-                              }}
-                            >
-                              {item.message || item.description || ""}
-                            </Text>
-                            {(item.createdAt || item.timestamp) && (
-                              <>
-                                <Divider type="vertical" style={{ margin: 0 }} />
-                                <Text
-                                  style={{
-                                    fontSize: 11,
-                                    color: "var(--text-muted)",
-                                  }}
-                                >
-                                  {timeAgo(item.createdAt || item.timestamp)}
-                                </Text>
-                              </>
-                            )}
-                          </Space>
-                        </div>
-                      ),
-                    };
-                  })}
-                />
-              )}
-            </div>
-          </Col>
-        </Row>
-
-        {/* Revenue by School + Quick Actions */}
-        <Row gutter={[16, 16]}>
-          <Col xs={24} md={12}>
-            <div style={{ ...sectionPanel, marginBottom: 0 }}>
-              <PanelHeader
-                icon={<RupeeIcon />}
-                color="var(--success)"
-                title="Revenue by School"
-              />
-              <List
-                dataSource={schoolsData
-                  .filter((s) => s.revenue > 0)
-                  .sort((a, b) => b.revenue - a.revenue)}
-                locale={{ emptyText: "No revenue data" }}
-                renderItem={(school) => (
-                  <List.Item style={{ padding: "10px 0", border: "none" }}>
-                    <Space
-                      style={{
-                        width: "100%",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Space>
-                        <Avatar
-                          size={32}
-                          style={{
-                            background: `hsl(${(school.name.charCodeAt(0) * 7) % 360}, 55%, 55%)`,
-                            fontSize: 12,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {school.name[0]}
-                        </Avatar>
-                        <div>
-                          <Text
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 500,
-                              display: "block",
-                              color: "var(--text-primary)",
-                            }}
-                          >
-                            {school.name}
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: 11,
-                              color: "var(--text-muted)",
-                            }}
-                          >
-                            {school.city}
-                          </Text>
-                        </div>
-                      </Space>
-                      <Text
-                        strong
-                        style={{ color: "var(--success)", fontSize: 14 }}
-                      >
-                        {formatMoney(school.revenue)}
-                      </Text>
-                    </Space>
-                  </List.Item>
-                )}
-              />
-            </div>
-          </Col>
-
-          <Col xs={24} md={12}>
-            <div style={{ ...sectionPanel, marginBottom: 0 }}>
-              <PanelHeader
-                icon={<LinkOutlined />}
-                color="var(--success)"
-                title="Quick Actions"
-              />
-              <Row gutter={[10, 10]}>
-                {QUICK_ACTIONS.map((action) => (
-                  <Col span={12} key={action.label}>
-                    <Button
-                      block
-                      icon={
-                        <span style={{ color: action.color, fontSize: 16 }}>
-                          {action.icon}
-                        </span>
-                      }
-                      style={{
-                        height: 52,
-                        borderRadius: 10,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        textAlign: "left",
-                        fontSize: 13,
-                        border: "1px solid var(--border)",
-                      }}
-                      onClick={() => navigate(action.route)}
-                    >
-                      {action.label}
-                    </Button>
-                  </Col>
-                ))}
-              </Row>
-            </div>
-          </Col>
-        </Row>
-      </div>
-    </>
+            </Panel>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

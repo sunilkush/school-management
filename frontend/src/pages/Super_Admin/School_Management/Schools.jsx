@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Alert, Button, Checkbox, Drawer, Empty, Form, Input, Modal, Popconfirm, Progress, Segmented, Select,
   Skeleton, Switch, Table, Tag, Upload, message,
@@ -426,8 +426,14 @@ const Schools = () => {
   const [view, setView] = useState("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("name");
-  const [openId, setOpenId] = useState(null);
-  const [formFor, setFormFor] = useState(null);      // null | { school: null } (add) | { school } (edit)
+  // Other pages link here as ?open=<schoolId> (open that school) or ?add=1 (start adding one).
+  const [params, setParams] = useSearchParams();
+  const [openId, setOpenId] = useState(() => params.get("open"));
+  const [formFor, setFormFor] = useState(() => (params.get("add") ? { school: null } : null));      // null | { school: null } (add) | { school } (edit)
+  useEffect(() => {
+    if (params.get("open") || params.get("add")) setParams({}, { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [deleting, setDeleting] = useState(null);
   const [toggling, setToggling] = useState(null);
 

@@ -5,6 +5,7 @@ import {
 } from "../controllers/dashboard.controllers.js";
 import { getAccountantDashboard } from "../controllers/accountantDashboard.controllers.js";
 import { getHostelWardenDashboard } from "../controllers/hostelDashboard.controllers.js";
+import { getPlatformOverview } from "../controllers/platformOverview.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import { Router } from "express";
 
@@ -19,6 +20,7 @@ const FINANCE_ROLES   = ["School Admin", "Accountant"];
 const HOSTEL_ROLES    = ["Super Admin", "School Admin", "Hostel Warden"];
 
 router.get("/summary", auth, roleMiddleware(ADMIN_TEACHER), getDashboardSummary);
+router.get("/platform", auth, roleMiddleware(["Super Admin"]), getPlatformOverview);
 router.get("/role-overview", auth, getRoleDashboardOverview);
 router.get(
   "/school-admin/analytics",
