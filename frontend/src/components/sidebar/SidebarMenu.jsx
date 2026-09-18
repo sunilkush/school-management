@@ -1,8 +1,10 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { Menu, Typography } from "antd";
+import { Menu, Tooltip, Typography, message as antdMessage } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useTheme } from "../../context/ThemeContext";
-import { InboxOutlined } from "@ant-design/icons";
+import { InboxOutlined, LockOutlined } from "@ant-design/icons";
+import { canUpgrade, lockMessage, lockedModuleFor, UPGRADE_PATH } from "../../utils/planAccess";
 
 const { Text } = Typography;
 
@@ -119,6 +121,8 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
   const navigate = useNavigate();
   const { isDark: isDarkMode } = useTheme();
   const t = tokens();
+  // What the school's plan includes. null (Super Admin, no subscription, unreadable plan) = no locks.
+  const planModules = useSelector((s) => s.auth?.user?.planModules ?? null);
 
   const [sidebarConfig, setSidebarConfig] = useState(null);
   const [openKeys, setOpenKeys] = useState([]);
@@ -183,29 +187,82 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
     [openKeys]
   );
 
+  /* Pages the school's plan does not include. They stay in the menu wearing a lock — clicking one
+     explains what it needs instead of opening it. planModules === null means no limits. */
+  const lockedByKey = useMemo(() => {
+    const map = new Map();
+    const walk = (items) => {
+      for (const item of items) {
+        const locked = lockedModuleFor(item, planModules);
+        if (locked) map.set(item.path, locked);
+        if (Array.isArray(item.subMenu)) walk(item.subMenu);
+      }
+    };
+    walk(menuItems);
+    return map;
+  }, [menuItems, planModules]);
+
   /* Build Ant Design menu item tree */
   const antMenuItems = useMemo(() => {
+    const lockedLabel = (title, moduleName) => (
+      <Tooltip title={lockMessage(moduleName, role)} placement="right">
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
+          <LockOutlined style={{ fontSize: 11, opacity: 0.75, flexShrink: 0 }} />
+        </span>
+      </Tooltip>
+    );
+
     return menuItems.map((item) => {
       const icon = item.icon ? (
         <item.icon size={15} strokeWidth={1.8} />
       ) : null;
 
       if (!item?.subMenu?.length) {
-        return { key: item.path, icon, label: item.title };
+        const locked = lockedByKey.get(item.path);
+        return {
+          key: item.path,
+          icon,
+          label: locked ? lockedLabel(item.title, locked) : item.title,
+          className: locked ? "menu-locked" : undefined,
+        };
       }
+
+      const children = item.subMenu.map((sub) => {
+        const locked = lockedByKey.get(sub.path);
+        return {
+          key: sub.path,
+          icon: sub.icon ? <sub.icon size={13} strokeWidth={1.8} /> : null,
+          label: locked ? lockedLabel(sub.title, locked) : sub.title,
+          className: locked ? "menu-locked" : undefined,
+        };
+      });
+
+      // A section whose every page is locked wears the lock itself, so it reads as locked while shut.
+      const sectionModule = item.subMenu.every((sub) => lockedByKey.get(sub.path))
+        ? lockedByKey.get(item.subMenu[0].path)
+        : null;
 
       return {
         key: item.title,
         icon,
-        label: item.title,
-        children: item.subMenu.map((sub) => ({
-          key: sub.path,
-          icon: sub.icon ? <sub.icon size={13} strokeWidth={1.8} /> : null,
-          label: sub.title,
-        })),
+        label: sectionModule ? lockedLabel(item.title, sectionModule) : item.title,
+        className: sectionModule ? "menu-locked" : undefined,
+        children,
       };
     });
-  }, [menuItems]);
+  }, [menuItems, lockedByKey, role]);
+
+  const handleClick = useCallback(({ key }) => {
+    if (!key) return;
+    const locked = lockedByKey.get(key);
+    if (!locked) {
+      navigate(`/dashboard/${key}`);
+      return;
+    }
+    antdMessage.info(lockMessage(locked, role));
+    if (canUpgrade(role)) navigate(UPGRADE_PATH);
+  }, [lockedByKey, navigate, role]);
 
   const selectedKey = location.pathname.replace("/dashboard/", "");
 
@@ -311,6 +368,16 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
           opacity: 1;
         }
 
+        /* ── Not in the school's plan ── */
+        .sidebar-nav .ant-menu-item.menu-locked,
+        .sidebar-nav .ant-menu-submenu.menu-locked > .ant-menu-submenu-title {
+          opacity: 0.55;
+        }
+        .sidebar-nav .ant-menu-item.menu-locked:hover,
+        .sidebar-nav .ant-menu-submenu.menu-locked > .ant-menu-submenu-title:hover {
+          opacity: 0.8;
+        }
+
         /* ── Overall menu container ── */
         .sidebar-nav.ant-menu {
           border-inline-end: none !important;
@@ -326,7 +393,7 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
         selectedKeys={[selectedKey]}
         openKeys={collapsed ? [] : openKeys}
         onOpenChange={collapsed ? undefined : onOpenChange}
-        onClick={({ key }) => key && navigate(`/dashboard/${key}`)}
+        onClick={handleClick}
         theme={isDarkMode ? "dark" : "light"}
         style={{
           background: "transparent",

@@ -18,6 +18,7 @@ import { SchoolSubscription } from '../models/schoolSubscription.model.js'
 import { recordLoginEvent, recordLogoutByUserId } from './loginLog.controllers.js'
 import { billingOnlyMessage, canUseBillingOnly, findSchoolAccessProblem, isSuperAdminUser } from '../utils/schoolAccess.js'
 import { issueOtp } from '../utils/otpCodes.js'
+import { resolvePlanModules } from '../utils/planModules.js'
 import { findForbiddenRole } from '../utils/roleAssignment.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
@@ -668,10 +669,19 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
+  // The modules this school's plan switched on, so the sidebar can mark the rest as "not in your
+  // plan". null means no limits (Super Admin, no subscription, or a plan we can't read) — the
+  // frontend shows everything unlocked in that case. Nothing is blocked by this list; it is a
+  // label, and the API gates are still the role checks.
+  const user = userWithDetails[0];
+  user.planModules = isSuperAdminUser(req.user)
+    ? null
+    : await resolvePlanModules(user.school?._id || req.user.schoolId);
+
   return res.status(200).json(
     new ApiResponse(
       200,
-      userWithDetails[0],
+      user,
       "User fetched successfully"
     )
   );
