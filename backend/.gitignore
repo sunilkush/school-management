@@ -129,3 +129,6 @@ dist
 
 # Generated backup files
 backups/
+
+# Kept out of git on purpose — this file carries the real connection string layout.
+.env.example
