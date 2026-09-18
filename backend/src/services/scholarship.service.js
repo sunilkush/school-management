@@ -36,7 +36,12 @@ export const effectiveConcession = async ({ schoolId, studentId, academicYearId 
     schoolId,
     studentId,
     status: "approved",
-    ...(academicYearId ? { academicYearId } : {}),
+    // An award with no academic year on it belongs to every year — the concession form does not
+    // ask for one, so that is what almost every award looks like. Matching the year exactly meant
+    // "Apply to fees" (which always passes the enrolment's year) never found a single award, so it
+    // reported "every student already matches" and changed nothing, forever. The award's own
+    // validFrom/validUntil dates are what bound it in time; isAwardLive checks those below.
+    ...(academicYearId ? { academicYearId: { $in: [academicYearId, null] } } : {}),
   })
     .populate("schemeId", "name code category discountType value isActive")
     .lean();
@@ -127,6 +132,10 @@ export const syncConcessionToEnrollments = async ({ schoolId, academicYearId = n
 
   let updated = 0;
   const changes = [];
+  // A fixed-rupee scheme cannot travel this path: the enrolment carries one number, a percentage,
+  // and that is all fee assignment reads. Counted here so the page can say so out loud instead of
+  // quietly leaving those students at full fee.
+  const flatAmountStudents = [];
 
   for (const enrollment of enrollments) {
     // eslint-disable-next-line no-await-in-loop
@@ -135,6 +144,10 @@ export const syncConcessionToEnrollments = async ({ schoolId, academicYearId = n
       studentId: enrollment.studentId,
       academicYearId: enrollment.academicYearId,
     });
+
+    if (concession.flatAmount > 0) {
+      flatAmountStudents.push({ studentId: enrollment.studentId, flatAmount: concession.flatAmount });
+    }
 
     const current = enrollment.feeDiscount || 0;
     if (round2(current) === concession.percent) continue;
@@ -145,7 +158,13 @@ export const syncConcessionToEnrollments = async ({ schoolId, academicYearId = n
     changes.push({ studentId: enrollment.studentId, from: round2(current), to: concession.percent });
   }
 
-  return { considered: enrollments.length, updated, changes: changes.slice(0, 200) };
+  return {
+    considered: enrollments.length,
+    updated,
+    changes: changes.slice(0, 200),
+    flatAmountCount: flatAmountStudents.length,
+    flatAmountStudents: flatAmountStudents.slice(0, 200),
+  };
 };
 
 /**

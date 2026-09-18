@@ -125,14 +125,25 @@ const ScholarshipsPage = () => {
 
   const applyToFees = async () => {
     const res = await dispatch(syncConcessions({}));
-    if (syncConcessions.fulfilled.match(res)) {
-      message.success(res.payload?.updated
-        ? `${res.payload.updated} student(s) updated`
-        : "Every student already matches");
-      load();
-    } else {
+    if (!syncConcessions.fulfilled.match(res)) {
       message.error(res.payload || "Could not apply the concessions");
+      return;
     }
+
+    const { updated = 0, considered = 0, flatAmountCount = 0 } = res.payload || {};
+    if (updated) message.success(`${updated} student(s) updated`);
+    else if (considered) message.info(`Checked ${considered} student(s) — every one already matches`);
+    else message.warning("No active enrolment to apply concessions to");
+
+    // A fixed-rupee concession cannot be written onto the enrolment, which carries a percentage.
+    // Saying nothing would leave those students at full fee with no sign anything was missed.
+    if (flatAmountCount) {
+      message.warning(
+        `${flatAmountCount} student(s) hold a fixed-amount concession. Fee assignment only carries a percentage, so take those off the bill by hand.`,
+        8
+      );
+    }
+    load();
   };
 
   const costThem = async () => {
