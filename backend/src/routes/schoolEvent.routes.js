@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { auth } from "../middlewares/auth.middleware.js";
+import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 import {
   createSchoolEvent,
   deleteSchoolEvent,
@@ -11,11 +11,15 @@ import {
 
 const router = Router();
 
+// Everyone in the school reads the calendar; only the people who run it may change it. Writing was
+// open to every signed-in user, so a student or a driver could delete the school's events.
+const CALENDAR_EDITORS = ["Super Admin", "School Admin", "Principal", "Vice Principal"];
+
 router.get("/", auth, listSchoolEvents);
 router.get("/stats", auth, schoolEventStats);
 router.get("/:id", auth, getSchoolEvent);
-router.post("/", auth, createSchoolEvent);
-router.put("/:id", auth, updateSchoolEvent);
-router.delete("/:id", auth, deleteSchoolEvent);
+router.post("/", auth, roleMiddleware(CALENDAR_EDITORS), createSchoolEvent);
+router.put("/:id", auth, roleMiddleware(CALENDAR_EDITORS), updateSchoolEvent);
+router.delete("/:id", auth, roleMiddleware(CALENDAR_EDITORS), deleteSchoolEvent);
 
 export default router;

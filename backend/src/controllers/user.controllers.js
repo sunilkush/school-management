@@ -18,6 +18,7 @@ import { SchoolSubscription } from '../models/schoolSubscription.model.js'
 import { recordLoginEvent, recordLogoutByUserId } from './loginLog.controllers.js'
 import { billingOnlyMessage, canUseBillingOnly, findSchoolAccessProblem, isSuperAdminUser } from '../utils/schoolAccess.js'
 import { issueOtp } from '../utils/otpCodes.js'
+import { findForbiddenRole } from '../utils/roleAssignment.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -103,6 +104,20 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (!name || !email || !password || !roleId || !schoolId) {
     throw new ApiError(400, "All required fields must be provided");
+  }
+
+  // The role came straight from the request body and was written to the new user untouched, so a
+  // School Admin could create an account holding the Super Admin role — the role list they can
+  // already read hands them its id — and then sign in to the whole platform. Same guard as
+  // assignAdditionalRoles: the platform role, and other schools' roles, are Super Admin's to give.
+  const requestedRole = await Role.findById(roleId).select("_id name schoolId").lean();
+  if (!requestedRole) throw new ApiError(400, "Invalid role");
+  const forbiddenRole = findForbiddenRole([requestedRole], {
+    isSuperAdmin,
+    callerSchoolId: req.user?.schoolId,
+  });
+  if (forbiddenRole) {
+    throw new ApiError(403, `Not allowed to assign role "${forbiddenRole.name}"`);
   }
 
   // ✅ Check Academic Year
@@ -216,9 +231,15 @@ const loginUser = asyncHandler(async (req, res) => {
     if (problem && !canUseBillingOnly(problem, user)) throw new ApiError(403, problem.message);
     if (problem) billingOnly = { reason: billingOnlyMessage(problem) };
 
-    /* if (!user.isEmailVerified) {
+    // Email verification is OFF by default, on purpose: 90 of the 110 active accounts were created
+    // before verification mattered and have isEmailVerified unset, so switching it on here would
+    // lock out most of the school. It is a flag rather than a comment so it can be turned on
+    // deliberately — backfill isEmailVerified for existing users first, then set
+    // REQUIRE_VERIFIED_EMAIL=true. (This was never the thing protecting the platform: the account
+    // that could be created with a Super Admin role is blocked in registerUser now.)
+    if (process.env.REQUIRE_VERIFIED_EMAIL === "true" && !user.isEmailVerified) {
       throw new ApiError(403, "Email is not verified. Please verify before login.");
-    } */
+    }
   }
 
   // 4b️⃣ Warn when the subscription ends within 30 days
@@ -1377,22 +1398,20 @@ const assignAdditionalRoles = asyncHandler(async (req, res) => {
 
   // Validate every supplied role ID actually exists
   if (additionalRoleIds.length > 0) {
-    const validRoles = await Role.find({ _id: { $in: additionalRoleIds } }).select("_id name type level").lean();
+    const validRoles = await Role.find({ _id: { $in: additionalRoleIds } }).select("_id name type level schoolId").lean();
     if (validRoles.length !== additionalRoleIds.length) {
       throw new ApiError(400, "One or more role IDs are invalid");
     }
 
-    // Only Super Admin may grant a system role (currently just "Super Admin" itself) or any role
-    // at a more senior tier than their own — otherwise a School Admin could hand themselves (or
-    // anyone) platform-admin access through this endpoint.
-    if (!isSuperAdmin) {
-      const callerRoleId = req.user?.roleId?._id || req.user?.roleId;
-      const callerRole = await Role.findById(callerRoleId).select("level").lean();
-      const callerLevel = callerRole?.level ?? 4;
-      const forbidden = validRoles.find((r) => r.type === "system" || (r.level ?? 4) < callerLevel);
-      if (forbidden) {
-        throw new ApiError(403, `Not allowed to assign role "${forbidden.name}"`);
-      }
+    // Only Super Admin may grant the platform role or another school's role — otherwise a School
+    // Admin could hand themselves (or anyone) platform-admin access through this endpoint.
+    //
+    // This used to reject any role of type "system", which reads right but blocks everything:
+    // Teacher, Student, Parent and the rest are all stored as "system" too, so a School Admin
+    // could not grant a single additional role. The name is the privilege boundary, not the type.
+    const forbidden = findForbiddenRole(validRoles, { isSuperAdmin, callerSchoolId: req.user?.schoolId });
+    if (forbidden) {
+      throw new ApiError(403, `Not allowed to assign role "${forbidden.name}"`);
     }
 
     // Prevent assigning primary role as additional role

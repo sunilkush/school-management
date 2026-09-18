@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { ALL_ACTIONS, DEFAULT_ROLE_PERMISSIONS, ROLE_LEVEL_MAP } from "../utils/roleDefaults.js";
+import { isPlatformRoleName } from "../utils/roleAssignment.js";
 
 // ✅ Allowed Actions
 const allActions = ALL_ACTIONS;
@@ -72,6 +73,14 @@ const allActions = ALL_ACTIONS;
       throw new ApiError(403, "Only Super Admin can create system roles");
     }
 
+    // …and nobody but Super Admin may create a role NAMED like the platform role, whatever its
+    // type. The SYSTEM_ROLES check above is exact-match, so "SUPER ADMIN" slipped past it as a
+    // "custom" role — and buildSchoolAccessFilter lowercases the name before comparing, so that
+    // role would have read every school's data.
+    if (isPlatformRoleName(name) && req.userRole?.name !== "Super Admin") {
+      throw new ApiError(403, "Only Super Admin can create that role");
+    }
+
     /* ===============================
        3. AUTO ROLE LEVEL (🔥 MAIN PART)
     ================================ */
@@ -86,13 +95,18 @@ const allActions = ALL_ACTIONS;
 
     // System roles → no school
     if (type === "custom") {
-      if (!schoolId || !mongoose.Types.ObjectId.isValid(schoolId)) {
+      // A School Admin's custom role belongs to their own school, whatever the body says —
+      // otherwise they could plant a role inside another school. Super Admin picks freely.
+      const ownSchoolId = req.user?.schoolId?._id || req.user?.schoolId;
+      const targetSchoolId = req.userRole?.name === "Super Admin" ? schoolId : ownSchoolId;
+
+      if (!targetSchoolId || !mongoose.Types.ObjectId.isValid(targetSchoolId)) {
         throw new ApiError(
           400,
           "Valid schoolId is required for custom roles"
         );
       }
-      schoolObjectId = new mongoose.Types.ObjectId(schoolId);
+      schoolObjectId = new mongoose.Types.ObjectId(targetSchoolId);
     }
 
     /* ===============================
