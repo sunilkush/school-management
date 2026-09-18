@@ -180,3 +180,16 @@ cypress.config.*
 # One-off local check scripts (e.g. backend/__settings_check.mjs)
 __*_check.*
 __*_preview.*
+
+### Test files — kept on disk, never committed ###
+*.test.js
+*.test.jsx
+*.test.mjs
+*.spec.js
+*.spec.jsx
+jest.setup.js
+__mocks__/
+__tests__/
+test-utils/
+# Scratch query files used to poke the database by hand
+*.mongodb.js
