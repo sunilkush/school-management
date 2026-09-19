@@ -35,8 +35,9 @@ const CustomTooltip = ({ active, payload }) => {
         <Text style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>{d.label}</Text>
       </div>
       <Text style={{ fontSize: 18, fontWeight: 800, color: d.color, display: "block" }}>
-        ₹{Number(d.value || 0).toLocaleString("en-IN")}
+        ₹{Number(d.amount || 0).toLocaleString("en-IN")}
       </Text>
+      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{Number(d.value || 0)}% of collections</Text>
     </div>
   );
 };
@@ -64,7 +65,9 @@ const IncomeAnalysis = ({ data = [] }) => {
     name: d.label,
   }));
 
-  const total = incomeData.reduce((sum, d) => sum + (d.value || 0), 0);
+  // `value` is each mode's share of collections (it sizes the slices); `amount` is the money.
+  // Adding the shares up would always come to 100, which is what the centre used to show as "₹100".
+  const totalAmount = incomeData.reduce((sum, d) => sum + Number(d.amount || 0), 0);
 
   const cardBg = "var(--surface)";
   const border  = "var(--border)";
@@ -129,9 +132,13 @@ const IncomeAnalysis = ({ data = [] }) => {
           textAlign: "center",
         }}>
           <Text style={{ fontSize: 16, fontWeight: 800, color: textPri, lineHeight: 1, display: "block" }}>
-            ₹{total >= 1000 ? `${(total / 1000).toFixed(1)}k` : total.toLocaleString("en-IN")}
+            {totalAmount >= 100000
+              ? `₹${(totalAmount / 100000).toFixed(1)}L`
+              : totalAmount >= 1000
+              ? `₹${(totalAmount / 1000).toFixed(1)}k`
+              : `₹${totalAmount.toLocaleString("en-IN")}`}
           </Text>
-          <Text style={{ fontSize: 10, color: textSec }}>total</Text>
+          <Text style={{ fontSize: 10, color: textSec }}>collected</Text>
         </div>
       </div>
     </div>

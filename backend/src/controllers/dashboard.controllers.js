@@ -419,7 +419,10 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
     const palette = ["#1677ff", "#0891b2", "#0ea472", "#7c3aed"];
     return {
       label: String(item._id || "other").toUpperCase(),
+      // `value` is the slice's share of the total, which is what sizes the chart. `amount` is the
+      // money itself — without it the screen could only add the shares up to a meaningless 100.
       value: incomeAnalysisTotal ? Number(((item.value / incomeAnalysisTotal) * 100).toFixed(0)) : 0,
+      amount: Number((item.value || 0).toFixed(0)),
       color: palette[index % palette.length],
     };
   });

@@ -37,7 +37,7 @@ const CustomTooltip = ({ active, payload }) => {
       <Text style={{ fontSize: 18, fontWeight: 800, color: d.color, display: "block" }}>
         {Number(d.count || 0).toLocaleString("en-IN")}
       </Text>
-      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{d.percent}% of total</Text>
+      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{d.share}% of total</Text>
     </div>
   );
 };
@@ -74,9 +74,12 @@ const EmployeeStructure = ({ data = [] }) => {
   }));
 
   const total = structureData.reduce((s, d) => s + d.value, 0);
+  // Deliberately NOT called `percent`: recharts spreads each row's own fields into the label and
+  // tooltip props, so a `percent` here would overwrite the 0–1 fraction recharts passes and the
+  // slice labels would read "9300%" instead of "93%".
   const withPercent = structureData.map((d) => ({
     ...d,
-    percent: total ? Math.round((d.value / total) * 100) : 0,
+    share: total ? Math.round((d.value / total) * 100) : 0,
   }));
 
   const cardBg = "var(--surface)";
