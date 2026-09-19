@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Form, Input, Button, Typography, message } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,12 +7,17 @@ import {
   clearRecoveryState,
   resetPasswordRequest,
 } from "../../features/accountRecoverySlice";
+import PasswordRequirements from "../../components/forms/PasswordRequirements";
+import { passwordRule, isStrongPassword } from "../../utils/passwordPolicy";
 
 const { Title, Text } = Typography;
 
 const ResetPasswordPage = () => {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
+  const [form] = Form.useForm();
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const passwordValue = Form.useWatch("password", form) || "";
   const { loading, success, error, message: successMessage } = useSelector(
     (state) => state.accountRecovery.resetPassword
   );
@@ -50,16 +55,28 @@ const ResetPasswordPage = () => {
           <Text type="secondary">Enter your new password below</Text>
         </div>
 
-        <Form layout="vertical" onFinish={onFinish}>
+        <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
             label="New Password"
             name="password"
             rules={[
               { required: true, message: "Please enter new password" },
-              { min: 6, message: "Minimum 6 characters required" },
+              passwordRule,
             ]}
+            // Passed as null when hidden: an always-present extra node would leave a gap under the box.
+            extra={
+              passwordFocused || (!!passwordValue && !isStrongPassword(passwordValue)) ? (
+                <PasswordRequirements value={passwordValue} />
+              ) : null
+            }
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="Enter new password" size="large" />
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="Enter new password"
+              size="large"
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
+            />
           </Form.Item>
 
           <Form.Item
