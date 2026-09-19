@@ -261,13 +261,15 @@ const IssueBook = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("issue-tbl")}</style>
-      <PageHeader
+    <>
+    <PageHeader
         title="Issue / Return Books"
         subtitle="Manage book circulation for students, teachers, and staff"
         icon={<BookOutlined />}
       />
+    <div style={pageWrapper}>
+      <style>{tableHeadCss("issue-tbl")}</style>
+      
 
       {/* ── KPI summary ───────────────────────────────────────────── */}
       <div style={statGrid(150)}>
@@ -419,7 +421,7 @@ const IssueBook = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </div></>
   );
 };
 

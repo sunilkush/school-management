@@ -1,12 +1,9 @@
-import React, { useState } from "react";
-import { Select, Typography } from "antd";
+import React from "react";
+import { Typography } from "antd";
 
 const { Text } = Typography;
-const { Option } = Select;
 
 const SalaryStatistics = ({ stats = [] }) => {
-  const [period, setPeriod] = useState("lastMonth");
-
   const dynamicStats = stats.length
     ? stats
     : [
@@ -26,12 +23,10 @@ const SalaryStatistics = ({ stats = [] }) => {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
           <Text style={{ fontSize: 14, fontWeight: 700, color: textPri, display: "block" }}>Salary Statistics</Text>
-          <Text style={{ fontSize: 12, color: textSec }}>By department</Text>
+          {/* A "Last month / This month" picker used to sit here. It set state nothing read, so the
+              numbers never changed — removed rather than left looking like a working filter. */}
+          <Text style={{ fontSize: 12, color: textSec }}>Paid salaries, by department</Text>
         </div>
-        <Select value={period} onChange={setPeriod} size="small" style={{ width: 120 }} bordered={false}>
-          <Option value="lastMonth">Last Month</Option>
-          <Option value="thisMonth">This Month</Option>
-        </Select>
       </div>
 
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-around", gap: 12, marginBottom: 16 }}>
@@ -40,8 +35,10 @@ const SalaryStatistics = ({ stats = [] }) => {
           return (
             <div key={item.title} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
               <Text style={{ fontSize: 13, fontWeight: 700, color: item.color }}>₹{Math.round(item.value).toLocaleString("en-IN")}</Text>
-              <div style={{ width: "100%", height: 120, background: trackBg, borderRadius: 8, display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
-                <div style={{ width: "100%", height: `${pct}%`, background: item.color }} />
+              {/* The bar sits on a baseline instead of filling a grey track: a half-filled track
+                  read as if the grey part were a second, larger value. */}
+              <div style={{ width: "100%", height: 120, display: "flex", alignItems: "flex-end", borderBottom: `1px solid ${trackBg}` }}>
+                <div style={{ width: "100%", height: `${Math.max(pct, 4)}%`, background: item.color, borderRadius: "8px 8px 0 0" }} />
               </div>
               <Text style={{ fontSize: 11.5, color: textSec, fontWeight: 500 }}>{item.title}</Text>
             </div>

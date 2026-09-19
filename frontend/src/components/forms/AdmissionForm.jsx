@@ -6,13 +6,57 @@ import { getClassData } from "../../features/schoolClassSlice";
 import {
   UserOutlined, ProfileOutlined, ManOutlined, WomanOutlined,
   CheckOutlined, LeftOutlined, RightOutlined, InfoCircleOutlined,
-  UploadOutlined, FileTextOutlined, DeleteOutlined, PlusOutlined,
+  UploadOutlined, FileTextOutlined, DeleteOutlined, PlusOutlined, CopyOutlined,
 } from "@ant-design/icons";
 
 const DOCUMENT_ACCEPT = ".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx";
 const MAX_DOCUMENTS = 5;
-const MAX_DOCUMENT_SIZE_KB = 50;
-const MAX_DOCUMENT_SIZE = MAX_DOCUMENT_SIZE_KB * 1024;
+// Matches uploadAdmissionDocs in backend/src/middlewares/multer.middleware.js.
+const MAX_DOCUMENT_SIZE_MB = 2;
+const MAX_DOCUMENT_SIZE = MAX_DOCUMENT_SIZE_MB * 1024 * 1024;
+const IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+/**
+ * Shrinks a photographed document until it fits the upload limit.
+ *
+ * A birth certificate snapped on a phone is 3–5 MB; the office has no way to compress it before
+ * uploading, so without this the answer would be "file too large" and nothing else. Scans down to
+ * 1600px on the long edge and steps the JPEG quality down until it fits. Anything that is not an
+ * image (PDF, DOC) is returned untouched and simply checked against the limit.
+ */
+const shrinkImageToFit = (file) =>
+  new Promise((resolve) => {
+    if (!IMAGE_TYPES.includes(file.type) || file.size <= MAX_DOCUMENT_SIZE) return resolve(file);
+
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+
+      const attempt = (quality) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file);
+            if (blob.size <= MAX_DOCUMENT_SIZE || quality <= 0.4) {
+              const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+              return resolve(new File([blob], name, { type: "image/jpeg" }));
+            }
+            attempt(quality - 0.15);
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      attempt(0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
 
 // Each row gets its own independent upload control (not one shared multi-file dropzone).
 const DEFAULT_DOCUMENT_ROWS = ["Birth Certificate", "Student Photo", "ID Proof (Aadhar/Passport)", "Previous School TC"];
@@ -50,10 +94,10 @@ const CredentialBlock = ({ label, creds }) => {
   return (
     <div style={{
       marginBottom: 12, padding: "12px 14px",
-      background: "rgba(124,58,237,0.06)",
-      borderRadius: 10, borderLeft: "3px solid var(--purple)",
+      background: "rgba(var(--primary-rgb), 0.06)",
+      borderRadius: 10, borderLeft: "3px solid var(--primary)",
     }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
         {label}
       </div>
       <div style={{ fontSize: 13, color: "var(--text)", marginBottom: 2 }}>
@@ -81,14 +125,82 @@ const InfoHint = ({ children }) => (
   <div style={{
     display: "flex", alignItems: "flex-start", gap: 10,
     padding: "12px 16px",
-    background: "rgba(124,58,237,0.05)",
-    border: "1px solid rgba(124,58,237,0.15)",
+    background: "rgba(var(--primary-rgb), 0.05)",
+    border: "1px solid rgba(var(--primary-rgb), 0.15)",
     borderRadius: 10, marginTop: 12,
   }}>
-    <InfoCircleOutlined style={{ color: "var(--purple)", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
-    <span style={{ fontSize: 13, color: "var(--purple-hover)", lineHeight: 1.55 }}>{children}</span>
+    <InfoCircleOutlined style={{ color: "var(--primary)", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
+    <span style={{ fontSize: 13, color: "var(--primary-hover)", lineHeight: 1.55 }}>{children}</span>
   </div>
 );
+
+/** Puts the new logins on the clipboard as plain text, ready to paste into SMS, WhatsApp or a note. */
+const copyCredentials = ({ credentials, enrollment, studentName }) => {
+  const line = (label, creds) =>
+    creds ? `${label} — login: ${creds.loginId || "—"}, password: ${creds.password || "unchanged (already existed)"}` : null;
+
+  const text = [
+    `Admission confirmed${studentName ? ` — ${studentName}` : ""}`,
+    enrollment?.rollNumber != null ? `Roll number: ${enrollment.rollNumber}` : null,
+    enrollment?.registrationNumber ? `Registration number: ${enrollment.registrationNumber}` : null,
+    "",
+    line("Student", credentials?.student),
+    line("Father", credentials?.father),
+    line("Mother", credentials?.mother),
+  ].filter(Boolean).join("\n");
+
+  navigator.clipboard?.writeText(text).then(
+    () => message.success("Admission details copied"),
+    () => message.error("Could not copy — please note the details down")
+  );
+};
+
+/** The one-glance recap shown on the last step, with a way back to the step that owns each value. */
+const ReviewSummary = ({ values, className, sectionName, rollNumber, documentCount, onEdit }) => {
+  const rows = [
+    { step: "student", label: "Student", value: values.studentName },
+    { step: "student", label: "Class", value: className && sectionName ? `${className} · Section ${sectionName}` : className },
+    { step: "student", label: "Roll no.", value: rollNumber ? `${rollNumber} (next in section)` : "—" },
+    { step: "student", label: "Registration no.", value: values.registrationNumber },
+    { step: "student", label: "Email (student login)", value: values.email },
+    { step: "other", label: "Date of birth", value: values.dateOfBirth?.format?.("DD MMM YYYY") },
+    { step: "father", label: "Father", value: [values.fatherName, values.fatherMobile].filter(Boolean).join(" · ") },
+    { step: "mother", label: "Mother", value: [values.motherName, values.motherMobile].filter(Boolean).join(" · ") },
+    { step: "documents", label: "Documents", value: documentCount ? `${documentCount} attached` : "None attached" },
+  ];
+
+  return (
+    <div style={{
+      border: "1px solid var(--border-muted)",
+      borderRadius: 10,
+      background: "var(--surface-soft)",
+      padding: "6px 14px",
+      marginBottom: 20,
+    }}>
+      {rows.map((r) => (
+        <div
+          key={r.label}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "8px 0",
+            borderBottom: "1px solid var(--border-muted)",
+            fontSize: 13,
+          }}
+        >
+          <span style={{ width: 170, color: "var(--text-muted)", flexShrink: 0 }}>{r.label}</span>
+          <span style={{ flex: 1, color: r.value ? "var(--text)" : "var(--text-muted)", fontWeight: r.value ? 600 : 400 }}>
+            {r.value || "Not filled"}
+          </span>
+          {r.step !== "documents" && (
+            <Button type="link" size="small" style={{ padding: 0, height: "auto", fontSize: 12 }} onClick={() => onEdit(r.step)}>
+              Edit
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const AdmissionForm = ({ onClose }) => {
   const [form] = Form.useForm();
@@ -102,6 +214,9 @@ const AdmissionForm = ({ onClose }) => {
   const [documentList, setDocumentList]   = useState(() => DEFAULT_DOCUMENT_ROWS.map((label, i) => makeDocumentRow(label, i)));
 
   const currentIndex = TAB_KEYS.indexOf(activeTab);
+  // The furthest step reached, so a step already filled in can be revisited from either
+  // direction. Clicking a step beyond this used to do nothing at all, with no hint why.
+  const [furthestIndex, setFurthestIndex] = useState(0);
 
   const { lastStudent = [], registrationNumber } = useSelector(s => s.students);
   const { user }                                 = useSelector(s => s.auth);
@@ -147,12 +262,18 @@ const AdmissionForm = ({ onClose }) => {
 
   // Each row's Upload control fires this independently — files are picked one row at a time,
   // never bulk-selected into a shared list.
-  const handleDocumentFileSelect = (uid, file) => {
-    if (file.size > MAX_DOCUMENT_SIZE) {
-      message.error(`"${file.name}" is ${(file.size / 1024).toFixed(0)}KB — max allowed is ${MAX_DOCUMENT_SIZE_KB}KB.`);
+  const handleDocumentFileSelect = async (uid, file) => {
+    const ready = await shrinkImageToFit(file);
+    if (ready.size > MAX_DOCUMENT_SIZE) {
+      message.error(
+        `"${file.name}" is ${(ready.size / (1024 * 1024)).toFixed(1)} MB — the limit is ${MAX_DOCUMENT_SIZE_MB} MB. Please upload a smaller file.`
+      );
       return Upload.LIST_IGNORE;
     }
-    setDocumentList(prev => prev.map(d => (d.uid === uid ? { ...d, file, name: file.name, size: file.size } : d)));
+    if (ready !== file) {
+      message.success(`"${file.name}" was large, so it was compressed to ${(ready.size / 1024).toFixed(0)} KB before upload.`);
+    }
+    setDocumentList(prev => prev.map(d => (d.uid === uid ? { ...d, file: ready, name: file.name, size: ready.size } : d)));
     return false; // prevent antd's built-in auto-upload
   };
 
@@ -177,6 +298,7 @@ const AdmissionForm = ({ onClose }) => {
         return; // validation failed — stay on current step
       }
     }
+    setFurthestIndex((f) => Math.max(f, currentIndex + 1));
     setActiveTab(TAB_KEYS[currentIndex + 1]);
   };
 
@@ -220,7 +342,7 @@ const AdmissionForm = ({ onClose }) => {
         const { credentials, enrollment } = res?.payload || {};
         if (credentials) {
           Modal.success({
-            title: <span style={{ fontSize: 17, fontWeight: 700, color: "var(--purple)" }}>Admission Successful</span>,
+            title: <span style={{ fontSize: 17, fontWeight: 700, color: "var(--primary)" }}>Admission Successful</span>,
             width: 480,
             icon: null,
             content: (
@@ -247,6 +369,17 @@ const AdmissionForm = ({ onClose }) => {
                 <CredentialBlock label="Student" creds={credentials.student} />
                 <CredentialBlock label="Father"  creds={credentials.father} />
                 <CredentialBlock label="Mother"  creds={credentials.mother} />
+
+                {/* These logins are handed to the family at the counter. Copying beats writing
+                    three ID/password pairs out by hand — and this dialog is the only place they
+                    are ever shown. */}
+                <Button
+                  icon={<CopyOutlined />}
+                  onClick={() => copyCredentials({ credentials, enrollment, studentName: values.studentName })}
+                  style={{ marginTop: 4 }}
+                >
+                  Copy all details
+                </Button>
               </div>
             ),
             onOk: onClose,
@@ -256,6 +389,7 @@ const AdmissionForm = ({ onClose }) => {
         }
         form.resetFields();
         setActiveTab("student");
+        setFurthestIndex(0);
         setSections([]);
         setNextRollNumber(null);
         setDocumentList(DEFAULT_DOCUMENT_ROWS.map((label, i) => makeDocumentRow(label, i)));
@@ -294,13 +428,13 @@ const AdmissionForm = ({ onClose }) => {
         .adm-form .ant-input:focus,
         .adm-form .ant-input-number:focus-within,
         .adm-form .ant-picker:focus-within {
-          border-color: var(--purple) !important;
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1) !important;
         }
         .adm-form .ant-input:hover,
         .adm-form .ant-input-number:hover,
         .adm-form .ant-picker:hover {
-          border-color: var(--purple) !important;
+          border-color: var(--primary) !important;
         }
         .adm-form textarea.ant-input {
           height: auto !important;
@@ -317,11 +451,11 @@ const AdmissionForm = ({ onClose }) => {
           align-items: center !important;
         }
         .adm-form .ant-select:hover .ant-select-selector {
-          border-color: var(--purple) !important;
+          border-color: var(--primary) !important;
         }
         .adm-form .ant-select-focused .ant-select-selector {
-          border-color: var(--purple) !important;
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1) !important;
         }
         .adm-form .ant-picker { width: 100% !important; }
         .adm-form .ant-input-number { width: 100% !important; }
@@ -330,10 +464,10 @@ const AdmissionForm = ({ onClose }) => {
           margin-top: 3px !important;
         }
         .adm-form .ant-input[disabled] {
-          background: rgba(var(--purple-rgb), 0.08) !important;
-          color: var(--purple) !important;
+          background: rgba(var(--primary-rgb), 0.08) !important;
+          color: var(--primary) !important;
           font-weight: 700 !important;
-          border-color: rgba(var(--purple-rgb), 0.3) !important;
+          border-color: rgba(var(--primary-rgb), 0.3) !important;
           cursor: default !important;
         }
         .adm-form .roll-preview-assigned .ant-input[disabled] {
@@ -367,7 +501,8 @@ const AdmissionForm = ({ onClose }) => {
           min-width: 80px;
           transition: background 0.2s;
         }
-        .adm-tab:hover { background: rgba(124,58,237,0.03); }
+        .adm-tab:not(:disabled):hover { background: rgba(var(--primary-rgb), 0.05); }
+        .adm-tab:disabled { cursor: not-allowed; opacity: 0.55; }
         .adm-tab .step-num {
           width: 32px; height: 32px;
           border-radius: 50%;
@@ -381,17 +516,17 @@ const AdmissionForm = ({ onClose }) => {
           text-transform: uppercase;
         }
         .adm-tab.active .step-num {
-          background: var(--purple);
+          background: var(--primary);
           color: #fff;
-          box-shadow: 0 3px 10px rgba(124,58,237,0.4);
+          box-shadow: 0 3px 10px rgba(var(--primary-rgb), 0.4);
         }
-        .adm-tab.active .step-lbl { color: var(--purple); }
+        .adm-tab.active .step-lbl { color: var(--primary); }
         .adm-tab.active::after {
           content: '';
           position: absolute;
           bottom: 0; left: 0; right: 0;
           height: 2px;
-          background: var(--purple);
+          background: var(--primary);
           border-radius: 2px 2px 0 0;
         }
         .adm-tab.done .step-num {
@@ -438,7 +573,7 @@ const AdmissionForm = ({ onClose }) => {
 
       {/* ── Gradient Header ── */}
       <div style={{
-        background: "linear-gradient(135deg, var(--purple) 0%, var(--purple-hover) 100%)",
+        background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
         padding: "20px 28px 18px",
         position: "relative",
         overflow: "hidden",
@@ -495,26 +630,30 @@ const AdmissionForm = ({ onClose }) => {
           <React.Fragment key={tab.key}>
             <button
               type="button"
-              className={`adm-tab ${activeTab === tab.key ? "active" : currentIndex > i ? "done" : "idle"}`}
-              onClick={() => {
-                // Only allow going back or to already-completed steps
-                if (i < currentIndex) setActiveTab(tab.key);
-              }}
+              className={`adm-tab ${activeTab === tab.key ? "active" : furthestIndex > i ? "done" : "idle"}`}
+              // Steps already reached can be revisited in either direction. A step not reached yet
+              // is disabled rather than silently unresponsive, and says why on hover.
+              disabled={i > furthestIndex}
+              title={i > furthestIndex ? "Fill in the earlier steps first" : `Go to ${tab.label}`}
+              onClick={() => i <= furthestIndex && setActiveTab(tab.key)}
             >
               <div className="step-num">
-                {currentIndex > i ? <CheckOutlined style={{ fontSize: 12 }} /> : tab.step}
+                {furthestIndex > i ? <CheckOutlined style={{ fontSize: 12 }} /> : tab.step}
               </div>
               <span className="step-lbl">{tab.label}</span>
             </button>
             {i < TABS.length - 1 && (
-              <div className={`adm-connector ${currentIndex > i ? "done" : ""}`} />
+              <div className={`adm-connector ${furthestIndex > i ? "done" : ""}`} />
             )}
           </React.Fragment>
         ))}
       </div>
 
-      {/* ── Form Body ── */}
-      <div style={{ padding: "24px 28px 8px", maxHeight: "55vh", overflowY: "auto" }}>
+      {/* ── Form Body ──
+          Inside a dialog the body scrolls on its own so the footer stays reachable. Opened as a
+          page (no onClose), that cap squeezed the fields into a short scrolling strip with the
+          rest of the screen left empty, so the page scrolls normally instead. */}
+      <div style={{ padding: "24px 28px 8px", ...(onClose ? { maxHeight: "55vh", overflowY: "auto" } : {}) }}>
         <Form
           className="adm-form"
           layout="vertical"
@@ -742,14 +881,30 @@ const AdmissionForm = ({ onClose }) => {
           {/* STEP 5 — Documents */}
           {activeTab === "documents" && (
             <>
+              {/* What is about to be saved, on the last screen before Submit — the earlier steps
+                  are four screens back by now, and a wrong class or section is otherwise only
+                  noticed once the student has been admitted. */}
+              <SectionHeading>Check before you submit</SectionHeading>
+              <ReviewSummary
+                values={form.getFieldsValue(true)}
+                className={schoolClasses.find((c) => c._id === form.getFieldValue("schoolClassId"))?.name}
+                sectionName={sections.find((s) => s._id === form.getFieldValue("sectionId"))?.name}
+                rollNumber={nextRollNumber}
+                documentCount={documentList.filter((d) => d.file).length}
+                onEdit={(key) => setActiveTab(key)}
+              />
+
               <SectionHeading>Upload Documents</SectionHeading>
               <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>
-                Each document is uploaded separately below · JPG, PNG, PDF, DOC, XLS · max {MAX_DOCUMENT_SIZE_KB}KB each
+                JPG, PNG, PDF, DOC or XLS · up to {MAX_DOCUMENT_SIZE_MB} MB each · photos are compressed automatically
               </div>
 
+              {/* At phone width the two columns squeeze the label box down to a few characters;
+                  scrolling the table sideways keeps both readable. */}
               <Table
                 size="small"
                 pagination={false}
+                scroll={{ x: 420 }}
                 rowKey="uid"
                 dataSource={documentList}
                 columns={[
@@ -777,8 +932,10 @@ const AdmissionForm = ({ onClose }) => {
                         {name ? (
                           <span style={{ fontSize: 12, color: "var(--text)" }}>
                             {name}{" "}
-                            <span style={{ color: "var(--text-muted)" }}>({(row.size / 1024).toFixed(1)} KB)</span>{" "}
-                            <span style={{ color: "var(--purple)", cursor: "pointer", fontWeight: 600 }}>Change</span>
+                            <span style={{ color: "var(--text-muted)" }}>
+                              ({row.size >= 1024 * 1024 ? `${(row.size / (1024 * 1024)).toFixed(1)} MB` : `${(row.size / 1024).toFixed(0)} KB`})
+                            </span>{" "}
+                            <span style={{ color: "var(--primary)", cursor: "pointer", fontWeight: 600 }}>Change</span>
                           </span>
                         ) : (
                           <Button size="small" icon={<UploadOutlined />}>Choose File</Button>
@@ -792,6 +949,7 @@ const AdmissionForm = ({ onClose }) => {
                     width: 40,
                     render: (uid) => (
                       <DeleteOutlined
+                        title="Remove this document row"
                         style={{ color: "var(--danger)", cursor: "pointer" }}
                         onClick={() => handleDocumentRowRemove(uid)}
                       />
@@ -851,7 +1009,7 @@ const AdmissionForm = ({ onClose }) => {
                 width:        i === currentIndex ? 24 : 7,
                 height:       7,
                 borderRadius: 4,
-                background:   i === currentIndex ? "var(--purple)"
+                background:   i === currentIndex ? "var(--primary)"
                             : i < currentIndex  ? "var(--success)"
                             : "var(--border)",
                 transition: "all 0.25s",
@@ -868,10 +1026,10 @@ const AdmissionForm = ({ onClose }) => {
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "0 22px", height: 38, borderRadius: 8,
-              background: "linear-gradient(135deg, var(--purple) 0%, var(--purple-hover) 100%)",
+              background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
               color: "#fff", border: "none",
               fontSize: 13, fontWeight: 600, cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(124,58,237,0.3)",
+              boxShadow: "0 4px 12px rgba(var(--primary-rgb), 0.3)",
             }}
           >
             Next <RightOutlined style={{ fontSize: 11 }} />

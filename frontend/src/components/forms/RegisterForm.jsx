@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Form, Input, Select, Upload, Checkbox, Steps, DatePicker, InputNumber, message } from "antd";
 import { fetchSchools } from "../../features/schoolSlice";
 import { fetchRoles } from "../../features/roleSlice";
@@ -8,44 +9,55 @@ import { createEmployee, resetEmployeeState } from "../../features/employeeSlice
 import { savePayrollStructure } from "../../features/payrollSlice";
 import { Camera, CheckCircle, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
+import PasswordRequirements from "./PasswordRequirements";
+import { passwordRule, isStrongPassword } from "../../utils/passwordPolicy";
 
 const EXCLUDED_ROLES_FOR_SCHOOL_ADMIN = ["super admin", "school admin", "student", "parent"];
 const MAX_AVATAR_SIZE_BYTES = 1024 * 1024;
 
 /* ─── shared CSS injected once ─── */
 const FORM_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
   .reg-form .ant-form-item-label > label {
     font-size: 11px !important; font-weight: 700 !important; color: var(--text-muted) !important;
     text-transform: uppercase !important; letter-spacing: 0.07em !important; height: auto !important;
   }
   .reg-form .ant-input, .reg-form .ant-input-affix-wrapper,
   .reg-form .ant-input-number, .reg-form .ant-picker {
-    border-radius: 10px !important; border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important;
-    font-size: 12px !important; height: 30px !important;
-    background: var(--surface-soft) !important; color: var(--text) !important; width: 100% !important;
+    border-radius: 10px !important; border: 1px solid var(--border) !important;
+    font-size: 13px !important; height: 38px !important;
+    background: var(--surface) !important; color: var(--text) !important; width: 100% !important;
   }
   .reg-form .ant-input-affix-wrapper { padding: 0 12px !important; }
-  .reg-form .ant-input-affix-wrapper input { height: 30px !important; background: transparent !important; }
+  .reg-form .ant-input-affix-wrapper > .ant-input {
+    height: 36px !important; background: transparent !important; width: auto !important;
+    flex: 1 1 auto !important; border: none !important; box-shadow: none !important; border-radius: 0 !important;
+  }
+  .reg-form .ant-input-affix-wrapper .ant-input-suffix { margin-left: 8px; color: var(--text-muted); }
   .reg-form .ant-input:focus, .reg-form .ant-input-affix-wrapper-focused,
   .reg-form .ant-input-number-focused, .reg-form .ant-picker-focused {
-    border-color: var(--purple) !important; box-shadow: 0 0 0 3px rgba(var(--purple-rgb), 0.1) !important;
+    border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12) !important;
   }
   .reg-form .ant-select .ant-select-selector {
-    border-radius: 10px !important; border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important;
-    height: 30px !important; background: var(--surface-soft) !important;
-    align-items: center !important; font-size: 12px !important;
+    border-radius: 10px !important; border: 1px solid var(--border) !important;
+    height: 38px !important; background: var(--surface) !important;
+    align-items: center !important; font-size: 13px !important;
   }
   .reg-form .ant-select-focused .ant-select-selector {
-    border-color: var(--purple) !important; box-shadow: 0 0 0 3px rgba(var(--purple-rgb), 0.1) !important;
+    border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12) !important;
   }
   .reg-form .ant-checkbox-checked .ant-checkbox-inner {
-    background: var(--purple) !important; border-color: var(--purple) !important;
+    background: var(--primary) !important; border-color: var(--primary) !important;
   }
   .reg-form .ant-form-item-explain-error { font-size: 11px !important; margin-top: 3px !important; }
-  .reg-form .ant-form-item { margin-bottom: 14px !important; }
+  .reg-form .ant-form-item { margin-bottom: 16px !important; }
   .reg-form .ant-input-number-handler-wrap { display: none; }
+
+  /* Section divider inside a step, e.g. "Employee Profile" / "Payroll Setup". */
+  .reg-section {
+    font-size: 11px; font-weight: 700; color: var(--primary);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin: 4px 0 14px; padding-bottom: 7px; border-bottom: 1px solid var(--border);
+  }
 
   .reg-alert {
     padding: 10px 14px; border-radius: 10px; margin-bottom: 16px;
@@ -55,47 +67,50 @@ const FORM_CSS = `
   .reg-alert.error   { background: var(--danger-light); color: var(--danger-hover); border: 1px solid rgba(var(--danger-rgb), 0.3); }
 
   .reg-btn {
-    height: 30px; border-radius: 10px; font-size: 12px; font-weight: 600;
-    cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.01em;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
+    height: 40px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
   }
-  .reg-btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--purple-hover) 100%);
-    color: #fff; box-shadow: 0 4px 14px rgba(var(--purple-rgb),0.35); padding: 0 20px;
+  .reg-btn-primary { background: var(--primary); color: #fff; padding: 0 20px; }
+  .reg-btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+  .reg-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+  .reg-btn-ghost {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border) !important; padding: 0 16px;
   }
-  .reg-btn-primary:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(var(--purple-rgb),0.45); transform: translateY(-1px);
-  }
-  .reg-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-  .reg-btn-ghost { background: transparent; color: var(--purple); border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important; padding: 0 16px; }
-  .reg-btn-ghost:hover { border-color: var(--purple) !important; }
+  .reg-btn-ghost:hover:not(:disabled) { border-color: var(--primary) !important; color: var(--primary); }
+  .reg-btn-ghost:disabled { opacity: 0.55; cursor: not-allowed; }
 
   .upload-zone {
     display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-    border: 1.5px dashed rgba(var(--purple-rgb), 0.25); border-radius: 10px; background: var(--surface-soft);
+    border: 1px dashed var(--border); border-radius: 10px; background: var(--surface-soft);
     cursor: pointer; transition: border-color 0.2s, background 0.2s;
   }
-  .upload-zone:hover { border-color: var(--purple); background: rgba(var(--purple-rgb), 0.12); }
+  .upload-zone:hover { border-color: var(--primary); background: var(--primary-light); }
 
-  .step-status-row {
-    display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
+  /* The whole row toggles the checkbox, not just the 16px box on the right. */
+  .reg-toggle-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 14px; background: var(--surface-soft); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 20px; cursor: pointer;
   }
+  .reg-toggle-row:hover { border-color: var(--primary); }
+
+  .step-status-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
   .step-status-item {
     display: flex; align-items: center; gap: 10px; padding: 8px 12px;
     border-radius: 10px; font-size: 12px; font-weight: 500;
   }
   .step-status-item.done    { background: var(--success-light); color: var(--success-hover); }
-  .step-status-item.loading { background: rgba(var(--purple-rgb), 0.08); color: var(--purple); }
+  .step-status-item.loading { background: var(--primary-light); color: var(--primary); }
   .step-status-item.error   { background: var(--danger-light); color: var(--danger-hover); }
-  .step-status-item.idle    { background: var(--background); color: var(--text-muted); }
+  .step-status-item.idle    { background: var(--surface-soft); color: var(--text-muted); }
 
-  .reg-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 16px;
-  }
+  .reg-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
   @media (max-width: 600px) {
     .reg-grid-2 { grid-template-columns: 1fr; }
+    .reg-actions { flex-direction: column-reverse; }
+    .reg-actions .reg-btn { width: 100%; }
   }
 
   .spin { animation: spin 1s linear infinite; }
@@ -117,11 +132,15 @@ const StatusIcon = ({ status }) => {
    (Driver/Transporter) rather than a School Admin. */
 const RegisterForm = ({ onClose, allowedRoleNames }) => {
   const [form] = Form.useForm();
+  // The rules are shown while the box is focused, and stay up while what is typed still fails.
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const passwordValue = Form.useWatch("password", form) || "";
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { roles }   = useSelector((s) => s.role);
   const { schools } = useSelector((s) => s.school);
-  const { Loading, error, user } = useSelector((s) => s.auth);
+  const { user } = useSelector((s) => s.auth);
 
   const currentUserRole  = user?.role?.name?.toLowerCase();
   const currentSchoolId  = user?.school?._id;
@@ -130,6 +149,9 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [avatarName,  setAvatarName]  = useState("");
+  const [avatarPreview, setAvatarPreview] = useState("");
+  // What was just created, kept on screen on the standalone page (a dialog closes instead).
+  const [created, setCreated] = useState(null);
   const [status, setStatus] = useState({ user: "idle", employee: "idle", payroll: "idle" });
   const [doneMsg, setDoneMsg] = useState("");
   const [errMsg,  setErrMsg]  = useState("");
@@ -159,8 +181,13 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
   const roleOptions   = useMemo(() => filteredRoles.map((r) => ({ value: r._id, label: r.name })), [filteredRoles]);
 
   const handleAvatarUpload = useCallback((file) => {
-    if (file.size > MAX_AVATAR_SIZE_BYTES) return Upload.LIST_IGNORE;
+    // Was silently ignored before, so an oversized photo looked like a click that did nothing.
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      message.error(`"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)} MB — the limit is 1 MB.`);
+      return Upload.LIST_IGNORE;
+    }
     setAvatarName(file.name);
+    setAvatarPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     return false;
   }, []);
 
@@ -180,11 +207,6 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
 
   /* ── Final submit: user → employee → payroll ── */
   const onFinish = useCallback(async (values) => {
-    /* validate required employee fields before anything hits the server */
-    if (!values.phone || !values.gender || !values.joinDate) {
-      message.error("Phone, Gender and Join Date are required");
-      return;
-    }
     setErrMsg("");
     setDoneMsg("");
     const resolvedSchoolId = isSchoolAdmin ? currentSchoolId : values.schoolId;
@@ -271,24 +293,105 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
     }
 
     setStatus({ user: "done", employee: "done", payroll: "done" });
-    setDoneMsg("User, employee profile, and payroll created successfully!");
+    setCreated({
+      name: values.name,
+      email: values.email,
+      role: roleOptions.find((r) => r.value === values.roleId)?.label || "",
+      isActive: values.isActive !== false,
+    });
     form.resetFields();
     setAvatarName("");
+    setAvatarPreview("");
     dispatch(resetState());
     dispatch(resetEmployeeState());
-    setTimeout(() => {
-      setDoneMsg("");
-      setStatus({ user: "idle", employee: "idle", payroll: "idle" });
-      setCurrentStep(0);
-      onClose?.();
-    }, 2000);
-  }, [dispatch, isSchoolAdmin, currentSchoolId, onClose, form]);
+    // In a dialog the caller closes it. On the page there is nowhere to be sent, so the result
+    // stays on screen with the two things anyone does next.
+    if (onClose) {
+      setDoneMsg("User, employee profile, and payroll created successfully!");
+      setTimeout(() => {
+        setDoneMsg("");
+        setStatus({ user: "idle", employee: "idle", payroll: "idle" });
+        setCurrentStep(0);
+        onClose();
+      }, 1500);
+    }
+  }, [dispatch, isSchoolAdmin, currentSchoolId, onClose, form, roleOptions]);
+
+  const startAnother = () => {
+    setCreated(null);
+    setStatus({ user: "idle", employee: "idle", payroll: "idle" });
+    setErrMsg("");
+    setCurrentStep(0);
+  };
+
+  // Defined once and placed in whichever column is free — next to Role, or below School+Role.
+  const avatarField = (
+    <Form.Item
+      label="Profile Avatar" name="avatar"
+      valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}
+    >
+      <Upload beforeUpload={handleAvatarUpload} maxCount={1} showUploadList={false}>
+        <div className="upload-zone">
+          {avatarPreview ? (
+            <img
+              src={avatarPreview}
+              alt=""
+              style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+            />
+          ) : (
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Camera size={18} />
+            </div>
+          )}
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {avatarName || "Click to upload avatar"}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+              {avatarName ? "Click to replace · PNG, JPG · Max 1 MB" : "PNG, JPG · Max 1 MB"}
+            </div>
+          </div>
+        </div>
+      </Upload>
+    </Form.Item>
+  );
 
   const isProcessing = status.user === "loading" || status.employee === "loading" || status.payroll === "loading";
   const allDone = status.user === "done" && status.employee === "done" && status.payroll === "done";
 
+  if (created && !onClose) {
+    return (
+      <div>
+        <style>{FORM_CSS}</style>
+        <div style={{ textAlign: "center", padding: "24px 8px" }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: "50%", margin: "0 auto 14px",
+            background: "var(--success-light)", color: "var(--success-hover)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <CheckCircle size={26} />
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--text)" }}>{created.name} is now on the staff list</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 6 }}>
+            {created.role ? `${created.role} · ` : ""}{created.email}
+            {created.isActive ? " · can sign in now" : " · account is not active yet"}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 10 }}>
+            Employee profile and payroll structure were created too.
+          </div>
+          <div className="reg-actions" style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 22 }}>
+            <button type="button" className="reg-btn reg-btn-ghost" onClick={startAnother}>Create another user</button>
+            <button type="button" className="reg-btn reg-btn-primary" onClick={() => navigate("/dashboard/schooladmin/teacher")}>
+              Go to Teachers &amp; Staff
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}>
+    <div>
       <style>{FORM_CSS}</style>
 
       {/* Steps indicator */}
@@ -296,9 +399,12 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
         current={currentStep}
         size="small"
         style={{ marginBottom: 20 }}
+        // Backwards is always allowed; forwards goes through the same validation as the button,
+        // so step 2 can never be reached with an invalid account.
+        onChange={(step) => { if (isProcessing) return; if (step === 0) setCurrentStep(0); else goToStep2(); }}
         items={[
-          { title: "Account" },
-          { title: "Employee & Payroll" },
+          { title: "Account", description: "Login & role" },
+          { title: "Employee & Payroll", description: "Profile & salary" },
         ]}
       />
 
@@ -361,8 +467,23 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           </div>
 
           <div className="reg-grid-2">
-            <Form.Item label="Password" name="password" rules={[{ required: true, min: 6, message: "Min 6 characters" }]}>
-              <Input.Password placeholder="Min. 6 characters" styles={{border:"none"}} />
+            <Form.Item
+              label="Password"
+              name="password"
+              rules={[{ required: true, message: "Required" }, passwordRule]}
+              // Passed as null when hidden: an always-present extra node would leave a gap under the box.
+              extra={
+                passwordFocused || (!!passwordValue && !isStrongPassword(passwordValue)) ? (
+                  <PasswordRequirements value={passwordValue} />
+                ) : null
+              }
+            >
+              <Input.Password
+                placeholder="Min. 8 characters"
+                styles={{border:"none"}}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+              />
             </Form.Item>
             <Form.Item
               label="Confirm Password" name="confirmPassword"
@@ -382,43 +503,40 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
             </Form.Item>
           </div>
 
-          <div className={isSuperAdmin ? "reg-grid-2" : ""}>
+          <div className="reg-grid-2">
             {isSuperAdmin && (
               <Form.Item label="School" name="schoolId" rules={[{ required: true, message: "Select a school" }]}>
                 <Select placeholder="Select school" options={schoolOptions} />
               </Form.Item>
             )}
-            <Form.Item label="Role" name="roleId" rules={[{ required: true, message: "Select a role" }]}>
-              <Select placeholder="Select role" options={roleOptions} />
+            <Form.Item
+              label="Role"
+              name="roleId"
+              rules={[{ required: true, message: "Select a role" }]}
+              extra={
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  Decides which menu and pages this person sees after signing in.
+                </span>
+              }
+            >
+              <Select placeholder="Select role" options={roleOptions} showSearch optionFilterProp="label" />
             </Form.Item>
+            {!isSuperAdmin && avatarField}
           </div>
 
-          <Form.Item
-            label="Profile Avatar" name="avatar"
-            valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}
-          >
-            <Upload beforeUpload={handleAvatarUpload} maxCount={1} showUploadList={false}>
-              <div className="upload-zone">
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(var(--purple-rgb), 0.12)", color: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Camera size={18} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)" }}>{avatarName || "Click to upload avatar"}</div>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>PNG, JPG · Max 1 MB</div>
-                </div>
-              </div>
-            </Upload>
-          </Form.Item>
+          {isSuperAdmin && avatarField}
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 10, background: "var(--surface-soft)", border: "1.5px solid rgba(var(--purple-rgb), 0.25)", borderRadius: 10, marginBottom: 20 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Activate Account</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>User can log in immediately after registration</div>
-            </div>
+          <label className="reg-toggle-row">
+            <span>
+              <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Activate account</span>
+              <span style={{ display: "block", fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                User can sign in straight away. Untick to create the account but keep it locked.
+              </span>
+            </span>
             <Form.Item name="isActive" valuePropName="checked" noStyle>
               <Checkbox />
             </Form.Item>
-          </div>
+          </label>
 
           <button type="button" className="reg-btn reg-btn-primary" style={{ width: "100%" }} onClick={goToStep2}>
             Next: Employee Details →
@@ -431,9 +549,16 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
         <div style={{ display: currentStep === 1 ? "block" : "none" }}>
 
           {/* Section label */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12, paddingBottom: 6, borderBottom: "1.5px solid rgba(var(--purple-rgb), 0.25)" }}>
-            Employee Profile
+          {/* Who is being created — step 1 is off screen by the time this matters. */}
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>
+            Creating <strong style={{ color: "var(--text)" }}>{form.getFieldValue("name") || "this user"}</strong>
+            {roleOptions.find((r) => r.value === form.getFieldValue("roleId"))?.label ? (
+              <> as <strong style={{ color: "var(--text)" }}>{roleOptions.find((r) => r.value === form.getFieldValue("roleId"))?.label}</strong></>
+            ) : null}
+            . These details build the employee record and the opening salary structure.
           </div>
+
+          <div className="reg-section">Employee Profile</div>
 
           <div className="reg-grid-2">
             <Form.Item label="Phone Number" name="phone" rules={[{ required: true, message: "Required" }, { pattern: /^[0-9]{10,13}$/, message: "Enter valid 10-13 digit number" }]}>
@@ -473,9 +598,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           </div>
 
           {/* Payroll section */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", margin: "8px 0 12px", paddingBottom: 6, borderBottom: "1.5px solid rgba(var(--purple-rgb), 0.25)" }}>
-            Payroll Setup
-          </div>
+          <div className="reg-section" style={{ marginTop: 22 }}>Payroll Setup</div>
 
           <Form.Item label="Basic Salary (₹/month)" name="basicSalary">
             <InputNumber
@@ -492,7 +615,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+          <div className="reg-actions" style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button type="button" className="reg-btn reg-btn-ghost" style={{ flex: 1 }} onClick={() => setCurrentStep(0)} disabled={isProcessing}>
               ← Back
             </button>
