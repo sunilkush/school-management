@@ -56,14 +56,16 @@ export const upload = multer({
   },
 });
 
-// Admission documents specifically: capped much smaller (50 KB) so scanned
-// certificates/IDs stay cheap to store — separate instance so it doesn't
-// shrink the 5 MB limit other upload flows (homework, study material, etc.) rely on.
+// Admission documents. Same 2 MB as the public portal below: this was 50 KB, on the reasoning
+// that office staff can re-compress a scan first — but a birth certificate photographed on a
+// phone is 2–5 MB, so in practice every upload failed and the documents step went unused. The
+// form now shrinks images before sending, and 2 MB is what is left for PDFs and scans. Still
+// well below the 5 MB general cap.
 export const uploadAdmissionDocs = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 50 * 1024,  // 50 KB per file
+    fileSize: 2 * 1024 * 1024,  // 2 MB per file
     files: 5,
   },
 });

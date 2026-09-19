@@ -214,6 +214,9 @@ export const sidebarMenu = {
   /* ================= SCHOOL ADMIN ================= */
   "school admin": [
     { title: "Overview", path: "schooladmin", icon: LayoutDashboard },
+    // Second on purpose: setting the school up (classes, sections, boards, academic year) is what
+    // a new School Admin does first, and it used to sit near the bottom of a long menu.
+    { title: "School Setup", path: "schooladmin/school-setup", icon: School },
     {
       title: "Users",
       icon: Users,
@@ -239,7 +242,7 @@ export const sidebarMenu = {
       title: "Attendance",
       icon: UserCheck,
       subMenu: [
-        { title: "Dashboard",          path: "schooladmin/attendance/dashboard"  },
+        { title: "Attendance Dashboard",          path: "schooladmin/attendance/dashboard"  },
         { title: "Student Attendance", path: "schooladmin/attendance/students"   },
         { title: "Teacher Attendance", path: "schooladmin/attendance/teachers"   },
         { title: "Staff Attendance",   path: "schooladmin/attendance/staff"      },
@@ -373,7 +376,6 @@ export const sidebarMenu = {
     },
     { title: "Task Management", path: "schooladmin/tasks", icon: ListChecks },
     { title: "Reports", path: "schooladmin/reports", icon: FileBarChart2 },
-    { title: "School Setup", path: "schooladmin/school-setup", icon: School },
     {
       title: "My Subscription",
       icon: CreditCard,
