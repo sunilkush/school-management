@@ -16,7 +16,7 @@ import {
 } from "../../../features/complianceSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import StatCardsRow from "../../../components/layout/StatCardsRow";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const SOCIAL_CATEGORIES = ["General", "OBC", "SC", "ST", "Other"];
 const MINORITY_GROUPS = ["None", "Muslim", "Christian", "Sikh", "Buddhist", "Parsi", "Jain"];
@@ -169,8 +169,7 @@ const CompliancePage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("comp-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Government Compliance"
@@ -222,7 +221,7 @@ const CompliancePage = () => {
                   />
                 )}
 
-                <div style={sectionPanel}>
+                <div className="section-panel">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 12 }}>
                     <div style={{ fontWeight: 700 }}>Student records ready to file</div>
                     <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
@@ -232,20 +231,20 @@ const CompliancePage = () => {
                   <Progress percent={readyPercent} status={readyPercent === 100 ? "success" : "active"} />
                 </div>
 
-                <div style={sectionPanel}>
+                <div className="section-panel">
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>What is missing</div>
                   <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 0 }}>
                     Grouped by field on purpose — &ldquo;212 children have no mother tongue&rdquo; is an
                     afternoon&rsquo;s work, while 212 separate rows is a job nobody starts.
                   </p>
                   {!readiness?.missingByField?.length ? (
-                    <div style={emptyState}>
+                    <div className="empty-state">
                       <Empty description="Nothing missing — every record is complete" />
                     </div>
                   ) : (
-                    <div style={tableContainer}>
+                    <div className="table-container">
                       <Table
-                        className="comp-table" rowKey="key" size="middle" pagination={false}
+                        className="comp-table data-table" rowKey="key" size="middle" pagination={false}
                         dataSource={readiness.missingByField}
                         columns={[
                           { title: "Field", dataIndex: "label" },
@@ -257,7 +256,7 @@ const CompliancePage = () => {
                   )}
                 </div>
 
-                <div style={sectionPanel}>
+                <div className="section-panel">
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>APAAR</div>
                   <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 0 }}>
                     Counted separately from the list above: an APAAR ID cannot be created without a
@@ -278,7 +277,7 @@ const CompliancePage = () => {
             label: "Student records",
             children: (
               <>
-                <div style={{ ...sectionPanel, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <div className="section-panel" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                   <Input.Search
                     allowClear placeholder="Search by name, registration no. or PEN" style={{ maxWidth: 320 }}
                     value={search} onChange={(e) => setSearch(e.target.value)}
@@ -305,10 +304,10 @@ const CompliancePage = () => {
                   </Tooltip>
                 </div>
 
-                <div style={sectionPanel}>
-                  <div style={tableContainer}>
+                <div className="section-panel">
+                  <div className="table-container">
                     <Table
-                      className="comp-table" rowKey="studentId" size="middle"
+                      className="comp-table data-table" rowKey="studentId" size="middle"
                       loading={studentsLoading} columns={studentColumns} dataSource={students}
                       pagination={{ pageSize: 25, showSizeChanger: false }}
                     />
@@ -323,7 +322,7 @@ const CompliancePage = () => {
             children: rteLoading && !rte ? (
               <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
             ) : (
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
                   <div>
                     <div style={{ fontWeight: 700 }}>Reservation at {rte?.quotaPercent ?? 25}%</div>
@@ -336,9 +335,9 @@ const CompliancePage = () => {
                   Shown per class rather than as one number: a school can look compliant overall
                   while having admitted nobody in the class where it was actually required.
                 </p>
-                <div style={tableContainer}>
+                <div className="table-container">
                   <Table
-                    className="comp-table" rowKey="className" size="middle" pagination={false}
+                    className="comp-table data-table" rowKey="className" size="middle" pagination={false}
                     dataSource={rte?.classes || []}
                     columns={[
                       { title: "Class", dataIndex: "className" },
@@ -363,7 +362,7 @@ const CompliancePage = () => {
             key: "school",
             label: "School details",
             children: (
-              <div style={{ ...sectionPanel, maxWidth: 620 }}>
+              <div className="section-panel" style={{ maxWidth: 620 }}>
                 {schoolLoading && !school ? (
                   <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
                 ) : (

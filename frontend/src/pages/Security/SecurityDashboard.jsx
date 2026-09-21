@@ -10,9 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchGateEntries, fetchGateStats } from "../../features/gateEntrySlice";
 import { fetchEmergencyAlerts } from "../../features/emergencyAlertSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  pageWrapper, statGrid, sectionPanel, iconWell, tableHeadCss,
-} from "../../styles/pageStyles";
+import { statGrid, iconWell } from "../../styles/pageStyles";
 import { severityColor } from "./securityShared";
 import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
@@ -119,8 +117,7 @@ const SecurityDashboard = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("sec-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Security Dashboard"
@@ -159,10 +156,7 @@ const SecurityDashboard = () => {
       </div>
 
       {/* ── Quick Actions ──────────────────────────────────────────── */}
-      <div style={{
-        ...sectionPanel, marginBottom: 20, padding: "14px 18px",
-        display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-      }}>
+      <div className="section-panel" style={{ marginBottom: 20, padding: "14px 18px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginRight: 6, flexShrink: 0 }}>
           <div style={iconWell("var(--purple)", 28)}><ThunderboltOutlined style={{ fontSize: 12 }} /></div>
           <Text style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
@@ -179,7 +173,7 @@ const SecurityDashboard = () => {
       <Row gutter={[16, 16]}>
         {/* ── Recent Gate Activity ────────────────────────────────── */}
         <Col xs={24} lg={14}>
-          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+          <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={iconWell("var(--primary)", 32)}><AuditOutlined style={{ fontSize: 14 }} /></div>
@@ -195,7 +189,7 @@ const SecurityDashboard = () => {
               </Button>
             </div>
             <Table
-              className="sec-tbl"
+              className="sec-tbl data-table"
               rowKey="_id"
               columns={entryCols}
               dataSource={recentEntries}
@@ -209,7 +203,7 @@ const SecurityDashboard = () => {
 
         {/* ── Active Alerts ────────────────────────────────────────── */}
         <Col xs={24} lg={10}>
-          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+          <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={iconWell("var(--danger-hover)", 32)}><AlertOutlined style={{ fontSize: 14 }} /></div>

@@ -18,7 +18,7 @@ import {
   getStudentSummary,
 } from "../../../features/disciplineSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 
 const { Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -222,7 +222,6 @@ export default function DisciplinePage() {
 
   return (
     <>
-      <style>{tableHeadCss("discipline-tbl")}</style>
 
       <PageHeader
         title="Discipline"
@@ -230,7 +229,7 @@ export default function DisciplinePage() {
         icon={<SafetyOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!canFilter && (
           <Alert
             type="warning" showIcon
@@ -240,7 +239,7 @@ export default function DisciplinePage() {
         )}
 
         {/* ── Student picker ─────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
             <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
@@ -294,7 +293,7 @@ export default function DisciplinePage() {
         )}
 
         {/* ── Incident Log ─────────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" justify="space-between" wrap="wrap" gap={10} style={{ marginBottom: 14 }}>
             <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
               {showAllStudents || !studentId ? "All Discipline Incidents" : "Incident Log"}
@@ -343,7 +342,7 @@ export default function DisciplinePage() {
           </Row>
 
           <Table
-            className="discipline-tbl"
+            className="discipline-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={incidents}

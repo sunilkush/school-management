@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
-import { avatarStyle, iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles";
+import { avatarStyle, iconWell } from "../../../styles/pageStyles";
 
 /**
  * Platform overview — the Super Admin's home: what needs doing first, then how the platform stands.
@@ -76,7 +76,6 @@ const CSS = `
     .pov-attn { flex-wrap: wrap; }
     .pov-attn .pov-attn-action { width: 100%; }
   }
-  ${tableHeadCss("pov-table")}
 `;
 
 /* ─────────────────────────── pieces ─────────────────────────── */
@@ -87,11 +86,7 @@ const Tile = ({ label, value, note, icon, color, onClick, tone }) => {
       type={onClick ? "button" : undefined}
       onClick={onClick}
       className={onClick ? "pov-lift pov-tile" : undefined}
-      style={{
-        ...sectionPanel, marginBottom: 0, padding: "18px 20px", textAlign: "left", width: "100%",
-        cursor: onClick ? "pointer" : "default", font: "inherit", color: "inherit",
-        borderTop: `3px solid ${color}`, display: "flex", flexDirection: "column", gap: 6,
-      }}
+      className="section-panel" style={{ marginBottom: 0, padding: "18px 20px", textAlign: "left", width: "100%", cursor: onClick ? "pointer" : "default", font: "inherit", color: "inherit", borderTop: `3px solid ${color}`, display: "flex", flexDirection: "column", gap: 6 }}
     >
       <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={iconWell(color, 34)}>{icon}</span>
@@ -105,7 +100,7 @@ const Tile = ({ label, value, note, icon, color, onClick, tone }) => {
 };
 
 const Panel = ({ icon, color = "var(--primary)", title, extra, children, style }) => (
-  <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", flexDirection: "column", ...style }}>
+  <div className="section-panel" style={{ marginBottom: 0, display: "flex", flexDirection: "column", ...style }}>
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
       {icon && <span style={iconWell(color, 32)}>{icon}</span>}
       {/* The title keeps its line; badges and links wrap under it on a narrow screen. */}
@@ -333,7 +328,7 @@ const SuperAdminDashboard = () => {
   const twoColumns = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(360px, 100%), 1fr))", gap: 16, marginBottom: 16 };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <style>{CSS}</style>
       <PageHeader
         title="Platform overview"
@@ -357,9 +352,9 @@ const SuperAdminDashboard = () => {
       {!data && loading ? (
         <div style={{ marginTop: 16 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 16, marginBottom: 16 }}>
-            {[0, 1, 2, 3].map((i) => <div key={i} style={{ ...sectionPanel, marginBottom: 0 }}><Skeleton active paragraph={{ rows: 1 }} /></div>)}
+            {[0, 1, 2, 3].map((i) => <div key={i} className="section-panel is-last"><Skeleton active paragraph={{ rows: 1 }} /></div>)}
           </div>
-          <div style={sectionPanel}><Skeleton active paragraph={{ rows: 6 }} /></div>
+          <div className="section-panel"><Skeleton active paragraph={{ rows: 6 }} /></div>
         </div>
       ) : data && (
         <div style={{ marginTop: 16 }}>
@@ -478,7 +473,7 @@ const SuperAdminDashboard = () => {
             title={<span>Schools <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-muted)" }}>{schoolRows.length}</span></span>}
             extra={<LinkButton onClick={() => navigate(SCHOOLS)}>Manage schools</LinkButton>}
           >
-            <div className="pov-table" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid var(--border-muted)" }}>
+            <div className="pov-table data-table" style={{ borderRadius: 14, overflow: "hidden", border: "1px solid var(--border-muted)" }}>
               <Table
                 rowKey="_id"
                 size="middle"

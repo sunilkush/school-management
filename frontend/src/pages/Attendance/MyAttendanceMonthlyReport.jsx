@@ -11,7 +11,6 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyAttendance } from "../../features/attendanceSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper } from "../../styles/pageStyles";
 
 dayjs.extend(isSameOrBefore);
 
@@ -195,7 +194,7 @@ const MyAttendanceMonthlyReport = () => {
   const isLoading = loading || reportLoading;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Monthly Attendance Report"
         subtitle="View your attendance history in calendar format"

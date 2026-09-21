@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllAcademicYears, fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import { fetchSchoolReports } from "../../../features/reportSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, statGrid } from "../../../styles/pageStyles.js";
+import { iconWell, statGrid } from "../../../styles/pageStyles.js";
 import { useTheme } from "../../../context/ThemeContext";
 import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
@@ -62,21 +62,21 @@ const LoadingSkeleton = () => (
   <div>
     <div style={{ ...statGrid(160), marginBottom: 20 }}>
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} style={{ ...sectionPanel, padding: "18px 20px" }}>
+        <div key={i} className="section-panel" style={{ padding: "18px 20px" }}>
           <Skeleton active avatar paragraph={{ rows: 1 }} />
         </div>
       ))}
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 16 }}>
       {[1, 2].map((i) => (
-        <div key={i} style={sectionPanel}>
+        <div key={i} className="section-panel">
           <Skeleton active paragraph={{ rows: 6 }} />
         </div>
       ))}
     </div>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
       {[1, 2].map((i) => (
-        <div key={i} style={sectionPanel}>
+        <div key={i} className="section-panel">
           <Skeleton active paragraph={{ rows: 6 }} />
         </div>
       ))}
@@ -172,7 +172,7 @@ const SchoolAdminReport = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* ── Access / error alerts ── */}
         {accessError && (
           <Alert type="warning" message={accessError} showIcon style={{ borderRadius: 12, marginBottom: 20 }} />
@@ -186,7 +186,7 @@ const SchoolAdminReport = () => {
 
         {/* ── No data ── */}
         {!accessError && !loading && !error && !schoolReports?.academicYear && (
-          <div style={{ ...sectionPanel, textAlign: "center", padding: "56px 24px" }}>
+          <div className="section-panel" style={{ textAlign: "center", padding: "56px 24px" }}>
             <Empty description="No report data available for the selected year" />
           </div>
         )}
@@ -219,7 +219,7 @@ const SchoolAdminReport = () => {
             {/* ── Distribution Charts ── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16, marginBottom: 16 }}>
               {/* Role Distribution — Donut */}
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <SectionHd icon={<PieChartOutlined />} title="Role Distribution" color="var(--purple)"
                   extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{roleWise.length} roles</Text>}
                 />
@@ -242,7 +242,7 @@ const SchoolAdminReport = () => {
               </div>
 
               {/* Gender Distribution — Donut */}
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <SectionHd icon={<PieChartOutlined />} title="Gender Distribution" color="var(--primary)"
                   extra={
                     <Flex gap={6}>
@@ -280,7 +280,7 @@ const SchoolAdminReport = () => {
             {/* ── Enrollment Charts ── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
               {/* Class-wise — Horizontal Bar */}
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <SectionHd icon={<BarChartOutlined />} title="Class-wise Enrollment" color="var(--success)"
                   extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{classWise.length} classes · {classWise.reduce((s, c) => s + c.count, 0)} students</Text>}
                 />
@@ -311,7 +311,7 @@ const SchoolAdminReport = () => {
               </div>
 
               {/* Section-wise — Horizontal Bar */}
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <SectionHd icon={<BarChartOutlined />} title="Section-wise Enrollment" color="var(--warning)"
                   extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{sectionWise.length} sections · {sectionWise.reduce((s, c) => s + c.count, 0)} students</Text>}
                 />

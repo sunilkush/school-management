@@ -14,7 +14,7 @@ import {
 } from "../../features/hrSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import StatCardsRow from "../../components/layout/StatCardsRow";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { TextArea } = Input;
 
@@ -240,8 +240,7 @@ const RecruitmentPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("hr-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Recruitment"
@@ -267,26 +266,26 @@ const RecruitmentPage = () => {
         ]}
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ fontWeight: 700, marginBottom: 12 }}>Vacancies</div>
         {postingsLoading && !postings?.length ? (
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : !postings?.length ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <Empty description="No vacancies yet" />
             <Button type="primary" icon={<PlusOutlined />} style={{ marginTop: 12 }} onClick={() => openPosting()}>
               Create the first one
             </Button>
           </div>
         ) : (
-          <div style={tableContainer}>
-            <Table className="hr-table" rowKey="_id" size="middle" pagination={false}
+          <div className="table-container">
+            <Table className="hr-table data-table" rowKey="_id" size="middle" pagination={false}
                    columns={postingColumns} dataSource={postings} />
           </div>
         )}
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
           <div style={{ fontWeight: 700 }}>Candidates</div>
           <Select
@@ -294,9 +293,9 @@ const RecruitmentPage = () => {
             value={postingFilter} onChange={setPostingFilter} options={postingOptions}
           />
         </div>
-        <div style={tableContainer}>
+        <div className="table-container">
           <Table
-            className="hr-table" rowKey="_id" size="middle" loading={applicationsLoading}
+            className="hr-table data-table" rowKey="_id" size="middle" loading={applicationsLoading}
             columns={applicationColumns} dataSource={applications}
             pagination={{ pageSize: 20, showSizeChanger: false }}
             locale={{ emptyText: "Nobody has applied yet" }}
@@ -419,7 +418,7 @@ const RecruitmentPage = () => {
       >
         {openCandidate && (
           <>
-            <div style={{ ...sectionPanel, marginBottom: 16 }}>
+            <div className="section-panel" style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.8 }}>
                 <div>{openCandidate.email}{openCandidate.phone ? ` · ${openCandidate.phone}` : ""}</div>
                 {openCandidate.qualification && <div>{openCandidate.qualification}</div>}

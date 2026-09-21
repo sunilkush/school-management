@@ -13,10 +13,7 @@ import {
   fetchSchoolEvents, updateSchoolEvent,
 } from "../../../services/schoolEventApi";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, pageCard, toolbarRow, tableHeadCss,
-  statCard, statLabel, statValue, statGrid, pill, iconWell,
-} from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, pill, iconWell } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 
@@ -228,7 +225,6 @@ const Events = () => {
 
   return (
     <>
-      <style>{tableHeadCss("events-table")}</style>
 
       <PageHeader
         title="School Events"
@@ -244,7 +240,7 @@ const Events = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <Alert
           type="info"
           showIcon
@@ -265,9 +261,9 @@ const Events = () => {
           ))}
         </div>
 
-        <div style={pageCard}>
+        <div className="page-card">
           <div style={{ padding: "20px 20px 0" }}>
-            <div className="page-toolbar" style={toolbarRow}>
+            <div className="page-toolbar toolbar-row">
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Events
               </span>
@@ -295,7 +291,7 @@ const Events = () => {
             </div>
           </div>
 
-          <div className="events-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
+          <div className="events-table data-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
             <Table
               columns={columns}
               dataSource={events}

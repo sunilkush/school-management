@@ -24,10 +24,7 @@ import {
   fetchTimetableMasterData,
 } from "../../../features/timetableSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell,
-  tableContainer, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -41,7 +38,7 @@ const getTeacherOption = (teacher = {}) => {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -192,16 +189,15 @@ const TeacherTimetable = () => {
         subtitle="Live teacher-wise daily schedule from backend data"
         icon={<ClockCircleOutlined />}
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <div style={statGrid(200)}>
           <StatCard icon={<ClockCircleOutlined />} label="Daily Periods" value={stats.periods} color="var(--primary)" />
           <StatCard icon={<TeamOutlined />} label="Classes Handled" value={stats.classes} color="var(--success)" />
           <StatCard icon={<BookOutlined />} label="Subjects" value={stats.subjects} color="var(--purple)" />
         </div>
 
-        <style>{tableHeadCss("teacher-timetable-tbl")}</style>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Space direction="vertical" size={12} style={{ width: "100%" }}>
             <Alert
               type="info"
@@ -251,7 +247,7 @@ const TeacherTimetable = () => {
                     <TimetableCard key={item._id || index} item={item} index={index} />
                   ))
                 ) : (
-                  <div className="teacher-timetable-tbl" style={tableContainer}>
+                  <div className="teacher-timetable-tbl table-container">
                     <Table
                       rowKey={(record) => record._id}
                       columns={columns}

@@ -8,7 +8,7 @@ import {
 import { createRoom, deleteRoom, fetchRooms, updateRoom } from "../../features/timetableSlice";
 import { schoolIdFromUser } from "./timetableUi";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../styles/pageStyles";
+import { statGrid, iconWell } from "../../styles/pageStyles";
 
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
@@ -147,8 +147,7 @@ export default function RoomManager() {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("room-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Room Manager"
@@ -199,7 +198,7 @@ export default function RoomManager() {
       </div>
 
       {/* Table */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{
           padding: "14px 20px 12px",
           borderBottom: "1px solid " + C.border,
@@ -215,7 +214,7 @@ export default function RoomManager() {
           </span>
         </div>
         <Table
-          className="room-tbl"
+          className="room-tbl data-table"
           loading={loading}
           rowKey="_id"
           dataSource={rooms}

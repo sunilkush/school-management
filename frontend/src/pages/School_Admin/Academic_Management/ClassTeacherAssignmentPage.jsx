@@ -17,10 +17,7 @@ import { fetchSections } from "../../../features/sectionSlice";
 import { fetchAllUser } from "../../../features/authSlice";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill, toolbarRow,
-  tableContainer, tableHeadCss, avatarStyle, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, avatarStyle, modalTitle } from "../../../styles/pageStyles";
 
 // Class names are plain strings like "Class 10", "Nursery", "UKG" — a plain alphabetical sort
 // would put "Class 10" before "Class 2". Pre-primary names get a fixed rank ahead of any numbered
@@ -42,7 +39,7 @@ const compareClassNames = (a, b) => {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -258,7 +255,7 @@ const ClassTeacherAssignmentPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Class Teacher Assignments"
         subtitle={
@@ -289,8 +286,8 @@ const ClassTeacherAssignmentPage = () => {
         <StatCard icon={<Layers size={18} />}        label="Section-Level"       value={stats.sectionLevel}     color="var(--accent-hover)" />
       </div>
 
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <div style={toolbarRow}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
+        <div className="toolbar-row">
           <Input
             allowClear
             value={searchText}
@@ -301,8 +298,7 @@ const ClassTeacherAssignmentPage = () => {
           />
         </div>
 
-        <style>{tableHeadCss("cta-tbl")}</style>
-        <div className="cta-tbl" style={tableContainer}>
+        <div className="cta-tbl table-container">
           <Spin spinning={loading}>
             <Table
               rowKey="_id"

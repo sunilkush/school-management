@@ -13,18 +13,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  statGrid,
-  iconWell,
-  pill,
-  emptyState,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill } from "../../../styles/pageStyles";
 import { getRoleName, getRolePath } from "../../../utils/roles";
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -42,15 +35,7 @@ const ClassCard = ({ cls, onView, onAttendance }) => {
 
   return (
     <div
-      style={{
-        ...sectionPanel,
-        marginBottom: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: 14,
-        height: "100%",
-        transition: "box-shadow 0.2s ease, transform 0.2s ease",
-      }}
+      className="section-panel" style={{ marginBottom: 0, display: "flex", flexDirection: "column", gap: 14, height: "100%", transition: "box-shadow 0.2s ease, transform 0.2s ease" }}
       onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 18px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
     >
@@ -202,7 +187,7 @@ const AssignedClasses = () => {
     );
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Assigned Classes"
         subtitle="Manage your classes, subjects & students easily"
@@ -229,7 +214,7 @@ const AssignedClasses = () => {
       {/* ── Cards ── */}
       <Spin spinning={loading}>
         {!loading && filteredClasses.length === 0 ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <Empty
               description={
                 searchText

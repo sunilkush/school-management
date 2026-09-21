@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { fetchAccountantDashboard } from "../../../features/financeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../../../styles/pageStyles";
+import { iconWell, statGrid } from "../../../styles/pageStyles";
 import MyAttendanceSection from "../../../components/attendance/MyAttendanceSection";
 
 const { Text } = Typography;
@@ -145,20 +145,20 @@ const TxBadge = ({ type }) => {
 
 /* ── Loading skeleton ─────────────────────────────────────────────── */
 const DashboardSkeleton = () => (
-  <div style={pageWrapper}>
+  <div className="page-wrapper">
     <div style={{ ...statGrid(160), marginBottom: 20 }}>
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} style={{ ...sectionPanel, marginBottom: 0, padding: "16px 18px" }}>
+        <div key={i} className="section-panel" style={{ marginBottom: 0, padding: "16px 18px" }}>
           <Skeleton active avatar={{ size: 46, shape: "square" }} paragraph={{ rows: 1 }} />
         </div>
       ))}
     </div>
-    <div style={{ ...sectionPanel, marginBottom: 20 }}>
+    <div className="section-panel" style={{ marginBottom: 20 }}>
       <Skeleton active paragraph={{ rows: 2 }} />
     </div>
     <Row gutter={[16, 16]}>
-      <Col xs={24} lg={14}><div style={sectionPanel}><Skeleton active paragraph={{ rows: 8 }} /></div></Col>
-      <Col xs={24} lg={10}><div style={sectionPanel}><Skeleton active paragraph={{ rows: 8 }} /></div></Col>
+      <Col xs={24} lg={14}><div className="section-panel"><Skeleton active paragraph={{ rows: 8 }} /></div></Col>
+      <Col xs={24} lg={10}><div className="section-panel"><Skeleton active paragraph={{ rows: 8 }} /></div></Col>
     </Row>
   </div>
 );
@@ -225,8 +225,7 @@ const AccountantDashboard = () => {
   if (dashboardLoading) return <DashboardSkeleton />;
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("tx-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Financial Dashboard"
@@ -347,15 +346,7 @@ const AccountantDashboard = () => {
       </div>
 
       {/* ── Quick Actions Bar ─────────────────────────────────────── */}
-      <div style={{
-        ...sectionPanel,
-        marginBottom: 20,
-        padding: "14px 18px",
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        flexWrap: "wrap",
-      }}>
+      <div className="section-panel" style={{ marginBottom: 20, padding: "14px 18px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginRight: 6, flexShrink: 0 }}>
           <div style={iconWell("var(--purple)", 28)}><ThunderboltOutlined style={{ fontSize: 12 }} /></div>
           <Text style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
@@ -375,7 +366,7 @@ const AccountantDashboard = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
         {/* Income vs Expense — Area Chart */}
         <Col xs={24} lg={14}>
-          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+          <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <div style={iconWell("var(--purple)", 32)}><LineChartOutlined style={{ fontSize: 14 }} /></div>
               <div>
@@ -418,7 +409,7 @@ const AccountantDashboard = () => {
 
         {/* Fee Collection — Bar Chart */}
         <Col xs={24} lg={10}>
-          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+          <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <div style={iconWell("var(--primary)", 32)}><WalletOutlined style={{ fontSize: 14 }} /></div>
               <div>
@@ -453,7 +444,7 @@ const AccountantDashboard = () => {
       </Row>
 
       {/* ── Recent Transactions ───────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={iconWell("var(--accent)", 32)}><FileTextOutlined style={{ fontSize: 14 }} /></div>
@@ -474,7 +465,7 @@ const AccountantDashboard = () => {
         </div>
 
         <Table
-          className="tx-tbl"
+          className="tx-tbl data-table"
           rowKey="_id"
           columns={txColumns}
           dataSource={recentActivity}

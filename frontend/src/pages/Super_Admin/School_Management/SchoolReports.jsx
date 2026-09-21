@@ -11,7 +11,6 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { FilterGrid, FilterField } from "../../../components/attendance/FilterGrid";
 import { FULL_WIDTH } from "../../../components/attendance/filterStyles";
 import SchoolOverview, { InlineBar } from "../../../components/reports/SchoolOverview";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 
 /**
  * School Reports — one school, any of its years, and how its roll has changed year to year.
@@ -153,7 +152,7 @@ const SchoolReports = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <style>{`.sr-open td { background: var(--primary-light) !important; } .sr-row { cursor: pointer; }`}</style>
       <PageHeader
         title="School Reports"
@@ -161,7 +160,7 @@ const SchoolReports = () => {
         icon={<BankOutlined />}
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <FilterGrid>
           <FilterField label="School">
             <Select
@@ -185,14 +184,14 @@ const SchoolReports = () => {
       </div>
 
       {!schoolId ? (
-        <div style={sectionPanel}><Empty description="Pick a school to see its report" /></div>
+        <div className="section-panel"><Empty description="Pick a school to see its report" /></div>
       ) : yearsError ? (
         <Alert
           type="error" showIcon style={{ marginBottom: 16 }} message={yearsError}
           action={<Button size="small" icon={<ReloadOutlined />} onClick={loadYears}>Try again</Button>}
         />
       ) : yearsLoading ? (
-        <div style={sectionPanel}><Skeleton active paragraph={{ rows: 6 }} /></div>
+        <div className="section-panel"><Skeleton active paragraph={{ rows: 6 }} /></div>
       ) : !years.length ? (
         <Alert
           type="info"
@@ -208,7 +207,7 @@ const SchoolReports = () => {
         />
       ) : (
         <>
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
                 {school?.name || "School"} · {year.name} {yearTag(year)}
@@ -230,7 +229,7 @@ const SchoolReports = () => {
           </div>
 
           {years.length > 1 && (
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>Year by year</div>
               <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 12 }}>
                 Students who studied in each year{years.length > COMPARE_YEARS ? ` — the latest ${COMPARE_YEARS}` : ""}. Pick a year to open it above.

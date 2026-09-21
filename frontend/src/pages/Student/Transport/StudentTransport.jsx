@@ -12,7 +12,7 @@ import {
 } from "@ant-design/icons";
 import { fetchStudentTransport } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 /* ── helpers ── */
 const statusColor = {
@@ -65,7 +65,7 @@ const StudentTransport = () => {
   useEffect(() => { dispatch(fetchStudentTransport()); }, [dispatch]);
 
   if (loading) return (
-    <div style={{ ...pageWrapper, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
+    <div className="page-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
       <Spin size="large" />
     </div>
   );
@@ -78,7 +78,7 @@ const StudentTransport = () => {
   const stops  = Array.isArray(route?.stops) ? route.stops : [];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Transport"
         subtitle="Your bus route, vehicle and stop details"
@@ -97,7 +97,7 @@ const StudentTransport = () => {
       )}
 
       {!t ? (
-        <div style={{ ...sectionPanel, marginTop: 20, textAlign: "center", padding: "48px 24px" }}>
+        <div className="section-panel" style={{ marginTop: 20, textAlign: "center", padding: "48px 24px" }}>
           <CarOutlined style={{ fontSize: 48, color: "var(--text-muted)", marginBottom: 14 }} />
           <Empty
             image={null}
@@ -153,7 +153,7 @@ const StudentTransport = () => {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 0 }}>
 
             {/* Vehicle Details */}
-            <div style={{ ...sectionPanel }}>
+            <div className="section-panel">
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <div style={iconWell("var(--cyan)", 36)}><CarOutlined /></div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Vehicle Details</div>
@@ -182,7 +182,7 @@ const StudentTransport = () => {
             </div>
 
             {/* Driver Info */}
-            <div style={{ ...sectionPanel }}>
+            <div className="section-panel">
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <div style={iconWell("var(--success-hover)", 36)}><UserOutlined /></div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Driver Information</div>
@@ -206,7 +206,7 @@ const StudentTransport = () => {
           </div>
 
           {/* ── Route & Stops ── */}
-          <div style={{ ...sectionPanel, marginTop: 0 }}>
+          <div className="section-panel" style={{ marginTop: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <div style={iconWell("var(--purple)", 36)}><ApartmentOutlined /></div>
               <div>

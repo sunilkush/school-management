@@ -36,7 +36,7 @@ const { Title, Text } = Typography;
 /* ─────────────────────────────────────────
    Design tokens
 ───────────────────────────────────────── */
-// Shared design tokens (frontend/src/index.css) — replaces a local
+// Shared design tokens (frontend/src/styles/main.scss) — replaces a local
 // isDark-branched hex object that duplicated what these CSS vars already do.
 const tokens = {
   pageBg:       "var(--surface-page)",

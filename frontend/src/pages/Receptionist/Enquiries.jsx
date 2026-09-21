@@ -4,10 +4,7 @@ import { HelpCircle, Plus, Clock, CheckCircle, Users, Eye } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchInquiries, createInquiry, updateInquiry } from "../../features/admissionInquirySlice";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, statGrid,
-  pill, tableHeadCss, emptyState,
-} from "../../styles/pageStyles.js";
+import { statGrid, pill } from "../../styles/pageStyles.js";
 import { Avatar, StatCard, RefreshBtn, PrimaryBtn } from "./receptionistShared.jsx";
 
 // AdmissionInquiry.status enum values (backend/src/models/AdmissionInquiry.model.js) — lowercase,
@@ -109,8 +106,7 @@ const Enquiries = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("enq-table")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Admission Enquiries"
         subtitle="Manage incoming admission requests and follow-ups"
@@ -130,17 +126,17 @@ const Enquiries = () => {
         <StatCard icon={Users}       label="In Progress"     value={counts.inProgress} color="var(--info)" />
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}><Spin size="large" /></div>
         ) : inquiries.length === 0 ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <div style={{ fontSize: 34, marginBottom: 10 }}>📋</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>No Enquiries Yet</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Click "New Enquiry" to log the first admission enquiry.</div>
           </div>
         ) : (
-          <Table className="enq-table" rowKey="_id" dataSource={inquiries} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 680 }} />
+          <Table className="enq-table data-table" rowKey="_id" dataSource={inquiries} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 680 }} />
         )}
       </div>
 

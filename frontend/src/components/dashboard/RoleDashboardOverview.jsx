@@ -7,9 +7,7 @@ import {
 import dayjs from "dayjs";
 import { useGetRoleDashboardOverviewQuery } from "../../services/schoolDashboardApi";
 import PageHeader from "../layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, emptyState,
-} from "../../styles/pageStyles";
+import { statGrid, iconWell } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
 const STAT_COLORS = CATEGORICAL_COLORS;
@@ -30,7 +28,7 @@ const formatMetricValue = (metric = {}) => {
 };
 
 const MetricSkeleton = ({ color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={{ ...iconWell(color, 42), opacity: 0.4 }} />
     <div style={{ flex: 1 }}>
       <div style={{ height: 10, width: "50%", borderRadius: 4, background: "var(--surface-soft)", marginBottom: 8 }} />
@@ -40,7 +38,7 @@ const MetricSkeleton = ({ color }) => (
 );
 
 const MetricCard = ({ label, value, color, isCurrency }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>
       {isCurrency ? <DollarCircleOutlined /> : <BarChartOutlined />}
     </div>
@@ -63,7 +61,7 @@ const RoleDashboardOverview = ({ titlePrefix = "Dashboard" }) => {
   const upcomingExams = data?.lists?.upcomingExams || [];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title={titlePrefix}
         subtitle="Live overview based on your role permissions and school data."
@@ -77,13 +75,7 @@ const RoleDashboardOverview = ({ titlePrefix = "Dashboard" }) => {
 
       <div style={{ marginTop: 20 }}>
         {isError ? (
-          <div style={{
-            ...sectionPanel,
-            borderColor: "rgba(var(--danger-rgb), 0.6)",
-            background: "rgba(var(--danger-rgb), 0.12)",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            flexWrap: "wrap", gap: 12,
-          }}>
+          <div className="section-panel" style={{ borderColor: "rgba(var(--danger-rgb), 0.6)", background: "rgba(var(--danger-rgb), 0.12)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700, color: "var(--danger-hover)", marginBottom: 4 }}>Failed to load dashboard</div>
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
@@ -108,14 +100,14 @@ const RoleDashboardOverview = ({ titlePrefix = "Dashboard" }) => {
                   />
                 ))
               ) : (
-                <div style={{ ...emptyState, gridColumn: "1 / -1" }}>
+                <div className="empty-state" style={{ gridColumn: "1 / -1" }}>
                   <Empty description="No dashboard metrics available yet" />
                 </div>
               )}
             </div>
 
             {!loading && upcomingExams.length > 0 && (
-              <div style={{ ...sectionPanel, marginTop: 20 }}>
+              <div className="section-panel" style={{ marginTop: 20 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                   <CalendarOutlined style={{ color: "var(--primary)" }} />
                   <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Upcoming Exams</span>

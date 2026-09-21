@@ -51,7 +51,7 @@ import {
 } from "@ant-design/icons";
 
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { avatarStyle, iconWell, pageWrapper, sectionPanel } from "../../../styles/pageStyles.js";
+import { avatarStyle, iconWell } from "../../../styles/pageStyles.js";
 
 const { Text } = Typography;
 
@@ -830,7 +830,7 @@ const Settings = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* Unsaved-changes banner */}
         {isDirty && (
           <Alert
@@ -869,7 +869,7 @@ const Settings = () => {
 
         <Spin spinning={isLoading}>
           <Form form={form} layout="vertical" onFinish={handleSave} onValuesChange={handleValuesChange}>
-            <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+            <div className="section-panel is-flush">
               <Tabs
                 className="settings-tabs"
                 activeKey={activeTab}

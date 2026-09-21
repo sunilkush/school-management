@@ -17,14 +17,7 @@ import {
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { fetchFinanceSummary } from "../../../features/analyticsSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  toolbarRow,
-  statGrid,
-  iconWell,
-  tableContainer,
-  tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const TABLE_CLS = "finance-tbl";
 
@@ -140,8 +133,7 @@ const FinanceSummary = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Finance Summary"
@@ -160,7 +152,7 @@ const FinanceSummary = () => {
       />
 
       {/* Toolbar */}
-      <div style={{ ...toolbarRow, marginTop: 20 }}>
+      <div className="toolbar-row" style={{ marginTop: 20 }}>
         <Select
           value={selectedYear}
           onChange={handleYearChange}
@@ -235,9 +227,9 @@ const FinanceSummary = () => {
               <span style={iconWell("var(--warning)", 28)}><RiseOutlined /></span>
               Top Performing Schools — {selectedYear}
             </div>
-            <div style={tableContainer}>
+            <div className="table-container">
               <Table
-                className={TABLE_CLS}
+                className={`${TABLE_CLS} data-table`}
                 rowKey={(r) => r.schoolId || r.schoolName}
                 columns={schoolColumns}
                 dataSource={topSchools}

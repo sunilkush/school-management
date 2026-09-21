@@ -14,7 +14,7 @@ import {
 import { useSelector } from "react-redux";
 import httpClient from "../../api/httpClient";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss, avatarStyle } from "../../styles/pageStyles.js";
+import { iconWell, avatarStyle } from "../../styles/pageStyles.js";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -341,7 +341,6 @@ export default function SupportTicketsPage() {
 
   return (
     <>
-      <style>{tableHeadCss("support-tbl")}</style>
 
       <PageHeader
         title="Support Tickets"
@@ -359,7 +358,7 @@ export default function SupportTicketsPage() {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
         {/* ── Stat cards ─────────────────────────────────────────── */}
         <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
@@ -398,7 +397,7 @@ export default function SupportTicketsPage() {
         </Row>
 
         {/* ── Filter + Search bar ─────────────────────────────────── */}
-        <div style={{ ...sectionPanel, padding: "12px 16px", marginBottom: 16 }}>
+        <div className="section-panel" style={{ padding: "12px 16px", marginBottom: 16 }}>
           <Flex gap={8} wrap="wrap" align="center" justify="space-between">
             <Flex gap={8} wrap="wrap" align="center">
               <Input
@@ -443,9 +442,9 @@ export default function SupportTicketsPage() {
         </div>
 
         {/* ── Table ──────────────────────────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Table
-            className="support-tbl"
+            className="support-tbl data-table"
             rowKey="_id"
             columns={columns}
             loading={loading}

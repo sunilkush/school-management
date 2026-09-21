@@ -6,10 +6,7 @@ import { fetchGateEntries, fetchGateStats } from "../../features/gateEntrySlice"
 import { fetchCallLogs } from "../../features/callLogSlice";
 import { fetchInquiries } from "../../features/admissionInquirySlice";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, statGrid,
-  pill, tableHeadCss, emptyState,
-} from "../../styles/pageStyles.js";
+import { statGrid, pill } from "../../styles/pageStyles.js";
 import { fmt, Avatar, StatCard, RefreshBtn, VISITOR_COLORS } from "./receptionistShared.jsx";
 import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
@@ -75,8 +72,7 @@ const ReceptionistDashboard = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("dash-table")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Receptionist Dashboard"
         subtitle="Front desk overview — visitors, enquiries, calls and broadcasts"
@@ -92,19 +88,19 @@ const ReceptionistDashboard = () => {
         <StatCard icon={CheckCircle} label="Currently Inside"   value={stats?.inside ?? 0}       color="var(--info)" loading={loading} />
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
           Recent Visitor Entries
         </div>
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}><Spin /></div>
         ) : recentEntries.length === 0 ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <div style={{ fontSize: 30, marginBottom: 8 }}>🚪</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>No visitors yet today</div>
           </div>
         ) : (
-          <Table className="dash-table" rowKey="_id" dataSource={recentEntries} columns={columns} pagination={false} size="small" />
+          <Table className="dash-table data-table" rowKey="_id" dataSource={recentEntries} columns={columns} pagination={false} size="small" />
         )}
       </div>
     </div>

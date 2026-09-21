@@ -13,14 +13,14 @@ import {
 } from "recharts";
 import { fetchHostelDashboard } from "../../features/hostelWardenSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../../styles/pageStyles";
+import { iconWell, statGrid } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const KpiCard = ({ icon, label, value, color, sub, onClick }) => (
   <div
     onClick={onClick}
-    style={{ ...sectionPanel, marginBottom: 0, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: onClick ? "pointer" : "default", transition: "transform 0.15s" }}
+    className="section-panel" style={{ marginBottom: 0, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: onClick ? "pointer" : "default", transition: "transform 0.15s" }}
     onMouseEnter={(e) => { if (onClick) e.currentTarget.style.transform = "translateY(-2px)"; }}
     onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
   >
@@ -36,7 +36,7 @@ const KpiCard = ({ icon, label, value, color, sub, onClick }) => (
 const ActionTile = ({ icon, label, path, color, navigate }) => (
   <div
     onClick={() => navigate(path)}
-    style={{ ...sectionPanel, marginBottom: 0, padding: "14px 12px", textAlign: "center", cursor: "pointer", transition: "transform 0.15s" }}
+    className="section-panel" style={{ marginBottom: 0, padding: "14px 12px", textAlign: "center", cursor: "pointer", transition: "transform 0.15s" }}
     onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; }}
     onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
   >
@@ -58,15 +58,14 @@ const HostelDashboard = () => {
 
   if (dashboardLoading) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
+      <div className="page-wrapper" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
         <Spin size="large" tip="Loading hostel data…" />
       </div>
     );
   }
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("hw-dash-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Hostel Dashboard"
         subtitle="Live overview — occupancy, leaves, visitors and complaints"
@@ -101,7 +100,7 @@ const HostelDashboard = () => {
       </div>
 
       {/* ── Occupancy Progress ───────────────────────────────── */}
-      <div style={{ ...sectionPanel, marginBottom: 20 }}>
+      <div className="section-panel" style={{ marginBottom: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Overall Occupancy Rate</div>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
           <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
@@ -123,7 +122,7 @@ const HostelDashboard = () => {
       </div>
 
       {/* ── Quick Actions ────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, padding: 20, marginBottom: 20 }}>
+      <div className="section-panel" style={{ padding: 20, marginBottom: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>Quick Actions</div>
         <div style={statGrid(120)}>
           <ActionTile icon={<ClockCircleOutlined />} label="Leave Requests" path="/dashboard/hostelwarden/leaves"      color="var(--warning)" navigate={navigate} />
@@ -138,7 +137,7 @@ const HostelDashboard = () => {
       {/* ── Charts Row ───────────────────────────────────────── */}
       <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
         <Col xs={24} lg={14}>
-          <div style={{ ...sectionPanel, marginBottom: 0 }}>
+          <div className="section-panel is-last">
             <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 14 }}>Monthly Leave Trend</div>
             {leaves.length === 0 ? (
               <Empty description="No leave data yet" />
@@ -156,7 +155,7 @@ const HostelDashboard = () => {
           </div>
         </Col>
         <Col xs={24} lg={10}>
-          <div style={{ ...sectionPanel, marginBottom: 0 }}>
+          <div className="section-panel is-last">
             <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 14 }}>Complaints by Type</div>
             {compls.length === 0 ? (
               <Empty description="No complaints" />

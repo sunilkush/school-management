@@ -42,13 +42,7 @@ import {
 } from "../../../features/studentFeeSlice";
 import { FREQUENCIES, FREQUENCY_ORDER, FrequencyTag, perPeriodLabel } from "../../../components/fees/feeUi.jsx";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  tableHeadCss,
-  iconWell,
-  avatarStyle,
-} from "../../../styles/pageStyles";
+import { iconWell, avatarStyle } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -554,8 +548,7 @@ const AssignStudentFee = () => {
   const cardBg = "var(--surface)";
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       {/* ── Header ── */}
       <PageHeader
@@ -621,12 +614,7 @@ const AssignStudentFee = () => {
 
           {/* ── Filters ── */}
           <Col xs={24} lg={8}>
-            <div style={{
-              ...sectionPanel,
-              background: cardBg,
-              position: isMobile ? "static" : "sticky",
-              top: 20,
-            }}>
+            <div className="section-panel" style={{ background: cardBg, position: isMobile ? "static" : "sticky", top: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
                 <div style={iconWell("var(--purple-hover)", 36)}>
                   <FilterOutlined />
@@ -749,7 +737,7 @@ const AssignStudentFee = () => {
 
           {/* ── Fee structures ── */}
           <Col xs={24} lg={16}>
-            <div style={{ ...sectionPanel, background: cardBg }}>
+            <div className="section-panel" style={{ background: cardBg }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={iconWell("var(--cyan)", 36)}>
@@ -816,7 +804,7 @@ const AssignStudentFee = () => {
                 </div>
               ) : (
                 <Table
-                  className={TABLE_CLS}
+                  className={`${TABLE_CLS} data-table`}
                   rowKey="_id"
                   columns={feeColumns}
                   dataSource={feeStructures}
@@ -893,7 +881,7 @@ const AssignStudentFee = () => {
           </div>
 
           {/* Selected fees list */}
-          <div style={{ ...sectionPanel, marginBottom: 0, background: cardBg, padding: 16 }}>
+          <div className="section-panel" style={{ marginBottom: 0, background: cardBg, padding: 16 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>
               Selected Fees
             </div>
@@ -925,7 +913,7 @@ const AssignStudentFee = () => {
           </div>
 
           {/* Target students */}
-          <div style={{ ...sectionPanel, marginBottom: 0, background: cardBg, padding: 16 }}>
+          <div className="section-panel" style={{ marginBottom: 0, background: cardBg, padding: 16 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>
               Target Students
             </div>
@@ -951,7 +939,7 @@ const AssignStudentFee = () => {
               </div>
             ) : (
               <Table
-                className={TABLE_CLS}
+                className={`${TABLE_CLS} data-table`}
                 rowKey="_id"
                 size="small"
                 columns={previewStudentColumns}

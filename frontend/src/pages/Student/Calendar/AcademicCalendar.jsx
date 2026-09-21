@@ -4,7 +4,7 @@ import { CalendarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const EVENT_TYPE_COLOR = {
   Holiday:  "red",
@@ -16,7 +16,7 @@ const EVENT_TYPE_COLOR = {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -100,7 +100,7 @@ const AcademicCalendar = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Academic Calendar"
         subtitle="View school events, holidays, and exam schedules"
@@ -114,7 +114,7 @@ const AcademicCalendar = () => {
         <StatCard icon={<CalendarOutlined />} label="Exams"        value={stats.exams}    color="var(--success)" />
       </div>
 
-      <div style={{ ...sectionPanel, marginTop: 0 }}>
+      <div className="section-panel" style={{ marginTop: 0 }}>
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: 48 }}>
             <Spin size="large" />
@@ -129,7 +129,7 @@ const AcademicCalendar = () => {
       </div>
 
       {/* Upcoming events list */}
-      <div style={{ ...sectionPanel, marginTop: 0 }}>
+      <div className="section-panel" style={{ marginTop: 0 }}>
         <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
           Upcoming Events
         </div>

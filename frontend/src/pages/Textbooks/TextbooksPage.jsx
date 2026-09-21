@@ -3,7 +3,7 @@ import { Button, Empty, Segmented, Skeleton, Tag, Tooltip } from "antd";
 import { BookOutlined, DownloadOutlined, FilePdfOutlined, ReloadOutlined, RightOutlined } from "@ant-design/icons";
 import apiClient from "../../api/httpClient";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, pill, sectionPanel } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 /**
  * Textbooks class-wise and subject-wise, every chapter opening as its official PDF.
@@ -155,7 +155,7 @@ const TextbooksPage = () => {
   const titleCase = (s = "") => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Textbooks"
         subtitle="NCERT books class-wise and subject-wise — open any chapter as a PDF"
@@ -163,7 +163,7 @@ const TextbooksPage = () => {
         extra={<Button icon={<ReloadOutlined />} onClick={() => load(classNo)} loading={state.loading}>Refresh</Button>}
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Class</div>
         <div style={{ overflowX: "auto" }}>
           <Segmented
@@ -196,16 +196,16 @@ const TextbooksPage = () => {
       </div>
 
       {state.loading ? (
-        <div style={sectionPanel}><Skeleton active paragraph={{ rows: 6 }} /></div>
+        <div className="section-panel"><Skeleton active paragraph={{ rows: 6 }} /></div>
       ) : state.error ? (
-        <div style={{ ...sectionPanel, color: "var(--danger)" }}>
+        <div className="section-panel" style={{ color: "var(--danger)" }}>
           {state.error} — <Button type="link" style={{ padding: 0 }} onClick={() => load(classNo)}>try again</Button>
         </div>
       ) : !state.books.length ? (
-        <div style={sectionPanel}><Empty description={`No textbooks for Class ${classNo} yet`} /></div>
+        <div className="section-panel"><Empty description={`No textbooks for Class ${classNo} yet`} /></div>
       ) : (
         bySubject.map(([subject, books]) => (
-          <div key={subject} style={sectionPanel}>
+          <div key={subject} className="section-panel">
             <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)", marginBottom: 12 }}>{titleCase(subject)}</div>
             <div style={{ display: "grid", gap: 10 }}>
               {books.map((b) => <BookCard key={b._id} book={b} />)}

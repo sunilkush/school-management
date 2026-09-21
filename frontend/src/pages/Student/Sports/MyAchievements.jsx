@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import { fetchMyAchievements } from "../../../features/sportsSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+
 
 const fmt = (v) => (v ? dayjs(v).format("DD MMM YYYY") : "—");
 
@@ -27,12 +27,11 @@ export default function MyAchievements() {
 
   return (
     <>
-      <style>{tableHeadCss("my-ach-tbl")}</style>
       <PageHeader title="My Achievements" subtitle="Sports and co-curricular achievements" icon={<TrophyOutlined />} />
-      <div style={pageWrapper}>
-        <div style={sectionPanel}>
+      <div className="page-wrapper">
+        <div className="section-panel">
           <Table
-            className="my-ach-tbl" rowKey="_id" columns={columns} dataSource={myAchievements} loading={myLoading}
+            className="my-ach-tbl data-table" rowKey="_id" columns={columns} dataSource={myAchievements} loading={myLoading}
             size="middle" pagination={{ pageSize: 20 }}
             locale={{ emptyText: <Empty description="No achievements recorded yet" style={{ padding: "40px 0" }} /> }}
           />

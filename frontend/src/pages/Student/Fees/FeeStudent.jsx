@@ -4,7 +4,6 @@ import RupeeIcon from "../../../components/icons/RupeeIcon";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyStudentEnrollment } from "../../../features/studentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 import StudentFeeLedger from "../../../components/fees/StudentFeeLedger.jsx";
 
 /** A student's own fees: structure, installment schedule, online payment and receipts. */
@@ -24,7 +23,7 @@ const FeeStudent = () => {
         subtitle={myEnrollment?.academicYear?.name ? `Academic year ${myEnrollment.academicYear.name}` : "Fee structure, installments and payments"}
         icon={<RupeeIcon />}
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {studentId && academicYearId ? (
           <StudentFeeLedger
             mode="online"
@@ -37,7 +36,7 @@ const FeeStudent = () => {
             }}
           />
         ) : (
-          <div style={sectionPanel}>
+          <div className="section-panel">
             {loading ? <div style={{ textAlign: "center", padding: 32 }}><Spin /></div> : <Empty description="No active enrollment found" />}
           </div>
         )}

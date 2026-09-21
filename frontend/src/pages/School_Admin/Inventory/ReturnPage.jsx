@@ -6,10 +6,7 @@ import {
   ImportOutlined, ClockCircleOutlined, CheckCircleOutlined,
 } from "@ant-design/icons";
 import { fetchStockIssues, processReturn } from "../../../features/stockIssueSlice";
-import {
-  tableContainer, tableHeadCss,
-  statGrid, iconWell, modalTitle, pill,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle, pill } from "../../../styles/pageStyles";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -135,8 +132,7 @@ export default function ReturnPage() {
       )}
 
       {/* Table */}
-      <style>{tableHeadCss("return-tbl")}</style>
-      <div className="return-tbl" style={tableContainer}>
+      <div className="return-tbl table-container">
         <Table
           columns={columns}
           dataSource={returnable}

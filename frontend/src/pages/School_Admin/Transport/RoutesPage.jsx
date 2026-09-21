@@ -14,16 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createRoute, deleteRoute, fetchRoutes, updateRoute } from "../../../features/transportSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import RouteStopMapper from "../../../components/transport/RouteStopMapper";
-import {
-  pageWrapper,
-  pageCard,
-  statGrid,
-  statCard,
-  statLabel,
-  statValue,
-  tableHeadCss,
-  toolbarRow,
-} from "../../../styles/pageStyles";
+import { statGrid, statCard, statLabel, statValue } from "../../../styles/pageStyles";
 
 const TRANSPORT_MANAGE_ROLES = ["Super Admin", "School Admin", "Transport Manager"];
 
@@ -172,8 +163,7 @@ const RoutesPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("routes-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Bus Routes"
         subtitle="Manage transport routes, stops and bus assignments"
@@ -202,7 +192,7 @@ const RoutesPage = () => {
           </div>
         </div>
 
-        <div className="page-toolbar" style={toolbarRow}>
+        <div className="page-toolbar toolbar-row">
           <div style={{ flex: 1, fontWeight: 700, fontSize: 16, color: "var(--text-primary)" }}>Bus Routes</div>
           {canManageRoutes && (
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
@@ -211,9 +201,9 @@ const RoutesPage = () => {
           )}
         </div>
 
-        <div style={pageCard}>
+        <div className="page-card">
           <Table
-            className="routes-tbl"
+            className="routes-tbl data-table"
             columns={columns}
             dataSource={dataSource}
             loading={loading}

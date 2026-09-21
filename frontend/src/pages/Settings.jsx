@@ -27,7 +27,7 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell } from "../styles/pageStyles";
+import { iconWell } from "../styles/pageStyles";
 
 const Settings = () => {
   const dispatch = useDispatch();
@@ -172,7 +172,7 @@ const Settings = () => {
   };
 
   const SectionPanel = ({ icon, title, color, children }) => (
-    <div style={{ ...sectionPanel, height: "100%" }}>
+    <div className="section-panel" style={{ height: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
         <div style={iconWell(color, 36)}>{icon}</div>
         <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{title}</span>
@@ -182,7 +182,7 @@ const Settings = () => {
   );
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title={`${user?.role?.name || "User"} Settings`}
         subtitle="Manage your account preferences and security"

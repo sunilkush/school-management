@@ -13,7 +13,7 @@ import {
 } from "../../features/hostelWardenSlice";
 import { fetchLibraryStudents } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss } from "../../styles/pageStyles";
+import { iconWell, pill, statGrid } from "../../styles/pageStyles";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -116,8 +116,7 @@ const VisitorLog = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("visitor-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Visitor Log"
         subtitle="Track all hostel visitors — entry, exit, and pass generation"
@@ -132,21 +131,21 @@ const VisitorLog = () => {
 
       {/* ── KPIs ─────────────────────────────────────────────── */}
       <div style={statGrid(160)}>
-        <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
+        <div className="section-panel is-header-strip">
           <div style={iconWell("var(--accent)", 40)}><UserOutlined /></div>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase" }}>Visitors Today</div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{visitorsToday}</div>
           </div>
         </div>
-        <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
+        <div className="section-panel is-header-strip">
           <div style={iconWell("var(--warning)", 40)}><LoginOutlined /></div>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: "var(--warning)", textTransform: "uppercase" }}>Currently Visiting</div>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{visitors.filter((v) => v.status === "visiting").length}</div>
           </div>
         </div>
-        <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
+        <div className="section-panel is-header-strip">
           <div style={iconWell("var(--success)", 40)}><LogoutOutlined /></div>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: "var(--success)", textTransform: "uppercase" }}>Total Records</div>
@@ -156,7 +155,7 @@ const VisitorLog = () => {
       </div>
 
       {/* ── Filters ──────────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, padding: "12px 18px", display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+      <div className="section-panel" style={{ padding: "12px 18px", display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
         <Select value={statusFilter} onChange={setStatusFilter} placeholder="Status" style={{ width: 140 }} allowClear>
           <Option value="visiting">Currently Visiting</Option>
           <Option value="exited">Exited</Option>
@@ -167,12 +166,12 @@ const VisitorLog = () => {
       </div>
 
       {/* ── Table ────────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {visitorsLoading ? (
           <div style={{ textAlign: "center", padding: 40 }}><Spin size="large" /></div>
         ) : (
           <Table
-            className="visitor-tbl"
+            className="visitor-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={visitors}

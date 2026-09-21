@@ -14,7 +14,7 @@ import {
 } from "../../features/circularSlice";
 import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { TextArea } = Input;
 
@@ -201,8 +201,7 @@ const CircularsPage = () => {
   const overdue = (circulars || []).filter((c) => c.ack?.isOverdue);
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("cir-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Circulars"
@@ -231,7 +230,7 @@ const CircularsPage = () => {
         />
       )}
 
-      <div style={{ ...sectionPanel, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+      <div className="section-panel" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <Select
           allowClear placeholder="All statuses" style={{ width: 170 }}
           value={statusFilter} onChange={setStatusFilter}
@@ -239,11 +238,11 @@ const CircularsPage = () => {
         />
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {loading && !circulars?.length ? (
           <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
         ) : !circulars?.length ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <Empty description="No circulars yet" />
             <p style={{ color: "var(--text-muted)", maxWidth: 500, margin: "12px auto" }}>
               A circular gets a number when it is published, goes to a fixed list of people, and can
@@ -252,9 +251,9 @@ const CircularsPage = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={() => openEditor()}>Write the first one</Button>
           </div>
         ) : (
-          <div style={tableContainer}>
+          <div className="table-container">
             <Table
-              className="cir-table" rowKey="_id" size="middle"
+              className="cir-table data-table" rowKey="_id" size="middle"
               columns={columns} dataSource={circulars}
               pagination={{ pageSize: 20, showSizeChanger: false }}
             />
@@ -335,7 +334,7 @@ const CircularsPage = () => {
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : current ? (
           <>
-            <div style={{ ...sectionPanel, marginBottom: 16 }}>
+            <div className="section-panel" style={{ marginBottom: 16 }}>
               <div style={{ fontWeight: 700, marginBottom: 6 }}>{current.title}</div>
               <div style={{ fontSize: 13, color: "var(--text-secondary)", whiteSpace: "pre-wrap" }}>{current.body}</div>
             </div>

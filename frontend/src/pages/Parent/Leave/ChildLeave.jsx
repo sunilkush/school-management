@@ -13,7 +13,7 @@ import {
 } from "../../../features/leaveRequestSlice";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const { TextArea } = Input;
 const STAT_COLORS  = ["var(--accent)", "var(--warning)", "var(--success)", "var(--danger)"];
@@ -171,7 +171,7 @@ const ChildLeave = () => {
           </Space>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <div className="stat-grid" style={statGrid(160)}>
           {statMeta.map(({ key, label, value }, i) => (
             <div key={key} style={statCard({ color: STAT_COLORS[i] })}>
@@ -184,7 +184,7 @@ const ChildLeave = () => {
           ))}
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           {!selectedChildId ? (
             <Empty description="Select a child to view leave requests" />
           ) : !myRequests.length ? (

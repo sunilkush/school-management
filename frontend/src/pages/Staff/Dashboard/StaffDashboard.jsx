@@ -11,9 +11,7 @@ import dayjs from "dayjs";
 import { fetchTasks } from "../../../features/taskSlice";
 import { useGetRoleDashboardOverviewQuery } from "../../../services/schoolDashboardApi";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill } from "../../../styles/pageStyles";
 import MyAttendanceSection from "../../../components/attendance/MyAttendanceSection";
 
 const PRIORITY_COLOR = {
@@ -24,7 +22,7 @@ const PRIORITY_COLOR = {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -70,7 +68,7 @@ const StaffDashboard = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Staff Dashboard"
         subtitle="Your attendance, tasks and quick actions in one place."
@@ -90,7 +88,7 @@ const StaffDashboard = () => {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }} className="staff-dash-grid">
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>My Pending Tasks</span>
             <Button size="small" onClick={() => navigate("/dashboard/staff/tasks")}>View All</Button>
@@ -127,7 +125,7 @@ const StaffDashboard = () => {
           )}
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Quick Actions</div>
           <Space direction="vertical" style={{ width: "100%" }} size={8}>
             <Button block icon={<IdcardOutlined />} onClick={() => navigate("/dashboard/staff/attendance/self")}>

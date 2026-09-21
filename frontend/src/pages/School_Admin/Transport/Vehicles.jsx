@@ -14,7 +14,7 @@ import {
 import { getEmployees } from "../../../features/employeeSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
@@ -292,8 +292,7 @@ const Vehicles = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("veh-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="School Vehicles"
@@ -345,7 +344,7 @@ const Vehicles = () => {
       </div>
 
       {/* Table */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{
           padding: "14px 20px", borderBottom: "1px solid " + C.border,
           display: "flex", alignItems: "center", gap: 8,
@@ -360,7 +359,7 @@ const Vehicles = () => {
           </span>
         </div>
         <Table
-          className="veh-tbl"
+          className="veh-tbl data-table"
           columns={columns}
           dataSource={dataSource}
           loading={loading}

@@ -4,7 +4,6 @@ import { UserSwitchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, toolbarRow } from "../../styles/pageStyles";
 import { fetchMySubstitutions } from "../../services/substitutionApi";
 
 const { Text } = Typography;
@@ -49,15 +48,15 @@ export default function MySubstitutions() {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Cover Duties"
         subtitle="Periods you have been asked to cover for an absent colleague."
         icon={<UserSwitchOutlined />}
       />
 
-      <div style={sectionPanel}>
-        <div style={toolbarRow}>
+      <div className="section-panel">
+        <div className="toolbar-row">
           <RangePicker value={range} onChange={setRange} format="DD MMM YYYY" allowClear={false} />
         </div>
 

@@ -8,7 +8,7 @@ import {
   VideoCameraOutlined, WarningOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, iconWell, pageWrapper, pill, sectionPanel } from "../../styles/pageStyles";
+import { iconWell, pill } from "../../styles/pageStyles";
 
 /**
  * Which role uses which module, and how.
@@ -380,7 +380,7 @@ const ModuleRoleGuide = () => {
   }, [search, group]);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Modules & Roles"
         subtitle="What each module does, who can use it, and how"
@@ -411,12 +411,12 @@ const ModuleRoleGuide = () => {
       </div>
 
       {!filtered.length ? (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="Nothing matches that search" />
         </div>
       ) : (
         filtered.map((module) => (
-          <div key={module.id} style={sectionPanel}>
+          <div key={module.id} className="section-panel">
             <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
               <div style={iconWell(module.color, 44)}>{module.icon}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -510,7 +510,7 @@ const ModuleRoleGuide = () => {
         ))
       )}
 
-      <div style={{ ...sectionPanel, display: "flex", gap: 12, alignItems: "flex-start" }}>
+      <div className="section-panel" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
         <div style={iconWell("var(--primary)", 36)}><IdcardOutlined /></div>
         <div style={{ fontSize: 13.5, lineHeight: 1.7, color: "var(--text-secondary)" }}>
           Looking for step-by-step instructions for your own job rather than the whole system?

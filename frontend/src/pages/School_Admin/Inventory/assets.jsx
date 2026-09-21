@@ -21,15 +21,12 @@ import {
   updateInventoryItem,
 } from "../../../features/inventorySlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow,
-  tableContainer, tableHeadCss, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -173,7 +170,7 @@ const Assets = () => {
           </Button>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
         {error ? <Alert style={{ marginBottom: 16 }} type="error" showIcon message={error} /> : null}
 
@@ -183,8 +180,8 @@ const Assets = () => {
           <StatCard icon={<DatabaseOutlined />} label="Total Allocated" value={`${totalAllocated} / ${totalQuantity}`} color="var(--warning)" />
         </div>
 
-        <div style={sectionPanel}>
-          <div style={toolbarRow}>
+        <div className="section-panel">
+          <div className="toolbar-row">
             <Input.Search
               placeholder="Search by asset, category or location"
               allowClear
@@ -193,8 +190,7 @@ const Assets = () => {
             />
           </div>
 
-          <style>{tableHeadCss("assets-tbl")}</style>
-          <div className="assets-tbl" style={tableContainer}>
+          <div className="assets-tbl table-container">
             <Table
               columns={columns}
               dataSource={filteredAssets}

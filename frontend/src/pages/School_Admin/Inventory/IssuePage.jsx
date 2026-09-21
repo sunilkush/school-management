@@ -7,10 +7,7 @@ import {
 } from "@ant-design/icons";
 import { fetchStockIssues, createStockIssue, deleteStockIssue } from "../../../features/stockIssueSlice";
 import { fetchInventoryItems } from "../../../features/inventorySlice";
-import {
-  toolbarRow, tableContainer, tableHeadCss,
-  statGrid, iconWell, modalTitle, pill,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle, pill } from "../../../styles/pageStyles";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -134,7 +131,7 @@ export default function IssuePage() {
       </div>
 
       {/* Toolbar */}
-      <div style={toolbarRow}>
+      <div className="toolbar-row">
         <Select value={statusFilter} onChange={setStatusFilter} style={{ width: 140 }} placeholder="All Status" allowClear>
           <Option value="issued">Issued</Option>
           <Option value="returned">Returned</Option>
@@ -153,8 +150,7 @@ export default function IssuePage() {
       </div>
 
       {/* Table */}
-      <style>{tableHeadCss("issue-tbl")}</style>
-      <div className="issue-tbl" style={tableContainer}>
+      <div className="issue-tbl table-container">
         <Table
           columns={columns}
           dataSource={filtered}

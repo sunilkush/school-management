@@ -12,9 +12,7 @@ import dayjs from "dayjs";
 import { getEmployees, softDeleteEmployee } from "../../../features/employeeSlice";
 import EmployeeForm from "../../../components/forms/EmployeeForm";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
@@ -258,8 +256,7 @@ const CreateEmployee = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("emp-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Employee Management"
@@ -310,7 +307,7 @@ const CreateEmployee = () => {
       </div>
 
       {/* Table */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{
           padding: "14px 20px", borderBottom: "1px solid " + C.border,
           display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
@@ -335,7 +332,7 @@ const CreateEmployee = () => {
           </div>
         </div>
         <Table
-          className="emp-tbl"
+          className="emp-tbl data-table"
           columns={columns}
           dataSource={dataSource}
           loading={loading}

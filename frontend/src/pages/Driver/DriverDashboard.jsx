@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import { fetchMyVehicles } from "../../features/transportSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell, pill } from "../../styles/pageStyles";
+import { iconWell, pill } from "../../styles/pageStyles";
 import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
 const STATUS_COLOR = {
@@ -20,7 +20,7 @@ const STATUS_COLOR = {
 const VehicleCard = ({ vehicle }) => {
   const [color, bg] = STATUS_COLOR[vehicle.status] || STATUS_COLOR.Available;
   return (
-    <div style={{ ...sectionPanel, marginBottom: 16 }}>
+    <div className="section-panel" style={{ marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={iconWell("var(--primary)", 48)}><CarOutlined style={{ fontSize: 20 }} /></div>
@@ -61,7 +61,7 @@ const DriverDashboard = () => {
   useEffect(() => { dispatch(fetchMyVehicles()); }, [dispatch]);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Driver Dashboard"
         subtitle={`Welcome back, ${user?.name || "Driver"}`}
@@ -74,7 +74,7 @@ const DriverDashboard = () => {
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 12 }}>My Vehicle</div>
           <Spin spinning={myVehiclesLoading}>
             {myVehicles.length === 0 ? (
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description="No vehicle linked to your account yet — ask your Transport Manager to link one from the Vehicles page."
@@ -86,7 +86,7 @@ const DriverDashboard = () => {
           </Spin>
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Quick Actions</div>
           <Space direction="vertical" style={{ width: "100%" }} size={8}>
             <Button block icon={<CarOutlined />} onClick={() => navigate("/dashboard/driver/attendance/self")}>

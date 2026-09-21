@@ -10,7 +10,7 @@ import dayjs from "dayjs";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const STAT_COLORS = ["var(--accent)", "var(--primary)", "var(--warning)", "var(--success)"];
 
@@ -131,7 +131,7 @@ const ChildHomework = () => {
           </Space>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* Stats */}
         <div className="stat-grid" style={statGrid(160)}>
           {statMeta.map(({ key, label, icon, value }, i) => (
@@ -145,7 +145,7 @@ const ChildHomework = () => {
           ))}
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           {!selectedChildId ? (
             <Empty description="Select a child to view their homework" />
           ) : loading ? (

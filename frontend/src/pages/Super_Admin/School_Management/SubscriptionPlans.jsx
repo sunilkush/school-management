@@ -50,9 +50,7 @@ import {
 } from "../../../constants/planModules.js";
 import PlanLogs from "./PlanLogs.jsx";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, emptyState, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 
@@ -83,15 +81,7 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
 
   return (
     <div
-      style={{
-        ...sectionPanel,
-        padding: 0,
-        marginBottom: 0,
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
+      className="section-panel" style={{ padding: 0, marginBottom: 0, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}
     >
       {/* ── TOP ACCENT BAR ── */}
       <div style={{ height: 4, background: `linear-gradient(90deg, ${tier.color}, color-mix(in srgb, ${tier.color} 53%, transparent))` }} />
@@ -316,7 +306,7 @@ const SubscriptionPlans = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Subscription Plans"
         subtitle="Manage pricing tiers and feature access for schools"
@@ -337,7 +327,7 @@ const SubscriptionPlans = () => {
           { label: "Avg. Price", value: plans?.length ? `₹${Math.round(plans.reduce((s, p) => s + (p.price || 0), 0) / plans.length)}` : "—", color: "var(--warning)", icon: <CrownOutlined /> },
           { label: "Avg. Duration", value: plans?.length ? `${Math.round(plans.reduce((s, p) => s + (p.durationInDays || 0), 0) / plans.length)}d` : "—", color: "var(--accent)", icon: <ClockCircleOutlined /> },
         ].map((stat) => (
-          <div key={stat.label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, marginBottom: 0 }}>
+          <div key={stat.label} className="section-panel" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 0 }}>
             <div style={iconWell(stat.color, 38)}>{stat.icon}</div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</div>
@@ -358,11 +348,11 @@ const SubscriptionPlans = () => {
       {loading && !plans?.length ? (
         <div style={{ ...statGrid(280) }}>
           {[1, 2, 3].map((i) => (
-            <div key={i} style={{ ...sectionPanel, height: 320, background: "var(--surface-soft)" }} />
+            <div key={i} className="section-panel" style={{ height: 320, background: "var(--surface-soft)" }} />
           ))}
         </div>
       ) : !plans?.length ? (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={<span style={{ color: "var(--text-muted)" }}>No subscription plans yet</span>}

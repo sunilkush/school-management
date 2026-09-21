@@ -8,7 +8,7 @@ const { useBreakpoint } = Grid;
 const performanceConfig = {
   EXCELLENT: { color: "var(--success)", bg: "rgba(var(--success-rgb), 0.08)", border: "rgba(var(--success-rgb), 0.2)", dot: "var(--success)" },
   GOOD:      { color: "var(--primary)", bg: "rgba(var(--primary-rgb), 0.08)", border: "rgba(var(--primary-rgb), 0.2)", dot: "var(--primary)" },
-  // no --orange-rgb token exists in index.css; decimal rgba kept for the bg/border tint
+  // no --orange-rgb token exists in styles/main.scss; decimal rgba kept for the bg/border tint
   AVERAGE:   { color: "var(--orange)", bg: "rgba(234, 88, 12, 0.08)",  border: "rgba(234, 88, 12, 0.2)",  dot: "var(--orange)" },
   POOR:      { color: "var(--danger)", bg: "rgba(var(--danger-rgb), 0.08)",border: "rgba(var(--danger-rgb), 0.2)",dot: "var(--danger)" },
 };

@@ -46,7 +46,7 @@ import {
   markMessageRead,
 } from "../features/messageSlice";
 import PageHeader from "../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell } from "../styles/pageStyles";
+import { iconWell } from "../styles/pageStyles";
 
 const { Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
@@ -123,7 +123,7 @@ const getPriority = (item) => toText(item?.priority, "normal").toLowerCase();
 const MessageSkeleton = () => (
   <Space direction="vertical" size={10} style={{ width: "100%" }}>
     {[1, 2, 3].map((item) => (
-      <div key={item} style={{ ...sectionPanel, padding: 16, marginBottom: 0 }}>
+      <div key={item} className="section-panel" style={{ padding: 16, marginBottom: 0 }}>
         <Skeleton active avatar paragraph={{ rows: 2 }} title={{ width: "55%" }} />
       </div>
     ))}
@@ -318,7 +318,7 @@ const MessagePage = () => {
           subtitle="Secure role-wise inbox, sent mail, replies, and archive."
           icon={<MessageSquareText size={18} />}
         />
-        <div style={pageWrapper}>
+        <div className="page-wrapper">
           <Alert
             type="warning"
             showIcon
@@ -348,7 +348,7 @@ const MessagePage = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* Stat Cards */}
         <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
           {statCards.map((stat) => (
@@ -380,7 +380,7 @@ const MessagePage = () => {
         </Row>
 
         {/* Mailbox Toolbar */}
-        <div style={{ ...sectionPanel, marginBottom: 16, padding: "10px 16px" }}>
+        <div className="section-panel" style={{ marginBottom: 16, padding: "10px 16px" }}>
           <Flex vertical={isMobile} gap={12} align={isMobile ? "stretch" : "center"} justify="space-between">
             <Tabs
               activeKey={mailbox}
@@ -407,7 +407,7 @@ const MessagePage = () => {
         </div>
 
         {/* Messages List */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Flex align="center" justify="space-between" style={{ marginBottom: 16 }}>
             <Flex align="center" gap={8}>
               <Text strong style={{ fontSize: 15, color: "var(--text-primary)", textTransform: "capitalize" }}>
@@ -572,7 +572,7 @@ const MessagePage = () => {
         {selected && (
           <Space direction="vertical" size={14} style={{ width: "100%" }}>
             {/* Message meta */}
-            <div style={{ ...sectionPanel, padding: 14, marginBottom: 0, background: "var(--surface-soft)" }}>
+            <div className="section-panel" style={{ padding: 14, marginBottom: 0, background: "var(--surface-soft)" }}>
               <Flex gap={6} wrap="wrap" align="center">
                 <Tag color={PRIORITY_COLOR[getPriority(selected)] || "blue"} style={{ borderRadius: 99 }}>
                   {getPriority(selected).toUpperCase()}
@@ -593,7 +593,7 @@ const MessagePage = () => {
                 rowKey={(item) => item._id}
                 renderItem={(item) => (
                   <List.Item style={{ padding: 0, marginBottom: 10 }}>
-                    <div style={{ ...sectionPanel, padding: 14, marginBottom: 0, width: "100%" }}>
+                    <div className="section-panel" style={{ padding: 14, marginBottom: 0, width: "100%" }}>
                       <Space direction="vertical" size={8} style={{ width: "100%" }}>
                         <Flex vertical={isMobile} gap={8} justify="space-between" align={isMobile ? "flex-start" : "center"}>
                           <Space wrap>
@@ -614,7 +614,7 @@ const MessagePage = () => {
             )}
 
             {/* Reply */}
-            <div style={{ ...sectionPanel, marginBottom: 0 }}>
+            <div className="section-panel is-last">
               <Text strong style={{ display: "block", marginBottom: 10, fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 Reply
               </Text>

@@ -4,10 +4,7 @@ import { UserPlus, LogOut, Plus, Users, CheckCircle } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGateEntries, createGateEntry, markGateExit } from "../../features/gateEntrySlice";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, statGrid,
-  pill, tableHeadCss, emptyState,
-} from "../../styles/pageStyles.js";
+import { statGrid, pill } from "../../styles/pageStyles.js";
 import { fmt, Avatar, StatCard, RefreshBtn, PrimaryBtn, VISITOR_COLORS } from "./receptionistShared.jsx";
 
 const VisitorManagement = () => {
@@ -96,8 +93,7 @@ const VisitorManagement = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("visitor-table")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Visitor Management"
         subtitle="Track all gate entries and exits in real time"
@@ -116,17 +112,17 @@ const VisitorManagement = () => {
         <StatCard icon={LogOut}      label="Exited"           value={exited}         color="var(--text-muted)" />
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}><Spin size="large" /></div>
         ) : entries.length === 0 ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <div style={{ fontSize: 34, marginBottom: 10 }}>🚪</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>No Visitor Entries</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Click "Check In Visitor" to log the first entry.</div>
           </div>
         ) : (
-          <Table className="visitor-table" rowKey="_id" dataSource={entries} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 700 }} />
+          <Table className="visitor-table data-table" rowKey="_id" dataSource={entries} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 700 }} />
         )}
       </div>
 

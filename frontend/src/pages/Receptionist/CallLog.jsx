@@ -6,10 +6,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCallLogs, createCallLog, deleteCallLog } from "../../features/callLogSlice";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, statGrid,
-  pill, tableHeadCss, emptyState,
-} from "../../styles/pageStyles.js";
+import { statGrid, pill } from "../../styles/pageStyles.js";
 import { fmtFull, Avatar, StatCard, RefreshBtn, PrimaryBtn } from "./receptionistShared.jsx";
 
 const CALL_COLORS = { Incoming: "var(--success)", Outgoing: "var(--purple)", Missed: "var(--danger)" };
@@ -94,8 +91,7 @@ const CallLog = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("call-table")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Call Log"
         subtitle="Record and track all incoming, outgoing and missed calls"
@@ -115,17 +111,17 @@ const CallLog = () => {
         <StatCard icon={Phone}         label="Total"    value={logs.length}     color="var(--info)" />
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}><Spin size="large" /></div>
         ) : logs.length === 0 ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <div style={{ fontSize: 34, marginBottom: 10 }}>📞</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>No Calls Logged</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Click "Log Call" to record the first call.</div>
           </div>
         ) : (
-          <Table className="call-table" rowKey="_id" dataSource={logs} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 680 }} />
+          <Table className="call-table data-table" rowKey="_id" dataSource={logs} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 680 }} />
         )}
       </div>
 

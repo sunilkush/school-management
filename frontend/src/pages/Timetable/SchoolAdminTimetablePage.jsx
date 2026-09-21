@@ -15,7 +15,6 @@ import TimetableGrid from "./TimetableGrid.jsx";
 import { getId, getName, schoolIdFromUser } from "./timetableUi.js";
 import PageHeader from "../../components/layout/PageHeader";
 import GenerateTimetableModal from "../../components/timetable/GenerateTimetableModal";
-import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
@@ -169,7 +168,7 @@ export default function SchoolAdminTimetablePage() {
   const periodCount     = entries.filter((e) => e.type === "regular").length;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Timetable Planner"
         subtitle="Build and manage weekly class timetables, detect conflicts, and publish schedules"
@@ -215,7 +214,7 @@ export default function SchoolAdminTimetablePage() {
       />
 
       {/* ── Filter bar ── */}
-      <div style={{ ...sectionPanel, margin: "20px 0 16px" }}>
+      <div className="section-panel" style={{ margin: "20px 0 16px" }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 8, marginBottom: 14,
           justifyContent: "space-between", flexWrap: "wrap",
@@ -307,7 +306,7 @@ export default function SchoolAdminTimetablePage() {
       </div>
 
       {/* ── Timetable grid ── */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{ padding: "14px 20px", borderBottom: "1px solid " + C.border }}>
           <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>Weekly Timetable</span>
         </div>

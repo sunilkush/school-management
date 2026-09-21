@@ -10,7 +10,7 @@ import {
 import apiClient from "../../../api/httpClient";
 import { fetchStudentEnrollment } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const TYPE_OPTIONS = [
   { value: "notes",          label: "Notes",          icon: <FileTextOutlined /> },
@@ -26,7 +26,7 @@ const TYPE_COLOR = {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -39,15 +39,7 @@ const MaterialCard = ({ item }) => {
   const typeInfo = TYPE_OPTIONS.find((t) => t.value === item.type) || TYPE_OPTIONS[5];
 
   return (
-    <div style={{
-      ...sectionPanel,
-      padding: "16px 20px",
-      marginBottom: 0,
-      display: "flex",
-      flexDirection: "column",
-      gap: 8,
-      transition: "box-shadow 0.2s",
-    }}>
+    <div className="section-panel" style={{ padding: "16px 20px", marginBottom: 0, display: "flex", flexDirection: "column", gap: 8, transition: "box-shadow 0.2s" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 4 }}>{item.title}</div>
@@ -150,7 +142,7 @@ const StudyMaterials = () => {
   }), [materials]);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Study Materials"
         subtitle="Browse resources uploaded by your teachers"
@@ -164,8 +156,8 @@ const StudyMaterials = () => {
         <StatCard icon={<BookOutlined />}        label="Books"  value={stats.books}  color="var(--warning)" />
       </div>
 
-      <div style={{ ...sectionPanel, marginTop: 0 }}>
-        <div style={toolbarRow}>
+      <div className="section-panel" style={{ marginTop: 0 }}>
+        <div className="toolbar-row">
           <Input
             placeholder="Search by title or subject"
             prefix={<SearchOutlined />}

@@ -20,7 +20,7 @@ import {
   updateHealthVisit,
 } from "../../features/healthRecordSlice";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../styles/pageStyles.js";
+import { iconWell } from "../../styles/pageStyles.js";
 
 const { Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -275,7 +275,6 @@ export default function HealthRecordsPage() {
 
   return (
     <>
-      <style>{tableHeadCss("health-tbl")}</style>
 
       <PageHeader
         title="Health Records"
@@ -283,7 +282,7 @@ export default function HealthRecordsPage() {
         icon={<MedicineBoxOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!canFilter && (
           <Alert
             type="warning" showIcon
@@ -293,7 +292,7 @@ export default function HealthRecordsPage() {
         )}
 
         {/* ── Student picker ─────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
             <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
@@ -332,7 +331,7 @@ export default function HealthRecordsPage() {
         {studentId && (
           <>
             {/* ── Health Profile ─────────────────────────────── */}
-            <div style={{ ...sectionPanel, marginBottom: 16 }}>
+            <div className="section-panel" style={{ marginBottom: 16 }}>
               <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
                 <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>Health Profile</Text>
                 <Button type="primary" icon={<SaveOutlined />} loading={savingProfile} onClick={handleSaveProfile}>
@@ -448,7 +447,7 @@ export default function HealthRecordsPage() {
         )}
 
         {/* ── Visit Log ────────────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" justify="space-between" wrap="wrap" gap={10} style={{ marginBottom: 14 }}>
             <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
               {showAllStudents || !studentId ? "All Health Visits" : "Visit Log"}
@@ -490,7 +489,7 @@ export default function HealthRecordsPage() {
           </Row>
 
           <Table
-            className="health-tbl"
+            className="health-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={visits}

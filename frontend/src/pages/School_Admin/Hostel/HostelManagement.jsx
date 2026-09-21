@@ -14,10 +14,10 @@ import {
 } from "../../../features/hostelSlice";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
-// Shared design tokens (frontend/src/index.css) — replaces a local hardcoded
+// Shared design tokens (frontend/src/styles/main.scss) — replaces a local hardcoded
 // hex palette that never adapted to dark mode.
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
@@ -353,8 +353,7 @@ const HostelManagement = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("hostel-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Hostel Room Management"
@@ -468,7 +467,7 @@ const HostelManagement = () => {
       </div>
 
       {/* Table */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{
           padding: "14px 20px", borderBottom: "1px solid " + C.border,
           display: "flex", alignItems: "center", gap: 8,
@@ -483,7 +482,7 @@ const HostelManagement = () => {
           </span>
         </div>
         <Table
-          className="hostel-tbl"
+          className="hostel-tbl data-table"
           columns={columns}
           dataSource={filteredRooms}
           loading={loading}

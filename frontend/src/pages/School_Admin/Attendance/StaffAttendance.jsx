@@ -24,13 +24,7 @@ import dayjs from "dayjs";
 import { fetchAllUser } from "../../../features/authSlice";
 import { markBulkAttendance } from "../../../features/attendanceSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-  sectionPanel,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 /* ── Map display role name → attendance role slug ── */
 const ROLE_TO_ATT_ROLE = {
@@ -323,8 +317,7 @@ const StaffAttendance = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Staff Attendance"
@@ -343,7 +336,7 @@ const StaffAttendance = () => {
       />
 
       {/* ── Filters ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div
           style={{
             display: "grid",
@@ -516,7 +509,7 @@ const StaffAttendance = () => {
       >
         {filteredStaff.length > 0 ? (
           <Table
-            className={TABLE_CLS}
+            className={`${TABLE_CLS} data-table`}
             rowKey="_id"
             columns={columns}
             dataSource={filteredStaff}

@@ -8,7 +8,7 @@ import {
   Layers, Database, Package, Building2, Wrench,
 } from "lucide-react";
 import PageHeader from "../components/layout/PageHeader";
-import { pageWrapper, iconWell } from "../styles/pageStyles";
+import { iconWell } from "../styles/pageStyles";
 
 /* ── Module → icon + color ───────────────────────────────────────── */
 const MODULE_KEYS = [
@@ -96,13 +96,7 @@ const RoleWorkspace = () => {
   if (loading) {
     return (
       <div
-        style={{
-          ...pageWrapper,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "60vh",
-        }}
+        className="page-wrapper" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}
       >
         <Spin size="large" />
       </div>
@@ -110,7 +104,7 @@ const RoleWorkspace = () => {
   }
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       {/* ── Standard page header ── */}
       <PageHeader
         title="Role Workspace"

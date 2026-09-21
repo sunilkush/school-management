@@ -7,13 +7,10 @@ import {
 } from "@ant-design/icons";
 import { fetchStudentHostel } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{
-    ...sectionPanel, display: "flex", alignItems: "center",
-    gap: 14, padding: "16px 20px", marginBottom: 0,
-  }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -30,15 +27,15 @@ const StudentHostel = () => {
   useEffect(() => { dispatch(fetchStudentHostel()); }, [dispatch]);
 
   if (hostelLoading) return (
-    <div style={{ ...pageWrapper, display: "flex", justifyContent: "center", padding: 80 }}>
+    <div className="page-wrapper" style={{ display: "flex", justifyContent: "center", padding: 80 }}>
       <Spin size="large" />
     </div>
   );
 
   if (!allocation) return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader title="Hostel" subtitle="Your hostel room allocation" icon={<HomeOutlined />} />
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={<span style={{ color: "var(--text-muted)" }}>No hostel allocation found. Contact the hostel office.</span>} />
       </div>
@@ -46,7 +43,7 @@ const StudentHostel = () => {
   );
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader title="Hostel" subtitle="Your hostel room details and allocation" icon={<HomeOutlined />} />
 
       <div style={{ ...statGrid(160), marginTop: 20 }}>
@@ -57,7 +54,7 @@ const StudentHostel = () => {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 0 }}>
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Room Details</div>
           <Descriptions column={1} size="small" labelStyle={{ color: "var(--text-muted)", fontWeight: 600, fontSize: 12 }}>
             <Descriptions.Item label="Room Number">{allocation.roomNumber || "—"}</Descriptions.Item>
@@ -71,7 +68,7 @@ const StudentHostel = () => {
           </Descriptions>
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Roommates</div>
           {allocation.roommates?.length ? (
             <List

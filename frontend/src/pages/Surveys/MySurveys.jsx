@@ -9,7 +9,7 @@ import {
   clearMyResponse, fetchMyResponse, fetchMySurveys, submitResponse,
 } from "../../features/surveySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { TextArea } = Input;
 
@@ -103,11 +103,7 @@ const MySurveys = () => {
   const card = (s) => (
     <div
       key={s._id}
-      style={{
-        ...sectionPanel,
-        cursor: s.hasResponded && s.isAnonymous ? "default" : "pointer",
-        borderColor: s.hasResponded || s.closedReason ? "var(--border-muted)" : "var(--primary)",
-      }}
+      className="section-panel" style={{ cursor: s.hasResponded && s.isAnonymous ? "default" : "pointer", borderColor: s.hasResponded || s.closedReason ? "var(--border-muted)" : "var(--primary)" }}
       onClick={() => { if (!(s.hasResponded && s.isAnonymous) && !s.closedReason) open(s); }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -137,7 +133,7 @@ const MySurveys = () => {
   const locked = answered && active?.isAnonymous;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Surveys"
         subtitle="Questions the school has asked you"
@@ -147,7 +143,7 @@ const MySurveys = () => {
       {mineLoading && !mine?.length ? (
         <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
       ) : !mine?.length ? (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="Nothing to answer at the moment" />
         </div>
       ) : (

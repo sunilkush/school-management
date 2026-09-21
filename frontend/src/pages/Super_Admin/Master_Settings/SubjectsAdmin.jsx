@@ -28,15 +28,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllSubjects, deleteSubject } from "../../../features/subjectSlice.js";
 import * as XLSX from "xlsx";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  statGrid,
-  iconWell,
-  toolbarRow,
-  tableContainer,
-  tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -64,7 +56,7 @@ function StatusBadge({ isActive }) {
 /* ─── Stat Card ─── */
 function StatCard({ label, value, icon, accentColor }) {
   return (
-    <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+    <div className="section-panel is-header-strip">
       <div style={iconWell(accentColor, 42)}>{icon}</div>
       <div>
         <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -349,7 +341,7 @@ const SubjectsAdmin = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Subjects Management"
         subtitle="Manage subjects for your school or global context"
@@ -374,18 +366,11 @@ const SubjectsAdmin = () => {
         <StatCard label="Teacher Assigned"  value={assignedCount} icon={<TeamOutlined />}         accentColor="var(--orange)" />
       </div>
 
-      <style>{tableHeadCss("subjects-tbl")}</style>
 
       {/* ── Table Card ── */}
-      <div style={{ ...sectionPanel, padding: 0 }}>
+      <div className="section-panel" style={{ padding: 0 }}>
         {/* Filter Bar */}
-        <div style={{
-          ...toolbarRow,
-          justifyContent: "space-between",
-          padding: "16px 20px",
-          borderBottom: "1px solid var(--border-muted)",
-          marginBottom: 0,
-        }}>
+        <div className="toolbar-row" style={{ justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid var(--border-muted)", marginBottom: 0 }}>
           <Space wrap>
             <Input
               prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
@@ -441,7 +426,7 @@ const SubjectsAdmin = () => {
         </div>
 
         {/* Table */}
-        <div className="subjects-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0, overflowX: "auto" }}>
+        <div className="subjects-tbl data-table table-container" style={{ border: "none", borderRadius: 0, overflowX: "auto" }}>
           <Table
             rowKey="_id"
             columns={columns}

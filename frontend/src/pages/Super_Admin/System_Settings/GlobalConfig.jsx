@@ -6,7 +6,7 @@ import { CreditCardOutlined, FileTextOutlined, PictureOutlined, SaveOutlined, Se
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGlobalConfig, updateGlobalConfig } from "../../../features/globalConfigSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { iconWell, pageWrapper, sectionPanel } from "../../../styles/pageStyles";
+import { iconWell } from "../../../styles/pageStyles";
 
 /**
  * Global settings — the platform-wide details, grouped by what actually uses them.
@@ -50,7 +50,7 @@ const valuesFrom = (c = {}) => ({
 });
 
 const Panel = ({ icon, title, usedBy, children }) => (
-  <div style={sectionPanel}>
+  <div className="section-panel">
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 16 }}>
       <div style={iconWell("var(--primary)", 36)}>{icon}</div>
       <div>
@@ -161,11 +161,11 @@ export default function GlobalConfig() {
   const contact = [watched.supportEmail, watched.supportPhone].filter(Boolean).join("  ·  ");
 
   if (!config && loading) {
-    return <div style={pageWrapper}><PageHeader title="Global settings" icon={<SettingOutlined />} /><div style={sectionPanel}><Skeleton active paragraph={{ rows: 8 }} /></div></div>;
+    return <div className="page-wrapper"><PageHeader title="Global settings" icon={<SettingOutlined />} /><div className="section-panel"><Skeleton active paragraph={{ rows: 8 }} /></div></div>;
   }
   if (!config && error) {
     return (
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <PageHeader title="Global settings" icon={<SettingOutlined />} />
         <Alert type="error" showIcon message={error} action={<Button size="small" onClick={() => dispatch(fetchGlobalConfig())}>Try again</Button>} />
       </div>
@@ -182,7 +182,7 @@ export default function GlobalConfig() {
   );
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Global settings"
         subtitle="Platform-wide details — each group says what uses it"

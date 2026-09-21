@@ -13,7 +13,7 @@ import {
 import dayjs from "dayjs";
 import { getAttemptById } from "../../../features/attemptSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { iconWell, pageWrapper, sectionPanel, statGrid } from "../../../styles/pageStyles";
+import { iconWell, statGrid } from "../../../styles/pageStyles";
 
 /* ── helpers ── */
 const resolveQuestionText = (ans, idx) => {
@@ -118,7 +118,7 @@ const AttemptReview = () => {
   );
 
   if (!attempt) return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <Empty description="Attempt not found" />
     </div>
   );
@@ -128,7 +128,7 @@ const AttemptReview = () => {
   const pct   = stats?.pct ?? 0;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Attempt Review"
         subtitle={attempt?.examId?.title || "Exam Review"}
@@ -145,11 +145,7 @@ const AttemptReview = () => {
       )}
 
       {/* ── Score card ── */}
-      <div style={{
-        ...sectionPanel, marginTop: 20,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        flexWrap: "wrap", gap: 20,
-      }}>
+      <div className="section-panel" style={{ marginTop: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
           {/* Circle progress */}
           <Progress
@@ -216,7 +212,7 @@ const AttemptReview = () => {
       </div>
 
       {/* ── Question-wise Review ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <div style={iconWell("var(--primary)", 34)}><FileTextOutlined /></div>
           <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>

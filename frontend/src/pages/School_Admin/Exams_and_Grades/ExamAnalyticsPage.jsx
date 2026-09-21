@@ -4,16 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { BarChartOutlined, TrophyOutlined, TeamOutlined } from "@ant-design/icons";
 import { getExamAnalytics, getExams } from "../../../features/examSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  sectionPanel,
-  toolbarRow,
-  statCard,
-  statLabel,
-  statValue,
-  statGrid,
-} from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 
@@ -38,7 +29,7 @@ const ExamAnalyticsPage = () => {
   }, [analytics]);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Exam Analytics"
         subtitle="Track performance, pass rates, and insights for each exam."
@@ -46,8 +37,8 @@ const ExamAnalyticsPage = () => {
       />
 
       <div style={{ marginTop: 20 }}>
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
-          <div className="page-toolbar" style={toolbarRow}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
+          <div className="page-toolbar toolbar-row">
             <Select
               value={examId}
               onChange={setExamId}
@@ -69,7 +60,7 @@ const ExamAnalyticsPage = () => {
         ) : null}
 
         {!examId ? (
-          <div style={pageCard}>
+          <div className="page-card">
             <Empty
               description="Select an exam above to view analytics"
               style={{ padding: "48px 24px" }}
@@ -93,7 +84,7 @@ const ExamAnalyticsPage = () => {
               ))}
             </div>
 
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <Space direction="vertical" size={6} style={{ width: "100%" }}>
                 <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
                   Risk Level:{" "}

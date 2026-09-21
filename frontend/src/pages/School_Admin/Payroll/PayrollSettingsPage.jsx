@@ -4,7 +4,7 @@ import { SettingOutlined, SafetyCertificateOutlined, HeartOutlined, HistoryOutli
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell } from "../../../styles/pageStyles";
+import { iconWell } from "../../../styles/pageStyles";
 import { fetchPayrollSettings, savePayrollSettings } from "../../../features/payrollSlice";
 
 const SectionTitle = ({ icon, color, title, subtitle }) => (
@@ -108,7 +108,7 @@ const PayrollSettingsPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Payroll Settings"
         subtitle="Configure PF (EPF), ESI, and other statutory payroll rules for this school"
@@ -116,7 +116,7 @@ const PayrollSettingsPage = () => {
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 20, alignItems: "start" }}>
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={DEFAULTS}>
             <SectionTitle
               icon={<SafetyCertificateOutlined style={{ fontSize: 13 }} />}
@@ -279,7 +279,7 @@ const PayrollSettingsPage = () => {
           </Form>
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <SectionTitle icon={<HistoryOutlined style={{ fontSize: 13 }} />} color="var(--purple)" title="Settings History" subtitle="All configured versions, newest first" />
           <Table
             size="small"

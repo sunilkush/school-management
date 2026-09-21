@@ -12,7 +12,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, CartesianGrid, AreaChart, Area,
 } from "recharts";
-import { iconWell, pageWrapper, sectionPanel, statGrid } from "../../styles/pageStyles";
+import { iconWell, statGrid } from "../../styles/pageStyles";
 import { BarChartOutlined } from "@ant-design/icons";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
@@ -20,7 +20,7 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const ReportCard = ({ title, children, extra }) => (
-  <div style={{ ...sectionPanel, marginBottom: 0 }}>
+  <div className="section-panel is-last">
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
       <div style={{ fontWeight: 700, fontSize: 13 }}>{title}</div>
       {extra}
@@ -97,7 +97,7 @@ const HostelReports = () => {
   const loading = dashboardLoading || leavesLoading || visitorsLoading || complaintsLoading || attendanceLoading;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Hostel Reports"
         subtitle="Occupancy, leave, visitor, complaint, and attendance analytics"
@@ -124,7 +124,7 @@ const HostelReports = () => {
           { label: "Students",        value: kpis.totalStudents,  color: "var(--accent)" },
           { label: "Open Complaints", value: kpis.openComplaints, color: "var(--danger)" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ ...sectionPanel, marginBottom: 0, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+          <div key={label} className="section-panel is-header-strip">
             <div style={iconWell(color, 36)}><FileTextOutlined /></div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase" }}>{label}</div>
@@ -135,7 +135,7 @@ const HostelReports = () => {
       </div>
 
       {/* ── Occupancy ──────────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, marginBottom: 20 }}>
+      <div className="section-panel" style={{ marginBottom: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Occupancy Rate</div>
         <Progress
           percent={kpis.occupancyRate || 0}

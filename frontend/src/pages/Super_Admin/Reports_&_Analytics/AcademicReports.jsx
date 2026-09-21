@@ -18,14 +18,7 @@ import {
 import { fetchAcademicSummary } from "../../../features/analyticsSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  toolbarRow,
-  statGrid,
-  iconWell,
-  tableContainer,
-  tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -148,8 +141,7 @@ const AcademicReports = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Academic Reports"
@@ -168,7 +160,7 @@ const AcademicReports = () => {
       />
 
       {/* Toolbar */}
-      <div style={{ ...toolbarRow, marginTop: 20 }}>
+      <div className="toolbar-row" style={{ marginTop: 20 }}>
         <Select
           placeholder="All Schools"
           allowClear
@@ -247,9 +239,9 @@ const AcademicReports = () => {
             }}>
               School-wise Academic Overview
             </div>
-            <div style={tableContainer}>
+            <div className="table-container">
               <Table
-                className={TABLE_CLS}
+                className={`${TABLE_CLS} data-table`}
                 rowKey={(r) => r.schoolId || r.schoolName}
                 columns={schoolColumns}
                 dataSource={schoolData}

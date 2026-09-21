@@ -5,7 +5,6 @@ import { DownloadOutlined, FileTextOutlined } from "@ant-design/icons";
 
 import PageHeader from "../../../components/layout/PageHeader";
 import ReportCardView from "../../../components/reportCard/ReportCardView";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import { fetchChildReportCards, downloadReportCardPdf } from "../../../services/reportCardApi";
 
@@ -36,7 +35,7 @@ export default function ChildReportCards() {
   const childName = children.find((c) => c.userId === selectedChildId)?.name;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Report Cards"
         subtitle="Your child's consolidated results for each term, once the school publishes them."
@@ -55,11 +54,11 @@ export default function ChildReportCards() {
       />
 
       {loading || childLoading ? (
-        <div style={sectionPanel}><Skeleton active paragraph={{ rows: 6 }} /></div>
+        <div className="section-panel"><Skeleton active paragraph={{ rows: 6 }} /></div>
       ) : !children.length ? (
-        <div style={sectionPanel}><Empty description="No children linked to your account" /></div>
+        <div className="section-panel"><Empty description="No children linked to your account" /></div>
       ) : !cards.length ? (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Empty description={`No report cards published for ${childName || "this child"} yet`} />
         </div>
       ) : (

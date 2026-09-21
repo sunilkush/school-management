@@ -13,10 +13,7 @@ import { fetchRoles } from "../../../features/roleSlice";
 import RegisterForm from "../../../components/forms/RegisterForm";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, pageCard, toolbarRow, tableHeadCss,
-  avatarStyle, pill, emptyState, statCard, statLabel, statValue, statGrid,
-} from "../../../styles/pageStyles";
+import { avatarStyle, pill, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const ROLE_COLORS = {
   teacher:            { color: "var(--accent)", bg: "rgba(var(--accent-rgb), 0.2)" },
@@ -230,7 +227,6 @@ const TeacherList = () => {
 
   return (
     <>
-      <style>{tableHeadCss("staff-table")}</style>
 
       <PageHeader
         title="Staff Directory"
@@ -250,7 +246,7 @@ const TeacherList = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <Modal
           open={isAdmin && isModalOpen}
           footer={null}
@@ -324,7 +320,7 @@ const TeacherList = () => {
           </div>
         </Modal>
 
-        <div style={pageCard}>
+        <div className="page-card">
           <div style={{ padding: "20px 20px 0" }}>
             {/* KPI row */}
             <div className="stat-grid" style={statGrid(200)}>
@@ -340,7 +336,7 @@ const TeacherList = () => {
             </div>
 
             {/* Toolbar */}
-            <div className="page-toolbar" style={toolbarRow}>
+            <div className="page-toolbar toolbar-row">
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Staff
               </span>
@@ -363,7 +359,7 @@ const TeacherList = () => {
 
           {filteredUsers.length === 0 ? (
             <div style={{ padding: "0 20px 20px" }}>
-              <div style={emptyState}>
+              <div className="empty-state">
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🧑‍🏫</div>
                 <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
                   {searchText || selectedRole !== "all" ? "No staff match your filters" : "No staff found"}
@@ -376,7 +372,7 @@ const TeacherList = () => {
               </div>
             </div>
           ) : (
-            <div className="staff-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
+            <div className="staff-table data-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
               <Table
                 columns={columns}
                 dataSource={filteredUsers}

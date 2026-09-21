@@ -23,13 +23,7 @@ import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { markBulkAttendance } from "../../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-  sectionPanel,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 /* ── Status config ───────────────────────────────────────────────── */
 // `color` feeds StatusBtn's alpha tint (via color-mix()) and the shared iconWell()
@@ -280,8 +274,7 @@ const AllStudentsAttendance = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Student Attendance"
@@ -301,7 +294,7 @@ const AllStudentsAttendance = () => {
       />
 
       {/* ── Filters ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div
           style={{
             display: "grid",
@@ -483,7 +476,7 @@ const AllStudentsAttendance = () => {
         <Spin spinning={studLoading}>
           {filteredStudents.length > 0 ? (
             <Table
-              className={TABLE_CLS}
+              className={`${TABLE_CLS} data-table`}
               rowKey="_id"
               columns={columns}
               dataSource={filteredStudents}

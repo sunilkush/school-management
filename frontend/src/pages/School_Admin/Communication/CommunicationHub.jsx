@@ -24,10 +24,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  iconWell, pageWrapper, pill, sectionPanel,
-  statGrid, tableContainer, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { iconWell, pill, statGrid } from "../../../styles/pageStyles";
 import { getRoleName, ALL_ROLE_NAMES } from "../../../utils/roles";
 import {
   createNotificationPayload, getNotificationAnalytics, getNotifications,
@@ -254,7 +251,7 @@ const BroadcastPanel = ({ user }) => {
     <div>
       {/* Compose section */}
       {canCreate && (
-        <div style={{ ...sectionPanel, marginBottom: 20 }}>
+        <div className="section-panel" style={{ marginBottom: 20 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 18 }}>
             <div style={iconWell("var(--purple)", 38)}><SendOutlined style={{ fontSize: 17 }} /></div>
             <div>
@@ -318,7 +315,7 @@ const BroadcastPanel = ({ user }) => {
       )}
 
       {/* Notifications inbox */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <Flex align="center" justify="space-between" wrap="wrap" gap={10} style={{ marginBottom: 14 }}>
           <Flex align="center" gap={8}>
             <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>My Notifications</Text>
@@ -337,7 +334,7 @@ const BroadcastPanel = ({ user }) => {
 
         {loading ? (
           <Space direction="vertical" size={10} style={{ width: "100%" }}>
-            {[1, 2, 3].map((i) => <div key={i} style={{ ...sectionPanel, padding: 14, marginBottom: 0, borderRadius: 12 }}><Skeleton active avatar paragraph={{ rows: 2 }} /></div>)}
+            {[1, 2, 3].map((i) => <div key={i} className="section-panel" style={{ padding: 14, marginBottom: 0, borderRadius: 12 }}><Skeleton active avatar paragraph={{ rows: 2 }} /></div>)}
           </Space>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "48px 0" }}>
@@ -471,7 +468,7 @@ const MessagesPanel = ({ user }) => {
   return (
     <div>
       {/* Toolbar */}
-      <div style={{ ...sectionPanel, padding: "10px 16px", marginBottom: 16 }}>
+      <div className="section-panel" style={{ padding: "10px 16px", marginBottom: 16 }}>
         <Flex align="center" justify="space-between" gap={12} wrap="wrap">
           <Tabs
             activeKey={mailbox}
@@ -509,10 +506,10 @@ const MessagesPanel = ({ user }) => {
       </div>
 
       {/* List */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {loading ? (
           <Space direction="vertical" size={10} style={{ width: "100%" }}>
-            {[1, 2, 3].map((i) => <div key={i} style={{ ...sectionPanel, padding: 14, marginBottom: 0 }}><Skeleton active avatar paragraph={{ rows: 2 }} /></div>)}
+            {[1, 2, 3].map((i) => <div key={i} className="section-panel" style={{ padding: 14, marginBottom: 0 }}><Skeleton active avatar paragraph={{ rows: 2 }} /></div>)}
           </Space>
         ) : rows.length === 0 ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No messages" style={{ padding: "48px 0" }} />
@@ -633,7 +630,7 @@ const MessagesPanel = ({ user }) => {
       >
         {selected && (
           <Space direction="vertical" size={14} style={{ width: "100%" }}>
-            <div style={{ ...sectionPanel, padding: 12, background: "var(--surface-soft)" }}>
+            <div className="section-panel" style={{ padding: 12, background: "var(--surface-soft)" }}>
               <Flex gap={6} wrap="wrap" align="center">
                 <Tag color={PRIORITY_COLOR[selected.priority] || "blue"} style={{ borderRadius: 99 }}>
                   {(selected.priority || "NORMAL").toUpperCase()}
@@ -652,7 +649,7 @@ const MessagesPanel = ({ user }) => {
                 rowKey={(r) => r._id}
                 renderItem={(msg) => (
                   <List.Item style={{ padding: 0, marginBottom: 10 }}>
-                    <div style={{ ...sectionPanel, padding: 14, width: "100%" }}>
+                    <div className="section-panel" style={{ padding: 14, width: "100%" }}>
                       <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
                         <Flex align="center" gap={8}>
                           <div style={iconWell("var(--primary)", 28)}><MailOutlined style={{ fontSize: 12 }} /></div>
@@ -669,7 +666,7 @@ const MessagesPanel = ({ user }) => {
               />
             )}
 
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <Text strong style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 10 }}>Reply</Text>
               <Form form={replyForm} layout="vertical" onFinish={sendReply}>
                 <Form.Item name="body" rules={[{ required: true }]}>
@@ -764,7 +761,7 @@ const HistoryPanel = () => {
       </div>
 
       {/* Filters */}
-      <div style={{ ...sectionPanel, padding: "12px 16px", marginBottom: 16 }}>
+      <div className="section-panel" style={{ padding: "12px 16px", marginBottom: 16 }}>
         <Flex gap={10} wrap="wrap" align="center">
           <Select placeholder="All Channels" allowClear style={{ width: 150 }} onChange={(v) => setFilters((f) => ({ ...f, type: v }))}>
             <Select.Option value="SMS">SMS</Select.Option>
@@ -779,8 +776,7 @@ const HistoryPanel = () => {
       </div>
 
       {/* Table */}
-      <style>{tableHeadCss("hist-tbl")}</style>
-      <div className="hist-tbl" style={tableContainer}>
+      <div className="hist-tbl table-container">
         <Table
           columns={columns}
           dataSource={filteredData}
@@ -847,7 +843,7 @@ export default function CommunicationHub() {
         icon={<NotificationOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <style>{`
           .comm-hub-tabs .ant-tabs-tab { font-size: 13px !important; padding: 8px 16px !important; color: var(--text-muted) !important; }
           .comm-hub-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--primary) !important; font-weight: 600 !important; }

@@ -10,7 +10,6 @@ import {
 
 import PageHeader from "../../../components/layout/PageHeader";
 import ReportCardView from "../../../components/reportCard/ReportCardView";
-import { pageWrapper, sectionPanel, toolbarRow } from "../../../styles/pageStyles";
 import httpClient from "../../../api/httpClient";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import {
@@ -281,7 +280,7 @@ export default function ReportCards() {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Report Cards"
         subtitle="Define a term, generate consolidated cards from its exams, then publish them to parents."
@@ -296,8 +295,8 @@ export default function ReportCards() {
             label: "Report Cards",
             children: (
               <>
-                <div style={{ ...sectionPanel }}>
-                  <div style={toolbarRow}>
+                <div className="section-panel">
+                  <div className="toolbar-row">
                     <Select
                       placeholder="Select term"
                       style={{ minWidth: 220 }}
@@ -357,8 +356,8 @@ export default function ReportCards() {
             key: "terms",
             label: "Terms",
             children: (
-              <div style={sectionPanel}>
-                <div style={toolbarRow}>
+              <div className="section-panel">
+                <div className="toolbar-row">
                   <Button type="primary" icon={<PlusOutlined />} onClick={() => openTemplateModal()}>
                     New term
                   </Button>

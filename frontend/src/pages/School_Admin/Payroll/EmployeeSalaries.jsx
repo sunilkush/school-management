@@ -10,11 +10,6 @@ import PayrollEntriesTable from "../../../components/payroll/PayrollEntriesTable
 import { useLatestPayrollCycle, usePayrollActions, usePayrollCycle } from "../../../hooks/payrollHooks";
 import { getPayrollActionPermissions } from "../../../utils/payroll";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  sectionPanel,
-} from "../../../styles/pageStyles";
 
 const EmployeeSalaries = () => {
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
@@ -55,7 +50,7 @@ const EmployeeSalaries = () => {
   );
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Monthly Payroll Run"
         subtitle="Generate, review and process monthly payroll"
@@ -63,7 +58,7 @@ const EmployeeSalaries = () => {
       />
 
       <div style={{ padding: "20px" }}>
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Space wrap style={{ justifyContent: "space-between", width: "100%" }}>
             <PayrollHeaderActions
               selectedMonth={selectedMonth}
@@ -157,7 +152,7 @@ const EmployeeSalaries = () => {
           <PayrollSummaryCards summary={summary} />
         </div>
 
-        <div style={{ ...pageCard, padding: 24 }}>
+        <div className="page-card" style={{ padding: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Payroll Entries</div>
           <PayrollEntriesTable entries={entries} loading={loading} />
         </div>

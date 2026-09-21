@@ -10,10 +10,9 @@ import {
   fetchLibrarySettings, updateLibrarySettings,
 } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 
 const Section = ({ title, children }) => (
-  <div style={{ ...sectionPanel, marginBottom: 20 }}>
+  <div className="section-panel" style={{ marginBottom: 20 }}>
     <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border)", paddingBottom: 10 }}>
       {title}
     </div>
@@ -68,14 +67,14 @@ const LibrarySettings = () => {
 
   if (settingsLoading) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
+      <div className="page-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
         <Spin size="large" tip="Loading settings..." />
       </div>
     );
   }
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Library Settings"
         subtitle="Configure issue limits, fine rules, and feature toggles"

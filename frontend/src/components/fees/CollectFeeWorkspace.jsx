@@ -7,7 +7,7 @@ import RupeeIcon from "../icons/RupeeIcon";
 import { fetchStudentsBySchoolId } from "../../features/studentSlice";
 import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 import PageHeader from "../layout/PageHeader";
-import { pageWrapper, avatarColor } from "../../styles/pageStyles";
+import { avatarColor } from "../../styles/pageStyles";
 import StudentFeeLedger from "./StudentFeeLedger.jsx";
 
 const { useBreakpoint } = Grid;
@@ -75,7 +75,7 @@ const CollectFeeWorkspace = () => {
 
   if (!academicYearId) {
     return (
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {header}
         <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 32, textAlign: "center" }}>
           <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>No active academic year selected</div>
@@ -88,7 +88,7 @@ const CollectFeeWorkspace = () => {
   const clearAll = () => { setSelectedClassId(null); setSelectedStudentId(null); setSearchText(""); };
 
   return (
-    <div style={{ ...pageWrapper, padding: isMobile ? "12px" : "clamp(12px,3vw,24px)" }}>
+    <div className="page-wrapper" style={{ padding: isMobile ? "12px" : "clamp(12px,3vw,24px)" }}>
       {header}
 
       <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: isMobile ? "14px" : "20px", marginBottom: 16 }}>

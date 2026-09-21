@@ -11,7 +11,7 @@ import {
   deleteLeaveRequest,
 } from "../../../features/leaveRequestSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 
@@ -25,7 +25,7 @@ const LEAVE_TYPES = [
 ];
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -124,7 +124,7 @@ const StudentLeave = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Leave Requests"
         subtitle="Apply for and track your leave applications"
@@ -143,7 +143,7 @@ const StudentLeave = () => {
         <StatCard icon={<CalendarOutlined />} label="Rejected" value={stats.rejected} color="var(--danger)" />
       </div>
 
-      <div style={{ ...sectionPanel, marginTop: 0 }}>
+      <div className="section-panel" style={{ marginTop: 0 }}>
         <Table
           columns={columns} dataSource={myRequests} rowKey="_id"
           loading={loading} pagination={{ pageSize: 8 }}

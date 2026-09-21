@@ -16,7 +16,6 @@ import PageHeader             from "../../components/layout/PageHeader";
 import { FilterGrid, FilterField } from "../../components/attendance/FilterGrid";
 import { FULL_WIDTH }         from "../../components/attendance/filterStyles";
 import YearField              from "../../components/attendance/YearField";
-import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
 /* ── theme ── */
@@ -259,7 +258,7 @@ const MonthlyReportPage = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Monthly Attendance Report"
         subtitle={`${role.charAt(0).toUpperCase() + role.slice(1)} attendance summary for ${month.format("MMMM YYYY")}`}
@@ -278,7 +277,7 @@ const MonthlyReportPage = () => {
       />
 
       {/* ── Filter Panel ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <FilterGrid>
           {isSuperAdmin && (
             <FilterField label="School">
@@ -380,7 +379,7 @@ const MonthlyReportPage = () => {
       )}
 
       {/* ── Table ── */}
-      <div style={{ ...sectionPanel, marginTop: 14, overflow: "hidden", padding: 0 }}>
+      <div className="section-panel" style={{ marginTop: 14, overflow: "hidden", padding: 0 }}>
         {!schoolId && !reportLoading ? (
           <div style={{ padding: 40 }}>
             <Empty

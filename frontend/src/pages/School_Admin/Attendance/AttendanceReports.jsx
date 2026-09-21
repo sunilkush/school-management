@@ -23,14 +23,7 @@ import dayjs from "dayjs";
 import { fetchAttendance } from "../../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-  sectionPanel,
-  toolbarRow,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 
@@ -272,8 +265,7 @@ const AttendanceReports = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Attendance Reports"
@@ -296,7 +288,7 @@ const AttendanceReports = () => {
       />
 
       {/* ── Filters ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div style={{ marginBottom: 14 }}>
           <Segmented
             options={REPORT_TYPES}
@@ -309,7 +301,7 @@ const AttendanceReports = () => {
           />
         </div>
 
-        <div style={toolbarRow}>
+        <div className="toolbar-row">
           {reportType === "student" && (
             <>
               <Select
@@ -440,7 +432,7 @@ const AttendanceReports = () => {
         <Spin spinning={loading}>
           {filteredList.length > 0 ? (
             <Table
-              className={TABLE_CLS}
+              className={`${TABLE_CLS} data-table`}
               rowKey="_id"
               columns={columns}
               dataSource={filteredList}

@@ -17,9 +17,7 @@ import {
   promoteStudents,
 } from "../../../features/studentPromotionSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import {
-  avatarStyle, iconWell, pageWrapper, sectionPanel, tableHeadCss,
-} from "../../../styles/pageStyles.js";
+import { avatarStyle, iconWell } from "../../../styles/pageStyles.js";
 
 const { Text } = Typography;
 const TBL = "promo-tbl";
@@ -176,7 +174,6 @@ export default function StudentPromotion() {
   return (
     <>
       <style>{`
-        ${tableHeadCss(TBL)}
         .${TBL} .ant-table-tbody > tr.ant-table-row-selected > td {
           background: var(--primary-light) !important;
         }
@@ -208,10 +205,10 @@ export default function StudentPromotion() {
         icon={<UsergroupAddOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
         {/* ── Config panel ──────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
 
           {/* Panel label */}
           <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
@@ -451,7 +448,7 @@ export default function StudentPromotion() {
 
         {/* ── Table ─────────────────────────────────────── */}
         {candidates.length > 0 && (
-          <div style={{ ...sectionPanel, padding: 0, overflow: "hidden", marginBottom: 16 }}>
+          <div className="section-panel" style={{ padding: 0, overflow: "hidden", marginBottom: 16 }}>
             <div style={{ padding: "16px 20px 14px", borderBottom: "1px solid var(--border-muted)" }}>
               <Flex align="center" justify="space-between">
                 <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
@@ -466,7 +463,7 @@ export default function StudentPromotion() {
             </div>
             <Spin spinning={loading}>
               <Table
-                className={TBL}
+                className={`${TBL} data-table`}
                 rowKey="enrollmentId"
                 columns={columns}
                 dataSource={candidates}
@@ -486,16 +483,7 @@ export default function StudentPromotion() {
         )}
 
         {/* ── Action bar ────────────────────────────────── */}
-        <div style={{
-          ...sectionPanel,
-          marginBottom: 0,
-          padding: "16px 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}>
+        <div className="section-panel" style={{ marginBottom: 0, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           {/* Left: selection count */}
           <Flex align="center" gap={14}>
             <div style={{

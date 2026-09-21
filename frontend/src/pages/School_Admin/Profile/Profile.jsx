@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { changePassword, currentUser, updateUser } from '../../../features/authSlice';
 import PageHeader from '../../../components/layout/PageHeader';
-import { pageWrapper, pageCard, avatarStyle } from '../../../styles/pageStyles';
+import { avatarStyle } from '../../../styles/pageStyles';
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -79,18 +79,18 @@ const Profile = () => {
 
   if (authLoading) {
     return (
-      <div style={{ ...pageWrapper, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--text-muted)' }}>
+      <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--text-muted)' }}>
         <Loader2 style={{ width: 20, height: 20 }} /> Loading profile...
       </div>
     );
   }
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader title="My Profile" subtitle="View and update your personal information" icon={<UserOutlined />} />
 
       {/* Hero Card */}
-      <div style={{ ...pageCard, marginTop: 16, padding: '20px 24px' }}>
+      <div className="page-card" style={{ marginTop: 16, padding: '20px 24px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div
@@ -132,7 +132,7 @@ const Profile = () => {
 
       {/* Profile Form */}
       <form onSubmit={handleSaveProfile} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginTop: 16 }}>
-        <div style={{ ...pageCard, padding: '20px 24px', gridColumn: 'span 2' }}>
+        <div className="page-card" style={{ padding: '20px 24px', gridColumn: 'span 2' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>Basic Profile</div>
             <button type="submit" disabled={saving} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--primary, #7c3aed)', color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontSize: 13, opacity: saving ? 0.6 : 1 }}>
@@ -151,7 +151,7 @@ const Profile = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ ...pageCard, padding: '16px 20px' }}>
+          <div className="page-card" style={{ padding: '16px 20px' }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Building2 style={{ width: 14, height: 14 }} /> School
             </div>
@@ -163,7 +163,7 @@ const Profile = () => {
               </span>
             </div>
           </div>
-          <div style={{ ...pageCard, padding: '16px 20px' }}>
+          <div className="page-card" style={{ padding: '16px 20px' }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Mail style={{ width: 14, height: 14 }} /> Contact
             </div>
@@ -183,7 +183,7 @@ const Profile = () => {
 
       {/* Password Section */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginTop: 16 }}>
-        <form onSubmit={handleChangePassword} style={{ ...pageCard, padding: '20px 24px', gridColumn: 'span 2' }}>
+        <form onSubmit={handleChangePassword} className="page-card" style={{ padding: '20px 24px', gridColumn: 'span 2' }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 4 }}>Change Password</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Update your account password</div>
           <Section title="Password">
@@ -200,7 +200,7 @@ const Profile = () => {
           </button>
         </form>
 
-        <div style={{ ...pageCard, padding: '16px 20px', background: 'var(--surface-soft)' }}>
+        <div className="page-card" style={{ padding: '16px 20px', background: 'var(--surface-soft)' }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 12 }}>Password Tips</div>
           <ul style={{ padding: 0, margin: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {['At least 8 characters', 'Mix uppercase & lowercase', 'Include numbers & symbols', 'Avoid your name or email'].map((tip) => (

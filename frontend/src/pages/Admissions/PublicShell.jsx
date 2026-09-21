@@ -6,7 +6,7 @@ const { Title, Text } = Typography;
 /**
  * Layout for the unauthenticated admission pages. These render outside the dashboard shell
  * (no sidebar, no header, no auth), so they carry their own centred card. Colours come from the
- * index.css variables so the page still follows the app's theme, dark mode included.
+ * styles/main.scss variables so the page still follows the app's theme, dark mode included.
  */
 export default function PublicShell({ title, subtitle, wide = false, children }) {
   return (

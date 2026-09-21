@@ -24,13 +24,7 @@ import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import { markBulkAttendance } from "../../../features/attendanceSlice";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-  sectionPanel,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 /* ── Status config ───────────────────────────────────────────────── */
 const STATUS_OPTIONS = [
@@ -319,8 +313,7 @@ const StudentAttendance = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Student Attendance"
@@ -340,7 +333,7 @@ const StudentAttendance = () => {
       />
 
       {/* ── Filters ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div
           style={{
             display: "grid",
@@ -517,7 +510,7 @@ const StudentAttendance = () => {
         <Spin spinning={studLoading}>
           {filteredStudents.length > 0 ? (
             <Table
-              className={TABLE_CLS}
+              className={`${TABLE_CLS} data-table`}
               rowKey="_id"
               columns={columns}
               dataSource={filteredStudents}

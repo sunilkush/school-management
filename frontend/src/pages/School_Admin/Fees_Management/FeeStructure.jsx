@@ -15,9 +15,7 @@ import {
   fetchFeeStructureSummary,
 } from "../../../features/feeStructureSlice.js";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, pageCard, sectionPanel, toolbarRow, tableHeadCss, pill, iconWell,
-} from "../../../styles/pageStyles";
+import { pill, iconWell } from "../../../styles/pageStyles";
 import {
   FREQUENCIES, FREQUENCY_OPTIONS, FREQUENCY_ORDER, FrequencyTag, lateFineText, money, perPeriodLabel,
 } from "../../../components/fees/feeUi.jsx";
@@ -211,7 +209,6 @@ const FeeStructure = () => {
 
   return (
     <>
-      <style>{tableHeadCss("fee-table")}</style>
 
       <PageHeader
         title="Fee Structure"
@@ -230,9 +227,9 @@ const FeeStructure = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* School fee rules at a glance */}
-        <div style={{ ...sectionPanel, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+        <div className="section-panel" style={{ padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <div style={iconWell("var(--primary)", 34)}><SettingOutlined /></div>
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
@@ -247,13 +244,13 @@ const FeeStructure = () => {
 
         {/* Class summary */}
         {classFilter && summary && (
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 12 }}>
               {summaryClassName} — fee per student
             </div>
             {summary.rows.length ? (
               <>
-                <div className="fee-table" style={{ overflowX: "auto" }}>
+                <div className="fee-table data-table" style={{ overflowX: "auto" }}>
                   <Table
                     rowKey="_id"
                     size="small"
@@ -284,9 +281,9 @@ const FeeStructure = () => {
           </div>
         )}
 
-        <div style={pageCard}>
+        <div className="page-card">
           <div style={{ padding: "20px 20px 0" }}>
-            <div className="page-toolbar" style={toolbarRow}>
+            <div className="page-toolbar toolbar-row">
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Fee Structures
               </span>
@@ -297,7 +294,7 @@ const FeeStructure = () => {
             </div>
           </div>
 
-          <div className="fee-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
+          <div className="fee-table data-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
             <Table
               rowKey="_id"
               columns={columns}

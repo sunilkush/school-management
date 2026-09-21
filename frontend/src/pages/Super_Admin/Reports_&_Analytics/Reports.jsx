@@ -18,7 +18,7 @@ import { createReport, deleteReport, fetchReports } from "../../../features/repo
 import PageHeader from "../../../components/layout/PageHeader";
 import { FilterGrid, FilterField } from "../../../components/attendance/FilterGrid";
 import { FULL_WIDTH } from "../../../components/attendance/filterStyles";
-import { modalTitle, pageWrapper, sectionPanel } from "../../../styles/pageStyles";
+import { modalTitle } from "../../../styles/pageStyles";
 import SchoolOverview from "../../../components/reports/SchoolOverview";
 
 /**
@@ -299,7 +299,7 @@ const Reports = () => {
   const viewingIsOverview = Boolean(viewing?.data?.summary && viewing?.data?.classWise);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Reports"
         subtitle="Pick a school to see its numbers for the year — save a copy whenever you need one"
@@ -308,7 +308,7 @@ const Reports = () => {
       />
 
       {/* ── 1. a school, this year ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <FilterGrid>
           <FilterField label="School">
             <Select
@@ -345,7 +345,7 @@ const Reports = () => {
       </div>
 
       {/* ── 2. saved reports ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
           <div style={{ flex: 1, fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>
             Saved reports
@@ -423,7 +423,7 @@ const Reports = () => {
       </div>
 
       {/* ── 3. everything else ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)", marginBottom: 12 }}>More reports</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
           {MORE.map((m) => (

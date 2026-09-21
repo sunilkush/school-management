@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { modalTitle, pageWrapper, pill, sectionPanel } from "../../../styles/pageStyles";
+import { modalTitle, pill } from "../../../styles/pageStyles";
 
 /**
  * Chapters & Topics — pick a board, a class and a subject; everything for that subject is on one
@@ -331,7 +331,7 @@ const ChaptersTopics = () => {
   const otherSubjects = allSubjects.filter((s) => !classSubjects.some((c) => c.id === s._id));
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Chapters & Topics"
         subtitle="Choose a class and a subject — its chapters, textbook PDFs and topics are all on one screen"
@@ -350,7 +350,7 @@ const ChaptersTopics = () => {
       />
 
       {/* ── Step 1 & 2: class and subject ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {label("Class")}
         {boardClasses.length ? (
           <div style={{ overflowX: "auto", paddingBottom: 4 }}>
@@ -397,9 +397,9 @@ const ChaptersTopics = () => {
 
       {/* ── Step 3: the subject ── */}
       {!subjectId ? (
-        <div style={sectionPanel}><Empty description="Pick a subject to see its chapters" /></div>
+        <div className="section-panel"><Empty description="Pick a subject to see its chapters" /></div>
       ) : (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 6 }}>
             <div style={{ flex: "1 1 220px" }}>
               <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>

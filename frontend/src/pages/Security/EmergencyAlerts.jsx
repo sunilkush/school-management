@@ -12,9 +12,7 @@ import {
   fetchEmergencyAlerts, raiseEmergencyAlert, resolveEmergencyAlert,
 } from "../../features/emergencyAlertSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  pageWrapper, statGrid, sectionPanel, iconWell, tableHeadCss, pill, modalTitle,
-} from "../../styles/pageStyles";
+import { statGrid, iconWell, pill, modalTitle } from "../../styles/pageStyles";
 import { severityColor } from "./securityShared";
 
 const { Text } = Typography;
@@ -102,8 +100,7 @@ const EmergencyAlerts = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("alert-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Emergency Alerts"
@@ -153,7 +150,7 @@ const EmergencyAlerts = () => {
           { label: "Resolved",       value: summary.resolved, icon: <CheckCircleOutlined />, color: "var(--success)" },
           { label: "High Severity",  value: summary.highOpen, icon: <ThunderboltOutlined />, color: "var(--warning-hover)" },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+          <div key={label} className="section-panel is-header-strip">
             <div style={iconWell(color, 40)}>{icon}</div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
@@ -164,7 +161,7 @@ const EmergencyAlerts = () => {
       </div>
 
       {/* ── Alerts table ──────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
           <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>All Alerts</Text>
           <Space wrap>
@@ -183,7 +180,7 @@ const EmergencyAlerts = () => {
           </Space>
         </div>
         <Table
-          className="alert-tbl"
+          className="alert-tbl data-table"
           dataSource={filteredAlerts}
           rowKey="_id"
           columns={cols}

@@ -10,16 +10,13 @@ import {
   TeamOutlined, BookOutlined, UserOutlined, SolutionOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow,
-  tableContainer, tableHeadCss, pill,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill } from "../../../styles/pageStyles";
 
 const enrolledCount = (sec) =>
   sec.studentEnrollmentIds?.length || sec.StudentEnrollmentId?.length || 0;
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -142,15 +139,15 @@ const SchoolClassSectionFilter = () => {
   const tableData = filteredSections.map((sec) => ({ ...sec, key: sec._id }));
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Class & Section Explorer"
         subtitle="Select a school to explore its classes, sections, teachers and enrollment"
         icon={<ApartmentOutlined />}
       />
 
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <div style={toolbarRow}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
+        <div className="toolbar-row">
           <div style={{ flex: "1 1 220px" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>Select School</div>
             <Select
@@ -210,9 +207,8 @@ const SchoolClassSectionFilter = () => {
         </div>
       )}
 
-      <style>{tableHeadCss("class-section-tbl")}</style>
 
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Sections</span>
           {selectedSchool && (
@@ -231,7 +227,7 @@ const SchoolClassSectionFilter = () => {
         {sectionLoading ? (
           <Spin />
         ) : (
-          <div className="class-section-tbl" style={tableContainer}>
+          <div className="class-section-tbl table-container">
             <Table
               columns={columns}
               dataSource={tableData}

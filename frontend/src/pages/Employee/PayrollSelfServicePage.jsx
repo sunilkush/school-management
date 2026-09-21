@@ -10,10 +10,7 @@ import {
 import httpClient from "../../api/httpClient";
 import { formatCurrencyINR } from "../../utils/payroll";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  pageWrapper, pageCard, tableHeadCss, statGrid,
-  iconWell,
-} from "../../styles/pageStyles";
+import { statGrid, iconWell } from "../../styles/pageStyles";
 
 const { Text } = Typography;
 
@@ -75,10 +72,7 @@ function StatCard({ icon: Icon, label, value, color, sub }) {
 /* ── Breakdown table ─────────────────────────────────────────────── */
 function BreakdownTable({ title, icon: Icon, color, rows, emptyText }) {
   return (
-    <div style={{
-      ...pageCard,
-      overflow: "hidden",
-    }}>
+    <div className="page-card" style={{ overflow: "hidden" }}>
       {/* Card header */}
       <div style={{
         display:      "flex",
@@ -306,8 +300,7 @@ export default function PayrollSelfServicePage() {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("payslip-table")}</style>
+    <div className="page-wrapper">
 
       {/* ── Page header ── */}
       <PageHeader
@@ -400,7 +393,7 @@ export default function PayrollSelfServicePage() {
 
           {/* ── Tab: My Payslips ── */}
           {activeTab === "payslips" && (
-            <div style={pageCard}>
+            <div className="page-card">
               {/* Card header */}
               <div style={{
                 display:      "flex",
@@ -435,7 +428,7 @@ export default function PayrollSelfServicePage() {
                 </div>
               ) : (
                 <Table
-                  className="payslip-table"
+                  className="payslip-table data-table"
                   rowKey="_id"
                   dataSource={payslips}
                   columns={payslipColumns}
@@ -451,7 +444,7 @@ export default function PayrollSelfServicePage() {
           {activeTab === "breakdown" && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
               {/* Active structure */}
-              <div style={{ ...pageCard, overflow: "hidden" }}>
+              <div className="page-card" style={{ overflow: "hidden" }}>
                 <div style={{
                   display:      "flex",
                   alignItems:   "center",
@@ -573,11 +566,7 @@ export default function PayrollSelfServicePage() {
 
                 {/* Attendance % bar */}
                 {latestPayslip.workingDays > 0 && (
-                  <div style={{
-                    ...pageCard,
-                    padding:   20,
-                    marginTop: 20,
-                  }}>
+                  <div className="page-card" style={{ padding:   20, marginTop: 20 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
                         Attendance Rate
@@ -610,11 +599,7 @@ export default function PayrollSelfServicePage() {
                 )}
               </div>
             ) : (
-              <div style={{
-                ...pageCard,
-                padding:   "56px 24px",
-                textAlign: "center",
-              }}>
+              <div className="page-card" style={{ padding:   "56px 24px", textAlign: "center" }}>
                 <Empty
                   description={
                     <span style={{ color: "var(--text-muted)" }}>

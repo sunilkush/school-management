@@ -1,0 +1,44 @@
+// Page defaults, typography, scrollbar
+// Moved out of index.css unchanged — see styles/main.scss.
+
+/* =========================
+   Global Styles
+========================= */
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  @apply antialiased;
+  font-size: 13px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+* {
+  font-family: "Inter", "Poppins", sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+
+/* =========================
+   Scrollbar
+========================= */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #2563EB, #14B8A6);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--surface-soft);
+}

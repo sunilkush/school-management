@@ -10,7 +10,6 @@ import {
 import TimetableGrid from "./TimetableGrid";
 import { getName, schoolIdFromUser } from "./timetableUi";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
@@ -75,7 +74,7 @@ export default function TeacherTimetablePage() {
   const periodCount = entries.filter((e) => e.type === "regular").length;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title={isSchoolAdmin ? "Teacher Timetable" : "My Teaching Timetable"}
         subtitle={
@@ -88,7 +87,7 @@ export default function TeacherTimetablePage() {
 
       {/* Teacher selector panel — admin only */}
       {isSchoolAdmin && (
-        <div style={{ ...sectionPanel, margin: "20px 0 16px" }}>
+        <div className="section-panel" style={{ margin: "20px 0 16px" }}>
           {/* Info banner */}
           <div style={{
             padding: "11px 14px", borderRadius: 10, marginBottom: 16,
@@ -162,7 +161,7 @@ export default function TeacherTimetablePage() {
       )}
 
       {/* Timetable grid card */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         {/* Card header */}
         <div style={{
           padding: "14px 20px",

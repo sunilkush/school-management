@@ -24,12 +24,7 @@ import {
 } from "@ant-design/icons";
 import { fetchFaqs, createFaq, updateFaq, deleteFaq } from "../../../features/faqSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  toolbarRow,
-  iconWell,
-  modalTitle,
-} from "../../../styles/pageStyles";
+import { modalTitle } from "../../../styles/pageStyles";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -217,7 +212,7 @@ const Faqs = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Help & FAQs"
         subtitle="Manage frequently asked questions for school users"
@@ -243,7 +238,7 @@ const Faqs = () => {
       />
 
       {/* Toolbar */}
-      <div style={{ ...toolbarRow, marginTop: 20 }}>
+      <div className="toolbar-row" style={{ marginTop: 20 }}>
         <Search
           placeholder="Search FAQs by question..."
           allowClear

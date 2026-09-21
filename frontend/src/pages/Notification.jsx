@@ -48,7 +48,7 @@ import {
 } from "../utils/notifications";
 import { ALL_ROLE_NAMES, getRoleName } from "../utils/roles";
 import PageHeader from "../components/layout/PageHeader";
-import { iconWell, pageWrapper, sectionPanel } from "../styles/pageStyles";
+import { iconWell } from "../styles/pageStyles";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -250,7 +250,7 @@ const NotifItem = ({ item, isMobile, onMarkRead }) => {
 const NotifSkeleton = () => (
   <Space direction="vertical" size={10} style={{ width: "100%" }}>
     {[1, 2, 3].map((i) => (
-      <div key={i} style={{ ...sectionPanel, padding: 16, marginBottom: 0, borderRadius: 14 }}>
+      <div key={i} className="section-panel" style={{ padding: 16, marginBottom: 0, borderRadius: 14 }}>
         <Skeleton active avatar paragraph={{ rows: 2 }} />
       </div>
     ))}
@@ -446,7 +446,7 @@ const Notification = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
         {/* ── Stat cards ──────────────────────────────────────────── */}
         <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
@@ -490,7 +490,7 @@ const Notification = () => {
 
         {/* ── Create / Broadcast Form ──────────────────────────────── */}
         {canCreateNotification && (
-          <div style={{ ...sectionPanel, marginBottom: 20 }}>
+          <div className="section-panel" style={{ marginBottom: 20 }}>
             {/* Form header */}
             <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
               <div style={iconWell("var(--purple)", 38)}>
@@ -594,7 +594,7 @@ const Notification = () => {
         )}
 
         {/* ── Notifications List ───────────────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
 
           {/* List header */}
           <Flex

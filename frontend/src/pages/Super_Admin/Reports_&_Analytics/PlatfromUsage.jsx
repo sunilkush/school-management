@@ -41,14 +41,7 @@ import {
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchAllUser } from "../../../features/authSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  statGrid,
-  iconWell,
-  tableContainer,
-  tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 
@@ -76,7 +69,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const KpiCard = ({ icon, label, value, accent, change }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+  <div className="section-panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         {label}
@@ -332,7 +325,7 @@ const PlatformUsage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Super Admin Analytics"
         subtitle="Platform-wide overview — schools, users, usage, and revenue."
@@ -402,7 +395,7 @@ const PlatformUsage = () => {
           />
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>User Growth</span>
             <Tag color="blue" style={{ borderRadius: 20 }}>Total</Tag>
@@ -463,17 +456,16 @@ const PlatformUsage = () => {
           @media (max-width: 900px) {
             .platform-usage-grid { grid-template-columns: 1fr !important; }
           }
-          ${tableHeadCss("platform-usage-tbl")}
         `}</style>
 
         <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20 }} className="platform-usage-grid">
-          <div style={{ ...sectionPanel, padding: 0 }}>
+          <div className="section-panel" style={{ padding: 0 }}>
             <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 10 }}>
               <BankOutlined style={{ color: "var(--primary)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>School Usage</span>
               <Tag style={{ borderRadius: 20 }}>{tableData.length} schools</Tag>
             </div>
-            <div className="platform-usage-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+            <div className="platform-usage-tbl data-table table-container" style={{ border: "none", borderRadius: 0 }}>
               <Table
                 columns={columns}
                 dataSource={tableData}
@@ -483,7 +475,7 @@ const PlatformUsage = () => {
             </div>
           </div>
 
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <BellOutlined style={{ color: "var(--orange)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Recent Activity</span>

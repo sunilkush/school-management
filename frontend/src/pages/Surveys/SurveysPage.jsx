@@ -15,7 +15,7 @@ import {
 } from "../../features/surveySlice";
 import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { TextArea } = Input;
 
@@ -80,7 +80,7 @@ const QuestionResult = ({ question }) => {
 
   if (question.type === "rating" || question.type === "number") {
     return (
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {head}
         {question.average === null ? (
           <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 8 }}>No answers yet</div>
@@ -99,7 +99,7 @@ const QuestionResult = ({ question }) => {
 
   if (question.type === "yes_no") {
     return (
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {head}
         <Progress percent={question.percentYes} strokeColor="var(--success)" style={{ marginTop: 8 }} />
         <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
@@ -112,7 +112,7 @@ const QuestionResult = ({ question }) => {
   if (question.counts) {
     const total = Object.values(question.counts).reduce((s, n) => s + n, 0) || 1;
     return (
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {head}
         <div style={{ marginTop: 10 }}>
           {Object.entries(question.counts).map(([option, n]) => (
@@ -130,7 +130,7 @@ const QuestionResult = ({ question }) => {
   }
 
   return (
-    <div style={sectionPanel}>
+    <div className="section-panel">
       {head}
       {question.texts?.length ? (
         <div style={{ marginTop: 10, maxHeight: 260, overflowY: "auto" }}>
@@ -350,8 +350,7 @@ const SurveysPage = () => {
   ], [schoolClasses]);
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("srv-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Surveys & Feedback"
@@ -370,11 +369,11 @@ const SurveysPage = () => {
         }
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {loading && !surveys?.length ? (
           <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
         ) : !surveys?.length ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <Empty description="No surveys yet" />
             <p style={{ color: "var(--text-muted)", maxWidth: 520, margin: "12px auto" }}>
               A survey goes to a chosen group — the parents of Class 8, all teachers, the whole
@@ -384,9 +383,9 @@ const SurveysPage = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={() => openEditor()}>Write the first one</Button>
           </div>
         ) : (
-          <div style={tableContainer}>
+          <div className="table-container">
             <Table
-              className="srv-table" rowKey="_id" size="middle"
+              className="srv-table data-table" rowKey="_id" size="middle"
               columns={columns} dataSource={surveys}
               pagination={{ pageSize: 20, showSizeChanger: false }}
             />
@@ -411,7 +410,7 @@ const SurveysPage = () => {
 
           <div style={{ fontWeight: 700, marginBottom: 8 }}>Questions</div>
           {questions.map((q, index) => (
-            <div key={q.key} style={{ ...sectionPanel, marginBottom: 12 }}>
+            <div key={q.key} className="section-panel" style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <div style={{ fontWeight: 700, color: "var(--text-muted)", paddingTop: 6 }}>{index + 1}.</div>
                 <Input
@@ -498,7 +497,7 @@ const SurveysPage = () => {
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : results ? (
           <>
-            <div style={{ ...sectionPanel, marginBottom: 16 }}>
+            <div className="section-panel" style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 26, fontWeight: 700 }}>{results.responseRate}%</div>

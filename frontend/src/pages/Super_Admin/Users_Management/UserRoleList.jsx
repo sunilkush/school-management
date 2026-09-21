@@ -12,13 +12,10 @@ import {
 import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  toolbarRow, tableContainer, tableHeadCss, avatarStyle, emptyState,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, avatarStyle } from "../../../styles/pageStyles";
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -191,7 +188,7 @@ const UserRoleList = ({
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title={title}
         subtitle={subtitle}
@@ -217,10 +214,9 @@ const UserRoleList = ({
         </div>
       )}
 
-      <style>{tableHeadCss("user-role-tbl")}</style>
 
-      <div style={{ ...sectionPanel, padding: 0 }}>
-        <div style={{ ...toolbarRow, padding: "16px 20px", marginBottom: 0, borderBottom: "1px solid var(--border-muted)" }}>
+      <div className="section-panel" style={{ padding: 0 }}>
+        <div className="toolbar-row" style={{ padding: "16px 20px", marginBottom: 0, borderBottom: "1px solid var(--border-muted)" }}>
           <Input
             allowClear
             prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
@@ -260,7 +256,7 @@ const UserRoleList = ({
           </div>
         )}
 
-        <div className="user-role-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+        <div className="user-role-tbl data-table table-container" style={{ border: "none", borderRadius: 0 }}>
           <Table
             rowKey="_id"
             columns={columns}
@@ -270,7 +266,7 @@ const UserRoleList = ({
             pagination={{ pageSize: 8 }}
             locale={{
               emptyText: (
-                <div style={{ ...emptyState, border: "none" }}>
+                <div className="empty-state" style={{ border: "none" }}>
                   <Empty description={`No ${nounPlural} found`} />
                 </div>
               ),

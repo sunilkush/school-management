@@ -16,9 +16,7 @@ import { fetchAccountantDashboard } from "../../../features/financeSlice";
 import { fetchIncomeSummary } from "../../../features/financeSlice";
 import { fetchExpenseSummary } from "../../../features/financeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { iconWell, statGrid } from "../../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
@@ -152,8 +150,7 @@ const FinancialReports = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("rep-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Financial Reports"
         subtitle="Profit & Loss, income breakdown, expense analysis, and cash flow"
@@ -168,7 +165,7 @@ const FinancialReports = () => {
       />
 
       {/* ── Date filter ────────────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, padding: "14px 20px", marginBottom: 20, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+      <div className="section-panel" style={{ padding: "14px 20px", marginBottom: 20, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-muted)" }}>Filter by date:</span>
         <RangePicker onChange={(r) => setDateRange(r ? [r[0].toDate(), r[1].toDate()] : [])} />
         <Button type="primary" onClick={handleFilter}>Apply</Button>
@@ -189,7 +186,7 @@ const FinancialReports = () => {
                 icon: <BarChartOutlined /> },
               { label: "Pending Fees",   value: money(kpis.pendingFees),     color: "var(--warning)", icon: <FileTextOutlined /> },
             ].map(({ label, value, color, icon }) => (
-              <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+              <div key={label} className="section-panel is-header-strip">
                 <div style={iconWell(color, 40)}>{icon}</div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
@@ -200,7 +197,7 @@ const FinancialReports = () => {
           </div>
 
           {/* ── P&L Chart ─────────────────────────────────────────── */}
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Profit & Loss — Monthly Trend</div>
             {monthlyChart.length === 0 ? (
               <Empty description="No data yet" />
@@ -227,10 +224,10 @@ const FinancialReports = () => {
           </div>
 
           {/* ── P&L Table ─────────────────────────────────────────── */}
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>Monthly Profit & Loss Statement</div>
             <Table
-              className="rep-tbl"
+              className="rep-tbl data-table"
               rowKey="month"
               columns={plColumns}
               dataSource={profitLossData}
@@ -256,7 +253,7 @@ const FinancialReports = () => {
           {/* ── Income & Expense Charts ────────────────────────────── */}
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
             <Col xs={24} lg={12}>
-              <div style={{ ...sectionPanel, marginBottom: 0 }}>
+              <div className="section-panel is-last">
                 <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Income by Category</div>
                 {incomeByCategory.length === 0 ? (
                   <Empty description="No income data" />
@@ -272,14 +269,14 @@ const FinancialReports = () => {
                         <Tooltip formatter={(v) => money(v)} />
                       </PieChart>
                     </ResponsiveContainer>
-                    <Table className="rep-tbl" rowKey="_id" columns={incColumns} dataSource={incomeByCategory} pagination={false} size="small" style={{ marginTop: 12 }} />
+                    <Table className="rep-tbl data-table" rowKey="_id" columns={incColumns} dataSource={incomeByCategory} pagination={false} size="small" style={{ marginTop: 12 }} />
                   </>
                 )}
               </div>
             </Col>
 
             <Col xs={24} lg={12}>
-              <div style={{ ...sectionPanel, marginBottom: 0 }}>
+              <div className="section-panel is-last">
                 <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Expense by Category</div>
                 {expenseByCategory.length === 0 ? (
                   <Empty description="No expense data" />
@@ -293,7 +290,7 @@ const FinancialReports = () => {
                         <Bar dataKey="total" fill="var(--danger)" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
-                    <Table className="rep-tbl" rowKey="_id" columns={expColumns} dataSource={expenseByCategory} pagination={false} size="small" style={{ marginTop: 12 }} />
+                    <Table className="rep-tbl data-table" rowKey="_id" columns={expColumns} dataSource={expenseByCategory} pagination={false} size="small" style={{ marginTop: 12 }} />
                   </>
                 )}
               </div>

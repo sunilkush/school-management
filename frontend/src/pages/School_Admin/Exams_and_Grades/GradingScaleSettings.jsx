@@ -4,7 +4,7 @@ import { Button, Input, InputNumber, Spin, message, Tooltip } from "antd";
 import { PlusOutlined, DeleteOutlined, SaveOutlined, ReloadOutlined, TrophyOutlined } from "@ant-design/icons";
 import { fetchGradingScale, updateGradingScale } from "../../../features/gradingScaleSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, pill } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 let rowKeySeq = 0;
 const nextRowKey = () => `row-${++rowKeySeq}-${Date.now()}`;
@@ -71,14 +71,14 @@ const GradingScaleSettings = () => {
 
   if (loading) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
+      <div className="page-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
         <Spin size="large" tip="Loading grading scale..." />
       </div>
     );
   }
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Grading Scale"
         subtitle="Define the percentage thresholds used to compute grades when exam results are published"
@@ -96,7 +96,7 @@ const GradingScaleSettings = () => {
         </div>
       )}
 
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 4 }}>
           Grade Bands
         </div>

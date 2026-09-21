@@ -25,9 +25,6 @@ import { FULL_WIDTH } from "../../components/attendance/filterStyles";
 import YearField                   from "../../components/attendance/YearField";
 import GeofenceMap                 from "../../components/maps/GeofenceMap";
 import { MAP_COLORS }              from "../../components/maps/osm";
-import {
-  pageWrapper, sectionPanel, tableHeadCss,
-} from "../../styles/pageStyles";
 
 const TABLE_CLS = "sa-att-tbl";
 
@@ -363,8 +360,7 @@ const AttendanceTablePage = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Attendance Records"
@@ -373,7 +369,7 @@ const AttendanceTablePage = () => {
       />
 
       {/* ── Filters ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <FilterGrid>
           {isSuperAdmin && (
             <FilterField label="School">
@@ -467,7 +463,7 @@ const AttendanceTablePage = () => {
       )}
 
       {/* ── Table ── */}
-      <div style={{ ...sectionPanel, marginTop: 14, overflow: "hidden", padding: 0 }}>
+      <div className="section-panel" style={{ marginTop: 14, overflow: "hidden", padding: 0 }}>
         {!schoolId && !loading ? (
           <div style={{ padding: 40 }}>
             <Empty
@@ -487,7 +483,7 @@ const AttendanceTablePage = () => {
               }} />
             )}
             <div style={{ overflowX: "auto" }}>
-              <table className={TABLE_CLS} style={{ width: "100%", borderCollapse: "collapse" }}>
+              <table className={`${TABLE_CLS} data-table`} style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: C.surfaceSoft }}>
                     {columns.map((col) => (

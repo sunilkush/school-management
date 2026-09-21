@@ -34,10 +34,7 @@ import {
   fetchBillingPayments,
 } from "../../../features/superAdminBillingSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, modalTitle } from "../../../styles/pageStyles";
 
 const formatCurrency = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -64,7 +61,7 @@ const paymentModeOptions = [
 ];
 
 const MetricCard = ({ title, value, icon, color, sub }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+  <div className="section-panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         {title}
@@ -210,7 +207,7 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Subscription Payments"
         subtitle="Super Admin billing, invoices aur manual payment tracking"
@@ -234,10 +231,8 @@ export default function PaymentsPage() {
           <MetricCard title="Payment Records" value={stats.totalPayments} icon={<CreditCardOutlined />} color="var(--accent)" sub="Total payment entries" />
         </div>
 
-        <style>{tableHeadCss("payments-invoices-tbl")}</style>
-        <style>{tableHeadCss("payments-history-tbl")}</style>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
             <FileTextOutlined style={{ color: "var(--primary)" }} />
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Invoices</span>
@@ -264,7 +259,7 @@ export default function PaymentsPage() {
             />
           </div>
 
-          <div className="payments-invoices-tbl" style={tableContainer}>
+          <div className="payments-invoices-tbl table-container">
             <Table
               loading={loading}
               dataSource={filteredInvoices}
@@ -357,7 +352,7 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        <div style={{ ...sectionPanel, marginTop: 20 }}>
+        <div className="section-panel" style={{ marginTop: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
             <CreditCardOutlined style={{ color: "var(--accent)" }} />
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Payment History</span>
@@ -373,7 +368,7 @@ export default function PaymentsPage() {
             />
           </div>
 
-          <div className="payments-history-tbl" style={tableContainer}>
+          <div className="payments-history-tbl table-container">
             <Table
               loading={loading}
               dataSource={filteredPayments}
@@ -427,7 +422,7 @@ export default function PaymentsPage() {
         destroyOnClose
       >
         {selectedInvoice ? (
-          <div style={{ ...sectionPanel, marginBottom: 0, background: "var(--surface-soft)" }}>
+          <div className="section-panel" style={{ marginBottom: 0, background: "var(--surface-soft)" }}>
             <Space direction="vertical" size={10} style={{ width: "100%" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--text-muted)" }}>Invoice</span>
@@ -475,7 +470,7 @@ export default function PaymentsPage() {
         destroyOnClose
       >
         {selectedInvoice ? (
-          <div style={{ ...sectionPanel, padding: 12, background: "var(--surface-soft)" }}>
+          <div className="section-panel" style={{ padding: 12, background: "var(--surface-soft)" }}>
             <span style={{ color: "var(--text-muted)" }}>Selected Invoice</span>
             <div style={{ marginTop: 4 }}>
               <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>{" "}

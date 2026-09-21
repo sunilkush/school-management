@@ -1,5 +1,5 @@
 import React from "react";
-import { sectionPanel, statGrid, iconWell } from "../../styles/pageStyles";
+import { statGrid, iconWell } from "../../styles/pageStyles";
 
 /**
  * StatCardsRow — the KPI-cards row used at the top of most list/report pages
@@ -16,7 +16,7 @@ const StatCardsRow = ({ items = [], minColPx = 150, style }) => (
     {items.map(({ key, icon, label, value, color }) => (
       <div
         key={key ?? label}
-        style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}
+        className="section-panel is-header-strip"
       >
         <div style={iconWell(color, 42)}>{icon}</div>
         <div>

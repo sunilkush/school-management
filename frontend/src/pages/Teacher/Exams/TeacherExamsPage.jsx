@@ -15,10 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, statGrid, statCard, statLabel, statValue,
-  pill, tableHeadCss, emptyState,
-} from "../../../styles/pageStyles.js";
+import { statGrid, statCard, statLabel, statValue, pill } from "../../../styles/pageStyles.js";
 
 /* ── Status helpers ───────────────────────────────────────────────── */
 const examStatus = (examDate) => {
@@ -254,8 +251,7 @@ const TeacherExamsPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("exam-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Exam & Marks Entry"
@@ -269,7 +265,7 @@ const TeacherExamsPage = () => {
       />
 
       {/* ── Exam Selector ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div style={{
           fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
           textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10,
@@ -330,7 +326,7 @@ const TeacherExamsPage = () => {
 
       {/* ── Marks Table ── */}
       {selectedExamId && (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           {/* Toolbar */}
           <div style={{
             display: "flex", alignItems: "center",
@@ -399,7 +395,7 @@ const TeacherExamsPage = () => {
 
           {/* Table */}
           {rows.length === 0 ? (
-            <div style={emptyState}>
+            <div className="empty-state">
               <div style={{ fontSize: 34, marginBottom: 10 }}>📋</div>
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
                 No Students Found
@@ -410,7 +406,7 @@ const TeacherExamsPage = () => {
             </div>
           ) : (
             <Table
-              className="exam-table"
+              className="exam-table data-table"
               rowKey={(r, i) => `${r.studentId || "r"}-${i}`}
               dataSource={visibleRows}
               columns={columns}
@@ -425,7 +421,7 @@ const TeacherExamsPage = () => {
 
       {/* ── No exam selected empty state ── */}
       {!selectedExamId && !loading && (
-        <div style={emptyState}>
+        <div className="empty-state">
           <div style={{ fontSize: 38, marginBottom: 12 }}>📝</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
             No Exams Found

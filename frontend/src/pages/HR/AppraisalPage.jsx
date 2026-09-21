@@ -13,7 +13,7 @@ import {
   startCycle, submitReview, updateCycle,
 } from "../../features/hrSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
@@ -215,8 +215,7 @@ const AppraisalPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("appraisal-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Staff Appraisal"
@@ -238,12 +237,12 @@ const AppraisalPage = () => {
         description="A rating here does not change anybody's salary. Increments stay a decision somebody makes, with this as the evidence for it."
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ fontWeight: 700, marginBottom: 12 }}>Review cycles</div>
         {cyclesLoading && !cycles?.length ? (
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : !cycles?.length ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <Empty description="No appraisal cycle yet" />
             <p style={{ color: "var(--text-muted)", maxWidth: 460, margin: "12px auto" }}>
               A cycle sets the period and the criteria everyone is scored against. Criteria are
@@ -252,19 +251,19 @@ const AppraisalPage = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={openCycleModal}>Create one</Button>
           </div>
         ) : (
-          <div style={tableContainer}>
-            <Table className="appraisal-table" rowKey="_id" size="middle" pagination={false}
+          <div className="table-container">
+            <Table className="appraisal-table data-table" rowKey="_id" size="middle" pagination={false}
                    columns={cycleColumns} dataSource={cycles} />
           </div>
         )}
       </div>
 
       {activeCycle && (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, marginBottom: 12 }}>Reviews in this cycle</div>
-          <div style={tableContainer}>
+          <div className="table-container">
             <Table
-              className="appraisal-table" rowKey="_id" size="middle" loading={reviewsLoading}
+              className="appraisal-table data-table" rowKey="_id" size="middle" loading={reviewsLoading}
               columns={reviewColumns} dataSource={reviews}
               pagination={{ pageSize: 20, showSizeChanger: false }}
             />
@@ -342,7 +341,7 @@ const AppraisalPage = () => {
             )}
 
             {review.selfScores?.length > 0 && (
-              <div style={{ ...sectionPanel, marginBottom: 16 }}>
+              <div className="section-panel" style={{ marginBottom: 16 }}>
                 <div style={{ fontWeight: 700, marginBottom: 8 }}>What they said about themselves</div>
                 {review.selfScores.map((s) => (
                   <div key={s.criterion} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>

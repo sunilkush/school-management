@@ -8,10 +8,7 @@ import {
 } from "@ant-design/icons";
 import { fetchPurchaseOrders, createPO, updatePO, updatePOStatus, deletePO } from "../../../features/purchaseOrderSlice";
 import { fetchVendors } from "../../../features/vendorSlice";
-import {
-  toolbarRow, tableContainer, tableHeadCss,
-  statGrid, iconWell, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle } from "../../../styles/pageStyles";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -173,15 +170,14 @@ export default function PurchaseOrderPage() {
       </div>
 
       {/* Toolbar */}
-      <div style={toolbarRow}>
+      <div className="toolbar-row">
         <div style={{ marginLeft: "auto" }}>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>New Purchase Order</Button>
         </div>
       </div>
 
       {/* Table */}
-      <style>{tableHeadCss("po-tbl")}</style>
-      <div className="po-tbl" style={tableContainer}>
+      <div className="po-tbl table-container">
         <Table columns={columns} dataSource={orders} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} scroll={{ x: 640 }} />
       </div>
 
@@ -271,8 +267,7 @@ export default function PurchaseOrderPage() {
                 </div>
               ))}
             </div>
-            <style>{tableHeadCss("po-view-tbl")}</style>
-            <div className="po-view-tbl" style={tableContainer}>
+            <div className="po-view-tbl table-container">
               <Table
                 size="small"
                 dataSource={viewOrder.items}

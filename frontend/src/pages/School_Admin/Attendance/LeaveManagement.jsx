@@ -29,7 +29,6 @@ import {
   createLeaveRequest,
 } from "../../../features/leaveRequestSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 import apiClient from "../../../api/httpClient";
 
 const { TextArea } = Input;
@@ -366,7 +365,7 @@ const LeaveManagement = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Leave Management"
         subtitle="Review, approve and manage all leave requests"
@@ -425,7 +424,7 @@ const LeaveManagement = () => {
       </div>
 
       {/* ── Tabs ── */}
-      <div style={{ ...sectionPanel, marginTop: 16 }}>
+      <div className="section-panel" style={{ marginTop: 16 }}>
         <Spin spinning={loading}>
           <Tabs items={tabItems} defaultActiveKey="pending" />
         </Spin>

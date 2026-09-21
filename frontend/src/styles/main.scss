@@ -1,0 +1,14 @@
+// The app's one stylesheet. Everything is imported here, in this order, and Vite compiles it
+// into a single CSS file. Partials keep it navigable — one 1,600-line file was not.
+//
+// Order matters: tokens define the CSS variables everything else reads, and the mobile and
+// responsive blocks override what comes before them.
+
+@use "tokens";
+@use "base";
+@use "antd";
+@use "components";
+@use "layout";
+@use "pastel";
+@use "responsive";
+@use "mobile";

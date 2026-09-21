@@ -14,9 +14,7 @@ import {
 } from "../../../features/financeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import StatCardsRow from "../../../components/layout/StatCardsRow";
-import {
-  pageWrapper, pill, sectionPanel, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -214,8 +212,7 @@ const ExpenseManagement = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("exp-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Expense Management"
         subtitle="Track all school expenses: salaries, utilities, maintenance, and more"
@@ -244,7 +241,7 @@ const ExpenseManagement = () => {
 
       {/* ── Category breakdown ────────────────────────────────────── */}
       {byCategory.length > 0 && (
-        <div style={{ ...sectionPanel, marginBottom: 20 }}>
+        <div className="section-panel" style={{ marginBottom: 20 }}>
           <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>By Category</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {byCategory.map((c) => (
@@ -258,7 +255,7 @@ const ExpenseManagement = () => {
       )}
 
       {/* ── Filters + Table ──────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <Row gutter={[10, 10]} style={{ marginBottom: 14 }}>
           <Col xs={24} sm={7}>
             <Input prefix={<SearchOutlined />} placeholder="Search title…" value={search} onChange={(e) => setSearch(e.target.value)} onPressEnter={handleSearch} allowClear />
@@ -290,7 +287,7 @@ const ExpenseManagement = () => {
           <div style={{ textAlign: "center", padding: 40 }}><Spin size="large" /></div>
         ) : (
           <Table
-            className="exp-tbl"
+            className="exp-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={expenseRecords}

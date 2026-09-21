@@ -15,7 +15,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts";
 import { fetchLibraryDashboard, fetchLibraryBooks, fetchIssuedBooks } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell } from "../../styles/pageStyles";
+import { statGrid, iconWell } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 import MyAttendanceSection from "../../components/attendance/MyAttendanceSection";
 
@@ -27,12 +27,7 @@ const { Text } = Typography;
 const KpiCard = ({ icon, label, value, color, sub, onClick }) => (
   <div
     onClick={onClick}
-    style={{
-      ...sectionPanel,
-      display: "flex", alignItems: "center", gap: 16, padding: "18px 20px",
-      marginBottom: 0, cursor: onClick ? "pointer" : "default",
-      transition: "transform 0.15s, box-shadow 0.15s",
-    }}
+    className="section-panel" style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 20px", marginBottom: 0, cursor: onClick ? "pointer" : "default", transition: "transform 0.15s, box-shadow 0.15s" }}
     onMouseEnter={(e) => { if (onClick) e.currentTarget.style.transform = "translateY(-2px)"; }}
     onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
   >
@@ -49,11 +44,7 @@ const KpiCard = ({ icon, label, value, color, sub, onClick }) => (
 const ActionTile = ({ icon, label, path, color, navigate }) => (
   <div
     onClick={() => navigate(path)}
-    style={{
-      ...sectionPanel, marginBottom: 0, padding: "16px 14px",
-      textAlign: "center", cursor: "pointer",
-      transition: "transform 0.15s, box-shadow 0.15s",
-    }}
+    className="section-panel" style={{ marginBottom: 0, padding: "16px 14px", textAlign: "center", cursor: "pointer", transition: "transform 0.15s, box-shadow 0.15s" }}
     onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)"; }}
     onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
   >
@@ -160,14 +151,14 @@ const LibraryDashboard = () => {
 
   if (dashboardLoading || booksLoading) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
+      <div className="page-wrapper" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
         <Spin size="large" tip="Loading library data..." />
       </div>
     );
   }
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Library Dashboard"
         subtitle="Real-time overview of book circulation, fines, and activity"
@@ -194,7 +185,7 @@ const LibraryDashboard = () => {
       </div>
 
       {/* ── Quick Actions ──────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, padding: 20 }}>
+      <div className="section-panel" style={{ padding: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.05em" }}>Quick Actions</div>
         <div style={statGrid(120)}>
           <ActionTile icon={<BookOutlined />}        label="Add Book"       path="/dashboard/librarian/book-catalog" color="var(--accent)" navigate={navigate} />
@@ -210,7 +201,7 @@ const LibraryDashboard = () => {
       {/* ── Charts Row ─────────────────────────────────────────── */}
       <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
         <Col xs={24} lg={12}>
-          <div style={{ ...sectionPanel, marginBottom: 0 }}>
+          <div className="section-panel is-last">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 16 }}>Books by Category</div>
             {categoryData.length === 0 ? (
               <Empty description="No books yet" />
@@ -228,7 +219,7 @@ const LibraryDashboard = () => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <div style={{ ...sectionPanel, marginBottom: 0 }}>
+          <div className="section-panel is-last">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 16 }}>Monthly Issue Trend</div>
             {monthlyTrend.length === 0 ? (
               <Empty description="No issue data yet" />
@@ -264,7 +255,7 @@ const LibraryDashboard = () => {
       </Row>
 
       {/* ── Recent Activity ──────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Recent Activity</div>
         <Table
           rowKey="_id"
@@ -279,7 +270,7 @@ const LibraryDashboard = () => {
 
       {/* ── Top Borrowed Books ───────────────────────────────────── */}
       {stats?.topBorrowedBooks?.length > 0 && (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Top Borrowed Books</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {stats.topBorrowedBooks.map((book, i) => (

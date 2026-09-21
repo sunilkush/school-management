@@ -14,9 +14,7 @@ import {
 import { fetchPayments, fetchPaymentSummary, refundPayment } from "../../../features/paymentSlice";
 import { fetchStudentFeeSummary } from "../../../features/studentFeeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { iconWell, pill, statGrid } from "../../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
@@ -198,8 +196,7 @@ const FeeReports = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("fee-rep-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Fee Reports"
         subtitle="Collection status, payment modes, and transaction history"
@@ -213,7 +210,7 @@ const FeeReports = () => {
       />
 
       {/* ── Filters ───────────────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, padding: "12px 18px", marginBottom: 20, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+      <div className="section-panel" style={{ padding: "12px 18px", marginBottom: 20, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
         <Select value={modeFilter} onChange={setModeFilter} placeholder="Payment mode" style={{ width: 160 }} allowClear>
           {PAYMENT_MODES.map((m) => <Option key={m} value={m}>{m}</Option>)}
         </Select>
@@ -232,7 +229,7 @@ const FeeReports = () => {
             { label: "Partial Payments",   value: feeStats.partial,             color: "var(--warning)", icon: <WalletOutlined /> },
             { label: "Pending Students",   value: feeStats.pending,             color: "var(--danger)", icon: <ClockCircleOutlined /> },
           ].map(({ label, value, color, icon }) => (
-            <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+            <div key={label} className="section-panel is-header-strip">
               <div style={iconWell(color, 40)}>{icon}</div>
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
@@ -243,7 +240,7 @@ const FeeReports = () => {
         </div>
 
         {/* ── Collection utilization ─────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 20 }}>
+        <div className="section-panel" style={{ marginBottom: 20 }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 8 }}>Fee Collection Progress</div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
@@ -257,7 +254,7 @@ const FeeReports = () => {
         {/* ── Charts ────────────────────────────────────────────────── */}
         <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
           <Col xs={24} lg={14}>
-            <div style={{ ...sectionPanel, marginBottom: 0 }}>
+            <div className="section-panel is-last">
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Monthly Collection Trend</div>
               {monthlyData.length === 0 ? (
                 <Empty description="No collection data" />
@@ -276,7 +273,7 @@ const FeeReports = () => {
           </Col>
 
           <Col xs={24} lg={10}>
-            <div style={{ ...sectionPanel, marginBottom: 0 }}>
+            <div className="section-panel is-last">
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Fee Status Breakdown</div>
               {feeStatusPie.length === 0 ? (
                 <Empty description="No fee data" />
@@ -298,7 +295,7 @@ const FeeReports = () => {
 
         {/* ── Payment mode breakdown ─────────────────────────────── */}
         {modeBreakdown.length > 0 && (
-          <div style={{ ...sectionPanel, marginBottom: 20 }}>
+          <div className="section-panel" style={{ marginBottom: 20 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>By Payment Mode</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               {modeBreakdown.map((m, i) => {
@@ -317,13 +314,13 @@ const FeeReports = () => {
         )}
 
         {/* ── Transaction history table ──────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Payment Transaction History</div>
           {paymentsLoading ? (
             <div style={{ textAlign: "center", padding: 40 }}><Spin size="large" /></div>
           ) : (
             <Table
-              className="fee-rep-tbl"
+              className="fee-rep-tbl data-table"
               rowKey="_id"
               columns={paymentColumns}
               dataSource={payments}

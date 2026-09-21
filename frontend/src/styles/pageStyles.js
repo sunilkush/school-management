@@ -2,16 +2,9 @@ import React from "react";
 
 /**
  * Shared style patterns for all pages.
- * All colours come from CSS variables defined in index.css so dark-mode
+ * All colours come from CSS variables defined in styles/main.scss so dark-mode
  * works automatically.  Do NOT use raw hex values here.
  */
-
-/* ── Page shell ──────────────────────────────────────────────────── */
-export const pageWrapper = {
-  minHeight: "100vh",
-  background: "var(--surface-page)",
-  padding: "clamp(12px, 3vw, 24px)",
-};
 
 /* ── Responsive stat-card grid ───────────────────────────────────── */
 /**
@@ -22,77 +15,15 @@ export const pageWrapper = {
 export const statGrid = (minColPx = 150) => ({
   display: "grid",
   gridTemplateColumns: `repeat(auto-fit, minmax(${minColPx}px, 1fr))`,
-  gap: 14,
-  marginBottom: 20,
+  gap: "var(--space-3)",
+  marginBottom: "var(--space-5)",
 });
-
-/* ── Main content card ───────────────────────────────────────────── */
-export const pageCard = {
-  background: "var(--surface)",
-  borderRadius: 22,
-  border: "1px solid var(--border-muted)",
-  boxShadow: "var(--shadow-soft)",
-  overflow: "hidden",
-};
-
-/* ── Section panel inside a page ────────────────────────────────── */
-export const sectionPanel = {
-  background: "var(--surface)",
-  border: "1px solid var(--border-muted)",
-  borderRadius: 18,
-  padding: 22,
-  marginBottom: 20,
-  boxShadow: "var(--shadow-soft)",
-};
-
-/* ── Toolbar row (search + filters + action buttons) ────────────── */
-export const toolbarRow = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  marginBottom: 18,
-  flexWrap: "wrap",
-};
-
-/* ── Table container ─────────────────────────────────────────────── */
-export const tableContainer = {
-  borderRadius: 16,
-  overflow: "hidden",
-  border: "1px solid var(--border-muted)",
-  boxShadow: "var(--shadow-soft)",
-};
-
-/* ── Table header CSS (inject via <style>) ───────────────────────── */
-export const tableHeadCss = (cls) => `
-  .${cls} .ant-table { background: transparent !important; }
-  .${cls} .ant-table-thead > tr > th {
-    background: var(--surface-soft) !important;
-    color: var(--text-muted) !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.08em !important;
-    border-bottom: 1px solid var(--border-muted) !important;
-    padding: 12px 16px !important;
-  }
-  .${cls} .ant-table-tbody > tr > td {
-    border-bottom: 1px solid var(--border-muted) !important;
-    padding: 13px 16px !important;
-    color: var(--text-primary) !important;
-  }
-  .${cls} .ant-table-tbody > tr:hover > td {
-    background: var(--surface-soft) !important;
-  }
-  .${cls} .ant-table-tbody > tr:last-child > td { border-bottom: none !important; }
-  .${cls} .ant-pagination-item-active { border-color: var(--primary) !important; }
-  .${cls} .ant-pagination-item-active a { color: var(--primary) !important; }
-`;
 
 /* ── KPI stat card (pastel design) ──────────────────────────────── */
 export const statCard = ({ color, bg, accentBar }) => ({
-  padding: "18px 20px",
+  padding: "var(--space-4) var(--space-5)",
   background: bg || "var(--surface)",
-  borderRadius: 20,
+  borderRadius: "var(--radius-lg)",
   border: "1px solid var(--border-muted)",
   borderLeft: `3px solid ${accentBar || color}`,
   display: "flex",
@@ -103,17 +34,17 @@ export const statCard = ({ color, bg, accentBar }) => ({
 });
 
 export const statLabel = () => ({
-  fontSize: 11,
-  fontWeight: 700,
+  fontSize: "var(--font-xs)",
+  fontWeight: "var(--weight-bold)",
   color: "var(--text-muted)",
   textTransform: "uppercase",
   letterSpacing: "0.07em",
-  marginBottom: 4,
+  marginBottom: "var(--space-1)",
 });
 
 export const statValue = () => ({
-  fontSize: 26,
-  fontWeight: 800,
+  fontSize: "var(--font-2xl)",
+  fontWeight: "var(--weight-bold)",
   color: "var(--text)",
   lineHeight: 1.1,
 });
@@ -138,7 +69,7 @@ export const avatarStyle = (name = "", size = 38) => {
   return {
     width: size, height: size, borderRadius: "50%",
     background: bg, color,
-    fontWeight: 700, fontSize: Math.round(size * 0.35),
+    fontWeight: "var(--weight-bold)", fontSize: Math.round(size * 0.35),
     display: "flex", alignItems: "center", justifyContent: "center",
     flexShrink: 0, border: `2px solid color-mix(in srgb, ${color} 30%, transparent)`,
   };
@@ -157,7 +88,7 @@ export const STATUS = {
 };
 
 export const statusDot = () => ({
-  display: "inline-flex", alignItems: "center", gap: 6,
+  display: "inline-flex", alignItems: "center", gap: "var(--space-1)",
 });
 
 /* ── Pill tag ────────────────────────────────────────────────────── */
@@ -169,20 +100,11 @@ export const pill = (color, bg) => ({
   padding: "2px 10px",
   background: bg || `color-mix(in srgb, ${color} 15%, transparent)`,
   color,
-  borderRadius: 99,
-  fontSize: 12,
-  fontWeight: 600,
+  borderRadius: "var(--radius-pill)",
+  fontSize: "var(--font-sm)",
+  fontWeight: "var(--weight-semibold)",
   border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
 });
-
-/* ── Empty state ─────────────────────────────────────────────────── */
-export const emptyState = {
-  textAlign: "center",
-  padding: "56px 24px",
-  border: "1.5px dashed var(--border-color)",
-  borderRadius: 20,
-  background: "var(--surface-soft)",
-};
 
 /* ── Icon well (pastel-aware) ────────────────────────────────────── */
 // color-mix() here too, same reason as pill() above — works with both hex and var() inputs.
@@ -199,14 +121,14 @@ export const iconWell = (color = "var(--primary)", size = 36, extraStyle = {}) =
 export const modalTitle = (icon, title, subtitle) =>
   React.createElement(
     "div",
-    { style: { display: "flex", alignItems: "center", gap: 12 } },
+    { style: { display: "flex", alignItems: "center", gap: "var(--space-3)" } },
     React.createElement("div", { style: iconWell("var(--primary)", 36) }, icon),
     React.createElement(
       "div",
       null,
-      React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: "var(--text-primary)" } }, title),
+      React.createElement("div", { style: { fontWeight: "var(--weight-bold)", fontSize: "var(--font-lg)", color: "var(--text-primary)" } }, title),
       subtitle
-        ? React.createElement("div", { style: { fontSize: 12, color: "var(--text-muted)", fontWeight: 400 } }, subtitle)
+        ? React.createElement("div", { style: { fontSize: "var(--font-sm)", color: "var(--text-muted)", fontWeight: 400 } }, subtitle)
         : null
     )
   );

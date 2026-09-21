@@ -10,7 +10,6 @@ import {
   ToolOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper } from "../../../styles/pageStyles";
 import { useTheme } from "../../../context/ThemeContext";
 
 const StockPage           = lazy(() => import("./StockPage"));
@@ -48,7 +47,7 @@ export default function InventoryStore() {
         icon={<AppstoreOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <style>{`
           .inv-tabs .ant-tabs-nav {
             margin-bottom: 20px !important;

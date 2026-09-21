@@ -12,10 +12,7 @@ import {
 import TimetableGrid from "./TimetableGrid";
 import { getName, schoolIdFromUser, DAYS } from "./timetableUi";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel,
-  statCard, statLabel, statValue, statGrid,
-} from "../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid } from "../../styles/pageStyles";
 
 const STAT_COLORS = ["var(--primary)", "var(--accent)", "var(--success)", "var(--warning)"];
 
@@ -135,7 +132,7 @@ export default function ParentChildTimetablePage() {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* Stats — only show when data is loaded */}
         {childTimetable.length > 0 && (
           <div className="stat-grid" style={statGrid(160)}>
@@ -152,7 +149,7 @@ export default function ParentChildTimetablePage() {
         )}
 
         {/* Timetable grid */}
-        <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+        <div className="section-panel is-flush">
           {/* Panel header */}
           <div style={{
             padding: "16px 20px",

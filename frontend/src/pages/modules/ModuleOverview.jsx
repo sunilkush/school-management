@@ -5,7 +5,7 @@ import { AppstoreOutlined, SearchOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { getRoleModules } from "../../utils/moduleRegistry";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import { pageWrapper, sectionPanel, iconWell, pill } from "../../styles/pageStyles.js";
+import { pill } from "../../styles/pageStyles.js";
 import { categoricalColorFor } from "../../utils/colorPalette.js";
 
 const { Text } = Typography;
@@ -208,20 +208,9 @@ const ModuleOverview = () => {
         icon={<AppstoreOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* ── Welcome strip ── */}
-        <div style={{
-          ...sectionPanel,
-          marginBottom: 20,
-          padding: "20px 24px",
-          background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%)",
-          borderLeft: "4px solid var(--primary)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 16,
-        }}>
+        <div className="section-panel" style={{ marginBottom: 20, padding: "20px 24px", background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%)", borderLeft: "4px solid var(--primary)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>
               Welcome to the Module Center
@@ -263,7 +252,7 @@ const ModuleOverview = () => {
 
         {/* ── Empty state ── */}
         {!modules.length ? (
-          <div style={{ ...sectionPanel, textAlign: "center", padding: "64px 24px" }}>
+          <div className="section-panel" style={{ textAlign: "center", padding: "64px 24px" }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
               No Module Access
@@ -274,7 +263,7 @@ const ModuleOverview = () => {
             </div>
           </div>
         ) : filteredModules.length === 0 ? (
-          <div style={{ ...sectionPanel, textAlign: "center", padding: "56px 24px" }}>
+          <div className="section-panel" style={{ textAlign: "center", padding: "56px 24px" }}>
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={

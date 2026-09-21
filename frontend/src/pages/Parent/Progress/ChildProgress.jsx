@@ -11,7 +11,7 @@ import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import { getParentResults } from "../../../features/examSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const PIE_COLORS = ["var(--success)", "var(--danger)", "var(--warning)"];
 const STAT_COLORS = ["var(--accent)", "var(--primary)", "var(--success)", "var(--warning)"];
@@ -128,9 +128,9 @@ const ChildProgress = () => {
           </Space>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!selectedChildId ? (
-          <div style={sectionPanel}><Empty description="Select a child to view progress analytics" /></div>
+          <div className="section-panel"><Empty description="Select a child to view progress analytics" /></div>
         ) : isLoading && !results.length && !attendance.length ? (
           <Skeleton active paragraph={{ rows: 10 }} />
         ) : (
@@ -156,7 +156,7 @@ const ChildProgress = () => {
                   children: (
                     <Row gutter={[16, 16]}>
                       <Col xs={24} md={12}>
-                        <div style={sectionPanel}>
+                        <div className="section-panel">
                           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
                             Monthly Breakdown
                           </div>
@@ -173,7 +173,7 @@ const ChildProgress = () => {
                         </div>
                       </Col>
                       <Col xs={24} md={12}>
-                        <div style={sectionPanel}>
+                        <div className="section-panel">
                           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
                             Summary
                           </div>
@@ -201,7 +201,7 @@ const ChildProgress = () => {
                   key: "grades",
                   label: "Exam Results",
                   children: gradeChartData.length ? (
-                    <div style={sectionPanel}>
+                    <div className="section-panel">
                       <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
                         Exam Score Trend
                       </div>
@@ -216,7 +216,7 @@ const ChildProgress = () => {
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
-                  ) : <div style={sectionPanel}><Empty description="No exam results available" /></div>,
+                  ) : <div className="section-panel"><Empty description="No exam results available" /></div>,
                 },
                 {
                   key: "homework",
@@ -224,7 +224,7 @@ const ChildProgress = () => {
                   children: (
                     <Row gutter={[16, 16]}>
                       <Col xs={24} md={12}>
-                        <div style={sectionPanel}>
+                        <div className="section-panel">
                           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
                             Completion Breakdown
                           </div>
@@ -241,7 +241,7 @@ const ChildProgress = () => {
                         </div>
                       </Col>
                       <Col xs={24} md={12}>
-                        <div style={sectionPanel}>
+                        <div className="section-panel">
                           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
                             Homework Summary
                           </div>

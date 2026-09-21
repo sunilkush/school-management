@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 import StudentFeeLedger from "../../../components/fees/StudentFeeLedger.jsx";
 
 /**
@@ -59,9 +58,9 @@ const ParentFees = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!selectedChildId ? (
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <Empty description={childrenLoading ? "Loading…" : "No linked child found"} />
           </div>
         ) : !studentId ? (

@@ -8,10 +8,7 @@ import {
 import { fetchAMCs, createAMC, updateAMC, addServiceLog, deleteAMC } from "../../../features/amcSlice";
 import { fetchInventoryItems } from "../../../features/inventorySlice";
 import { fetchVendors } from "../../../features/vendorSlice";
-import {
-  toolbarRow, tableContainer, tableHeadCss,
-  statGrid, iconWell, modalTitle, pill,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle, pill } from "../../../styles/pageStyles";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -179,7 +176,7 @@ export default function AMCTrackingPage() {
       </div>
 
       {/* Toolbar */}
-      <div style={toolbarRow}>
+      <div className="toolbar-row">
         <Select value={statusFilter} onChange={setStatusFilter} style={{ width: 160 }} placeholder="All Status" allowClear>
           {Object.entries(STATUS_META).map(([k, m]) => (
             <Option key={k} value={k}><span style={{ color: m.color, fontWeight: 500 }}>{m.label}</span></Option>
@@ -191,8 +188,7 @@ export default function AMCTrackingPage() {
       </div>
 
       {/* Table */}
-      <style>{tableHeadCss("amc-tbl")}</style>
-      <div className="amc-tbl" style={tableContainer}>
+      <div className="amc-tbl table-container">
         <Table
           columns={columns}
           dataSource={filtered}

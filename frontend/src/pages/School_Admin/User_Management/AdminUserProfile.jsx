@@ -15,7 +15,6 @@ import { getUserById, deleteUser, adminUpdateUser, fetchAllUser } from "../../..
 import { fetchDepartments } from "../../../features/departmentSlice";
 import { fetchDesignations } from "../../../features/designationSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 
 const GENDER_OPTS = [
   { value: "Male",   label: "Male"   },
@@ -134,7 +133,7 @@ const AdminUserProfile = () => {
 
   if (loading) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", justifyContent: "center", paddingTop: 80 }}>
+      <div className="page-wrapper" style={{ display: "flex", justifyContent: "center", paddingTop: 80 }}>
         <Spin size="large" />
       </div>
     );
@@ -142,7 +141,7 @@ const AdminUserProfile = () => {
 
   if (!profile) {
     return (
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <PageHeader title="User Profile" subtitle="User not found" icon={<UserOutlined />} />
         <div style={{ marginTop: 32, textAlign: "center", color: "var(--text-muted)" }}>
           No user found with this ID.
@@ -155,7 +154,7 @@ const AdminUserProfile = () => {
   const avatar   = profile?.avatar;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="User Profile"
         subtitle={`${roleName} · ${profile?.school?.name || ""}`}
@@ -188,10 +187,7 @@ const AdminUserProfile = () => {
       />
 
       {/* ── Header Card ── */}
-      <div style={{
-        ...sectionPanel, marginTop: 20,
-        display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap",
-      }}>
+      <div className="section-panel" style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
         {/* Avatar */}
         <div style={{
           width: 80, height: 80, borderRadius: "50%", flexShrink: 0,
@@ -259,7 +255,7 @@ const AdminUserProfile = () => {
         marginTop: 16,
       }}>
         {/* Contact Info */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             Contact Information
           </div>
@@ -269,7 +265,7 @@ const AdminUserProfile = () => {
         </div>
 
         {/* Personal Info */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             Personal Details
           </div>
@@ -279,7 +275,7 @@ const AdminUserProfile = () => {
         </div>
 
         {/* Professional Info */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             Professional Details
           </div>
@@ -289,7 +285,7 @@ const AdminUserProfile = () => {
         </div>
 
         {/* Emergency Contact */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
             Emergency Contact
           </div>

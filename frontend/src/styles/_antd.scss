@@ -1,0 +1,217 @@
+// Ant Design overrides, app-wide
+// Moved out of index.css unchanged — see styles/main.scss.
+
+/* =========================
+   Antd Global Theme Harmony
+========================= */
+.ant-layout,
+.ant-layout-content,
+.ant-app {
+  background: transparent;
+  color: var(--text);
+}
+
+.ant-card {
+  border-color: var(--border-muted) !important;
+  border-radius: 22px !important;
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+/* ── Soft UI — gradient primary buttons, app-wide ──────────────── */
+.ant-btn-primary:not(:disabled):not(.ant-btn-dangerous) {
+  background: var(--gradient-primary) !important;
+  border: none !important;
+  box-shadow: var(--shadow-primary) !important;
+  font-weight: 600 !important;
+}
+.ant-btn-primary:not(:disabled):not(.ant-btn-dangerous):hover {
+  filter: brightness(1.07);
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.42) !important;
+  transform: translateY(-1px);
+}
+.ant-btn-primary:not(:disabled):not(.ant-btn-dangerous):active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+.ant-btn { font-weight: 500; }
+
+/* Soft UI — rounder inputs & controls */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-picker,
+.ant-select-selector {
+  border-radius: 12px !important;
+}
+.ant-select-dropdown,
+.ant-picker-dropdown .ant-picker-panel-container {
+  border-radius: 16px !important;
+  box-shadow: var(--shadow-strong) !important;
+}
+
+.ant-card-head,
+.ant-modal-header,
+.ant-drawer-header {
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  background: transparent !important;
+}
+
+.ant-typography,
+.ant-typography-secondary,
+.ant-table,
+.ant-table-thead>tr>th,
+.ant-table-tbody>tr>td,
+.ant-descriptions-item-label,
+.ant-descriptions-item-content {
+  color: var(--text) !important;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-picker,
+.ant-select-selector,
+.ant-btn-default {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+/* The rule above pins every field's border in every state, focus included, so nothing on the field
+   itself showed that it had focus — the only sign was a square browser ring around the hidden
+   <input> inside a select. A focused field now shows it on its own rounded border instead. */
+.ant-select-focused .ant-select-selector,
+.ant-select-open .ant-select-selector,
+.ant-picker.ant-picker-focused,
+.ant-input-affix-wrapper.ant-input-affix-wrapper-focused,
+.ant-input:focus,
+.ant-input-number.ant-input-number-focused {
+  border-color: var(--primary) !important;
+}
+
+.ant-input::placeholder,
+.ant-select-selection-placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Remove inner input border inside affix wrappers (Password, Search, etc.) */
+.ant-input-affix-wrapper > .ant-input {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* ── Remove focus outline/glow on mouse click — everywhere ───────────────
+   :focus-visible stays intact so keyboard users still get an outline.
+   This covers native elements, Ant Design components, and custom inputs.
+─────────────────────────────────────────────────────────────────────── */
+
+/* Universal: any element focused by mouse loses the browser default ring */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Input */
+.ant-input:focus,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+textarea.ant-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — InputNumber */
+.ant-input-number:focus,
+.ant-input-number-focused,
+.ant-input-number-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Select */
+.ant-select-focused .ant-select-selector,
+.ant-select-selector:focus,
+.ant-select:focus,
+.ant-select-open .ant-select-selector {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — DatePicker / TimePicker */
+.ant-picker:focus,
+.ant-picker-focused,
+.ant-picker-input > input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Button */
+.ant-btn:focus:not(:focus-visible),
+.ant-btn-primary:focus:not(:focus-visible),
+.ant-btn-default:focus:not(:focus-visible),
+.ant-btn-text:focus:not(:focus-visible),
+.ant-btn-link:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Checkbox / Radio */
+.ant-checkbox-input:focus + .ant-checkbox-inner,
+.ant-radio-input:focus + .ant-radio-inner {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Switch */
+.ant-switch:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Ant Design — Segmented */
+.ant-segmented-item:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* Ant Design — Pagination / Table */
+.ant-pagination-item:focus:not(:focus-visible),
+.ant-pagination-prev:focus:not(:focus-visible),
+.ant-pagination-next:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* Native HTML elements */
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ant-table-wrapper .ant-table {
+  background: var(--surface) !important;
+}
+
+.ant-table-thead>tr>th {
+  background: var(--surface-soft) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.ant-table-tbody>tr>td {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.ant-modal-content,
+.ant-drawer-content,
+.ant-popover-inner,
+.ant-dropdown-menu {
+  border: 1px solid var(--border-muted) !important;
+  background: var(--surface) !important;
+  box-shadow: var(--shadow-strong) !important;
+  border-radius: 24px !important;
+}
+.ant-dropdown-menu { border-radius: 16px !important; }

@@ -13,10 +13,7 @@ import {
 } from "../../../features/librarySlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import ListToolbar from "../../../components/layout/ListToolbar";
-import {
-  pageWrapper, pageCard, tableHeadCss, statCard, statLabel, statValue, statGrid,
-  pill, emptyState, iconWell,
-} from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, pill, iconWell } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -218,7 +215,6 @@ const Books = () => {
 
   return (
     <>
-      <style>{tableHeadCss("books-table")}</style>
 
       <PageHeader
         title="Library Books"
@@ -236,8 +232,8 @@ const Books = () => {
         }
       />
 
-      <div style={pageWrapper}>
-        <div style={pageCard}>
+      <div className="page-wrapper">
+        <div className="page-card">
           <div style={{ padding: "20px 20px 0" }}>
             {/* KPI stats */}
             <div className="stat-grid" style={statGrid(200)}>
@@ -292,7 +288,7 @@ const Books = () => {
 
           {!booksLoading && filteredBooks.length === 0 ? (
             <div style={{ padding: "0 20px 20px" }}>
-              <div style={emptyState}>
+              <div className="empty-state">
                 <BookOutlined style={{ fontSize: 36, color: "var(--text-muted)", marginBottom: 12, display: "block" }} />
                 <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
                   {searchText || categoryFilter || statusFilter ? "No books match your filters" : "No books in the library yet"}
@@ -303,7 +299,7 @@ const Books = () => {
               </div>
             </div>
           ) : (
-            <div className="books-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
+            <div className="books-table data-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
               <Table
                 columns={columns}
                 dataSource={filteredBooks}

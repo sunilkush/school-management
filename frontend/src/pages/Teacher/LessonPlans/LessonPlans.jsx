@@ -8,12 +8,12 @@ import dayjs from "dayjs";
 import apiClient from "../../../api/httpClient";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const STATUS_COLOR = { draft: "orange", approved: "green", completed: "blue" };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -202,7 +202,7 @@ const LessonPlans = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Lesson Plans"
         subtitle="Plan and track your lessons for each subject and class"
@@ -221,8 +221,8 @@ const LessonPlans = () => {
         <StatCard icon={<BookOutlined />} label="Completed" value={stats.completed} color="var(--cyan)" />
       </div>
 
-      <div style={{ ...sectionPanel, marginTop: 0 }}>
-        <div style={toolbarRow}>
+      <div className="section-panel" style={{ marginTop: 0 }}>
+        <div className="toolbar-row">
           <Select
             placeholder="Filter by Status" style={{ width: 180 }} allowClear
             value={filterStatus} onChange={setFilterStatus}

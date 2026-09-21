@@ -6,7 +6,7 @@ import apiClient from "../../api/httpClient";
 import { endTrip, sendPing, setActiveTrip, startTrip } from "../../features/busTrackingSlice";
 import BusMap from "../../components/transport/BusMap";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 /**
  * The driver's screen — the only place bus positions come from.
@@ -132,7 +132,7 @@ const DriverTrip = () => {
   if (loading) return <div style={{ textAlign: "center", padding: 80 }}><Spin size="large" /></div>;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Trip"
         subtitle="Start your run so the school and parents can see the bus"
@@ -140,14 +140,14 @@ const DriverTrip = () => {
       />
 
       {!vehicles.length ? (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="No bus is assigned to you" />
           <p style={{ color: "var(--text-muted)", marginTop: 12 }}>
             Ask the transport office to link your account to a vehicle.
           </p>
         </div>
       ) : !activeTrip ? (
-        <Card style={{ ...sectionPanel, maxWidth: 560 }}>
+        <Card className="section-panel" style={{ maxWidth: 560 }}>
           <div style={{ display: "grid", gap: 14 }}>
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6 }}>BUS</div>
@@ -195,7 +195,7 @@ const DriverTrip = () => {
         </Card>
       ) : (
         <>
-          <div style={{ ...sectionPanel, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>{route?.name || "Trip running"}</div>
               <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
@@ -243,7 +243,7 @@ const DriverTrip = () => {
             />
           )}
 
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <BusMap
               stops={route?.stopPoints || []}
               bus={fix ? { ...fix, recordedAt: lastPingAt } : activeTrip.lastLocation}

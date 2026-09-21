@@ -6,7 +6,7 @@ import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import { fetchMyBus } from "../../../features/busTrackingSlice";
 import BusMap from "../../../components/transport/BusMap";
 import PageHeader from "../../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 /**
  * "Where is my child's bus" — the one screen a parent actually opens, on a phone, in the morning.
@@ -51,7 +51,7 @@ const ChildBusLive = () => {
 
     if (!myBus.assigned) {
       return (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="This student does not use school transport" />
         </div>
       );
@@ -59,7 +59,7 @@ const ChildBusLive = () => {
 
     if (!myBus.running) {
       return (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="The bus is not running right now" />
           <p style={{ color: "var(--text-muted)", marginTop: 12, maxWidth: 420, marginInline: "auto" }}>
             {myBus.routeName ? `${myBus.routeName} — ` : ""}
@@ -72,7 +72,7 @@ const ChildBusLive = () => {
 
     return (
       <>
-        <div style={{ ...sectionPanel, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+        <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div>
             <div style={{ fontWeight: 800, fontSize: 18 }}>{myBus.routeName || "Bus"}</div>
             <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
@@ -109,7 +109,7 @@ const ChildBusLive = () => {
           />
         )}
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <BusMap
             stops={myBus.stops || []}
             bus={myBus.lastLocation}
@@ -131,7 +131,7 @@ const ChildBusLive = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Where is the Bus"
         subtitle="Updates on its own every few seconds"

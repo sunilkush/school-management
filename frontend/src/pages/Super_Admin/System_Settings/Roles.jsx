@@ -33,10 +33,7 @@ import { fetchRoles, updateRole, deleteRole } from "../../../features/roleSlice"
 import apiClient from "../../../api/httpClient";
 import AddRoleForm from "../../../components/forms/AddRoleForm";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, modalTitle } from "../../../styles/pageStyles";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -88,7 +85,7 @@ const statusPill = (status) =>
     : pill("var(--text-muted)", "var(--surface-soft)");
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -387,7 +384,7 @@ const Roles = () => {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Role Governance"
         subtitle="Role templates, custom roles aur time-bound access manage karein"
@@ -413,7 +410,7 @@ const Roles = () => {
         <StatCard icon={<LockOutlined />} label="Security Mode" value="RBAC" color="var(--success)" />
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <TeamOutlined style={{ color: "var(--primary)" }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Role Templates by School Size</span>
@@ -477,15 +474,14 @@ const Roles = () => {
         </div>
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <SafetyCertificateOutlined style={{ color: "var(--primary)" }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>All Roles</span>
           <span style={pill("var(--primary)")}>{roles.length}</span>
         </div>
 
-        <style>{tableHeadCss("roles-all-tbl")}</style>
-        <div className="roles-all-tbl" style={tableContainer}>
+        <div className="roles-all-tbl table-container">
           <Table
             rowKey="_id"
             columns={roleColumns}
@@ -517,7 +513,7 @@ const Roles = () => {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={10}>
-          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+          <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <PlusOutlined style={{ color: "var(--primary)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Create / Manage Roles</span>
@@ -534,7 +530,7 @@ const Roles = () => {
         </Col>
 
         <Col xs={24} xl={14}>
-          <div style={{ ...sectionPanel, marginBottom: 0 }}>
+          <div className="section-panel is-last">
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               <ClockCircleOutlined style={{ color: "var(--warning)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Time-bound Temporary Access</span>
@@ -550,8 +546,7 @@ const Roles = () => {
               </Button>
             </div>
 
-            <style>{tableHeadCss("roles-temp-access-tbl")}</style>
-            <div className="roles-temp-access-tbl" style={tableContainer}>
+            <div className="roles-temp-access-tbl table-container">
               <Table
                 rowKey="_id"
                 columns={columns}

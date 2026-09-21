@@ -5,13 +5,13 @@ import dayjs from "dayjs";
 import httpClient from "../../../api/httpClient";
 import { useStatutoryReport } from "../../../hooks/payrollHooks";
 import PageHeader from "../../../components/layout/PageHeader";
-import { iconWell, pageCard, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../../../styles/pageStyles";
+import { iconWell, statGrid } from "../../../styles/pageStyles";
 import { formatCurrencyINR } from "../../../utils/payroll";
 
 const { Text } = Typography;
 
 const StatCard = ({ label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+  <div className="section-panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         {label}
@@ -92,8 +92,7 @@ const PfEsiReports = () => {
   };
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("pf-esi-report-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="PF / ESI Compliance Reports"
@@ -118,11 +117,7 @@ const PfEsiReports = () => {
         }
       />
 
-      <div style={{
-        ...sectionPanel, marginTop: 16, marginBottom: 16,
-        padding: "14px 20px",
-        display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
-      }}>
+      <div className="section-panel" style={{ marginTop: 16, marginBottom: 16, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <Segmented
           value={reportType}
           onChange={setReportType}
@@ -144,7 +139,7 @@ const PfEsiReports = () => {
       </div>
 
       {isEmpty ? (
-        <div style={{ ...sectionPanel, textAlign: "center", padding: "56px 24px" }}>
+        <div className="section-panel" style={{ textAlign: "center", padding: "56px 24px" }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
           <Text strong style={{ fontSize: 16, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
             No Payroll Cycle for {selectedMonth.format("MMMM YYYY")}
@@ -169,9 +164,9 @@ const PfEsiReports = () => {
             <StatCard label="Employer Contribution" value={formatCurrencyINR(totals.employerShare)} color="var(--success)" />
           </div>
 
-          <div style={{ ...pageCard, padding: 0, overflow: "hidden" }}>
+          <div className="page-card is-flush">
             <Table
-              className="pf-esi-report-tbl"
+              className="pf-esi-report-tbl data-table"
               rowKey={(r) => `${r.employeeName}-${r.uan || r.esicNumber}`}
               dataSource={rows}
               loading={loading}

@@ -14,9 +14,7 @@ import {
   collectLibraryFine, fetchFineSummary, fetchIssuedBooks,
 } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss,
-} from "../../styles/pageStyles";
+import { iconWell, statGrid } from "../../styles/pageStyles";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -193,8 +191,7 @@ const FineManagement = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("fine-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Fine Management"
         subtitle="Collect, waive, and track library fines"
@@ -209,7 +206,7 @@ const FineManagement = () => {
           { label: "Collected",        value: `₹${summary.totalCollected}`, color: "var(--success)", icon: <CheckCircleOutlined /> },
           { label: "Waived",           value: `₹${summary.totalWaived}`,    color: "var(--text-secondary)", icon: <CloseCircleOutlined /> },
         ].map(({ label, value, color, icon }) => (
-          <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+          <div key={label} className="section-panel is-header-strip">
             <div style={iconWell(color, 40)}>{icon}</div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
@@ -220,7 +217,7 @@ const FineManagement = () => {
       </div>
 
       {/* ── Filters + Table ──────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
           <Input
             prefix={<SearchOutlined />}
@@ -242,7 +239,7 @@ const FineManagement = () => {
           <div style={{ textAlign: "center", padding: 40 }}><Spin size="large" /></div>
         ) : (
           <Table
-            className="fine-tbl"
+            className="fine-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={filtered}
@@ -268,7 +265,7 @@ const FineManagement = () => {
       >
         {selectedRecord && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ ...sectionPanel, padding: 14, marginBottom: 0 }}>
+            <div className="section-panel" style={{ padding: 14, marginBottom: 0 }}>
               <div style={{ fontWeight: 700 }}>{selectedRecord.bookTitle}</div>
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
                 Borrower: <strong>{selectedRecord.borrowerName}</strong>

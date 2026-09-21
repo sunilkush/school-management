@@ -11,9 +11,7 @@ import PayslipFilters from "../../../components/payroll/PayslipFilters";
 import PayslipPreview from "../../../components/payroll/PayslipPreview";
 import { formatCurrencyINR } from "../../../utils/payroll";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  iconWell, pageCard, pageWrapper, sectionPanel, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { iconWell } from "../../../styles/pageStyles";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
@@ -177,8 +175,7 @@ const GeneratePayslip = () => {
   ], [selectedEmployeeId, payslipLoading]);
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("payslip-tbl")}</style>
+    <div className="page-wrapper">
       <style>{`.payslip-tbl .ant-table-row.selected-row td { background: var(--primary-light) !important; }`}</style>
 
       <PageHeader
@@ -193,7 +190,7 @@ const GeneratePayslip = () => {
       />
 
       {/* ── Filters toolbar ───────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, marginBottom: 16 }}>
+      <div className="section-panel" style={{ marginBottom: 16 }}>
         <PayslipFilters
           monthValue={selectedMonth}
           onMonthChange={(v) => v && setSelectedMonth(v)}
@@ -211,7 +208,7 @@ const GeneratePayslip = () => {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
 
         {/* Left — Cycle Entries */}
-        <div style={{ ...pageCard, padding: 0, overflow: "hidden" }}>
+        <div className="page-card is-flush">
           {/* Panel header */}
           <div style={{
             padding: "14px 20px",
@@ -249,7 +246,7 @@ const GeneratePayslip = () => {
             </div>
           ) : (
             <Table
-              className="payslip-tbl"
+              className="payslip-tbl data-table"
               rowKey="_id"
               columns={entriesColumns}
               dataSource={entries}
@@ -269,7 +266,7 @@ const GeneratePayslip = () => {
         </div>
 
         {/* Right — Payslip Preview */}
-        <div style={{ ...pageCard, padding: 0, overflow: "hidden" }}>
+        <div className="page-card is-flush">
           {/* Panel header */}
           <div style={{
             padding: "14px 20px",

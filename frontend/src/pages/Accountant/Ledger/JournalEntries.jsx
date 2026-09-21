@@ -12,7 +12,7 @@ import {
   createEntry, fetchAccounts, fetchEntries, postEntry, reverseEntry,
 } from "../../../features/ledgerSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 
@@ -183,8 +183,7 @@ const JournalEntries = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("je-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Journal"
@@ -193,7 +192,7 @@ const JournalEntries = () => {
         extra={<Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>New entry</Button>}
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
           <Select
             allowClear
@@ -209,13 +208,13 @@ const JournalEntries = () => {
         {entriesLoading ? (
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : !entries?.length ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <Empty description="No entries in this range" />
           </div>
         ) : (
-          <div style={tableContainer}>
+          <div className="table-container">
             <Table
-              className="je-table"
+              className="je-table data-table"
               rowKey="_id"
               size="middle"
               columns={columns}
@@ -289,11 +288,7 @@ const JournalEntries = () => {
           {/* The running totals are the whole point of this form — an unbalanced entry is refused
               by the server anyway, so it is shown failing here rather than after a round trip. */}
           <div
-            style={{
-              ...sectionPanel, marginTop: 18, marginBottom: 0, padding: "14px 18px",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              borderColor: totals.difference === 0 ? "var(--border-muted)" : "var(--danger)",
-            }}
+            className="section-panel" style={{ marginTop: 18, marginBottom: 0, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: totals.difference === 0 ? "var(--border-muted)" : "var(--danger)" }}
           >
             <div style={{ display: "flex", gap: 24 }}>
               <span><span style={{ color: "var(--text-muted)" }}>Debits </span><b>{money(totals.debit)}</b></span>

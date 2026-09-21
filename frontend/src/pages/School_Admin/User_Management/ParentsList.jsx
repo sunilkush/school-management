@@ -5,10 +5,7 @@ import { TeamOutlined, CheckCircleOutlined, EyeOutlined } from "@ant-design/icon
 import { fetchAllUser } from "../../../features/authSlice";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, pageCard, toolbarRow, tableHeadCss,
-  avatarStyle, pill, emptyState, statCard, statLabel, statValue, statGrid,
-} from "../../../styles/pageStyles";
+import { avatarStyle, pill, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const STAT_META = [
   { key: "total",   label: "Total Parents", color: "var(--accent)", icon: <TeamOutlined /> },
@@ -118,7 +115,6 @@ const ParentsList = () => {
 
   return (
     <>
-      <style>{tableHeadCss("parents-table")}</style>
 
       <PageHeader
         title="Parents Directory"
@@ -127,7 +123,7 @@ const ParentsList = () => {
         extra={currentYear ? <Tag color="blue">{currentYear.name}</Tag> : null}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* KPI row */}
         <div className="stat-grid" style={statGrid(200)}>
           {STAT_META.map(({ key, label, color, icon }) => (
@@ -141,9 +137,9 @@ const ParentsList = () => {
           ))}
         </div>
 
-        <div style={pageCard}>
+        <div className="page-card">
           <div style={{ padding: "20px 20px 0" }}>
-            <div className="page-toolbar" style={toolbarRow}>
+            <div className="page-toolbar toolbar-row">
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Parents
               </span>
@@ -161,7 +157,7 @@ const ParentsList = () => {
 
           {!loading && parentsList.length === 0 ? (
             <div style={{ padding: "0 20px 20px" }}>
-              <div style={emptyState}>
+              <div className="empty-state">
                 <div style={{ fontSize: 40, marginBottom: 12 }}>👨‍👩‍👧‍👦</div>
                 <div style={{ fontWeight: 600, color: "var(--text-muted)", marginBottom: 4 }}>
                   {searchText ? "No parents match your search" : "No parents found"}
@@ -174,7 +170,7 @@ const ParentsList = () => {
               </div>
             </div>
           ) : (
-            <div className="parents-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
+            <div className="parents-table data-table" style={{ borderTop: "1px solid var(--border-muted)" }}>
               <Table
                 columns={columns}
                 dataSource={parentsList}

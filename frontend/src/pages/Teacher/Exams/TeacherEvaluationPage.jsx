@@ -9,10 +9,7 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { evaluateAttempt, getAttempts } from "../../../features/attemptSlice";
-import {
-  pageWrapper, pageCard, tableHeadCss, statGrid,
-  statCard, statLabel, statValue,
-} from "../../../styles/pageStyles";
+import { statGrid, statCard, statLabel, statValue } from "../../../styles/pageStyles";
 import PageHeader from "../../../components/layout/PageHeader";
 import { GraduationCap } from "lucide-react";
 
@@ -324,8 +321,7 @@ const TeacherEvaluationPage = () => {
   const isReadOnly = drawerAttempt?.status === "evaluated";
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("eval-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Evaluation"
@@ -367,7 +363,7 @@ const TeacherEvaluationPage = () => {
         {error && <Alert type="error" showIcon message="Attempts load nahi hue" style={{ marginBottom: 16 }} />}
 
         {/* Tabs */}
-        <div style={pageCard}>
+        <div className="page-card">
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
@@ -383,7 +379,7 @@ const TeacherEvaluationPage = () => {
                 ),
                 children: (
                   <Table
-                    className="eval-table"
+                    className="eval-table data-table"
                     rowKey="_id"
                     loading={loading}
                     dataSource={pendingFiltered}
@@ -405,7 +401,7 @@ const TeacherEvaluationPage = () => {
                 ),
                 children: (
                   <Table
-                    className="eval-table"
+                    className="eval-table data-table"
                     rowKey="_id"
                     loading={loading}
                     dataSource={evaluatedFiltered}

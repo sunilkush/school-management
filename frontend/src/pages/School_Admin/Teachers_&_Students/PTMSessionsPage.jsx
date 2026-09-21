@@ -12,7 +12,7 @@ import {
   createSession, getSessions, getSessionSlots, cancelSession, markAttendance,
 } from "../../../features/ptmSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 
 const { Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -169,7 +169,6 @@ export default function PTMSessionsPage() {
 
   return (
     <>
-      <style>{tableHeadCss("ptm-tbl")}</style>
 
       <PageHeader
         title="Parent-Teacher Meetings"
@@ -177,13 +176,13 @@ export default function PTMSessionsPage() {
         icon={<CalendarOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!canFilter && (
           <Alert type="warning" showIcon message="Please select an active academic year to schedule PTM sessions." style={{ borderRadius: 12, marginBottom: 16 }} />
         )}
 
         {/* ── Create Session panel ─────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
             <div style={iconWell("var(--primary)", 38)}><CalendarOutlined style={{ fontSize: 17 }} /></div>
             <div>
@@ -233,10 +232,10 @@ export default function PTMSessionsPage() {
         </div>
 
         {/* ── Session list ──────────────────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Text strong style={{ fontSize: 14, marginBottom: 14, display: "block" }}>Sessions</Text>
           <Table
-            className="ptm-tbl" rowKey="_id" columns={sessionColumns} dataSource={sessions} loading={loading}
+            className="ptm-tbl data-table" rowKey="_id" columns={sessionColumns} dataSource={sessions} loading={loading}
             size="middle" scroll={{ x: 800 }} pagination={{ pageSize: 20 }}
             locale={{ emptyText: <Empty description="No PTM sessions yet" style={{ padding: "40px 0" }} /> }}
           />
@@ -252,7 +251,7 @@ export default function PTMSessionsPage() {
         title={currentSession ? `${currentSession.title} — Slots` : "Slots"}
       >
         <Table
-          className="ptm-tbl" rowKey="_id" columns={slotColumns} dataSource={sessionSlots}
+          className="ptm-tbl data-table" rowKey="_id" columns={slotColumns} dataSource={sessionSlots}
           size="small" pagination={{ pageSize: 10 }}
           locale={{ emptyText: <Empty description="No slots" style={{ padding: "20px 0" }} /> }}
         />

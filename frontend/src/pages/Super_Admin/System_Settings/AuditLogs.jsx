@@ -13,10 +13,7 @@ import { Clock, Download, RefreshCcw, Search } from "lucide-react";
 import dayjs from "dayjs";
 import httpClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, pill,
-  toolbarRow, tableContainer, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 
@@ -197,7 +194,7 @@ const AuditLogs = () => {
   );
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Audit Logs"
         subtitle="System-wide activity trail for every action across the platform"
@@ -214,8 +211,8 @@ const AuditLogs = () => {
         }
       />
 
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
-        <div style={toolbarRow}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
+        <div className="toolbar-row">
           <Input
             allowClear
             placeholder="Search by actor/action/entity"
@@ -261,8 +258,7 @@ const AuditLogs = () => {
 
         {error ? <div style={{ color: "var(--danger-hover)", marginBottom: 12 }}>{error}</div> : null}
 
-        <style>{tableHeadCss("audit-logs-tbl")}</style>
-        <div className="audit-logs-tbl" style={tableContainer}>
+        <div className="audit-logs-tbl table-container">
           <Table
             rowKey="_id"
             columns={columns}

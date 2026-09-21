@@ -41,10 +41,7 @@ import {
 
 import { fetchAllUser } from "../../../features/authSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell,
-  tableContainer, tableHeadCss, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -59,7 +56,7 @@ const getId = (value) => {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -404,7 +401,7 @@ const ClassTimetable = () => {
           </Button>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <Spin spinning={!!loading}>
           <div style={statGrid(200)}>
             <StatCard icon={<CalendarOutlined />} label="Total Slots" value={stats.totalSlots} color="var(--primary)" />
@@ -412,9 +409,8 @@ const ClassTimetable = () => {
             <StatCard icon={<BookOutlined />} label="Subjects Planned" value={stats.totalSubjects} color="var(--purple)" />
           </div>
 
-          <style>{tableHeadCss("class-timetable-tbl")}</style>
 
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <Space
               direction={isMobile ? "vertical" : "horizontal"}
               size={12}
@@ -477,7 +473,7 @@ const ClassTimetable = () => {
                   <TimetableMobileCard key={item._id} item={item} />
                 ))
               ) : (
-                <div className="class-timetable-tbl" style={tableContainer}>
+                <div className="class-timetable-tbl table-container">
                   <Table
                     columns={columns}
                     dataSource={filteredData}

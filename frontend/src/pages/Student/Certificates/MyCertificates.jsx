@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 import { fetchMyCertificates } from "../../../features/certificateSlice";
 import { getAccessToken } from "../../../api/authToken";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+
 
 const { Text } = Typography;
 
@@ -71,12 +71,11 @@ export default function MyCertificates() {
 
   return (
     <>
-      <style>{tableHeadCss("my-cert-tbl")}</style>
       <PageHeader title="My Certificates" subtitle="Certificates issued to you" icon={<SafetyCertificateOutlined />} />
-      <div style={pageWrapper}>
-        <div style={sectionPanel}>
+      <div className="page-wrapper">
+        <div className="section-panel">
           <Table
-            className="my-cert-tbl" rowKey="_id" columns={columns} dataSource={myCertificates} loading={myLoading}
+            className="my-cert-tbl data-table" rowKey="_id" columns={columns} dataSource={myCertificates} loading={myLoading}
             size="middle" pagination={{ pageSize: 20 }}
             locale={{ emptyText: <Empty description="No certificates issued yet" style={{ padding: "40px 0" }} /> }}
           />

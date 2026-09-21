@@ -4,7 +4,7 @@ import { Collapse, Empty, Space, Table, Tag, Typography } from "antd";
 import { TrophyOutlined } from "@ant-design/icons";
 import { fetchStudentGrades } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pageCard, tableHeadCss, pill } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 
@@ -42,14 +42,13 @@ const StudentGrades = () => {
   }, [grades]);
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("grades-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="My Grades"
         subtitle="View published exam results and subject-wise marks"
         icon={<TrophyOutlined />}
       />
-      <div style={{ ...pageCard, margin: "16px 0" }}>
+      <div className="page-card" style={{ margin: "16px 0" }}>
         <div style={{ padding: "16px 20px" }}>
           {summary && (
             <Space wrap style={{ marginBottom: 16 }}>
@@ -70,7 +69,7 @@ const StudentGrades = () => {
                 children: (
                   <Space direction="vertical" style={{ width: "100%" }}>
                     <Table
-                      className="grades-tbl"
+                      className="grades-tbl data-table"
                       rowKey={(row) => `${row.subjectId || row.subjectName}`}
                       columns={subjectColumns}
                       dataSource={grade.subjects || []}

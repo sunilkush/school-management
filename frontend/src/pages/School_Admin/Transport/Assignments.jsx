@@ -11,7 +11,7 @@ import {
   fetchRoutes, fetchVehicles, saveAssignment,
 } from "../../../features/transportSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
@@ -274,8 +274,7 @@ const Assignments = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("assign-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Transport Assignments"
@@ -327,7 +326,7 @@ const Assignments = () => {
       </div>
 
       {/* Table */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{
           padding: "14px 20px", borderBottom: "1px solid " + C.border,
           display: "flex", alignItems: "center", gap: 8,
@@ -342,7 +341,7 @@ const Assignments = () => {
           </span>
         </div>
         <Table
-          className="assign-tbl"
+          className="assign-tbl data-table"
           columns={columns}
           dataSource={dataSource}
           loading={loading}

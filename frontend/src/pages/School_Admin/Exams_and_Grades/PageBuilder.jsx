@@ -13,9 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getExams, updateExam } from "../../../features/examSlice";
 import dayjs from "dayjs";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, modalTitle, emptyState,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle } from "../../../styles/pageStyles";
 
 /* ── Accent colours (design tokens) ── */
 const C = {
@@ -45,7 +43,7 @@ const uid = () => Math.random().toString(36).slice(2, 8);
 
 /* ── Sub-components ──────────────────────────────────────────────── */
 const InfoChip = ({ icon, label, value, color = C.primary }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 38)}>{icon}</div>
     <div>
       <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</div>
@@ -61,12 +59,7 @@ const SectionRow = ({ sec, totalMarks, onChange, onDelete, index }) => {
   const strokeColor = progressColors[index % progressColors.length];
 
   return (
-    <div style={{
-      ...sectionPanel,
-      borderLeft: `4px solid ${sec.color}`,
-      padding: "16px 20px", marginBottom: 10,
-      transition: "box-shadow 0.2s",
-    }}
+    <div className="section-panel" style={{ borderLeft: `4px solid ${sec.color}`, padding: "16px 20px", marginBottom: 10, transition: "box-shadow 0.2s" }}
       onMouseEnter={(e) => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.07)"}
       onMouseLeave={(e) => e.currentTarget.style.boxShadow = "none"}
     >
@@ -271,14 +264,14 @@ const PaperBuilder = () => {
           </div>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 20, alignItems: "start" }}>
 
         {/* ── LEFT COLUMN ── */}
         <div>
           {/* Exam selector */}
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Select Exam
             </div>
@@ -319,7 +312,7 @@ const PaperBuilder = () => {
 
           {/* Sections builder */}
           {!selectedExam ? (
-            <div style={emptyState}>
+            <div className="empty-state">
               <FileTextOutlined style={{ fontSize: 40, color: "var(--text-muted)", marginBottom: 12 }} />
               <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>
                 No Exam Selected
@@ -329,7 +322,7 @@ const PaperBuilder = () => {
               </div>
             </div>
           ) : (
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{
                 display: "flex", alignItems: "center",
                 justifyContent: "space-between", marginBottom: 16,
@@ -371,7 +364,7 @@ const PaperBuilder = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Blueprint summary */}
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Blueprint Summary
             </div>
@@ -436,7 +429,7 @@ const PaperBuilder = () => {
 
           {/* Section breakdown */}
           {sections.length > 0 && selectedExam && (
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 Section Breakdown
               </div>

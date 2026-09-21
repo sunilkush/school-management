@@ -11,7 +11,7 @@ import SalaryStructureForm from "../../../components/payroll/SalaryStructureForm
 import SalaryStructureTable from "../../../components/payroll/SalaryStructureTable";
 import { fetchPayrollEmployees, fetchPayrollSettings, fetchPayrollStructures, savePayrollStructure } from "../../../features/payrollSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 import { formatCurrencyINR } from "../../../utils/payroll";
 
 const C = {
@@ -123,8 +123,7 @@ const SalaryStructures = () => {
   }, [safeStructures]);
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("sal-str-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Salary Structures"
@@ -224,7 +223,7 @@ const SalaryStructures = () => {
               />
             </div>
           </div>
-          <div className="sal-str-tbl">
+          <div className="sal-str-tbl data-table">
             <SalaryStructureTable
               data={filteredStructures}
               loading={loadingStructures}

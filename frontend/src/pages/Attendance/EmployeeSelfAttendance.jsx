@@ -13,7 +13,6 @@ import {
   clearAttendanceFeedback, fetchMyAttendance,
 } from "../../features/attendanceSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper } from "../../styles/pageStyles";
 import AttendanceMap from "./AttendanceMap";
 
 /* ─── Constants ─────────────────────────────────────────────── */
@@ -313,7 +312,7 @@ const EmployeeSelfAttendance = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Attendance"
         subtitle="GPS-based self check-in and check-out"

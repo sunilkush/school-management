@@ -15,17 +15,10 @@ import { fetchAssignedClasses } from "../../../features/classSlice";
 import memoryStorage from "../../../utils/memoryStorage";
 import { getRoleName, getRolePath } from "../../../utils/roles";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  statGrid,
-  iconWell,
-  pill,
-  emptyState,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill } from "../../../styles/pageStyles";
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -39,7 +32,7 @@ const SectionCard = ({ section, onAttendance }) => {
   const subjects = section?.subjects || [];
 
   return (
-    <div style={{ ...sectionPanel, marginBottom: 0, display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div className="section-panel" style={{ marginBottom: 0, display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0 }}>
           <div style={iconWell("var(--primary)", 40)}>
@@ -146,7 +139,7 @@ const ClassDetails = () => {
 
   if (!loading && !classData) {
     return (
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <PageHeader
           title="Class Details"
           subtitle="Class not found"
@@ -157,7 +150,7 @@ const ClassDetails = () => {
             </Button>
           }
         />
-        <div style={{ ...emptyState, marginTop: 20 }}>
+        <div className="empty-state" style={{ marginTop: 20 }}>
           <Empty description="Class details not found" />
         </div>
       </div>
@@ -165,7 +158,7 @@ const ClassDetails = () => {
   }
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title={classData?.name || "Class"}
         subtitle={isClassTeacherOverall ? "You are the Class Teacher for one or more sections here" : "Subject Teacher · Overview of your assigned sections"}
@@ -190,7 +183,7 @@ const ClassDetails = () => {
           <StatCard icon={<CrownOutlined />} label="Class Teacher Of" value={classTeacherSectionCount} color="var(--primary)" />
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <div style={iconWell("var(--purple)", 34)}>
               <BookOutlined />
@@ -222,7 +215,7 @@ const ClassDetails = () => {
             ))}
           </Row>
         ) : (
-          <div style={emptyState}>
+          <div className="empty-state">
             <Empty description="No sections assigned" />
           </div>
         )}

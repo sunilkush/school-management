@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { LayoutDashboard, Lock, Search, ShieldCheck } from "lucide-react";
 import { Row, Col, Empty, Tooltip, Input } from "antd";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, pill } from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill } from "../../../styles/pageStyles";
 
 const PALETTES = [
   { bg: "rgba(219,234,254,0.2)", text: "var(--primary)" },
@@ -17,7 +17,7 @@ const PALETTES = [
 ];
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -60,14 +60,7 @@ const detectModuleLabel = (title = "", parent = "") => {
 const ModuleCard = ({ title, parent, path, Icon, hasAccess, palette }) => {
   const content = (
     <div
-      style={{
-        ...sectionPanel,
-        height: "100%",
-        marginBottom: 0,
-        cursor: hasAccess ? "pointer" : "default",
-        opacity: hasAccess ? 1 : 0.6,
-        transition: "0.15s ease",
-      }}
+      className="section-panel" style={{ height: "100%", marginBottom: 0, cursor: hasAccess ? "pointer" : "default", opacity: hasAccess ? 1 : 0.6, transition: "0.15s ease" }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div style={iconWell(palette.text, 46)}>
@@ -186,7 +179,7 @@ const AllModules = () => {
   const lockedCount = enhancedModules.length - accessCount;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="All Modules"
         subtitle={`Role based module launcher for ${normalizedRole}`}
@@ -210,7 +203,7 @@ const AllModules = () => {
       </div>
 
       {filteredModules.length === 0 ? (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Empty description="No modules available" />
         </div>
       ) : (

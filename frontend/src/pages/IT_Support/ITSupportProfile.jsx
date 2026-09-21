@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Spin } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { currentUser, updateUser, changePassword as changePasswordAction } from "../../features/authSlice";
-import { avatarStyle as _avatarStyle, pageCard as _pageCard, pageWrapper as _pageWrapper } from "../../styles/pageStyles";
+import { avatarStyle as _avatarStyle } from "../../styles/pageStyles";
 import {
   Camera as _Camera, Save as _Save, Loader2 as _Loader2,
   Mail as _Mail, Phone as _Phone, Building2 as _Building2, Shield as _Shield,
@@ -88,11 +88,11 @@ const ITSupportProfile = () => {
   );
 
   return (
-    <div style={_pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader title="My Profile" subtitle="View and update your personal information" icon={<UserOutlined />} />
 
       {/* Hero Card */}
-      <div style={{ ..._pageCard, marginTop: 16, padding: "20px 24px" }}>
+      <div className="page-card" style={{ marginTop: 16, padding: "20px 24px" }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <div
@@ -141,7 +141,7 @@ const ITSupportProfile = () => {
 
       {/* Profile Form */}
       <form onSubmit={handleSaveProfile} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
-        <div style={{ ..._pageCard, padding: "20px 24px", gridColumn: "span 2" }}>
+        <div className="page-card" style={{ padding: "20px 24px", gridColumn: "span 2" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Basic Profile</div>
             <button type="submit" disabled={saving} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "var(--primary)", color: "#fff", border: "none", cursor: saving ? "not-allowed" : "pointer", fontSize: 13, opacity: saving ? 0.6 : 1 }}>
@@ -158,7 +158,7 @@ const ITSupportProfile = () => {
           {saveMsg.text && <p style={{ fontSize: 13, color: saveMsg.error ? "var(--danger)" : "var(--success)", margin: "8px 0 0" }}>{saveMsg.text}</p>}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ ..._pageCard, padding: "16px 20px" }}>
+          <div className="page-card" style={{ padding: "16px 20px" }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><_Building2 style={{ width: 14, height: 14 }} /> School</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{user?.school?.name || "—"}</div>
@@ -168,7 +168,7 @@ const ITSupportProfile = () => {
               </span>
             </div>
           </div>
-          <div style={{ ..._pageCard, padding: "16px 20px" }}>
+          <div className="page-card" style={{ padding: "16px 20px" }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><_Mail style={{ width: 14, height: 14 }} /> Contact</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div><div style={{ fontSize: 11, color: "var(--text-muted)" }}>Email</div><div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", wordBreak: "break-all" }}>{profileForm.email || "—"}</div></div>
@@ -180,7 +180,7 @@ const ITSupportProfile = () => {
 
       {/* Password Section */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
-        <form onSubmit={handleChangePassword} style={{ ..._pageCard, padding: "20px 24px", gridColumn: "span 2" }}>
+        <form onSubmit={handleChangePassword} className="page-card" style={{ padding: "20px 24px", gridColumn: "span 2" }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 4 }}>Change Password</div>
           <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>Update your account password</div>
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>Password</div>
@@ -209,7 +209,7 @@ const ITSupportProfile = () => {
             {pwdLoading ? "Updating…" : "Update Password"}
           </button>
         </form>
-        <div style={{ ..._pageCard, padding: "16px 20px", background: "var(--surface-soft)" }}>
+        <div className="page-card" style={{ padding: "16px 20px", background: "var(--surface-soft)" }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>Password Tips</div>
           <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
             {["At least 8 characters", "Mix uppercase & lowercase", "Include numbers & symbols", "Avoid your name or email"].map((tip) => (

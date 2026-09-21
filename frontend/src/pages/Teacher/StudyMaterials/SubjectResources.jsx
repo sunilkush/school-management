@@ -9,7 +9,7 @@ import {
 import apiClient from "../../../api/httpClient";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, toolbarRow } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const TYPE_OPTIONS = [
   { value: "notes",          label: "Notes" },
@@ -25,7 +25,7 @@ const TYPE_COLOR = {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -237,7 +237,7 @@ const SubjectResources = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Subject Resources"
         subtitle="Upload and manage study materials for your classes"
@@ -256,8 +256,8 @@ const SubjectResources = () => {
         <StatCard icon={<BookOutlined />} label="Books"  value={stats.books}  color="var(--warning)" />
       </div>
 
-      <div style={{ ...sectionPanel, marginTop: 0 }}>
-        <div style={toolbarRow}>
+      <div className="section-panel" style={{ marginTop: 0 }}>
+        <div className="toolbar-row">
           <Select
             placeholder="Filter by Class" style={{ width: 160 }} allowClear value={filterClass}
             onChange={setFilterClass}

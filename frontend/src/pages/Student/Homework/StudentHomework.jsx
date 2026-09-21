@@ -25,17 +25,7 @@ import {
 import dayjs from "dayjs";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  sectionPanel,
-  statGrid,
-  statCard,
-  statLabel,
-  statValue,
-  toolbarRow,
-  pill,
-} from "../../../styles/pageStyles";
+import { statGrid, statCard, statLabel, statValue, pill } from "../../../styles/pageStyles";
 
 const { Text, Paragraph } = Typography;
 
@@ -190,7 +180,7 @@ const StudentHomework = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Homework"
         subtitle="Track and submit your assignments"
@@ -210,8 +200,8 @@ const StudentHomework = () => {
         ))}
       </div>
 
-      <div style={pageCard}>
-        <div className="page-toolbar" style={toolbarRow}>
+      <div className="page-card">
+        <div className="page-toolbar toolbar-row">
           <Input
             placeholder="Search by subject/title"
             prefix={<SearchOutlined />}
@@ -302,7 +292,7 @@ const StudentHomework = () => {
 
             {selectedHomework.status !== "Submitted" ? (
               <>
-                <div style={sectionPanel}>
+                <div className="section-panel">
                   <div style={{ fontWeight: 600, marginBottom: 10, fontSize: 13 }}>Rubric Self-Check (before submit)</div>
                   <Space direction="vertical" style={{ width: "100%" }}>
                     <Text>Quality</Text>
@@ -339,7 +329,7 @@ const StudentHomework = () => {
               <Space direction="vertical" style={{ width: "100%" }} size={8}>
                 <Tag color="green">Already Submitted</Tag>
                 {selectedHomework.grade !== null && selectedHomework.grade !== undefined && (
-                  <div style={{ ...sectionPanel, padding: "12px 16px", background: "rgba(220,252,231,0.15)", border: "1px solid var(--success-light)" }}>
+                  <div className="section-panel" style={{ padding: "12px 16px", background: "rgba(220,252,231,0.15)", border: "1px solid var(--success-light)" }}>
                     <div style={{ fontWeight: 700, fontSize: 13, color: "var(--success)", marginBottom: 6 }}>Teacher Feedback</div>
                     <Space wrap>
                       <Tag color="blue" style={{ fontSize: 14, padding: "2px 12px" }}>

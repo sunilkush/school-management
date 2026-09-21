@@ -18,7 +18,7 @@ import {
 import TimetableGrid from "./TimetableGrid";
 import { getId, getName, schoolIdFromUser } from "./timetableUi";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, statGrid, sectionPanel, iconWell } from "../../styles/pageStyles";
+import { statGrid, iconWell } from "../../styles/pageStyles";
 
 /* ── KPI card ─────────────────────────────────────────────────────── */
 const KpiCard = ({ label, value, icon, color, sub }) => (
@@ -118,7 +118,7 @@ export default function PrincipalTimetableOverview() {
   const hasFilters = Object.values(filters).some(Boolean);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Timetable Overview"
         subtitle="View class, section, and teacher schedules with workload summaries"
@@ -153,7 +153,7 @@ export default function PrincipalTimetableOverview() {
         </div>
 
         {/* ── Filters ────────────────────────────────────────────── */}
-        <div style={{ ...sectionPanel, padding: "14px 18px" }}>
+        <div className="section-panel" style={{ padding: "14px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
             <div style={iconWell("var(--primary)", 28)}><FilterOutlined style={{ fontSize: 12 }} /></div>
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Filter Schedule</span>
@@ -207,7 +207,7 @@ export default function PrincipalTimetableOverview() {
         </div>
 
         {/* ── Weekly Grid ────────────────────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div style={iconWell("var(--accent)", 28)}><ScheduleOutlined style={{ fontSize: 12 }} /></div>
             <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Weekly Schedule</span>

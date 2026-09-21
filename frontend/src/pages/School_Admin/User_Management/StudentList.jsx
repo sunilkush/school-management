@@ -16,10 +16,7 @@ import { getClassData } from "../../../features/schoolClassSlice";
 import AdmissionForm from "../../../components/forms/AdmissionForm";
 import BulkImportStudentsSheet from "../../../components/forms/BulkImportStudentsSheet";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, pageCard, toolbarRow, tableContainer,
-  tableHeadCss, avatarStyle, pill, emptyState, statCard, statLabel, statValue, statGrid,
-} from "../../../styles/pageStyles";
+import { avatarStyle, pill, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const bloodGroupColor = {
   "A+":  { bg: "rgba(var(--danger-rgb), 0.2)", color: "var(--danger)" },
@@ -322,7 +319,7 @@ const StudentList = () => {
 
   if (!canViewStudents) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="page-wrapper" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{
           textAlign: "center", padding: "56px 32px", background: "var(--surface)",
           borderRadius: 20, border: "1px solid var(--border-muted)",
@@ -338,7 +335,6 @@ const StudentList = () => {
 
   return (
     <>
-      <style>{tableHeadCss("stu-table")}</style>
 
       <PageHeader
         title="Students"
@@ -367,7 +363,7 @@ const StudentList = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <Modal
           open={isModalOpen}
           footer={null}
@@ -444,7 +440,7 @@ const StudentList = () => {
           </Form>
         </Modal>
 
-        <div style={pageCard}>
+        <div className="page-card">
           <div style={{ padding: "20px 20px 0" }}>
             {/* KPI Stats */}
             <div className="stat-grid" style={statGrid(180)}>
@@ -460,7 +456,7 @@ const StudentList = () => {
             </div>
 
             {/* Toolbar */}
-            <div className="page-toolbar" style={toolbarRow}>
+            <div className="page-toolbar toolbar-row">
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Students
               </span>
@@ -491,7 +487,7 @@ const StudentList = () => {
           {/* Table / Empty */}
           {!loading && filtered.length === 0 ? (
             <div style={{ padding: "0 20px 20px" }}>
-              <div style={emptyState}>
+              <div className="empty-state">
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🎓</div>
                 <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
                   {searchText || selectedClassId !== "all" ? "No students match your filters" : "No students enrolled yet"}
@@ -504,7 +500,7 @@ const StudentList = () => {
               </div>
             </div>
           ) : (
-            <div className="stu-table" style={{ ...tableContainer, borderRadius: 0, border: "none", borderTop: "1px solid var(--border-muted)" }}>
+            <div className="stu-table data-table table-container" style={{ borderRadius: 0, border: "none", borderTop: "1px solid var(--border-muted)" }}>
               <Table
                 loading={loading}
                 columns={columns}

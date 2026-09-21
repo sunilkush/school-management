@@ -9,10 +9,7 @@ import dayjs from "dayjs";
 import { fetchDashboardSummary } from "../../../features/dashboardSlice";
 import { fetchReports } from "../../../features/reportSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, statGrid, statCard, statLabel, statValue,
-  pill, tableHeadCss, emptyState,
-} from "../../../styles/pageStyles.js";
+import { statGrid, statCard, statLabel, statValue, pill } from "../../../styles/pageStyles.js";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
 // RGB triples for the shared categorical palette, keyed by var(--x) string — used to
@@ -166,8 +163,7 @@ const TeacherReports = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("reports-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title={`${teacherName} — Reports`}
@@ -195,7 +191,7 @@ const TeacherReports = () => {
       </div>
 
       {/* ── Reports table ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{
           display: "flex", alignItems: "center", gap: 10,
           flexWrap: "wrap", marginBottom: 16,
@@ -229,7 +225,7 @@ const TeacherReports = () => {
             <Spin size="large" />
           </div>
         ) : filteredReports.length === 0 ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <div style={{ fontSize: 36, marginBottom: 10 }}>📊</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
               No Reports Found
@@ -242,7 +238,7 @@ const TeacherReports = () => {
           </div>
         ) : (
           <Table
-            className="reports-table"
+            className="reports-table data-table"
             rowKey={(r) => r._id}
             columns={columns}
             dataSource={filteredReports}

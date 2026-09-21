@@ -38,17 +38,7 @@ import {
 } from "../../../features/examSlice";
 import { getClassData } from "../../../features/schoolClassSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  sectionPanel,
-  toolbarRow,
-  statCard,
-  statLabel,
-  statValue,
-  statGrid,
-  avatarStyle,
-} from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, avatarStyle } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -324,7 +314,7 @@ const ExamSchedule = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Exam Schedule"
         subtitle="Plan, manage, and monitor all school exams from one modern calendar view."
@@ -375,8 +365,8 @@ const ExamSchedule = () => {
           ))}
         </div>
 
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
-          <div className="page-toolbar" style={toolbarRow}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
+          <div className="page-toolbar toolbar-row">
             <Select
               value={selectedClassFilter}
               onChange={setSelectedClassFilter}
@@ -405,7 +395,7 @@ const ExamSchedule = () => {
           </div>
         </div>
 
-        <div style={pageCard}>
+        <div className="page-card">
           <Spin spinning={loading}>
             {filteredExams.length ? (
               <Calendar dateCellRender={dateCellRender} />

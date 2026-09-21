@@ -21,9 +21,7 @@ import {
 } from "../../../features/librarySlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { iconWell, pill, statGrid } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -261,8 +259,7 @@ const IssueBook = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("issue-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Issue / Return Books"
         subtitle="Manage book circulation for students, teachers, and staff"
@@ -277,7 +274,7 @@ const IssueBook = () => {
           { label: "Overdue",          value: summaryStats.overdue, icon: <AlertOutlined />, color: "var(--danger)" },
           { label: "Pending Fines",    value: `₹${summaryStats.fines}`, icon: <RupeeIcon />, color: "var(--warning)" },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+          <div key={label} className="section-panel is-header-strip">
             <div style={iconWell(color, 40)}>{icon}</div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
@@ -288,7 +285,7 @@ const IssueBook = () => {
       </div>
 
       {/* ── Issue form ─────────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 16 }}>Issue a Book</div>
         <Form form={issueForm} layout="vertical" onFinish={handleIssue}>
           <Row gutter={16}>
@@ -347,7 +344,7 @@ const IssueBook = () => {
       </div>
 
       {/* ── Records table ──────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Issue Records</div>
           <Input
@@ -360,7 +357,7 @@ const IssueBook = () => {
           />
         </div>
         <Table
-          className="issue-tbl"
+          className="issue-tbl data-table"
           rowKey="_id"
           columns={columns}
           dataSource={filteredRows}
@@ -384,7 +381,7 @@ const IssueBook = () => {
       >
         {returningRecord && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ ...sectionPanel, padding: 14, marginBottom: 0 }}>
+            <div className="section-panel" style={{ padding: 14, marginBottom: 0 }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>{returningRecord.bookTitle}</div>
               <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
                 Borrower: <strong>{returningRecord.borrowerName}</strong> &nbsp;|&nbsp;

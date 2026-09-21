@@ -20,15 +20,12 @@ import {
   updateInventoryItem,
 } from "../../../features/inventorySlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, toolbarRow, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, modalTitle } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -173,7 +170,7 @@ const Supplies = () => {
           </Button>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {error ? <Alert style={{ marginBottom: 16 }} type="error" showIcon message={error} /> : null}
 
         <div style={{ ...statGrid(180), marginTop: 0 }}>
@@ -182,10 +179,9 @@ const Supplies = () => {
           <StatCard icon={<InboxOutlined />} label="Available Units" value={`${totalAvailable} / ${totalQuantity}`} color="var(--success-hover)" />
         </div>
 
-        <style>{tableHeadCss("supplies-tbl")}</style>
 
-        <div style={sectionPanel}>
-          <div style={toolbarRow}>
+        <div className="section-panel">
+          <div className="toolbar-row">
             <Input.Search
               placeholder="Search by name, category or unit"
               allowClear
@@ -194,7 +190,7 @@ const Supplies = () => {
             />
           </div>
 
-          <div className="supplies-tbl" style={tableContainer}>
+          <div className="supplies-tbl table-container">
             <Table
               columns={columns}
               dataSource={filteredSupplies}

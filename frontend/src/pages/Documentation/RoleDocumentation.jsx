@@ -13,7 +13,7 @@ import {
   PhoneOutlined, SolutionOutlined, StarOutlined, ExperimentOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, iconWell, pill, sectionPanel } from "../../styles/pageStyles";
+import { iconWell, pill } from "../../styles/pageStyles";
 
 /* ─── Shared sub-components ─────────────────────────────────── */
 const StepBlock = ({ steps }) => (
@@ -1310,7 +1310,7 @@ const RoleDocumentation = () => {
   }, [filteredSections]);
 
   return (
-    <div style={{ ...pageWrapper, padding: 0 }}>
+    <div className="page-wrapper" style={{ padding: 0 }}>
       <PageHeader
         title={`${roleName} Documentation`}
         subtitle={`Platform guide for the ${roleName} role`}
@@ -1412,7 +1412,7 @@ const RoleDocumentation = () => {
           </div>
 
           {/* Overview */}
-          <div style={{ ...sectionPanel, background: `color-mix(in srgb, ${activeSection.color} 3%, transparent)`, border: `1px solid color-mix(in srgb, ${activeSection.color} 12%, transparent)`, marginBottom: 20 }}>
+          <div className="section-panel" style={{ background: `color-mix(in srgb, ${activeSection.color} 3%, transparent)`, border: `1px solid color-mix(in srgb, ${activeSection.color} 12%, transparent)`, marginBottom: 20 }}>
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
               <InfoCircleOutlined style={{ color: activeSection.color, fontSize: 15, marginTop: 2 }} />
               <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-primary)", lineHeight: 1.7 }}>
@@ -1423,7 +1423,7 @@ const RoleDocumentation = () => {
 
           {/* Section blocks */}
           {activeSection.sections?.map((sec, si) => (
-            <div key={si} style={{ ...sectionPanel, marginBottom: 16 }}>
+            <div key={si} className="section-panel" style={{ marginBottom: 16 }}>
               <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
                 <RightOutlined style={{ color: activeSection.color, fontSize: 11 }} />
                 {sec.heading}
@@ -1438,7 +1438,7 @@ const RoleDocumentation = () => {
 
           {/* Checklist */}
           {activeSection.checklist?.length > 0 && (
-            <div style={{ ...sectionPanel, marginBottom: 16 }}>
+            <div className="section-panel" style={{ marginBottom: 16 }}>
               <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>✅ Checklist</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {activeSection.checklist.map((item, i) => (

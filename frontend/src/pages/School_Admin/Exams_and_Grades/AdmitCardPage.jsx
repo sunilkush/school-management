@@ -14,10 +14,7 @@ import { generateAdmitCards, getAdmitCards, getExams } from "../../../features/e
 import { getAccessToken } from "../../../api/authToken";
 import dayjs from "dayjs";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, modalTitle } from "../../../styles/pageStyles";
 
 /* ── Accent colours (design tokens; NOT used inside buildPrintHtml below, which
    intentionally stays literal hex — see that function's comment) ── */
@@ -47,7 +44,7 @@ const escHtml = (v = "") =>
 
 // NOTE: this HTML string is rendered into a blank popup window via
 // handlePrint's `document.write()` (see below), which has no <link> to
-// index.css — CSS custom properties like var(--text) would not resolve
+// styles/main.scss — CSS custom properties like var(--text) would not resolve
 // there. It should also always print on white paper regardless of the
 // app's active theme, so the hex colors below are intentionally literal.
 const buildPrintHtml = (card) => `
@@ -133,7 +130,7 @@ const buildPrintHtml = (card) => `
 
 /* ── Stat chip ───────────────────────────────────────────────────── */
 const StatChip = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 38)}>{icon}</div>
     <div>
       <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</div>
@@ -308,10 +305,10 @@ const AdmitCardPage = () => {
           )
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
       {/* ── Exam Selector + Generate ── */}
-      <div style={{ ...sectionPanel, display: "flex", alignItems: "flex-end", gap: 12, flexWrap: "wrap" }}>
+      <div className="section-panel" style={{ display: "flex", alignItems: "flex-end", gap: 12, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 280px" }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Select Exam
@@ -353,8 +350,7 @@ const AdmitCardPage = () => {
       )}
 
       {/* ── Table ── */}
-      <style>{tableHeadCss("admit-cards-tbl")}</style>
-      <div style={{ ...sectionPanel, padding: 0 }}>
+      <div className="section-panel" style={{ padding: 0 }}>
         <div style={{
           padding: "16px 24px", borderBottom: "1px solid var(--border-muted)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -386,7 +382,7 @@ const AdmitCardPage = () => {
           )}
         </div>
 
-        <div className="admit-cards-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+        <div className="admit-cards-tbl data-table table-container" style={{ border: "none", borderRadius: 0 }}>
           <Table
             rowKey={(r) => r._id || `${r.studentId}-${r.seatNumber}`}
             dataSource={rows}

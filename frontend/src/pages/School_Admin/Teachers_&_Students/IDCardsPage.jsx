@@ -21,9 +21,7 @@ import {
 } from "../../../features/idCardSlice";
 import { getAccessToken } from "../../../api/authToken";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import {
-  iconWell, pageWrapper, sectionPanel, tableHeadCss,
-} from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 
 const { Text, Paragraph } = Typography;
 
@@ -306,7 +304,6 @@ export default function IDCardsPage() {
 
   return (
     <>
-      <style>{tableHeadCss("idcard-tbl")}</style>
 
       <PageHeader
         title="ID Cards"
@@ -314,7 +311,7 @@ export default function IDCardsPage() {
         icon={<IdcardOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!canFilter && (
           <Alert
             type="warning"
@@ -337,7 +334,7 @@ export default function IDCardsPage() {
         </div>
 
         {/* ── Generate panel ─────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
             <div style={iconWell("var(--primary)", 38)}>
               <IdcardOutlined style={{ fontSize: 17 }} />
@@ -466,7 +463,7 @@ export default function IDCardsPage() {
         </div>
 
         {/* ── Filter row ─────────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Row gutter={[12, 12]} align="middle">
             <Col xs={24} sm={8} md={6}>
               <Select
@@ -502,9 +499,9 @@ export default function IDCardsPage() {
         </div>
 
         {/* ── Table ──────────────────────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Table
-            className="idcard-tbl"
+            className="idcard-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={cards}

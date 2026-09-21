@@ -16,7 +16,7 @@ import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchSubscriptionPlans } from "../../../features/subscriptionPlanSlice";
 import { getBoards } from "../../../features/boardSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { avatarStyle, modalTitle, pageWrapper, sectionPanel } from "../../../styles/pageStyles";
+import { avatarStyle, modalTitle } from "../../../styles/pageStyles";
 
 /**
  * Schools — every school on the platform, whether it can sign in, and whose subscription needs
@@ -539,7 +539,7 @@ const Schools = () => {
   const segment = (key, label) => ({ value: key, label: `${label} ${counts[key]}` });
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Schools"
         subtitle="Every school on the platform — who can sign in, and whose subscription needs attention"
@@ -547,7 +547,7 @@ const Schools = () => {
         extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setFormFor({ school: null })}>Add school</Button>}
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
           <Segmented
             value={view}

@@ -24,14 +24,7 @@ import {
 } from "@ant-design/icons";
 import { fetchTickets, createTicket, updateTicketStatus, resolveTicket } from "../../../features/supportTicketSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  toolbarRow,
-  tableContainer,
-  tableHeadCss,
-  pill,
-  modalTitle,
-} from "../../../styles/pageStyles";
+import { pill, modalTitle } from "../../../styles/pageStyles";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -227,8 +220,7 @@ const TicketPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Ticket Management"
@@ -255,7 +247,7 @@ const TicketPage = () => {
       />
 
       {/* Toolbar */}
-      <div style={{ ...toolbarRow, marginTop: 20 }}>
+      <div className="toolbar-row" style={{ marginTop: 20 }}>
         <Search
           placeholder="Search tickets by title..."
           allowClear
@@ -295,9 +287,9 @@ const TicketPage = () => {
 
       {/* Table */}
       <Spin spinning={loading}>
-        <div style={tableContainer}>
+        <div className="table-container">
           <Table
-            className={TABLE_CLS}
+            className={`${TABLE_CLS} data-table`}
             rowKey="_id"
             columns={columns}
             dataSource={filtered}

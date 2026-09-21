@@ -10,7 +10,7 @@ import { fetchSections } from "../../../features/sectionSlice";
 import { fetchClassRollNumbers } from "../../../features/studentSlice";
 import { markAsAlumni, getAlumni, updateAlumniProfile } from "../../../features/alumniSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -190,7 +190,6 @@ export default function AlumniPage() {
 
   return (
     <>
-      <style>{tableHeadCss("alumni-tbl")}</style>
 
       <PageHeader
         title="Alumni"
@@ -198,7 +197,7 @@ export default function AlumniPage() {
         icon={<TeamOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!canFilter && (
           <Alert
             type="warning" showIcon
@@ -208,7 +207,7 @@ export default function AlumniPage() {
         )}
 
         {/* ── Mark as Alumni panel ─────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
             <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
@@ -267,7 +266,7 @@ export default function AlumniPage() {
         </div>
 
         {/* ── Alumni Directory ─────────────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
             <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>Alumni Directory</Text>
           </Flex>
@@ -295,7 +294,7 @@ export default function AlumniPage() {
           </Row>
 
           <Table
-            className="alumni-tbl"
+            className="alumni-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={alumni}

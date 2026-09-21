@@ -6,10 +6,7 @@ import {
   CheckCircleOutlined, ShopOutlined, UserOutlined,
 } from "@ant-design/icons";
 import { fetchVendors, createVendor, updateVendor, toggleVendor, deleteVendor } from "../../../features/vendorSlice";
-import {
-  toolbarRow, tableContainer, tableHeadCss,
-  statGrid, iconWell, modalTitle, pill,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle, pill } from "../../../styles/pageStyles";
 const { Option } = Select;
 const { Text } = Typography;
 const CATEGORIES = ["General", "Stationery", "Electronics", "Furniture", "IT", "Lab Equipment", "Sports", "Housekeeping", "Catering"];
@@ -134,7 +131,7 @@ export default function VendorPage() {
       </div>
 
       {/* Toolbar */}
-      <div style={toolbarRow}>
+      <div className="toolbar-row">
         <Input.Search
           placeholder="Search vendors or contact..."
           allowClear
@@ -148,8 +145,7 @@ export default function VendorPage() {
       </div>
 
       {/* Table */}
-      <style>{tableHeadCss("vendor-tbl")}</style>
-      <div className="vendor-tbl" style={tableContainer}>
+      <div className="vendor-tbl table-container">
         <Table
           columns={columns}
           dataSource={filtered}

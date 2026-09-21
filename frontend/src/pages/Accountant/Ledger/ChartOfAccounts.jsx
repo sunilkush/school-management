@@ -14,7 +14,7 @@ import {
 } from "../../../features/ledgerSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import StatCardsRow from "../../../components/layout/StatCardsRow";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { TextArea } = Input;
 
@@ -173,8 +173,7 @@ const ChartOfAccounts = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("coa-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Chart of Accounts"
@@ -196,7 +195,7 @@ const ChartOfAccounts = () => {
         }))}
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
           <Segmented
             value={typeFilter}
@@ -215,7 +214,7 @@ const ChartOfAccounts = () => {
         {accountsLoading ? (
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : !accounts?.length ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <Empty description="No accounts yet" />
             <p style={{ color: "var(--text-muted)", maxWidth: 460, margin: "12px auto" }}>
               Start from the standard school chart — cash, bank, fee income, salaries and the rest —
@@ -226,9 +225,9 @@ const ChartOfAccounts = () => {
             </Button>
           </div>
         ) : (
-          <div style={tableContainer}>
+          <div className="table-container">
             <Table
-              className="coa-table"
+              className="coa-table data-table"
               rowKey="_id"
               size="middle"
               columns={columns}
@@ -294,7 +293,7 @@ const ChartOfAccounts = () => {
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : (
           <>
-            <div style={{ ...sectionPanel, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>Closing balance</span>
               <span style={{ fontSize: 22, fontWeight: 800 }}>{money(accountLedger?.closingBalance)}</span>
             </div>

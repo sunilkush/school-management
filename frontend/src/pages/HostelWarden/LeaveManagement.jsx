@@ -15,7 +15,7 @@ import {
 } from "../../features/hostelWardenSlice";
 import { fetchLibraryStudents } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, pill, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../styles/pageStyles";
+import { pill, statGrid, iconWell } from "../../styles/pageStyles";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -155,8 +155,7 @@ const LeaveManagement = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("leave-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Leave Management"
         subtitle="Manage student hostel leave requests — approve, reject, track check-in/out"
@@ -172,7 +171,7 @@ const LeaveManagement = () => {
       {/* ── Summary KPIs ─────────────────────────────────────── */}
       <div style={statGrid(140)}>
         {Object.entries(summary).map(([status, count]) => (
-          <div key={status} style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "12px 16px" }}>
+          <div key={status} className="section-panel is-header-strip">
             <div style={iconWell(STATUS_COLORS[status], 36)}><ClockCircleOutlined /></div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: STATUS_COLORS[status], textTransform: "uppercase" }}>{status}</div>
@@ -183,7 +182,7 @@ const LeaveManagement = () => {
       </div>
 
       {/* ── Filters ──────────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, padding: "12px 18px", display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+      <div className="section-panel" style={{ padding: "12px 18px", display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
         <Select value={statusFilter} onChange={setStatusFilter} placeholder="Status" style={{ width: 130 }} allowClear>
           {["pending", "approved", "rejected", "cancelled"].map((s) => <Option key={s} value={s}>{s}</Option>)}
         </Select>
@@ -193,12 +192,12 @@ const LeaveManagement = () => {
       </div>
 
       {/* ── Table ────────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {leavesLoading ? (
           <div style={{ textAlign: "center", padding: 40 }}><Spin size="large" /></div>
         ) : (
           <Table
-            className="leave-tbl"
+            className="leave-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={leaves}

@@ -23,7 +23,7 @@ import {
 } from "../../../features/studentPortalSlice";
 import { updateUser } from "../../../features/authSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pageCard, sectionPanel, avatarStyle, avatarColor } from "../../../styles/pageStyles";
+import { avatarStyle } from "../../../styles/pageStyles";
 
 const defaultStudentDetails = {
   dateOfBirth: "",
@@ -237,7 +237,7 @@ const Profile = () => {
 
   if (portalLoading || authLoading) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text-muted)" }}>
+      <div className="page-wrapper" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text-muted)" }}>
         <Loader2 style={{ width: 20, height: 20 }} />
         Loading profile...
       </div>
@@ -246,7 +246,7 @@ const Profile = () => {
 
   if (portalError) {
     return (
-      <div style={{ ...pageWrapper }}>
+      <div className="page-wrapper">
         <div style={{ border: "1px solid var(--danger-light)", background: "var(--danger-light)", borderRadius: 12, padding: 16, color: "var(--danger)" }}>
           <p style={{ fontWeight: 600, margin: "0 0 4px" }}>Error</p>
           <p style={{ fontSize: 13, margin: 0 }}>{portalError}</p>
@@ -256,14 +256,14 @@ const Profile = () => {
   }
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Profile"
         subtitle="View and update your personal information"
         icon={<UserOutlined />}
       />
 
-      <div style={{ ...pageCard, marginTop: 16, padding: "20px 24px" }}>
+      <div className="page-card" style={{ marginTop: 16, padding: "20px 24px" }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* Clickable avatar with camera badge */}
@@ -312,7 +312,7 @@ const Profile = () => {
       </div>
 
       <form onSubmit={handleSave} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
-        <div style={{ ...pageCard, padding: "20px 24px", gridColumn: "span 2" }}>
+        <div className="page-card" style={{ padding: "20px 24px", gridColumn: "span 2" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Basic Profile</div>
             <button
@@ -426,7 +426,7 @@ const SelectField = ({ label, name, value, onChange, options }) => (
 );
 
 const GuardianCard = ({ title, data, onChange }) => (
-  <div style={{ ...pageCard, padding: "16px 20px" }}>
+  <div className="page-card" style={{ padding: "16px 20px" }}>
     <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
       <Users style={{ width: 14, height: 14 }} /> {title}
     </div>

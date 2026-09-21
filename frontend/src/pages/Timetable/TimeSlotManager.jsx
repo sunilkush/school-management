@@ -10,7 +10,7 @@ import {
 } from "../../features/timetableSlice";
 import { schoolIdFromUser } from "./timetableUi";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../styles/pageStyles";
+import { statGrid, iconWell } from "../../styles/pageStyles";
 
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
@@ -151,8 +151,7 @@ export default function TimeSlotManager() {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("ts-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Time Slot Manager"
@@ -204,7 +203,7 @@ export default function TimeSlotManager() {
       </div>
 
       {/* Table */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{
           padding: "14px 20px 12px",
           borderBottom: "1px solid " + C.border,
@@ -220,7 +219,7 @@ export default function TimeSlotManager() {
           </span>
         </div>
         <Table
-          className="ts-tbl"
+          className="ts-tbl data-table"
           loading={loading}
           rowKey="_id"
           dataSource={sorted}

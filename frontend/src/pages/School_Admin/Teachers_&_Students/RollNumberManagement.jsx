@@ -16,7 +16,7 @@ import {
   updateRollNumber,
 } from "../../../features/studentSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 
 const { Text } = Typography;
 
@@ -259,7 +259,6 @@ export default function RollNumberManagement() {
 
   return (
     <>
-      <style>{tableHeadCss("rn-tbl")}</style>
 
       <PageHeader
         title="Roll Number Management"
@@ -276,7 +275,7 @@ export default function RollNumberManagement() {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
         {!canFilter && (
           <Alert
@@ -288,7 +287,7 @@ export default function RollNumberManagement() {
         )}
 
         {/* ── Filter Panel ─────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
             <div style={iconWell("var(--primary)", 38)}>
               <NumberOutlined style={{ fontSize: 17 }} />
@@ -387,7 +386,7 @@ export default function RollNumberManagement() {
 
         {/* ── Table ────────────────────────────────────────── */}
         {selectedClass && selectedSection ? (
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
                 Student Roll Numbers
@@ -398,7 +397,7 @@ export default function RollNumberManagement() {
             </Flex>
 
             <Table
-              className="rn-tbl"
+              className="rn-tbl data-table"
               rowKey="_id"
               columns={columns}
               dataSource={rollNumberList}
@@ -423,7 +422,7 @@ export default function RollNumberManagement() {
           </div>
         ) : (
           !rollLoading && (
-            <div style={{ ...sectionPanel, textAlign: "center", padding: "60px 0" }}>
+            <div className="section-panel" style={{ textAlign: "center", padding: "60px 0" }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🔢</div>
               <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
                 Select a Class & Section

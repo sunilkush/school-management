@@ -30,11 +30,6 @@ import {
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getExamRouteConfig } from "../../../utils/examRoutes";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  sectionPanel,
-} from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -259,7 +254,7 @@ const CreateExam = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title={isEditMode ? "Edit Exam" : "Create Exam"}
         subtitle={isEditMode ? "Update exam details and manage questions." : "Fill in details to create a new exam."}
@@ -268,7 +263,7 @@ const CreateExam = () => {
 
       <div style={{ marginTop: 20 }}>
         <Spin spinning={loading}>
-          <div style={pageCard}>
+          <div className="page-card">
             <div style={{ padding: 24 }}>
               <Form form={form} layout="vertical" onFinish={handleSubmit}>
                 <Divider orientation="left">Basic Info</Divider>

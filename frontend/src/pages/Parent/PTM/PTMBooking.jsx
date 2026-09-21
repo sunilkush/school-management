@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import { getAvailableSlots, bookSlot, cancelBooking, getMyBookings } from "../../../features/ptmSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel } from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 
 const { Text } = Typography;
 
@@ -85,9 +85,9 @@ export default function PTMBooking() {
         icon={<CalendarOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* ── Child picker ─────────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
             <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
@@ -103,7 +103,7 @@ export default function PTMBooking() {
         </div>
 
         {/* ── Available slots ──────────────────────────────────── */}
-        <div style={{ ...sectionPanel, marginBottom: 16 }}>
+        <div className="section-panel" style={{ marginBottom: 16 }}>
           <Text strong style={{ fontSize: 14, marginBottom: 14, display: "block" }}>Available Slots</Text>
           {!selectedChild ? (
             <Alert type="info" showIcon message="Select a child to see available PTM slots." style={{ borderRadius: 10 }} />
@@ -136,7 +136,7 @@ export default function PTMBooking() {
         </div>
 
         {/* ── My bookings ──────────────────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Text strong style={{ fontSize: 14, marginBottom: 14, display: "block" }}>My Bookings</Text>
           {myBookings.filter((b) => b.status === "Booked").length === 0 ? (
             <Empty description="No upcoming PTM bookings" style={{ padding: "30px 0" }} />

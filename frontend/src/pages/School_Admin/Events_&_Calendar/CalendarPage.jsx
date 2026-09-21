@@ -12,7 +12,7 @@ import {
   createSchoolEvent, deleteSchoolEvent, fetchSchoolEvents, updateSchoolEvent,
 } from "../../../services/schoolEventApi";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, pill, iconWell } from "../../../styles/pageStyles";
+import { pill, iconWell } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
@@ -231,7 +231,7 @@ const CalendarPage = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={18}>
             <div style={{
@@ -251,7 +251,7 @@ const CalendarPage = () => {
           </Col>
 
           <Col xs={24} lg={6}>
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 12 }}>
                 {selectedDate.format("DD MMM YYYY")}
               </div>

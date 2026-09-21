@@ -5,13 +5,10 @@ import { ReloadOutlined, PlusOutlined, CheckCircleOutlined, StopOutlined, CarOut
 import { fetchAllUser, deleteUser, activeUser } from "../../../features/authSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import RegisterForm from "../../../components/forms/RegisterForm";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, avatarStyle, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, avatarStyle, modalTitle } from "../../../styles/pageStyles";
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -101,7 +98,7 @@ const Transport = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Transport Management"
         subtitle="Manage drivers and transporters across schools"
@@ -132,9 +129,8 @@ const Transport = () => {
         <StatCard icon={<StopOutlined />} label="Inactive" value={[...drivers, ...transporters].filter((u) => !u.isActive).length} color="var(--danger)" />
       </div>
 
-      <style>{tableHeadCss("transport-tbl")}</style>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <Tabs
           defaultActiveKey="drivers"
           items={[
@@ -142,7 +138,7 @@ const Transport = () => {
               key: "drivers",
               label: `Drivers (${drivers.length})`,
               children: (
-                <div className="transport-tbl" style={tableContainer}>
+                <div className="transport-tbl table-container">
                   <Table rowKey="_id" columns={columns} dataSource={drivers} loading={loading} pagination={{ pageSize: 8 }} />
                 </div>
               ),
@@ -151,7 +147,7 @@ const Transport = () => {
               key: "transporters",
               label: `Transporters (${transporters.length})`,
               children: (
-                <div className="transport-tbl" style={tableContainer}>
+                <div className="transport-tbl table-container">
                   <Table rowKey="_id" columns={columns} dataSource={transporters} loading={loading} pagination={{ pageSize: 8 }} />
                 </div>
               ),

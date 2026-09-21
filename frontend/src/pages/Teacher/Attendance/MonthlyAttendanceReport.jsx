@@ -11,12 +11,11 @@ import dayjs from "dayjs";
 import { fetchMonthlyAttendance } from "../../../features/attendanceSlice";
 import { fetchAssignedClasses }   from "../../../features/classSlice";
 import PageHeader                 from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const TABLE_CLS = "teacher-monthly-tbl";
 
-/* ── theme (shared design tokens — see index.css) ── */
+/* ── theme (shared design tokens — see styles/main.scss) ── */
 const C = {
   primary:      "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
   success:      "var(--success)", successLight: "var(--success-light)",
@@ -334,8 +333,7 @@ const MonthlyAttendanceReport = () => {
   const loading = classLoading || attendanceLoading;
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Monthly Attendance Report"
@@ -344,7 +342,7 @@ const MonthlyAttendanceReport = () => {
       />
 
       {/* ── Filter Panel ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14, alignItems: "end" }}>
 
           <div>
@@ -466,7 +464,7 @@ const MonthlyAttendanceReport = () => {
       )}
 
       {/* ── Table ── */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <Spin spinning={loading}>
           {!selected && !loading ? (
             <div style={{ padding: 40 }}>
@@ -520,7 +518,7 @@ const MonthlyAttendanceReport = () => {
               </div>
 
               <Table
-                className={TABLE_CLS}
+                className={`${TABLE_CLS} data-table`}
                 rowKey="key"
                 columns={columns}
                 dataSource={tableData}

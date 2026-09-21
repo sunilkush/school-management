@@ -7,17 +7,7 @@ import { getExams } from "../../../features/examSlice";
 import { getClassData } from "../../../features/schoolClassSlice";
 import { getAccessToken } from "../../../api/authToken";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  toolbarRow,
-  tableHeadCss,
-  statCard,
-  statLabel,
-  statValue,
-  statGrid,
-  pill,
-} from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const ExamReports = () => {
   const dispatch = useDispatch();
@@ -105,8 +95,7 @@ const ExamReports = () => {
   };
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("report-table")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Exam Reports"
         subtitle="Filter, audit, and export report outcomes with enterprise-ready controls."
@@ -134,8 +123,8 @@ const ExamReports = () => {
           ))}
         </div>
 
-        <div style={pageCard}>
-          <div className="page-toolbar" style={{ ...toolbarRow, padding: "16px 16px 0" }}>
+        <div className="page-card">
+          <div className="page-toolbar toolbar-row" style={{ padding: "16px 16px 0" }}>
             <Select
               allowClear
               style={{ minWidth: 220 }}
@@ -219,7 +208,7 @@ const ExamReports = () => {
           ) : null}
 
           <Table
-            className="report-table"
+            className="report-table data-table"
             loading={loading}
             rowKey="_id"
             dataSource={filteredReports}

@@ -37,13 +37,7 @@ import {
 import { fetchAttendanceSummary } from "../../../features/analyticsSlice";
 import { fetchMonthlyReport }     from "../../../features/attendanceSlice";
 import PageHeader                  from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-  sectionPanel,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const TABLE_CLS   = "sa-dash-tbl";
 const MONTHS      = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -268,8 +262,7 @@ const AttendanceDashboard = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Attendance Dashboard"
@@ -279,11 +272,7 @@ const AttendanceDashboard = () => {
 
       {/* ── Quick Actions ── */}
       <div
-        style={{
-          ...sectionPanel,
-          marginTop: 20,
-          padding: "16px 20px",
-        }}
+        className="section-panel" style={{ marginTop: 20, padding: "16px 20px" }}
       >
         <div
           style={{
@@ -538,7 +527,7 @@ const AttendanceDashboard = () => {
 
           {lowAttendanceStudents.length > 0 ? (
             <Table
-              className={TABLE_CLS}
+              className={`${TABLE_CLS} data-table`}
               rowKey={(r) => r.userId || r.name}
               columns={lowColumns}
               dataSource={lowAttendanceStudents}

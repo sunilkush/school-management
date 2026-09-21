@@ -55,7 +55,7 @@ import {
   deleteBackupSchedule,
 } from "../../../features/systemBackupSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime);
@@ -337,7 +337,6 @@ export default function Backups() {
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
     <>
-      <style>{tableHeadCss("bkp-tbl")}</style>
 
       <PageHeader
         title="System Backups"
@@ -350,7 +349,7 @@ export default function Backups() {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
         {error && (
           <Alert type="error" showIcon message={typeof error === "string" ? error : "Something went wrong"} style={{ borderRadius: 12, marginBottom: 16 }} />
@@ -379,7 +378,7 @@ export default function Backups() {
         </Row>
 
         {/* ── Main tabs ───────────────────────────────────────────── */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
@@ -482,7 +481,7 @@ export default function Backups() {
                 children: (
                   <div style={{ paddingTop: 16 }}>
                     <Table
-                      className="bkp-tbl"
+                      className="bkp-tbl data-table"
                       rowKey={(r) => r?._id || r?.backupNo}
                       loading={loading}
                       columns={backupColumns}
@@ -566,7 +565,7 @@ export default function Backups() {
                     <div style={{ marginTop: 24 }}>
                       <SectionLabel>Existing Schedules</SectionLabel>
                       <Table
-                        className="bkp-tbl"
+                        className="bkp-tbl data-table"
                         rowKey={(r) => r?._id || r?.name}
                         columns={scheduleColumns}
                         dataSource={schedules}
@@ -670,7 +669,7 @@ export default function Backups() {
                     <div style={{ marginTop: 24 }}>
                       <SectionLabel>Restore Jobs</SectionLabel>
                       <Table
-                        className="bkp-tbl"
+                        className="bkp-tbl data-table"
                         rowKey={(r) => r?._id || r?.backupId?._id}
                         columns={restoreColumns}
                         dataSource={restoreJobs}
@@ -695,7 +694,7 @@ export default function Backups() {
                 children: (
                   <div style={{ paddingTop: 16 }}>
                     <Table
-                      className="bkp-tbl"
+                      className="bkp-tbl data-table"
                       rowKey={(r) => r?._id || r?.createdAt}
                       columns={auditColumns}
                       dataSource={auditLogs}

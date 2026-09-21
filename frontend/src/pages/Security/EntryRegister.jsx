@@ -10,9 +10,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGateEntries, fetchGateStats, createGateEntry, markGateExit } from "../../features/gateEntrySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  pageWrapper, statGrid, sectionPanel, iconWell, tableHeadCss, avatarStyle, modalTitle,
-} from "../../styles/pageStyles";
+import { statGrid, iconWell, avatarStyle, modalTitle } from "../../styles/pageStyles";
 import { EntryStatusBadge, getInitials } from "./securityShared";
 
 const { Text } = Typography;
@@ -101,8 +99,7 @@ const EntryRegister = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("entry-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Entry Register"
@@ -122,7 +119,7 @@ const EntryRegister = () => {
           { label: "Today's Entries",  value: stats.todayEntries ?? 0, icon: <LoginOutlined />,  color: "var(--primary)" },
           { label: "Today's Exits",    value: stats.todayExits ?? 0,   icon: <LogoutOutlined />, color: "var(--purple)" },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+          <div key={label} className="section-panel is-header-strip">
             <div style={iconWell(color, 40)}>{icon}</div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
@@ -133,7 +130,7 @@ const EntryRegister = () => {
       </div>
 
       {/* ── Records table ─────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
           <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>Gate Entries</Text>
           <Space wrap>
@@ -154,7 +151,7 @@ const EntryRegister = () => {
           </Space>
         </div>
         <Table
-          className="entry-tbl"
+          className="entry-tbl data-table"
           dataSource={filteredEntries}
           rowKey="_id"
           columns={cols}

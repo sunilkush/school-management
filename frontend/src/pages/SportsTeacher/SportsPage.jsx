@@ -16,7 +16,7 @@ import {
   createAchievement, getAchievements, deleteAchievement,
 } from "../../features/sportsSlice";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../styles/pageStyles.js";
+import { iconWell } from "../../styles/pageStyles.js";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -155,13 +155,13 @@ export default function SportsPage() {
   ];
 
   const teamsTab = (
-    <div style={sectionPanel}>
+    <div className="section-panel">
       <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
         <Text strong style={{ fontSize: 14 }}>Teams / Clubs</Text>
         <Button type="primary" icon={<PlusOutlined />} onClick={openTeamModal}>Create Team</Button>
       </Flex>
       <Table
-        className="sports-tbl" rowKey="_id" columns={teamColumns} dataSource={teams} loading={loading}
+        className="sports-tbl data-table" rowKey="_id" columns={teamColumns} dataSource={teams} loading={loading}
         size="middle" pagination={{ pageSize: 20 }}
         locale={{ emptyText: <Empty description="No teams yet" style={{ padding: "40px 0" }} /> }}
       />
@@ -212,13 +212,13 @@ export default function SportsPage() {
   ];
 
   const eventsTab = (
-    <div style={sectionPanel}>
+    <div className="section-panel">
       <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
         <Text strong style={{ fontSize: 14 }}>Matches / Events</Text>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => openEventModal()}>Log Event</Button>
       </Flex>
       <Table
-        className="sports-tbl" rowKey="_id" columns={eventColumns} dataSource={events} loading={loading}
+        className="sports-tbl data-table" rowKey="_id" columns={eventColumns} dataSource={events} loading={loading}
         size="middle" scroll={{ x: 800 }} pagination={{ pageSize: 20 }}
         locale={{ emptyText: <Empty description="No events logged yet" style={{ padding: "40px 0" }} /> }}
       />
@@ -278,13 +278,13 @@ export default function SportsPage() {
   ];
 
   const achievementsTab = (
-    <div style={sectionPanel}>
+    <div className="section-panel">
       <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
         <Text strong style={{ fontSize: 14 }}>Achievements</Text>
         <Button type="primary" icon={<PlusOutlined />} onClick={openAchModal}>Record Achievement</Button>
       </Flex>
       <Table
-        className="sports-tbl" rowKey="_id" columns={achColumns} dataSource={achievements} loading={loading}
+        className="sports-tbl data-table" rowKey="_id" columns={achColumns} dataSource={achievements} loading={loading}
         size="middle" scroll={{ x: 800 }} pagination={{ pageSize: 20 }}
         locale={{ emptyText: <Empty description="No achievements recorded yet" style={{ padding: "40px 0" }} /> }}
       />
@@ -293,7 +293,6 @@ export default function SportsPage() {
 
   return (
     <>
-      <style>{tableHeadCss("sports-tbl")}</style>
 
       <PageHeader
         title="Sports & Co-curricular"
@@ -301,7 +300,7 @@ export default function SportsPage() {
         icon={<TrophyOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!canFilter && (
           <Alert type="warning" showIcon message="Please select an active academic year to use this module." style={{ borderRadius: 12, marginBottom: 16 }} />
         )}

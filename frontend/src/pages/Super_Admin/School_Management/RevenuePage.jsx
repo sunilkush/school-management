@@ -37,10 +37,7 @@ import {
 } from "../../../features/superAdminBillingSlice";
 import { fetchSchools } from "../../../features/schoolSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, toolbarRow, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, modalTitle } from "../../../styles/pageStyles";
 
 const formatCurrency = (n) =>
   `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -69,7 +66,7 @@ const invoiceStatuses = ["draft", "unpaid", "paid", "overdue", "cancelled"].map(
 );
 
 const MetricCard = ({ title, value, icon, color, sub }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+  <div className="section-panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         {title}
@@ -274,7 +271,7 @@ export default function RevenuePage() {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Revenue Dashboard"
         subtitle="Super Admin billing, invoices, payments aur revenue tracking"
@@ -296,10 +293,9 @@ export default function RevenuePage() {
         <MetricCard title="Overdue" value={formatCurrency(revenueSummary.overdue)} icon={<WarningOutlined />} color="var(--danger)" sub="Needs follow-up" />
       </div>
 
-      <style>{tableHeadCss("revenue-page-tbl")}</style>
 
-      <div style={sectionPanel}>
-        <div style={toolbarRow}>
+      <div className="section-panel">
+        <div className="toolbar-row">
           <Input
             allowClear
             prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
@@ -319,7 +315,7 @@ export default function RevenuePage() {
           <span style={{ ...pill("var(--primary)"), marginLeft: "auto" }}>{filtered.length} invoices</span>
         </div>
 
-        <div className="revenue-page-tbl" style={tableContainer}>
+        <div className="revenue-page-tbl table-container">
           <Table
             loading={loading}
             columns={columns}
@@ -417,7 +413,7 @@ export default function RevenuePage() {
         destroyOnClose
       >
         {selectedInvoice && (
-          <div style={{ ...sectionPanel, padding: 12, background: "var(--surface-soft)" }}>
+          <div className="section-panel" style={{ padding: 12, background: "var(--surface-soft)" }}>
             <span style={{ color: "var(--text-muted)" }}>Selected Invoice</span>
             <div style={{ marginTop: 4 }}>
               <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>{" "}

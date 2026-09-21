@@ -5,7 +5,7 @@ import { ReadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { fetchStudentLibraryBooks } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pageCard, tableHeadCss, pill } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const StudentAllowedBook = () => {
   const dispatch = useDispatch();
@@ -50,17 +50,16 @@ const StudentAllowedBook = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("lib-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="My Issued Books"
         subtitle="Books currently borrowed from the school library"
         icon={<ReadOutlined />}
       />
-      <div style={{ ...pageCard, marginTop: 16 }}>
+      <div className="page-card" style={{ marginTop: 16 }}>
         {libraryBooks.length ? (
           <Table
-            className="lib-tbl"
+            className="lib-tbl data-table"
             rowKey="_id"
             columns={columns}
             dataSource={libraryBooks}

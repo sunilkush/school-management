@@ -4,7 +4,6 @@ import { Alert, Table, Tag, Button, message, Descriptions } from "antd";
 import { CreditCardOutlined, DownloadOutlined, CrownOutlined, FileAddOutlined } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles";
 import apiClient from "../../../api/httpClient";
 import {
   fetchMySubscription,
@@ -155,8 +154,7 @@ const MySubscription = () => {
   );
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("my-sub-invoices-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader title="My Subscription" subtitle="View your school's plan and pay subscription invoices" icon={<CrownOutlined />} />
 
       {reopenedUntil ? (
@@ -188,7 +186,7 @@ const MySubscription = () => {
       ) : null}
 
       {subscription && (
-        <div style={{ ...sectionPanel, marginTop: 16 }}>
+        <div className="section-panel" style={{ marginTop: 16 }}>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Current Plan</div>
           <Descriptions bordered column={2} size="small">
             <Descriptions.Item label="Plan">{subscription.planId?.name || "—"}</Descriptions.Item>
@@ -201,13 +199,13 @@ const MySubscription = () => {
         </div>
       )}
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>
           <RupeeIcon style={{ marginRight: 6 }} />
           Invoices
         </div>
         <Table
-          className="my-sub-invoices-tbl"
+          className="my-sub-invoices-tbl data-table"
           rowKey="_id"
           columns={columns}
           dataSource={invoices}

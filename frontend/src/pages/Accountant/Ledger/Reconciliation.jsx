@@ -6,7 +6,7 @@ import {
 } from "@ant-design/icons";
 import { fetchReconciliation, runPostPending } from "../../../features/ledgerSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 
@@ -60,8 +60,7 @@ const Reconciliation = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("recon-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Reconciliation"
@@ -88,10 +87,7 @@ const Reconciliation = () => {
       ) : (
         <>
           <div
-            style={{
-              ...sectionPanel, display: "flex", alignItems: "center", gap: 16,
-              borderColor: fullyPosted ? "var(--success)" : "var(--warning)",
-            }}
+            className="section-panel" style={{ display: "flex", alignItems: "center", gap: 16, borderColor: fullyPosted ? "var(--success)" : "var(--warning)" }}
           >
             {fullyPosted ? (
               <CheckCircleFilled style={{ fontSize: 32, color: "var(--success)" }} />
@@ -112,10 +108,10 @@ const Reconciliation = () => {
             </div>
           </div>
 
-          <div style={sectionPanel}>
-            <div style={tableContainer}>
+          <div className="section-panel">
+            <div className="table-container">
               <Table
-                className="recon-table"
+                className="recon-table data-table"
                 rowKey="source"
                 size="middle"
                 pagination={false}

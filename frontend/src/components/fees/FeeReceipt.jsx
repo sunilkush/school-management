@@ -133,7 +133,7 @@ const FeeReceipt = React.forwardRef(({ payment, lines = [], description, student
 
 FeeReceipt.displayName = "FeeReceipt";
 
-/** Opens a print-only popup for a rendered FeeReceipt ref. The popup has no <link> to index.css,
+/** Opens a print-only popup for a rendered FeeReceipt ref. The popup has no <link> to styles/main.scss,
  * so FeeReceipt intentionally uses literal hex colors rather than our CSS custom properties —
  * it should also always print on white paper regardless of the app's active theme. */
 export const printFeeReceipt = (receiptNode) => {

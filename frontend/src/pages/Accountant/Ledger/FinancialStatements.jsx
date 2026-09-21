@@ -5,7 +5,7 @@ import { FundOutlined, ReloadOutlined, WarningOutlined } from "@ant-design/icons
 import dayjs from "dayjs";
 import { fetchBalanceSheet, fetchProfitAndLoss, fetchTrialBalance } from "../../../features/ledgerSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 
@@ -35,13 +35,13 @@ const TotalRow = ({ label, value, strong, tone }) => (
 );
 
 const Section = ({ title, rows, total, totalLabel }) => (
-  <div style={sectionPanel}>
+  <div className="section-panel">
     <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
       {title}
     </h3>
-    <div style={tableContainer}>
+    <div className="table-container">
       <Table
-        className="stmt-table"
+        className="stmt-table data-table"
         rowKey="accountId"
         size="small"
         pagination={false}
@@ -89,7 +89,7 @@ const FinancialStatements = () => {
 
   const trialTab = (
     <>
-      <div style={{ ...sectionPanel, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+      <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           <span><span style={{ color: "var(--text-muted)" }}>Total debits </span><b>{money(trialBalance?.totalDebit)}</b></span>
           <span><span style={{ color: "var(--text-muted)" }}>Total credits </span><b>{money(trialBalance?.totalCredit)}</b></span>
@@ -97,9 +97,9 @@ const FinancialStatements = () => {
         {trialBalance && balanceBadge(trialBalance.isBalanced)}
       </div>
 
-      <div style={tableContainer}>
+      <div className="table-container">
         <Table
-          className="stmt-table"
+          className="stmt-table data-table"
           rowKey="accountId"
           size="middle"
           pagination={false}
@@ -120,7 +120,7 @@ const FinancialStatements = () => {
     <>
       <Section title="Income" rows={profitAndLoss?.income} total={profitAndLoss?.totalIncome} totalLabel="Total income" />
       <Section title="Expenditure" rows={profitAndLoss?.expense} total={profitAndLoss?.totalExpense} totalLabel="Total expenditure" />
-      <div style={{ ...sectionPanel, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontWeight: 700 }}>{(profitAndLoss?.surplus ?? 0) >= 0 ? "Surplus" : "Deficit"}</span>
         <span style={{ fontSize: 22, fontWeight: 800, color: (profitAndLoss?.surplus ?? 0) >= 0 ? "var(--success)" : "var(--danger)" }}>
           {money(Math.abs(profitAndLoss?.surplus || 0))}
@@ -132,20 +132,20 @@ const FinancialStatements = () => {
   const bsTab = (
     <>
       {balanceSheet && (
-        <div style={{ ...sectionPanel, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ color: "var(--text-muted)" }}>As at {asOf.format("D MMM YYYY")}</span>
           {balanceBadge(balanceSheet.isBalanced)}
         </div>
       )}
       <Section title="Assets" rows={balanceSheet?.assets} total={balanceSheet?.totalAssets} totalLabel="Total assets" />
       <Section title="Liabilities" rows={balanceSheet?.liabilities} total={balanceSheet?.totalLiabilities} totalLabel="Total liabilities" />
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)" }}>
           Equity
         </h3>
-        <div style={tableContainer}>
+        <div className="table-container">
           <Table
-            className="stmt-table"
+            className="stmt-table data-table"
             rowKey="accountId"
             size="small"
             pagination={false}
@@ -166,8 +166,7 @@ const FinancialStatements = () => {
   );
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("stmt-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Financial Statements"

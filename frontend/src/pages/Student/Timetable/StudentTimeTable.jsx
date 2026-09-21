@@ -8,15 +8,12 @@ import {
 import dayjs from "dayjs";
 import { fetchStudentTimetable } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, pill, emptyState,
-  statGrid, statCard, statLabel, statValue, iconWell,
-} from "../../../styles/pageStyles.js";
+import { pill, statGrid, statCard, statLabel, statValue, iconWell } from "../../../styles/pageStyles.js";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-// Shared design tokens (see index.css). PRIMARY/SUCCESS/INFO are the fixed accent
+// Shared design tokens (see styles/main.scss). PRIMARY/SUCCESS/INFO are the fixed accent
 // colors used outside the per-subject categorical palette below.
 const PRIMARY = "var(--primary)";
 const SUCCESS = "var(--success)";
@@ -270,7 +267,7 @@ export default function StudentTimeTable() {
   }, [sortedData.length, countPerDay, today]);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       {/* Header */}
       <PageHeader
         title="My Timetable"
@@ -410,7 +407,7 @@ export default function StudentTimeTable() {
       </div>
 
       {/* Periods */}
-      <div style={{ ...sectionPanel, marginTop: 0 }}>
+      <div className="section-panel" style={{ marginTop: 0 }}>
         <div
           style={{
             fontSize: 11,
@@ -430,7 +427,7 @@ export default function StudentTimeTable() {
             <Spin size="large" />
           </div>
         ) : dayWise.length === 0 ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <div style={{ fontSize: 36, marginBottom: 10 }}>📅</div>
             <div
               style={{

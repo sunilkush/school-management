@@ -21,13 +21,7 @@ import { getClassData } from "../../../features/schoolClassSlice";
 import { getExams, enterMarksBulk } from "../../../features/examSlice";
 import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  toolbarRow,
-  tableHeadCss,
-  pill,
-} from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -290,9 +284,7 @@ const EnterGrades = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("grade-table")}</style>
-      <style>{tableHeadCss("grade-config-table")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Enter Student Grades"
         subtitle="Marks are auto-converted into grades using your configured grade system."
@@ -300,11 +292,11 @@ const EnterGrades = () => {
       />
 
       <div style={{ marginTop: 20 }}>
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Divider orientation="left" style={{ marginTop: 0 }}>Grade System Setup</Divider>
 
           <Table
-            className="grade-config-table"
+            className="grade-config-table data-table"
             rowKey="key"
             size="small"
             pagination={false}
@@ -388,10 +380,10 @@ const EnterGrades = () => {
           )}
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Divider orientation="left" style={{ marginTop: 0 }}>Enter Marks</Divider>
 
-          <div className="page-toolbar" style={toolbarRow}>
+          <div className="page-toolbar toolbar-row">
             <Select
               placeholder="Select Class *"
               style={{ minWidth: 200 }}
@@ -457,7 +449,7 @@ const EnterGrades = () => {
           )}
 
           <Table
-            className="grade-table"
+            className="grade-table data-table"
             rowKey="id"
             loading={studentsLoading}
             columns={columns}

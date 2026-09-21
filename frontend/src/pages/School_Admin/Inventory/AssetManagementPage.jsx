@@ -10,10 +10,7 @@ import {
   updateInventoryItem, deleteInventoryItem,
 } from "../../../features/inventorySlice";
 import { fetchVendors } from "../../../features/vendorSlice";
-import {
-  toolbarRow, tableContainer, tableHeadCss,
-  statGrid, iconWell, modalTitle, pill,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle, pill } from "../../../styles/pageStyles";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -160,7 +157,7 @@ export default function AssetManagementPage() {
       </div>
 
       {/* Toolbar */}
-      <div style={toolbarRow}>
+      <div className="toolbar-row">
         <Select value={condFilter} onChange={setCondFilter} style={{ width: 150 }} placeholder="All Conditions" allowClear>
           {["new", "good", "fair", "poor", "disposed"].map((c) => (
             <Option key={c} value={c}>
@@ -181,8 +178,7 @@ export default function AssetManagementPage() {
       </div>
 
       {/* Table */}
-      <style>{tableHeadCss("asset-tbl")}</style>
-      <div className="asset-tbl" style={tableContainer}>
+      <div className="asset-tbl table-container">
         <Table
           columns={columns}
           dataSource={filtered}

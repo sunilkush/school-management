@@ -7,9 +7,9 @@ import {
 } from "@ant-design/icons";
 import { getExams, getSeatPlan } from "../../../features/examSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
-// Shared design tokens (frontend/src/index.css) — replaces a local hardcoded
+// Shared design tokens (frontend/src/styles/main.scss) — replaces a local hardcoded
 // hex palette that never adapted to dark mode.
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
@@ -88,7 +88,7 @@ const SeatPlanPage = () => {
     }));
     // NOTE: this HTML string is rendered into a blank popup window via
     // `window.open()` + `document.write()` below, which has no <link> to
-    // index.css — CSS custom properties would not resolve there. It should
+    // styles/main.scss — CSS custom properties would not resolve there. It should
     // also always print on white paper regardless of the app's active
     // theme, so the hex colors below are intentionally literal.
     const html = `<!DOCTYPE html><html><head>
@@ -229,8 +229,7 @@ const SeatPlanPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("sp-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Seat Plan"
@@ -253,7 +252,7 @@ const SeatPlanPage = () => {
       />
 
       {/* ── Configuration panel ── */}
-      <div style={{ ...sectionPanel, margin: "20px 0 16px" }}>
+      <div className="section-panel" style={{ margin: "20px 0 16px" }}>
         <div style={{
           fontSize: 11, fontWeight: 700, color: C.textMuted,
           textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14,
@@ -388,7 +387,7 @@ const SeatPlanPage = () => {
       )}
 
       {/* ── Seat assignments table ── */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{
           padding: "14px 20px",
           borderBottom: "1px solid " + C.border,
@@ -432,7 +431,7 @@ const SeatPlanPage = () => {
         </div>
 
         <Table
-          className="sp-tbl"
+          className="sp-tbl data-table"
           rowKey={(r) => `${r.studentId || r.rollNumber}-${r.seatNumber}`}
           dataSource={seats}
           loading={loading || generating}

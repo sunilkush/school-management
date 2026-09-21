@@ -510,7 +510,7 @@ export default LoginForm;
 
 /* ─────────────────────────────────────────────────────────────
    Scoped CSS
-   Uses the same CSS variables defined in index.css so light/
+   Uses the same CSS variables defined in styles/main.scss so light/
    dark mode switch happens automatically without any extra logic.
 ───────────────────────────────────────────────────────────── */
 const CSS = `

@@ -5,7 +5,7 @@ import { HomeOutlined, ReloadOutlined, UserOutlined } from "@ant-design/icons";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell } from "../../../styles/pageStyles";
+import { iconWell } from "../../../styles/pageStyles";
 
 const ChildHostel = () => {
   const dispatch = useDispatch();
@@ -56,17 +56,17 @@ const ChildHostel = () => {
           </Space>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {loading ? (
           <Skeleton active paragraph={{ rows: 5 }} />
         ) : !hostel ? (
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <Empty description={selectedChildId ? "No hostel allocated for this child" : "Select a child to view hostel details"} />
           </div>
         ) : (
           <Row gutter={[16, 16]}>
             <Col xs={24} md={14}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
                   <div style={iconWell("var(--accent)", 40)}><HomeOutlined /></div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Hostel Allocation</div>
@@ -84,7 +84,7 @@ const ChildHostel = () => {
               </div>
             </Col>
             <Col xs={24} md={10}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Roommates</div>
                 {hostel.roommates?.length ? (
                   <List

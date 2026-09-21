@@ -13,10 +13,7 @@ import dayjs from "dayjs";
 import { fetchMyAttendance } from "../../features/attendanceSlice";
 import { fetchMyChildren } from "../../features/studentPortalSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel,
-  statCard, statLabel, statValue, statGrid, tableHeadCss,
-} from "../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid } from "../../styles/pageStyles";
 
 /* ─── constants ─────────────────────────────────────────────────────── */
 const STAT_COLORS = ["var(--accent)", "var(--success)", "var(--danger)", "var(--warning)", "var(--primary)"];
@@ -243,7 +240,6 @@ const ChildAttendancePage = () => {
   /* ─── render ─────────────────────────────────────────────────────── */
   return (
     <>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
 
       <PageHeader
         title="Child Attendance"
@@ -286,7 +282,7 @@ const ChildAttendancePage = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
 
         {/* no-child alert */}
         {!children.length && !childLoading && (
@@ -318,7 +314,7 @@ const ChildAttendancePage = () => {
 
         {/* ── main content ── */}
         {!childId ? (
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <Empty description="Select a child to view attendance" />
           </div>
         ) : (
@@ -330,7 +326,7 @@ const ChildAttendancePage = () => {
           }}>
 
             {/* ── calendar panel ── */}
-            <div style={{ ...sectionPanel, minWidth: 0 }}>
+            <div className="section-panel" style={{ minWidth: 0 }}>
               {/* panel header */}
               <div style={{
                 display: "flex", alignItems: "center",
@@ -396,7 +392,7 @@ const ChildAttendancePage = () => {
             </div>
 
             {/* ── records table ── */}
-            <div style={{ ...sectionPanel, minWidth: 0 }}>
+            <div className="section-panel" style={{ minWidth: 0 }}>
               <div style={{
                 fontWeight: 700, fontSize: 13,
                 color: "var(--text-primary)", marginBottom: 14,
@@ -411,7 +407,7 @@ const ChildAttendancePage = () => {
                 <Empty description="No attendance records for this month" />
               ) : (
                 <Table
-                  className={TABLE_CLS}
+                  className={`${TABLE_CLS} data-table`}
                   rowKey="_id"
                   columns={columns}
                   dataSource={myAttendance}

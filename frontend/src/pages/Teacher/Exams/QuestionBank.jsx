@@ -20,7 +20,7 @@ import apiClient from "../../../api/httpClient";
 import CreateQuestion from "./CreateQuestion";
 import BulkUploadQuestions from "./BulkUploadQuestions";
 import PageHeader from "../../../components/layout/PageHeader";
-import { modalTitle, pageWrapper, pill, sectionPanel } from "../../../styles/pageStyles";
+import { modalTitle, pill } from "../../../styles/pageStyles";
 
 /**
  * Question Bank — pick a class and a subject, and every question filed under it is on one screen,
@@ -427,7 +427,7 @@ const QuestionBank = () => {
   );
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Question Bank"
         subtitle="Pick a class and a subject — every question filed under it is on one screen"
@@ -464,17 +464,17 @@ const QuestionBank = () => {
       />
 
       {isSuperAdmin && !selectedSchool ? (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Empty description="Questions belong to a school — choose one at the top to begin" />
         </div>
       ) : !ayId ? (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Empty description="Choose an academic year at the top — classes belong to one" />
         </div>
       ) : (
         <>
           {/* ── Step 1 & 2: class and subject ── */}
-          <div style={sectionPanel}>
+          <div className="section-panel">
             {label("Class")}
             {(isSuperAdmin ? schoolClassLoading : classLoading) && !classes.length ? (
               <Skeleton.Button active size="small" style={{ width: 320 }} />
@@ -522,9 +522,9 @@ const QuestionBank = () => {
 
           {/* ── Step 3: the questions ── */}
           {!subjectId ? (
-            <div style={sectionPanel}><Empty description="Pick a subject to see its questions" /></div>
+            <div className="section-panel"><Empty description="Pick a subject to see its questions" /></div>
           ) : (
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 12 }}>
                 <div style={{ flex: "1 1 220px" }}>
                   <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>

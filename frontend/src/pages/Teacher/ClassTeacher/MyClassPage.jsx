@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import { fetchMyClassTeacherAssignment } from "../../../features/classTeacherSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper } from "../../../styles/pageStyles";
 
 // RGB triples for the design tokens used on this page, keyed by var(--x) string — used
 // to build alpha-tinted backgrounds/shadows from a CSS custom property (rgba() rather
@@ -67,7 +66,7 @@ const MyClassPage = () => {
 
   if (loading) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", justifyContent: "center", paddingTop: 80 }}>
+      <div className="page-wrapper" style={{ display: "flex", justifyContent: "center", paddingTop: 80 }}>
         <Spin size="large" />
       </div>
     );
@@ -75,7 +74,7 @@ const MyClassPage = () => {
 
   if (!myAssignment) {
     return (
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <PageHeader
           title="My Class"
           subtitle="Class teacher assignment"
@@ -104,7 +103,7 @@ const MyClassPage = () => {
   const ay      = myAssignment.academicYearId;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Class"
         subtitle="You are the class in-charge for this class"

@@ -4,10 +4,7 @@ import { Bell, Megaphone, CheckCircle, Clock } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchNotifications, createNotification } from "../../features/notificationSlice";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, statGrid,
-  pill, tableHeadCss, emptyState,
-} from "../../styles/pageStyles.js";
+import { statGrid, pill } from "../../styles/pageStyles.js";
 import { fmtFull, StatCard, RefreshBtn, PrimaryBtn } from "./receptionistShared.jsx";
 
 const AUDIENCE_MAP = {
@@ -125,8 +122,7 @@ const Broadcasts = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("bc-table")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Broadcasts"
         subtitle="Send announcements to students, parents, teachers and staff"
@@ -145,17 +141,17 @@ const Broadcasts = () => {
         <StatCard icon={Clock}        label="Scheduled"        value={counts.scheduled} color="var(--info)" loading={loading} />
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}><Spin size="large" /></div>
         ) : notifications.length === 0 ? (
-          <div style={emptyState}>
+          <div className="empty-state">
             <div style={{ fontSize: 34, marginBottom: 10 }}>📣</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>No Broadcasts Yet</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Click "New Broadcast" to send your first announcement.</div>
           </div>
         ) : (
-          <Table className="bc-table" rowKey="_id" dataSource={notifications} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} locale={{ emptyText: "No broadcasts sent yet." }} />
+          <Table className="bc-table data-table" rowKey="_id" dataSource={notifications} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} locale={{ emptyText: "No broadcasts sent yet." }} />
         )}
       </div>
 

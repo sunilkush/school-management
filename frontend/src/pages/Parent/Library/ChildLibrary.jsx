@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const STAT_COLORS = ["var(--accent)", "var(--danger)", "var(--warning)"];
 
@@ -108,7 +108,7 @@ const ChildLibrary = () => {
           </Space>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <div className="stat-grid" style={statGrid(160)}>
           {statMeta.map(({ key, label, value }, i) => (
             <div key={key} style={statCard({ color: STAT_COLORS[i] })}>
@@ -121,7 +121,7 @@ const ChildLibrary = () => {
           ))}
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           {loading ? (
             <Skeleton active paragraph={{ rows: 5 }} />
           ) : !selectedChildId ? (

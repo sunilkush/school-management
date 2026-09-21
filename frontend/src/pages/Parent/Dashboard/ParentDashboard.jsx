@@ -10,7 +10,7 @@ import dayjs from "dayjs";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const STAT_COLORS = ["var(--primary)", "var(--success)", "var(--accent)", "var(--warning)"];
 const STAT_BARS   = ["var(--primary-light)", "var(--success-light)", "var(--accent-light)", "var(--warning-light)"];
@@ -103,7 +103,7 @@ const ParentDashboard = () => {
 
   if (isLoading && !children.length) {
     return (
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <Skeleton active paragraph={{ rows: 8 }} />
       </div>
     );
@@ -121,7 +121,7 @@ const ParentDashboard = () => {
           </Button>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* KPI stats */}
         <div className="stat-grid" style={statGrid(175)}>
           {statMeta.map(({ key, label, icon, value }, i) => (
@@ -144,7 +144,7 @@ const ParentDashboard = () => {
 
         {/* Alerts */}
         {alerts.length > 0 && (
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 12 }}>
               <BellOutlined style={{ marginRight: 8 }} />Alerts
             </div>
@@ -160,7 +160,7 @@ const ParentDashboard = () => {
         <Row gutter={[16, 16]}>
           {children.length === 0 ? (
             <Col xs={24}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <Empty description="No children linked to your account. Contact the school admin." />
               </div>
             </Col>
@@ -169,7 +169,7 @@ const ParentDashboard = () => {
               const cs = childStats[child.userId] || {};
               return (
                 <Col xs={24} sm={12} xl={8} key={child.userId}>
-                  <div style={{ ...sectionPanel, marginBottom: 0 }}>
+                  <div className="section-panel is-last">
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                       <div style={{
                         width: 46, height: 46, borderRadius: "50%",
@@ -227,7 +227,7 @@ const ParentDashboard = () => {
         </Row>
 
         {/* Quick Links */}
-        <div style={{ ...sectionPanel, marginTop: 0 }}>
+        <div className="section-panel" style={{ marginTop: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 12 }}>
             Quick Links
           </div>

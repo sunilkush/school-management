@@ -26,10 +26,7 @@ import {
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchRoles, fetchRoleBySchool } from "../../../features/roleSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, toolbarRow,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill } from "../../../styles/pageStyles";
 
 const HIGH_RISK_ACTIONS = [
   "delete",
@@ -41,7 +38,7 @@ const HIGH_RISK_ACTIONS = [
 ];
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -293,7 +290,7 @@ const Permissions = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Permissions Matrix"
         subtitle="Role-wise module permissions, diff viewer aur high-risk approval governance"
@@ -321,9 +318,8 @@ const Permissions = () => {
         />
       </div>
 
-      <style>{tableHeadCss("permissions-matrix-tbl")}</style>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
           <SafetyCertificateOutlined style={{ color: "var(--primary)" }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Role Permission Matrix</span>
@@ -337,7 +333,7 @@ const Permissions = () => {
         ) : dataSource.length === 0 ? (
           <Empty description="No permissions found" />
         ) : (
-          <div className="permissions-matrix-tbl" style={tableContainer}>
+          <div className="permissions-matrix-tbl table-container">
             <Table
               columns={columns}
               dataSource={dataSource}
@@ -349,7 +345,7 @@ const Permissions = () => {
         )}
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
           <DiffOutlined style={{ color: "var(--primary)" }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Permission Diff Viewer</span>
@@ -359,7 +355,7 @@ const Permissions = () => {
           Do roles compare karke added/removed actions aur high-risk changes dekhein.
         </span>
 
-        <div style={{ ...toolbarRow, marginTop: 14 }}>
+        <div className="toolbar-row" style={{ marginTop: 14 }}>
           <Select
             placeholder="Base role"
             options={roleOptions}
@@ -388,7 +384,7 @@ const Permissions = () => {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+          <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
               <WarningOutlined style={{ color: "var(--warning)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>High-Risk Approval Queue</span>
@@ -437,7 +433,7 @@ const Permissions = () => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <div style={{ ...sectionPanel, marginBottom: 0, height: "100%" }}>
+          <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
               <AuditOutlined style={{ color: "var(--success)" }} />
               <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Audit Trail</span>

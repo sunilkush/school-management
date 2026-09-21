@@ -7,7 +7,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import apiClient from "../../api/httpClient";
-import { iconWell, pill, sectionPanel } from "../../styles/pageStyles";
+import { iconWell, pill } from "../../styles/pageStyles";
 
 /**
  * "My Attendance" on a school employee's dashboard: today's check-in, this month so far, and the
@@ -124,7 +124,7 @@ const MyAttendanceSection = ({ basePath: basePathProp, style }) => {
   }
 
   return (
-    <div style={{ ...sectionPanel, ...style }}>
+    <div className="section-panel" style={{ ...style }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={iconWell("var(--primary)", 36)}><ClockCircleOutlined /></div>

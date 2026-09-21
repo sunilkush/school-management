@@ -13,7 +13,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { fetchMyAttendance } from "../../features/attendanceSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper } from "../../styles/pageStyles";
 
 /* ── theme ── */
 const C = {
@@ -170,7 +169,7 @@ const MyAttendancePage = () => {
   const todayBannerColor = todayCfg ? todayCfg.color : C.primary;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Attendance History"
         subtitle="Your attendance month by month, with check-in and check-out times"

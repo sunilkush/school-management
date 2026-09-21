@@ -22,14 +22,7 @@ import {
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchActivityLogs, deleteActivityLog } from "../../../features/activitySlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  statGrid,
-  toolbarRow,
-  tableContainer,
-  tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid } from "../../../styles/pageStyles";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
@@ -67,7 +60,7 @@ function isToday(d) {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 const StatCard = ({ label, value, sub }) => (
-  <div style={{ ...sectionPanel, padding: "14px 18px", marginBottom: 0 }}>
+  <div className="section-panel" style={{ padding: "14px 18px", marginBottom: 0 }}>
     <div
       style={{
         fontSize: 11,
@@ -322,7 +315,7 @@ const normalizedLogs = useMemo(() => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Activity Logs"
         subtitle="Track user and system activities across schools"
@@ -337,19 +330,12 @@ const normalizedLogs = useMemo(() => {
         <StatCard label="Schools"      value={stats.schools} sub="monitored" />
       </div>
 
-      <style>{tableHeadCss("logs-tbl")}</style>
 
       {/* ── Table card ───────────────────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, padding: 0 }}>
+      <div className="section-panel" style={{ padding: 0 }}>
         {/* Toolbar */}
         <div
-          style={{
-            ...toolbarRow,
-            justifyContent: "space-between",
-            padding: "14px 20px",
-            borderBottom: "1px solid var(--border-muted)",
-            marginBottom: 0,
-          }}
+          className="toolbar-row" style={{ justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", marginBottom: 0 }}
         >
           <Space wrap size={8}>
             <Input
@@ -398,7 +384,7 @@ const normalizedLogs = useMemo(() => {
         </div>
 
         {/* Table */}
-        <div className="logs-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+        <div className="logs-tbl data-table table-container" style={{ border: "none", borderRadius: 0 }}>
           <Table
             columns={columns}
             dataSource={filteredLogs}

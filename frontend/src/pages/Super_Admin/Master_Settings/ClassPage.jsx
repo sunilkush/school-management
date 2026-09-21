@@ -33,10 +33,7 @@ import {
   deleteClass,
 } from "../../../features/classSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  toolbarRow, tableContainer, tableHeadCss, modalTitle, avatarStyle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, modalTitle, avatarStyle } from "../../../styles/pageStyles";
 
 const INIT = {
   name: "",
@@ -48,7 +45,7 @@ const INIT = {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -239,7 +236,7 @@ export default function ClassPage() {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Class Management"
         subtitle="Academic classes ko create, search aur manage karein"
@@ -259,16 +256,15 @@ export default function ClassPage() {
         <StatCard icon={<GlobalOutlined />} label="Global Classes" value={stats.global} color="var(--accent)" />
       </div>
 
-      <style>{tableHeadCss("class-page-tbl")}</style>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
           <BookOutlined style={{ color: "var(--primary)" }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Class List</span>
           <span style={pill("var(--primary)")}>{filteredClasses.length}</span>
         </div>
 
-        <div style={{ ...toolbarRow, marginBottom: 16 }}>
+        <div className="toolbar-row" style={{ marginBottom: 16 }}>
           <Input
             allowClear
             prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
@@ -290,7 +286,7 @@ export default function ClassPage() {
           />
         </div>
 
-        <div className="class-page-tbl" style={tableContainer}>
+        <div className="class-page-tbl table-container">
           <Table
             columns={columns}
             dataSource={filteredClasses}

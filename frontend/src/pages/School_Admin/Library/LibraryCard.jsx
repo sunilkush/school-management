@@ -5,7 +5,6 @@ import {
 } from "antd";
 import { PlusOutlined, DeleteOutlined, CreditCardOutlined } from "@ant-design/icons";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, pageCard, tableHeadCss } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -77,8 +76,7 @@ const LibraryCard = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("lib-card-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Library Cards"
@@ -99,12 +97,12 @@ const LibraryCard = () => {
       />
 
       {/* ── Cards table ── */}
-      <div style={{ ...pageCard, margin: "20px 0", padding: 24 }}>
+      <div className="page-card" style={{ margin: "20px 0", padding: 24 }}>
         <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>
           Issued Library Cards
         </div>
         <Table
-          className="lib-card-tbl"
+          className="lib-card-tbl data-table"
           columns={columns}
           dataSource={cards}
           pagination={{ pageSize: 8 }}

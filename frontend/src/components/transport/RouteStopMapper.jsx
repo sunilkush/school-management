@@ -5,7 +5,7 @@ import { MapContainer, Marker, Polyline, Tooltip as MapTooltip, useMapEvents } f
 import L from "leaflet";
 import { DEFAULT_CENTRE } from "../maps/osm";
 import OsmTileLayer from "../maps/OsmTileLayer";
-import { pill, sectionPanel } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 /**
  * Puts a route's stops on the map.
@@ -156,7 +156,7 @@ const RouteStopMapper = ({ open, route, onClose, onSave, saving }) => {
         description="Select a row, then click where that stop is. Without coordinates the bus can still be watched moving, but nobody gets an automatic 'reached your stop' update."
       />
 
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden", marginBottom: 16 }}>
+      <div className="section-panel" style={{ padding: 0, overflow: "hidden", marginBottom: 16 }}>
         <MapContainer center={centre} zoom={13} style={{ height: 320, width: "100%" }} scrollWheelZoom>
           <OsmTileLayer />
           <ClickToPlace onPick={(lat, lng) => patch(activeIndex, { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) })} />

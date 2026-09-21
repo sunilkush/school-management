@@ -6,7 +6,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, TagsOutlined, SyncOutlined,
 import { fetchFeeHeads, createFeeHead, updateFeeHead, deleteFeeHead } from "../../features/headSlice.js";
 import { fetchSchools } from "../../features/schoolSlice.js";
 import PageHeader from "../layout/PageHeader.jsx";
-import { pageWrapper, sectionPanel, statGrid, iconWell, pill, tableContainer, tableHeadCss, modalTitle } from "../../styles/pageStyles";
+import { statGrid, iconWell, pill, modalTitle } from "../../styles/pageStyles";
 
 const FEE_HEAD_TYPES = [
   "Admission Fee", "Annual Fee", "Tuition Fee", "Registration Fee", "Transport Fee",
@@ -22,7 +22,7 @@ const TYPE_COLOR = {
 };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -193,8 +193,7 @@ const FeeHeadManager = ({ showSchoolPicker = false }) => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("fee-categories-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Fee Categories"
@@ -230,14 +229,14 @@ const FeeHeadManager = ({ showSchoolPicker = false }) => {
         <StatCard icon={<WarningOutlined />} label="Penalty" value={stats.penalty} color="var(--danger-hover)" />
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <TagsOutlined style={{ color: "var(--primary)" }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Fee Heads</span>
           <span style={pill("var(--primary)")}>{feeHeads.length}</span>
         </div>
 
-        <div className="fee-categories-tbl" style={tableContainer}>
+        <div className="fee-categories-tbl table-container">
           <Table
             rowKey="_id"
             columns={columns}

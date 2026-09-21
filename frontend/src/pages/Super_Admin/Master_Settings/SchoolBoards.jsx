@@ -15,7 +15,7 @@ import { fetchSchools } from "../../../features/schoolSlice.js";
 import { getBoardClass } from "../../../features/boardClassSlice.js";
 import { currentUser } from "../../../features/authSlice.js";
 import PageHeader from "../../../components/layout/PageHeader";
-import { modalTitle, pageWrapper, pill, sectionPanel } from "../../../styles/pageStyles";
+import { modalTitle, pill } from "../../../styles/pageStyles";
 
 /**
  * Exam boards — the list of boards, and which schools follow which.
@@ -267,7 +267,7 @@ const SchoolBoards = () => {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Exam Boards"
         subtitle="The boards schools can follow, and the classes each one runs"
@@ -282,7 +282,7 @@ const SchoolBoards = () => {
         }
       />
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
           <div style={{ flex: "1 1 200px" }}>
             <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>
@@ -372,7 +372,7 @@ const SchoolBoards = () => {
         )}
       </div>
 
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {label("What a board is for")}
         <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
           A board holds the classes it runs — set those up under <strong>Academics → Board Classes</strong> — and a

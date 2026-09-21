@@ -29,19 +29,7 @@ import {
   deleteDepartment,
 } from "../../../features/departmentSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  toolbarRow,
-  tableHeadCss,
-  statGrid,
-  statCard,
-  statLabel,
-  statValue,
-  pill,
-  iconWell,
-  modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, statCard, statLabel, statValue, pill, iconWell, modalTitle } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -283,8 +271,7 @@ export default function Departments() {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("dept-table")}</style>
+    <div className="page-wrapper">
 
       {/* Header */}
       <PageHeader
@@ -329,16 +316,10 @@ export default function Departments() {
       </div>
 
       {/* Table card */}
-      <div style={pageCard}>
+      <div className="page-card">
         {/* Toolbar */}
         <div
-          style={{
-            ...toolbarRow,
-            padding: "14px 20px",
-            borderBottom: "1px solid var(--border-muted)",
-            marginBottom: 0,
-            justifyContent: "space-between",
-          }}
+          className="toolbar-row" style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", marginBottom: 0, justifyContent: "space-between" }}
         >
           <Space wrap>
             <Input
@@ -373,7 +354,7 @@ export default function Departments() {
             </div>
           ) : (
             <Table
-              className="dept-table"
+              className="dept-table data-table"
               rowKey="_id"
               columns={columns}
               dataSource={filtered}

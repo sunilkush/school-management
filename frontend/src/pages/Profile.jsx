@@ -15,7 +15,7 @@ import {
   updateStudentProfile,
 } from "../features/studentPortalSlice";
 import PageHeader from "../components/layout/PageHeader";
-import { pageWrapper, pageCard, avatarStyle } from "../styles/pageStyles";
+import { avatarStyle } from "../styles/pageStyles";
 
 /* ── Role groups ── */
 const STUDENT_ROLE = "Student";
@@ -193,7 +193,7 @@ const Profile = () => {
 
   if (authLoading || (isStudent && portalLoading && !studentProfile)) {
     return (
-      <div style={{ ...pageWrapper, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text-muted)" }}>
+      <div className="page-wrapper" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "var(--text-muted)" }}>
         <Loader2 style={{ width: 20, height: 20 }} /> Loading profile...
       </div>
     );
@@ -201,11 +201,11 @@ const Profile = () => {
 
   /* ─────────────────────── RENDER ─────────────────────── */
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader title="My Profile" subtitle="View and update your personal information" icon={<UserOutlined />} />
 
       {/* ── Hero Card ── */}
-      <div style={{ ...pageCard, marginTop: 16, padding: "20px 24px" }}>
+      <div className="page-card" style={{ marginTop: 16, padding: "20px 24px" }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -263,7 +263,7 @@ const Profile = () => {
       {/* ── Main Form ── */}
       <form onSubmit={handleSaveProfile} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
 
-        <div style={{ ...pageCard, padding: "20px 24px", gridColumn: "span 2" }}>
+        <div className="page-card" style={{ padding: "20px 24px", gridColumn: "span 2" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
               {isStudent ? "Student Profile" : isEmployee ? "Employee Profile" : "My Profile"}
@@ -339,7 +339,7 @@ const Profile = () => {
             </>
           ) : (
             <>
-              <div style={{ ...pageCard, padding: "16px 20px" }}>
+              <div className="page-card" style={{ padding: "16px 20px" }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
                   <Building2 style={{ width: 14, height: 14 }} /> {isEmployee ? "Work Info" : "School"}
                 </div>
@@ -360,7 +360,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div style={{ ...pageCard, padding: "16px 20px" }}>
+              <div className="page-card" style={{ padding: "16px 20px" }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
                   <ClipboardList style={{ width: 14, height: 14 }} /> Summary
                 </div>
@@ -386,7 +386,7 @@ const Profile = () => {
 
       {/* ── Password Section ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
-        <form onSubmit={handleChangePassword} style={{ ...pageCard, padding: "20px 24px", gridColumn: "span 2" }}>
+        <form onSubmit={handleChangePassword} className="page-card" style={{ padding: "20px 24px", gridColumn: "span 2" }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 4 }}>Change Password</div>
           <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 20 }}>Update your account password</div>
           <Section title="Password">
@@ -403,7 +403,7 @@ const Profile = () => {
           </button>
         </form>
 
-        <div style={{ ...pageCard, padding: "16px 20px", background: "var(--surface-soft)" }}>
+        <div className="page-card" style={{ padding: "16px 20px", background: "var(--surface-soft)" }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>Password Tips</div>
           <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
             {["At least 8 characters", "Mix uppercase & lowercase", "Include numbers & symbols", "Avoid your name or email"].map((tip) => (
@@ -492,7 +492,7 @@ const PwdField = ({ label, value, onChange, placeholder }) => {
 };
 
 const GuardianCard = ({ title, data, onChange }) => (
-  <div style={{ ...pageCard, padding: "16px 20px" }}>
+  <div className="page-card" style={{ padding: "16px 20px" }}>
     <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
       <Users style={{ width: 14, height: 14 }} /> {title}
     </div>

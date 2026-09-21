@@ -17,9 +17,7 @@ import {
   fetchIssuedBooks, fetchLibraryBooks, fetchFineSummary,
 } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss,
-} from "../../styles/pageStyles";
+import { iconWell, statGrid } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
 
 const { Text } = Typography;
@@ -148,8 +146,7 @@ const LibraryReports = () => {
   const isLoading = booksLoading || issuedLoading;
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("report-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Library Reports"
         subtitle="Circulation statistics, category breakdown, and trends"
@@ -177,7 +174,7 @@ const LibraryReports = () => {
               { label: "Lost",            value: summary.lostCount,       color: "var(--accent)", icon: <AlertOutlined /> },
               { label: "Pending Fines",   value: `₹${summary.pendingFines}`, color: "var(--warning)", icon: <RupeeIcon /> },
             ].map(({ label, value, color, icon }) => (
-              <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+              <div key={label} className="section-panel is-header-strip">
                 <div style={iconWell(color, 38)}>{icon}</div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
@@ -188,7 +185,7 @@ const LibraryReports = () => {
           </div>
 
           {/* ── Utilization bar ──────────────────────────────────────── */}
-          <div style={{ ...sectionPanel, marginBottom: 20 }}>
+          <div className="section-panel" style={{ marginBottom: 20 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 10 }}>Collection Utilization</div>
             <div style={{ marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -202,7 +199,7 @@ const LibraryReports = () => {
           {/* ── Charts row ───────────────────────────────────────────── */}
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
             <Col xs={24} lg={14}>
-              <div style={{ ...sectionPanel, marginBottom: 0 }}>
+              <div className="section-panel is-last">
                 <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Monthly Issue vs. Return Trend</div>
                 {monthlyTrend.every((m) => m.issued === 0) ? (
                   <Empty description="No circulation data yet" />
@@ -222,7 +219,7 @@ const LibraryReports = () => {
             </Col>
 
             <Col xs={24} lg={10}>
-              <div style={{ ...sectionPanel, marginBottom: 0 }}>
+              <div className="section-panel is-last">
                 <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>By Member Type</div>
                 {memberTypeData.length === 0 ? (
                   <Empty description="No data" />
@@ -241,7 +238,7 @@ const LibraryReports = () => {
           </Row>
 
           {/* ── Category breakdown ───────────────────────────────────── */}
-          <div style={{ ...sectionPanel, marginBottom: 20 }}>
+          <div className="section-panel" style={{ marginBottom: 20 }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Books by Category</div>
             {categoryData.length === 0 ? (
               <Empty description="No books added yet" />
@@ -268,10 +265,10 @@ const LibraryReports = () => {
           </div>
 
           {/* ── Top 10 borrowed ──────────────────────────────────────── */}
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Top Borrowed Books</div>
             <Table
-              className="report-tbl"
+              className="report-tbl data-table"
               rowKey="key"
               columns={[
                 { title: "#", render: (_, __, i) => <span style={{ fontWeight: 700, color: "var(--accent)" }}>{i + 1}</span>, width: 40 },

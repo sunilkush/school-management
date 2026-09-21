@@ -9,7 +9,7 @@ import {
   fetchAttendanceSheet, markHostelAttendance, fetchHostelAttendance,
 } from "../../features/hostelWardenSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { iconWell, pageWrapper, sectionPanel, statGrid, tableHeadCss } from "../../styles/pageStyles";
+import { iconWell, statGrid } from "../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -129,8 +129,7 @@ const HostelAttendance = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("attendance-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Hostel Attendance"
         subtitle="Mark daily attendance by session — morning, evening, night"
@@ -144,7 +143,7 @@ const HostelAttendance = () => {
       />
 
       {/* ── Controls ──────────────────────────────────────────── */}
-      <div style={{ ...sectionPanel, padding: "12px 18px", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", marginBottom: 20 }}>
+      <div className="section-panel" style={{ padding: "12px 18px", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", marginBottom: 20 }}>
         <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)} buttonStyle="solid">
           <Radio.Button value="mark">Mark Attendance</Radio.Button>
           <Radio.Button value="history">View History</Radio.Button>
@@ -169,7 +168,7 @@ const HostelAttendance = () => {
               { label: "Absent",  value: absentCount,  color: "var(--danger)" },
               { label: "On Leave",value: leaveCount,   color: "var(--warning)" },
             ].map(({ label, value, color }) => (
-              <div key={label} style={{ ...sectionPanel, marginBottom: 0, display: "flex", alignItems: "center", gap: 12, padding: "12px 16px" }}>
+              <div key={label} className="section-panel is-header-strip">
                 <div style={iconWell(color, 36)}><CheckCircleOutlined /></div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase" }}>{label}</div>
@@ -181,7 +180,7 @@ const HostelAttendance = () => {
 
           {/* ── Progress bar ─────────────────────────────────────── */}
           {total > 0 && (
-            <div style={{ ...sectionPanel, marginBottom: 20 }}>
+            <div className="section-panel" style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <span style={{ fontWeight: 700, fontSize: 13 }}>Attendance Rate — {date.format("DD MMM YYYY")} ({session})</span>
                 <span style={{ fontWeight: 700 }}>{attendancePct}%</span>
@@ -198,14 +197,14 @@ const HostelAttendance = () => {
             </div>
           )}
 
-          <div style={sectionPanel}>
+          <div className="section-panel">
             {attendanceLoading ? (
               <div style={{ textAlign: "center", padding: 40 }}><Spin size="large" /></div>
             ) : sheetStudents.length === 0 ? (
               <Empty description="No students allocated in hostel" />
             ) : (
               <Table
-                className="attendance-tbl"
+                className="attendance-tbl data-table"
                 rowKey="studentId"
                 columns={markColumns}
                 dataSource={sheetStudents}
@@ -217,12 +216,12 @@ const HostelAttendance = () => {
           </div>
         </>
       ) : (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           {attendanceLoading ? (
             <div style={{ textAlign: "center", padding: 40 }}><Spin size="large" /></div>
           ) : (
             <Table
-              className="attendance-tbl"
+              className="attendance-tbl data-table"
               rowKey="_id"
               columns={historyColumns}
               dataSource={attendanceRecords}

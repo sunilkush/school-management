@@ -4,7 +4,6 @@ import { DownloadOutlined, FileTextOutlined } from "@ant-design/icons";
 
 import PageHeader from "../../../components/layout/PageHeader";
 import ReportCardView from "../../../components/reportCard/ReportCardView";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 import { fetchMyReportCards, downloadReportCardPdf } from "../../../services/reportCardApi";
 
 export default function MyReportCards() {
@@ -19,7 +18,7 @@ export default function MyReportCards() {
   }, []);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Report Cards"
         subtitle="Consolidated results for each term, once your school publishes them."
@@ -27,9 +26,9 @@ export default function MyReportCards() {
       />
 
       {loading ? (
-        <div style={sectionPanel}><Skeleton active paragraph={{ rows: 6 }} /></div>
+        <div className="section-panel"><Skeleton active paragraph={{ rows: 6 }} /></div>
       ) : !cards.length ? (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Empty description="No report cards have been published for you yet" />
         </div>
       ) : (

@@ -15,9 +15,7 @@ import {
   createInquiry, updateInquiry, deleteInquiry,
 } from "../../../features/admissionInquirySlice.js";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import {
-  pageWrapper, sectionPanel, toolbarRow, tableHeadCss, pill, statGrid, iconWell,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const TABLE_CLS = "ai-tbl";
 
@@ -51,10 +49,7 @@ const STATUS_TABS = [
 
 /* ── Stat card ───────────────────────────────────────────────────── */
 const StatCard = ({ label, value, color }) => (
-  <div style={{
-    ...sectionPanel,
-    display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0,
-  }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 40)}>
       <UserAddOutlined style={{ fontSize: 18 }} />
     </div>
@@ -294,8 +289,7 @@ const AdmissionInquiry = () => {
   }));
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Admission Inquiries"
@@ -321,9 +315,9 @@ const AdmissionInquiry = () => {
       </div>
 
       {/* ── Table panel ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {/* Toolbar */}
-        <div style={toolbarRow}>
+        <div className="toolbar-row">
           <Input
             placeholder="Search by name / phone / email..."
             prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
@@ -343,7 +337,7 @@ const AdmissionInquiry = () => {
         />
 
         <Table
-          className={TABLE_CLS}
+          className={`${TABLE_CLS} data-table`}
           rowKey="_id"
           columns={columns}
           dataSource={inquiries}

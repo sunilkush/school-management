@@ -5,7 +5,7 @@ import { CarOutlined, EnvironmentOutlined, ReloadOutlined } from "@ant-design/ic
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell } from "../../../styles/pageStyles";
+import { iconWell } from "../../../styles/pageStyles";
 
 const ChildTransport = () => {
   const dispatch = useDispatch();
@@ -61,17 +61,17 @@ const ChildTransport = () => {
           </Space>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {loading ? (
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : !transport ? (
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <Empty description={selectedChildId ? "No transport assigned for this child" : "Select a child to view transport details"} />
           </div>
         ) : (
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
                   <div style={iconWell("var(--accent)", 40)}><CarOutlined /></div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Route Details</div>
@@ -94,7 +94,7 @@ const ChildTransport = () => {
             </Col>
 
             <Col xs={24} md={12}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
                   <div style={iconWell("var(--primary)", 40)}><EnvironmentOutlined /></div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Vehicle Details</div>

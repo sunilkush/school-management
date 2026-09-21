@@ -1,0 +1,192 @@
+// Colour, shadow and theme variables — light and dark
+// Moved out of index.css unchanged — see styles/main.scss.
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================
+   Root Variables / Theme
+========================= */
+:root {
+  color-scheme: light;
+
+  /* ── Brand Palette ── */
+  --primary:        #2563EB;
+  --primary-hover:  #1D4ED8;
+  --primary-light:  #DBEAFE;
+  --primary-light-rgb: rgba(219, 234, 254, 0.5);
+  --secondary:      #0F172A;
+  --secondary-light: rgba(15, 23, 42, 0.06);
+  --accent:         #14B8A6;
+  --accent-hover:   #0D9488;
+  --accent-light:   rgba(20, 184, 166, 0.12);
+
+  /* ── Semantic ── */
+  --success:        #22C55E;
+  --success-hover:  #15803D;
+  --success-light:  rgba(220, 252, 231, 0.6);
+  --warning:        #F59E0B;
+  --warning-hover:  #B45309;
+  --warning-light:  rgba(254, 243, 199, 0.6);
+  --danger:         #EF4444;
+  --danger-hover:   #DC2626;
+  --danger-light:   rgba(254, 226, 226, 0.6);
+  --info:           #3B82F6;
+  --info-light:     rgba(59, 130, 246, 0.1);
+  --orange:         #F97316;
+  --orange-light:   rgba(249, 115, 22, 0.12);
+  --purple:         #8B5CF6;
+  --purple-hover:   #6D28D9;
+  --cyan:           #06B6D4;
+  --cyan-hover:     #0E7490;
+  --cyan-light:     rgba(6, 182, 212, 0.12);
+  --pink:           #EC4899;
+  --pink-hover:     #BE185D;
+  --pink-light:     rgba(236, 72, 153, 0.12);
+
+  /* ── RGB triplets (no rgba() wrapper) — for custom-alpha tints:
+       background: rgba(var(--primary-rgb), 0.08) ── */
+  --primary-rgb:    37, 99, 235;
+  --accent-rgb:     20, 184, 166;
+  --success-rgb:    34, 197, 94;
+  --warning-rgb:    245, 158, 11;
+  --danger-rgb:     239, 68, 68;
+  --purple-rgb:     139, 92, 246;
+  --info-rgb:       59, 130, 246;
+  --orange-rgb:     249, 115, 22;
+  --cyan-rgb:       6, 182, 212;
+  --pink-rgb:       236, 72, 153;
+
+  /* ── Surfaces ── */
+  --dark-bg:        #020617;
+  --light-bg:       #F8FAFC;
+  --bg:             #F8FAFC;
+  --background:     #F8FAFC;
+  --surface:        #FFFFFF;
+  --surface-soft:   #F1F5F9;
+  --surface-soft-hover: #E2E8F0;
+  --surface-elevated: #FFFFFF;
+  --surface-page:   #F8FAFC;
+  --surface-header: #FFFFFF;
+  --surface-sidebar:#FFFFFF;
+  --cardBg:         #FFFFFF;
+  --card:           #FFFFFF;
+  --sidebar:        #FFFFFF;
+
+  /* ── Text ── */
+  --text:           #0F172A;
+  --text-primary:   #0F172A;
+  --text-secondary: #64748B;
+  --text-muted:     #94A3B8;
+  --textMuted:      #94A3B8;
+  --text-disabled:  #CBD5E1;
+
+  /* ── Borders (Soft UI — light; shadow carries separation) ── */
+  --border:         #E9EDF4;
+  --border-color:   #E9EDF4;
+  --border-muted:   #F3F5F9;
+  --divider:        #E9EDF4;
+
+  /* ── Shadows (Soft UI — diffuse, low-opacity, layered) ── */
+  --shadow-soft:    0 2px 6px rgba(17,24,39,0.04), 0 12px 32px rgba(17,24,39,0.06);
+  --shadow-strong:  0 6px 16px rgba(17,24,39,0.06), 0 24px 56px rgba(17,24,39,0.10);
+  --shadow-xl:      0 32px 80px rgba(17,24,39,0.16);
+  --shadow-primary: 0 8px 22px rgba(37, 99, 235, 0.28);
+  --shadow-inset:   inset 0 0 0 1px rgba(17,24,39,0.03);
+  --header-shadow:  0 4px 20px rgba(17,24,39,0.04);
+  --gradient-primary: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  --gradient-hero:    linear-gradient(135deg, #EFF6FF 0%, #F0FDFA 55%, #F8FAFC 100%);
+
+  /* ── Glass ── */
+  --glass-bg:       rgba(255, 255, 255, 0.82);
+  --glass-border:   rgba(226, 232, 240, 0.55);
+
+  /* ── Misc ── */
+  --logo:           none;
+  --hover:          #1D4ED8;
+  --radius-sm:      10px;
+  --radius-md:      14px;
+  --radius-lg:      18px;
+  --radius-xl:      26px;
+  --radius-pill:    999px;
+
+  /* ── The scale ──────────────────────────────────────────────────────────────
+     Pages were writing their own numbers: nine different corner radii, ten font
+     sizes, and gaps anywhere from 6 to 24, so two pages side by side never quite
+     matched. These are the only steps allowed from here on — reach for a token,
+     not a number.
+
+     Named --font-* and not --text-*, because --text is already a colour above and
+     --text-sm next to --text-muted would read as one family when it is two.
+  ────────────────────────────────────────────────────────────────────────────── */
+  --font-xs:        11px;   /* chips, table captions, meta lines   */
+  --font-sm:        12px;   /* labels, secondary text              */
+  --font-md:        13px;   /* dense body text, table cells        */
+  --font-base:      14px;   /* body                                */
+  --font-lg:        16px;   /* card titles                         */
+  --font-xl:        20px;   /* page titles                         */
+  --font-2xl:       24px;   /* headline figures                    */
+
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --space-1:        4px;
+  --space-2:        8px;
+  --space-3:        12px;
+  --space-4:        16px;
+  --space-5:        20px;
+  --space-6:        24px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg:             #0F172A;
+  --background:     #0F172A;
+  --surface:        #1E293B;
+  --surface-soft:   #1E293B;
+  --surface-soft-hover: #273549;
+  --surface-elevated: #1E293B;
+  --surface-page:   #0F172A;
+  --surface-header: #1E293B;
+  --surface-sidebar:#1E293B;
+  --cardBg:         #1E293B;
+  --card:           #1E293B;
+  --sidebar:        #1E293B;
+
+  --text:           #F8FAFC;
+  --text-primary:   #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted:     #64748B;
+  --textMuted:      #64748B;
+  --text-disabled:  #475569;
+
+  --border:         #2A3648;
+  --border-color:   #2A3648;
+  --border-muted:   #1E293B;
+  --divider:        #2A3648;
+
+  --shadow-soft:    0 2px 8px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.38);
+  --shadow-strong:  0 8px 20px rgba(0, 0, 0, 0.4), 0 28px 64px rgba(0, 0, 0, 0.55);
+  --shadow-xl:      0 32px 80px rgba(0, 0, 0, 0.7);
+  --shadow-primary: 0 8px 24px rgba(37, 99, 235, 0.4);
+  --shadow-inset:   inset 0 0 0 1px rgba(255,255,255,0.04);
+  --header-shadow:  0 4px 24px rgba(0, 0, 0, 0.3);
+  --gradient-hero:  linear-gradient(135deg, #12233F 0%, #10231F 55%, #0F172A 100%);
+
+  --glass-bg:       rgba(30, 41, 59, 0.82);
+  --glass-border:   rgba(51, 65, 85, 0.55);
+
+  --logo:           brightness(0) invert(1);
+  --primary-light:  rgba(37, 99, 235, 0.15);
+  --accent-light:   rgba(20, 184, 166, 0.15);
+  --success-light:  rgba(34, 197, 94, 0.15);
+  --warning-light:  rgba(245, 158, 11, 0.15);
+  --danger-light:   rgba(239, 68, 68, 0.15);
+  --info-light:     rgba(59, 130, 246, 0.15);
+  --orange-light:   rgba(249, 115, 22, 0.15);
+  --cyan-light:     rgba(6, 182, 212, 0.15);
+  --pink-light:     rgba(236, 72, 153, 0.15);
+}

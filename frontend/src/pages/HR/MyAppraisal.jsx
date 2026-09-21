@@ -5,7 +5,6 @@ import { TrophyOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { fetchMyReview, submitSelfAssessment } from "../../features/hrSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, sectionPanel } from "../../styles/pageStyles";
 
 const { TextArea } = Input;
 
@@ -56,7 +55,7 @@ const MyAppraisal = () => {
   }
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="My Appraisal"
         subtitle={myReview?.cycleId?.name || "Your review"}
@@ -64,7 +63,7 @@ const MyAppraisal = () => {
       />
 
       {!myReview ? (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="You have no appraisal open" />
           <p style={{ color: "var(--text-muted)", marginTop: 12 }}>
             One will appear here when the school starts its next review round.
@@ -72,7 +71,7 @@ const MyAppraisal = () => {
         </div>
       ) : (
         <>
-          <div style={{ ...sectionPanel, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>{myReview.cycleId?.name}</div>
               <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
@@ -93,7 +92,7 @@ const MyAppraisal = () => {
                 message={`${myReview.overallScore} / 5 — ${myReview.overallBand}`}
                 description={myReview.reviewerComment || "Your appraisal has been finalised."}
               />
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, marginBottom: 12 }}>How you were scored</div>
                 {(myReview.reviewerScores || []).map((s) => (
                   <div key={s.criterion} style={{ marginBottom: 10 }}>
@@ -106,7 +105,7 @@ const MyAppraisal = () => {
                 ))}
               </div>
               {myReview.goals?.length > 0 && (
-                <div style={sectionPanel}>
+                <div className="section-panel">
                   <div style={{ fontWeight: 700, marginBottom: 8 }}>Agreed goals</div>
                   <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, lineHeight: 1.8 }}>
                     {myReview.goals.map((g, i) => <li key={i}>{g}</li>)}
@@ -122,7 +121,7 @@ const MyAppraisal = () => {
                 description="Your reviewer scores the same criteria separately. Where the two differ is what the appraisal conversation is actually about — so this is not a form to talk yourself up on."
               />
 
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <Form form={form} layout="vertical">
                   <Form.List name="scores">
                     {(fields) => (

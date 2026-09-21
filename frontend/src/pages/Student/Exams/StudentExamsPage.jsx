@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { getExams, getStudentResults } from "../../../features/examSlice";
 import { getActiveAttemptByExam, getAttempts, startAttempt } from "../../../features/attemptSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { iconWell, pageWrapper, sectionPanel, statGrid } from "../../../styles/pageStyles";
+import { iconWell, statGrid } from "../../../styles/pageStyles";
 
 /* ── helpers ── */
 const getExamWindow = (exam, now = dayjs()) => {
@@ -314,7 +314,7 @@ const StudentExamsPage = () => {
   const handleReview = (attemptId) => navigate(`/dashboard/student/exams/attempt-review?attemptId=${attemptId}`);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Exam Hub"
         subtitle="View your schedule, start live exams, and check published results"
@@ -331,12 +331,7 @@ const StudentExamsPage = () => {
 
       {/* ── Next exam banner ── */}
       {nextExam && (
-        <div style={{
-          ...sectionPanel, marginTop: 0, padding: "12px 18px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          background: "linear-gradient(135deg, rgba(124,58,237,0.07), rgba(124,58,237,0.02))",
-          border: "1px solid rgba(124,58,237,0.2)", flexWrap: "wrap", gap: 8,
-        }}>
+        <div className="section-panel" style={{ marginTop: 0, padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "linear-gradient(135deg, rgba(124,58,237,0.07), rgba(124,58,237,0.02))", border: "1px solid rgba(124,58,237,0.2)", flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={iconWell("var(--primary)", 38)}><CalendarOutlined /></div>
             <div>
@@ -361,7 +356,7 @@ const StudentExamsPage = () => {
       )}
 
       {/* ── Exam Schedule ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={iconWell("var(--warning-hover)", 34)}><CalendarOutlined /></div>
@@ -403,7 +398,7 @@ const StudentExamsPage = () => {
       </div>
 
       {/* ── Published Results ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <div style={iconWell("var(--success-hover)", 34)}><TrophyOutlined /></div>
           <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Published Results</span>

@@ -1,0 +1,358 @@
+// The reusable pieces: cards, pills, panels, tables
+// Moved out of index.css unchanged — see styles/main.scss.
+
+/* =========================
+   Reusable Design System
+========================= */
+@layer components {
+  .class-page {
+    @apply min-h-screen p-4 md:p-6 lg:p-8;
+  }
+
+  .class-hero {
+    @apply rounded-3xl p-6 md:p-8 border;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(20, 184, 166, 0.06));
+    border-color: var(--border);
+  }
+
+  .class-grid-layout {
+    @apply grid gap-4 md:gap-6;
+  }
+
+  .class-card {
+    @apply rounded-2xl border p-4 md:p-6 transition-all duration-300;
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: var(--shadow-soft);
+    border-radius: 16px;
+  }
+
+  .class-card-hover {
+    @apply hover:-translate-y-1;
+    box-shadow: var(--shadow-strong);
+  }
+
+  .class-stat-card {
+    @apply class-card flex items-center justify-between;
+  }
+
+  .class-section-box {
+    @apply class-card;
+    background: linear-gradient(180deg, var(--surface), var(--surface-soft));
+  }
+
+  .class-search {
+    @apply w-full rounded-xl border px-4 py-2 text-sm;
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .class-input {
+    @apply w-full rounded-xl border px-3 py-2;
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .class-table {
+    @apply w-full rounded-2xl overflow-hidden border;
+    border-color: var(--border);
+  }
+
+  .class-modal {
+    @apply rounded-2xl border p-5;
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .class-glass,
+  .glass-effect {
+    @apply border backdrop-blur-xl;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+  }
+
+  .class-gradient-button,
+  .class-gradient-btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold text-white transition-all duration-300;
+    background: linear-gradient(135deg, #2563EB, #14B8A6);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+  }
+
+  .class-gradient-button:hover,
+  .class-gradient-btn:hover {
+    background: linear-gradient(135deg, #1D4ED8, #0D9488);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.38);
+    transform: translateY(-1px);
+  }
+
+  .class-button {
+    @apply inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-300;
+  }
+
+  .class-button-outline {
+    @apply border;
+    border-color: var(--border);
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .class-button-ghost {
+    @apply text-sm;
+    color: var(--text-muted);
+  }
+
+  .class-button-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .class-button-md {
+    @apply px-4 py-2 text-sm md:text-base;
+  }
+
+  .class-button-lg {
+    @apply px-5 py-2.5 text-base;
+  }
+
+  .class-subject-chip {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--primary);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+  }
+
+  .class-card-content {
+    @apply p-4 md:p-5;
+  }
+
+  .support-page-shell {
+    @apply min-h-screen p-6;
+    background: #f5f6fa;
+  }
+
+  .support-page-header {
+    @apply mb-5 flex items-center justify-between;
+  }
+
+  .support-filter-card {
+    @apply mb-5;
+  }
+
+  .support-search-width {
+    width: 250px;
+  }
+
+  .support-select-width {
+    width: 160px;
+  }
+
+  .support-info-card {
+    margin-bottom: 16px;
+  }
+
+  .docs-layout-shell {
+    min-height: 100vh;
+    background: #f5f6fa;
+  }
+
+  .docs-sider {
+    background: #fff;
+    padding: 16px;
+  }
+
+  .docs-search {
+    margin-bottom: 16px;
+  }
+
+  .docs-content {
+    padding: 24px;
+  }
+
+  .docs-main-card {
+    border-radius: 12px;
+  }
+
+  .docs-role-section {
+    margin-bottom: 16px;
+  }
+
+  .docs-extra {
+    margin-top: 30px;
+  }
+
+  .role-workspace-loader {
+    min-height: 60vh;
+  }
+
+  .role-workspace-title {
+    margin-bottom: 8px !important;
+  }
+
+  .auth-shell {
+    @apply min-h-screen flex items-center justify-center px-4;
+    background: var(--bg);
+  }
+
+  .auth-card {
+    width: 400px;
+    border-radius: 20px !important;
+    border: 1px solid rgba(167,199,231,.28) !important;
+    box-shadow: var(--shadow-soft) !important;
+  }
+
+  .auth-card-wide {
+    width: 420px;
+  }
+
+  .auth-header {
+    @apply text-center mb-5;
+  }
+
+  .auth-footer {
+    @apply text-center mt-2.5;
+  }
+
+  .auth-title {
+    color: var(--text) !important;
+  }
+
+  .auth-text {
+    color: var(--text-muted) !important;
+  }
+
+  .verify-card {
+    text-align: center;
+  }
+
+  .verify-spin-copy {
+    margin-top: 16px;
+  }
+
+  .success-icon {
+    color: #22C55E !important;
+  }
+
+  .page-center-shell {
+    @apply min-h-screen grid place-items-center p-4;
+    background: var(--bg);
+  }
+
+  .page-center-shell-flex {
+    @apply min-h-screen flex items-center justify-center p-5;
+    background: var(--bg);
+  }
+
+  .center-card-md {
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+    border-radius: 16px !important;
+  }
+
+  .center-card-sm {
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .title-no-margin {
+    margin: 0 !important;
+  }
+
+  .warning-icon-lg {
+    font-size: 40px;
+    color: #F59E0B;
+  }
+
+  .btn-top-gap {
+    margin-top: 12px;
+  }
+
+  .page-stack {
+    width: 100%;
+  }
+
+  .page-title-tight {
+    margin: 0 !important;
+  }
+
+  .page-title-subtight {
+    margin-bottom: 4px !important;
+  }
+
+  .search-input-lg {
+    width: 290px;
+  }
+
+  .search-input-md {
+    width: 280px;
+  }
+
+  .filter-select-sm {
+    width: 180px;
+  }
+
+  .table-loading-wrap {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .drawer-stack {
+    width: 100%;
+  }
+
+  .record-id-text {
+    font-size: 12px;
+  }
+
+  .json-preview {
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .table-row-clickable {
+    cursor: pointer;
+  }
+
+  .fade-up {
+    animation: fadeUp .45s ease-out both;
+  }
+
+  .animate-float {
+    animation: float 3.4s ease-in-out infinite;
+  }
+
+  .scale-hover {
+    @apply transition-transform duration-300 hover:scale-[1.02];
+  }
+
+  .glow-hover {
+    @apply transition-shadow duration-300;
+    box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+  }
+
+  .glow-hover:hover {
+    box-shadow: 0 0 24px rgba(37, 99, 235, 0.25);
+  }
+
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #2563EB, #14B8A6);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+.avatar {
+  @apply size-8 rounded-full object-cover text-center;
+  background-color: #e2e8f0;
+}

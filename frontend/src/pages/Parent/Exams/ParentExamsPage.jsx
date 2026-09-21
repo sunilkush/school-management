@@ -12,10 +12,7 @@ import { getExams, getParentResults } from "../../../features/examSlice";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import { getAccessToken } from "../../../api/authToken";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel,
-  statCard, statLabel, statValue, statGrid,
-} from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const STAT_COLORS = ["var(--accent)", "var(--success)", "var(--danger)", "var(--primary)"];
 
@@ -138,8 +135,8 @@ const ParentExamsPage = () => {
     return (
       <>
         <PageHeader title="Child Exam Hub" subtitle="Monitor exam schedules and results." icon={<TrophyOutlined />} />
-        <div style={pageWrapper}>
-          <div style={sectionPanel}><Empty description="No linked children found for this parent account" /></div>
+        <div className="page-wrapper">
+          <div className="section-panel"><Empty description="No linked children found for this parent account" /></div>
         </div>
       </>
     );
@@ -166,14 +163,10 @@ const ParentExamsPage = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* Next exam notice */}
         {nextExam && (
-          <div style={{
-            ...sectionPanel,
-            display: "flex", alignItems: "center", gap: 10,
-            background: "var(--primary-light)", borderColor: "var(--primary-light)",
-          }}>
+          <div className="section-panel" style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--primary-light)", borderColor: "var(--primary-light)" }}>
             <CalendarOutlined style={{ color: "var(--primary)", fontSize: 18 }} />
             <span>
               <span style={{ fontWeight: 700, color: "var(--primary-hover)" }}>Next Exam: </span>
@@ -198,7 +191,7 @@ const ParentExamsPage = () => {
         </div>
 
         {/* Performance trend */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>
             Overall Performance
           </div>
@@ -221,7 +214,7 @@ const ParentExamsPage = () => {
         )}
 
         {/* Exam Schedule */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Exam Schedule</span>
             <Segmented
@@ -286,7 +279,7 @@ const ParentExamsPage = () => {
         </div>
 
         {/* Published Results */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 16 }}>
             Published Results
           </div>

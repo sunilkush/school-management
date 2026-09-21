@@ -13,7 +13,6 @@ import {
 import { getBoards } from "../../../features/boardSlice.js";
 import { fetchAllClasses } from "../../../features/classSlice.js";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../../styles/pageStyles";
 
 /**
  * Board Classes — which classes each exam board runs.
@@ -143,7 +142,7 @@ export default function BoardClassPage() {
   };
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Board Classes"
         subtitle="Which classes each exam board runs"
@@ -165,10 +164,10 @@ export default function BoardClassPage() {
       />
 
       {!board ? (
-        <div style={sectionPanel}><Empty description="Pick a board to see the classes it runs" /></div>
+        <div className="section-panel"><Empty description="Pick a board to see the classes it runs" /></div>
       ) : (
         <>
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
               <div style={{ flex: "1 1 220px" }}>
                 <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>
@@ -241,7 +240,7 @@ export default function BoardClassPage() {
           </div>
 
           {/* ── what this board is missing ── */}
-          <div style={sectionPanel}>
+          <div className="section-panel">
             {label(`Not added to ${board.name} yet`)}
             {missing.length === 0 ? (
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
@@ -280,7 +279,7 @@ export default function BoardClassPage() {
           </div>
 
           {/* ── how the other boards stand ── */}
-          <div style={sectionPanel}>
+          <div className="section-panel">
             {label("Every board")}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
               {boardList.map((b) => {

@@ -1,5 +1,4 @@
 import React from "react";
-import { toolbarRow } from "../../styles/pageStyles";
 
 /**
  * ListToolbar — standardised wrapper for a list page's search/filter row.
@@ -13,10 +12,10 @@ import { toolbarRow } from "../../styles/pageStyles";
  *  right     ReactNode — optional right-aligned content (counter, button, ...)
  *  style     object    — merged onto the outer container
  *  className string    — optional extra class (e.g. "page-toolbar" for the global
- *                         mobile flex-wrap rules some pages rely on — see index.css)
+ *                         mobile flex-wrap rules some pages rely on — see styles/main.scss)
  */
 const ListToolbar = ({ children, right, style, className }) => (
-  <div className={className} style={{ ...toolbarRow, ...style }}>
+  <div className={className} className="toolbar-row" style={{ ...style }}>
     {children}
     {right && <span style={{ marginLeft: "auto" }}>{right}</span>}
   </div>

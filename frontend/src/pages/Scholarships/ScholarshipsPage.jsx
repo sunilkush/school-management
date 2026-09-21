@@ -16,7 +16,7 @@ import {
 import { fetchAllStudent } from "../../features/studentSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import StatCardsRow from "../../components/layout/StatCardsRow";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { TextArea } = Input;
 
@@ -289,8 +289,7 @@ const ScholarshipsPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("sch-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Scholarships & Concessions"
@@ -335,17 +334,17 @@ const ScholarshipsPage = () => {
             label: pendingCount ? `Concessions (${pendingCount} awaiting)` : "Concessions",
             children: (
               <>
-                <div style={{ ...sectionPanel, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <div className="section-panel" style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                   <Select
                     allowClear placeholder="All statuses" style={{ width: 190 }}
                     value={statusFilter} onChange={setStatusFilter}
                     options={["pending", "approved", "rejected", "revoked"].map((s) => ({ value: s, label: s }))}
                   />
                 </div>
-                <div style={sectionPanel}>
-                  <div style={tableContainer}>
+                <div className="section-panel">
+                  <div className="table-container">
                     <Table
-                      className="sch-table" rowKey="_id" size="middle" loading={awardsLoading}
+                      className="sch-table data-table" rowKey="_id" size="middle" loading={awardsLoading}
                       columns={awardColumns} dataSource={awards}
                       pagination={{ pageSize: 20, showSizeChanger: false }}
                       locale={{ emptyText: "No concessions recorded yet" }}
@@ -359,7 +358,7 @@ const ScholarshipsPage = () => {
             key: "schemes",
             label: "Schemes",
             children: (
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                   <div style={{ fontWeight: 700 }}>What the school offers</div>
                   <Button icon={<PlusOutlined />} onClick={() => openSchemeModal()}>New scheme</Button>
@@ -367,7 +366,7 @@ const ScholarshipsPage = () => {
                 {schemesLoading && !schemes?.length ? (
                   <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
                 ) : !schemes?.length ? (
-                  <div style={emptyState}>
+                  <div className="empty-state">
                     <Empty description="No schemes yet" />
                     <p style={{ color: "var(--text-muted)", maxWidth: 480, margin: "12px auto" }}>
                       A scheme is the reusable definition — &ldquo;Staff Ward 50%&rdquo;, &ldquo;Sibling 10%&rdquo;.
@@ -376,8 +375,8 @@ const ScholarshipsPage = () => {
                     <Button type="primary" icon={<PlusOutlined />} onClick={() => openSchemeModal()}>Create one</Button>
                   </div>
                 ) : (
-                  <div style={tableContainer}>
-                    <Table className="sch-table" rowKey="_id" size="middle" pagination={false}
+                  <div className="table-container">
+                    <Table className="sch-table data-table" rowKey="_id" size="middle" pagination={false}
                            columns={schemeColumns} dataSource={schemes} />
                   </div>
                 )}
@@ -391,7 +390,7 @@ const ScholarshipsPage = () => {
               <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
             ) : (
               <>
-                <div style={{ ...sectionPanel, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                   <div>
                     <div style={{ fontSize: 24, fontWeight: 800 }}>{money(report?.totalWaived)}</div>
                     <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{report?.note}</div>
@@ -399,11 +398,11 @@ const ScholarshipsPage = () => {
                   <Button loading={actionLoading} onClick={costThem}>Recalculate from the bills</Button>
                 </div>
 
-                <div style={sectionPanel}>
+                <div className="section-panel">
                   <div style={{ fontWeight: 700, marginBottom: 12 }}>By scheme</div>
-                  <div style={tableContainer}>
+                  <div className="table-container">
                     <Table
-                      className="sch-table" rowKey="schemeId" size="middle" pagination={false}
+                      className="sch-table data-table" rowKey="schemeId" size="middle" pagination={false}
                       dataSource={report?.schemes || []}
                       locale={{ emptyText: "Nothing awarded yet" }}
                       columns={[
@@ -417,11 +416,11 @@ const ScholarshipsPage = () => {
                   </div>
                 </div>
 
-                <div style={sectionPanel}>
+                <div className="section-panel">
                   <div style={{ fontWeight: 700, marginBottom: 12 }}>By category</div>
-                  <div style={tableContainer}>
+                  <div className="table-container">
                     <Table
-                      className="sch-table" rowKey="category" size="middle" pagination={false}
+                      className="sch-table data-table" rowKey="category" size="middle" pagination={false}
                       dataSource={report?.byCategory || []}
                       locale={{ emptyText: "Nothing awarded yet" }}
                       columns={[

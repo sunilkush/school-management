@@ -11,7 +11,7 @@ import {
 import { getParentResults } from "../../../features/examSlice";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const STAT_COLORS = ["var(--accent)", "var(--success)", "var(--danger)", "var(--warning)"];
 
@@ -98,7 +98,7 @@ const ChildGrades = () => {
           </Space>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* Stats */}
         <div className="stat-grid" style={statGrid(160)}>
           {statMeta.map(({ key, label, icon, value }, i) => (
@@ -116,7 +116,7 @@ const ChildGrades = () => {
         {chartData.length > 0 && (
           <Row gutter={[16, 16]}>
             <Col xs={24}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
                   Exam Performance
                 </div>
@@ -136,7 +136,7 @@ const ChildGrades = () => {
         )}
 
         {/* Exam Collapse */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           {!selectedChildId ? (
             <Empty description="Select a child to view grades" />
           ) : error && !results.length ? (

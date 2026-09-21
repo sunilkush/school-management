@@ -37,13 +37,7 @@ import {
 import { fetchMonthlyReport } from "../../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import PageHeader              from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-  sectionPanel,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const TABLE_CLS = "analytics-tbl";
 const MONTHS    = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -239,8 +233,7 @@ const AttendanceAnalytics = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Attendance Analytics"
@@ -259,7 +252,7 @@ const AttendanceAnalytics = () => {
       />
 
       {/* ── Filters ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div
           style={{
             display: "grid",
@@ -718,7 +711,7 @@ const AttendanceAnalytics = () => {
 
           {chronicAbsentees.length > 0 ? (
             <Table
-              className={TABLE_CLS}
+              className={`${TABLE_CLS} data-table`}
               rowKey={(r) => r.userId || r.name}
               columns={absenteeColumns}
               dataSource={chronicAbsentees}

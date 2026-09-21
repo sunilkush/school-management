@@ -40,15 +40,7 @@ import ExamPageHeader from "../../../components/exams/ExamPageHeader";
 import ExamStatCards from "../../../components/exams/ExamStatCards";
 import { getExamRouteConfig } from "../../../utils/examRoutes";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  pageCard,
-  tableHeadCss,
-  statCard,
-  statLabel,
-  statValue,
-  statGrid,
-} from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 
@@ -266,8 +258,7 @@ const ExamsPage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("exam-table")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Exam Operations"
         subtitle="Manage exam lifecycle, publishing, and performance from one workspace."
@@ -338,9 +329,9 @@ const ExamsPage = () => {
           ))}
         </div>
 
-        <div style={pageCard}>
+        <div className="page-card">
           <Table
-            className="exam-table"
+            className="exam-table data-table"
             loading={loading}
             columns={columns}
             dataSource={exams}

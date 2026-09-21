@@ -1,6 +1,6 @@
 import { Empty, Table, Tag, Typography } from "antd";
 
-import { pill, sectionPanel } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { Text, Title } = Typography;
 
@@ -68,7 +68,7 @@ export default function ReportCardView({ card, showStudent = false }) {
 
   return (
     <div>
-      <div style={{ ...sectionPanel, marginBottom: 16 }}>
+      <div className="section-panel" style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             {showStudent && (
@@ -107,7 +107,7 @@ export default function ReportCardView({ card, showStudent = false }) {
       />
 
       {(card.coScholastic || []).some((c) => c.area) && (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Text strong>Co-scholastic areas</Text>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, marginTop: 12 }}>
             {card.coScholastic.map((entry) => (
@@ -121,7 +121,7 @@ export default function ReportCardView({ card, showStudent = false }) {
       )}
 
       {options.showRemarks !== false && card.classTeacherRemarks && (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Text strong>Class teacher's remarks</Text>
           <p style={{ margin: "8px 0 0", fontStyle: "italic", color: "var(--text-secondary)" }}>
             {card.classTeacherRemarks}

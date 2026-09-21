@@ -7,7 +7,6 @@ import {
   UploadOutlined, CloudUploadOutlined, DownloadOutlined,
   DeleteOutlined, CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined,
 } from "@ant-design/icons";
-import { pageCard } from "../../styles/pageStyles";
 
 const COLUMNS = [
   { key: "name",         label: "name",         required: true,  hint: "Student's full name" },
@@ -175,7 +174,7 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ ...pageCard, padding: 16 }}>
+      <div className="page-card" style={{ padding: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, gap: 12 }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Excel Template Download Karein</div>
@@ -202,7 +201,7 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
         </div>
       </div>
 
-      <div style={{ ...pageCard, padding: 20 }}>
+      <div className="page-card" style={{ padding: 20 }}>
         {!rows.length && !bulkImportResult && (
           <Upload beforeUpload={handleFile} accept=".xlsx,.xls" maxCount={1} showUploadList={false}>
             <Button icon={<UploadOutlined />} size="large" block>Excel File Select Karein (.xlsx / .xls)</Button>

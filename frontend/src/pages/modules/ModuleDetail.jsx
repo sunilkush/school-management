@@ -10,7 +10,7 @@ import {
 import { useSelector } from "react-redux";
 import { ERP_MODULES } from "../../utils/moduleRegistry";
 import PageHeader from "../../components/layout/PageHeader.jsx";
-import { pageWrapper, sectionPanel, iconWell } from "../../styles/pageStyles.js";
+import { iconWell } from "../../styles/pageStyles.js";
 import { categoricalColorFor } from "../../utils/colorPalette.js";
 
 const { Text } = Typography;
@@ -322,8 +322,8 @@ const ModuleDetail = () => {
             </Button>
           }
         />
-        <div style={pageWrapper}>
-          <div style={{ ...sectionPanel, textAlign: "center", padding: "56px 24px" }}>
+        <div className="page-wrapper">
+          <div className="section-panel" style={{ textAlign: "center", padding: "56px 24px" }}>
             <Empty description="Module not found. Please check the URL or contact your administrator." />
           </div>
         </div>
@@ -344,7 +344,7 @@ const ModuleDetail = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* ── Hero Banner ── */}
         <div style={{
           borderRadius: 16,
@@ -411,7 +411,7 @@ const ModuleDetail = () => {
         <Row gutter={[16, 16]}>
           {/* Quick Access Actions */}
           <Col xs={24} lg={quickActions.length > 0 ? 15 : 24}>
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <Flex align="center" gap={10} style={{ marginBottom: 18 }}>
                 <div style={iconWell(meta.color, 36)}>
                   <ThunderboltOutlined style={{ fontSize: 15 }} />
@@ -486,7 +486,7 @@ const ModuleDetail = () => {
           {/* Module Features */}
           {features.length > 0 && (
             <Col xs={24} lg={9}>
-              <div style={{ ...sectionPanel, height: "100%" }}>
+              <div className="section-panel" style={{ height: "100%" }}>
                 <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
                   <div style={iconWell(meta.color, 36)}>
                     <CheckOutlined style={{ fontSize: 14 }} />
@@ -524,7 +524,7 @@ const ModuleDetail = () => {
         </Row>
 
         {/* ── Footer navigation ── */}
-        <div style={{ ...sectionPanel, marginTop: 4, padding: "14px 20px" }}>
+        <div className="section-panel" style={{ marginTop: 4, padding: "14px 20px" }}>
           <Flex align="center" justify="space-between" wrap="wrap" gap={10}>
             <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
               Viewing{" "}

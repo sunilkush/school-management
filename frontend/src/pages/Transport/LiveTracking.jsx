@@ -5,7 +5,7 @@ import { EnvironmentOutlined, ReloadOutlined, WarningOutlined } from "@ant-desig
 import { fetchLiveTrips, fetchTripTrail, clearTrail } from "../../features/busTrackingSlice";
 import BusMap from "../../components/transport/BusMap";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 /** How often the office view re-reads positions. Ten seconds is about as fast as the data itself
  *  changes; anything quicker is load with nothing new to show. */
@@ -80,8 +80,7 @@ const LiveTracking = () => {
   const selected = (liveTrips || []).find((t) => t.tripId === selectedId);
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("live-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Live Bus Tracking"
@@ -111,7 +110,7 @@ const LiveTracking = () => {
       {liveLoading && !liveTrips?.length ? (
         <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
       ) : !liveTrips?.length ? (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="No bus is running at the moment" />
           <p style={{ color: "var(--text-muted)", marginTop: 12 }}>
             A trip appears here as soon as a driver starts their run.
@@ -120,10 +119,10 @@ const LiveTracking = () => {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 420px) 1fr", gap: 20, alignItems: "start" }}
              className="live-track-grid">
-          <div style={sectionPanel}>
-            <div style={tableContainer}>
+          <div className="section-panel">
+            <div className="table-container">
               <Table
-                className="live-table"
+                className="live-table data-table"
                 rowKey="tripId"
                 size="middle"
                 pagination={false}
@@ -135,7 +134,7 @@ const LiveTracking = () => {
             </div>
           </div>
 
-          <div style={sectionPanel}>
+          <div className="section-panel">
             {selected && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{selected.routeName || "Route"}</div>

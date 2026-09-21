@@ -8,7 +8,6 @@ import {
   DownloadOutlined, DeleteOutlined, CheckCircleOutlined,
   InfoCircleOutlined,
 } from "@ant-design/icons";
-import { pageCard } from "../../../styles/pageStyles";
 
 /* ── Excel column spec shown to users ── */
 const COLUMNS = [
@@ -415,7 +414,7 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, academicYearId, classOptions
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
       {/* ── Format guide ── */}
-      <div style={{ ...pageCard, padding: 16 }}>
+      <div className="page-card" style={{ padding: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, gap: 12 }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
@@ -473,7 +472,7 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, academicYearId, classOptions
       </div>
 
       {/* ── Upload area ── */}
-      <div style={{ ...pageCard, padding: 20 }}>
+      <div className="page-card" style={{ padding: 20 }}>
         {done ? (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <CheckCircleOutlined style={{ fontSize: 40, color: "var(--success)", display: "block", marginBottom: 10 }} />

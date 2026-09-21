@@ -13,9 +13,8 @@ import {
 } from "../../../features/attendanceSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import GeofenceMap from "../../../components/maps/GeofenceMap";
-import { pageWrapper } from "../../../styles/pageStyles";
 
-// Shared design tokens (frontend/src/index.css) — replaces a local hardcoded
+// Shared design tokens (frontend/src/styles/main.scss) — replaces a local hardcoded
 // hex palette that never adapted to dark mode.
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-light)",
@@ -138,7 +137,7 @@ const GeofenceSettings = () => {
   const summary = liveDashboard?.summary;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Geofence Settings"
         subtitle="Configure school GPS location and employee check-in geofence radius"

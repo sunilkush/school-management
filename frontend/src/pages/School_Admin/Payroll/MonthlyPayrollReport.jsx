@@ -10,9 +10,7 @@ import {
 import { usePayrollCycle, useMonthlyPayrollReport } from "../../../hooks/payrollHooks";
 import MonthlyPayrollReportCards from "../../../components/payroll/MonthlyPayrollReportCards";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  iconWell, pageCard, pageWrapper, sectionPanel, tableHeadCss,
-} from "../../../styles/pageStyles";
+import { iconWell } from "../../../styles/pageStyles";
 import { formatCurrencyINR } from "../../../utils/payroll";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
@@ -139,8 +137,7 @@ const MonthlyPayrollReport = () => {
   ], [totalNetPay]);
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("payroll-report-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Monthly Payroll Report"
@@ -164,11 +161,7 @@ const MonthlyPayrollReport = () => {
       />
 
       {/* ── Toolbar ───────────────────────────────────────────────── */}
-      <div style={{
-        ...sectionPanel, marginBottom: 16,
-        padding: "14px 20px",
-        display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
-      }}>
+      <div className="section-panel" style={{ marginBottom: 16, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div style={iconWell("var(--purple)", 32)}><BarChartOutlined style={{ fontSize: 14 }} /></div>
         <div style={{ flex: 1 }}>
           <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
@@ -188,10 +181,7 @@ const MonthlyPayrollReport = () => {
 
       {/* ── Empty state ─────────────────────────────────────────── */}
       {isEmpty ? (
-        <div style={{
-          ...sectionPanel,
-          textAlign: "center", padding: "56px 24px",
-        }}>
+        <div className="section-panel" style={{ textAlign: "center", padding: "56px 24px" }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>📊</div>
           <Text strong style={{ fontSize: 16, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
             No Report for {selectedMonth.format("MMMM YYYY")}
@@ -224,7 +214,7 @@ const MonthlyPayrollReport = () => {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 16, alignItems: "start" }}>
 
             {/* Bar chart */}
-            <div style={{ ...pageCard, padding: 0, overflow: "hidden" }}>
+            <div className="page-card is-flush">
               <div style={{
                 padding: "14px 20px", borderBottom: "1px solid var(--border-muted)",
                 display: "flex", alignItems: "center", gap: 10,
@@ -275,7 +265,7 @@ const MonthlyPayrollReport = () => {
             </div>
 
             {/* Department table */}
-            <div style={{ ...pageCard, padding: 0, overflow: "hidden" }}>
+            <div className="page-card is-flush">
               <div style={{
                 padding: "14px 20px", borderBottom: "1px solid var(--border-muted)",
                 display: "flex", alignItems: "center", gap: 10,
@@ -291,7 +281,7 @@ const MonthlyPayrollReport = () => {
                 </div>
               </div>
               <Table
-                className="payroll-report-tbl"
+                className="payroll-report-tbl data-table"
                 rowKey="department"
                 dataSource={deptRows}
                 loading={loading}

@@ -33,12 +33,7 @@ import {
 } from "../../../features/attendanceSlice";
 import StatusTag from "../../../components/attendance/StatusTag";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const TABLE_CLS = "my-att-tbl";
 
@@ -203,8 +198,7 @@ const MyAttendancePage = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="My Attendance"
@@ -465,7 +459,7 @@ const MyAttendancePage = () => {
           </div>
 
           <Table
-            className={TABLE_CLS}
+            className={`${TABLE_CLS} data-table`}
             rowKey="_id"
             dataSource={myAttendance}
             columns={columns}

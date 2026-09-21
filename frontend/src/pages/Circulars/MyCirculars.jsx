@@ -5,7 +5,7 @@ import { FileTextOutlined, PushpinOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { acknowledgeCircular, fetchCircular, fetchMyCirculars, clearCurrent } from "../../features/circularSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { TextArea } = Input;
 
@@ -51,7 +51,7 @@ const MyCirculars = () => {
   const card = (c) => (
     <div
       key={c._id}
-      style={{ ...sectionPanel, cursor: "pointer", borderColor: c.needsAcknowledgement ? "var(--warning)" : "var(--border-muted)" }}
+      className="section-panel" style={{ cursor: "pointer", borderColor: c.needsAcknowledgement ? "var(--warning)" : "var(--border-muted)" }}
       onClick={() => open(c)}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
@@ -85,7 +85,7 @@ const MyCirculars = () => {
   );
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Circulars"
         subtitle="Notices from the school"
@@ -99,7 +99,7 @@ const MyCirculars = () => {
       {mineLoading && !mine?.length ? (
         <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
       ) : !mine?.length ? (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="Nothing from the school yet" />
         </div>
       ) : (
@@ -168,7 +168,7 @@ const MyCirculars = () => {
             )}
 
             {current.requiresAcknowledgement && !current.acknowledgedAt && (
-              <div style={{ ...sectionPanel, marginTop: 20, marginBottom: 0, borderColor: "var(--warning)" }}>
+              <div className="section-panel" style={{ marginTop: 20, marginBottom: 0, borderColor: "var(--warning)" }}>
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>
                   Pressing the button below records: &ldquo;{current.acknowledgementText}&rdquo;
                 </div>

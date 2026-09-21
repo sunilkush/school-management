@@ -30,20 +30,14 @@ import dayjs from "dayjs";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  sectionPanel,
-  statGrid,
-  iconWell,
-  toolbarRow,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const { Text } = Typography;
 
 const statusColors = { active: "green", overdue: "red" };
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -365,7 +359,7 @@ const Assignments = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Assignments"
         subtitle="Create and manage assignments for your classes"
@@ -383,8 +377,8 @@ const Assignments = () => {
         <StatCard icon={<FileTextOutlined />} label="Overdue" value={stats.overdue} color="var(--danger)" />
       </div>
 
-      <div style={{ ...sectionPanel, marginTop: 0 }}>
-        <div style={toolbarRow}>
+      <div className="section-panel" style={{ marginTop: 0 }}>
+        <div className="toolbar-row">
           <Select
             placeholder="Class" style={{ width: 140 }} allowClear value={selectedClassKey}
             onChange={(v) => { setSelectedClassKey(v); setSelectedSectionName(undefined); }}

@@ -12,15 +12,12 @@ import { fetchSchoolReports } from "../../../features/reportSlice";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  toolbarRow, tableContainer, tableHeadCss, avatarStyle, modalTitle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, avatarStyle, modalTitle } from "../../../styles/pageStyles";
 
 const formatCurrency = (n = 0) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 const StatCard = ({ icon, label, value, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", marginBottom: 0 }}>
+  <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
@@ -218,7 +215,7 @@ const SchoolWiseReports = () => {
   const summary = schoolReports?.summary;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="School Wise Reports"
         subtitle="Compare every school side by side on status, attendance and revenue"
@@ -240,10 +237,9 @@ const SchoolWiseReports = () => {
         <StatCard icon={<ScheduleOutlined />} label="Avg. Attendance Today" value={`${stats.avgAttendance}%`} color="var(--accent)" />
       </div>
 
-      <style>{tableHeadCss("school-wise-tbl")}</style>
 
-      <div style={sectionPanel}>
-        <div style={toolbarRow}>
+      <div className="section-panel">
+        <div className="toolbar-row">
           <Input
             allowClear
             prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
@@ -265,7 +261,7 @@ const SchoolWiseReports = () => {
           </span>
         </div>
 
-        <div className="school-wise-tbl" style={tableContainer}>
+        <div className="school-wise-tbl table-container">
           <Table
             columns={columns}
             dataSource={filteredRows}
@@ -290,7 +286,7 @@ const SchoolWiseReports = () => {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {/* School info */}
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <EnvironmentOutlined style={{ color: "var(--text-muted)" }} />
                 <span style={{ color: "var(--text-primary)" }}>{reportSchool?.address || "No address provided"}</span>
@@ -323,7 +319,7 @@ const SchoolWiseReports = () => {
             )}
 
             {/* Attendance + Finance */}
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>Today's Attendance</div>
               {reportAttendance ? (
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -337,7 +333,7 @@ const SchoolWiseReports = () => {
               )}
             </div>
 
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>
                 Revenue — FY {reportYear}-{String((reportYear || 0) + 1).slice(-2)}
               </div>

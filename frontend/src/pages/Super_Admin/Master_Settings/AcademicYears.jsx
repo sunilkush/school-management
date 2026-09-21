@@ -12,7 +12,7 @@ import apiClient from "../../../api/httpClient";
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchActiveAcademicYear, setSelectedAcademicYear } from "../../../features/academicYearSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { modalTitle, pageWrapper, sectionPanel } from "../../../styles/pageStyles";
+import { modalTitle } from "../../../styles/pageStyles";
 
 /**
  * Academic Years — a school's sessions, which one is running, and the next one.
@@ -81,7 +81,7 @@ const RunningYear = ({ year, onPlanNext }) => {
   const left = end.diff(today, "day");
 
   return (
-    <div style={{ ...sectionPanel, borderLeft: `4px solid ${ended ? "var(--warning)" : "var(--success)"}` }}>
+    <div className="section-panel" style={{ borderLeft: `4px solid ${ended ? "var(--warning)" : "var(--success)"}` }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
         <div style={{ flex: "1 1 260px" }}>
           <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--success-hover)" }}>
@@ -333,7 +333,7 @@ const AcademicYearPage = () => {
   const presets = useMemo(() => presetsAfter(sorted), [sorted]);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Academic Years"
         subtitle="A school's sessions — which one is running, and the next one to set up"
@@ -359,11 +359,11 @@ const AcademicYearPage = () => {
       />
 
       {!schoolId ? (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Empty description={isSuperAdmin ? "Pick a school at the top to see its academic years" : "Your account is not linked to a school"} />
         </div>
       ) : loading && !years.length ? (
-        <div style={sectionPanel}><Skeleton active paragraph={{ rows: 4 }} /></div>
+        <div className="section-panel"><Skeleton active paragraph={{ rows: 4 }} /></div>
       ) : (
         <>
           {running ? (
@@ -385,7 +385,7 @@ const AcademicYearPage = () => {
             />
           ) : null}
 
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
               <div style={{ flex: 1, fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>
                 {running ? "Other years" : "Years"}

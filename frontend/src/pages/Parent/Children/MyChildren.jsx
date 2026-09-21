@@ -5,7 +5,7 @@ import { CalendarOutlined, IdcardOutlined, MailOutlined, UserOutlined } from "@a
 import dayjs from "dayjs";
 import { fetchMyChildren } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, iconWell } from "../../../styles/pageStyles";
+import { iconWell } from "../../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const COLORS = CATEGORICAL_COLORS;
@@ -23,11 +23,11 @@ const MyChildren = () => {
         subtitle="Linked student profiles for your parent account."
         icon={<UserOutlined />}
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {loading ? (
-          <div style={sectionPanel}><Skeleton active paragraph={{ rows: 4 }} /></div>
+          <div className="section-panel"><Skeleton active paragraph={{ rows: 4 }} /></div>
         ) : !children.length ? (
-          <div style={sectionPanel}><Empty description="No linked children found for this account" /></div>
+          <div className="section-panel"><Empty description="No linked children found for this account" /></div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
             {children.map((child, i) => {
@@ -41,7 +41,7 @@ const MyChildren = () => {
               return (
                 <div
                   key={child._id || child.userId}
-                  style={{ ...sectionPanel, padding: 0, overflow: "hidden", marginBottom: 0 }}
+                  className="section-panel" style={{ padding: 0, overflow: "hidden", marginBottom: 0 }}
                 >
                   <div style={{ height: 4, background: color }} />
                   <div style={{ padding: "20px 20px 18px" }}>

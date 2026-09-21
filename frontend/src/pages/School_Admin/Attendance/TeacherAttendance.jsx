@@ -24,13 +24,7 @@ import dayjs from "dayjs";
 import { fetchAllUser } from "../../../features/authSlice";
 import { markBulkAttendance, fetchAttendance } from "../../../features/attendanceSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-  sectionPanel,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 /* ── Status config ───────────────────────────────────────────────── */
 const STATUS_OPTIONS = [
@@ -328,8 +322,7 @@ const TeacherAttendance = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Teacher Attendance"
@@ -348,7 +341,7 @@ const TeacherAttendance = () => {
       />
 
       {/* ── Filters ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <div
           style={{
             display: "grid",
@@ -492,7 +485,7 @@ const TeacherAttendance = () => {
         <Spin spinning={usersLoading}>
           {filteredTeachers.length > 0 ? (
             <Table
-              className={TABLE_CLS}
+              className={`${TABLE_CLS} data-table`}
               rowKey="_id"
               columns={columns}
               dataSource={filteredTeachers}

@@ -16,7 +16,7 @@ import {
 import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 import { fetchSections } from "../../features/sectionSlice";
 import PageHeader from "../../components/layout/PageHeader";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
@@ -235,8 +235,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("live-class-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Online Classes"
@@ -264,7 +263,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
       {loading && !classes?.length ? (
         <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
       ) : !classes?.length ? (
-        <div style={emptyState}>
+        <div className="empty-state">
           <Empty description="No online classes in this period" />
           {canHost && (
             <Button type="primary" icon={<PlusOutlined />} style={{ marginTop: 12 }} onClick={openAdd}>
@@ -273,13 +272,13 @@ const OnlineClassesPage = ({ canHost = false }) => {
           )}
         </div>
       ) : (
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ marginBottom: 12, color: "var(--text-muted)", fontSize: 13 }}>
             <ClockCircleOutlined /> {upcoming} upcoming in this period
           </div>
-          <div style={tableContainer}>
+          <div className="table-container">
             <Table
-              className="live-class-table" rowKey="_id" size="middle"
+              className="live-class-table data-table" rowKey="_id" size="middle"
               columns={columns} dataSource={classes}
               pagination={{ pageSize: 20, showSizeChanger: false }}
             />

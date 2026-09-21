@@ -34,10 +34,7 @@ import {
 import { fetchSchools } from "../../../features/schoolSlice";
 import { fetchRevenueSummary, fetchBillingInvoices } from "../../../features/superAdminBillingSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import {
-  pageWrapper, sectionPanel, statGrid, iconWell, pill,
-  tableContainer, tableHeadCss, avatarStyle,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, pill, avatarStyle } from "../../../styles/pageStyles";
 
 const formatCurrency = (amount = 0) => `₹${Number(amount || 0).toLocaleString("en-IN")}`;
 
@@ -95,7 +92,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const KpiCard = ({ icon, label, value, sub, color }) => (
-  <div style={{ ...sectionPanel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
+  <div className="section-panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 0 }}>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         {label}
@@ -286,7 +283,7 @@ const RevenueAnalytics = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Revenue Analytics"
         subtitle="Live data from billing invoices and payments"
@@ -313,7 +310,7 @@ const RevenueAnalytics = () => {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginBottom: 20 }} className="revenue-charts-grid">
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Revenue Trend</span>
             <span style={pill("var(--primary)")}>Invoiced vs Paid</span>
@@ -341,7 +338,7 @@ const RevenueAnalytics = () => {
           </ResponsiveContainer>
         </div>
 
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 16 }}>Period Breakdown</div>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} barSize={28} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -359,16 +356,15 @@ const RevenueAnalytics = () => {
         @media (max-width: 900px) {
           .revenue-charts-grid { grid-template-columns: 1fr !important; }
         }
-        ${tableHeadCss("revenue-tbl")}
       `}</style>
 
-      <div style={{ ...sectionPanel, padding: 0 }}>
+      <div className="section-panel" style={{ padding: 0 }}>
         <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 10 }}>
           <BankOutlined style={{ color: "var(--primary)" }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>School Revenue Breakdown</span>
           <span style={pill("var(--text-muted)")}>{schoolRevenue.length} schools</span>
         </div>
-        <div className="revenue-tbl" style={{ ...tableContainer, border: "none", borderRadius: 0 }}>
+        <div className="revenue-tbl data-table table-container" style={{ border: "none", borderRadius: 0 }}>
           <Table
             columns={columns}
             dataSource={schoolRevenue}

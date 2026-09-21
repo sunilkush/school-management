@@ -1,0 +1,144 @@
+// The page furniture: shell, panels, toolbars, tables, empty states.
+//
+// These are the same patterns styles/pageStyles.js has always exported as JS objects, written as
+// classes so a page says what a thing IS (class="section-panel") instead of restating how it looks
+// at every use. Every value comes from the scale in _tokens.scss, so changing a radius or a gap
+// here changes it everywhere at once — which is the whole point of the move.
+//
+// The JS objects stay exported for now: 8,000-odd inline styles cannot move in one go, and a page
+// half-migrated must still render. Both read the same tokens, so they cannot drift apart.
+
+/* ── Page shell ──────────────────────────────────────────────────── */
+.page-wrapper {
+  min-height: 100vh;
+  background: var(--surface-page);
+  padding: clamp(12px, 3vw, var(--space-6));
+}
+
+/* ── Cards and panels ────────────────────────────────────────────── */
+.page-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-muted);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.section-panel {
+  background: var(--surface);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-soft);
+
+  // The two shapes pages kept rewriting by hand: a panel that wraps a table edge to edge, and a
+  // panel used as a header strip.
+  &.is-flush { padding: 0; overflow: hidden; }
+  &.is-last { margin-bottom: 0; }
+  &.is-header-strip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: 0;
+  }
+}
+
+/* ── Toolbar: search + filters + buttons ─────────────────────────── */
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* ── Stat cards ──────────────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.stat-label {
+  font-size: var(--font-xs);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: var(--space-1);
+}
+
+.stat-value {
+  font-size: var(--font-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  line-height: 1.1;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────── */
+.table-container {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-muted);
+  box-shadow: var(--shadow-soft);
+}
+
+// Replaces tableHeadCss(): every page was injecting this same block into a <style> tag under its
+// own throwaway class name — 278 copies of one table style. One class does it for all of them.
+.data-table {
+  .ant-table { background: transparent !important; }
+
+  .ant-table-thead > tr > th {
+    background: var(--surface-soft) !important;
+    color: var(--text-muted) !important;
+    font-size: var(--font-xs) !important;
+    font-weight: var(--weight-bold) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    border-bottom: 1px solid var(--border-muted) !important;
+    padding: var(--space-3) var(--space-4) !important;
+  }
+
+  .ant-table-tbody > tr > td {
+    border-bottom: 1px solid var(--border-muted) !important;
+    padding: var(--space-3) var(--space-4) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .ant-table-tbody > tr:hover > td { background: var(--surface-soft) !important; }
+  .ant-table-tbody > tr:last-child > td { border-bottom: none !important; }
+
+  .ant-pagination-item-active { border-color: var(--primary) !important; }
+  .ant-pagination-item-active a { color: var(--primary) !important; }
+}
+
+/* ── Empty state ─────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ── Pill / badge ────────────────────────────────────────────────── */
+// Colour is the one thing a pill cannot know in CSS — it comes from the row's status — so the page
+// passes it in as two variables and the shape stays here.
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-xs);
+  font-weight: var(--weight-bold);
+  line-height: 1.6;
+  white-space: nowrap;
+  color: var(--pill-color, var(--text-secondary));
+  background: var(--pill-bg, var(--surface-soft));
+}

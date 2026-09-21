@@ -15,7 +15,7 @@ import {
   createTask, deleteTask, fetchAssignableUsers, fetchTasks, updateTask,
 } from "../../../features/taskSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { iconWell, modalTitle, pageWrapper, sectionPanel, statGrid } from "../../../styles/pageStyles";
+import { iconWell, modalTitle, statGrid } from "../../../styles/pageStyles";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
 dayjs.extend(relativeTime);
@@ -453,7 +453,7 @@ const TaskManagement = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* ── KPI Cards ── */}
         <div style={{ ...statGrid(150), marginBottom: 20 }}>
           {KPI.map((k) => (
@@ -478,7 +478,7 @@ const TaskManagement = () => {
         </div>
 
         {/* ── Progress + Filter toolbar ── */}
-        <div style={{ ...sectionPanel, padding: "12px 16px", marginBottom: 18 }}>
+        <div className="section-panel" style={{ padding: "12px 16px", marginBottom: 18 }}>
           <Flex align="center" justify="space-between" gap={12} wrap="wrap">
             {/* Completion progress */}
             <Flex align="center" gap={12}>

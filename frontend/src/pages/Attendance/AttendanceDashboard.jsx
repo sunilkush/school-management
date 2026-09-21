@@ -12,9 +12,7 @@ import {
 import { fetchAttendanceSummary } from "../../features/analyticsSlice";
 import { fetchSchools }           from "../../features/schoolSlice";
 import PageHeader                 from "../../components/layout/PageHeader";
-import {
-  pageWrapper, statGrid, iconWell, toolbarRow, tableHeadCss, pill,
-} from "../../styles/pageStyles";
+import { statGrid, iconWell, pill } from "../../styles/pageStyles";
 
 const TABLE_CLS   = "sa-dash-tbl";
 const LOW         = 75;
@@ -199,8 +197,7 @@ const AttendanceDashboard = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Attendance Overview"
@@ -219,7 +216,7 @@ const AttendanceDashboard = () => {
       />
 
       {/* ── Toolbar ── */}
-      <div style={{ ...toolbarRow, marginTop: 20 }}>
+      <div className="toolbar-row" style={{ marginTop: 20 }}>
         <Select
           placeholder="All Schools"
           allowClear
@@ -323,7 +320,7 @@ const AttendanceDashboard = () => {
               School-wise Breakdown
             </div>
             <Table
-              className={TABLE_CLS}
+              className={`${TABLE_CLS} data-table`}
               rowKey={(r) => r.schoolId || r.schoolName}
               columns={schoolColumns}
               dataSource={schoolStats}

@@ -16,7 +16,7 @@ import {
 import { fetchAllUser } from "../../../features/authSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import StatCardsRow from "../../../components/layout/StatCardsRow";
-import { emptyState, pageWrapper, pill, sectionPanel, tableContainer, tableHeadCss } from "../../../styles/pageStyles";
+import { pill } from "../../../styles/pageStyles";
 
 const { Paragraph, Text } = Typography;
 
@@ -204,8 +204,7 @@ const AttendanceDevices = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("dev-table")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Attendance Devices"
@@ -248,7 +247,7 @@ const AttendanceDevices = () => {
             children: devicesLoading && !devices?.length ? (
               <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
             ) : !devices?.length ? (
-              <div style={emptyState}>
+              <div className="empty-state">
                 <Empty description="No readers registered yet" />
                 <p style={{ color: "var(--text-muted)", maxWidth: 520, margin: "12px auto" }}>
                   Register a reader here to get its key and secret, then enter those in whatever
@@ -259,9 +258,9 @@ const AttendanceDevices = () => {
                 <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Add the first device</Button>
               </div>
             ) : (
-              <div style={sectionPanel}>
-                <div style={tableContainer}>
-                  <Table className="dev-table" rowKey="_id" size="middle" pagination={false}
+              <div className="section-panel">
+                <div className="table-container">
+                  <Table className="dev-table data-table" rowKey="_id" size="middle" pagination={false}
                          columns={deviceColumns} dataSource={devices} />
                 </div>
               </div>
@@ -273,7 +272,7 @@ const AttendanceDevices = () => {
             children: (
               <>
                 {unmatched?.length > 0 && (
-                  <div style={{ ...sectionPanel, borderColor: "var(--warning)" }}>
+                  <div className="section-panel" style={{ borderColor: "var(--warning)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
                       <div>
                         <div style={{ fontWeight: 700 }}>{unmatched.length} card(s) scanned that belong to nobody</div>
@@ -300,7 +299,7 @@ const AttendanceDevices = () => {
                   </div>
                 )}
 
-                <div style={sectionPanel}>
+                <div className="section-panel">
                   <div style={{ fontWeight: 700, marginBottom: 12 }}>
                     Enrol a card {prefillCard ? <Tag color="blue">{prefillCard}</Tag> : null}
                   </div>
@@ -330,10 +329,10 @@ const AttendanceDevices = () => {
                   </Form>
                 </div>
 
-                <div style={sectionPanel}>
-                  <div style={tableContainer}>
+                <div className="section-panel">
+                  <div className="table-container">
                     <Table
-                      className="dev-table" rowKey="_id" size="middle"
+                      className="dev-table data-table" rowKey="_id" size="middle"
                       loading={credentialsLoading}
                       columns={credentialColumns} dataSource={credentials}
                       pagination={{ pageSize: 20, showSizeChanger: false }}
@@ -347,14 +346,14 @@ const AttendanceDevices = () => {
             key: "log",
             label: "Scan log",
             children: (
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 0 }}>
                   Exactly what the readers saw. These are never edited — attendance is worked out
                   from them, so a disputed absence can always be checked against the raw scan.
                 </p>
-                <div style={tableContainer}>
+                <div className="table-container">
                   <Table
-                    className="dev-table" rowKey="_id" size="middle"
+                    className="dev-table data-table" rowKey="_id" size="middle"
                     loading={punchesLoading}
                     columns={punchColumns} dataSource={punches}
                     pagination={{ pageSize: 25, showSizeChanger: false }}

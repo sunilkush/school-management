@@ -11,7 +11,7 @@ import {
 import RupeeIcon from "../icons/RupeeIcon";
 import { fetchFeeSchedule, generateMissingSchedules, quoteInstallments } from "../../features/feeInstallmentSlice";
 import { createPayment, fetchPayments, verifyPayment } from "../../features/paymentSlice";
-import { sectionPanel, statCard, statLabel, statValue, statGrid, tableHeadCss, iconWell } from "../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, iconWell } from "../../styles/pageStyles";
 import FeeReceipt, { printFeeReceipt } from "./FeeReceipt.jsx";
 import {
   COUNTER_MODES, FREQUENCIES, FREQUENCY_ORDER, FeeStatusTag, FrequencyTag, paymentModeLabel, recallCheckoutRows,
@@ -238,7 +238,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
 
   if (!heads.length) {
     return (
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <Empty description="No fees have been assigned for this academic year" />
       </div>
     );
@@ -364,7 +364,6 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
 
   return (
     <div>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
 
       {/* 1 ── Summary */}
       <div className="stat-grid" style={statGrid(170)}>
@@ -390,7 +389,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       )}
 
       {/* 2 ── Fee structure */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
           {panelTitle(<RupeeIcon />, "Fee Structure", student?.className || "Assigned fee heads for this year")}
           <Tooltip title="Refresh">
@@ -398,7 +397,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
           </Tooltip>
         </div>
 
-        <div className={TABLE_CLS} style={{ overflowX: "auto" }}>
+        <div className={`${TABLE_CLS} data-table`} style={{ overflowX: "auto" }}>
           <Table rowKey="studentFeeId" columns={headColumns} dataSource={heads} pagination={false} size="middle" scroll={{ x: 760 }} />
         </div>
 
@@ -415,7 +414,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       </div>
 
       {/* 3 ── Installments */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
           {panelTitle(<ClockCircleOutlined />, "Installments", fineRule || `Due on the ${settings?.dueDay ?? 10}th of each period`)}
           <Segmented
@@ -448,7 +447,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
           {selectedIds.length > 0 && <Button size="small" type="text" onClick={() => setSelectedIds([])}>Clear selection</Button>}
         </div>
 
-        <div className={TABLE_CLS} style={{ overflowX: "auto" }}>
+        <div className={`${TABLE_CLS} data-table`} style={{ overflowX: "auto" }}>
           <Table
             rowKey={(r) => String(r._id)}
             columns={instColumns}
@@ -507,9 +506,9 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       </div>
 
       {/* 4 ── Payment history */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {panelTitle(<PrinterOutlined />, "Payment History", "Receipts for this student")}
-        <div className={TABLE_CLS} style={{ overflowX: "auto" }}>
+        <div className={`${TABLE_CLS} data-table`} style={{ overflowX: "auto" }}>
           <Table
             rowKey="_id"
             columns={historyColumns}

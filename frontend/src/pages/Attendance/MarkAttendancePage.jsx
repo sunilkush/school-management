@@ -16,7 +16,6 @@ import { fetchAllAcademicYears }  from "../../features/academicYearSlice";
 import BulkAttendanceTable        from "../../components/attendance/BulkAttendanceTable";
 import { ATTENDANCE_ROLE_OPTIONS } from "../../utils/attendanceRoles";
 import PageHeader                 from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel } from "../../styles/pageStyles";
 import { FilterGrid, FilterField } from "../../components/attendance/FilterGrid";
 import { FULL_WIDTH } from "../../components/attendance/filterStyles";
 import YearField from "../../components/attendance/YearField";
@@ -152,7 +151,7 @@ const MarkAttendancePage = () => {
   }, []);
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Mark Attendance"
         subtitle="Load users, set status and check-in/out times, then save in one click"
@@ -160,7 +159,7 @@ const MarkAttendancePage = () => {
       />
 
       {/* ── Filter panel — same fields, same order, same sizes as Records and Monthly ── */}
-      <div style={{ ...sectionPanel, marginTop: 20 }}>
+      <div className="section-panel" style={{ marginTop: 20 }}>
         <FilterGrid>
           {isSuperAdmin && (
             <FilterField label="School">
@@ -232,7 +231,7 @@ const MarkAttendancePage = () => {
       </div>
 
       {/* ── Attendance table ── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         {rows.length === 0 && !loading ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -261,11 +260,7 @@ const MarkAttendancePage = () => {
 
       {/* ── Footer ── */}
       {rows.length > 0 && (
-        <div style={{
-          ...sectionPanel,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          flexWrap: "wrap", gap: 12,
-        }}>
+        <div className="section-panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
             <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{rows.length}</span>{" "}records loaded
             {showTimes && (

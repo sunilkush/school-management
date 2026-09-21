@@ -16,7 +16,7 @@ import {
 import { fetchMyAttendance } from "../../../features/attendanceSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 
 const getGradeScore = (grade = {}) => {
   const numeric = [grade?.percentage, grade?.marks, grade?.score, grade?.obtainedMarks]
@@ -97,7 +97,7 @@ const StudentDashboard = () => {
 
   if (loading && !enrollment) {
     return (
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <Skeleton active paragraph={{ rows: 7 }} />
       </div>
     );
@@ -117,7 +117,7 @@ const StudentDashboard = () => {
           </Button>
         }
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {error && <Alert type="warning" showIcon message={error} style={{ borderRadius: 10, marginBottom: 16 }} />}
 
         {/* KPI stats */}
@@ -144,7 +144,7 @@ const StudentDashboard = () => {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={14}>
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Latest Results</div>
               {(grades || []).length ? (
                 <List
@@ -170,7 +170,7 @@ const StudentDashboard = () => {
           </Col>
 
           <Col xs={24} lg={10}>
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Transport Status</div>
               {transportAssignment ? (
                 <Space direction="vertical" size={12} style={{ width: "100%" }}>
@@ -204,7 +204,7 @@ const StudentDashboard = () => {
         {attendancePercent !== null && (
           <Row gutter={[16, 16]} style={{ marginTop: 0 }}>
             <Col xs={24} md={12}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>
                   <PercentageOutlined style={{ marginRight: 8 }} />Monthly Attendance
                 </div>
@@ -225,7 +225,7 @@ const StudentDashboard = () => {
               </div>
             </Col>
             <Col xs={24} md={12}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 12 }}>Quick Links</div>
                 <Space wrap>
                   <Button size="small" onClick={() => navigate("/dashboard/student/homework")}>Homework</Button>
@@ -240,7 +240,7 @@ const StudentDashboard = () => {
           </Row>
         )}
 
-        <div style={{ ...sectionPanel, marginTop: 0 }}>
+        <div className="section-panel" style={{ marginTop: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Today at a Glance</div>
           {todayClasses.length ? (
             <List

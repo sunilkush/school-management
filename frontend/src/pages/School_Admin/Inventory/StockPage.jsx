@@ -9,10 +9,7 @@ import {
   fetchInventoryItems, createInventoryItem,
   updateInventoryItem, deleteInventoryItem,
 } from "../../../features/inventorySlice";
-import {
-  toolbarRow, tableContainer, tableHeadCss,
-  statGrid, iconWell, modalTitle, pill,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell, modalTitle, pill } from "../../../styles/pageStyles";
 const { Option } = Select;
 const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
 const CATEGORIES = ["Stationery", "Hygiene", "Electronics", "Furniture", "Lab Equipment", "Sports", "Housekeeping", "General"];
@@ -139,7 +136,7 @@ export default function StockPage() {
       </div>
 
       {/* Toolbar */}
-      <div style={toolbarRow}>
+      <div className="toolbar-row">
         <Select value={typeFilter} onChange={setTypeFilter} style={{ width: 130 }}>
           <Option value="supply">Supplies</Option>
           <Option value="asset">Assets</Option>
@@ -157,8 +154,7 @@ export default function StockPage() {
       </div>
 
       {/* Table */}
-      <style>{tableHeadCss("stock-tbl")}</style>
-      <div className="stock-tbl" style={tableContainer}>
+      <div className="stock-tbl table-container">
         <Table
           columns={columns}
           dataSource={filtered}

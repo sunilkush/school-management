@@ -8,7 +8,7 @@ import { SwapOutlined, UserSwitchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 import PageHeader from "../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, toolbarRow, pill } from "../../styles/pageStyles";
+import { pill } from "../../styles/pageStyles";
 import httpClient from "../../api/httpClient";
 import {
   fetchSubstitutionPlan, assignSubstitute, fetchSubstitutions, cancelSubstitution,
@@ -190,7 +190,7 @@ export default function SubstitutionsPage() {
   const uncovered = (plan?.periods || []).filter((p) => !p.assigned).length;
 
   return (
-    <div style={pageWrapper}>
+    <div className="page-wrapper">
       <PageHeader
         title="Substitutions"
         subtitle="Cover the periods left open by absent teachers — for one day only, without touching the weekly timetable."
@@ -201,8 +201,8 @@ export default function SubstitutionsPage() {
         <Alert type="warning" showIcon message="Select an academic year first" style={{ marginBottom: 16 }} />
       )}
 
-      <div style={sectionPanel}>
-        <div style={toolbarRow}>
+      <div className="section-panel">
+        <div className="toolbar-row">
           <DatePicker value={date} onChange={(d) => d && setDate(d)} allowClear={false} format="DD MMM YYYY" />
           <Select
             mode="multiple"

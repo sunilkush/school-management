@@ -26,13 +26,7 @@ import dayjs from "dayjs";
 import { fetchAttendanceSummary } from "../../../features/analyticsSlice";
 import { fetchSchools }           from "../../../features/schoolSlice";
 import PageHeader                 from "../../../components/layout/PageHeader";
-import {
-  pageWrapper,
-  toolbarRow,
-  statGrid,
-  iconWell,
-  tableHeadCss,
-} from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -239,8 +233,7 @@ const AttendanceSummary = () => {
 
   /* ── Render ── */
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss(TABLE_CLS)}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Attendance Summary"
@@ -259,7 +252,7 @@ const AttendanceSummary = () => {
       />
 
       {/* ── Toolbar ── */}
-      <div style={{ ...toolbarRow, marginTop: 20 }}>
+      <div className="toolbar-row" style={{ marginTop: 20 }}>
         <Select
           placeholder="All Schools"
           allowClear
@@ -409,7 +402,7 @@ const AttendanceSummary = () => {
               School-wise Breakdown
             </div>
             <Table
-              className={TABLE_CLS}
+              className={`${TABLE_CLS} data-table`}
               rowKey={(r) => r.schoolId || r.schoolName}
               columns={schoolColumns}
               dataSource={schoolStats}

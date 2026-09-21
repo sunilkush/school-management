@@ -14,7 +14,7 @@ import { fetchMyAttendance } from "../../../features/attendanceSlice";
 import { getExams } from "../../../features/examSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
+import { statCard, statLabel, statValue, statGrid, pill } from "../../../styles/pageStyles";
 import { getRoleName, getRolePath } from "../../../utils/roles";
 import MyAttendanceSection from "../../../components/attendance/MyAttendanceSection";
 
@@ -118,7 +118,7 @@ const TeacherDashboard = () => {
         subtitle={`Welcome back, ${user?.name || "Teacher"} · ${selectedAcademicYear?.name ?? ""}`}
         icon={<DashboardOutlined />}
       />
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         <MyAttendanceSection />
         <Spin spinning={isLoading}>
           {/* KPI stats */}
@@ -145,7 +145,7 @@ const TeacherDashboard = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} md={14}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Upcoming Exams</div>
                 {dashboardData.upcomingExams.length ? (
                   <List
@@ -169,7 +169,7 @@ const TeacherDashboard = () => {
             </Col>
 
             <Col xs={24} md={10}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Quick Actions</div>
                 <Space direction="vertical" style={{ width: "100%" }}>
                   {isMedicalOfficer ? (
@@ -237,7 +237,7 @@ const TeacherDashboard = () => {
 
           <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
             <Col xs={24} md={12}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>Attendance Rate</div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>Present days from last {myAttendance.length} records</div>
                 <Progress
@@ -252,7 +252,7 @@ const TeacherDashboard = () => {
             </Col>
 
             <Col xs={24} md={12}>
-              <div style={sectionPanel}>
+              <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Assigned Sections</div>
                 {dashboardData.sections.length ? (
                   <List

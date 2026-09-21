@@ -7,9 +7,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGateEntries, fetchGateStats } from "../../features/gateEntrySlice";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  pageWrapper, statGrid, sectionPanel, iconWell, tableHeadCss, avatarStyle,
-} from "../../styles/pageStyles";
+import { statGrid, iconWell, avatarStyle } from "../../styles/pageStyles";
 import { EntryStatusBadge, getInitials } from "./securityShared";
 
 const { Text } = Typography;
@@ -71,8 +69,7 @@ const GateLogs = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("gatelog-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Gate Logs"
@@ -92,7 +89,7 @@ const GateLogs = () => {
           { label: "Today's Entries",  value: stats.todayEntries ?? 0, icon: <LoginOutlined />,  color: "var(--primary)" },
           { label: "Today's Exits",    value: stats.todayExits ?? 0,   icon: <LogoutOutlined />, color: "var(--purple)" },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+          <div key={label} className="section-panel is-header-strip">
             <div style={iconWell(color, 40)}>{icon}</div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
@@ -103,7 +100,7 @@ const GateLogs = () => {
       </div>
 
       {/* ── Activity table ────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
           <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>All Gate Activity</Text>
           <Space wrap>
@@ -124,7 +121,7 @@ const GateLogs = () => {
           </Space>
         </div>
         <Table
-          className="gatelog-tbl"
+          className="gatelog-tbl data-table"
           dataSource={filteredEntries}
           rowKey="_id"
           columns={cols}

@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import "@ant-design/v5-patch-for-react-19";
-import "./index.css";
+import "./styles/main.scss";
 import "antd/dist/reset.css";
 import App from "./App.jsx";
 import store, { persistor } from "./store/store.js";
@@ -15,7 +15,7 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
 
 export const ThemedAntWrapper = ({ children }) => {
   const { isDark } = useTheme();
-  // Aligned with index.css CSS variables so Ant components and custom
+  // Aligned with styles/_tokens.scss CSS variables so Ant components and custom
   // components render the same brand — blue-forward "Soft UI" palette.
   const palette = {
     primary: "#2563eb",

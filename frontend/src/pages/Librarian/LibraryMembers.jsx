@@ -14,9 +14,7 @@ import {
 } from "../../features/librarySlice";
 import apiClient from "../../api/httpClient";
 import PageHeader from "../../components/layout/PageHeader";
-import {
-  iconWell, pageWrapper, pill, sectionPanel, statGrid, tableHeadCss,
-} from "../../styles/pageStyles";
+import { iconWell, pill, statGrid } from "../../styles/pageStyles";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -244,8 +242,7 @@ const LibraryMembers = () => {
   const isLoading = studentsLoading || issuedLoading || usersLoading;
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("members-tbl")}</style>
+    <div className="page-wrapper">
       <PageHeader
         title="Library Members"
         subtitle="All borrowers with borrowing status and history"
@@ -260,7 +257,7 @@ const LibraryMembers = () => {
           { label: "With Overdues",   value: stats.overdue, icon: <ClockCircleOutlined />, color: "var(--danger)" },
           { label: "Pending Fines",   value: `₹${stats.fines}`, icon: <BookOutlined />,   color: "var(--warning)" },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} style={{ ...sectionPanel, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 0 }}>
+          <div key={label} className="section-panel is-header-strip">
             <div style={iconWell(color, 40)}>{icon}</div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
@@ -271,7 +268,7 @@ const LibraryMembers = () => {
       </div>
 
       {/* ── Filters + Table ──────────────────────────────────────────── */}
-      <div style={sectionPanel}>
+      <div className="section-panel">
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
           <Input
             prefix={<SearchOutlined />}
@@ -299,7 +296,7 @@ const LibraryMembers = () => {
           <div style={{ textAlign: "center", padding: 40 }}><Spin size="large" /></div>
         ) : (
           <Table
-            className="members-tbl"
+            className="members-tbl data-table"
             rowKey="id"
             columns={columns}
             dataSource={rows}

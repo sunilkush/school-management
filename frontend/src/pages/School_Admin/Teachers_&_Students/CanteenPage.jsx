@@ -18,7 +18,7 @@ import {
   createOrder, fetchOrders, cancelOrder,
 } from "../../../features/canteenSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { iconWell, pageWrapper, sectionPanel, tableHeadCss } from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 
 const { Text } = Typography;
 const CATEGORIES = ["Breakfast", "Lunch", "Snacks", "Beverages", "Other"];
@@ -265,7 +265,7 @@ export default function CanteenPage() {
 
   /* ── Student picker (shared) ───────────────────────────── */
   const StudentPicker = (
-    <div style={{ ...sectionPanel, marginBottom: 16 }}>
+    <div className="section-panel" style={{ marginBottom: 16 }}>
       <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
         <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
         <div>
@@ -311,13 +311,13 @@ export default function CanteenPage() {
   ];
 
   const menuItemsTab = (
-    <div style={sectionPanel}>
+    <div className="section-panel">
       <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
         <Text strong style={{ fontSize: 14 }}>Menu Items</Text>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => openItemModal()}>Add Item</Button>
       </Flex>
       <Table
-        className="canteen-tbl" rowKey="_id" columns={itemColumns} dataSource={items} loading={loading}
+        className="canteen-tbl data-table" rowKey="_id" columns={itemColumns} dataSource={items} loading={loading}
         size="middle" pagination={{ pageSize: 20 }}
         locale={{ emptyText: <Empty description="No menu items yet" style={{ padding: "40px 0" }} /> }}
       />
@@ -337,7 +337,7 @@ export default function CanteenPage() {
     <div>
       {studentId ? (
         <>
-          <div style={{ ...sectionPanel, marginBottom: 16 }}>
+          <div className="section-panel" style={{ marginBottom: 16 }}>
             <Flex align="center" gap={16} wrap="wrap">
               <div style={iconWell("var(--success)", 44)}><WalletOutlined style={{ fontSize: 20 }} /></div>
               <div>
@@ -352,17 +352,17 @@ export default function CanteenPage() {
               </Button>
             </Flex>
           </div>
-          <div style={sectionPanel}>
+          <div className="section-panel">
             <Text strong style={{ fontSize: 14, marginBottom: 14, display: "block" }}>Transaction History</Text>
             <Table
-              className="canteen-tbl" rowKey="_id" columns={txnColumns} dataSource={transactions} loading={loading}
+              className="canteen-tbl data-table" rowKey="_id" columns={txnColumns} dataSource={transactions} loading={loading}
               size="middle" pagination={{ pageSize: 20 }}
               locale={{ emptyText: <Empty description="No transactions yet" style={{ padding: "40px 0" }} /> }}
             />
           </div>
         </>
       ) : (
-        <div style={{ ...sectionPanel, textAlign: "center", padding: "40px 0" }}>
+        <div className="section-panel" style={{ textAlign: "center", padding: "40px 0" }}>
           <Text type="secondary">Select a student above to view their wallet</Text>
         </div>
       )}
@@ -375,7 +375,7 @@ export default function CanteenPage() {
       {studentId ? (
         <Row gutter={16}>
           <Col xs={24} md={14}>
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <Text strong style={{ fontSize: 14, marginBottom: 14, display: "block" }}>Menu</Text>
               <Row gutter={[10, 10]}>
                 {items.filter((i) => i.isAvailable).map((item) => (
@@ -394,7 +394,7 @@ export default function CanteenPage() {
             </div>
           </Col>
           <Col xs={24} md={10}>
-            <div style={sectionPanel}>
+            <div className="section-panel">
               <Flex align="center" gap={8} style={{ marginBottom: 14 }}>
                 <ShoppingCartOutlined />
                 <Text strong style={{ fontSize: 14 }}>Cart</Text>
@@ -432,7 +432,7 @@ export default function CanteenPage() {
           </Col>
         </Row>
       ) : (
-        <div style={{ ...sectionPanel, textAlign: "center", padding: "40px 0" }}>
+        <div className="section-panel" style={{ textAlign: "center", padding: "40px 0" }}>
           <Text type="secondary">Select a student above to place an order</Text>
         </div>
       )}
@@ -459,7 +459,7 @@ export default function CanteenPage() {
   ];
 
   const ordersTab = (
-    <div style={sectionPanel}>
+    <div className="section-panel">
       <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
         <Text strong style={{ fontSize: 14 }}>{studentId ? "Orders for Selected Student" : "All Orders"}</Text>
         <Select
@@ -469,7 +469,7 @@ export default function CanteenPage() {
         />
       </Flex>
       <Table
-        className="canteen-tbl" rowKey="_id" columns={orderColumns} dataSource={orders} loading={loading}
+        className="canteen-tbl data-table" rowKey="_id" columns={orderColumns} dataSource={orders} loading={loading}
         size="middle" scroll={{ x: 700 }} pagination={{ pageSize: 20 }}
         locale={{ emptyText: <Empty description="No orders yet" style={{ padding: "40px 0" }} /> }}
       />
@@ -478,7 +478,6 @@ export default function CanteenPage() {
 
   return (
     <>
-      <style>{tableHeadCss("canteen-tbl")}</style>
 
       <PageHeader
         title="Canteen"
@@ -486,7 +485,7 @@ export default function CanteenPage() {
         icon={<CoffeeOutlined />}
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {!canFilter && (
           <Alert type="warning" showIcon message="Please select an active academic year to use the canteen module." style={{ borderRadius: 12, marginBottom: 16 }} />
         )}

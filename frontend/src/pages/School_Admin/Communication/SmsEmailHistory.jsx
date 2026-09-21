@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchNotifications } from "../../../features/notificationSlice";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { pageWrapper, sectionPanel, iconWell, tableHeadCss } from "../../../styles/pageStyles.js";
+import { iconWell } from "../../../styles/pageStyles.js";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -131,7 +131,6 @@ const SmsEmailHistory = () => {
 
   return (
     <>
-      <style>{tableHeadCss("comm-history-tbl")}</style>
       <PageHeader
         title="Communication History"
         subtitle="View all sent notifications and broadcast history"
@@ -147,7 +146,7 @@ const SmsEmailHistory = () => {
         }
       />
 
-      <div style={pageWrapper}>
+      <div className="page-wrapper">
         {/* Stat Cards */}
         <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
           {statCards.map((s) => (
@@ -178,7 +177,7 @@ const SmsEmailHistory = () => {
         </Row>
 
         {/* Filters */}
-        <div style={{ ...sectionPanel, marginBottom: 20, padding: "14px 20px" }}>
+        <div className="section-panel" style={{ marginBottom: 20, padding: "14px 20px" }}>
           <Flex align="center" gap={10} wrap="wrap">
             <Select
               placeholder="Filter by Channel"
@@ -214,9 +213,9 @@ const SmsEmailHistory = () => {
         </div>
 
         {/* Table */}
-        <div style={sectionPanel}>
+        <div className="section-panel">
           <Table
-            className="comm-history-tbl"
+            className="comm-history-tbl data-table"
             scroll={{ x: 800 }}
             columns={columns}
             dataSource={filteredData}

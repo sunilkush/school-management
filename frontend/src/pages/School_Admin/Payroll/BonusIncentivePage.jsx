@@ -13,7 +13,7 @@ import {
 import { getEmployees } from "../../../features/employeeSlice";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { pageWrapper, sectionPanel, statGrid, iconWell, tableHeadCss } from "../../../styles/pageStyles";
+import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
   primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
@@ -236,8 +236,7 @@ const BonusIncentivePage = () => {
   ];
 
   return (
-    <div style={pageWrapper}>
-      <style>{tableHeadCss("bonus-tbl")}</style>
+    <div className="page-wrapper">
 
       <PageHeader
         title="Bonus & Incentives"
@@ -279,7 +278,7 @@ const BonusIncentivePage = () => {
       </div>
 
       {/* Table */}
-      <div style={{ ...sectionPanel, padding: 0, overflow: "hidden" }}>
+      <div className="section-panel is-flush">
         <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Bonuses & Incentives</span>
           <span style={{
@@ -290,7 +289,7 @@ const BonusIncentivePage = () => {
           </span>
         </div>
         <Table
-          className="bonus-tbl"
+          className="bonus-tbl data-table"
           columns={columns}
           dataSource={dataSource}
           loading={loading}
