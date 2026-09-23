@@ -147,6 +147,20 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
   const isSuperAdmin     = currentUserRole === "super admin";
   const isSchoolAdmin    = currentUserRole === "school admin";
 
+  /**
+   * Super Admin registers a School Admin — an account for somebody to run a school with, not a
+   * member of that school's staff.
+   *
+   * The employee profile and the opening salary structure belong to the school: its department
+   * list, its designations, its payroll. A platform administrator has none of that to hand and
+   * no business inventing it, and the school admin they create would arrive already carrying a
+   * payroll record nobody in the school asked for.
+   *
+   * So for Super Admin this is one step that creates one account. A School Admin registering
+   * their own staff still gets the full wizard, which is where those details actually belong.
+   */
+  const accountOnly = isSuperAdmin;
+
   const [currentStep, setCurrentStep] = useState(0);
   const [avatarName,  setAvatarName]  = useState("");
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -269,6 +283,32 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
     }
     setStatus((s) => ({ ...s, user: "done" }));
 
+    /* Super Admin's School Admin is an account and nothing else — see `accountOnly` above.
+       Returning here rather than skipping past the two blocks below keeps them unreachable
+       instead of merely unused, so neither can be reintroduced by accident. */
+    if (accountOnly) {
+      setCreated({
+        name: values.name,
+        email: values.email,
+        role: roleOptions.find((r) => r.value === values.roleId)?.label || "",
+        isActive: values.isActive !== false,
+      });
+      form.resetFields();
+      setAvatarName("");
+      setAvatarPreview("");
+      dispatch(resetState());
+      if (onClose) {
+        setDoneMsg("School Admin created successfully!");
+        setTimeout(() => {
+          setDoneMsg("");
+          setStatus({ user: "idle", employee: "idle", payroll: "idle" });
+          setCurrentStep(0);
+          onClose();
+        }, 1500);
+      }
+      return;
+    }
+
     const userId = userResult.payload?.data?._id;
     if (!userId) {
       setStatus((s) => ({ ...s, employee: "error", payroll: "error" }));
@@ -353,7 +393,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
         onClose();
       }, 1500);
     }
-  }, [dispatch, isSchoolAdmin, currentSchoolId, onClose, form, roleOptions]);
+  }, [dispatch, isSchoolAdmin, currentSchoolId, onClose, form, roleOptions, accountOnly]);
 
   const startAnother = () => {
     setCreated(null);
@@ -394,8 +434,12 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
     </Form.Item>
   );
 
-  const isProcessing = status.user === "loading" || status.employee === "loading" || status.payroll === "loading";
-  const allDone = status.user === "done" && status.employee === "done" && status.payroll === "done";
+  const isProcessing = accountOnly
+    ? status.user === "loading"
+    : status.user === "loading" || status.employee === "loading" || status.payroll === "loading";
+  const allDone = accountOnly
+    ? status.user === "done"
+    : status.user === "done" && status.employee === "done" && status.payroll === "done";
 
   if (created && !onClose) {
     return (
@@ -432,7 +476,8 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
     <div>
       <style>{FORM_CSS}</style>
 
-      {/* Steps indicator */}
+      {/* Steps indicator — a one-step form has nothing to step through. */}
+      {!accountOnly && (
       <Steps
         current={currentStep}
         size="small"
@@ -445,6 +490,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           { title: "Employee & Payroll", description: "Profile & salary" },
         ]}
       />
+      )}
 
       {/* Success */}
       {doneMsg && (
@@ -467,8 +513,14 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
         <div className="step-status-row">
           {[
             { key: "user",     label: "Creating user account" },
-            { key: "employee", label: "Creating employee profile" },
-            { key: "payroll",  label: "Setting up payroll structure" },
+            // Not listed when they will not run — a row that never leaves "idle" reads as a step
+            // that failed.
+            ...(accountOnly
+              ? []
+              : [
+                  { key: "employee", label: "Creating employee profile" },
+                  { key: "payroll",  label: "Setting up payroll structure" },
+                ]),
           ].map(({ key, label }) => (
             <div key={key} className={`step-status-item ${status[key]}`}>
               <StatusIcon status={status[key]} />
@@ -576,14 +628,34 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
             </Form.Item>
           </label>
 
-          <button type="button" className="reg-btn reg-btn-primary" style={{ width: "100%" }} onClick={goToStep2}>
-            Next: Employee Details →
-          </button>
+          {accountOnly ? (
+            <button
+              type="submit"
+              className="reg-btn reg-btn-primary"
+              style={{ width: "100%" }}
+              disabled={isProcessing || allDone}
+            >
+              {isProcessing ? (
+                <><Loader2 size={14} className="spin" /> Creating…</>
+              ) : (
+                "✓ Create School Admin"
+              )}
+            </button>
+          ) : (
+            <button type="button" className="reg-btn reg-btn-primary" style={{ width: "100%" }} onClick={goToStep2}>
+              Next: Employee Details →
+            </button>
+          )}
         </div>
 
         {/* ════════════════════════════════
             STEP 2 — Employee & Payroll
         ════════════════════════════════ */}
+        {/* Not rendered at all when there is no step 2 — hiding it with display:none leaves its
+            Form.Items mounted, and phone, gender and joinDate are required. The submit would then
+            fail validation against fields that are not on screen, which looks like a button that
+            does nothing. */}
+        {!accountOnly && (
         <div style={{ display: currentStep === 1 ? "block" : "none" }}>
 
           {/* Section label */}
@@ -666,6 +738,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
             </button>
           </div>
         </div>
+        )}
       </Form>
     </div>
   );
