@@ -166,16 +166,54 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
     if (isSchoolAdmin && currentSchoolId) form.setFieldValue("schoolId", currentSchoolId);
   }, [isSchoolAdmin, currentSchoolId, form]);
 
+  /**
+   * Which school the new user belongs to. The Role list depends on it — see filteredRoles below.
+   *
+   * Changing the school clears whatever role was already picked, because that role may belong to
+   * the school just navigated away from. Ant Design keeps a field's value when the options behind
+   * it change, so without this a role chosen first and a school chosen second would submit an id
+   * that no longer appears in the dropdown showing it.
+   */
+  const selectedSchoolId = Form.useWatch("schoolId", form);
+
+  useEffect(() => {
+    if (isSuperAdmin) form.setFieldValue("roleId", undefined);
+  }, [selectedSchoolId, isSuperAdmin, form]);
+
   const filteredRoles = useMemo(() => {
     if (!roles?.length || !currentUserRole) return [];
     if (allowedRoleNames?.length) {
       const allowed = allowedRoleNames.map((n) => n.toLowerCase());
       return roles.filter((r) => allowed.includes(r.name.toLowerCase()));
     }
-    if (isSuperAdmin)  return roles.filter((r) => r.name.toLowerCase() === "school admin");
+
+    /**
+     * Super Admin creates School Admins, so the list is the roles by that name — but WHICH one
+     * matters, and filtering by name alone got that wrong.
+     *
+     * Roles are scoped: initializeNewSchool gives every new school its own set, so a role named
+     * "School Admin" exists once per school plus once at platform level (schoolId null). Picking
+     * by name alone offered every one of them under an identical label, with nothing to tell
+     * them apart, and attaching a new admin to another school's role is not a cosmetic mistake.
+     *
+     * So: the selected school's own role if it has one, the platform role otherwise. Exactly one
+     * option either way. The final fallback keeps the old behaviour rather than handing back an
+     * empty list — a required dropdown with nothing in it is a dead end with no explanation.
+     */
+    if (isSuperAdmin) {
+      const named = roles.filter((r) => r.name.toLowerCase() === "school admin");
+      const ownedBySelected = selectedSchoolId
+        ? named.filter((r) => r.schoolId && String(r.schoolId) === String(selectedSchoolId))
+        : [];
+      if (ownedBySelected.length) return ownedBySelected;
+
+      const platform = named.filter((r) => !r.schoolId);
+      return platform.length ? platform : named;
+    }
+
     if (isSchoolAdmin) return roles.filter((r) => !EXCLUDED_ROLES_FOR_SCHOOL_ADMIN.includes(r.name.toLowerCase()));
     return [];
-  }, [roles, currentUserRole, isSuperAdmin, isSchoolAdmin, allowedRoleNames]);
+  }, [roles, currentUserRole, isSuperAdmin, isSchoolAdmin, allowedRoleNames, selectedSchoolId]);
 
   const schoolOptions = useMemo(() => schools.map((s) => ({ value: s._id, label: s.name })), [schools]);
   const roleOptions   = useMemo(() => filteredRoles.map((r) => ({ value: r._id, label: r.name })), [filteredRoles]);

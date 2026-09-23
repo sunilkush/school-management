@@ -295,14 +295,19 @@ schoolSchema.pre("save", function (next) {
 /* ================= STATIC METHODS ================= */
 
 // Soft delete helper
-schoolSchema.statics.softDeleteById = function (id, userId) {
-  return this.findByIdAndUpdate(id, {
-    deletedAt: new Date(),
-    updatedBy: userId,
-    isActive: false,
-    status: "inactive",
-  });
-};
+/**
+ * Removed: softDeleteById.
+ *
+ * It marked a school deleted and left everything hanging off it — roles above all. Nothing ever
+ * called it, so it caused no harm; the danger was that it read like the supported way to delete a
+ * school and was not. deleteSchool in school.controllers.js is: it refuses while users, students,
+ * classes, enrolments or billing records exist, and then clears the school's roles, academic
+ * years, board links and subscription before removing it.
+ *
+ * Wiring this up instead would have left a role named "School Admin" behind for a school that no
+ * longer exists — and the Super Admin's register form would have offered it, under a label
+ * identical to the real one.
+ */
 
 /* ================= MODEL ================= */
 
