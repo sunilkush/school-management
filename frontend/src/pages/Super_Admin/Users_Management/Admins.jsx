@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Modal } from "antd";
 import { PlusOutlined, UserSwitchOutlined, SafetyCertificateOutlined } from "@ant-design/icons";
-import RegisterForm from "../../../components/forms/RegisterForm";
+import RegisterSchoolAdminForm from "../../../components/forms/RegisterSchoolAdminForm";
 import UserRoleList from "./UserRoleList";
 import { modalTitle } from "../../../styles/pageStyles";
 
@@ -35,10 +35,12 @@ const Admins = () => {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={720}
+        width={640}
         destroyOnClose
       >
-        <RegisterForm onClose={handleClose} />
+        {/* Not RegisterForm: that is the staff wizard, with an employee profile and an opening
+            salary structure a platform administrator has no basis to fill in. */}
+        <RegisterSchoolAdminForm onClose={handleClose} />
       </Modal>
     </UserRoleList>
   );
