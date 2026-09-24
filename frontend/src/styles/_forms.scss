@@ -2,167 +2,168 @@
 // Moved here in the SASS clean-up — components no longer inject <style> tags.
 
 /* ── from components/forms/AdmissionForm.jsx ─────────────────────────────── */
-        .adm-form .ant-form-item-label > label {
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          color: var(--text-secondary) !important;
-          height: auto !important;
-        }
-        .adm-form .ant-input,
-        .adm-form .ant-input-number,
-        .adm-form .ant-input-number-input,
-        .adm-form .ant-picker {
-          border-radius: 8px !important;
-          border: 1.5px solid var(--border) !important;
-          font-size: 13px !important;
-          background: var(--surface) !important;
-          color: var(--text) !important;
-          transition: border-color 0.18s, box-shadow 0.18s !important;
-          height: 38px !important;
-        }
-        .adm-form .ant-input:focus,
-        .adm-form .ant-input-number:focus-within,
-        .adm-form .ant-picker:focus-within {
-          border-color: var(--purple) !important;
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
-        }
-        .adm-form .ant-input:hover,
-        .adm-form .ant-input-number:hover,
-        .adm-form .ant-picker:hover {
-          border-color: var(--purple) !important;
-        }
-        .adm-form textarea.ant-input {
-          height: auto !important;
-          min-height: 80px !important;
-          padding-top: 8px !important;
-        }
-        .adm-form .ant-select .ant-select-selector {
-          border-radius: 8px !important;
-          border: 1.5px solid var(--border) !important;
-          font-size: 13px !important;
-          background: var(--surface) !important;
-          color: var(--text) !important;
-          height: 38px !important;
-          align-items: center !important;
-        }
-        .adm-form .ant-select:hover .ant-select-selector {
-          border-color: var(--purple) !important;
-        }
-        .adm-form .ant-select-focused .ant-select-selector {
-          border-color: var(--purple) !important;
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
-        }
-        .adm-form .ant-picker { width: 100% !important; }
-        .adm-form .ant-input-number { width: 100% !important; }
-        .adm-form .ant-form-item-explain-error {
-          font-size: 11px !important;
-          margin-top: 3px !important;
-        }
-        .adm-form .ant-input[disabled] {
-          background: rgba(var(--purple-rgb), 0.08) !important;
-          color: var(--purple) !important;
-          font-weight: 700 !important;
-          border-color: rgba(var(--purple-rgb), 0.3) !important;
-          cursor: default !important;
-        }
-        .adm-form .roll-preview-assigned .ant-input[disabled] {
-          background: var(--success-light) !important;
-          color: var(--success-hover) !important;
-          border-color: rgba(var(--success-rgb), 0.3) !important;
-          font-size: 15px !important;
-        }
-        .adm-form .roll-preview-placeholder .ant-input[disabled] {
-          background: var(--background) !important;
-          color: var(--text-muted) !important;
-          border-color: var(--border) !important;
-          font-weight: 400 !important;
-          font-style: italic !important;
-        }
-        .adm-form .ant-form-item {
-          margin-bottom: 16px !important;
-        }
+.adm-form .ant-form-item-label > label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  height: auto !important;
+}
+.adm-form .ant-input,
+.adm-form .ant-input-number,
+.adm-form .ant-input-number-input,
+.adm-form .ant-picker {
+  border-radius: 8px !important;
+  border: 1.5px solid var(--border) !important;
+  font-size: 13px !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  transition: border-color 0.18s, box-shadow 0.18s !important;
+  height: 38px !important;
+}
+.adm-form .ant-input:focus,
+.adm-form .ant-input-number:focus-within,
+.adm-form .ant-picker:focus-within {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1) !important;
+}
+.adm-form .ant-input:hover,
+.adm-form .ant-input-number:hover,
+.adm-form .ant-picker:hover {
+  border-color: var(--primary) !important;
+}
+.adm-form textarea.ant-input {
+  height: auto !important;
+  min-height: 80px !important;
+  padding-top: 8px !important;
+}
+.adm-form .ant-select .ant-select-selector {
+  border-radius: 8px !important;
+  border: 1.5px solid var(--border) !important;
+  font-size: 13px !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  height: 38px !important;
+  align-items: center !important;
+}
+.adm-form .ant-select:hover .ant-select-selector {
+  border-color: var(--primary) !important;
+}
+.adm-form .ant-select-focused .ant-select-selector {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1) !important;
+}
+.adm-form .ant-picker { width: 100% !important; }
+.adm-form .ant-input-number { width: 100% !important; }
+.adm-form .ant-form-item-explain-error {
+  font-size: 11px !important;
+  margin-top: 3px !important;
+}
+.adm-form .ant-input[disabled] {
+  background: rgba(var(--primary-rgb), 0.08) !important;
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+  border-color: rgba(var(--primary-rgb), 0.3) !important;
+  cursor: default !important;
+}
+.adm-form .roll-preview-assigned .ant-input[disabled] {
+  background: var(--success-light) !important;
+  color: var(--success-hover) !important;
+  border-color: rgba(var(--success-rgb), 0.3) !important;
+  font-size: 15px !important;
+}
+.adm-form .roll-preview-placeholder .ant-input[disabled] {
+  background: var(--background) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border) !important;
+  font-weight: 400 !important;
+  font-style: italic !important;
+}
+.adm-form .ant-form-item {
+  margin-bottom: 16px !important;
+}
 
-        /* Step tabs */
-        .adm-tab {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          padding: 14px 20px 12px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          position: relative;
-          min-width: 80px;
-          transition: background 0.2s;
-        }
-        .adm-tab:hover { background: rgba(124,58,237,0.03); }
-        .adm-tab .step-num {
-          width: 32px; height: 32px;
-          border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 13px; font-weight: 700;
-          transition: all 0.22s;
-        }
-        .adm-tab .step-lbl {
-          font-size: 10px; font-weight: 700;
-          letter-spacing: 0.07em;
-          text-transform: uppercase;
-        }
-        .adm-tab.active .step-num {
-          background: var(--purple);
-          color: #fff;
-          box-shadow: 0 3px 10px rgba(124,58,237,0.4);
-        }
-        .adm-tab.active .step-lbl { color: var(--purple); }
-        .adm-tab.active::after {
-          content: '';
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: 2px;
-          background: var(--purple);
-          border-radius: 2px 2px 0 0;
-        }
-        .adm-tab.done .step-num {
-          background: var(--success-light);
-          color: var(--success-hover);
-          border: 2px solid var(--success);
-        }
-        .adm-tab.done .step-lbl { color: var(--success-hover); }
-        .adm-tab.idle .step-num {
-          background: var(--surface-soft);
-          color: var(--text-muted);
-          border: 1.5px solid var(--border);
-        }
-        .adm-tab.idle .step-lbl { color: var(--text-muted); }
-        .adm-connector {
-          flex: 1; height: 1.5px;
-          background: var(--border);
-          margin-top: -10px;
-          transition: background 0.3s;
-        }
-        .adm-connector.done { background: var(--success); }
+/* Step tabs */
+.adm-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 20px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  min-width: 80px;
+  transition: background 0.2s;
+}
+.adm-tab:not(:disabled):hover { background: rgba(var(--primary-rgb), 0.05); }
+.adm-tab:disabled { cursor: not-allowed; opacity: 0.55; }
+.adm-tab .step-num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  transition: all 0.22s;
+}
+.adm-tab .step-lbl {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.adm-tab.active .step-num {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(var(--primary-rgb), 0.4);
+}
+.adm-tab.active .step-lbl { color: var(--primary); }
+.adm-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px 2px 0 0;
+}
+.adm-tab.done .step-num {
+  background: var(--success-light);
+  color: var(--success-hover);
+  border: 2px solid var(--success);
+}
+.adm-tab.done .step-lbl { color: var(--success-hover); }
+.adm-tab.idle .step-num {
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
+}
+.adm-tab.idle .step-lbl { color: var(--text-muted); }
+.adm-connector {
+  flex: 1; height: 1.5px;
+  background: var(--border);
+  margin-top: -10px;
+  transition: background 0.3s;
+}
+.adm-connector.done { background: var(--success); }
 
-        /* Grid layouts */
-        .adm-row {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 0 20px;
-        }
-        .adm-row-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 0 20px;
-        }
-        @media (max-width: 640px) {
-          .adm-row { grid-template-columns: 1fr 1fr; }
-          .adm-row-2 { grid-template-columns: 1fr; }
-          .adm-tab { min-width: 56px; padding: 10px 8px; }
-          .adm-tab .step-lbl { display: none; }
-        }
-        @media (max-width: 420px) {
-          .adm-row { grid-template-columns: 1fr; }
-        }
+/* Grid layouts */
+.adm-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 20px;
+}
+.adm-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+}
+@media (max-width: 640px) {
+  .adm-row { grid-template-columns: 1fr 1fr; }
+  .adm-row-2 { grid-template-columns: 1fr; }
+  .adm-tab { min-width: 56px; padding: 10px 8px; }
+  .adm-tab .step-lbl { display: none; }
+}
+@media (max-width: 420px) {
+  .adm-row { grid-template-columns: 1fr; }
+}
 
 /* ── from components/forms/LoginForm.jsx ─────────────────────────────── */
   /* ── Root / layout ── */
@@ -502,90 +503,103 @@
     .lf-trust-badge { font-size: 10.5px; padding: 3px 8px; }
   }
 
-/* ── from components/forms/RegisterForm.jsx ─────────────────────────────── */
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+/* ── Registration forms (staff, and the school admin a Super Admin creates) ───── */
+.reg-form .ant-form-item-label > label {
+  font-size: 11px !important; font-weight: 700 !important; color: var(--text-muted) !important;
+  text-transform: uppercase !important; letter-spacing: 0.07em !important; height: auto !important;
+}
+.reg-form .ant-input, .reg-form .ant-input-affix-wrapper,
+.reg-form .ant-input-number, .reg-form .ant-picker {
+  border-radius: 10px !important; border: 1px solid var(--border) !important;
+  font-size: 13px !important; height: 38px !important;
+  background: var(--surface) !important; color: var(--text) !important; width: 100% !important;
+}
+.reg-form .ant-input-affix-wrapper { padding: 0 12px !important; }
+.reg-form .ant-input-affix-wrapper > .ant-input {
+  height: 36px !important; background: transparent !important; width: auto !important;
+  flex: 1 1 auto !important; border: none !important; box-shadow: none !important; border-radius: 0 !important;
+}
+.reg-form .ant-input-affix-wrapper .ant-input-suffix { margin-left: 8px; color: var(--text-muted); }
+.reg-form .ant-input:focus, .reg-form .ant-input-affix-wrapper-focused,
+.reg-form .ant-input-number-focused, .reg-form .ant-picker-focused {
+  border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12) !important;
+}
+.reg-form .ant-select .ant-select-selector {
+  border-radius: 10px !important; border: 1px solid var(--border) !important;
+  height: 38px !important; background: var(--surface) !important;
+  align-items: center !important; font-size: 13px !important;
+}
+.reg-form .ant-select-focused .ant-select-selector {
+  border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12) !important;
+}
+.reg-form .ant-checkbox-checked .ant-checkbox-inner {
+  background: var(--primary) !important; border-color: var(--primary) !important;
+}
+.reg-form .ant-form-item-explain-error { font-size: 11px !important; margin-top: 3px !important; }
+.reg-form .ant-form-item { margin-bottom: 16px !important; }
+.reg-form .ant-input-number-handler-wrap { display: none; }
 
-  .reg-form .ant-form-item-label > label {
-    font-size: 11px !important; font-weight: 700 !important; color: var(--text-muted) !important;
-    text-transform: uppercase !important; letter-spacing: 0.07em !important; height: auto !important;
-  }
-  .reg-form .ant-input, .reg-form .ant-input-affix-wrapper,
-  .reg-form .ant-input-number, .reg-form .ant-picker {
-    border-radius: 10px !important; border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important;
-    font-size: 12px !important; height: 30px !important;
-    background: var(--surface-soft) !important; color: var(--text) !important; width: 100% !important;
-  }
-  .reg-form .ant-input-affix-wrapper { padding: 0 12px !important; }
-  .reg-form .ant-input-affix-wrapper input { height: 30px !important; background: transparent !important; }
-  .reg-form .ant-input:focus, .reg-form .ant-input-affix-wrapper-focused,
-  .reg-form .ant-input-number-focused, .reg-form .ant-picker-focused {
-    border-color: var(--purple) !important; box-shadow: 0 0 0 3px rgba(var(--purple-rgb), 0.1) !important;
-  }
-  .reg-form .ant-select .ant-select-selector {
-    border-radius: 10px !important; border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important;
-    height: 30px !important; background: var(--surface-soft) !important;
-    align-items: center !important; font-size: 12px !important;
-  }
-  .reg-form .ant-select-focused .ant-select-selector {
-    border-color: var(--purple) !important; box-shadow: 0 0 0 3px rgba(var(--purple-rgb), 0.1) !important;
-  }
-  .reg-form .ant-checkbox-checked .ant-checkbox-inner {
-    background: var(--purple) !important; border-color: var(--purple) !important;
-  }
-  .reg-form .ant-form-item-explain-error { font-size: 11px !important; margin-top: 3px !important; }
-  .reg-form .ant-form-item { margin-bottom: 14px !important; }
-  .reg-form .ant-input-number-handler-wrap { display: none; }
+/* Section divider inside a step, e.g. "Employee Profile" / "Payroll Setup". */
+.reg-section {
+  font-size: 11px; font-weight: 700; color: var(--primary);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin: 4px 0 14px; padding-bottom: 7px; border-bottom: 1px solid var(--border);
+}
 
-  .reg-alert {
-    padding: 10px 14px; border-radius: 10px; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;
-  }
-  .reg-alert.success { background: var(--success-light); color: var(--success-hover); border: 1px solid rgba(var(--success-rgb), 0.3); }
-  .reg-alert.error   { background: var(--danger-light); color: var(--danger-hover); border: 1px solid rgba(var(--danger-rgb), 0.3); }
+.reg-alert {
+  padding: 10px 14px; border-radius: 10px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;
+}
+.reg-alert.success { background: var(--success-light); color: var(--success-hover); border: 1px solid rgba(var(--success-rgb), 0.3); }
+.reg-alert.error   { background: var(--danger-light); color: var(--danger-hover); border: 1px solid rgba(var(--danger-rgb), 0.3); }
 
-  .reg-btn {
-    height: 30px; border-radius: 10px; font-size: 12px; font-weight: 600;
-    cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.01em;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
-  .reg-btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--purple-hover) 100%);
-    color: #fff; box-shadow: 0 4px 14px rgba(var(--purple-rgb),0.35); padding: 0 20px;
-  }
-  .reg-btn-primary:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(var(--purple-rgb),0.45); transform: translateY(-1px);
-  }
-  .reg-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-  .reg-btn-ghost { background: transparent; color: var(--purple); border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important; padding: 0 16px; }
-  .reg-btn-ghost:hover { border-color: var(--purple) !important; }
+.reg-btn {
+  height: 40px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.reg-btn-primary { background: var(--primary); color: #fff; padding: 0 20px; }
+.reg-btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+.reg-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.reg-btn-ghost {
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border) !important; padding: 0 16px;
+}
+.reg-btn-ghost:hover:not(:disabled) { border-color: var(--primary) !important; color: var(--primary); }
+.reg-btn-ghost:disabled { opacity: 0.55; cursor: not-allowed; }
 
-  .upload-zone {
-    display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-    border: 1.5px dashed rgba(var(--purple-rgb), 0.25); border-radius: 10px; background: var(--surface-soft);
-    cursor: pointer; transition: border-color 0.2s, background 0.2s;
-  }
-  .upload-zone:hover { border-color: var(--purple); background: rgba(var(--purple-rgb), 0.12); }
+.upload-zone {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+  border: 1px dashed var(--border); border-radius: 10px; background: var(--surface-soft);
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.upload-zone:hover { border-color: var(--primary); background: var(--primary-light); }
 
-  .step-status-row {
-    display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
-  }
-  .step-status-item {
-    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-    border-radius: 10px; font-size: 12px; font-weight: 500;
-  }
-  .step-status-item.done    { background: var(--success-light); color: var(--success-hover); }
-  .step-status-item.loading { background: rgba(var(--purple-rgb), 0.08); color: var(--purple); }
-  .step-status-item.error   { background: var(--danger-light); color: var(--danger-hover); }
-  .step-status-item.idle    { background: var(--background); color: var(--text-muted); }
+/* The whole row toggles the checkbox, not just the 16px box on the right. */
+.reg-toggle-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; background: var(--surface-soft); border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 20px; cursor: pointer;
+}
+.reg-toggle-row:hover { border-color: var(--primary); }
 
-  .reg-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 16px;
-  }
-  @media (max-width: 600px) {
-    .reg-grid-2 { grid-template-columns: 1fr; }
-  }
+.step-status-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.step-status-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+  border-radius: 10px; font-size: 12px; font-weight: 500;
+}
+.step-status-item.done    { background: var(--success-light); color: var(--success-hover); }
+.step-status-item.loading { background: var(--primary-light); color: var(--primary); }
+.step-status-item.error   { background: var(--danger-light); color: var(--danger-hover); }
+.step-status-item.idle    { background: var(--surface-soft); color: var(--text-muted); }
 
-  .spin { animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+.reg-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+@media (max-width: 600px) {
+  .reg-grid-2 { grid-template-columns: 1fr; }
+  .reg-actions { flex-direction: column-reverse; }
+  .reg-actions .reg-btn { width: 100%; }
+}
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+

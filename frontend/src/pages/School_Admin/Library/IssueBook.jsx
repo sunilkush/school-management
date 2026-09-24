@@ -21,7 +21,9 @@ import {
 } from "../../../features/librarySlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { iconWell, pill, statGrid } from "../../../styles/pageStyles";
+import {
+  iconWell, pill, statGrid,
+} from "../../../styles/pageStyles";
 
 const { Option } = Select;
 
@@ -201,7 +203,7 @@ const IssueBook = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontWeight: 600, fontSize: 13 }}>{r.borrowerName}</div>
-          <div className="u-meta-xs">{r.memberType}</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.memberType}</div>
         </div>
       ),
     },
@@ -259,12 +261,14 @@ const IssueBook = () => {
   ];
 
   return (
-    <div className="page-wrapper">
-      <PageHeader
+    <>
+    <PageHeader
         title="Issue / Return Books"
         subtitle="Manage book circulation for students, teachers, and staff"
         icon={<BookOutlined />}
       />
+    <div className="page-wrapper">
+      
 
       {/* ── KPI summary ───────────────────────────────────────────── */}
       <div style={statGrid(150)}>
@@ -321,7 +325,7 @@ const IssueBook = () => {
                 >
                   {books.filter((b) => (b.availableCopies || 0) > 0).map((b) => (
                     <Option key={b._id} value={b._id}>
-                      {b.title} <span className="u-meta-xs">({b.availableCopies} left)</span>
+                      {b.title} <span style={{ color: "var(--text-muted)", fontSize: 11 }}>({b.availableCopies} left)</span>
                     </Option>
                   ))}
                 </Select>
@@ -329,7 +333,7 @@ const IssueBook = () => {
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item label="Issue Date" name="issueDate" rules={[{ required: true }]}>
-                <DatePicker className="u-full" />
+                <DatePicker style={{ width: "100%" }} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8} style={{ display: "flex", alignItems: "flex-end" }}>
@@ -346,9 +350,9 @@ const IssueBook = () => {
       {/* ── Records table ──────────────────────────────────────────── */}
       <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
-          <div className="u-title-sm">Issue Records</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Issue Records</div>
           <Input
-            prefix={<SearchOutlined className="u-muted" />}
+            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
             placeholder="Search borrower, book, status..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -381,9 +385,9 @@ const IssueBook = () => {
       >
         {returningRecord && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div className="section-panel" style={{ padding: 14, marginBottom: 0 }}>
+            <div className="section-panel is-last" style={{ padding: 14 }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>{returningRecord.bookTitle}</div>
-              <div className="u-meta">
+              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
                 Borrower: <strong>{returningRecord.borrowerName}</strong> &nbsp;|&nbsp;
                 Due: <strong style={{ color: returningRecord.status === "Overdue" ? "var(--danger)" : "inherit" }}>{returningRecord.dueDate}</strong>
               </div>
@@ -396,7 +400,7 @@ const IssueBook = () => {
 
             <div>
               <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13 }}>Return Status</div>
-              <Select value={returnStatus} onChange={setReturnStatus} className="u-full">
+              <Select value={returnStatus} onChange={setReturnStatus} style={{ width: "100%" }}>
                 <Option value="Returned">
                   <CheckCircleOutlined style={{ color: "var(--success)", marginRight: 6 }} />
                   Returned — Book is back in good condition
@@ -416,7 +420,7 @@ const IssueBook = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </div></>
   );
 };
 

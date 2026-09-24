@@ -30,11 +30,14 @@ const TotalSalaryByUnit = ({ data }) => {
 
   return (
     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "20px 20px 16px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      {/* Wraps on a narrow screen: side by side the heading was squeezed into a three-line column
+          next to the department buttons. */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
         <div>
-          <Text style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", display: "block" }}>Salary by Unit</Text>
+          <Text style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", display: "block" }}>Monthly Salary Cost</Text>
+          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>By department</Text>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {units.map((u) => (
             <button key={u.key} onClick={() => setSelected(u.key)} style={{ padding: "6px 16px", borderRadius: 8, fontSize: 12.5, border: `1px solid ${selected === u.key ? u.color : "var(--border)"}`, color: selected === u.key ? u.color : "var(--text-muted)", background: "transparent" }}>
               {u.label}

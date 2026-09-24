@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useGetSchoolAdminDashboardAnalyticsQuery } from "../../../services/schoolDashboardApi";
 import {
   Row,
@@ -17,6 +17,12 @@ import {
   RiseOutlined,
   TeamOutlined,
   ReloadOutlined,
+  RightOutlined,
+  UserAddOutlined,
+  ScheduleOutlined,
+  CheckSquareOutlined,
+  NotificationOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
@@ -30,7 +36,78 @@ const IncomeAnalysis    = lazy(() => import("./components/IncomeAnalysis.jsx"));
 const EmployeeStructure = lazy(() => import("./components/EmployeeStructure.jsx"));
 const EmployeePerformance = lazy(() => import("./components/EmployeePerformance.jsx"));
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
+
+/* ─────────────────────────────────────────
+   Where the numbers lead
+   ─────────────────────────────────────────
+   School Admin, Principal and Vice Principal share this screen but not their menus, so each
+   card and button points at the page that exists for the role actually looking at it. A key
+   left out here simply renders as a plain, unclickable card.
+───────────────────────────────────────── */
+const ROLE_LINKS = {
+  schooladmin: {
+    newAdmissions: "schooladmin/admission/inquiry",
+    totalStudents: "schooladmin/studentList",
+    totalTeachers: "schooladmin/teacher",
+    totalIncome: "schooladmin/fees/reports",
+    finance: "schooladmin/fees/reports",
+    staff: "schooladmin/teacher",
+  },
+  principal: {
+    totalStudents: "principal/students",
+    totalTeachers: "principal/staff",
+    totalIncome: "principal/fees/reports",
+    finance: "principal/fees/reports",
+    staff: "principal/staff",
+  },
+  viceprincipal: {
+    totalStudents: "viceprincipal/attendance/students",
+    totalTeachers: "viceprincipal/attendance/staff",
+    totalIncome: "viceprincipal/fees/reports",
+    finance: "viceprincipal/fees/reports",
+    staff: "viceprincipal/attendance/staff",
+  },
+};
+
+const ROLE_ACTIONS = {
+  schooladmin: [
+    { label: "Collect Fees", to: "schooladmin/fees/collect", icon: <RupeeIcon /> },
+    { label: "New Admission", to: "schooladmin/admission", icon: <UserAddOutlined /> },
+    { label: "Mark Attendance", to: "schooladmin/attendance/mark", icon: <CheckSquareOutlined /> },
+    { label: "Timetable", to: "schooladmin/timetable", icon: <ScheduleOutlined /> },
+    { label: "Send Notice", to: "schooladmin/circulars", icon: <NotificationOutlined /> },
+  ],
+  principal: [
+    { label: "Mark Attendance", to: "principal/attendance/mark", icon: <CheckSquareOutlined /> },
+    { label: "Timetable", to: "principal/timetable", icon: <ScheduleOutlined /> },
+    { label: "Circulars", to: "principal/circulars", icon: <NotificationOutlined /> },
+    { label: "Fee Reports", to: "principal/fees/reports", icon: <RupeeIcon /> },
+    { label: "Academic Reports", to: "principal/reports/academic", icon: <FileTextOutlined /> },
+  ],
+  viceprincipal: [
+    { label: "Attendance", to: "viceprincipal/attendance/table", icon: <CheckSquareOutlined /> },
+    { label: "Timetable", to: "viceprincipal/timetable", icon: <ScheduleOutlined /> },
+    { label: "Exams", to: "viceprincipal/exams", icon: <FileTextOutlined /> },
+    { label: "Reports", to: "viceprincipal/reports", icon: <FileTextOutlined /> },
+  ],
+};
+
+/* Row of one-tap shortcuts — the jobs this role opens the dashboard to do. */
+const QuickActions = ({ actions, onGo }) => (
+  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+    {actions.map((a) => (
+      <Button
+        key={a.to}
+        onClick={() => onGo(a.to)}
+        icon={a.icon}
+        style={{ height: 40, borderRadius: 10, fontWeight: 600 }}
+      >
+        {a.label}
+      </Button>
+    ))}
+  </div>
+);
 
 /* ─────────────────────────────────────────
    Design tokens
@@ -105,7 +182,7 @@ const SectionErrorBanner = ({ message, onRetry }) => (
    Section header — thin labelled divider
    with an icon and optional tag.
 ───────────────────────────────────────── */
-const SectionHeader = ({ icon, title, tag, tagColor = "blue" }) => {
+const SectionHeader = ({ icon, title, tag, tagColor = "blue", linkLabel, onLink }) => {
   const t = tokens;
   return (
     <div
@@ -139,7 +216,7 @@ const SectionHeader = ({ icon, title, tag, tagColor = "blue" }) => {
         {title}
       </Text>
       {tag && (
-        <Tag color={tagColor} style={{ marginLeft: "auto", fontSize: 11, borderRadius: 99 }}>
+        <Tag color={tagColor} style={{ fontSize: 11, borderRadius: 99, marginInlineEnd: 0 }}>
           {tag}
         </Tag>
       )}
@@ -148,9 +225,13 @@ const SectionHeader = ({ icon, title, tag, tagColor = "blue" }) => {
           flex: 1,
           height: 1,
           background: `linear-gradient(90deg, ${t.sectionBorder} 0%, transparent 100%)`,
-          marginLeft: tag ? 0 : "auto",
         }}
       />
+      {linkLabel && onLink && (
+        <Button type="link" size="small" onClick={onLink} style={{ padding: 0, height: "auto", fontSize: 12 }}>
+          {linkLabel} <RightOutlined style={{ fontSize: 9 }} />
+        </Button>
+      )}
     </div>
   );
 };
@@ -162,7 +243,12 @@ const SchoolAdminDashboard = () => {
   // Principal and Vice Principal share this dashboard and check in like other staff; a School Admin
   // has no My Attendance page, so the section is theirs only.
   const { pathname } = useLocation();
-  const ownsSelfAttendance = ["principal", "viceprincipal"].includes(pathname.split("/")[2]);
+  const navigate = useNavigate();
+  const roleSegment = pathname.split("/")[2] || "schooladmin";
+  const links = ROLE_LINKS[roleSegment] || ROLE_LINKS.schooladmin;
+  const actions = ROLE_ACTIONS[roleSegment] || ROLE_ACTIONS.schooladmin;
+  const go = (to) => navigate(`/dashboard/${to}`);
+  const ownsSelfAttendance = ["principal", "viceprincipal"].includes(roleSegment);
   const schoolId = useSelector(
     (state) =>
       state?.auth?.user?.school?._id ||
@@ -172,10 +258,16 @@ const SchoolAdminDashboard = () => {
   const {
     data: analytics,
     isLoading,
+    isFetching,
     isError,
     error,
     refetch,
+    fulfilledTimeStamp,
   } = useGetSchoolAdminDashboardAnalyticsQuery(schoolId, { skip: !schoolId });
+
+  const updatedAt = fulfilledTimeStamp
+    ? new Date(fulfilledTimeStamp).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   return (
     <>
@@ -184,12 +276,14 @@ const SchoolAdminDashboard = () => {
         subtitle="Monitor school performance, finance and staff activity"
         icon={<DashboardOutlined />}
         extra={
-          <Tag
-            color="purple"
-            style={{ borderRadius: 99, padding: "3px 10px", fontSize: 11 }}
-          >
-            Live Overview
-          </Tag>
+          <Space size={10} wrap>
+            {updatedAt && (
+              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>Updated {updatedAt}</Text>
+            )}
+            <Button icon={<ReloadOutlined />} onClick={refetch} loading={isFetching}>
+              Refresh
+            </Button>
+          </Space>
         }
       />
       {ownsSelfAttendance && <MyAttendanceSection style={{ marginTop: 16 }} />}
@@ -204,12 +298,18 @@ const SchoolAdminDashboard = () => {
         />
       )}
 
+      {/* ── QUICK ACTIONS ── */}
+      <div className="dash-section">
+        <SectionHeader icon={<ScheduleOutlined />} title="Quick Actions" />
+        <QuickActions actions={actions} onGo={go} />
+      </div>
+
       {/* ── SUMMARY KPIs ── */}
       <div className="dash-section">
         <SectionHeader
           icon={<RiseOutlined />}
           title="Key Metrics"
-          tag="Today"
+          tag="This month"
                  />
         {isLoading ? (
           <Row gutter={[16, 16]}>
@@ -231,7 +331,7 @@ const SchoolAdminDashboard = () => {
               </Row>
             }
           >
-            <SummaryCards summary={analytics?.summary} />
+            <SummaryCards summary={analytics?.summary} links={links} />
           </Suspense>
         )}
       </div>
@@ -241,8 +341,10 @@ const SchoolAdminDashboard = () => {
         <SectionHeader
           icon={<RupeeIcon />}
           title="Finance Overview"
-          tag="This Month"
+          tag="Last 6 months"
           tagColor="green"
+          linkLabel="Fee reports"
+          onLink={links.finance ? () => go(links.finance) : undefined}
                  />
 
         <Row gutter={[16, 16]}>
@@ -286,6 +388,8 @@ const SchoolAdminDashboard = () => {
           title="Human Resources"
           tag="Staff"
           tagColor="purple"
+          linkLabel="All staff"
+          onLink={links.staff ? () => go(links.staff) : undefined}
                  />
 
         <Row gutter={[16, 16]}>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Form, Input, Select, Upload, Checkbox, Steps, DatePicker, InputNumber, message } from "antd";
 import { fetchSchools } from "../../features/schoolSlice";
 import { fetchRoles } from "../../features/roleSlice";
@@ -8,11 +9,11 @@ import { createEmployee, resetEmployeeState } from "../../features/employeeSlice
 import { savePayrollStructure } from "../../features/payrollSlice";
 import { Camera, CheckCircle, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
+import PasswordRequirements from "./PasswordRequirements";
+import { passwordRule, isStrongPassword } from "../../utils/passwordPolicy";
 
 const EXCLUDED_ROLES_FOR_SCHOOL_ADMIN = ["super admin", "school admin", "student", "parent"];
 const MAX_AVATAR_SIZE_BYTES = 1024 * 1024;
-
-/* ─── shared CSS injected once ─── */
 
 /* ─── status icon helper ─── */
 const StatusIcon = ({ status }) => {
@@ -29,11 +30,15 @@ const StatusIcon = ({ status }) => {
    (Driver/Transporter) rather than a School Admin. */
 const RegisterForm = ({ onClose, allowedRoleNames }) => {
   const [form] = Form.useForm();
+  // The rules are shown while the box is focused, and stay up while what is typed still fails.
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const passwordValue = Form.useWatch("password", form) || "";
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { roles }   = useSelector((s) => s.role);
   const { schools } = useSelector((s) => s.school);
-  const { Loading, error, user } = useSelector((s) => s.auth);
+  const { user } = useSelector((s) => s.auth);
 
   const currentUserRole  = user?.role?.name?.toLowerCase();
   const currentSchoolId  = user?.school?._id;
@@ -42,6 +47,9 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [avatarName,  setAvatarName]  = useState("");
+  const [avatarPreview, setAvatarPreview] = useState("");
+  // What was just created, kept on screen on the standalone page (a dialog closes instead).
+  const [created, setCreated] = useState(null);
   const [status, setStatus] = useState({ user: "idle", employee: "idle", payroll: "idle" });
   const [doneMsg, setDoneMsg] = useState("");
   const [errMsg,  setErrMsg]  = useState("");
@@ -56,23 +64,66 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
     if (isSchoolAdmin && currentSchoolId) form.setFieldValue("schoolId", currentSchoolId);
   }, [isSchoolAdmin, currentSchoolId, form]);
 
+  /**
+   * Which school the new user belongs to. The Role list depends on it — see filteredRoles below.
+   *
+   * Changing the school clears whatever role was already picked, because that role may belong to
+   * the school just navigated away from. Ant Design keeps a field's value when the options behind
+   * it change, so without this a role chosen first and a school chosen second would submit an id
+   * that no longer appears in the dropdown showing it.
+   */
+  const selectedSchoolId = Form.useWatch("schoolId", form);
+
+  useEffect(() => {
+    if (isSuperAdmin) form.setFieldValue("roleId", undefined);
+  }, [selectedSchoolId, isSuperAdmin, form]);
+
   const filteredRoles = useMemo(() => {
     if (!roles?.length || !currentUserRole) return [];
     if (allowedRoleNames?.length) {
       const allowed = allowedRoleNames.map((n) => n.toLowerCase());
       return roles.filter((r) => allowed.includes(r.name.toLowerCase()));
     }
-    if (isSuperAdmin)  return roles.filter((r) => r.name.toLowerCase() === "school admin");
+
+    /**
+     * Super Admin creates School Admins, so the list is the roles by that name — but WHICH one
+     * matters, and filtering by name alone got that wrong.
+     *
+     * Roles are scoped: initializeNewSchool gives every new school its own set, so a role named
+     * "School Admin" exists once per school plus once at platform level (schoolId null). Picking
+     * by name alone offered every one of them under an identical label, with nothing to tell
+     * them apart, and attaching a new admin to another school's role is not a cosmetic mistake.
+     *
+     * So: the selected school's own role if it has one, the platform role otherwise. Exactly one
+     * option either way. The final fallback keeps the old behaviour rather than handing back an
+     * empty list — a required dropdown with nothing in it is a dead end with no explanation.
+     */
+    if (isSuperAdmin) {
+      const named = roles.filter((r) => r.name.toLowerCase() === "school admin");
+      const ownedBySelected = selectedSchoolId
+        ? named.filter((r) => r.schoolId && String(r.schoolId) === String(selectedSchoolId))
+        : [];
+      if (ownedBySelected.length) return ownedBySelected;
+
+      const platform = named.filter((r) => !r.schoolId);
+      return platform.length ? platform : named;
+    }
+
     if (isSchoolAdmin) return roles.filter((r) => !EXCLUDED_ROLES_FOR_SCHOOL_ADMIN.includes(r.name.toLowerCase()));
     return [];
-  }, [roles, currentUserRole, isSuperAdmin, isSchoolAdmin, allowedRoleNames]);
+  }, [roles, currentUserRole, isSuperAdmin, isSchoolAdmin, allowedRoleNames, selectedSchoolId]);
 
   const schoolOptions = useMemo(() => schools.map((s) => ({ value: s._id, label: s.name })), [schools]);
   const roleOptions   = useMemo(() => filteredRoles.map((r) => ({ value: r._id, label: r.name })), [filteredRoles]);
 
   const handleAvatarUpload = useCallback((file) => {
-    if (file.size > MAX_AVATAR_SIZE_BYTES) return Upload.LIST_IGNORE;
+    // Was silently ignored before, so an oversized photo looked like a click that did nothing.
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      message.error(`"${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)} MB — the limit is 1 MB.`);
+      return Upload.LIST_IGNORE;
+    }
     setAvatarName(file.name);
+    setAvatarPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     return false;
   }, []);
 
@@ -92,11 +143,6 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
 
   /* ── Final submit: user → employee → payroll ── */
   const onFinish = useCallback(async (values) => {
-    /* validate required employee fields before anything hits the server */
-    if (!values.phone || !values.gender || !values.joinDate) {
-      message.error("Phone, Gender and Join Date are required");
-      return;
-    }
     setErrMsg("");
     setDoneMsg("");
     const resolvedSchoolId = isSchoolAdmin ? currentSchoolId : values.schoolId;
@@ -183,33 +229,116 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
     }
 
     setStatus({ user: "done", employee: "done", payroll: "done" });
-    setDoneMsg("User, employee profile, and payroll created successfully!");
+    setCreated({
+      name: values.name,
+      email: values.email,
+      role: roleOptions.find((r) => r.value === values.roleId)?.label || "",
+      isActive: values.isActive !== false,
+    });
     form.resetFields();
     setAvatarName("");
+    setAvatarPreview("");
     dispatch(resetState());
     dispatch(resetEmployeeState());
-    setTimeout(() => {
-      setDoneMsg("");
-      setStatus({ user: "idle", employee: "idle", payroll: "idle" });
-      setCurrentStep(0);
-      onClose?.();
-    }, 2000);
-  }, [dispatch, isSchoolAdmin, currentSchoolId, onClose, form]);
+    // In a dialog the caller closes it. On the page there is nowhere to be sent, so the result
+    // stays on screen with the two things anyone does next.
+    if (onClose) {
+      setDoneMsg("User, employee profile, and payroll created successfully!");
+      setTimeout(() => {
+        setDoneMsg("");
+        setStatus({ user: "idle", employee: "idle", payroll: "idle" });
+        setCurrentStep(0);
+        onClose();
+      }, 1500);
+    }
+  }, [dispatch, isSchoolAdmin, currentSchoolId, onClose, form, roleOptions]);
+
+  const startAnother = () => {
+    setCreated(null);
+    setStatus({ user: "idle", employee: "idle", payroll: "idle" });
+    setErrMsg("");
+    setCurrentStep(0);
+  };
+
+  // Defined once and placed in whichever column is free — next to Role, or below School+Role.
+  const avatarField = (
+    <Form.Item
+      label="Profile Avatar" name="avatar"
+      valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}
+    >
+      <Upload beforeUpload={handleAvatarUpload} maxCount={1} showUploadList={false}>
+        <div className="upload-zone">
+          {avatarPreview ? (
+            <img
+              src={avatarPreview}
+              alt=""
+              style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+            />
+          ) : (
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Camera size={18} />
+            </div>
+          )}
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {avatarName || "Click to upload avatar"}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+              {avatarName ? "Click to replace · PNG, JPG · Max 1 MB" : "PNG, JPG · Max 1 MB"}
+            </div>
+          </div>
+        </div>
+      </Upload>
+    </Form.Item>
+  );
 
   const isProcessing = status.user === "loading" || status.employee === "loading" || status.payroll === "loading";
   const allDone = status.user === "done" && status.employee === "done" && status.payroll === "done";
 
+  if (created && !onClose) {
+    return (
+      <div>
+        <div style={{ textAlign: "center", padding: "24px 8px" }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: "50%", margin: "0 auto 14px",
+            background: "var(--success-light)", color: "var(--success-hover)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <CheckCircle size={26} />
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--text)" }}>{created.name} is now on the staff list</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 6 }}>
+            {created.role ? `${created.role} · ` : ""}{created.email}
+            {created.isActive ? " · can sign in now" : " · account is not active yet"}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 10 }}>
+            Employee profile and payroll structure were created too.
+          </div>
+          <div className="reg-actions" style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 22 }}>
+            <button type="button" className="reg-btn reg-btn-ghost" onClick={startAnother}>Create another user</button>
+            <button type="button" className="reg-btn reg-btn-primary" onClick={() => navigate("/dashboard/schooladmin/teacher")}>
+              Go to Teachers &amp; Staff
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}>
-      
+    <div>
+
       {/* Steps indicator */}
       <Steps
         current={currentStep}
         size="small"
         style={{ marginBottom: 20 }}
+        // Backwards is always allowed; forwards goes through the same validation as the button,
+        // so step 2 can never be reached with an invalid account.
+        onChange={(step) => { if (isProcessing) return; if (step === 0) setCurrentStep(0); else goToStep2(); }}
         items={[
-          { title: "Account" },
-          { title: "Employee & Payroll" },
+          { title: "Account", description: "Login & role" },
+          { title: "Employee & Payroll", description: "Profile & salary" },
         ]}
       />
 
@@ -272,8 +401,23 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           </div>
 
           <div className="reg-grid-2">
-            <Form.Item label="Password" name="password" rules={[{ required: true, min: 6, message: "Min 6 characters" }]}>
-              <Input.Password placeholder="Min. 6 characters" styles={{border:"none"}} />
+            <Form.Item
+              label="Password"
+              name="password"
+              rules={[{ required: true, message: "Required" }, passwordRule]}
+              // Passed as null when hidden: an always-present extra node would leave a gap under the box.
+              extra={
+                passwordFocused || (!!passwordValue && !isStrongPassword(passwordValue)) ? (
+                  <PasswordRequirements value={passwordValue} />
+                ) : null
+              }
+            >
+              <Input.Password
+                placeholder="Min. 8 characters"
+                styles={{border:"none"}}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+              />
             </Form.Item>
             <Form.Item
               label="Confirm Password" name="confirmPassword"
@@ -293,43 +437,40 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
             </Form.Item>
           </div>
 
-          <div className={isSuperAdmin ? "reg-grid-2" : ""}>
+          <div className="reg-grid-2">
             {isSuperAdmin && (
               <Form.Item label="School" name="schoolId" rules={[{ required: true, message: "Select a school" }]}>
                 <Select placeholder="Select school" options={schoolOptions} />
               </Form.Item>
             )}
-            <Form.Item label="Role" name="roleId" rules={[{ required: true, message: "Select a role" }]}>
-              <Select placeholder="Select role" options={roleOptions} />
+            <Form.Item
+              label="Role"
+              name="roleId"
+              rules={[{ required: true, message: "Select a role" }]}
+              extra={
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  Decides which menu and pages this person sees after signing in.
+                </span>
+              }
+            >
+              <Select placeholder="Select role" options={roleOptions} showSearch optionFilterProp="label" />
             </Form.Item>
+            {!isSuperAdmin && avatarField}
           </div>
 
-          <Form.Item
-            label="Profile Avatar" name="avatar"
-            valuePropName="fileList" getValueFromEvent={(e) => e?.fileList}
-          >
-            <Upload beforeUpload={handleAvatarUpload} maxCount={1} showUploadList={false}>
-              <div className="upload-zone">
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(var(--purple-rgb), 0.12)", color: "var(--purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Camera size={18} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)" }}>{avatarName || "Click to upload avatar"}</div>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>PNG, JPG · Max 1 MB</div>
-                </div>
-              </div>
-            </Upload>
-          </Form.Item>
+          {isSuperAdmin && avatarField}
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 10, background: "var(--surface-soft)", border: "1.5px solid rgba(var(--purple-rgb), 0.25)", borderRadius: 10, marginBottom: 20 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Activate Account</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>User can log in immediately after registration</div>
-            </div>
+          <label className="reg-toggle-row">
+            <span>
+              <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Activate account</span>
+              <span style={{ display: "block", fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                User can sign in straight away. Untick to create the account but keep it locked.
+              </span>
+            </span>
             <Form.Item name="isActive" valuePropName="checked" noStyle>
               <Checkbox />
             </Form.Item>
-          </div>
+          </label>
 
           <button type="button" className="reg-btn reg-btn-primary u-full" onClick={goToStep2}>
             Next: Employee Details →
@@ -342,9 +483,16 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
         <div style={{ display: currentStep === 1 ? "block" : "none" }}>
 
           {/* Section label */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12, paddingBottom: 6, borderBottom: "1.5px solid rgba(var(--purple-rgb), 0.25)" }}>
-            Employee Profile
+          {/* Who is being created — step 1 is off screen by the time this matters. */}
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>
+            Creating <strong style={{ color: "var(--text)" }}>{form.getFieldValue("name") || "this user"}</strong>
+            {roleOptions.find((r) => r.value === form.getFieldValue("roleId"))?.label ? (
+              <> as <strong style={{ color: "var(--text)" }}>{roleOptions.find((r) => r.value === form.getFieldValue("roleId"))?.label}</strong></>
+            ) : null}
+            . These details build the employee record and the opening salary structure.
           </div>
+
+          <div className="reg-section">Employee Profile</div>
 
           <div className="reg-grid-2">
             <Form.Item label="Phone Number" name="phone" rules={[{ required: true, message: "Required" }, { pattern: /^[0-9]{10,13}$/, message: "Enter valid 10-13 digit number" }]}>
@@ -384,9 +532,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           </div>
 
           {/* Payroll section */}
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: "0.07em", margin: "8px 0 12px", paddingBottom: 6, borderBottom: "1.5px solid rgba(var(--purple-rgb), 0.25)" }}>
-            Payroll Setup
-          </div>
+          <div className="reg-section" style={{ marginTop: 22 }}>Payroll Setup</div>
 
           <Form.Item label="Basic Salary (₹/month)" name="basicSalary">
             <InputNumber
@@ -403,7 +549,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+          <div className="reg-actions" style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button type="button" className="reg-btn reg-btn-ghost u-grow" onClick={() => setCurrentStep(0)} disabled={isProcessing}>
               ← Back
             </button>

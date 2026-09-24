@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { Select, Typography, Avatar, Grid } from "antd";
+import React from "react";
+import { Typography, Avatar, Grid } from "antd";
 
 const { Text } = Typography;
-const { Option } = Select;
 const { useBreakpoint } = Grid;
 
 const performanceConfig = {
@@ -33,8 +32,6 @@ const EmployeePerformance = ({ employees = [] }) => {
   const screens    = useBreakpoint();
   const isMobile   = !screens.md;
 
-  const [period, setPeriod] = useState("lastMonth");
-
   const list = employees.length
     ? employees
     : [{ name: "No records", email: "-", designation: "-", performance: "AVERAGE", dept: "-", avatar: null }];
@@ -56,13 +53,13 @@ const EmployeePerformance = ({ employees = [] }) => {
     }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-        <Text style={{ fontSize: 14, fontWeight: 700, color: textPri }}>
-          Teacher Performance
-        </Text>
-        <Select value={period} onChange={setPeriod} size="small" style={{ width: 120 }} bordered={false}>
-          <Option value="lastMonth">Last Month</Option>
-          <Option value="thisMonth">This Month</Option>
-        </Select>
+        <div>
+          <Text style={{ fontSize: 14, fontWeight: 700, color: textPri, display: "block" }}>
+            Teacher Performance
+          </Text>
+          {/* A "Last month / This month" picker used to sit here; it changed nothing, so it is gone. */}
+          <Text style={{ fontSize: 12, color: textSec }}>Top staff by performance score</Text>
+        </div>
       </div>
 
       {/* ── MOBILE: Card list ── */}
