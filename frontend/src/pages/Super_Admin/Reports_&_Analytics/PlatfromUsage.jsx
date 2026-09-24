@@ -57,7 +57,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         }}
       >
-        <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>{label}</Text>
+        <Text className="u-meta">{label}</Text>
         <br />
         <Text strong style={{ fontSize: 15, color: "var(--text-primary)" }}>
           {payload[0]?.value?.toLocaleString?.() || 0} users
@@ -253,7 +253,7 @@ const PlatformUsage = () => {
       dataIndex: "users",
       sorter: (a, b) => a.users - b.users,
       render: (v) => (
-        <Text style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+        <Text className="u-strong">
           {Number(v || 0).toLocaleString()}
         </Text>
       ),
@@ -276,7 +276,7 @@ const PlatformUsage = () => {
       dataIndex: "usage",
       sorter: (a, b) => a.usage - b.usage,
       render: (val) => (
-        <Space direction="vertical" size={2} style={{ width: "100%" }}>
+        <Space direction="vertical" size={2} className="u-full">
           <Progress
             percent={val}
             size="small"
@@ -285,7 +285,7 @@ const PlatformUsage = () => {
             }
             showInfo={false}
           />
-          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{val}% utilized</Text>
+          <Text className="u-meta-xs">{val}% utilized</Text>
         </Space>
       ),
     },
@@ -359,7 +359,7 @@ const PlatformUsage = () => {
           showIcon
           message="Some analytics data could not be loaded"
           description={errorMessage}
-          style={{ marginTop: 20 }}
+          className="u-mt-5"
         />
       ) : null}
 
@@ -397,7 +397,7 @@ const PlatformUsage = () => {
 
         <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>User Growth</span>
+            <span className="u-title-sm">User Growth</span>
             <Tag color="blue" style={{ borderRadius: 20 }}>Total</Tag>
             <Tag color="green" style={{ borderRadius: 20 }}>Active</Tag>
           </div>
@@ -452,17 +452,12 @@ const PlatformUsage = () => {
           </ResponsiveContainer>
         </div>
 
-        <style>{`
-          @media (max-width: 900px) {
-            .platform-usage-grid { grid-template-columns: 1fr !important; }
-          }
-        `}</style>
-
+        
         <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20 }} className="platform-usage-grid">
           <div className="section-panel" style={{ padding: 0 }}>
             <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 10 }}>
               <BankOutlined style={{ color: "var(--primary)" }} />
-              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>School Usage</span>
+              <span className="u-title-sm">School Usage</span>
               <Tag style={{ borderRadius: 20 }}>{tableData.length} schools</Tag>
             </div>
             <div className="platform-usage-tbl data-table table-container" style={{ border: "none", borderRadius: 0 }}>
@@ -478,7 +473,7 @@ const PlatformUsage = () => {
           <div className="section-panel">
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <BellOutlined style={{ color: "var(--orange)" }} />
-              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Recent Activity</span>
+              <span className="u-title-sm">Recent Activity</span>
             </div>
             <Timeline
               items={(activity.length
@@ -516,7 +511,7 @@ const PlatformUsage = () => {
                       {item.desc}
                     </Text>
                     <br />
-                    <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    <Text className="u-meta-xs">
                       {item.time}
                     </Text>
                   </div>

@@ -88,7 +88,7 @@ const RunningYear = ({ year, onPlanNext }) => {
             <CheckCircleFilled /> Running year
           </div>
           <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", marginTop: 2 }}>{year.name}</div>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          <div className="u-meta-md">
             {start.format(DAY)} – {end.format(DAY)} · {monthsBetween(start, end)} months
           </div>
         </div>
@@ -152,10 +152,10 @@ const YearRow = ({ year, onSetRunning, onEdit, onArchive, onDelete, busy }) => {
         <CalendarOutlined />
       </div>
       <div style={{ flex: "1 1 200px", minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
+        <div className="u-title">
           {year.name} <Tag color={s.color} style={{ marginLeft: 6 }}>{s.label}</Tag>
         </div>
-        <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <div className="u-meta-md">
           {start.format(DAY)} – {end.format(DAY)} · {monthsBetween(start, end)} months
         </div>
       </div>
@@ -485,7 +485,7 @@ const AcademicYearPage = () => {
           {range?.[0] && range?.[1] && (
             <div style={{ padding: "12px 14px", borderRadius: 12, background: "var(--surface-soft)", marginBottom: 16 }}>
               <div style={{ fontSize: 22, fontWeight: 800, color: "var(--primary)" }}>{yearName(range[0], range[1])}</div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <div className="u-meta-md">
                 {monthsBetween(range[0], range[1])} months · {dayjs(range[0]).format(DAY)} – {dayjs(range[1]).format(DAY)}
               </div>
             </div>
@@ -495,7 +495,7 @@ const AcademicYearPage = () => {
             <Alert
               type="error"
               showIcon
-              style={{ marginBottom: 16 }}
+              className="u-mb-4"
               message={`These dates overlap ${overlap.name}`}
               description={`${overlap.name} runs ${dayjs(overlap.startDate).format(DAY)} – ${dayjs(overlap.endDate).format(DAY)}. A school's years cannot share days.`}
             />
@@ -505,7 +505,7 @@ const AcademicYearPage = () => {
             <Form.Item name="setRunning" valuePropName="checked" style={{ marginBottom: 0 }}>
               <Checkbox>
                 Set it running straight away
-                {running && <span style={{ color: "var(--text-muted)" }}> (instead of {running.name})</span>}
+                {running && <span className="u-muted"> (instead of {running.name})</span>}
               </Checkbox>
             </Form.Item>
           )}

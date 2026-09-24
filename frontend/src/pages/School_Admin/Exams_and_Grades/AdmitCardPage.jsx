@@ -231,11 +231,11 @@ const AdmitCardPage = () => {
       title: "Student",
       dataIndex: "studentName",
       render: (v) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={iconWell(C.primary, 32, { borderRadius: "50%", fontSize: 13, fontWeight: 800 })}>
             {(v || "?")[0].toUpperCase()}
           </div>
-          <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v || "—"}</span>
+          <span className="u-strong">{v || "—"}</span>
         </div>
       ),
     },
@@ -258,7 +258,7 @@ const AdmitCardPage = () => {
     {
       title: "Date",
       dataIndex: "examDate",
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{fmtDate(v)}</span>,
+      render: (v) => <span className="u-meta">{fmtDate(v)}</span>,
     },
     {
       title: "Actions",
@@ -319,7 +319,7 @@ const AdmitCardPage = () => {
             value={examId}
             onChange={handleExamChange}
             loading={loading}
-            style={{ width: "100%" }}
+            className="u-full"
             size="large"
             options={exams.map((e) => ({ label: e.title, value: e._id }))}
             filterOption={(input, opt) => opt.label?.toLowerCase().includes(input.toLowerCase())}
@@ -355,7 +355,7 @@ const AdmitCardPage = () => {
           padding: "16px 24px", borderBottom: "1px solid var(--border-muted)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+          <div className="u-title-sm">
             Student List
             {rows.length > 0 && (
               <span style={{ marginLeft: 8, ...pill(C.primary) }}>{rows.length}</span>
@@ -451,7 +451,7 @@ const AdmitCardPage = () => {
               }}>
                 {(selectedCard.studentName || "?")[0].toUpperCase()}
               </div>
-              <div style={{ flex: 1 }}>
+              <div className="u-grow">
                 <div style={{ fontSize: 17, fontWeight: 800, color: "#fff" }}>{selectedCard.studentName}</div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 3 }}>
                   Roll No: {selectedCard.rollNumber}

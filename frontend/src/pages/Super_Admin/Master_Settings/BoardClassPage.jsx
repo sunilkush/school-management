@@ -243,7 +243,7 @@ export default function BoardClassPage() {
           <div className="section-panel">
             {label(`Not added to ${board.name} yet`)}
             {missing.length === 0 ? (
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <div className="u-meta-md">
                 This board already runs every class on the list.
               </div>
             ) : (

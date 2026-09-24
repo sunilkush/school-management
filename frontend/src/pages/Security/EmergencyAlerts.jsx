@@ -94,7 +94,7 @@ const EmergencyAlerts = () => {
             Mark Resolved
           </Button>
         ) : (
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+          <span className="u-meta">—</span>
         ),
     },
   ];
@@ -137,7 +137,7 @@ const EmergencyAlerts = () => {
             <Text strong style={{ fontSize: 14, color: "var(--danger-hover)", display: "block" }}>
               {summary.highOpen} high-severity {summary.highOpen === 1 ? "alert needs" : "alerts need"} immediate attention
             </Text>
-            <Text style={{ fontSize: 12, color: "#9F1239" }}>Review and resolve open high-severity alerts below</Text>
+            <Text style={{ fontSize: 12, color: "var(--danger-hover)" }}>Review and resolve open high-severity alerts below</Text>
           </div>
         </div>
       )}
@@ -170,7 +170,7 @@ const EmergencyAlerts = () => {
             <Select value={severityFilter} onChange={setSeverityFilter} style={{ width: 130 }}
               options={["All", "Low", "Medium", "High"].map((v) => ({ value: v, label: v }))} />
             <Input
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search type, location..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}

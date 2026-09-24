@@ -272,170 +272,7 @@ const AdmissionForm = ({ onClose }) => {
 
   return (
     <>
-      <style>{`
-        .adm-form .ant-form-item-label > label {
-          font-size: 12px !important;
-          font-weight: 600 !important;
-          color: var(--text-secondary) !important;
-          height: auto !important;
-        }
-        .adm-form .ant-input,
-        .adm-form .ant-input-number,
-        .adm-form .ant-input-number-input,
-        .adm-form .ant-picker {
-          border-radius: 8px !important;
-          border: 1.5px solid var(--border) !important;
-          font-size: 13px !important;
-          background: var(--surface) !important;
-          color: var(--text) !important;
-          transition: border-color 0.18s, box-shadow 0.18s !important;
-          height: 38px !important;
-        }
-        .adm-form .ant-input:focus,
-        .adm-form .ant-input-number:focus-within,
-        .adm-form .ant-picker:focus-within {
-          border-color: var(--purple) !important;
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
-        }
-        .adm-form .ant-input:hover,
-        .adm-form .ant-input-number:hover,
-        .adm-form .ant-picker:hover {
-          border-color: var(--purple) !important;
-        }
-        .adm-form textarea.ant-input {
-          height: auto !important;
-          min-height: 80px !important;
-          padding-top: 8px !important;
-        }
-        .adm-form .ant-select .ant-select-selector {
-          border-radius: 8px !important;
-          border: 1.5px solid var(--border) !important;
-          font-size: 13px !important;
-          background: var(--surface) !important;
-          color: var(--text) !important;
-          height: 38px !important;
-          align-items: center !important;
-        }
-        .adm-form .ant-select:hover .ant-select-selector {
-          border-color: var(--purple) !important;
-        }
-        .adm-form .ant-select-focused .ant-select-selector {
-          border-color: var(--purple) !important;
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important;
-        }
-        .adm-form .ant-picker { width: 100% !important; }
-        .adm-form .ant-input-number { width: 100% !important; }
-        .adm-form .ant-form-item-explain-error {
-          font-size: 11px !important;
-          margin-top: 3px !important;
-        }
-        .adm-form .ant-input[disabled] {
-          background: rgba(var(--purple-rgb), 0.08) !important;
-          color: var(--purple) !important;
-          font-weight: 700 !important;
-          border-color: rgba(var(--purple-rgb), 0.3) !important;
-          cursor: default !important;
-        }
-        .adm-form .roll-preview-assigned .ant-input[disabled] {
-          background: var(--success-light) !important;
-          color: var(--success-hover) !important;
-          border-color: rgba(var(--success-rgb), 0.3) !important;
-          font-size: 15px !important;
-        }
-        .adm-form .roll-preview-placeholder .ant-input[disabled] {
-          background: var(--background) !important;
-          color: var(--text-muted) !important;
-          border-color: var(--border) !important;
-          font-weight: 400 !important;
-          font-style: italic !important;
-        }
-        .adm-form .ant-form-item {
-          margin-bottom: 16px !important;
-        }
-
-        /* Step tabs */
-        .adm-tab {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          padding: 14px 20px 12px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          position: relative;
-          min-width: 80px;
-          transition: background 0.2s;
-        }
-        .adm-tab:hover { background: rgba(124,58,237,0.03); }
-        .adm-tab .step-num {
-          width: 32px; height: 32px;
-          border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 13px; font-weight: 700;
-          transition: all 0.22s;
-        }
-        .adm-tab .step-lbl {
-          font-size: 10px; font-weight: 700;
-          letter-spacing: 0.07em;
-          text-transform: uppercase;
-        }
-        .adm-tab.active .step-num {
-          background: var(--purple);
-          color: #fff;
-          box-shadow: 0 3px 10px rgba(124,58,237,0.4);
-        }
-        .adm-tab.active .step-lbl { color: var(--purple); }
-        .adm-tab.active::after {
-          content: '';
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: 2px;
-          background: var(--purple);
-          border-radius: 2px 2px 0 0;
-        }
-        .adm-tab.done .step-num {
-          background: var(--success-light);
-          color: var(--success-hover);
-          border: 2px solid var(--success);
-        }
-        .adm-tab.done .step-lbl { color: var(--success-hover); }
-        .adm-tab.idle .step-num {
-          background: var(--surface-soft);
-          color: var(--text-muted);
-          border: 1.5px solid var(--border);
-        }
-        .adm-tab.idle .step-lbl { color: var(--text-muted); }
-        .adm-connector {
-          flex: 1; height: 1.5px;
-          background: var(--border);
-          margin-top: -10px;
-          transition: background 0.3s;
-        }
-        .adm-connector.done { background: var(--success); }
-
-        /* Grid layouts */
-        .adm-row {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 0 20px;
-        }
-        .adm-row-2 {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 0 20px;
-        }
-        @media (max-width: 640px) {
-          .adm-row { grid-template-columns: 1fr 1fr; }
-          .adm-row-2 { grid-template-columns: 1fr; }
-          .adm-tab { min-width: 56px; padding: 10px 8px; }
-          .adm-tab .step-lbl { display: none; }
-        }
-        @media (max-width: 420px) {
-          .adm-row { grid-template-columns: 1fr; }
-        }
-      `}</style>
-
+      
       {/* ── Gradient Header ── */}
       <div style={{
         background: "linear-gradient(135deg, var(--purple) 0%, var(--purple-hover) 100%)",
@@ -564,7 +401,7 @@ const AdmissionForm = ({ onClose }) => {
                   />
                 </Form.Item>
                 <Form.Item name="admissionDate" label="Admission Date" rules={[{ required: true, message: "Required" }]}>
-                  <DatePicker style={{ width: "100%" }} />
+                  <DatePicker className="u-full" />
                 </Form.Item>
               </div>
 
@@ -605,7 +442,7 @@ const AdmissionForm = ({ onClose }) => {
                   <Input placeholder="For SMS alerts" maxLength={10} />
                 </Form.Item>
                 <Form.Item name="feeDiscount" label="Fee Discount (%)">
-                  <InputNumber placeholder="0" min={0} max={100} style={{ width: "100%" }} />
+                  <InputNumber placeholder="0" min={0} max={100} className="u-full" />
                 </Form.Item>
               </div>
             </>
@@ -617,7 +454,7 @@ const AdmissionForm = ({ onClose }) => {
               <SectionHeading>Personal Details</SectionHeading>
               <div className="adm-row">
                 <Form.Item name="dateOfBirth" label="Date of Birth" rules={[{ required: true, message: "Required" }]}>
-                  <DatePicker style={{ width: "100%" }} />
+                  <DatePicker className="u-full" />
                 </Form.Item>
                 <Form.Item name="gender" label="Gender" rules={[{ required: true, message: "Required" }]}>
                   <Select placeholder="Select" options={[{ value: "Male", label: "Male" }, { value: "Female", label: "Female" }, { value: "Other", label: "Other" }]} />
@@ -641,7 +478,7 @@ const AdmissionForm = ({ onClose }) => {
 
               <div className="adm-row">
                 <Form.Item name="siblings" label="No. of Siblings">
-                  <InputNumber placeholder="0" min={0} style={{ width: "100%" }} />
+                  <InputNumber placeholder="0" min={0} className="u-full" />
                 </Form.Item>
                 <Form.Item name="orphan" label="Orphan">
                   <Select placeholder="Select" options={[{ value: "Yes", label: "Yes" }, { value: "No", label: "No" }]} />
@@ -693,7 +530,7 @@ const AdmissionForm = ({ onClose }) => {
                   <Input placeholder="e.g. B.Tech" />
                 </Form.Item>
                 <Form.Item name="fatherIncome" label="Annual Income (₹)">
-                  <InputNumber placeholder="0" min={0} style={{ width: "100%" }} />
+                  <InputNumber placeholder="0" min={0} className="u-full" />
                 </Form.Item>
               </div>
               <InfoHint>Father's login credentials will be auto-generated after successful admission.</InfoHint>
@@ -732,7 +569,7 @@ const AdmissionForm = ({ onClose }) => {
                   <Input placeholder="e.g. M.A." />
                 </Form.Item>
                 <Form.Item name="motherIncome" label="Annual Income (₹)">
-                  <InputNumber placeholder="0" min={0} style={{ width: "100%" }} />
+                  <InputNumber placeholder="0" min={0} className="u-full" />
                 </Form.Item>
               </div>
               <InfoHint>Mother's login credentials will be auto-generated after successful admission.</InfoHint>
@@ -777,7 +614,7 @@ const AdmissionForm = ({ onClose }) => {
                         {name ? (
                           <span style={{ fontSize: 12, color: "var(--text)" }}>
                             {name}{" "}
-                            <span style={{ color: "var(--text-muted)" }}>({(row.size / 1024).toFixed(1)} KB)</span>{" "}
+                            <span className="u-muted">({(row.size / 1024).toFixed(1)} KB)</span>{" "}
                             <span style={{ color: "var(--purple)", cursor: "pointer", fontWeight: 600 }}>Change</span>
                           </span>
                         ) : (
@@ -806,7 +643,7 @@ const AdmissionForm = ({ onClose }) => {
                   size="small"
                   icon={<PlusOutlined />}
                   onClick={handleDocumentRowAdd}
-                  style={{ marginTop: 12 }}
+                  className="u-mt-3"
                 >
                   Add Document
                 </Button>
@@ -843,7 +680,7 @@ const AdmissionForm = ({ onClose }) => {
         </button>
 
         {/* Step dots */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="u-row-sm">
           {TAB_KEYS.map((_, i) => (
             <div
               key={i}

@@ -54,8 +54,8 @@ const Panel = ({ icon, title, usedBy, children }) => (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 16 }}>
       <div style={iconWell("var(--primary)", 36)}>{icon}</div>
       <div>
-        <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{title}</div>
-        <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{usedBy}</div>
+        <div className="u-title">{title}</div>
+        <div className="u-meta-md">{usedBy}</div>
       </div>
     </div>
     {children}
@@ -84,9 +84,9 @@ const SecretField = ({ name, label, saved, clearing, onToggleClear, placeholder 
 
 const Toggle = ({ name, title, note }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0" }}>
-    <div style={{ flex: 1 }}>
-      <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{title}</div>
-      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{note}</div>
+    <div className="u-grow">
+      <div className="u-strong">{title}</div>
+      <div className="u-meta">{note}</div>
     </div>
     <Form.Item name={name} valuePropName="checked" noStyle><Switch /></Form.Item>
   </div>
@@ -236,7 +236,7 @@ export default function GlobalConfig() {
             children: (
               <>
                 <Alert
-                  type="info" showIcon style={{ marginBottom: 16 }}
+                  type="info" showIcon className="u-mb-4"
                   message="Nothing in the app reads these yet"
                   description="Changing them has no effect today. E-mails and SMS are sent with the server's .env settings, and maintenance mode, public registration and the school limit are not enforced."
                 />
@@ -256,7 +256,7 @@ export default function GlobalConfig() {
                   </div>
                 </Form.Item>
                 <div style={grid(200)}>
-                  <Form.Item name="maxSchools" label="School limit"><InputNumber min={0} style={{ width: "100%" }} placeholder="No limit" /></Form.Item>
+                  <Form.Item name="maxSchools" label="School limit"><InputNumber min={0} className="u-full" placeholder="No limit" /></Form.Item>
                   <Form.Item name="currency" label="Currency"><Select options={[{ value: "INR", label: "INR — Indian rupee" }]} /></Form.Item>
                   <Form.Item name="timezone" label="Time zone">
                     <Select showSearch options={["Asia/Kolkata", "UTC", "Asia/Dubai", "Asia/Singapore", "Europe/London", "Europe/Paris", "America/New_York", "America/Los_Angeles"].map((z) => ({ value: z, label: z }))} />
@@ -271,7 +271,7 @@ export default function GlobalConfig() {
                 <div style={{ fontWeight: 700, margin: "16px 0 8px" }}>Email (SMTP)</div>
                 <div style={grid(220)}>
                   <Form.Item name="smtpHost" label="Host"><Input placeholder="smtp.gmail.com" /></Form.Item>
-                  <Form.Item name="smtpPort" label="Port"><InputNumber min={1} max={65535} style={{ width: "100%" }} placeholder="587" /></Form.Item>
+                  <Form.Item name="smtpPort" label="Port"><InputNumber min={1} max={65535} className="u-full" placeholder="587" /></Form.Item>
                   <Form.Item name="smtpUser" label="Username"><Input autoComplete="off" /></Form.Item>
                   {secret("smtpPassword", "Password", "SMTP password")}
                   <Form.Item name="smtpFromEmail" label="From email" rules={[{ type: "email", message: "That is not an email address" }]}><Input placeholder="noreply@yourcompany.in" /></Form.Item>

@@ -73,18 +73,6 @@ const dayGroup = (dateStr) => {
   return "Earlier";
 };
 
-const CSS = `
-  @keyframes nd-ring { 0%,100% { transform: rotate(0) } 15% { transform: rotate(16deg) } 30% { transform: rotate(-14deg) } 45% { transform: rotate(10deg) } 60% { transform: rotate(-8deg) } 75% { transform: rotate(4deg) } }
-  .nd-ring { animation: nd-ring 1s ease-in-out 2; transform-origin: 50% 4px; }
-  .nd-bell { transition: border-color .15s ease, box-shadow .15s ease; }
-  .nd-bell:hover, .nd-bell:focus-visible { border-color: var(--primary) !important; outline: none; }
-  .nd-item { transition: background .15s ease; }
-  .nd-item:hover, .nd-item:focus-visible { background: var(--surface-soft); outline: none; }
-  .nd-item .nd-quick { opacity: 0; transition: opacity .15s ease; }
-  .nd-item:hover .nd-quick, .nd-item:focus-within .nd-quick { opacity: 1; }
-  @media (hover: none) { .nd-item .nd-quick { opacity: 1; } }
-  .nd-clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
-`;
 
 /* ─────────────────────────── one notification ─────────────────────────── */
 const Item = ({ item, expanded, onToggle, onMarkRead }) => {
@@ -111,7 +99,7 @@ const Item = ({ item, expanded, onToggle, onMarkRead }) => {
         {level.icon}
       </span>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="u-grow-min">
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
           <span
             className={expanded ? undefined : "nd-clamp"}
@@ -372,9 +360,9 @@ const NotificationDropdown = () => {
   const panel = (
     <div style={{ display: "flex", flexDirection: "column", maxHeight: isMobile ? "80vh" : 560, background: "var(--surface)" }}>
       <div style={{ padding: "14px 16px 10px", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ flex: 1 }}>
+        <div className="u-grow">
           <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>Notifications</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {summary.count > 0 ? `${summary.count} unread` : "You're all caught up"}
           </div>
         </div>
@@ -404,7 +392,7 @@ const NotificationDropdown = () => {
             {[1, 2, 3].map((k) => (
               <div key={k} style={{ display: "flex", gap: 12 }}>
                 <Skeleton.Avatar active size={38} />
-                <Skeleton active title={{ width: "55%" }} paragraph={{ rows: 1 }} style={{ flex: 1 }} />
+                <Skeleton active title={{ width: "55%" }} paragraph={{ rows: 1 }} className="u-grow" />
               </div>
             ))}
           </div>
@@ -417,7 +405,7 @@ const NotificationDropdown = () => {
             }}>
               {tab === "unread" ? <CheckCircleFilled /> : <BellOutlined />}
             </div>
-            <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+            <div className="u-strong-bold">
               {tab === "unread" ? "You're all caught up" : "No notifications yet"}
             </div>
             <div style={{ fontSize: 12.5, color: "var(--text-muted)", marginTop: 4 }}>
@@ -480,8 +468,7 @@ const NotificationDropdown = () => {
 
   return (
     <>
-      <style>{CSS}</style>
-      {toastHolder}
+            {toastHolder}
       {isMobile ? (
         <>
           {bell}

@@ -53,7 +53,7 @@ const SectionHd = ({ icon, title, color, extra }) => (
 /* ── Empty chart placeholder ────────────────────────────────────────── */
 const NoData = () => (
   <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
-    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span style={{ color: "var(--text-muted)", fontSize: 12 }}>No data</span>} />
+    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span className="u-meta">No data</span>} />
   </div>
 );
 
@@ -221,7 +221,7 @@ const SchoolAdminReport = () => {
               {/* Role Distribution — Donut */}
               <div className="section-panel">
                 <SectionHd icon={<PieChartOutlined />} title="Role Distribution" color="var(--purple)"
-                  extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{roleWise.length} roles</Text>}
+                  extra={<Text className="u-meta-xs">{roleWise.length} roles</Text>}
                 />
                 {roleWise.length === 0 ? <NoData /> : (
                   <ResponsiveContainer width="100%" height={260}>
@@ -282,7 +282,7 @@ const SchoolAdminReport = () => {
               {/* Class-wise — Horizontal Bar */}
               <div className="section-panel">
                 <SectionHd icon={<BarChartOutlined />} title="Class-wise Enrollment" color="var(--success)"
-                  extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{classWise.length} classes · {classWise.reduce((s, c) => s + c.count, 0)} students</Text>}
+                  extra={<Text className="u-meta-xs">{classWise.length} classes · {classWise.reduce((s, c) => s + c.count, 0)} students</Text>}
                 />
                 {classWise.length === 0 ? <NoData /> : (
                   <ResponsiveContainer width="100%" height={Math.min(Math.max(200, classWise.length * 38), 420)}>
@@ -313,7 +313,7 @@ const SchoolAdminReport = () => {
               {/* Section-wise — Horizontal Bar */}
               <div className="section-panel">
                 <SectionHd icon={<BarChartOutlined />} title="Section-wise Enrollment" color="var(--warning)"
-                  extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{sectionWise.length} sections · {sectionWise.reduce((s, c) => s + c.count, 0)} students</Text>}
+                  extra={<Text className="u-meta-xs">{sectionWise.length} sections · {sectionWise.reduce((s, c) => s + c.count, 0)} students</Text>}
                 />
                 {sectionWise.length === 0 ? <NoData /> : (
                   <ResponsiveContainer width="100%" height={Math.min(Math.max(200, sectionWise.length * 38), 420)}>

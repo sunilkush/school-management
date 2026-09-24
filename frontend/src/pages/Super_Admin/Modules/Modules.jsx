@@ -21,7 +21,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -75,12 +75,12 @@ const ModuleCard = ({ title, parent, path, Icon, hasAccess, palette }) => {
       </div>
 
       <div style={{ marginTop: 18 }}>
-        <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+        <div className="u-title">
           {title}
         </div>
 
         <div style={{ marginTop: 4 }}>
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <span className="u-meta">
             {parent || "Dashboard Module"}
           </span>
         </div>

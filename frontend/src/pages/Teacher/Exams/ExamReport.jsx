@@ -128,7 +128,7 @@ const ExamReports = () => {
     <Card bordered={false} style={{ borderRadius: 12 }} bodyStyle={{ padding: 24 }}>
       <Space style={{ width: "100%", justifyContent: "space-between" }} wrap>
         <div>
-          <Title level={3} style={{ margin: 0 }}>
+          <Title level={3} className="u-m-0">
             📑 Exam Reports
           </Title>
           <Text type="secondary">Dynamic reports with filter + search</Text>
@@ -144,11 +144,11 @@ const ExamReports = () => {
         </Space>
       </Space>
 
-      <Row gutter={[12, 12]} style={{ marginTop: 16 }}>
+      <Row gutter={[12, 12]} className="u-mt-4">
         <Col xs={24} md={8}>
           <Select
             allowClear
-            style={{ width: "100%" }}
+            className="u-full"
             placeholder="Select exam"
             value={filters.examId}
             onChange={(value) => setFilters((prev) => ({ ...prev, examId: value }))}
@@ -162,7 +162,7 @@ const ExamReports = () => {
         <Col xs={24} md={8}>
           <Select
             allowClear
-            style={{ width: "100%" }}
+            className="u-full"
             placeholder="Result type"
             value={filters.type || undefined}
             onChange={(value) =>
@@ -190,7 +190,7 @@ const ExamReports = () => {
 
       {error ? (
         <Alert
-          style={{ marginTop: 16 }}
+          className="u-mt-4"
           type="error"
           showIcon
           message="Failed to load exam reports"
@@ -198,7 +198,7 @@ const ExamReports = () => {
         />
       ) : null}
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         {loading ? (
           <Spin size="large" />
         ) : (

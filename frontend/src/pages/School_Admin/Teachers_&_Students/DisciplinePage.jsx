@@ -201,7 +201,7 @@ export default function DisciplinePage() {
       render: (v, row) => (
         <div>
           <div style={{ fontWeight: 600 }}>{v || "—"}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{[row.className, row.sectionName].filter(Boolean).join(" - ")}</div>
+          <div className="u-meta-xs">{[row.className, row.sectionName].filter(Boolean).join(" - ")}</div>
         </div>
       ),
     }] : []),
@@ -239,18 +239,18 @@ export default function DisciplinePage() {
         )}
 
         {/* ── Student picker ─────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
-          <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
+          <Flex align="center" gap={10} className="u-mb-4">
             <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Select Student</Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>View discipline history and report new incidents</Text>
+              <Text className="u-meta">View discipline history and report new incidents</Text>
             </div>
           </Flex>
           <Row gutter={[12, 12]}>
             <Col xs={24} sm={12} md={6}>
               <Select
-                placeholder="Select Class" style={{ width: "100%" }}
+                placeholder="Select Class" className="u-full"
                 value={selectedClass} onChange={setSelectedClass}
                 options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))}
                 showSearch optionFilterProp="label" disabled={!canFilter} size="large"
@@ -258,7 +258,7 @@ export default function DisciplinePage() {
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Select
-                placeholder="Select Section" style={{ width: "100%" }}
+                placeholder="Select Section" className="u-full"
                 value={selectedSection} onChange={setSelectedSection}
                 options={sectionOptions} showSearch optionFilterProp="label"
                 disabled={!selectedClass} size="large"
@@ -266,7 +266,7 @@ export default function DisciplinePage() {
             </Col>
             <Col xs={24} sm={24} md={12}>
               <Select
-                placeholder="Select Student" style={{ width: "100%" }}
+                placeholder="Select Student" className="u-full"
                 value={studentId} onChange={setStudentId}
                 options={studentOptions} showSearch optionFilterProp="label"
                 disabled={!selectedSection} loading={rollLoading} size="large"
@@ -276,7 +276,7 @@ export default function DisciplinePage() {
         </div>
 
         {studentId && summary && (
-          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+          <Row gutter={[12, 12]} className="u-mb-4">
             {[
               { label: "Total Incidents", value: summary.totalIncidents || 0, color: "var(--primary)" },
               { label: "Total Demerit Points", value: summary.totalDemeritPoints || 0, color: "var(--danger-hover)" },
@@ -293,7 +293,7 @@ export default function DisciplinePage() {
         )}
 
         {/* ── Incident Log ─────────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <Flex align="center" justify="space-between" wrap="wrap" gap={10} style={{ marginBottom: 14 }}>
             <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
               {showAllStudents || !studentId ? "All Discipline Incidents" : "Incident Log"}
@@ -313,21 +313,21 @@ export default function DisciplinePage() {
           <Row gutter={[12, 12]} style={{ marginBottom: 14 }}>
             <Col xs={24} sm={8} md={5}>
               <Select
-                placeholder="Filter by Status" allowClear style={{ width: "100%" }}
+                placeholder="Filter by Status" allowClear className="u-full"
                 value={filterStatus} onChange={setFilterStatus}
                 options={[{ value: "Open", label: "Open" }, { value: "Resolved", label: "Resolved" }]}
               />
             </Col>
             <Col xs={24} sm={8} md={5}>
               <Select
-                placeholder="Filter by Severity" allowClear style={{ width: "100%" }}
+                placeholder="Filter by Severity" allowClear className="u-full"
                 value={filterSeverity} onChange={setFilterSeverity}
                 options={["Minor", "Moderate", "Major"].map((s) => ({ value: s, label: s }))}
               />
             </Col>
             <Col xs={24} sm={8} md={5}>
               <Select
-                placeholder="Filter by Category" allowClear style={{ width: "100%" }}
+                placeholder="Filter by Category" allowClear className="u-full"
                 value={filterCategory} onChange={setFilterCategory}
                 options={CATEGORIES.map((c) => ({ value: c, label: c }))}
               />
@@ -371,38 +371,38 @@ export default function DisciplinePage() {
         okText="Report Incident"
         title={<Space><ExclamationCircleOutlined style={{ color: "var(--danger-hover)" }} />Report Discipline Incident</Space>}
       >
-        <Space direction="vertical" style={{ width: "100%" }} size={12}>
+        <Space direction="vertical" className="u-full" size={12}>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>CATEGORY</Text>
-              <Select style={{ width: "100%" }} value={category} onChange={setCategory} options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
+              <Text className="u-meta-xs">CATEGORY</Text>
+              <Select className="u-full" value={category} onChange={setCategory} options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>SEVERITY</Text>
-              <Select style={{ width: "100%" }} value={severity} onChange={setSeverity} options={["Minor", "Moderate", "Major"].map((s) => ({ value: s, label: s }))} />
+              <Text className="u-meta-xs">SEVERITY</Text>
+              <Select className="u-full" value={severity} onChange={setSeverity} options={["Minor", "Moderate", "Major"].map((s) => ({ value: s, label: s }))} />
             </Col>
           </Row>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>DESCRIPTION *</Text>
+            <Text className="u-meta-xs">DESCRIPTION *</Text>
             <TextArea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What happened?" />
           </div>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>DEMERIT POINTS</Text>
-              <InputNumber min={0} style={{ width: "100%" }} value={demeritPoints} onChange={setDemeritPoints} />
+              <Text className="u-meta-xs">DEMERIT POINTS</Text>
+              <InputNumber min={0} className="u-full" value={demeritPoints} onChange={setDemeritPoints} />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>FOLLOW-UP DATE</Text>
-              <DatePicker style={{ width: "100%" }} value={followUpDate} onChange={setFollowUpDate} />
+              <Text className="u-meta-xs">FOLLOW-UP DATE</Text>
+              <DatePicker className="u-full" value={followUpDate} onChange={setFollowUpDate} />
             </Col>
           </Row>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>ACTION TAKEN</Text>
+            <Text className="u-meta-xs">ACTION TAKEN</Text>
             <Input value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} placeholder="e.g. Verbal warning, Detention" />
           </div>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>WITNESSES</Text>
-            <Select mode="tags" style={{ width: "100%" }} value={witnesses} onChange={setWitnesses} placeholder="Type and press enter" tokenSeparators={[","]} />
+            <Text className="u-meta-xs">WITNESSES</Text>
+            <Select mode="tags" className="u-full" value={witnesses} onChange={setWitnesses} placeholder="Type and press enter" tokenSeparators={[","]} />
           </div>
           <Checkbox checked={parentMeetingRequired} onChange={(e) => setParentMeetingRequired(e.target.checked)}>
             Parent meeting required
@@ -423,21 +423,21 @@ export default function DisciplinePage() {
         title={`Update Incident — ${editingIncident ? fmtDateTime(editingIncident.incidentDate) : ""}`}
       >
         {editingIncident && (
-          <Space direction="vertical" style={{ width: "100%" }} size={12}>
+          <Space direction="vertical" className="u-full" size={12}>
             <Paragraph style={{ fontSize: 13, marginBottom: 0 }}><Text strong>Description:</Text> {editingIncident.description}</Paragraph>
             <div>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>STATUS</Text>
+              <Text className="u-meta-xs">STATUS</Text>
               <Select
-                style={{ width: "100%" }} value={editStatus} onChange={setEditStatus}
+                className="u-full" value={editStatus} onChange={setEditStatus}
                 options={[{ value: "Open", label: "Open" }, { value: "Resolved", label: "Resolved" }]}
               />
             </div>
             <div>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>ACTION TAKEN</Text>
+              <Text className="u-meta-xs">ACTION TAKEN</Text>
               <Input value={editActionTaken} onChange={(e) => setEditActionTaken(e.target.value)} />
             </div>
             <div>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>RESOLUTION NOTES</Text>
+              <Text className="u-meta-xs">RESOLUTION NOTES</Text>
               <TextArea rows={2} value={editResolutionNotes} onChange={(e) => setEditResolutionNotes(e.target.value)} />
             </div>
             <Checkbox checked={editParentNotified} onChange={(e) => setEditParentNotified(e.target.checked)}>

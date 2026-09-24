@@ -140,7 +140,7 @@ const AttendanceDashboard = () => {
       title:     "School",
       dataIndex: "schoolName",
       render:    (n) => (
-        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{n || "—"}</span>
+        <span className="u-strong">{n || "—"}</span>
       ),
     },
     {
@@ -173,7 +173,7 @@ const AttendanceDashboard = () => {
         const pct = Number(v).toFixed(1);
         const low = Number(v) < LOW;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="u-row">
             <Progress
               percent={Number(pct)}
               size="small"
@@ -216,7 +216,7 @@ const AttendanceDashboard = () => {
       />
 
       {/* ── Toolbar ── */}
-      <div className="toolbar-row" style={{ marginTop: 20 }}>
+      <div className="toolbar-row u-mt-5">
         <Select
           placeholder="All Schools"
           allowClear
@@ -337,7 +337,7 @@ const AttendanceDashboard = () => {
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
-                  <span style={{ color: "var(--text-muted)" }}>
+                  <span className="u-muted">
                     {attendance
                       ? "No school-wise breakdown available for the selected filters"
                       : "Click Refresh to load attendance data"}

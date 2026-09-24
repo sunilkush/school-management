@@ -172,7 +172,7 @@ const AttendanceAnalytics = () => {
     {
       title: "Name",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="u-row">
           <div
             style={{
               width: 30, height: 30, borderRadius: "50%",
@@ -183,7 +183,7 @@ const AttendanceAnalytics = () => {
           >
             {(r.name || "S")[0].toUpperCase()}
           </div>
-          <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+          <span className="u-strong">
             {r.name || r.userId?.name || "—"}
           </span>
         </div>
@@ -252,7 +252,7 @@ const AttendanceAnalytics = () => {
       />
 
       {/* ── Filters ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div
           style={{
             display: "grid",
@@ -268,7 +268,7 @@ const AttendanceAnalytics = () => {
               { value: "teacher", label: "Teachers" },
               { value: "staff",   label: "Staff"    },
             ]}
-            style={{ width: "100%" }}
+            className="u-full"
           />
           {role === "student" && (
             <Select
@@ -277,14 +277,14 @@ const AttendanceAnalytics = () => {
               value={classId}
               onChange={(v) => setClassId(v || null)}
               options={classes.map((c) => ({ value: c._id, label: c.name }))}
-              style={{ width: "100%" }}
+              className="u-full"
             />
           )}
           <Select
             value={month}
             onChange={setMonth}
             options={MONTHS.map((m, i) => ({ value: i, label: m }))}
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <Select
             value={year}
@@ -293,7 +293,7 @@ const AttendanceAnalytics = () => {
               value: y,
               label: `${y}`,
             }))}
-            style={{ width: "100%" }}
+            className="u-full"
           />
         </div>
       </div>
@@ -485,7 +485,7 @@ const AttendanceAnalytics = () => {
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
-                    <span style={{ color: "var(--text-muted)" }}>
+                    <span className="u-muted">
                       No daily data
                     </span>
                   }
@@ -555,7 +555,7 @@ const AttendanceAnalytics = () => {
                         fontSize: 12,
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div className="u-row-sm">
                         <div
                           style={{
                             width: 10, height: 10, borderRadius: "50%",
@@ -584,7 +584,7 @@ const AttendanceAnalytics = () => {
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
-                    <span style={{ color: "var(--text-muted)" }}>No data</span>
+                    <span className="u-muted">No data</span>
                   }
                 />
               </div>
@@ -689,7 +689,7 @@ const AttendanceAnalytics = () => {
           >
             <WarningOutlined style={{ color: "var(--warning)" }} />
             <span
-              style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}
+              className="u-title-sm"
             >
               Students Below 75% Attendance
             </span>
@@ -723,7 +723,7 @@ const AttendanceAnalytics = () => {
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
-                  <span style={{ color: "var(--text-muted)" }}>
+                  <span className="u-muted">
                     No students below 75% for this period
                   </span>
                 }

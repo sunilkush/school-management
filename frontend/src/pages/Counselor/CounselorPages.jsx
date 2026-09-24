@@ -309,7 +309,7 @@ export const CounselorReports = () => {
         </Row>
 
         <Card title="Top Issues Reported">
-          <Space direction="vertical" style={{ width: "100%" }}>
+          <Space direction="vertical" className="u-full">
             {topIssues.map((issue, i) => (
               <div key={i}>
                 <div style={{ marginBottom: 4, display: "flex", justifyContent: "space-between" }}>

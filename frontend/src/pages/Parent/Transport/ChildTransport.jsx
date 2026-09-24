@@ -74,7 +74,7 @@ const ChildTransport = () => {
               <div className="section-panel">
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
                   <div style={iconWell("var(--accent)", 40)}><CarOutlined /></div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Route Details</div>
+                  <div className="u-title">Route Details</div>
                 </div>
                 <Descriptions column={1} size="small" bordered>
                   <Descriptions.Item label="Route Name">
@@ -97,7 +97,7 @@ const ChildTransport = () => {
               <div className="section-panel">
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
                   <div style={iconWell("var(--primary)", 40)}><EnvironmentOutlined /></div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Vehicle Details</div>
+                  <div className="u-title">Vehicle Details</div>
                 </div>
                 <Descriptions column={1} size="small" bordered>
                   <Descriptions.Item label="Vehicle No">

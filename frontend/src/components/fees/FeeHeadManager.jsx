@@ -26,7 +26,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -149,7 +149,7 @@ const FeeHeadManager = ({ showSchoolPicker = false }) => {
     {
       title: "Fee Head",
       dataIndex: "name",
-      render: (name) => <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{name || "—"}</span>,
+      render: (name) => <span className="u-strong-bold">{name || "—"}</span>,
     },
     {
       title: "Type",
@@ -232,7 +232,7 @@ const FeeHeadManager = ({ showSchoolPicker = false }) => {
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <TagsOutlined style={{ color: "var(--primary)" }} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Fee Heads</span>
+          <span className="u-title-sm">Fee Heads</span>
           <span style={pill("var(--primary)")}>{feeHeads.length}</span>
         </div>
 
@@ -268,7 +268,7 @@ const FeeHeadManager = ({ showSchoolPicker = false }) => {
         okText={editTarget ? "Update" : "Create"}
         confirmLoading={saving}
       >
-        <Form layout="vertical" form={form} style={{ marginTop: 16 }}>
+        <Form layout="vertical" form={form} className="u-mt-4">
           {FEE_HEAD_FORM_FIELDS}
         </Form>
       </Modal>

@@ -32,7 +32,7 @@ const KpiCard = ({ icon, label, value, color, sub, onClick }) => (
     onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
   >
     <div style={iconWell(color, 48)}>{icon}</div>
-    <div style={{ flex: 1 }}>
+    <div className="u-grow">
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.1 }}>{value ?? "—"}</div>
       {sub && <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>{sub}</div>}
@@ -199,7 +199,7 @@ const LibraryDashboard = () => {
       </div>
 
       {/* ── Charts Row ─────────────────────────────────────────── */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+      <Row gutter={[16, 16]} className="u-mb-5">
         <Col xs={24} lg={12}>
           <div className="section-panel is-last">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 16 }}>Books by Category</div>
@@ -238,7 +238,7 @@ const LibraryDashboard = () => {
       </Row>
 
       {/* ── Status summary tiles ────────────────────────────────── */}
-      <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+      <Row gutter={[12, 12]} className="u-mb-5">
         {[
           { label: "Issued",   count: issuedBooks.filter((b) => b.status === "Issued").length,   color: "var(--warning-hover)", bg: "rgba(var(--warning-rgb), 0.30)", border: "rgba(var(--warning-rgb), 0.55)" },
           { label: "Returned", count: issuedBooks.filter((b) => b.status === "Returned").length, color: "var(--success-hover)", bg: "rgba(var(--success-rgb), 0.25)", border: "rgba(var(--success-rgb), 0.5)" },
@@ -278,8 +278,8 @@ const LibraryDashboard = () => {
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(var(--accent-rgb), 0.2)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
                   {i + 1}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{book.title}</div>
+                <div className="u-grow">
+                  <div className="u-label">{book.title}</div>
                 </div>
                 <Tag color="blue">{book.count} issued</Tag>
               </div>

@@ -297,13 +297,13 @@ const Subjects = () => {
           display: "flex", justifyContent: "space-between", alignItems: "center",
           marginBottom: 14, gap: 10, flexWrap: "wrap",
         }}>
-          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <Text className="u-meta">
             Showing{" "}
             <strong style={{ color: C.primary }}>{filtered.length}</strong>
             {" "}of {safe.length} subjects
           </Text>
           <Input
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)", fontSize: 13 }} />}
+            prefix={<SearchOutlined className="u-meta-md" />}
             placeholder="Search subjects…"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -372,10 +372,10 @@ const Subjects = () => {
           </Form.Item>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item name="maxMarks" label="Max Marks" initialValue={100}>
-              <InputNumber min={1} style={{ width: "100%" }} />
+              <InputNumber min={1} className="u-full" />
             </Form.Item>
             <Form.Item name="passMarks" label="Pass Marks" initialValue={33}>
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
           </div>
           <Form.Item name="description" label="Description">

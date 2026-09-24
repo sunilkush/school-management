@@ -48,7 +48,7 @@ const LiveTracking = () => {
       render: (name, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{name || "Route"}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.direction === "pickup" ? "Morning pickup" : "Afternoon drop"}
           </div>
         </div>
@@ -157,11 +157,11 @@ const LiveTracking = () => {
             )}
 
             {trail?.trip?.stopArrivals?.length > 0 && (
-              <div style={{ marginTop: 16 }}>
+              <div className="u-mt-4">
                 <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", marginBottom: 8 }}>
                   Stops reached
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <div className="u-row-wrap">
                   {trail.trip.stopArrivals.map((s) => (
                     <span key={s.sequence} style={pill(s.delayMin > 5 ? "var(--warning)" : "var(--success)")}>
                       {s.name} · {new Date(s.arrivedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
@@ -175,13 +175,7 @@ const LiveTracking = () => {
         </div>
       )}
 
-      <style>{`
-        .live-row-selected > td { background: var(--surface-soft) !important; }
-        @media (max-width: 1100px) {
-          .live-track-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </div>
+          </div>
   );
 };
 

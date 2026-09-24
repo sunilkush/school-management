@@ -26,7 +26,7 @@ const MobileCards = ({ data = [] }) => {
       {data.map((cls, index) => (
         <Col xs={24} key={cls._id}>
           <Card size="small" bordered>
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <Space direction="vertical" className="u-full">
               
               {/* Header */}
               <Space

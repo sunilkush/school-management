@@ -130,7 +130,7 @@ const LibraryCard = () => {
           form={form}
           layout="vertical"
           onFinish={handleCreateCard}
-          style={{ marginTop: 8 }}
+          className="u-mt-2"
         >
           <Form.Item
             label="Full Name"
@@ -174,14 +174,14 @@ const LibraryCard = () => {
               name="issueDate"
               rules={[{ required: true, message: "Required" }]}
             >
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
             <Form.Item
               label="Expiry Date"
               name="expiryDate"
               rules={[{ required: true, message: "Required" }]}
             >
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
           </div>
 

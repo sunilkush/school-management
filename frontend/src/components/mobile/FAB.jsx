@@ -54,26 +54,8 @@ const FAB = ({
 
   return (
     <>
-      <style>{`
-        .fab-root { position: fixed; right: ${right}px; bottom: ${bottom}px; z-index: 900; display: flex; flex-direction: column-reverse; align-items: center; gap: 12px; }
-        .fab-main:active  { transform: scale(0.92) !important; }
-        .fab-child:active { transform: scale(0.90) !important; }
-        .fab-action-item  { display: flex; align-items: center; gap: 10px; animation: fabIn 0.18s ease forwards; }
-        @keyframes fabIn  { from { opacity:0; transform:translateY(10px) scale(0.9); } to { opacity:1; transform:translateY(0) scale(1); } }
-        .fab-label-chip   {
-          background: rgba(15,23,42,0.75);
-          backdrop-filter: blur(8px);
-          color: #fff;
-          font-size: 11px;
-          font-weight: 600;
-          padding: 4px 10px;
-          border-radius: 20px;
-          white-space: nowrap;
-          pointer-events: none;
-        }
-      `}</style>
 
-      <div className="fab-root">
+      <div className="fab-root" style={{ "--fab-right": `${right}px`, "--fab-bottom": `${bottom}px` }}>
         {/* Main button */}
         <Tooltip title={!isMulti ? label : undefined} placement="left">
           <button

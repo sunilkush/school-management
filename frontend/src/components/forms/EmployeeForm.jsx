@@ -265,7 +265,7 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 12px" }}>
         <Form.Item name="dateOfBirth" label="Date of Birth" rules={[{ required: true }]} style={fi}>
-          <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" placeholder="DD-MM-YYYY" />
+          <DatePicker className="u-full" format="DD-MM-YYYY" placeholder="DD-MM-YYYY" />
         </Form.Item>
         <Form.Item name="bloodType" label="Blood Group" rules={[{ required: true }]} style={fi}>
           <Select options={bloodGroups.map((b) => ({ value: b }))} placeholder="Select" />
@@ -311,7 +311,7 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
         <Form.Item
           name="subjects"
           label={
-            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span className="u-row-sm">
               <BookOutlined style={{ color: C.accent }} />
               Subjects Taught
             </span>
@@ -334,7 +334,7 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "0 12px" }}>
         <Form.Item name="joinDate" label="Joining Date" rules={[{ required: true }]} style={fi}>
-          <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+          <DatePicker className="u-full" format="DD-MM-YYYY" />
         </Form.Item>
         <Form.Item name="department" label="Department" rules={[{ required: true }]} style={fi}>
           <Input placeholder="e.g. Science" />
@@ -433,10 +433,10 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
           <Input placeholder="12-digit UAN" maxLength={12} />
         </Form.Item>
         <Form.Item name="pfJoiningDate" label="PF Joining Date" style={fi}>
-          <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+          <DatePicker className="u-full" format="DD-MM-YYYY" />
         </Form.Item>
         <Form.Item name="pfExitDate" label="PF Exit Date" style={fi}>
-          <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+          <DatePicker className="u-full" format="DD-MM-YYYY" />
         </Form.Item>
         <Form.Item name="pfCategory" label="PF Category" style={fi}>
           <Select
@@ -460,7 +460,7 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
           <Input placeholder="ESIC insurance number" />
         </Form.Item>
         <Form.Item name="esiJoiningDate" label="ESI Joining Date" style={fi}>
-          <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+          <DatePicker className="u-full" format="DD-MM-YYYY" />
         </Form.Item>
         <Form.Item name="esiCategory" label="ESI Category" style={fi}>
           <Select
@@ -511,17 +511,17 @@ const EmployeeForm = ({ editingEmployee = null, onSuccess }) => {
         items={[
           {
             key: "profile",
-            label: <span style={{ display: "flex", alignItems: "center", gap: 6 }}><UserOutlined /> Profile</span>,
+            label: <span className="u-row-sm"><UserOutlined /> Profile</span>,
             children: profileTab,
           },
           {
             key: "statutory",
-            label: <span style={{ display: "flex", alignItems: "center", gap: 6 }}><SafetyCertificateOutlined /> PF/ESI</span>,
+            label: <span className="u-row-sm"><SafetyCertificateOutlined /> PF/ESI</span>,
             children: statutoryTab,
           },
           {
             key: "attendance",
-            label: <span style={{ display: "flex", alignItems: "center", gap: 6 }}><CalendarOutlined /> Attendance</span>,
+            label: <span className="u-row-sm"><CalendarOutlined /> Attendance</span>,
             children: attendanceTab,
           },
         ]}

@@ -104,7 +104,7 @@ const AcademicReports = () => {
     {
       title: "School",
       dataIndex: "schoolName",
-      render: (n) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{n || "—"}</span>,
+      render: (n) => <span className="u-strong">{n || "—"}</span>,
     },
     {
       title: "Students",
@@ -160,7 +160,7 @@ const AcademicReports = () => {
       />
 
       {/* Toolbar */}
-      <div className="toolbar-row" style={{ marginTop: 20 }}>
+      <div className="toolbar-row u-mt-5">
         <Select
           placeholder="All Schools"
           allowClear
@@ -262,7 +262,7 @@ const AcademicReports = () => {
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <span style={{ color: "var(--text-muted)" }}>
+                <span className="u-muted">
                   No school-wise breakdown available
                 </span>
               }
@@ -281,7 +281,7 @@ const AcademicReports = () => {
           }}>
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={<span style={{ color: "var(--text-muted)" }}>No academic data available</span>}
+              description={<span className="u-muted">No academic data available</span>}
             >
               <Button type="primary" onClick={handleRefresh}>Load Data</Button>
             </Empty>

@@ -126,7 +126,7 @@ const CompliancePage = () => {
       render: (name, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{name}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.className || "no class"}{r.sectionName ? ` · ${r.sectionName}` : ""}
             {r.registrationNumber ? ` · ${r.registrationNumber}` : ""}
           </div>
@@ -137,7 +137,7 @@ const CompliancePage = () => {
       title: "PEN", width: 140,
       render: (_, r) => r.compliance?.pen
         ? <span style={{ fontFamily: "monospace" }}>{r.compliance.pen}</span>
-        : <span style={{ color: "var(--text-muted)" }}>—</span>,
+        : <span className="u-muted">—</span>,
     },
     {
       title: "APAAR", width: 140,
@@ -157,7 +157,7 @@ const CompliancePage = () => {
         r.isComplete ? (
           <span style={pill("var(--success)")}><CheckCircleOutlined /> complete</span>
         ) : (
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <span className="u-meta">
             {r.missing.map((m) => m.label).join(", ")}
           </span>
         ),
@@ -224,7 +224,7 @@ const CompliancePage = () => {
                 <div className="section-panel">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 12 }}>
                     <div style={{ fontWeight: 700 }}>Student records ready to file</div>
-                    <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    <div className="u-meta-md">
                       {readiness?.readyStudents ?? 0} of {readiness?.totalStudents ?? 0}
                     </div>
                   </div>
@@ -326,7 +326,7 @@ const CompliancePage = () => {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
                   <div>
                     <div style={{ fontWeight: 700 }}>Reservation at {rte?.quotaPercent ?? 25}%</div>
-                    <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    <div className="u-meta-md">
                       {rte?.rteStudents ?? 0} of {rte?.totalStudents ?? 0} students ({rte?.rtePercent ?? 0}%)
                     </div>
                   </div>
@@ -414,7 +414,7 @@ const CompliancePage = () => {
         confirmLoading={actionLoading}
         okText="Save"
       >
-        <Form form={studentForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={studentForm} layout="vertical" className="u-mt-4">
           <Form.Item name="pen" label="PEN" extra="11 digits, issued through UDISE+.">
             <Input maxLength={11} />
           </Form.Item>

@@ -16,7 +16,7 @@ const StatCard = ({ label, value, color }) => (
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         {label}
       </div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
     <div style={iconWell(color, 40)}><SafetyCertificateOutlined /></div>
   </div>
@@ -126,8 +126,8 @@ const PfEsiReports = () => {
             { label: "ESI Report", value: "esi" },
           ]}
         />
-        <div style={{ flex: 1 }} />
-        <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+        <div className="u-grow" />
+        <Text className="u-meta-xs">
           Viewing {selectedMonth.format("MMMM YYYY")}
         </Text>
         <DatePicker
@@ -144,10 +144,10 @@ const PfEsiReports = () => {
           <Text strong style={{ fontSize: 16, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
             No Payroll Cycle for {selectedMonth.format("MMMM YYYY")}
           </Text>
-          <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          <Text className="u-meta-md">
             Generate the payroll cycle for this month first, then refresh.
           </Text>
-          <div style={{ marginTop: 20 }}>
+          <div className="u-mt-5">
             <Alert
               type="info"
               showIcon

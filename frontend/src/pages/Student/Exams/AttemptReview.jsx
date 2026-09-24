@@ -215,7 +215,7 @@ const AttemptReview = () => {
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <div style={iconWell("var(--primary)", 34)}><FileTextOutlined /></div>
-          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+          <span className="u-title">
             Question-wise Review
           </span>
         </div>
@@ -244,7 +244,7 @@ const AttemptReview = () => {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className="u-row">
                       <span style={{
                         width: 28, height: 28, borderRadius: 7, flexShrink: 0,
                         background: "var(--primary)", color: "#fff",
@@ -272,9 +272,9 @@ const AttemptReview = () => {
                           {correct ? "Correct" : "Incorrect"}
                         </span>
                       ) : (
-                        <Tag color="default" style={{ margin: 0 }}>Pending</Tag>
+                        <Tag color="default" className="u-m-0">Pending</Tag>
                       )}
-                      {ans?.flagged && <Tag color="orange" style={{ margin: 0 }}>Flagged</Tag>}
+                      {ans?.flagged && <Tag color="orange" className="u-m-0">Flagged</Tag>}
                     </div>
                   </div>
 

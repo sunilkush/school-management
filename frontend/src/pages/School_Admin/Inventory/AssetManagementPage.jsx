@@ -80,7 +80,7 @@ export default function AssetManagementPage() {
   };
 
   const warrantyCell = (a) => {
-    if (!a.warrantyExpiry) return <span style={{ color: "var(--text-muted)" }}>—</span>;
+    if (!a.warrantyExpiry) return <span className="u-muted">—</span>;
     const days    = dayjs(a.warrantyExpiry).diff(dayjs(), "day");
     const expired = days < 0;
     const soon    = days >= 0 && days <= 30;
@@ -99,13 +99,13 @@ export default function AssetManagementPage() {
     {
       title: "Asset", key: "asset",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={iconWell(COND_COLOR[r.condition] || "var(--primary)", 34)}>
             <DesktopOutlined style={{ fontSize: 13 }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{r.name}</div>
-            {r.serialNumber && <div style={{ fontSize: 11, color: "var(--text-muted)" }}>S/N: {r.serialNumber}</div>}
+            <div className="u-label">{r.name}</div>
+            {r.serialNumber && <div className="u-meta-xs">S/N: {r.serialNumber}</div>}
           </div>
         </div>
       ),
@@ -121,14 +121,14 @@ export default function AssetManagementPage() {
       render: (_, r) => (
         <div>
           {r.purchasePrice ? <div style={{ fontWeight: 700, fontSize: 13 }}>₹{Number(r.purchasePrice).toLocaleString("en-IN")}</div> : null}
-          {r.purchaseDate  ? <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{dayjs(r.purchaseDate).format("DD MMM YYYY")}</div> : null}
+          {r.purchaseDate  ? <div className="u-meta-xs">{dayjs(r.purchaseDate).format("DD MMM YYYY")}</div> : null}
         </div>
       ),
     },
     { title: "Warranty", key: "warranty", responsive: ["lg"], render: (_, r) => warrantyCell(r) },
     {
       title: "Assigned To", dataIndex: "assignedTo", key: "assignedTo", responsive: ["lg"],
-      render: (t) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t || "—"}</span>,
+      render: (t) => <span className="u-meta">{t || "—"}</span>,
     },
     {
       title: "", key: "actions",
@@ -161,7 +161,7 @@ export default function AssetManagementPage() {
         <Select value={condFilter} onChange={setCondFilter} style={{ width: 150 }} placeholder="All Conditions" allowClear>
           {["new", "good", "fair", "poor", "disposed"].map((c) => (
             <Option key={c} value={c}>
-              <span style={{ color: COND_COLOR[c] || "#333", fontWeight: 600 }}>{c.toUpperCase()}</span>
+              <span style={{ color: COND_COLOR[c] || "var(--text-secondary)", fontWeight: 600 }}>{c.toUpperCase()}</span>
             </Option>
           ))}
         </Select>
@@ -198,7 +198,7 @@ export default function AssetManagementPage() {
         destroyOnClose
         width={680}
       >
-        <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" onFinish={onFinish} className="u-mt-4">
           <Form.Item label="Asset Name" name="name" rules={[{ required: true }]}>
             <Input size="large" />
           </Form.Item>
@@ -213,13 +213,13 @@ export default function AssetManagementPage() {
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item label="Quantity" name="quantity" initialValue={1}><InputNumber min={1} style={{ width: "100%" }} /></Form.Item>
+            <Form.Item label="Quantity" name="quantity" initialValue={1}><InputNumber min={1} className="u-full" /></Form.Item>
             <Form.Item label="Unit" name="unit" initialValue="pcs"><Input /></Form.Item>
             <Form.Item label="Serial Number" name="serialNumber"><Input placeholder="SN-XXXXX" /></Form.Item>
             <Form.Item label="Location" name="location"><Input placeholder="Lab / Classroom" /></Form.Item>
-            <Form.Item label="Purchase Price (₹)" name="purchasePrice"><InputNumber min={0} style={{ width: "100%" }} /></Form.Item>
-            <Form.Item label="Purchase Date" name="purchaseDate"><DatePicker style={{ width: "100%" }} /></Form.Item>
-            <Form.Item label="Warranty Expiry" name="warrantyExpiry"><DatePicker style={{ width: "100%" }} /></Form.Item>
+            <Form.Item label="Purchase Price (₹)" name="purchasePrice"><InputNumber min={0} className="u-full" /></Form.Item>
+            <Form.Item label="Purchase Date" name="purchaseDate"><DatePicker className="u-full" /></Form.Item>
+            <Form.Item label="Warranty Expiry" name="warrantyExpiry"><DatePicker className="u-full" /></Form.Item>
             <Form.Item label="Vendor" name="vendorId">
               <Select allowClear placeholder="Select vendor">
                 {vendors.map((v) => <Option key={v._id} value={v._id}>{v.name}</Option>)}

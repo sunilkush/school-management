@@ -149,7 +149,7 @@ const StudentList = () => {
         <Space>
           <div style={avatarStyle(name, 38)}>{name.charAt(0).toUpperCase()}</div>
           <div>
-            <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{name}</div>
+            <div className="u-label">{name}</div>
             <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{r.email}</div>
           </div>
         </Space>
@@ -173,7 +173,7 @@ const StudentList = () => {
       width: 110,
       render: (bg) => {
         const s = bloodGroupColor[bg];
-        if (!s) return <span style={{ color: "var(--text-muted)" }}>—</span>;
+        if (!s) return <span className="u-muted">—</span>;
         return <span style={pill(s.color, s.bg)}>{bg}</span>;
       },
     },
@@ -197,7 +197,7 @@ const StudentList = () => {
       title: "Admission",
       dataIndex: "admissionDate",
       width: 120,
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v}</span>,
+      render: (v) => <span className="u-meta">{v}</span>,
     },
     {
       title: "Academic Year",
@@ -216,7 +216,7 @@ const StudentList = () => {
         const dot   = isActive ? "var(--success)" : isPending ? "var(--warning)" : "var(--danger)";
         const dotRing = isActive ? "rgba(var(--success-rgb), 0.19)" : isPending ? "rgba(var(--warning-rgb), 0.19)" : "rgba(var(--danger-rgb), 0.19)";
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div className="u-row-sm">
             <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, boxShadow: `0 0 0 2px ${dotRing}` }} />
             <span style={{ fontSize: 12, fontWeight: 600, color }}>{s}</span>
           </div>
@@ -423,7 +423,7 @@ const StudentList = () => {
               />
             </Form.Item>
             <Form.Item name="dateOfBirth" label="Date of Birth">
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
             <Form.Item name="status" label="Status">
               <Select
@@ -460,7 +460,7 @@ const StudentList = () => {
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Students
               </span>
-              <div style={{ flex: 1 }} />
+              <div className="u-grow" />
               <Input.Search
                 placeholder="Search by name or email…"
                 allowClear
@@ -492,7 +492,7 @@ const StudentList = () => {
                 <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
                   {searchText || selectedClassId !== "all" ? "No students match your filters" : "No students enrolled yet"}
                 </div>
-                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                <div className="u-meta-md">
                   {searchText || selectedClassId !== "all"
                     ? "Try adjusting your search or filter"
                     : 'Click "Add Student" to enroll the first student'}
@@ -513,7 +513,7 @@ const StudentList = () => {
                   showSizeChanger: true,
                   onChange: (p, ps) => { setPage(p); setPageSize(ps); },
                   showTotal: (total, range) => (
-                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{range[0]}–{range[1]} of {total} students</span>
+                    <span className="u-meta">{range[0]}–{range[1]} of {total} students</span>
                   ),
                 }}
                 scroll={{ x: canManageStudents ? 1100 : 1000 }}

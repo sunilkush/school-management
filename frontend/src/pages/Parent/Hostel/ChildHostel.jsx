@@ -69,7 +69,7 @@ const ChildHostel = () => {
               <div className="section-panel">
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
                   <div style={iconWell("var(--accent)", 40)}><HomeOutlined /></div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Hostel Allocation</div>
+                  <div className="u-title">Hostel Allocation</div>
                 </div>
                 <Descriptions column={1} size="small" bordered>
                   <Descriptions.Item label="Room Number">{hostel.roomNumber || "—"}</Descriptions.Item>
@@ -92,7 +92,7 @@ const ChildHostel = () => {
                     dataSource={hostel.roommates}
                     renderItem={(name) => (
                       <List.Item>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div className="u-row">
                           <Avatar size={30} icon={<UserOutlined />} style={{ background: "var(--primary)" }} />
                           <span style={{ color: "var(--text-primary)", fontSize: 13 }}>{name}</span>
                         </div>
@@ -100,7 +100,7 @@ const ChildHostel = () => {
                     )}
                   />
                 ) : (
-                  <span style={{ color: "var(--text-muted)", fontSize: 13 }}>No roommates assigned to this room.</span>
+                  <span className="u-meta-md">No roommates assigned to this room.</span>
                 )}
               </div>
             </Col>

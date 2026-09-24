@@ -144,7 +144,7 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
         form={form}
         layout="vertical"
         onFinish={() => onFinish(form.getFieldsValue(true))}
-        style={{ marginTop: 16 }}
+        className="u-mt-4"
       >
         {/* Subject Name */}
         <Form.Item
@@ -172,7 +172,7 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
             label="Category"
             name="category"
             rules={[{ required: true, message: "Please select a category" }]}
-            style={{ flex: 1 }}
+            className="u-grow"
           >
             <Select placeholder="Select category" options={toOptions(CATEGORIES)} />
           </Form.Item>
@@ -181,7 +181,7 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
             label="Type"
             name="type"
             rules={[{ required: true, message: "Please select a type" }]}
-            style={{ flex: 1 }}
+            className="u-grow"
           >
             <Select placeholder="Select type" options={toOptions(TYPES)} />
           </Form.Item>
@@ -189,11 +189,11 @@ const SubjectForm = ({ isOpen, onClose, editData = null }) => {
 
         {/* Max Marks & Pass Marks */}
         <Space size="large" style={{ display: "flex" }}>
-          <Form.Item label="Max Marks" name="maxMarks" style={{ flex: 1 }}>
-            <InputNumber min={0} style={{ width: "100%" }} />
+          <Form.Item label="Max Marks" name="maxMarks" className="u-grow">
+            <InputNumber min={0} className="u-full" />
           </Form.Item>
-          <Form.Item label="Pass Marks" name="passMarks" style={{ flex: 1 }}>
-            <InputNumber min={0} style={{ width: "100%" }} />
+          <Form.Item label="Pass Marks" name="passMarks" className="u-grow">
+            <InputNumber min={0} className="u-full" />
           </Form.Item>
         </Space>
 

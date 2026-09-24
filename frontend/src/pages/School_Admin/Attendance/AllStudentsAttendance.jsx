@@ -220,7 +220,7 @@ const AllStudentsAttendance = () => {
       render: (_, r) => {
         const name = r?.user?.name || "—";
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div
               style={{
                 width: 36, height: 36, borderRadius: "50%",
@@ -235,7 +235,7 @@ const AllStudentsAttendance = () => {
               <div style={{ fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
                 {name}
               </div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <div className="u-meta">
                 Roll: {r?.rollNumber || r?.registrationNumber || "—"}
               </div>
             </div>
@@ -246,7 +246,7 @@ const AllStudentsAttendance = () => {
     {
       title: "Class / Section",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {r?.schoolClass?.name || "—"}
           {r?.section?.name && ` • ${r.section.name}`}
         </span>
@@ -294,7 +294,7 @@ const AllStudentsAttendance = () => {
       />
 
       {/* ── Filters ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div
           style={{
             display: "grid",
@@ -308,7 +308,7 @@ const AllStudentsAttendance = () => {
             onChange={handleClassChange}
             options={classes.map((c) => ({ value: c._id, label: c.name }))}
             allowClear
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <Select
             placeholder="Select Section"
@@ -317,13 +317,13 @@ const AllStudentsAttendance = () => {
             options={sectionOptions}
             allowClear
             disabled={!selectedClassId}
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <DatePicker
             value={attendanceDate}
             onChange={(d) => setAttendanceDate(d || dayjs())}
             disabledDate={(c) => c && c > dayjs().endOf("day")}
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <Select
             placeholder="Filter by Status"
@@ -334,7 +334,7 @@ const AllStudentsAttendance = () => {
               value: o.value,
               label: o.fullLabel,
             }))}
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <Input
             placeholder="Search name / roll no"
@@ -488,7 +488,7 @@ const AllStudentsAttendance = () => {
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
-                  <span style={{ color: "var(--text-muted)" }}>
+                  <span className="u-muted">
                     {!selectedClassId
                       ? "Select a class to view students"
                       : "No students found with current filters"}

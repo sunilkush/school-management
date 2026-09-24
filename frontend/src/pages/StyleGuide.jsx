@@ -47,7 +47,7 @@ const Section = ({ id, title, children }) => (
 
 /* ─── Showcase box (label + content) ─────────────────────────────── */
 const Demo = ({ label, children, bg = "var(--surface)", pad = 24 }) => (
-  <div style={{ marginBottom: 16 }}>
+  <div className="u-mb-4">
     {label && (
       <Text style={{
         display: "block", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
@@ -234,7 +234,7 @@ const StyleGuide = () => {
 
         <div style={{ padding: "20px 16px 0", borderTop: "1px solid var(--border-muted)", marginTop: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <Text className="u-meta">
               {isDark ? "Dark" : "Light"} Mode
             </Text>
             <Switch size="small" checked={isDark} onChange={toggleTheme} />
@@ -344,12 +344,12 @@ const StyleGuide = () => {
         {/* ══ 2. TYPOGRAPHY ══════════════════════════════════════════ */}
         <Section id="typography" title="Typography">
           <Demo label="Heading Scale — Noto Sans">
-            <Space direction="vertical" size={8} style={{ width: "100%" }}>
-              <Title level={1} style={{ margin: 0 }}>H1 — Page Title (40px, 800)</Title>
-              <Title level={2} style={{ margin: 0 }}>H2 — Section Header (32px, 700)</Title>
-              <Title level={3} style={{ margin: 0 }}>H3 — Card Header (24px, 600)</Title>
-              <Title level={4} style={{ margin: 0 }}>H4 — Sub-section (20px, 600)</Title>
-              <Title level={5} style={{ margin: 0 }}>H5 — Component Title (16px, 600)</Title>
+            <Space direction="vertical" size={8} className="u-full">
+              <Title level={1} className="u-m-0">H1 — Page Title (40px, 800)</Title>
+              <Title level={2} className="u-m-0">H2 — Section Header (32px, 700)</Title>
+              <Title level={3} className="u-m-0">H3 — Card Header (24px, 600)</Title>
+              <Title level={4} className="u-m-0">H4 — Sub-section (20px, 600)</Title>
+              <Title level={5} className="u-m-0">H5 — Component Title (16px, 600)</Title>
             </Space>
           </Demo>
 
@@ -535,7 +535,7 @@ const StyleGuide = () => {
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
               <Demo label="Text Inputs">
-                <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                <Space direction="vertical" className="u-full" size={12}>
                   <Input placeholder="Default input" />
                   <Input size="large" placeholder="Large input" />
                   <Input size="small" placeholder="Small input" />
@@ -550,10 +550,10 @@ const StyleGuide = () => {
             </Col>
             <Col xs={24} md={12}>
               <Demo label="Select & Other Controls">
-                <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                <Space direction="vertical" className="u-full" size={12}>
                   <Select
                     placeholder="Select class"
-                    style={{ width: "100%" }}
+                    className="u-full"
                     options={[
                       { value: "10a", label: "Class 10-A" },
                       { value: "10b", label: "Class 10-B" },
@@ -563,7 +563,7 @@ const StyleGuide = () => {
                   <Select
                     mode="multiple"
                     placeholder="Select subjects"
-                    style={{ width: "100%" }}
+                    className="u-full"
                     options={[
                       { value: "math", label: "Mathematics" },
                       { value: "sci",  label: "Science" },
@@ -571,7 +571,7 @@ const StyleGuide = () => {
                       { value: "his",  label: "History" },
                     ]}
                   />
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <div className="u-row-wrap">
                     <Checkbox>Remember me</Checkbox>
                     <Checkbox defaultChecked>Auto-promote</Checkbox>
                     <Checkbox disabled>Disabled</Checkbox>
@@ -612,12 +612,12 @@ const StyleGuide = () => {
                 <Input prefix={<MailOutlined />} placeholder="aryan@school.edu" type="email" />
               </Form.Item>
               <Form.Item label="Role" required>
-                <Select placeholder="Select role" style={{ width: "100%" }}
+                <Select placeholder="Select role" className="u-full"
                   options={Object.keys(ROLE_COLORS).map((r) => ({ value: r, label: r }))}
                 />
               </Form.Item>
               <Form.Item label="Class" validateStatus="error" help="Class is required">
-                <Select placeholder="Select class" style={{ width: "100%" }} status="error" />
+                <Select placeholder="Select class" className="u-full" status="error" />
               </Form.Item>
               <Space>
                 <Button type="primary">Save Student</Button>
@@ -688,7 +688,7 @@ const StyleGuide = () => {
                     border: "1px solid var(--border-muted)",
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                      <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>{title}</Text>
+                      <Text className="u-meta">{title}</Text>
                       <div style={{
                         width: 32, height: 32, borderRadius: 8, color,
                         background: `color-mix(in srgb, ${color} 9%, transparent)`,
@@ -786,7 +786,7 @@ const StyleGuide = () => {
         {/* ══ 8. ALERTS & FEEDBACK ═══════════════════════════════════ */}
         <Section id="alerts" title="Alerts & Feedback">
           <Demo label="Alert Variants">
-            <Space direction="vertical" style={{ width: "100%" }} size={12}>
+            <Space direction="vertical" className="u-full" size={12}>
               <Alert message="Success — Record saved successfully." type="success" showIcon />
               <Alert message="Info — Academic year 2024-25 is now active." type="info" showIcon />
               <Alert message="Warning — Fee payment is overdue." type="warning" showIcon />
@@ -824,7 +824,7 @@ const StyleGuide = () => {
           </Demo>
 
           <Demo label="Progress Bars">
-            <Space direction="vertical" style={{ width: "100%" }} size={16}>
+            <Space direction="vertical" className="u-full" size={16}>
               <div>
                 <Text style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 6, display: "block" }}>
                   Fee Collection — 78%
@@ -914,7 +914,7 @@ const StyleGuide = () => {
         {/* ══ 10. STATUS PATTERNS ════════════════════════════════════ */}
         <Section id="status" title="Status Patterns">
           <Demo label="Entity Status — Used Across Student / Fee / School Pages">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space direction="vertical" size={16} className="u-full">
               <Row gutter={[12, 12]}>
                 {[
                   { label: "Active",     bg: "rgba(220,252,231,0.15)", color: "var(--success-hover)", border: "#bbf7d0", dot: "var(--success)" },
@@ -1000,11 +1000,11 @@ const StyleGuide = () => {
             </Col>
             <Col xs={24} md={12}>
               <Demo label="List Skeleton">
-                <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                <Space direction="vertical" className="u-full" size={12}>
                   {[1, 2, 3].map((i) => (
                     <div key={i} style={{ display: "flex", gap: 12, alignItems: "center" }}>
                       <Skeleton.Avatar active size={40} />
-                      <Skeleton active paragraph={{ rows: 1 }} title={{ width: "60%" }} style={{ flex: 1 }} />
+                      <Skeleton active paragraph={{ rows: 1 }} title={{ width: "60%" }} className="u-grow" />
                     </div>
                   ))}
                 </Space>
@@ -1028,11 +1028,7 @@ const StyleGuide = () => {
           </Demo>
 
           <Demo label="Pulse Animation Skeleton (pure CSS)">
-            <style>{`
-              @keyframes sgPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
-              .sg-skeleton { background:var(--surface-soft); border-radius:8px; animation:sgPulse 1.6s ease-in-out infinite; }
-            `}</style>
-            <Space direction="vertical" style={{ width: "100%" }} size={8}>
+                        <Space direction="vertical" className="u-full" size={8}>
               <div className="sg-skeleton" style={{ height: 20, width: "80%" }} />
               <div className="sg-skeleton" style={{ height: 16, width: "60%" }} />
               <div className="sg-skeleton" style={{ height: 16, width: "70%" }} />
@@ -1130,7 +1126,7 @@ const StyleGuide = () => {
         {/* ══ 13. NAVIGATION ═════════════════════════════════════════ */}
         <Section id="navigation" title="Navigation">
           <Demo label="Breadcrumb">
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            <Space direction="vertical" size={16} className="u-full">
               <Breadcrumb
                 separator={<RightOutlined style={{ fontSize: 10 }} />}
                 items={[
@@ -1208,7 +1204,7 @@ const StyleGuide = () => {
                         <div>
                           <Text strong style={{ fontSize: 13 }}>New student admitted</Text>
                           <Text style={{ display: "block", fontSize: 12, color: "var(--text-muted)" }}>Aryan Sharma — Class 10-A</Text>
-                          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>2 min ago</Text>
+                          <Text className="u-meta-xs">2 min ago</Text>
                         </div>
                       ),
                     },
@@ -1218,7 +1214,7 @@ const StyleGuide = () => {
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Fee collected</Text>
                           <Text style={{ display: "block", fontSize: 12, color: "var(--text-muted)" }}>₹12,000 from Priya Verma</Text>
-                          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>25 min ago</Text>
+                          <Text className="u-meta-xs">25 min ago</Text>
                         </div>
                       ),
                     },
@@ -1228,7 +1224,7 @@ const StyleGuide = () => {
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Exam scheduled</Text>
                           <Text style={{ display: "block", fontSize: 12, color: "var(--text-muted)" }}>Mid-term — 15 Jan 2025</Text>
-                          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>1 hr ago</Text>
+                          <Text className="u-meta-xs">1 hr ago</Text>
                         </div>
                       ),
                     },
@@ -1238,7 +1234,7 @@ const StyleGuide = () => {
                         <div>
                           <Text strong style={{ fontSize: 13 }}>Attendance below threshold</Text>
                           <Text style={{ display: "block", fontSize: 12, color: "var(--text-muted)" }}>Class 9-B — 68% this week</Text>
-                          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>3 hr ago</Text>
+                          <Text className="u-meta-xs">3 hr ago</Text>
                         </div>
                       ),
                     },
@@ -1273,7 +1269,7 @@ const StyleGuide = () => {
               </Demo>
 
               <Demo label="Avatar + User Info Pattern">
-                <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                <Space direction="vertical" className="u-full" size={12}>
                   {[
                     { name: "Aryan Sharma", role: "Student", class: "Class 10-A", color: "var(--accent)" },
                     { name: "Priya Verma",  role: "Teacher",  class: "Mathematics", color: "var(--success)" },
@@ -1292,7 +1288,7 @@ const StyleGuide = () => {
                         </Avatar>
                         <div>
                           <Text strong style={{ fontSize: 13, display: "block" }}>{name}</Text>
-                          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{cls}</Text>
+                          <Text className="u-meta-xs">{cls}</Text>
                         </div>
                       </Space>
                       <Tag style={{
@@ -1309,7 +1305,7 @@ const StyleGuide = () => {
           </Row>
 
           <Demo label="Divider Styles">
-            <Space direction="vertical" style={{ width: "100%" }} size={16}>
+            <Space direction="vertical" className="u-full" size={16}>
               <Divider />
               <Divider dashed />
               <Divider orientation="left">Section Label</Divider>

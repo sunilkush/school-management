@@ -159,7 +159,7 @@ const MarkAttendancePage = () => {
       />
 
       {/* ── Filter panel — same fields, same order, same sizes as Records and Monthly ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <FilterGrid>
           {isSuperAdmin && (
             <FilterField label="School">
@@ -236,7 +236,7 @@ const MarkAttendancePage = () => {
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
-              <span style={{ color: "var(--text-muted)" }}>
+              <span className="u-muted">
                 {schoolId ? 'Click "Load Users" to fetch attendance records' : "Select a school first"}
               </span>
             }
@@ -261,8 +261,8 @@ const MarkAttendancePage = () => {
       {/* ── Footer ── */}
       {rows.length > 0 && (
         <div className="section-panel" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
-            <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{rows.length}</span>{" "}records loaded
+          <span className="u-meta-md">
+            <span className="u-strong-bold">{rows.length}</span>{" "}records loaded
             {showTimes && (
               <span style={{ marginLeft: 8, color: "var(--text-muted)", fontSize: 12 }}>
                 · Check-In/Out times enabled for this role

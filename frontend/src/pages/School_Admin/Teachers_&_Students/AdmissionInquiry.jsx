@@ -174,15 +174,15 @@ const AdmissionInquiry = () => {
     {
       title: "#",
       width: 42,
-      render: (_, __, i) => <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{(page - 1) * 15 + i + 1}</span>,
+      render: (_, __, i) => <span className="u-meta">{(page - 1) * 15 + i + 1}</span>,
     },
     {
       title:     "Student",
       dataIndex: "studentName",
       render:    (v, r) => (
         <div>
-          <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{v}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-strong-bold">{v}</div>
+          <div className="u-meta">
             {r.applyingClass}{r.academicYear ? ` • ${r.academicYear}` : ""}
           </div>
         </div>
@@ -192,13 +192,13 @@ const AdmissionInquiry = () => {
       title:  "Parent",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{r.parentName}</div>
+          <div className="u-label">{r.parentName}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}>
-            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <span className="u-meta">
               <PhoneOutlined style={{ marginRight: 4 }} />{r.parentPhone}
             </span>
             {r.parentEmail && (
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <span className="u-meta">
                 <MailOutlined style={{ marginRight: 4 }} />{r.parentEmail}
               </span>
             )}
@@ -226,7 +226,7 @@ const AdmissionInquiry = () => {
       title:  "Source",
       width:  110,
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {SOURCE_MAP[r.source] || r.source}
         </span>
       ),
@@ -235,17 +235,17 @@ const AdmissionInquiry = () => {
       title:  "Follow-up",
       width:  110,
       render: (_, r) => r.followUpDate ? (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           <CalendarOutlined style={{ marginRight: 4 }} />
           {dayjs(r.followUpDate).format("DD MMM YYYY")}
         </span>
-      ) : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
+      ) : <span className="u-meta">—</span>,
     },
     {
       title:  "Date",
       width:  100,
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {dayjs(r.createdAt).format("DD MMM YYYY")}
         </span>
       ),
@@ -320,7 +320,7 @@ const AdmissionInquiry = () => {
         <div className="toolbar-row">
           <Input
             placeholder="Search by name / phone / email..."
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             style={{ width: 280 }}
@@ -376,7 +376,7 @@ const AdmissionInquiry = () => {
         okButtonProps={{ style: { background: "var(--primary)", borderColor: "var(--primary)" } }}
         width={680}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="u-mt-4">
           {/* Student info */}
           <div style={{ fontWeight: 700, color: "var(--text-muted)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
             Student Information
@@ -396,7 +396,7 @@ const AdmissionInquiry = () => {
           <Row gutter={14}>
             <Col span={8}>
               <Form.Item name="dateOfBirth" label="Date of Birth">
-                <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                <DatePicker className="u-full" format="DD/MM/YYYY" />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -466,7 +466,7 @@ const AdmissionInquiry = () => {
             )}
             <Col span={8}>
               <Form.Item name="followUpDate" label="Follow-up Date">
-                <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                <DatePicker className="u-full" format="DD/MM/YYYY" />
               </Form.Item>
             </Col>
           </Row>

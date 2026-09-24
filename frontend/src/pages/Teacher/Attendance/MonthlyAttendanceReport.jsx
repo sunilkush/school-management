@@ -290,7 +290,7 @@ const MonthlyAttendanceReport = () => {
         const name = row?.student?.name || "—";
         const { bg, color } = avatarColor(name);
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="u-row">
             <div style={{
               width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
               background: bg, color, fontWeight: 800, fontSize: 12,
@@ -342,14 +342,14 @@ const MonthlyAttendanceReport = () => {
       />
 
       {/* ── Filter Panel ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14, alignItems: "end" }}>
 
           <div>
             <FL>Class & Section</FL>
             <Select
               placeholder="Select assigned class & section"
-              style={{ width: "100%" }}
+              className="u-full"
               value={selectedKey}
               onChange={setSelectedKey}
               loading={classLoading}
@@ -368,7 +368,7 @@ const MonthlyAttendanceReport = () => {
           <div>
             <FL>Month</FL>
             <DatePicker
-              picker="month" style={{ width: "100%" }}
+              picker="month" className="u-full"
               value={month}
               onChange={(v) => setMonth(v || dayjs())}
             />
@@ -538,20 +538,6 @@ const MonthlyAttendanceReport = () => {
       </div>
 
       {/* Row tint styles */}
-      <style>{`
-        .${TABLE_CLS} .row-at-risk > td { background: ${tint(C.danger, 0.024)} !important; }
-        .${TABLE_CLS} .row-at-risk:hover > td { background: ${tint(C.danger, 0.07)} !important; }
-        .${TABLE_CLS} .row-excellent > td { background: ${tint(C.success, 0.024)} !important; }
-        .${TABLE_CLS} .row-excellent:hover > td { background: ${tint(C.success, 0.07)} !important; }
-        .${TABLE_CLS} .ant-table-thead > tr > th { padding: 8px 6px !important; }
-        .${TABLE_CLS} .ant-table-tbody > tr > td { padding: 8px 6px !important; }
-        .${TABLE_CLS} .ant-table-fixed-left .ant-table-cell,
-        .${TABLE_CLS} .ant-table-fixed-right .ant-table-cell { background: ${C.surface} !important; }
-        .${TABLE_CLS} .ant-table-tbody > tr.row-at-risk .ant-table-cell-fix-left,
-        .${TABLE_CLS} .ant-table-tbody > tr.row-at-risk .ant-table-cell-fix-right { background: var(--danger-light) !important; }
-        .${TABLE_CLS} .ant-table-tbody > tr.row-excellent .ant-table-cell-fix-left,
-        .${TABLE_CLS} .ant-table-tbody > tr.row-excellent .ant-table-cell-fix-right { background: var(--success-light) !important; }
-      `}</style>
     </div>
   );
 };

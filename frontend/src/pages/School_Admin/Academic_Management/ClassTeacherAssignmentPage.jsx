@@ -43,7 +43,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -203,10 +203,10 @@ const ClassTeacherAssignmentPage = () => {
             {(r.teacherId?.name || "?")[0].toUpperCase()}
           </div>
           <div>
-            <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+            <div className="u-strong">
               {r.teacherId?.name || "—"}
             </div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <div className="u-meta">
               {r.teacherId?.email}
             </div>
           </div>
@@ -225,12 +225,12 @@ const ClassTeacherAssignmentPage = () => {
       title: "Section",
       render: (_, r) => r.sectionId?.name
         ? <span style={pill("var(--accent-hover)", "rgba(var(--accent-rgb), 0.5)")}>{r.sectionId.name}</span>
-        : <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Whole class</span>,
+        : <span className="u-meta">Whole class</span>,
     },
     {
       title: "Session",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {r.academicYearId?.name || "—"}
         </span>
       ),
@@ -286,14 +286,14 @@ const ClassTeacherAssignmentPage = () => {
         <StatCard icon={<Layers size={18} />}        label="Section-Level"       value={stats.sectionLevel}     color="var(--accent-hover)" />
       </div>
 
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div className="toolbar-row">
           <Input
             allowClear
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             placeholder="Search by teacher, class or section"
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             style={{ width: 280 }}
           />
         </div>
@@ -341,7 +341,7 @@ const ClassTeacherAssignmentPage = () => {
             </div>
             <Select
               showSearch
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select teacher…"
               value={form.teacherId}
               onChange={(v) => setForm((f) => ({ ...f, teacherId: v }))}
@@ -355,7 +355,7 @@ const ClassTeacherAssignmentPage = () => {
               Class <span style={{ color: "var(--danger)" }}>*</span>
             </div>
             <Select
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select class…"
               value={form.schoolClassId}
               onChange={(v) => setForm((f) => ({ ...f, schoolClassId: v, sectionId: null }))}
@@ -370,7 +370,7 @@ const ClassTeacherAssignmentPage = () => {
             </div>
             <Select
               allowClear
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select section…"
               value={form.sectionId}
               onChange={(v) => setForm((f) => ({ ...f, sectionId: v || null }))}

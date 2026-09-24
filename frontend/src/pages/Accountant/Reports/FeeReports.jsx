@@ -240,7 +240,7 @@ const FeeReports = () => {
         </div>
 
         {/* ── Collection utilization ─────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 20 }}>
+        <div className="section-panel u-mb-5">
           <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 8 }}>Fee Collection Progress</div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
@@ -252,7 +252,7 @@ const FeeReports = () => {
         </div>
 
         {/* ── Charts ────────────────────────────────────────────────── */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+        <Row gutter={[16, 16]} className="u-mb-5">
           <Col xs={24} lg={14}>
             <div className="section-panel is-last">
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Monthly Collection Trend</div>
@@ -295,7 +295,7 @@ const FeeReports = () => {
 
         {/* ── Payment mode breakdown ─────────────────────────────── */}
         {modeBreakdown.length > 0 && (
-          <div className="section-panel" style={{ marginBottom: 20 }}>
+          <div className="section-panel u-mb-5">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>By Payment Mode</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               {modeBreakdown.map((m, i) => {
@@ -305,7 +305,7 @@ const FeeReports = () => {
                     <span style={{ width: 10, height: 10, borderRadius: "50%", background: c, flexShrink: 0 }} />
                     <span style={{ fontWeight: 700, color: c, fontSize: 13, textTransform: "capitalize" }}>{m.name}</span>
                     <span style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>{money(m.total)}</span>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>({m.count} txns)</span>
+                    <span className="u-meta-xs">({m.count} txns)</span>
                   </div>
                 );
               })}
@@ -363,7 +363,7 @@ const FeeReports = () => {
                   },
                 ]}
               >
-                <InputNumber min={1} style={{ width: "100%" }} addonBefore="₹" />
+                <InputNumber min={1} className="u-full" addonBefore="₹" />
               </Form.Item>
               <Form.Item label="Refund Mode" name="refundMode" rules={[{ required: true }]}>
                 <Select

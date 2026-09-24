@@ -50,13 +50,7 @@ const ExamTimer = ({ initialSeconds = 1800, onTimeUp, inline = false }) => {
       }}>
         <ClockCircleOutlined style={{ fontSize: 14 }} />
         {formatTime(timeLeft)}
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.6; }
-          }
-        `}</style>
-      </div>
+              </div>
     );
   }
 
@@ -79,13 +73,7 @@ const ExamTimer = ({ initialSeconds = 1800, onTimeUp, inline = false }) => {
           {formatTime(timeLeft)}
         </div>
       </div>
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.7; }
-        }
-      `}</style>
-    </div>
+          </div>
   );
 };
 

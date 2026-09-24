@@ -218,7 +218,7 @@ const Profile = () => {
 /* ── Sub-components ── */
 
 const Section = ({ title, children }) => (
-  <div style={{ marginBottom: 20 }}>
+  <div className="u-mb-5">
     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>{title}</div>
     {children}
   </div>

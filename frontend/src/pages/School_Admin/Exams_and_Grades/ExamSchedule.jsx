@@ -224,7 +224,7 @@ const ExamSchedule = () => {
           marginBottom: 8,
         }}
       >
-        <Space direction="vertical" size={6} style={{ width: "100%" }}>
+        <Space direction="vertical" size={6} className="u-full">
           <Space align="start" style={{ width: "100%", justifyContent: "space-between" }}>
             <Space align="center">
               <div style={avatarStyle(exam.title, 34)}>
@@ -252,7 +252,7 @@ const ExamSchedule = () => {
           </Space>
 
           <Space size={6}>
-            <ClockCircleOutlined style={{ color: "var(--text-muted)" }} />
+            <ClockCircleOutlined className="u-muted" />
             <Text type="secondary" style={{ fontSize: 12 }}>
               {exam.startTime ? dayjs(exam.startTime).format("hh:mm A") : "-"} -{" "}
               {exam.endTime ? dayjs(exam.endTime).format("hh:mm A") : "-"}
@@ -338,7 +338,7 @@ const ExamSchedule = () => {
         ]}
       />
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         <div style={{ marginBottom: 8 }}>
           <Tag color="blue" style={{ borderRadius: 999 }}>
             Academic Year: {selectedAcademicYear?.name || "Not Selected"}
@@ -365,7 +365,7 @@ const ExamSchedule = () => {
           ))}
         </div>
 
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <div className="page-toolbar toolbar-row">
             <Select
               value={selectedClassFilter}
@@ -425,7 +425,7 @@ const ExamSchedule = () => {
             <Input placeholder="e.g. Mid Term Mathematics" />
           </Form.Item>
 
-          <Space wrap style={{ width: "100%" }}>
+          <Space wrap className="u-full">
             <Form.Item
               label="Exam Type"
               name="examType"
@@ -470,7 +470,7 @@ const ExamSchedule = () => {
               name="examDate"
               rules={[{ required: true, message: "Select exam date" }]}
             >
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
 
             <Form.Item
@@ -478,7 +478,7 @@ const ExamSchedule = () => {
               name="startTime"
               rules={[{ required: true, message: "Select start time" }]}
             >
-              <DatePicker picker="time" format="HH:mm" style={{ width: "100%" }} />
+              <DatePicker picker="time" format="HH:mm" className="u-full" />
             </Form.Item>
 
             <Form.Item
@@ -486,7 +486,7 @@ const ExamSchedule = () => {
               name="endTime"
               rules={[{ required: true, message: "Select end time" }]}
             >
-              <DatePicker picker="time" format="HH:mm" style={{ width: "100%" }} />
+              <DatePicker picker="time" format="HH:mm" className="u-full" />
             </Form.Item>
 
             <Form.Item

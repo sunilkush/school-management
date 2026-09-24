@@ -88,7 +88,7 @@ const QuestionResult = ({ question }) => {
           <>
             <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 13 }}>
               <span><b style={{ fontSize: 20 }}>{question.average}</b> average</span>
-              <span style={{ color: "var(--text-muted)" }}>lowest {question.min} · highest {question.max}</span>
+              <span className="u-muted">lowest {question.min} · highest {question.max}</span>
             </div>
             {question.type === "rating" && <RatingSpread distribution={question.distribution} />}
           </>
@@ -101,7 +101,7 @@ const QuestionResult = ({ question }) => {
     return (
       <div className="section-panel">
         {head}
-        <Progress percent={question.percentYes} strokeColor="var(--success)" style={{ marginTop: 8 }} />
+        <Progress percent={question.percentYes} strokeColor="var(--success)" className="u-mt-2" />
         <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
           {question.yes} said yes · {question.no} said no
         </div>
@@ -119,7 +119,7 @@ const QuestionResult = ({ question }) => {
             <div key={option} style={{ marginBottom: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                 <span>{option}</span>
-                <span style={{ color: "var(--text-muted)" }}>{n}</span>
+                <span className="u-muted">{n}</span>
               </div>
               <Progress percent={Math.round((n / total) * 100)} size="small" showInfo={false} />
             </div>
@@ -288,7 +288,7 @@ const SurveysPage = () => {
               </Tooltip>
             )}
           </div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.questions?.length || 0} question(s)
             {r.openedAt ? ` · opened ${dayjs(r.openedAt).format("D MMM YYYY")}` : ""}
             {r.closesAt ? ` · closes ${dayjs(r.closesAt).format("D MMM")}` : ""}
@@ -299,11 +299,11 @@ const SurveysPage = () => {
     {
       title: "Replies", width: 200,
       render: (_, r) => (r.status === "draft" ? (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>not sent yet</span>
+        <span className="u-meta">not sent yet</span>
       ) : (
         <div>
           <Progress percent={r.responseRate} size="small" />
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.responded} of {r.recipientCount}
           </div>
         </div>
@@ -357,7 +357,7 @@ const SurveysPage = () => {
         subtitle="Ask the school a question, and see what came back"
         icon={<BarChartOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <Select
               allowClear placeholder="All statuses" style={{ width: 150 }}
               value={statusFilter} onChange={setStatusFilter}
@@ -400,7 +400,7 @@ const SurveysPage = () => {
         onCancel={() => setModalOpen(false)} onOk={save}
         confirmLoading={actionLoading} okText="Save draft"
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="u-mt-4">
           <Form.Item name="title" label="Title" rules={[{ required: true }]}>
             <Input placeholder="Parent–teacher meeting feedback" />
           </Form.Item>
@@ -417,7 +417,7 @@ const SurveysPage = () => {
                   placeholder="What would you like to ask?"
                   value={q.text}
                   onChange={(e) => setQuestion(index, { text: e.target.value })}
-                  style={{ flex: 1 }}
+                  className="u-grow"
                 />
                 <Select
                   value={q.type} style={{ width: 160 }} options={QUESTION_TYPES}
@@ -446,7 +446,7 @@ const SurveysPage = () => {
             </div>
           ))}
           <Button
-            icon={<PlusOutlined />} block style={{ marginBottom: 20 }}
+            icon={<PlusOutlined />} block className="u-mb-5"
             onClick={() => setQuestions((qs) => [...qs, newQuestion()])}
           >
             Add a question
@@ -459,16 +459,16 @@ const SurveysPage = () => {
             parents of that class only.
           </p>
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="roles" label="Roles" style={{ flex: 1 }}>
+            <Form.Item name="roles" label="Roles" className="u-grow">
               <Select mode="multiple" allowClear placeholder="Everyone"
                       options={ROLES.map((r) => ({ value: r, label: r }))} />
             </Form.Item>
-            <Form.Item name="schoolClassIds" label="Classes" style={{ flex: 1 }}>
+            <Form.Item name="schoolClassIds" label="Classes" className="u-grow">
               <Select mode="multiple" allowClear placeholder="All classes" optionFilterProp="label"
                       options={schoolClasses.map((c) => ({ value: c._id, label: c.name }))} />
             </Form.Item>
             <Form.Item name="closesAt" label="Closes on" style={{ width: 180 }}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
           </div>
 
@@ -497,11 +497,11 @@ const SurveysPage = () => {
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : results ? (
           <>
-            <div className="section-panel" style={{ marginBottom: 16 }}>
+            <div className="section-panel u-mb-4">
               <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 26, fontWeight: 700 }}>{results.responseRate}%</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  <div className="u-meta">
                     {results.responded} of {results.sentTo} replied
                   </div>
                 </div>
@@ -570,7 +570,7 @@ const SurveysPage = () => {
                                     : String(a.value);
                                 return (
                                   <div key={a.questionKey}>
-                                    <span style={{ color: "var(--text-muted)" }}>{q?.text || a.questionKey}: </span>
+                                    <span className="u-muted">{q?.text || a.questionKey}: </span>
                                     {shown}
                                   </div>
                                 );

@@ -151,8 +151,8 @@ const StudentDashboard = () => {
                   dataSource={grades.slice(0, 5)}
                   renderItem={(grade) => (
                     <List.Item style={{ padding: "10px 0", borderBottom: "1px solid var(--border-muted)" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>
+                      <div className="u-grow">
+                        <div className="u-label">
                           {grade?.subjectName || grade?.subject?.name || "Subject"}
                         </div>
                         <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
@@ -173,7 +173,7 @@ const StudentDashboard = () => {
             <div className="section-panel">
               <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Transport Status</div>
               {transportAssignment ? (
-                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                <Space direction="vertical" size={12} className="u-full">
                   <div>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Route</div>
                     <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 600 }}>
@@ -247,15 +247,15 @@ const StudentDashboard = () => {
               dataSource={todayClasses.slice(0, 4)}
               renderItem={(session) => (
                 <List.Item style={{ padding: "10px 0", borderBottom: "1px solid var(--border-muted)" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>
+                  <div className="u-grow">
+                    <div className="u-label">
                       {session?.subjectName || session?.subject?.name || "Class"}
                     </div>
                     <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
                       {session?.teacherName || session?.teacher?.name || "Teacher TBA"}
                     </div>
                   </div>
-                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  <span className="u-meta">
                     {session?.startTime ? dayjs(session.startTime, "HH:mm").format("hh:mm A") : "Time TBA"}
                   </span>
                 </List.Item>

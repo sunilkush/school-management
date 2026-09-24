@@ -100,7 +100,7 @@ const ParentsList = () => {
       title: "Status",
       key: "status",
       render: () => (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="u-row-sm">
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--success)", boxShadow: "0 0 0 2px var(--success-light)" }} />
           <span style={{ fontSize: 12, fontWeight: 600, color: "var(--success-hover)" }}>Active</span>
         </div>
@@ -143,7 +143,7 @@ const ParentsList = () => {
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Parents
               </span>
-              <div style={{ flex: 1 }} />
+              <div className="u-grow" />
               <Input.Search
                 allowClear
                 placeholder="Search by name, email or phone…"
@@ -162,7 +162,7 @@ const ParentsList = () => {
                 <div style={{ fontWeight: 600, color: "var(--text-muted)", marginBottom: 4 }}>
                   {searchText ? "No parents match your search" : "No parents found"}
                 </div>
-                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                <div className="u-meta-md">
                   {searchText
                     ? "Try a different name, email, or phone number"
                     : "Parents will appear here once added to the system"}
@@ -180,7 +180,7 @@ const ParentsList = () => {
                   pageSize: 10,
                   size: "small",
                   showTotal: (total) => (
-                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{total} parents</span>
+                    <span className="u-meta">{total} parents</span>
                   ),
                 }}
                 scroll={{ x: "max-content" }}

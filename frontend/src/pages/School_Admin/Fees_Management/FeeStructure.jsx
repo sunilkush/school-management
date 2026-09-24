@@ -163,15 +163,15 @@ const FeeStructure = () => {
       title: "Class",
       render: (r) => r.schoolClassId?.name
         ? <span style={pill("var(--accent)", "rgba(var(--accent-rgb), 0.2)")}>{r.schoolClassId.name}</span>
-        : <span style={{ color: "var(--text-muted)" }}>—</span>,
+        : <span className="u-muted">—</span>,
     },
     {
       title: "Fee Head",
-      render: (r) => <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{r.feeHeadId?.name || "—"}</span>,
+      render: (r) => <span className="u-label">{r.feeHeadId?.name || "—"}</span>,
     },
     {
       title: "Amount",
-      render: (r) => <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{perPeriodLabel(r.amount, r.frequency)}</span>,
+      render: (r) => <span className="u-title-sm">{perPeriodLabel(r.amount, r.frequency)}</span>,
     },
     { title: "Frequency", render: (r) => <FrequencyTag frequency={r.frequency} /> },
     {
@@ -232,7 +232,7 @@ const FeeStructure = () => {
         <div className="section-panel" style={{ padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <div style={iconWell("var(--primary)", 34)}><SettingOutlined /></div>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+            <div className="u-strong">
               Installments fall due on the {settings?.dueDay ?? 10}th of each period
             </div>
             <div style={{ fontSize: 12, color: fineText ? "var(--danger-hover)" : "var(--text-muted)" }}>
@@ -287,7 +287,7 @@ const FeeStructure = () => {
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Fee Structures
               </span>
-              <div style={{ flex: 1 }} />
+              <div className="u-grow" />
               <Select allowClear style={{ minWidth: 200 }} placeholder="Filter by class" value={classFilter} onChange={setClassFilter}>
                 {schoolClasses?.map((c) => <Option key={c._id} value={c._id}>{c.name}</Option>)}
               </Select>
@@ -303,7 +303,7 @@ const FeeStructure = () => {
               pagination={{
                 pageSize: 10,
                 size: "small",
-                showTotal: (total) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{total} records</span>,
+                showTotal: (total) => <span className="u-meta">{total} records</span>,
               }}
               scroll={{ x: 760 }}
             />
@@ -316,7 +316,7 @@ const FeeStructure = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={iconWell("var(--primary)", 34)}><RupeeIcon /></div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                <div className="u-title">
                   {editingRecord ? "Update Fee Structure" : "Create Fee Structure"}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>What one student of this class pays for this fee head</div>
@@ -330,7 +330,7 @@ const FeeStructure = () => {
           centered
           forceRender
         >
-          <Form layout="vertical" form={form} onFinish={handleSubmit} style={{ marginTop: 8 }}>
+          <Form layout="vertical" form={form} onFinish={handleSubmit} className="u-mt-2">
             <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Select a class" }]}>
               <Select placeholder="Select class" disabled={!!editingRecord}>
                 {schoolClasses?.map((c) => <Option key={c._id} value={c._id}>{c.name}</Option>)}
@@ -350,7 +350,7 @@ const FeeStructure = () => {
               rules={[{ required: true, message: "Enter the amount" }]}
               extra={watchFrequency && watchFrequency !== "one_time" ? `Charged every ${FREQUENCIES[watchFrequency]?.per}; the yearly total is shown in the list after saving.` : undefined}
             >
-              <InputNumber style={{ width: "100%" }} min={0} placeholder="e.g. 2000" prefix="₹" />
+              <InputNumber className="u-full" min={0} placeholder="e.g. 2000" prefix="₹" />
             </Form.Item>
             {editingRecord && (
               <Alert
@@ -368,7 +368,7 @@ const FeeStructure = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={iconWell("var(--primary)", 34)}><SettingOutlined /></div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Fee Settings</div>
+                <div className="u-title">Fee Settings</div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Applies to {user?.school?.name || "this school"} only</div>
               </div>
             </div>
@@ -381,7 +381,7 @@ const FeeStructure = () => {
           centered
           forceRender
         >
-          <Form layout="vertical" form={settingsForm} style={{ marginTop: 8 }}>
+          <Form layout="vertical" form={settingsForm} className="u-mt-2">
             <Form.Item
               name="dueDay"
               label="Due day of the month"
@@ -409,15 +409,15 @@ const FeeStructure = () => {
                     label={watchFine?.type === "per_day" ? "Fine per day" : "Fine amount"}
                     rules={[{ required: true }, { type: "number", min: 1, message: "Must be at least ₹1" }]}
                   >
-                    <InputNumber min={0} prefix="₹" style={{ width: "100%" }} />
+                    <InputNumber min={0} prefix="₹" className="u-full" />
                   </Form.Item>
                   <Form.Item name={["lateFine", "graceDays"]} label="Grace days" extra="Days after the due date before the fine starts">
-                    <InputNumber min={0} max={90} style={{ width: "100%" }} />
+                    <InputNumber min={0} max={90} className="u-full" />
                   </Form.Item>
                 </div>
                 {watchFine?.type === "per_day" && (
                   <Form.Item name={["lateFine", "maxAmount"]} label="Maximum fine per installment" extra="0 = no limit">
-                    <InputNumber min={0} prefix="₹" style={{ width: "100%" }} />
+                    <InputNumber min={0} prefix="₹" className="u-full" />
                   </Form.Item>
                 )}
                 {lateFineText({ lateFine: watchFine }) && (

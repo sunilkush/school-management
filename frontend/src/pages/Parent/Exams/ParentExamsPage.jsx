@@ -209,14 +209,14 @@ const ParentExamsPage = () => {
             showIcon
             message="Some exam data failed to load"
             description={String(error)}
-            style={{ marginBottom: 16 }}
+            className="u-mb-4"
           />
         )}
 
         {/* Exam Schedule */}
         <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Exam Schedule</span>
+            <span className="u-title-sm">Exam Schedule</span>
             <Segmented
               value={scheduleFilter}
               onChange={setScheduleFilter}
@@ -253,7 +253,7 @@ const ParentExamsPage = () => {
                     <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
                       {exam.title || "Untitled Exam"}
                     </div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    <div className="u-meta">
                       <CalendarOutlined style={{ marginRight: 5 }} />
                       {dayjs(exam.examDate).format("DD MMM YYYY")}
                       {exam.subjectId?.name && (
@@ -297,7 +297,7 @@ const ParentExamsPage = () => {
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 700 }}>{result.examId?.title || "Exam"}</span>
                     <Tag color={result.resultStatus === "PASS" ? "success" : "error"}>{result.resultStatus}</Tag>
-                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    <span className="u-meta-md">
                       {result.percentage}% — Grade {result.grade || "—"}
                     </span>
                   </div>
@@ -312,10 +312,10 @@ const ParentExamsPage = () => {
                       size="small"
                     />
                     <div style={{ display: "flex", gap: 20, marginTop: 12, flexWrap: "wrap" }}>
-                      <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+                      <span className="u-strong-bold">
                         Rank: {result.rank || "—"}
                       </span>
-                      <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+                      <span className="u-strong-bold">
                         Obtained: {result.totalObtainedMarks || 0}/{result.totalMaximumMarks || 0}
                       </span>
                     </div>

@@ -144,7 +144,7 @@ const TicketPage = () => {
     {
       title: "Title",
       dataIndex: "title",
-      render: (text) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{text}</span>,
+      render: (text) => <span className="u-strong">{text}</span>,
     },
     {
       title: "Submitted By",
@@ -247,7 +247,7 @@ const TicketPage = () => {
       />
 
       {/* Toolbar */}
-      <div className="toolbar-row" style={{ marginTop: 20 }}>
+      <div className="toolbar-row u-mt-5">
         <Search
           placeholder="Search tickets by title..."
           allowClear
@@ -298,7 +298,7 @@ const TicketPage = () => {
               emptyText: (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={<span style={{ color: "var(--text-muted)" }}>No tickets found</span>}
+                  description={<span className="u-muted">No tickets found</span>}
                 />
               ),
             }}
@@ -345,7 +345,7 @@ const TicketPage = () => {
         footer={null}
         width={480}
       >
-        <Form form={resolveForm} layout="vertical" onFinish={handleResolve} style={{ marginTop: 8 }}>
+        <Form form={resolveForm} layout="vertical" onFinish={handleResolve} className="u-mt-2">
           <Form.Item
             name="resolution"
             label="Resolution Note"
@@ -370,7 +370,7 @@ const TicketPage = () => {
         footer={null}
         width={400}
       >
-        <Form form={statusForm} layout="vertical" onFinish={handleStatusUpdate} style={{ marginTop: 8 }}>
+        <Form form={statusForm} layout="vertical" onFinish={handleStatusUpdate} className="u-mt-2">
           <Form.Item
             name="status"
             label="New Status"
@@ -398,7 +398,7 @@ const TicketPage = () => {
         footer={null}
         width={520}
       >
-        <Form form={newForm} layout="vertical" onFinish={handleCreate} style={{ marginTop: 8 }}>
+        <Form form={newForm} layout="vertical" onFinish={handleCreate} className="u-mt-2">
           <Form.Item
             name="title"
             label="Title"

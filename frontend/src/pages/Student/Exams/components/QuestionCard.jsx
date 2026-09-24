@@ -64,7 +64,7 @@ const MultiTile = ({ letter, label, value, selected, onChange }) => (
     }}
   >
     <Checkbox checked={selected} onChange={() => onChange(value)}>
-      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span className="u-row">
         <span style={{
           width: 26, height: 26, borderRadius: 7, flexShrink: 0,
           display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -120,7 +120,7 @@ const QuestionCard = ({ question, index, onAnswerChange, userAnswer }) => {
         display: "flex", justifyContent: "space-between", alignItems: "center",
         background: "var(--surface-soft, var(--surface-page))",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 32, height: 32, borderRadius: 8,
             background: "var(--primary)", color: "#fff",
@@ -231,7 +231,7 @@ const QuestionCard = ({ question, index, onAnswerChange, userAnswer }) => {
 
         {/* Unknown type */}
         {!type && (
-          <p style={{ color: "var(--text-muted)", fontSize: 13 }}>Answer type unavailable.</p>
+          <p className="u-meta-md">Answer type unavailable.</p>
         )}
         {type && !isSingleSelect && !isMultiSelect && !isText && !isFill && !isMatch && (
           <TextArea

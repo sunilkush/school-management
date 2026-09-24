@@ -87,7 +87,7 @@ export default function GenerateTimetableModal({
             elsewhere in the school is never double-booked.
           </Paragraph>
 
-          <div style={{ marginBottom: 16 }}>
+          <div className="u-mb-4">
             <Text strong style={{ display: "block", marginBottom: 8 }}>Working days</Text>
             <Checkbox.Group
               value={days}
@@ -98,7 +98,7 @@ export default function GenerateTimetableModal({
 
           {preview && (
             <>
-              <Space size={32} style={{ marginBottom: 16 }}>
+              <Space size={32} className="u-mb-4">
                 <Statistic title="Periods placed" value={preview.filledSlots} />
                 <Statistic title="Slots available" value={preview.totalSlots} />
                 <Statistic
@@ -130,7 +130,7 @@ export default function GenerateTimetableModal({
               <Alert
                 type="error"
                 showIcon
-                style={{ marginTop: 16 }}
+                className="u-mt-4"
                 message="Applying replaces the existing timetable for this section"
                 description="Any periods you arranged by hand will be overwritten. Nothing is written until you press Replace."
               />

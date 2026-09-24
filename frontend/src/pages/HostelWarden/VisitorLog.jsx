@@ -88,7 +88,7 @@ const VisitorLog = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{r.visitorName}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.visitorPhone}</div>
+          <div className="u-meta-xs">{r.visitorPhone}</div>
         </div>
       ),
     },
@@ -185,7 +185,7 @@ const VisitorLog = () => {
 
       {/* ── Add Visitor Modal ─────────────────────────────────── */}
       <Modal title="Log Visitor Entry" open={addModal} onCancel={() => setAddModal(false)} onOk={() => form.submit()} confirmLoading={actionLoading} width={600} destroyOnClose>
-        <Form form={form} layout="vertical" onFinish={handleAdd} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleAdd} className="u-mt-2">
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item name="visitorName" label="Visitor Name" rules={[{ required: true }]}>

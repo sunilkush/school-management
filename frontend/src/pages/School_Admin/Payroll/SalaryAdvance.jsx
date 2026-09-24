@@ -21,7 +21,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-lighter)",
   accent: "var(--accent)", accentLight: "var(--accent-light)",
   success: "var(--success)", successLight: "var(--success-light)",
   danger: "var(--danger)", dangerLight: "var(--danger-light)",
@@ -131,7 +131,7 @@ const SalaryAdvance = () => {
         <Input.TextArea
           rows={3} placeholder="Reason for rejection (optional)"
           onChange={(e) => { reason = e.target.value; }}
-          style={{ marginTop: 12 }}
+          className="u-mt-3"
         />
       ),
       okText: "Reject", okButtonProps: { danger: true, style: { borderRadius: 8 } },
@@ -184,7 +184,7 @@ const SalaryAdvance = () => {
     {
       title: "Employee",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 36, height: 36, borderRadius: 10, flexShrink: 0,
             background: `linear-gradient(135deg, ${C.primary}, ${C.accent})`,
@@ -201,8 +201,8 @@ const SalaryAdvance = () => {
       title: "Total / EMI",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{fmt(r.totalAmount)}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>EMI: {fmt(r.emiAmount)}/month</div>
+          <div className="u-title-sm">{fmt(r.totalAmount)}</div>
+          <div className="u-meta-xs">EMI: {fmt(r.emiAmount)}/month</div>
         </div>
       ),
     },
@@ -212,7 +212,7 @@ const SalaryAdvance = () => {
       render: (_, r) => (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Remaining: {fmt(r.remainingAmount)}</span>
+            <span className="u-meta-xs">Remaining: {fmt(r.remainingAmount)}</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: r.paidPercent === 100 ? C.success : C.primary }}>
               {r.paidPercent}%
             </span>
@@ -231,7 +231,7 @@ const SalaryAdvance = () => {
       title: "Start Month",
       dataIndex: "startMonth",
       render: (v) => v ? (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {dayjs(v).format("MMM YYYY")}
         </span>
       ) : "—",
@@ -326,7 +326,7 @@ const SalaryAdvance = () => {
       {/* Table */}
       <div className="section-panel is-flush">
         <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Advances</span>
+          <span className="u-title">All Advances</span>
           <span style={{
             fontSize: 12, padding: "2px 9px", borderRadius: 20,
             background: C.primaryLighter, color: C.primary,
@@ -363,24 +363,24 @@ const SalaryAdvance = () => {
         destroyOnClose
         width={480}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} className="u-mt-2">
           <Form.Item name="employeeId" label="Employee" rules={[{ required: true }]}>
             <Select showSearch optionFilterProp="label" options={employeeOptions} placeholder="Select employee…" size="large" />
           </Form.Item>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
             <Form.Item name="totalAmount" label="Advance Amount (₹)" rules={[{ required: true }]}>
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 25000"
+              <InputNumber min={1} className="u-full" placeholder="e.g. 25000"
                 formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 parser={(v) => v.replace(/₹\s?|(,*)/g, "")} />
             </Form.Item>
             <Form.Item name="emiAmount" label="Monthly EMI (₹)" rules={[{ required: true }]}>
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 5000"
+              <InputNumber min={1} className="u-full" placeholder="e.g. 5000"
                 formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 parser={(v) => v.replace(/₹\s?|(,*)/g, "")} />
             </Form.Item>
           </div>
           <Form.Item name="startMonth" label="Deduction Start Month" rules={[{ required: true }]}>
-            <DatePicker picker="month" style={{ width: "100%" }} format="MMM YYYY" />
+            <DatePicker picker="month" className="u-full" format="MMM YYYY" />
           </Form.Item>
           <Form.Item name="note" label="Reason / Note">
             <Input.TextArea rows={3} placeholder="Reason for advance request (medical emergency, house repair, etc.)" />
@@ -414,8 +414,8 @@ const SalaryAdvance = () => {
                   <div style={{ flexShrink: 0, width: 8, height: 8, borderRadius: "50%", background: cfg.color, marginTop: 6 }} />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 13, color: cfg.color }}>{cfg.label}</div>
-                    {h.amount > 0 && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Amount: {fmt(h.amount)}</div>}
-                    {h.note && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{h.note}</div>}
+                    {h.amount > 0 && <div className="u-meta">Amount: {fmt(h.amount)}</div>}
+                    {h.note && <div className="u-meta">{h.note}</div>}
                     <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
                       {h.actedAt ? dayjs(h.actedAt).format("DD MMM YYYY, hh:mm A") : ""}
                     </div>

@@ -260,7 +260,7 @@ const Reports = () => {
       key: "title",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{r.title || `${typeLabel(r.type)} report`}</div>
+          <div className="u-strong">{r.title || `${typeLabel(r.type)} report`}</div>
           <Tag style={{ marginTop: 4 }}>{typeLabel(r.type)}</Tag>
           {r.status === "draft" && <Tag color="gold">Draft</Tag>}
         </div>
@@ -274,7 +274,7 @@ const Reports = () => {
       render: (_, r) => (
         <div>
           <div>{r.createdAt ? dayjs(r.createdAt).format(DAY) : "—"}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{r.generatedBy?.name ? `by ${r.generatedBy.name}` : ""}</div>
+          <div className="u-meta">{r.generatedBy?.name ? `by ${r.generatedBy.name}` : ""}</div>
         </div>
       ),
     },
@@ -331,7 +331,7 @@ const Reports = () => {
           </FilterField>
         </FilterGrid>
 
-        <div style={{ marginTop: 20 }}>
+        <div className="u-mt-5">
           {!schoolId ? (
             <Empty description="Pick a school to see its report" />
           ) : !yearsLoading && !years.length ? (
@@ -400,7 +400,7 @@ const Reports = () => {
           </FilterField>
         </FilterGrid>
 
-        <div style={{ marginTop: 16 }}>
+        <div className="u-mt-4">
           <Table
             rowKey="_id"
             columns={columns}
@@ -437,11 +437,11 @@ const Reports = () => {
                 background: "var(--surface)", color: "inherit", font: "inherit",
               }}
             >
-              <span style={{ flex: 1 }}>
+              <span className="u-grow">
                 <span style={{ display: "block", fontWeight: 600, color: "var(--text-primary)" }}>{m.title}</span>
                 <span style={{ display: "block", fontSize: 12, color: "var(--text-muted)" }}>{m.note}</span>
               </span>
-              <RightOutlined style={{ color: "var(--text-muted)", fontSize: 12 }} />
+              <RightOutlined className="u-meta" />
             </button>
           ))}
         </div>
@@ -463,7 +463,7 @@ const Reports = () => {
             <Alert
               type="info"
               showIcon
-              style={{ marginBottom: 16 }}
+              className="u-mb-4"
               message="A copy as it stood when it was saved"
               description="Pick the same school above to see today's numbers."
             />
@@ -490,7 +490,7 @@ const Reports = () => {
         width={560}
         title={modalTitle(<PlusOutlined />, "Custom report", "For something the reports above do not cover — a note, a finding, a summary")}
       >
-        <Form form={customForm} layout="vertical" requiredMark={false} initialValues={{ type: "custom", status: "finalized" }} style={{ marginTop: 12 }}>
+        <Form form={customForm} layout="vertical" requiredMark={false} initialValues={{ type: "custom", status: "finalized" }} className="u-mt-3">
           <Form.Item name="title" label="Title" rules={[{ required: true, whitespace: true, message: "Give it a title" }]}>
             <Input placeholder="Term 1 fee follow-up" maxLength={140} />
           </Form.Item>

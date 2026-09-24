@@ -30,7 +30,7 @@ const InfoRow = ({ icon: Icon, label, value, color = "var(--primary)", tint = "r
     }}>
       <Icon size={16} color={color} strokeWidth={1.8} />
     </div>
-    <div style={{ flex: 1 }}>
+    <div className="u-grow">
       <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</div>
       <div style={{ fontSize: 14, color: value ? "var(--text-primary)" : "var(--text-muted)", fontWeight: 500, marginTop: 2 }}>
         {value || "—"}
@@ -226,20 +226,20 @@ const AdminUserProfile = () => {
             padding: "12px 18px", minWidth: 160,
           }}>
             {profile?.department && (
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>Dept: </span>
+              <div className="u-meta">
+                <span className="u-strong">Dept: </span>
                 {profile.department.name}
               </div>
             )}
             {profile?.designation && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>Designation: </span>
+                <span className="u-strong">Designation: </span>
                 {profile.designation.title}
               </div>
             )}
             {profile?.joiningDate && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-                <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>Joined: </span>
+                <span className="u-strong">Joined: </span>
                 {dayjs(profile.joiningDate).format("DD MMM YYYY")}
               </div>
             )}
@@ -298,7 +298,7 @@ const AdminUserProfile = () => {
       <Modal
         open={editModal}
         title={
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>
+          <span className="u-strong-bold">
             Edit Profile — {profile?.name}
           </span>
         }
@@ -309,7 +309,7 @@ const AdminUserProfile = () => {
         width={620}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 12 }}>
+        <Form form={form} layout="vertical" className="u-mt-3">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
             <Form.Item name="name"  label="Full Name"  rules={[{ required: true }]}>
               <Input placeholder="Full name" />
@@ -324,10 +324,10 @@ const AdminUserProfile = () => {
               <Select placeholder="Select gender" options={GENDER_OPTS} />
             </Form.Item>
             <Form.Item name="dateOfBirth" label="Date of Birth">
-              <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+              <DatePicker className="u-full" format="DD/MM/YYYY" />
             </Form.Item>
             <Form.Item name="joiningDate" label="Joining Date">
-              <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+              <DatePicker className="u-full" format="DD/MM/YYYY" />
             </Form.Item>
             <Form.Item name="qualification" label="Qualification" style={{ gridColumn: "1 / -1" }}>
               <Input placeholder="e.g. M.Sc., B.Ed." />

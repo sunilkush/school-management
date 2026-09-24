@@ -103,7 +103,7 @@ const MySubscription = () => {
             message.error(typeof err === "string" ? err : "Payment verification failed");
           }
         },
-        theme: { color: "#2563EB" }, // Razorpay checkout runs in its own iframe/window — literal hex, not a CSS var
+        theme: { color: "var(--primary)" }, // Razorpay checkout runs in its own iframe/window — literal hex, not a CSS var
       };
       new window.Razorpay(options).open();
     } catch (err) {
@@ -159,26 +159,26 @@ const MySubscription = () => {
 
       {reopenedUntil ? (
         <Alert
-          type="success" showIcon style={{ marginTop: 16 }}
+          type="success" showIcon className="u-mt-4"
           message={`Your school is open again — the plan runs until ${day(reopenedUntil)}`}
           action={<Button type="primary" onClick={() => window.location.assign("/dashboard/schooladmin")}>Open the dashboard</Button>}
         />
       ) : blockedByAdmin ? (
         <Alert
-          type="warning" showIcon style={{ marginTop: 16 }}
+          type="warning" showIcon className="u-mt-4"
           message={`Your school's subscription is ${subscription.status}`}
           description="Please contact the administrator to reopen it."
         />
       ) : expired ? (
         <Alert
-          type="error" showIcon style={{ marginTop: 16 }}
+          type="error" showIcon className="u-mt-4"
           message={`Your plan ended on ${day(subscription.endDate)}`}
           description="Everything except this page is closed for your school until the renewal is paid. Paying renews the plan straight away."
           action={renewalAction}
         />
       ) : subscription && daysLeft != null && daysLeft <= RENEWAL_WINDOW_DAYS ? (
         <Alert
-          type="info" showIcon style={{ marginTop: 16 }}
+          type="info" showIcon className="u-mt-4"
           message={`Your plan ends on ${day(subscription.endDate)} — ${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
           description="Pay the renewal before then to keep the school open without a break."
           action={renewalAction}
@@ -186,7 +186,7 @@ const MySubscription = () => {
       ) : null}
 
       {subscription && (
-        <div className="section-panel" style={{ marginTop: 16 }}>
+        <div className="section-panel u-mt-4">
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Current Plan</div>
           <Descriptions bordered column={2} size="small">
             <Descriptions.Item label="Plan">{subscription.planId?.name || "—"}</Descriptions.Item>

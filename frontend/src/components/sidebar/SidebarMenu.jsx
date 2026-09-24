@@ -44,13 +44,7 @@ const MenuSkeleton = () => {
           }}
         />
       ))}
-      <style>{`
-        @keyframes menuPulse {
-          0%, 100% { opacity: 0.5; }
-          50%       { opacity: 1; }
-        }
-      `}</style>
-    </div>
+          </div>
   );
 };
 
@@ -120,7 +114,6 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isDark: isDarkMode } = useTheme();
-  const t = tokens();
   // What the school's plan includes. null (Super Admin, no subscription, unreadable plan) = no locks.
   const planModules = useSelector((s) => s.auth?.user?.planModules ?? null);
 
@@ -206,7 +199,7 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
   const antMenuItems = useMemo(() => {
     const lockedLabel = (title, moduleName) => (
       <Tooltip title={lockMessage(moduleName, role)} placement="right">
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span className="u-row-sm">
           <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
           <LockOutlined style={{ fontSize: 11, opacity: 0.75, flexShrink: 0 }} />
         </span>
@@ -272,118 +265,6 @@ const SidebarMenu = ({ role, additionalRoles = [], collapsed = false }) => {
 
   return (
     <>
-      <style>{`
-        /* ── Item base ── */
-        .sidebar-nav .ant-menu-item,
-        .sidebar-nav .ant-menu-submenu-title {
-          border-radius: 8px !important;
-          margin: 1px 8px !important;
-          width: calc(100% - 16px) !important;
-          height: 38px !important;
-          line-height: 38px !important;
-          font-size: 13px !important;
-          font-weight: 500 !important;
-          transition: background 0.18s ease, color 0.18s ease !important;
-        }
-
-        /* ── Sub-item ── */
-        .sidebar-nav .ant-menu-sub .ant-menu-item {
-          height: 34px !important;
-          line-height: 34px !important;
-          font-size: 12.5px !important;
-          font-weight: 400 !important;
-          border-radius: 6px !important;
-          margin: 1px 8px 1px 20px !important;
-          width: calc(100% - 28px) !important;
-          padding-left: 14px !important;
-          position: relative;
-        }
-
-        /* Sub-item left accent bar */
-        .sidebar-nav .ant-menu-sub .ant-menu-item::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 2px;
-          height: 16px;
-          border-radius: 2px;
-          background: ${t.subItemIndent};
-          transition: background 0.18s ease;
-        }
-
-        .sidebar-nav .ant-menu-sub .ant-menu-item-selected::before,
-        .sidebar-nav .ant-menu-sub .ant-menu-item:hover::before {
-          background: ${t.accent};
-        }
-
-        /* ── Selected item ── */
-        .sidebar-nav.ant-menu-light .ant-menu-item-selected,
-        .sidebar-nav.ant-menu-dark .ant-menu-item-selected {
-          background: ${t.accentBg} !important;
-          color: ${t.accent} !important;
-          font-weight: 600 !important;
-        }
-
-        /* ── Hover ── */
-        .sidebar-nav .ant-menu-item:hover,
-        .sidebar-nav .ant-menu-submenu-title:hover {
-          background: ${t.accentBgHover} !important;
-          color: ${t.accent} !important;
-        }
-
-        /* ── Submenu parent open state ── */
-        .sidebar-nav .ant-menu-submenu-open > .ant-menu-submenu-title {
-          color: ${t.accent} !important;
-          font-weight: 600 !important;
-        }
-
-        /* ── Remove default left border indicator ── */
-        .sidebar-nav.ant-menu-inline .ant-menu-item-selected::after,
-        .sidebar-nav.ant-menu-inline .ant-menu-item::after {
-          display: none !important;
-        }
-
-        /* ── Icon alignment ── */
-        .sidebar-nav .ant-menu-item .ant-menu-item-icon,
-        .sidebar-nav .ant-menu-submenu-title .ant-menu-item-icon {
-          display: flex !important;
-          align-items: center !important;
-        }
-
-        /* ── Inline submenu background ── */
-        .sidebar-nav .ant-menu-sub.ant-menu-inline {
-          background: transparent !important;
-          padding: 2px 0 4px !important;
-        }
-
-        /* ── Remove default submenu arrow padding weirdness ── */
-        .sidebar-nav .ant-menu-submenu-arrow {
-          right: 12px !important;
-          opacity: 0.5;
-          transition: opacity 0.18s ease !important;
-        }
-        .sidebar-nav .ant-menu-submenu-open .ant-menu-submenu-arrow {
-          opacity: 1;
-        }
-
-        /* ── Not in the school's plan ── */
-        .sidebar-nav .ant-menu-item.menu-locked,
-        .sidebar-nav .ant-menu-submenu.menu-locked > .ant-menu-submenu-title {
-          opacity: 0.55;
-        }
-        .sidebar-nav .ant-menu-item.menu-locked:hover,
-        .sidebar-nav .ant-menu-submenu.menu-locked > .ant-menu-submenu-title:hover {
-          opacity: 0.8;
-        }
-
-        /* ── Overall menu container ── */
-        .sidebar-nav.ant-menu {
-          border-inline-end: none !important;
-          padding: 0 !important;
-        }
-      `}</style>
 
       <Menu
         className="sidebar-nav"

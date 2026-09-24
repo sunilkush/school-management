@@ -137,7 +137,7 @@ const RoutesPage = () => {
         record.stopPoints?.length ? (
           <span style={{ color: "var(--success)", fontWeight: 600 }}>{record.stopPoints.length} mapped</span>
         ) : (
-          <span style={{ color: "var(--text-muted)" }}>not mapped</span>
+          <span className="u-muted">not mapped</span>
         ),
     },
     { title: "Students", dataIndex: "students", key: "students" },
@@ -239,7 +239,7 @@ const RoutesPage = () => {
               name="students"
               rules={[{ required: true, message: "Enter number of students" }]}
             >
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
             <Form.Item style={{ textAlign: "right" }}>
               <Space>

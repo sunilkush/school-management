@@ -23,7 +23,7 @@ const PayslipPreview = ({ payslip, monthLabel }) => {
         </div>
       )}
 
-      <Descriptions column={1} bordered size="small" style={{ marginTop: 12 }}>
+      <Descriptions column={1} bordered size="small" className="u-mt-3">
         <Descriptions.Item label="Working Days">{entry.workingDays}</Descriptions.Item>
         <Descriptions.Item label="Present Days">{entry.presentDays}</Descriptions.Item>
         <Descriptions.Item label="LOP Days">{entry.lopDays}</Descriptions.Item>
@@ -32,7 +32,7 @@ const PayslipPreview = ({ payslip, monthLabel }) => {
 
       <Divider style={{ margin: "16px 0 8px" }} />
       <Text type="secondary" style={{ fontSize: 12 }}>Deductions</Text>
-      <Descriptions column={1} bordered size="small" style={{ marginTop: 8 }}>
+      <Descriptions column={1} bordered size="small" className="u-mt-2">
         <Descriptions.Item label="LOP Deduction">{formatCurrencyINR(deductions.lopDeduction)}</Descriptions.Item>
         <Descriptions.Item label="PF — Employee (Statutory)">{formatCurrencyINR(deductions.statutoryPf)}</Descriptions.Item>
         {deductions.vpf > 0 && (
@@ -52,7 +52,7 @@ const PayslipPreview = ({ payslip, monthLabel }) => {
         <Descriptions.Item label="Total Deductions"><Text strong>{formatCurrencyINR(entry.totalDeductions)}</Text></Descriptions.Item>
       </Descriptions>
 
-      <Descriptions column={1} bordered size="small" style={{ marginTop: 12 }}>
+      <Descriptions column={1} bordered size="small" className="u-mt-3">
         <Descriptions.Item label="Net Pay"><Text strong>{formatCurrencyINR(entry.netPay)}</Text></Descriptions.Item>
         <Descriptions.Item label="Payment Status"><Tag color={entry.paymentStatus === "paid" ? "green" : "orange"}>{entry.paymentStatus}</Tag></Descriptions.Item>
       </Descriptions>
@@ -63,7 +63,7 @@ const PayslipPreview = ({ payslip, monthLabel }) => {
           <Text type="secondary" style={{ fontSize: 12 }}>
             Employer contributions (not deducted from pay — shown for CTC reference)
           </Text>
-          <Descriptions column={1} bordered size="small" style={{ marginTop: 8 }}>
+          <Descriptions column={1} bordered size="small" className="u-mt-2">
             <Descriptions.Item label="EPS (Pension Scheme)">{formatCurrencyINR(employerContributions.eps)}</Descriptions.Item>
             <Descriptions.Item label="EPF">{formatCurrencyINR(employerContributions.epf)}</Descriptions.Item>
             <Descriptions.Item label="EPF Admin Charges">{formatCurrencyINR(employerContributions.epfAdminCharges)}</Descriptions.Item>

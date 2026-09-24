@@ -182,23 +182,23 @@ export default function PTMSessionsPage() {
         )}
 
         {/* ── Create Session panel ─────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
-          <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
+          <Flex align="center" gap={10} className="u-mb-4">
             <div style={iconWell("var(--primary)", 38)}><CalendarOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Create PTM Session</Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>Bookable slots are auto-generated across the time window</Text>
+              <Text className="u-meta">Bookable slots are auto-generated across the time window</Text>
             </div>
           </Flex>
 
           <Row gutter={[12, 12]}>
             <Col xs={24} sm={12} md={6}>
-              <Select placeholder="Select Class" style={{ width: "100%" }} value={selectedClass} onChange={setSelectedClass}
+              <Select placeholder="Select Class" className="u-full" value={selectedClass} onChange={setSelectedClass}
                 options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))}
                 showSearch optionFilterProp="label" disabled={!canFilter} size="large" />
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Select placeholder="Select Section" style={{ width: "100%" }} value={selectedSection} onChange={setSelectedSection}
+              <Select placeholder="Select Section" className="u-full" value={selectedSection} onChange={setSelectedSection}
                 options={sectionOptions} showSearch optionFilterProp="label" disabled={!selectedClass} size="large" />
             </Col>
             <Col xs={24} sm={24} md={12}>
@@ -206,25 +206,25 @@ export default function PTMSessionsPage() {
             </Col>
           </Row>
 
-          <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+          <Row gutter={[12, 12]} className="u-mt-3">
             <Col xs={24} sm={12} md={6}>
-              <DatePicker style={{ width: "100%" }} value={date} onChange={setDate} size="large" />
+              <DatePicker className="u-full" value={date} onChange={setDate} size="large" />
             </Col>
             <Col xs={12} sm={6} md={4}>
-              <TimePicker style={{ width: "100%" }} format="hh:mm A" value={startTime} onChange={setStartTime} size="large" />
+              <TimePicker className="u-full" format="hh:mm A" value={startTime} onChange={setStartTime} size="large" />
             </Col>
             <Col xs={12} sm={6} md={4}>
-              <TimePicker style={{ width: "100%" }} format="hh:mm A" value={endTime} onChange={setEndTime} size="large" />
+              <TimePicker className="u-full" format="hh:mm A" value={endTime} onChange={setEndTime} size="large" />
             </Col>
             <Col xs={12} sm={6} md={4}>
-              <InputNumber style={{ width: "100%" }} min={5} addonAfter="min" value={slotDurationMinutes} onChange={setSlotDurationMinutes} size="large" />
+              <InputNumber className="u-full" min={5} addonAfter="min" value={slotDurationMinutes} onChange={setSlotDurationMinutes} size="large" />
             </Col>
             <Col xs={12} sm={6} md={6}>
               <Input placeholder="Location / Link" value={location} onChange={(e) => setLocation(e.target.value)} size="large" />
             </Col>
           </Row>
 
-          <Row style={{ marginTop: 12 }}>
+          <Row className="u-mt-3">
             <Button type="primary" icon={<PlusOutlined />} loading={creating} onClick={handleCreateSession} size="large">
               Create Session
             </Button>
@@ -266,13 +266,13 @@ export default function PTMSessionsPage() {
         okText="Save"
         title={attendanceTarget ? `Mark Attendance — ${attendanceTarget.studentName}` : ""}
       >
-        <Space direction="vertical" style={{ width: "100%" }} size={12}>
+        <Space direction="vertical" className="u-full" size={12}>
           <Paragraph style={{ fontSize: 13, marginBottom: 0 }}>
             {attendanceTarget && `${fmtTime(attendanceTarget.startTime)} – ${fmtTime(attendanceTarget.endTime)}`}
           </Paragraph>
           <Checkbox checked={attended} onChange={(e) => setAttended(e.target.checked)}>Parent attended</Checkbox>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>MEETING NOTES</Text>
+            <Text className="u-meta-xs">MEETING NOTES</Text>
             <TextArea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Discussion points, follow-up actions..." />
           </div>
         </Space>

@@ -435,13 +435,7 @@ const TaskManagement = () => {
 
   return (
     <>
-      <style>{`
-        .tm-board { display:flex; gap:14px; align-items:flex-start; overflow-x:auto; padding-bottom:12px; }
-        .tm-board::-webkit-scrollbar { height:5px; }
-        .tm-board::-webkit-scrollbar-thumb { background:var(--border-muted); border-radius:4px; }
-        .tm-board::-webkit-scrollbar-track { background:transparent; }
-      `}</style>
-
+      
       <PageHeader
         title="Task Management"
         subtitle="Create, assign and track tasks across your school"
@@ -465,7 +459,7 @@ const TaskManagement = () => {
               <div style={iconWell(k.color, 42)}>
                 {React.cloneElement(k.icon, { style: { fontSize: 17 } })}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="u-grow-min">
                 <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
                   {k.value}
                 </div>
@@ -580,7 +574,7 @@ const TaskManagement = () => {
         width={560}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit} className="u-mt-4">
           <Form.Item label="Task Title" name="title" rules={[{ required: true, message: "Title is required" }]}>
             <Input placeholder="Enter task title" size="large" />
           </Form.Item>
@@ -609,7 +603,7 @@ const TaskManagement = () => {
           </div>
 
           <Form.Item label="Due Date" name="dueDate">
-            <DatePicker style={{ width: "100%" }} size="large" format="DD MMM YYYY" />
+            <DatePicker className="u-full" size="large" format="DD MMM YYYY" />
           </Form.Item>
 
           <Form.Item label="Assign To" name="assignedTo">
@@ -629,14 +623,14 @@ const TaskManagement = () => {
                       {!u.avatar && u.name?.[0]?.toUpperCase()}
                     </Avatar>
                     <span style={{ fontSize: 13 }}>{u.name}</span>
-                    <span style={{ color: "var(--text-muted)", fontSize: 11 }}>{u.role}</span>
+                    <span className="u-meta-xs">{u.role}</span>
                   </Flex>
                 </Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Flex gap={10} style={{ marginTop: 12 }}>
+          <Flex gap={10} className="u-mt-3">
             <Button block size="large" onClick={() => setModalOpen(false)}>Cancel</Button>
             <Button block size="large" type="primary" htmlType="submit" loading={saving}>
               {editTask ? "Save Changes" : "Create Task"}

@@ -37,7 +37,7 @@ const CustomTooltip = ({ active, payload }) => {
       <Text style={{ fontSize: 18, fontWeight: 800, color: d.color, display: "block" }}>
         {Number(d.count || 0).toLocaleString("en-IN")}
       </Text>
-      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{d.percent}% of total</Text>
+      <Text className="u-meta-xs">{d.percent}% of total</Text>
     </div>
   );
 };
@@ -47,7 +47,7 @@ const renderLegend = ({ payload, data }) => (
     {payload.map((entry) => {
       const item = data.find((d) => d.label === entry.value);
       return (
-        <div key={entry.value} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div key={entry.value} className="u-row-sm">
           <span style={{ width: 10, height: 10, borderRadius: "50%", background: entry.color, flexShrink: 0 }} />
           <Text style={{ fontSize: 11, color: "var(--text-secondary)" }}>
             {entry.value}

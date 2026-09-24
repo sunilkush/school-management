@@ -13,7 +13,7 @@ const ExamPageHeader = ({
     <Space
       direction="vertical"
       size={10}
-      style={{ width: "100%" }}
+      className="u-full"
     >
       {breadcrumbItems.length ? <Breadcrumb items={breadcrumbItems} /> : null}
 
@@ -27,7 +27,7 @@ const ExamPageHeader = ({
         }}
       >
         <Space direction="vertical" size={2}>
-          <Title level={3} style={{ margin: 0 }}>
+          <Title level={3} className="u-m-0">
             {title}
           </Title>
           {subtitle ? <Text type="secondary">{subtitle}</Text> : null}

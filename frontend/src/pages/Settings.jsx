@@ -175,7 +175,7 @@ const Settings = () => {
     <div className="section-panel" style={{ height: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
         <div style={iconWell(color, 36)}>{icon}</div>
-        <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{title}</span>
+        <span className="u-title">{title}</span>
       </div>
       {children}
     </div>
@@ -189,7 +189,7 @@ const Settings = () => {
         icon={<SettingOutlined />}
       />
 
-      <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
+      <Row gutter={[16, 16]} className="u-mt-5">
         <Col xs={24} lg={12}>
           <SectionPanel icon={<UserOutlined />} title="Profile Settings" color="var(--primary)">
             <Form layout="vertical">
@@ -342,7 +342,7 @@ const Settings = () => {
                     <Form.Item label="Max Allowed Schools">
                       <InputNumber
                         min={1}
-                        style={{ width: "100%" }}
+                        className="u-full"
                         value={form.maxSchools}
                         onChange={(value) =>
                           updateField("maxSchools", value || 1)

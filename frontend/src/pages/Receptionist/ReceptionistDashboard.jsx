@@ -40,11 +40,11 @@ const ReceptionistDashboard = () => {
     {
       title: "Visitor",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <Avatar name={r.name || "?"} color={VISITOR_COLORS[r.type] || "var(--purple)"} />
           <div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.name || "—"}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.phone || ""}</div>
+            <div className="u-label">{r.name || "—"}</div>
+            <div className="u-meta-xs">{r.phone || ""}</div>
           </div>
         </div>
       ),
@@ -58,7 +58,7 @@ const ReceptionistDashboard = () => {
     },
     {
       title: "Entry", dataIndex: "entryTime", width: 90,
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{fmt(v)}</span>,
+      render: (v) => <span className="u-meta">{fmt(v)}</span>,
     },
     {
       title: "Status", dataIndex: "status", width: 100,

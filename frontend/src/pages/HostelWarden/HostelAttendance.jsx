@@ -93,7 +93,7 @@ const HostelAttendance = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{r.name || r.studentName}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.admissionNo || "—"}</div>
+          <div className="u-meta-xs">{r.admissionNo || "—"}</div>
         </div>
       ),
     },
@@ -180,7 +180,7 @@ const HostelAttendance = () => {
 
           {/* ── Progress bar ─────────────────────────────────────── */}
           {total > 0 && (
-            <div className="section-panel" style={{ marginBottom: 20 }}>
+            <div className="section-panel u-mb-5">
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <span style={{ fontWeight: 700, fontSize: 13 }}>Attendance Rate — {date.format("DD MMM YYYY")} ({session})</span>
                 <span style={{ fontWeight: 700 }}>{attendancePct}%</span>

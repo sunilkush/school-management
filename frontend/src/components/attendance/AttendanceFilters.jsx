@@ -24,7 +24,7 @@ const AttendanceFilters = ({
       <Select
         allowClear
         placeholder="Select Class"
-        style={{ width: "100%" }}
+        className="u-full"
         value={filters.classId || undefined}
         options={classOptions}
         onChange={(value) => onChange({ classId: value || null, sectionId: null })}
@@ -34,7 +34,7 @@ const AttendanceFilters = ({
       <Select
         allowClear
         placeholder="Select Section"
-        style={{ width: "100%" }}
+        className="u-full"
         value={filters.sectionId || undefined}
         disabled={!filters.classId}
         options={sectionOptions}
@@ -45,7 +45,7 @@ const AttendanceFilters = ({
       <Select
         allowClear
         placeholder="Role"
-        style={{ width: "100%" }}
+        className="u-full"
         value={filters.role || undefined}
         options={ATTENDANCE_ROLE_OPTIONS}
         onChange={(value) => onChange({ role: value || null })}
@@ -53,7 +53,7 @@ const AttendanceFilters = ({
     </Col>
     <Col xs={24} md={4}>
       <DatePicker
-        style={{ width: "100%" }}
+        className="u-full"
         value={filters.date ? dayjs(filters.date) : null}
         onChange={(value) => onChange({ date: value ? value.toISOString() : null })}
       />

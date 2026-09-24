@@ -15,7 +15,7 @@ import { statGrid, iconWell } from "../../../styles/pageStyles";
 import { formatCurrencyINR } from "../../../utils/payroll";
 
 const C = {
-  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-lighter)",
   accent: "var(--accent)", accentLight: "var(--accent-light)",
   success: "var(--success)", successLight: "var(--success-light)",
   warning: "var(--warning)", warningLight: "var(--warning-light)",
@@ -204,7 +204,7 @@ const SalaryStructures = () => {
             padding: "14px 20px", borderBottom: "1px solid var(--border-muted)",
             display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
           }}>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Structures</span>
+            <span className="u-title">All Structures</span>
             <span style={{
               fontSize: 12, padding: "2px 9px", borderRadius: 20,
               background: C.primaryLighter, color: C.primary,
@@ -215,7 +215,7 @@ const SalaryStructures = () => {
             <div style={{ marginLeft: "auto" }}>
               <Input
                 placeholder="Search employee…"
-                prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+                prefix={<SearchOutlined className="u-muted" />}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ width: 200, borderRadius: 8 }}

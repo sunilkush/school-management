@@ -248,11 +248,11 @@ const StudentHomework = () => {
                   }}
                 >
                   <FileTextOutlined style={{ fontSize: 20, color: "var(--primary)", marginTop: 2 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="u-grow-min">
                     <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>{item.title}</div>
                     <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 6 }}>{item.subject}</div>
                     <Space wrap size={8}>
-                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                      <span className="u-meta">
                         <ClockCircleOutlined style={{ marginRight: 4 }} />
                         Due: {item.dueDate || "Not specified"}
                       </span>
@@ -280,7 +280,7 @@ const StudentHomework = () => {
         centered
       >
         {selectedHomework && (
-          <Space direction="vertical" style={{ width: "100%" }} size={10}>
+          <Space direction="vertical" className="u-full" size={10}>
             <Text strong>Subject: </Text>
             <Text>{selectedHomework.subject}</Text>
 
@@ -294,7 +294,7 @@ const StudentHomework = () => {
               <>
                 <div className="section-panel">
                   <div style={{ fontWeight: 600, marginBottom: 10, fontSize: 13 }}>Rubric Self-Check (before submit)</div>
-                  <Space direction="vertical" style={{ width: "100%" }}>
+                  <Space direction="vertical" className="u-full">
                     <Text>Quality</Text>
                     <Slider value={rubric.quality} onChange={(v) => setRubric((p) => ({ ...p, quality: v }))} />
                     <Text>Clarity</Text>
@@ -326,7 +326,7 @@ const StudentHomework = () => {
                 </Button>
               </>
             ) : (
-              <Space direction="vertical" style={{ width: "100%" }} size={8}>
+              <Space direction="vertical" className="u-full" size={8}>
                 <Tag color="green">Already Submitted</Tag>
                 {selectedHomework.grade !== null && selectedHomework.grade !== undefined && (
                   <div className="section-panel" style={{ padding: "12px 16px", background: "rgba(220,252,231,0.15)", border: "1px solid var(--success-light)" }}>

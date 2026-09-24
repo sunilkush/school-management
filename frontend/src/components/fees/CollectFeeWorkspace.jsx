@@ -78,7 +78,7 @@ const CollectFeeWorkspace = () => {
       <div className="page-wrapper">
         {header}
         <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 32, textAlign: "center" }}>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>No active academic year selected</div>
+          <div className="u-strong">No active academic year selected</div>
           <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>Please select an academic year from the top navigation to continue.</div>
         </div>
       </div>
@@ -96,7 +96,7 @@ const CollectFeeWorkspace = () => {
           <div>
             <FL>Class</FL>
             <Select
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select class"
               options={classOptions}
               value={selectedClassId || undefined}
@@ -113,7 +113,7 @@ const CollectFeeWorkspace = () => {
             <FL>Student</FL>
             <Select
               showSearch
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder={selectedClassId ? "Search by student name" : "Select class first"}
               value={selectedStudentId || undefined}
               options={studentOptions}
@@ -141,7 +141,7 @@ const CollectFeeWorkspace = () => {
           <Avatar size={isMobile ? 44 : 52} style={{ background: avatarColor(getStudentName(selectedEnrollment)).bg, color: avatarColor(getStudentName(selectedEnrollment)).color, fontSize: 18, fontWeight: 700, flexShrink: 0 }}>
             {getStudentName(selectedEnrollment)[0]?.toUpperCase()}
           </Avatar>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="u-grow-min">
             <div style={{ fontWeight: 700, fontSize: isMobile ? 15 : 16, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {getStudentName(selectedEnrollment)}
             </div>
@@ -172,7 +172,7 @@ const CollectFeeWorkspace = () => {
         <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 20 }}>
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={<span style={{ color: "var(--text-muted)" }}>{!selectedClassId ? "Select a class to get started" : "Select a student to view fee details"}</span>}
+            description={<span className="u-muted">{!selectedClassId ? "Select a class to get started" : "Select a student to view fee details"}</span>}
             style={{ padding: "40px 0" }}
           />
         </div>

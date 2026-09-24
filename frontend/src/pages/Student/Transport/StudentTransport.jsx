@@ -27,7 +27,7 @@ const InfoRow = ({ icon, label, value, mono = false }) => (
     padding: "9px 0", borderBottom: "1px solid var(--border-muted)",
   }}>
     <span style={{ color: "var(--primary)", fontSize: 15, marginTop: 2, flexShrink: 0 }}>{icon}</span>
-    <div style={{ flex: 1 }}>
+    <div className="u-grow">
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
         {label}
       </div>
@@ -156,7 +156,7 @@ const StudentTransport = () => {
             <div className="section-panel">
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <div style={iconWell("var(--cyan)", 36)}><CarOutlined /></div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Vehicle Details</div>
+                <div className="u-title">Vehicle Details</div>
               </div>
               <div>
                 <InfoRow icon={<CarOutlined />}     label="Bus / Vehicle No."  value={veh?.busNumber}       mono />
@@ -185,13 +185,13 @@ const StudentTransport = () => {
             <div className="section-panel">
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <div style={iconWell("var(--success-hover)", 36)}><UserOutlined /></div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Driver Information</div>
+                <div className="u-title">Driver Information</div>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16, padding: "12px 14px", background: "var(--surface-soft, var(--surface-page))", borderRadius: 12 }}>
                 <Avatar size={52} icon={<UserOutlined />} style={{ background: "var(--primary)", flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{veh?.driverName || "—"}</div>
+                  <div className="u-title">{veh?.driverName || "—"}</div>
                   {veh?.driverContact && veh.driverContact !== "NA" && (
                     <a href={`tel:${veh.driverContact}`} style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--primary)", fontWeight: 600, fontSize: 13, marginTop: 4 }}>
                       <PhoneOutlined /> {veh.driverContact}
@@ -210,7 +210,7 @@ const StudentTransport = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <div style={iconWell("var(--purple)", 36)}><ApartmentOutlined /></div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Route Details</div>
+                <div className="u-title">Route Details</div>
                 {(t.routeName || route?.name) && (
                   <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{t.routeName || route?.name}</div>
                 )}
@@ -226,7 +226,7 @@ const StudentTransport = () => {
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--success-hover)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Pickup Stop
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div className="u-row-sm">
                   <EnvironmentOutlined style={{ color: "var(--success)", fontSize: 15 }} />
                   <span style={{ fontWeight: 700, fontSize: 14, color: "var(--success-hover)" }}>
                     {t.pickupStop || t.stopName || "—"}
@@ -240,7 +240,7 @@ const StudentTransport = () => {
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--danger-hover)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Drop Stop
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div className="u-row-sm">
                   <EnvironmentOutlined style={{ color: "var(--danger)", fontSize: 15 }} />
                   <span style={{ fontWeight: 700, fontSize: 14, color: "var(--danger-hover)" }}>
                     {t.dropStop || "—"}

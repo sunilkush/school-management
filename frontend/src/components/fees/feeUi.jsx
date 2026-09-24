@@ -39,7 +39,7 @@ export const FREQUENCY_OPTIONS = FREQUENCY_ORDER.map((value) => ({ value, label:
 
 export const FrequencyTag = ({ frequency }) => {
   const f = FREQUENCIES[frequency];
-  if (!f) return <span style={{ color: "var(--text-muted)" }}>—</span>;
+  if (!f) return <span className="u-muted">—</span>;
   return <span style={pill(f.color, f.bg)}>{f.label}</span>;
 };
 
@@ -234,7 +234,7 @@ export const useOnlineFeeCheckout = () => {
               description: description || "Fee payment",
               prefill,
               // Razorpay checkout runs in its own iframe without our CSS variables — must stay a literal hex.
-              theme: { color: "#2563EB" },
+              theme: { color: "var(--primary)" },
               handler: async () => {
                 try {
                   resolve(await confirm());

@@ -121,7 +121,7 @@ const getRecipientNames = (item) => normalizeNames(item?.recipientNames || item?
 const getPriority = (item) => toText(item?.priority, "normal").toLowerCase();
 
 const MessageSkeleton = () => (
-  <Space direction="vertical" size={10} style={{ width: "100%" }}>
+  <Space direction="vertical" size={10} className="u-full">
     {[1, 2, 3].map((item) => (
       <div key={item} className="section-panel" style={{ padding: 16, marginBottom: 0 }}>
         <Skeleton active avatar paragraph={{ rows: 2 }} title={{ width: "55%" }} />
@@ -350,7 +350,7 @@ const MessagePage = () => {
 
       <div className="page-wrapper">
         {/* Stat Cards */}
-        <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
+        <Row gutter={[14, 14]} className="u-mb-5">
           {statCards.map((stat) => (
             <Col xs={24} sm={8} key={stat.title}>
               <Card
@@ -385,7 +385,7 @@ const MessagePage = () => {
             <Tabs
               activeKey={mailbox}
               onChange={setMailbox}
-              style={{ margin: 0 }}
+              className="u-m-0"
               tabBarStyle={{ margin: 0, borderBottom: "none" }}
               tabBarGutter={isMobile ? 12 : 28}
               items={[
@@ -408,7 +408,7 @@ const MessagePage = () => {
 
         {/* Messages List */}
         <div className="section-panel">
-          <Flex align="center" justify="space-between" style={{ marginBottom: 16 }}>
+          <Flex align="center" justify="space-between" className="u-mb-4">
             <Flex align="center" gap={8}>
               <Text strong style={{ fontSize: 15, color: "var(--text-primary)", textTransform: "capitalize" }}>
                 {mailbox}
@@ -459,7 +459,7 @@ const MessagePage = () => {
                     >
                       <Flex vertical gap={10}>
                         <Flex vertical={isMobile} gap={10} justify="space-between" align={isMobile ? "stretch" : "flex-start"}>
-                          <Space direction="vertical" size={6} style={{ minWidth: 0, flex: 1 }}>
+                          <Space direction="vertical" size={6} className="u-grow-min">
                             <Flex gap={8} align="center" wrap="wrap">
                               {isUnread && <Badge status="processing" />}
                               <Text
@@ -570,7 +570,7 @@ const MessagePage = () => {
         styles={{ body: { padding: isMobile ? 14 : 20 } }}
       >
         {selected && (
-          <Space direction="vertical" size={14} style={{ width: "100%" }}>
+          <Space direction="vertical" size={14} className="u-full">
             {/* Message meta */}
             <div className="section-panel" style={{ padding: 14, marginBottom: 0, background: "var(--surface-soft)" }}>
               <Flex gap={6} wrap="wrap" align="center">
@@ -594,7 +594,7 @@ const MessagePage = () => {
                 renderItem={(item) => (
                   <List.Item style={{ padding: 0, marginBottom: 10 }}>
                     <div className="section-panel" style={{ padding: 14, marginBottom: 0, width: "100%" }}>
-                      <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                      <Space direction="vertical" size={8} className="u-full">
                         <Flex vertical={isMobile} gap={8} justify="space-between" align={isMobile ? "flex-start" : "center"}>
                           <Space wrap>
                             <MessageSquareText size={15} color="var(--primary)" />

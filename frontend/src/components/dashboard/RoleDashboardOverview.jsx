@@ -30,7 +30,7 @@ const formatMetricValue = (metric = {}) => {
 const MetricSkeleton = ({ color }) => (
   <div className="section-panel is-header-strip">
     <div style={{ ...iconWell(color, 42), opacity: 0.4 }} />
-    <div style={{ flex: 1 }}>
+    <div className="u-grow">
       <div style={{ height: 10, width: "50%", borderRadius: 4, background: "var(--surface-soft)", marginBottom: 8 }} />
       <div style={{ height: 18, width: "35%", borderRadius: 4, background: "var(--surface-soft)" }} />
     </div>
@@ -46,7 +46,7 @@ const MetricCard = ({ label, value, color, isCurrency }) => (
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
         {label}
       </div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -73,12 +73,12 @@ const RoleDashboardOverview = ({ titlePrefix = "Dashboard" }) => {
         }
       />
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         {isError ? (
           <div className="section-panel" style={{ borderColor: "rgba(var(--danger-rgb), 0.6)", background: "rgba(var(--danger-rgb), 0.12)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700, color: "var(--danger-hover)", marginBottom: 4 }}>Failed to load dashboard</div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <div className="u-meta-md">
                 {error?.data?.message || error?.message || "An unexpected error occurred. Please try again."}
               </div>
             </div>
@@ -107,19 +107,19 @@ const RoleDashboardOverview = ({ titlePrefix = "Dashboard" }) => {
             </div>
 
             {!loading && upcomingExams.length > 0 && (
-              <div className="section-panel" style={{ marginTop: 20 }}>
+              <div className="section-panel u-mt-5">
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                   <CalendarOutlined style={{ color: "var(--primary)" }} />
-                  <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Upcoming Exams</span>
+                  <span className="u-title-sm">Upcoming Exams</span>
                 </div>
                 <List
                   dataSource={upcomingExams}
                   renderItem={(exam) => (
                     <List.Item style={{ borderBottom: "1px solid var(--border-muted)", padding: "10px 0" }}>
                       <List.Item.Meta
-                        title={<span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{exam.title || "Exam"}</span>}
+                        title={<span className="u-strong">{exam.title || "Exam"}</span>}
                         description={
-                          <span style={{ color: "var(--text-muted)" }}>
+                          <span className="u-muted">
                             {exam.date ? dayjs(exam.date).format("DD MMM YYYY") : "Date not assigned"}
                           </span>
                         }

@@ -81,7 +81,7 @@ const MobileCard = ({
         )}
 
         {/* Title + subtitle */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="u-grow-min">
           <div style={{
             fontWeight: 700,
             fontSize:   13.5,

@@ -24,8 +24,8 @@ const panelTitle = (icon, title, sub) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
     <div style={iconWell("var(--primary)", 32)}>{icon}</div>
     <div>
-      <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{title}</div>
-      {sub && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{sub}</div>}
+      <div className="u-title">{title}</div>
+      {sub && <div className="u-meta">{sub}</div>}
     </div>
   </div>
 );
@@ -264,7 +264,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       title: "Fee Head",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{r.feeHeadName}</div>
+          <div className="u-strong">{r.feeHeadName}</div>
           {r.discountApplied?.percent ? (
             <div style={{ fontSize: 11, color: "var(--success-hover)" }}>{r.discountApplied.percent}% concession applied</div>
           ) : null}
@@ -296,8 +296,8 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       title: "Period",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{r.installmentName}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{r.feeHeadName}</div>
+          <div className="u-strong">{r.installmentName}</div>
+          <div className="u-meta">{r.feeHeadName}</div>
         </div>
       ),
     },
@@ -313,9 +313,9 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
     {
       title: "Fine",
       align: "right",
-      render: (_, r) => (r.fineAmount > 0 ? <span style={{ color: "var(--danger-hover)" }}>{money(r.fineAmount)}</span> : <span style={{ color: "var(--text-muted)" }}>—</span>),
+      render: (_, r) => (r.fineAmount > 0 ? <span style={{ color: "var(--danger-hover)" }}>{money(r.fineAmount)}</span> : <span className="u-muted">—</span>),
     },
-    { title: "Paid", align: "right", render: (_, r) => (r.paidAmount > 0 ? money(r.paidAmount) : <span style={{ color: "var(--text-muted)" }}>—</span>) },
+    { title: "Paid", align: "right", render: (_, r) => (r.paidAmount > 0 ? money(r.paidAmount) : <span className="u-muted">—</span>) },
     { title: "Balance", align: "right", render: (_, r) => <span style={{ fontWeight: 700 }}>{money(r.balance)}</span> },
     { title: "Status", render: (_, r) => <FeeStatusTag status={r.status} paidAmount={r.paidAmount} /> },
   ];
@@ -328,7 +328,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       title: "For",
       render: (_, p) => {
         const lines = receiptLines(p);
-        if (!lines.length) return <span style={{ color: "var(--text-muted)" }}>—</span>;
+        if (!lines.length) return <span className="u-muted">—</span>;
         const text = lines.map((l) => l.label).join(", ");
         return (
           <Tooltip title={text}>
@@ -490,7 +490,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
                 {quote.loading ? <Spin size="small" /> : quote.error ? <span style={{ color: "var(--danger)" }}>{quote.error}</span> : <b style={{ fontSize: 16 }}>{money(selectedTotal)}</b>}
               </>
             ) : (
-              <span style={{ color: "var(--text-muted)" }}>Select installments to pay</span>
+              <span className="u-muted">Select installments to pay</span>
             )}
           </div>
           {isCollect ? (
@@ -558,7 +558,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
               { validator: (_, v) => (v > selectedTotal ? Promise.reject(new Error(`Cannot exceed ${money(selectedTotal)}`)) : Promise.resolve()) },
             ]}
           >
-            <InputNumber style={{ width: "100%" }} prefix="₹" min={0} max={selectedTotal} precision={2} />
+            <InputNumber className="u-full" prefix="₹" min={0} max={selectedTotal} precision={2} />
           </Form.Item>
           <Form.Item name="paymentMode" label="Payment mode" rules={[{ required: true }]}>
             <Radio.Group optionType="button" buttonStyle="solid" options={COUNTER_MODES} />

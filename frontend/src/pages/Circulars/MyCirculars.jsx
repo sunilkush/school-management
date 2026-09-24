@@ -182,7 +182,7 @@ const MyCirculars = () => {
             )}
 
             {current.acknowledgedAt && (
-              <Tag color="green" style={{ marginTop: 16 }}>
+              <Tag color="green" className="u-mt-4">
                 You acknowledged this on {dayjs(current.acknowledgedAt).format("D MMM YYYY, h:mm A")}
               </Tag>
             )}

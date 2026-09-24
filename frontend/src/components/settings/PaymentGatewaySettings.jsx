@@ -133,8 +133,8 @@ const PaymentGatewaySettings = () => {
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
         <div style={iconWell("var(--warning)", 36)}><CreditCardOutlined /></div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Online Payment Gateway</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-title">Online Payment Gateway</div>
+          <div className="u-meta">
             Parents pay fees online through one gateway at a time. Money goes straight to your school's merchant account.
           </div>
         </div>
@@ -180,7 +180,7 @@ const PaymentGatewaySettings = () => {
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{g.label}</div>
+                <div className="u-title">{g.label}</div>
                 {g.isActive ? (
                   <Tag color="success" icon={<CheckCircleFilled />}>Active</Tag>
                 ) : g.complete ? (
@@ -199,7 +199,7 @@ const PaymentGatewaySettings = () => {
                     {g.lastTest ? (
                       <div style={{ color: g.lastTest.ok ? "var(--success-hover)" : "var(--danger)" }}>
                         {g.lastTest.ok ? <CheckCircleFilled /> : <ExclamationCircleFilled />} {g.lastTest.message}
-                        <span style={{ color: "var(--text-muted)" }}> · {dayjs(g.lastTest.at).format("DD MMM, HH:mm")}</span>
+                        <span className="u-muted"> · {dayjs(g.lastTest.at).format("DD MMM, HH:mm")}</span>
                       </div>
                     ) : (
                       <div>Connection not tested yet</div>
@@ -268,7 +268,7 @@ const PaymentGatewaySettings = () => {
         {gateway && (
           <>
             {gateway.isActive && (
-              <Alert type="info" showIcon style={{ marginBottom: 16 }} message="This gateway is active. Changes apply to the next payment." />
+              <Alert type="info" showIcon className="u-mb-4" message="This gateway is active. Changes apply to the next payment." />
             )}
             <Form form={form} layout="vertical">
               {gateway.usesMode && (

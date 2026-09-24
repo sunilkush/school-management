@@ -135,7 +135,7 @@ const HostelReports = () => {
       </div>
 
       {/* ── Occupancy ──────────────────────────────────────────── */}
-      <div className="section-panel" style={{ marginBottom: 20 }}>
+      <div className="section-panel u-mb-5">
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Occupancy Rate</div>
         <Progress
           percent={kpis.occupancyRate || 0}
@@ -149,7 +149,7 @@ const HostelReports = () => {
       </div>
 
       {/* ── Charts Row 1 ─────────────────────────────────────── */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+      <Row gutter={[16, 16]} className="u-mb-4">
         <Col xs={24} lg={14}>
           <ReportCard title="Monthly Leave Trend (Last 6 Months)">
             {leaveMonthly.length === 0 ? (
@@ -187,7 +187,7 @@ const HostelReports = () => {
       </Row>
 
       {/* ── Charts Row 2 ─────────────────────────────────────── */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+      <Row gutter={[16, 16]} className="u-mb-4">
         <Col xs={24} lg={12}>
           <ReportCard title="Complaints by Type">
             {complByType.length === 0 ? (

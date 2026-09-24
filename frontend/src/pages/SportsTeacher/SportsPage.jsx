@@ -317,24 +317,24 @@ export default function SportsPage() {
 
       {/* ── Create Team Modal ─────────────────────────────────── */}
       <Modal open={teamModalOpen} onCancel={() => setTeamModalOpen(false)} onOk={handleSaveTeam} confirmLoading={savingTeam} okText="Create" title="Create Team">
-        <Space direction="vertical" style={{ width: "100%" }} size={12}>
+        <Space direction="vertical" className="u-full" size={12}>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>TEAM NAME</Text>
+            <Text className="u-meta-xs">TEAM NAME</Text>
             <Input value={teamForm.name} onChange={(e) => setTeamForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. U-16 Football Team" />
           </div>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>CATEGORY</Text>
-              <Select style={{ width: "100%" }} value={teamForm.category} onChange={(v) => setTeamForm((f) => ({ ...f, category: v }))} options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
+              <Text className="u-meta-xs">CATEGORY</Text>
+              <Select className="u-full" value={teamForm.category} onChange={(v) => setTeamForm((f) => ({ ...f, category: v }))} options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>SPORT / ACTIVITY</Text>
+              <Text className="u-meta-xs">SPORT / ACTIVITY</Text>
               <Input value={teamForm.sportType} onChange={(e) => setTeamForm((f) => ({ ...f, sportType: e.target.value }))} placeholder="e.g. Football" />
             </Col>
           </Row>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>COACH</Text>
-            <Select style={{ width: "100%" }} value={teamForm.coachId} onChange={(v) => setTeamForm((f) => ({ ...f, coachId: v }))} options={coachOptions} showSearch optionFilterProp="label" allowClear />
+            <Text className="u-meta-xs">COACH</Text>
+            <Select className="u-full" value={teamForm.coachId} onChange={(v) => setTeamForm((f) => ({ ...f, coachId: v }))} options={coachOptions} showSearch optionFilterProp="label" allowClear />
           </div>
         </Space>
       </Modal>
@@ -343,21 +343,21 @@ export default function SportsPage() {
       <Modal open={!!rosterTeam} onCancel={() => setRosterTeam(null)} footer={<Button onClick={() => setRosterTeam(null)}>Close</Button>} width={640} title={rosterTeam ? `${rosterTeam.name} — Roster` : ""}>
         {rosterTeam && (
           <>
-            <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+            <Flex align="center" gap={10} className="u-mb-4">
               <div style={iconWell("var(--primary)", 34)}><UserOutlined /></div>
               <Text strong style={{ fontSize: 13 }}>Add Member</Text>
             </Flex>
-            <Row gutter={[8, 8]} style={{ marginBottom: 16 }}>
+            <Row gutter={[8, 8]} className="u-mb-4">
               <Col xs={24} sm={7}>
-                <Select placeholder="Class" style={{ width: "100%" }} value={selectedClass} onChange={setSelectedClass}
+                <Select placeholder="Class" className="u-full" value={selectedClass} onChange={setSelectedClass}
                   options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))} showSearch optionFilterProp="label" />
               </Col>
               <Col xs={24} sm={7}>
-                <Select placeholder="Section" style={{ width: "100%" }} value={selectedSection} onChange={setSelectedSection}
+                <Select placeholder="Section" className="u-full" value={selectedSection} onChange={setSelectedSection}
                   options={sectionOptions} showSearch optionFilterProp="label" disabled={!selectedClass} />
               </Col>
               <Col xs={16} sm={7}>
-                <Select placeholder="Student" style={{ width: "100%" }} value={pickerStudentId} onChange={setPickerStudentId}
+                <Select placeholder="Student" className="u-full" value={pickerStudentId} onChange={setPickerStudentId}
                   options={studentOptions} showSearch optionFilterProp="label" disabled={!selectedSection} loading={rollLoading} />
               </Col>
               <Col xs={8} sm={3}>
@@ -381,47 +381,47 @@ export default function SportsPage() {
 
       {/* ── Event Modal ───────────────────────────────────────── */}
       <Modal open={eventModalOpen} onCancel={() => setEventModalOpen(false)} onOk={handleSaveEvent} confirmLoading={savingEvent} okText="Save" title={editingEvent ? "Edit Event" : "Log New Event"}>
-        <Space direction="vertical" style={{ width: "100%" }} size={12}>
+        <Space direction="vertical" className="u-full" size={12}>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>TITLE</Text>
+            <Text className="u-meta-xs">TITLE</Text>
             <Input value={eventForm.title} onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))} />
           </div>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>TEAM</Text>
-              <Select style={{ width: "100%" }} value={eventForm.teamId} onChange={(v) => setEventForm((f) => ({ ...f, teamId: v }))} options={teamOptions} allowClear showSearch optionFilterProp="label" />
+              <Text className="u-meta-xs">TEAM</Text>
+              <Select className="u-full" value={eventForm.teamId} onChange={(v) => setEventForm((f) => ({ ...f, teamId: v }))} options={teamOptions} allowClear showSearch optionFilterProp="label" />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>TYPE</Text>
-              <Select style={{ width: "100%" }} value={eventForm.eventType} onChange={(v) => setEventForm((f) => ({ ...f, eventType: v }))} options={EVENT_TYPES.map((t) => ({ value: t, label: t }))} />
+              <Text className="u-meta-xs">TYPE</Text>
+              <Select className="u-full" value={eventForm.eventType} onChange={(v) => setEventForm((f) => ({ ...f, eventType: v }))} options={EVENT_TYPES.map((t) => ({ value: t, label: t }))} />
             </Col>
           </Row>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>OPPONENT</Text>
+              <Text className="u-meta-xs">OPPONENT</Text>
               <Input value={eventForm.opponent} onChange={(e) => setEventForm((f) => ({ ...f, opponent: e.target.value }))} />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>DATE</Text>
-              <DatePicker style={{ width: "100%" }} value={eventForm.eventDate} onChange={(d) => setEventForm((f) => ({ ...f, eventDate: d }))} />
+              <Text className="u-meta-xs">DATE</Text>
+              <DatePicker className="u-full" value={eventForm.eventDate} onChange={(d) => setEventForm((f) => ({ ...f, eventDate: d }))} />
             </Col>
           </Row>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>VENUE</Text>
+            <Text className="u-meta-xs">VENUE</Text>
             <Input value={eventForm.venue} onChange={(e) => setEventForm((f) => ({ ...f, venue: e.target.value }))} />
           </div>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>RESULT</Text>
-              <Select style={{ width: "100%" }} value={eventForm.result} onChange={(v) => setEventForm((f) => ({ ...f, result: v }))} options={RESULTS.map((r) => ({ value: r, label: r }))} />
+              <Text className="u-meta-xs">RESULT</Text>
+              <Select className="u-full" value={eventForm.result} onChange={(v) => setEventForm((f) => ({ ...f, result: v }))} options={RESULTS.map((r) => ({ value: r, label: r }))} />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>SCORE</Text>
+              <Text className="u-meta-xs">SCORE</Text>
               <Input value={eventForm.scoreDetails} onChange={(e) => setEventForm((f) => ({ ...f, scoreDetails: e.target.value }))} placeholder="e.g. 3-1" />
             </Col>
           </Row>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>NOTES</Text>
+            <Text className="u-meta-xs">NOTES</Text>
             <TextArea rows={2} value={eventForm.notes} onChange={(e) => setEventForm((f) => ({ ...f, notes: e.target.value }))} />
           </div>
         </Space>
@@ -429,54 +429,54 @@ export default function SportsPage() {
 
       {/* ── Achievement Modal ─────────────────────────────────── */}
       <Modal open={achModalOpen} onCancel={() => setAchModalOpen(false)} onOk={handleSaveAchievement} confirmLoading={savingAch} okText="Record" title="Record Achievement">
-        <Space direction="vertical" style={{ width: "100%" }} size={12}>
+        <Space direction="vertical" className="u-full" size={12}>
           <Segmented value={achHolderType} onChange={setAchHolderType} options={[{ label: "Student", value: "Student" }, { label: "Team", value: "Team" }]} />
 
           {achHolderType === "Student" ? (
             <Row gutter={[8, 8]}>
               <Col span={8}>
-                <Select placeholder="Class" style={{ width: "100%" }} value={selectedClass} onChange={setSelectedClass}
+                <Select placeholder="Class" className="u-full" value={selectedClass} onChange={setSelectedClass}
                   options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))} showSearch optionFilterProp="label" />
               </Col>
               <Col span={8}>
-                <Select placeholder="Section" style={{ width: "100%" }} value={selectedSection} onChange={setSelectedSection}
+                <Select placeholder="Section" className="u-full" value={selectedSection} onChange={setSelectedSection}
                   options={sectionOptions} showSearch optionFilterProp="label" disabled={!selectedClass} />
               </Col>
               <Col span={8}>
-                <Select placeholder="Student" style={{ width: "100%" }} value={achForm.studentId} onChange={(v) => setAchForm((f) => ({ ...f, studentId: v }))}
+                <Select placeholder="Student" className="u-full" value={achForm.studentId} onChange={(v) => setAchForm((f) => ({ ...f, studentId: v }))}
                   options={studentOptions} showSearch optionFilterProp="label" disabled={!selectedSection} loading={rollLoading} />
               </Col>
             </Row>
           ) : (
-            <Select placeholder="Select Team" style={{ width: "100%" }} value={achForm.teamId} onChange={(v) => setAchForm((f) => ({ ...f, teamId: v }))} options={teamOptions} showSearch optionFilterProp="label" />
+            <Select placeholder="Select Team" className="u-full" value={achForm.teamId} onChange={(v) => setAchForm((f) => ({ ...f, teamId: v }))} options={teamOptions} showSearch optionFilterProp="label" />
           )}
 
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>TITLE</Text>
+            <Text className="u-meta-xs">TITLE</Text>
             <Input value={achForm.title} onChange={(e) => setAchForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. State Level Chess Championship" />
           </div>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>LEVEL</Text>
-              <Select style={{ width: "100%" }} value={achForm.level} onChange={(v) => setAchForm((f) => ({ ...f, level: v }))} options={LEVELS.map((l) => ({ value: l, label: l }))} />
+              <Text className="u-meta-xs">LEVEL</Text>
+              <Select className="u-full" value={achForm.level} onChange={(v) => setAchForm((f) => ({ ...f, level: v }))} options={LEVELS.map((l) => ({ value: l, label: l }))} />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>POSITION</Text>
+              <Text className="u-meta-xs">POSITION</Text>
               <Input value={achForm.position} onChange={(e) => setAchForm((f) => ({ ...f, position: e.target.value }))} placeholder="e.g. 1st Place" />
             </Col>
           </Row>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>EVENT NAME</Text>
+              <Text className="u-meta-xs">EVENT NAME</Text>
               <Input value={achForm.eventName} onChange={(e) => setAchForm((f) => ({ ...f, eventName: e.target.value }))} />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>DATE</Text>
-              <DatePicker style={{ width: "100%" }} value={achForm.achievementDate} onChange={(d) => setAchForm((f) => ({ ...f, achievementDate: d }))} />
+              <Text className="u-meta-xs">DATE</Text>
+              <DatePicker className="u-full" value={achForm.achievementDate} onChange={(d) => setAchForm((f) => ({ ...f, achievementDate: d }))} />
             </Col>
           </Row>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>DESCRIPTION</Text>
+            <Text className="u-meta-xs">DESCRIPTION</Text>
             <TextArea rows={2} value={achForm.description} onChange={(e) => setAchForm((f) => ({ ...f, description: e.target.value }))} />
           </div>
         </Space>

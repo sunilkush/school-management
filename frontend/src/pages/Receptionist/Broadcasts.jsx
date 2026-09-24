@@ -80,7 +80,7 @@ const Broadcasts = () => {
             <Megaphone size={16} color="var(--purple)" strokeWidth={1.8} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.title || "Untitled"}</div>
+            <div className="u-label">{r.title || "Untitled"}</div>
             <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
               {fmtFull(r.createdAt)}
             </div>
@@ -106,7 +106,7 @@ const Broadcasts = () => {
             {ch.inApp  && <span style={pill("var(--purple)", "color-mix(in srgb, var(--purple) 8%, transparent)")}>{CH_ICONS.App} App</span>}
             {ch.sms    && <span style={pill("var(--info)", "color-mix(in srgb, var(--info) 8%, transparent)")}>{CH_ICONS.SMS} SMS</span>}
             {ch.email  && <span style={pill("var(--success)", "color-mix(in srgb, var(--success) 8%, transparent)")}>{CH_ICONS.Email} Email</span>}
-            {!ch.inApp && !ch.sms && !ch.email && <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>}
+            {!ch.inApp && !ch.sms && !ch.email && <span className="u-meta">—</span>}
           </div>
         );
       },
@@ -148,7 +148,7 @@ const Broadcasts = () => {
           <div className="empty-state">
             <div style={{ fontSize: 34, marginBottom: 10 }}>📣</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>No Broadcasts Yet</div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Click "New Broadcast" to send your first announcement.</div>
+            <div className="u-meta-md">Click "New Broadcast" to send your first announcement.</div>
           </div>
         ) : (
           <Table className="bc-table data-table" rowKey="_id" dataSource={notifications} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} locale={{ emptyText: "No broadcasts sent yet." }} />
@@ -156,7 +156,7 @@ const Broadcasts = () => {
       </div>
 
       <Modal title={<span style={{ fontWeight: 700 }}>Send Broadcast</span>} open={open} onCancel={() => { setOpen(false); form.resetFields(); }} footer={null} destroyOnClose width={520}>
-        <Form form={form} layout="vertical" onFinish={handleSend} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleSend} className="u-mt-2">
           <Form.Item label="Title" name="title" rules={[{ required: true, message: "Enter a title" }]}>
             <Input placeholder="e.g. School closed tomorrow" />
           </Form.Item>

@@ -213,11 +213,6 @@ export default function TimetableGrid({
 
   return (
     <>
-      <style>{`
-        .tt-today-col { background: ${C.primaryLighter} !important; }
-        .ant-table-row:hover .tt-today-col { background: ${C.primaryLight} !important; }
-        .ant-table-bordered .ant-table-cell { border-color: ${C.border} !important; }
-      `}</style>
       <Table
         rowKey={(row) => row.slot._id}
         columns={columns}

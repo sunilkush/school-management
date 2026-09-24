@@ -356,7 +356,7 @@ export default function Backups() {
         )}
 
         {/* ── Stat cards ──────────────────────────────────────────── */}
-        <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+        <Row gutter={[12, 12]} className="u-mb-5">
           {statCards.map((s) => (
             <Col xs={12} sm={8} md={6} lg={3} key={s.label}>
               <div style={{
@@ -394,7 +394,7 @@ export default function Backups() {
                 ),
                 children: (
                   <div style={{ paddingTop: 16 }}>
-                    <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+                    <Flex align="center" gap={10} className="u-mb-5">
                       <div style={iconWell("var(--primary)", 38)}>
                         <DatabaseOutlined style={{ fontSize: 17 }} />
                       </div>
@@ -402,7 +402,7 @@ export default function Backups() {
                         <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                           Create Manual Backup
                         </Text>
-                        <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        <Text className="u-meta">
                           Trigger an immediate backup of selected data
                         </Text>
                       </div>
@@ -439,7 +439,7 @@ export default function Backups() {
                         </Col>
                         <Col xs={12} md={6}>
                           <Form.Item name="retentionDays" label="Retention (days)">
-                            <InputNumber min={1} max={365} style={{ width: "100%" }} />
+                            <InputNumber min={1} max={365} className="u-full" />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
@@ -504,7 +504,7 @@ export default function Backups() {
                 ),
                 children: (
                   <div style={{ paddingTop: 16 }}>
-                    <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+                    <Flex align="center" gap={10} className="u-mb-5">
                       <div style={iconWell("var(--purple)", 38)}>
                         <CalendarOutlined style={{ fontSize: 17 }} />
                       </div>
@@ -512,7 +512,7 @@ export default function Backups() {
                         <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                           Create Backup Schedule
                         </Text>
-                        <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        <Text className="u-meta">
                           Automate recurring backups on a set frequency
                         </Text>
                       </div>
@@ -553,7 +553,7 @@ export default function Backups() {
                         </Col>
                         <Col xs={12} md={3}>
                           <Form.Item name="retentionDays" label="Retention (days)">
-                            <InputNumber min={1} max={365} style={{ width: "100%" }} />
+                            <InputNumber min={1} max={365} className="u-full" />
                           </Form.Item>
                         </Col>
                       </Row>
@@ -608,7 +608,7 @@ export default function Backups() {
                     </div>
 
                     {/* Request form */}
-                    <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+                    <Flex align="center" gap={10} className="u-mb-4">
                       <div style={iconWell("var(--danger-hover)", 38)}>
                         <PlayCircleOutlined style={{ fontSize: 17 }} />
                       </div>
@@ -616,7 +616,7 @@ export default function Backups() {
                         <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                           Request Restore
                         </Text>
-                        <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        <Text className="u-meta">
                           Select a backup and submit for MFA approval
                         </Text>
                       </div>
@@ -730,7 +730,7 @@ export default function Backups() {
         onCancel={() => { setApproveModalOpen(false); setPendingApproveId(null); setMfaToken(""); }}
         destroyOnClose
       >
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+        <Space direction="vertical" size={14} className="u-full">
           <Alert
             type="warning" showIcon
             message="Restore operations are irreversible and will overwrite current data."

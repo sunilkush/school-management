@@ -65,13 +65,13 @@ export default function VendorPage() {
     {
       title: "Vendor", key: "vendor",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{ ...iconWell("var(--primary)", 34), flexShrink: 0 }}>
             <ShopOutlined style={{ fontSize: 14 }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{r.name}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.category}</div>
+            <div className="u-label">{r.name}</div>
+            <div className="u-meta-xs">{r.category}</div>
           </div>
         </div>
       ),
@@ -81,12 +81,12 @@ export default function VendorPage() {
       render: (_, r) => (
         <div>
           <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{r.contactPerson || "—"}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.phone || ""}</div>
+          <div className="u-meta-xs">{r.phone || ""}</div>
         </div>
       ),
     },
     { title: "Email", dataIndex: "email", key: "email", responsive: ["md"],
-      render: (t) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t || "—"}</span> },
+      render: (t) => <span className="u-meta">{t || "—"}</span> },
     { title: "GST No.", dataIndex: "gstNumber", key: "gstNumber", responsive: ["lg"],
       render: (t) => <span style={{ fontFamily: "monospace", fontSize: 12 }}>{t || "—"}</span> },
     {
@@ -165,7 +165,7 @@ export default function VendorPage() {
         destroyOnClose
         width={600}
       >
-        <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" onFinish={onFinish} className="u-mt-4">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
             <Form.Item label="Vendor Name" name="name" rules={[{ required: true, message: "Required" }]} style={{ gridColumn: "1 / -1" }}>
               <Input placeholder="e.g. ABC Supplies Co." size="large" />

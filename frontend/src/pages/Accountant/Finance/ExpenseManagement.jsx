@@ -151,7 +151,7 @@ const ExpenseManagement = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontWeight: 600, fontSize: 13 }}>{r.title}</div>
-          {r.paidTo && <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Paid to: {r.paidTo}</div>}
+          {r.paidTo && <div className="u-meta-xs">Paid to: {r.paidTo}</div>}
         </div>
       ),
     },
@@ -241,13 +241,13 @@ const ExpenseManagement = () => {
 
       {/* ── Category breakdown ────────────────────────────────────── */}
       {byCategory.length > 0 && (
-        <div className="section-panel" style={{ marginBottom: 20 }}>
+        <div className="section-panel u-mb-5">
           <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>By Category</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {byCategory.map((c) => (
               <div key={c._id} style={{ display: "flex", alignItems: "center", gap: 8, background: `color-mix(in srgb, ${catColor(c._id)} 12%, transparent)`, borderRadius: 8, padding: "6px 12px", border: `1px solid color-mix(in srgb, ${catColor(c._id)} 25%, transparent)` }}>
                 <span style={{ fontWeight: 700, color: catColor(c._id), fontSize: 13 }}>{money(c.total)}</span>
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{c._id} ({c.count})</span>
+                <span className="u-meta-xs">{c._id} ({c.count})</span>
               </div>
             ))}
           </div>
@@ -261,25 +261,25 @@ const ExpenseManagement = () => {
             <Input prefix={<SearchOutlined />} placeholder="Search title…" value={search} onChange={(e) => setSearch(e.target.value)} onPressEnter={handleSearch} allowClear />
           </Col>
           <Col xs={12} sm={4}>
-            <Select value={catFilter} onChange={setCatFilter} placeholder="Category" style={{ width: "100%" }} allowClear>
+            <Select value={catFilter} onChange={setCatFilter} placeholder="Category" className="u-full" allowClear>
               {EXPENSE_CATEGORIES.map((c) => <Option key={c} value={c}>{c}</Option>)}
             </Select>
           </Col>
           <Col xs={12} sm={3}>
-            <Select value={statusFilter} onChange={setStatusFilter} placeholder="Status" style={{ width: "100%" }} allowClear>
+            <Select value={statusFilter} onChange={setStatusFilter} placeholder="Status" className="u-full" allowClear>
               {EXPENSE_STATUSES.map((s) => <Option key={s} value={s}>{s}</Option>)}
             </Select>
           </Col>
           <Col xs={12} sm={4}>
-            <Select value={modeFilter} onChange={setModeFilter} placeholder="Mode" style={{ width: "100%" }} allowClear>
+            <Select value={modeFilter} onChange={setModeFilter} placeholder="Mode" className="u-full" allowClear>
               {PAYMENT_MODES.map((m) => <Option key={m} value={m}>{m}</Option>)}
             </Select>
           </Col>
           <Col xs={24} sm={4}>
-            <RangePicker style={{ width: "100%" }} onChange={(r) => setDateRange(r ? [r[0].toDate(), r[1].toDate()] : [])} />
+            <RangePicker className="u-full" onChange={(r) => setDateRange(r ? [r[0].toDate(), r[1].toDate()] : [])} />
           </Col>
           <Col xs={24} sm={2}>
-            <Button type="primary" onClick={handleSearch} icon={<SearchOutlined />} style={{ width: "100%" }}>Go</Button>
+            <Button type="primary" onClick={handleSearch} icon={<SearchOutlined />} className="u-full">Go</Button>
           </Col>
         </Row>
 
@@ -315,7 +315,7 @@ const ExpenseManagement = () => {
         width={680}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" onFinish={handleSave} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleSave} className="u-mt-2">
           <Row gutter={16}>
             <Col xs={24} sm={16}>
               <Form.Item name="title" label="Title" rules={[{ required: true }]}>
@@ -324,7 +324,7 @@ const ExpenseManagement = () => {
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="amount" label="Amount (₹)" rules={[{ required: true }, { type: "number", min: 0 }]}>
-                <InputNumber style={{ width: "100%" }} min={0} prefix="₹" formatter={(v) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} />
+                <InputNumber className="u-full" min={0} prefix="₹" formatter={(v) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} />
               </Form.Item>
             </Col>
           </Row>
@@ -338,7 +338,7 @@ const ExpenseManagement = () => {
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item name="date" label="Date" rules={[{ required: true }]}>
-                <DatePicker style={{ width: "100%" }} />
+                <DatePicker className="u-full" />
               </Form.Item>
             </Col>
           </Row>

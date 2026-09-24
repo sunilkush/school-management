@@ -101,12 +101,12 @@ export default function AMCTrackingPage() {
     {
       title: "Asset / Contract", key: "asset",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={iconWell(STATUS_META[r.computedStatus || r.status]?.color || "var(--primary)", 34)}>
             <ToolOutlined style={{ fontSize: 13 }} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{r.assetName}</div>
+            <div className="u-label">{r.assetName}</div>
             {r.contractNumber && <div style={{ fontSize: 11, fontFamily: "monospace", color: "var(--text-muted)" }}>{r.contractNumber}</div>}
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function AMCTrackingPage() {
         destroyOnClose
         width={680}
       >
-        <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" onFinish={onFinish} className="u-mt-4">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
             <Form.Item label="Asset" name="assetId" rules={[{ required: true, message: "Select asset" }]}>
               <Select showSearch optionFilterProp="children" placeholder="Select asset"
@@ -231,10 +231,10 @@ export default function AMCTrackingPage() {
                 <Option value="warranty">Warranty</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Annual Cost (₹)" name="cost" initialValue={0}><InputNumber min={0} style={{ width: "100%" }} /></Form.Item>
-            <Form.Item label="Start Date" name="startDate" rules={[{ required: true }]}><DatePicker style={{ width: "100%" }} /></Form.Item>
-            <Form.Item label="End Date" name="endDate" rules={[{ required: true }]}><DatePicker style={{ width: "100%" }} /></Form.Item>
-            <Form.Item label="Next Service Date" name="nextServiceDate"><DatePicker style={{ width: "100%" }} /></Form.Item>
+            <Form.Item label="Annual Cost (₹)" name="cost" initialValue={0}><InputNumber min={0} className="u-full" /></Form.Item>
+            <Form.Item label="Start Date" name="startDate" rules={[{ required: true }]}><DatePicker className="u-full" /></Form.Item>
+            <Form.Item label="End Date" name="endDate" rules={[{ required: true }]}><DatePicker className="u-full" /></Form.Item>
+            <Form.Item label="Next Service Date" name="nextServiceDate"><DatePicker className="u-full" /></Form.Item>
             <Form.Item label="Notes" name="notes"><Input.TextArea rows={2} /></Form.Item>
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
@@ -252,12 +252,12 @@ export default function AMCTrackingPage() {
         footer={null}
         destroyOnClose
       >
-        <Form form={logForm} layout="vertical" onFinish={onAddLog} style={{ marginTop: 16 }}>
-          <Form.Item label="Service Date" name="date" rules={[{ required: true }]}><DatePicker style={{ width: "100%" }} /></Form.Item>
+        <Form form={logForm} layout="vertical" onFinish={onAddLog} className="u-mt-4">
+          <Form.Item label="Service Date" name="date" rules={[{ required: true }]}><DatePicker className="u-full" /></Form.Item>
           <Form.Item label="Description" name="description" rules={[{ required: true }]}><Input.TextArea rows={3} /></Form.Item>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
             <Form.Item label="Technician" name="technician"><Input /></Form.Item>
-            <Form.Item label="Cost (₹)" name="cost" initialValue={0}><InputNumber min={0} style={{ width: "100%" }} /></Form.Item>
+            <Form.Item label="Cost (₹)" name="cost" initialValue={0}><InputNumber min={0} className="u-full" /></Form.Item>
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
             <Button onClick={() => { setLogModal(null); logForm.resetFields(); }}>Cancel</Button>
@@ -281,10 +281,10 @@ export default function AMCTrackingPage() {
                 color: "var(--primary)",
                 children: (
                   <div style={{ padding: "8px 12px", background: "var(--surface-soft)", borderRadius: 10, border: "1px solid var(--border-muted)", marginBottom: 4 }}>
-                    <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{dayjs(l.date).format("DD MMM YYYY")}</div>
+                    <div className="u-label">{dayjs(l.date).format("DD MMM YYYY")}</div>
                     <div style={{ fontSize: 13, color: "var(--text-primary)", marginTop: 3 }}>{l.description}</div>
                     {l.technician && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>By: {l.technician}</div>}
-                    {l.cost > 0 && <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Cost: ₹{l.cost.toLocaleString("en-IN")}</div>}
+                    {l.cost > 0 && <div className="u-meta-xs">Cost: ₹{l.cost.toLocaleString("en-IN")}</div>}
                   </div>
                 ),
               }))}

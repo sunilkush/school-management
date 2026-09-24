@@ -134,22 +134,22 @@ const PayrollSettingsPage = () => {
             </div>
             <div style={grid2}>
               <Form.Item label="Employee PF %" name="pfPercent" rules={[{ required: true }]} style={fi}>
-                <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
+                <InputNumber min={0} max={100} step={0.01} className="u-full" />
               </Form.Item>
               <Form.Item label="Employer PF % (EPS + EPF)" name="employerPfPercent" rules={[{ required: true }]} style={fi}>
-                <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
+                <InputNumber min={0} max={100} step={0.01} className="u-full" />
               </Form.Item>
               <Form.Item label="EPS % (within employer PF)" name="epsPercent" rules={[{ required: true }]} style={fi}>
-                <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
+                <InputNumber min={0} max={100} step={0.01} className="u-full" />
               </Form.Item>
               <Form.Item label="PF Wage Ceiling (₹/month)" name="pfWageCeiling" rules={[{ required: true }]} style={fi}>
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} className="u-full" />
               </Form.Item>
               <Form.Item label="EPF Admin Charges %" name="epfAdminChargesPercent" style={fi}>
-                <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
+                <InputNumber min={0} max={100} step={0.01} className="u-full" />
               </Form.Item>
               <Form.Item label="EDLI %" name="edliPercent" style={fi}>
-                <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
+                <InputNumber min={0} max={100} step={0.01} className="u-full" />
               </Form.Item>
             </div>
             <div style={{ ...fi, display: "flex", alignItems: "center", gap: 8 }}>
@@ -206,13 +206,13 @@ const PayrollSettingsPage = () => {
             </div>
             <div style={grid2}>
               <Form.Item label="Employee ESI %" name="esiPercent" rules={[{ required: true }]} style={fi}>
-                <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
+                <InputNumber min={0} max={100} step={0.01} className="u-full" />
               </Form.Item>
               <Form.Item label="Employer ESI %" name="employerEsiPercent" rules={[{ required: true }]} style={fi}>
-                <InputNumber min={0} max={100} step={0.01} style={{ width: "100%" }} />
+                <InputNumber min={0} max={100} step={0.01} className="u-full" />
               </Form.Item>
               <Form.Item label="ESI Eligibility Ceiling (₹/month gross)" name="esiWageCeiling" rules={[{ required: true }]} style={fi}>
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} className="u-full" />
               </Form.Item>
             </div>
 
@@ -247,16 +247,16 @@ const PayrollSettingsPage = () => {
             <SectionTitle icon={<SettingOutlined style={{ fontSize: 13 }} />} color="var(--warning)" title="Other Rules" />
             <div style={grid2}>
               <Form.Item label="Professional Tax (₹/month)" name="professionalTaxAmount" style={fi}>
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} className="u-full" />
               </Form.Item>
               <Form.Item label="Rounding Mode" name="roundingMode" style={fi}>
                 <Select options={[{ value: "nearest", label: "Nearest rupee" }, { value: "up", label: "Round up" }, { value: "down", label: "Round down" }]} />
               </Form.Item>
               <Form.Item label="Paid Leaves / Month" name="paidLeavePerMonth" style={fi}>
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} className="u-full" />
               </Form.Item>
               <Form.Item label="Overtime Rate (₹/hour)" name="overtimeRatePerHour" style={fi}>
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} className="u-full" />
               </Form.Item>
             </div>
 
@@ -267,7 +267,7 @@ const PayrollSettingsPage = () => {
               tooltip="Payroll cycles generated on or after this date use these rates; earlier cycles keep using the previous version"
               style={fi}
             >
-              <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+              <DatePicker className="u-full" format="DD-MM-YYYY" />
             </Form.Item>
             <Form.Item label="Notes (optional)" name="notes" style={fi}>
               <Input placeholder="e.g. ESI ceiling revised per latest notification" />

@@ -47,7 +47,7 @@ const SalaryStructureTable = ({ data, loading, onEdit, settings }) => {
         const name = r.employeeId?.userId?.name || r.employeeId || "—";
         const initials = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={{
               width: 32, height: 32, borderRadius: 9, flexShrink: 0,
               background: `linear-gradient(135deg, ${C.primary}, var(--accent))`,

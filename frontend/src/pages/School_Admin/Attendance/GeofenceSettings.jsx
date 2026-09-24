@@ -230,7 +230,7 @@ const GeofenceSettings = () => {
               rules={[{ required: true, message: "Latitude required" }]}
             >
               <InputNumber
-                style={{ width: "100%" }}
+                className="u-full"
                 placeholder="e.g. 28.613939"
                 min={-90} max={90}
                 step={0.000001}
@@ -244,7 +244,7 @@ const GeofenceSettings = () => {
               rules={[{ required: true, message: "Longitude required" }]}
             >
               <InputNumber
-                style={{ width: "100%" }}
+                className="u-full"
                 placeholder="e.g. 77.209021"
                 min={-180} max={180}
                 step={0.000001}
@@ -265,7 +265,7 @@ const GeofenceSettings = () => {
             Auto-Detect My Location
           </Button>
 
-          <div style={{ marginBottom: 16 }}>
+          <div className="u-mb-4">
             <GeofenceMap
               school={mapSchool}
               editable
@@ -286,7 +286,7 @@ const GeofenceSettings = () => {
             extra="Minimum 50m. Recommended: 100–500m for a typical school campus."
           >
             <InputNumber
-              style={{ width: "100%" }}
+              className="u-full"
               min={50} max={5000} step={50}
               placeholder="200"
               formatter={(v) => `${v}m`}
@@ -310,10 +310,10 @@ const GeofenceSettings = () => {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
             <Form.Item label="School Starts" name="startTime">
-              <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="08:00" />
+              <TimePicker format="HH:mm" className="u-full" placeholder="08:00" />
             </Form.Item>
             <Form.Item label="School Ends" name="endTime">
-              <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="15:00" />
+              <TimePicker format="HH:mm" className="u-full" placeholder="15:00" />
             </Form.Item>
           </div>
 

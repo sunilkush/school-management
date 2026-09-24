@@ -23,7 +23,7 @@ const StatCardsRow = ({ items = [], minColPx = 150, style }) => (
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
             {label}
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+          <div className="u-title-lg">{value}</div>
         </div>
       </div>
     ))}

@@ -85,10 +85,10 @@ const MyAttendancePage = () => {
 
   return (
     <Card>
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space direction="vertical" size={16} className="u-full">
         <Row justify="space-between" align="middle" gutter={[12, 12]}>
           <Col>
-            <Title level={4} style={{ margin: 0 }}>
+            <Title level={4} className="u-m-0">
               My Attendance
             </Title>
             <Text type="secondary">

@@ -113,7 +113,7 @@ const ComplaintManagement = () => {
           >
             {r.title}
           </div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>#{r.complaintNo} · {r.type}</div>
+          <div className="u-meta-xs">#{r.complaintNo} · {r.type}</div>
         </div>
       ),
     },
@@ -197,7 +197,7 @@ const ComplaintManagement = () => {
 
       {/* ── Add Complaint Modal ───────────────────────────────── */}
       <Modal title="Register Complaint" open={addModal} onCancel={() => setAddModal(false)} onOk={() => form.submit()} confirmLoading={actionLoading} width={560} destroyOnClose>
-        <Form form={form} layout="vertical" onFinish={handleAdd} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleAdd} className="u-mt-2">
           <Form.Item name="title" label="Complaint Title" rules={[{ required: true }]}>
             <Input placeholder="Brief title of the complaint" />
           </Form.Item>
@@ -244,7 +244,7 @@ const ComplaintManagement = () => {
       {/* ── Update Status Modal ───────────────────────────────── */}
       <Modal title="Update Complaint" open={!!updateModal} onCancel={() => setUpdateModal(null)} onOk={() => updateForm.submit()} confirmLoading={actionLoading} width={480} destroyOnClose>
         {updateModal && (
-          <Form form={updateForm} layout="vertical" onFinish={handleUpdate} style={{ marginTop: 8 }}>
+          <Form form={updateForm} layout="vertical" onFinish={handleUpdate} className="u-mt-2">
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item name="status" label="Status">
@@ -288,13 +288,13 @@ const ComplaintManagement = () => {
             {detailModal.resolution && <p><strong>Resolution:</strong> {detailModal.resolution}</p>}
             {detailModal.resolvedAt && <p><strong>Resolved At:</strong> {dayjs(detailModal.resolvedAt).format("DD MMM YYYY hh:mm A")}</p>}
             {detailModal.actionHistory?.length > 0 && (
-              <div style={{ marginTop: 12 }}>
+              <div className="u-mt-3">
                 <strong>History:</strong>
                 <Timeline style={{ marginTop: 8 }}>
                   {detailModal.actionHistory.map((h, i) => (
                     <Timeline.Item key={i}>
                       <div style={{ fontSize: 12 }}><strong>{h.action}</strong> — {h.note || "—"}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{dayjs(h.at).format("DD MMM, hh:mm A")}</div>
+                      <div className="u-meta-xs">{dayjs(h.at).format("DD MMM, hh:mm A")}</div>
                     </Timeline.Item>
                   ))}
                 </Timeline>

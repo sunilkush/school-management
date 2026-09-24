@@ -37,7 +37,7 @@ export default function ChildAchievements() {
     <>
       <PageHeader title="Achievements" subtitle="Your child's sports and co-curricular achievements" icon={<TrophyOutlined />} />
       <div className="page-wrapper">
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <Select
             placeholder="Select Child" style={{ width: "100%", maxWidth: 360 }}
             value={selectedChildId} onChange={setSelectedChildId} loading={childrenLoading} size="large"

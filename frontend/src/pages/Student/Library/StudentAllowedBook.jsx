@@ -44,7 +44,7 @@ const StudentAllowedBook = () => {
         value > 0 ? (
           <span style={pill("var(--danger)", "var(--danger-light)")}>₹{value}</span>
         ) : (
-          <span style={{ color: "var(--text-muted)" }}>—</span>
+          <span className="u-muted">—</span>
         ),
     },
   ];
@@ -56,7 +56,7 @@ const StudentAllowedBook = () => {
         subtitle="Books currently borrowed from the school library"
         icon={<ReadOutlined />}
       />
-      <div className="page-card" style={{ marginTop: 16 }}>
+      <div className="page-card u-mt-4">
         {libraryBooks.length ? (
           <Table
             className="lib-tbl data-table"

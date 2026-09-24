@@ -74,7 +74,7 @@ export default function DocumentUploader({ applicationNumber, phone, documents =
           renderItem={(d) => (
             <List.Item>
               <Space size={8}>
-                <PaperClipOutlined style={{ color: "var(--text-muted)" }} />
+                <PaperClipOutlined className="u-muted" />
                 <Text style={{ fontSize: 13 }}>{d.originalName}</Text>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   {DOC_TYPES.find((t) => t.value === d.docType)?.label || d.docType}
@@ -85,14 +85,14 @@ export default function DocumentUploader({ applicationNumber, phone, documents =
         />
       )}
 
-      {error && <Alert type="error" showIcon message={error} style={{ marginTop: 12 }} />}
+      {error && <Alert type="error" showIcon message={error} className="u-mt-3" />}
 
       <Space direction="vertical" size={12} style={{ width: "100%", marginTop: 14 }}>
         <Select
           value={docType}
           onChange={setDocType}
           options={DOC_TYPES}
-          style={{ width: "100%" }}
+          className="u-full"
           aria-label="Document type"
         />
 
@@ -105,7 +105,7 @@ export default function DocumentUploader({ applicationNumber, phone, documents =
           onRemove={(file) => setFileList((prev) => prev.filter((f) => f.uid !== file.uid))}
           style={{ borderRadius: 18, background: "var(--surface-soft)" }}
         >
-          <p style={{ margin: 0 }}>
+          <p className="u-m-0">
             <InboxOutlined style={{ fontSize: 28, color: "var(--primary)" }} />
           </p>
           <p style={{ margin: "8px 0 0", fontSize: 14 }}>Click or drag files here</p>

@@ -131,7 +131,7 @@ const CircularsPage = () => {
             {title}
             {r.supersededById && <Tag color="orange" style={{ marginLeft: 8 }}>superseded</Tag>}
           </div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.circularNumber ? `${r.circularNumber} · ` : ""}{r.category}
             {r.publishedAt ? ` · ${dayjs(r.publishedAt).format("D MMM YYYY")}` : ""}
             {r.recipientCount ? ` · ${r.recipientCount} recipients` : ""}
@@ -143,9 +143,9 @@ const CircularsPage = () => {
       title: "Acknowledgement", width: 210,
       render: (_, r) => {
         if (!r.requiresAcknowledgement) {
-          return <span style={{ fontSize: 12, color: "var(--text-muted)" }}>not required</span>;
+          return <span className="u-meta">not required</span>;
         }
-        if (!r.ack) return <span style={{ fontSize: 12, color: "var(--text-muted)" }}>—</span>;
+        if (!r.ack) return <span className="u-meta">—</span>;
         return (
           <div>
             <Progress
@@ -153,7 +153,7 @@ const CircularsPage = () => {
               size="small"
               status={r.ack.isOverdue ? "exception" : r.ack.percentAcknowledged === 100 ? "success" : "active"}
             />
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <div className="u-meta">
               {r.ack.acknowledged} of {r.ack.total}
               {r.ack.viewed > r.ack.acknowledged ? ` · ${r.ack.viewed} opened` : ""}
             </div>
@@ -208,7 +208,7 @@ const CircularsPage = () => {
         subtitle="Numbered notices, and the record of who has read them"
         icon={<FileTextOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <Input.Search
               allowClear placeholder="Search title, number or text" style={{ width: 260 }}
               value={search} onChange={(e) => setSearch(e.target.value)} onSearch={load}
@@ -268,9 +268,9 @@ const CircularsPage = () => {
         onCancel={() => setModalOpen(false)} onOk={save}
         confirmLoading={actionLoading} okText={editing ? "Save draft" : "Save as draft"}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="u-mt-4">
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="title" label="Title" rules={[{ required: true }]} style={{ flex: 1 }}>
+            <Form.Item name="title" label="Title" rules={[{ required: true }]} className="u-grow">
               <Input placeholder="Revised transport timings" />
             </Form.Item>
             <Form.Item name="category" label="Category" style={{ width: 170 }}>
@@ -289,11 +289,11 @@ const CircularsPage = () => {
             parents of that class only.
           </p>
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="roles" label="Roles" style={{ flex: 1 }}>
+            <Form.Item name="roles" label="Roles" className="u-grow">
               <Select mode="multiple" allowClear placeholder="Everyone"
                       options={ROLES.map((r) => ({ value: r, label: r }))} />
             </Form.Item>
-            <Form.Item name="schoolClassIds" label="Classes" style={{ flex: 1 }}>
+            <Form.Item name="schoolClassIds" label="Classes" className="u-grow">
               <Select mode="multiple" allowClear placeholder="All classes" optionFilterProp="label"
                       options={schoolClasses.map((c) => ({ value: c._id, label: c.name }))} />
             </Form.Item>
@@ -316,7 +316,7 @@ const CircularsPage = () => {
                   <Input />
                 </Form.Item>
                 <Form.Item name="acknowledgementDeadline" label="By when">
-                  <DatePicker style={{ width: "100%" }} />
+                  <DatePicker className="u-full" />
                 </Form.Item>
               </>
             ) : null}
@@ -334,14 +334,14 @@ const CircularsPage = () => {
           <div style={{ textAlign: "center", padding: 48 }}><Spin /></div>
         ) : current ? (
           <>
-            <div className="section-panel" style={{ marginBottom: 16 }}>
+            <div className="section-panel u-mb-4">
               <div style={{ fontWeight: 700, marginBottom: 6 }}>{current.title}</div>
               <div style={{ fontSize: 13, color: "var(--text-secondary)", whiteSpace: "pre-wrap" }}>{current.body}</div>
             </div>
 
             {current.requiresAcknowledgement && (
               <Alert
-                type="info" showIcon style={{ marginBottom: 16 }}
+                type="info" showIcon className="u-mb-4"
                 message="Opened is not the same as acknowledged"
                 description={`Everyone here was sent the circular. "Opened" means they looked at it; "acknowledged" means they pressed the button confirming: "${current.acknowledgementText}"`}
               />

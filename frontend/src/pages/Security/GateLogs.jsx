@@ -52,11 +52,11 @@ const GateLogs = () => {
     {
       title: "Visitor",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={avatarStyle(r.name, 34)}>{getInitials(r.name)}</div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.name}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.type}</div>
+            <div className="u-label">{r.name}</div>
+            <div className="u-meta-xs">{r.type}</div>
           </div>
         </div>
       ),
@@ -111,7 +111,7 @@ const GateLogs = () => {
             <Select value={typeFilter} onChange={setTypeFilter} style={{ width: 140 }}
               options={TYPE_OPTIONS.map((v) => ({ value: v, label: v }))} />
             <Input
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search name, vehicle..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}

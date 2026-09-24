@@ -239,7 +239,7 @@ const SchoolBoard = ({ next }) => {
                       }}
                     >
                       <td style={{ padding: "12px 16px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div className="u-row">
                           <div style={{
                             width: 32, height: 32, borderRadius: 8,
                             background: "rgba(6,182,212,0.1)",
@@ -260,7 +260,7 @@ const SchoolBoard = ({ next }) => {
                             background: "rgba(var(--purple-rgb),0.1)", padding: "2px 8px", borderRadius: 99,
                           }}>Primary</span>
                         ) : (
-                          <span style={{ color: "var(--text-muted)" }}>—</span>
+                          <span className="u-muted">—</span>
                         )}
                       </td>
 
@@ -326,7 +326,7 @@ const SchoolBoard = ({ next }) => {
                 padding: 14, borderBottom: "1px solid var(--border)",
                 display: "flex", flexDirection: "column", gap: 8,
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="u-row">
                   <div style={{
                     width: 28, height: 28, borderRadius: 6,
                     background: "rgba(6,182,212,0.1)",
@@ -382,15 +382,7 @@ const SchoolBoard = ({ next }) => {
         </div>
       )}
 
-      <style>{`
-        .board-mb { display: none; }
-        .board-dt { display: block; }
-        @media (max-width: 768px) {
-          .board-dt { display: none; }
-          .board-mb { display: block; }
-        }
-      `}</style>
-    </div>
+          </div>
   );
 };
 

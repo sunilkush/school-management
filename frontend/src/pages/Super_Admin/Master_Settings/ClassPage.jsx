@@ -49,7 +49,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -175,7 +175,7 @@ export default function ClassPage() {
           <div style={avatarStyle(name, 36)}>{name?.[0]?.toUpperCase() || "C"}</div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{name || "-"}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{row.description || "No description"}</div>
+            <div className="u-meta">{row.description || "No description"}</div>
           </div>
         </Space>
       ),
@@ -260,14 +260,14 @@ export default function ClassPage() {
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
           <BookOutlined style={{ color: "var(--primary)" }} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Class List</span>
+          <span className="u-title-sm">Class List</span>
           <span style={pill("var(--primary)")}>{filteredClasses.length}</span>
         </div>
 
-        <div className="toolbar-row" style={{ marginBottom: 16 }}>
+        <div className="toolbar-row u-mb-4">
           <Input
             allowClear
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             placeholder="Search by class name or code"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -363,7 +363,7 @@ export default function ClassPage() {
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "0 12px", background: "var(--surface-soft)",
             }}>
-              <span style={{ color: "var(--text-muted)" }}>Make global</span>
+              <span className="u-muted">Make global</span>
               <Switch checked={formData.isGlobal} onChange={(v) => handleChange("isGlobal", v)} />
             </div>
           </div>
@@ -440,7 +440,7 @@ export default function ClassPage() {
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "0 12px", background: "var(--surface-soft)",
             }}>
-              <span style={{ color: "var(--text-muted)" }}>Make global</span>
+              <span className="u-muted">Make global</span>
               <Switch checked={editData.isGlobal} onChange={(v) => handleEditChange("isGlobal", v)} />
             </div>
           </div>

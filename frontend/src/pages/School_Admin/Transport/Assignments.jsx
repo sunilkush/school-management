@@ -14,7 +14,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-lighter)",
   accent: "var(--accent)", accentLight: "var(--accent-light)",
   warning: "var(--warning)", warningLight: "var(--warning-light)",
   success: "var(--success)", successLight: "var(--success-light)",
@@ -153,7 +153,7 @@ const Assignments = () => {
     {
       title: "Student",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 36, height: 36, borderRadius: 10, flexShrink: 0,
             background: `linear-gradient(135deg, ${C.primary}, ${C.accent})`,
@@ -377,7 +377,7 @@ const Assignments = () => {
         destroyOnClose
         width={500}
       >
-        <Form form={form} layout="vertical" onFinish={handleSaveAssignment} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleSaveAssignment} className="u-mt-2">
           <Form.Item
             label="Student"
             name="studentEnrollmentId"

@@ -57,12 +57,12 @@ function StatusBadge({ status }) {
 /* ── Department name cell ──────────────────────────────────────────── */
 function DeptCell({ name, code }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <div className="u-row">
       <div style={iconWell("var(--primary)", 32)}>
         <ApartmentOutlined style={{ fontSize: 14 }} />
       </div>
       <div>
-        <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{name}</div>
+        <div className="u-label">{name}</div>
         {code && (
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{code}</div>
         )}
@@ -181,7 +181,7 @@ export default function Departments() {
       title: "#",
       width: 52,
       render: (_, __, i) => (
-        <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{i + 1}</span>
+        <span className="u-meta">{i + 1}</span>
       ),
     },
     {
@@ -195,7 +195,7 @@ export default function Departments() {
         v ? (
           <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{v}</span>
         ) : (
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+          <span className="u-meta">—</span>
         ),
     },
     {
@@ -204,9 +204,9 @@ export default function Departments() {
       ellipsis: true,
       render: (v) =>
         v ? (
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v}</span>
+          <span className="u-meta">{v}</span>
         ) : (
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+          <span className="u-meta">—</span>
         ),
     },
     {
@@ -323,7 +323,7 @@ export default function Departments() {
         >
           <Space wrap>
             <Input
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search departments..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -341,7 +341,7 @@ export default function Departments() {
               <Option value="inactive">Inactive</Option>
             </Select>
           </Space>
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <span className="u-meta">
             Showing <strong>{filtered.length}</strong> of <strong>{total}</strong>
           </span>
         </div>
@@ -388,7 +388,7 @@ export default function Departments() {
           layout="vertical"
           form={form}
           onFinish={onFinish}
-          style={{ marginTop: 16 }}
+          className="u-mt-4"
           initialValues={{ status: "active" }}
         >
           <Form.Item

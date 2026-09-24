@@ -178,8 +178,7 @@ const PunchBtn = ({ checkedIn, checkedOut, canAct, loading, onPunch }) => {
           Waiting for GPS…
         </div>
       )}
-      <style>{`@keyframes att-pulse { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.14);opacity:.15} }`}</style>
-    </div>
+          </div>
   );
 };
 
@@ -476,7 +475,7 @@ const EmployeeSelfAttendance = () => {
           {/* ── Calendar ── */}
           <div style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-              <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+              <div className="u-title-sm">
                 {calMonth.format("MMMM YYYY")}
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -520,7 +519,7 @@ const EmployeeSelfAttendance = () => {
                       {/* Status dot */}
                       <div style={{ width: 10, height: 10, borderRadius: "50%", background: cfg.color || "var(--text-muted)", flexShrink: 0 }} />
                       {/* Main info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="u-grow-min">
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                             {dayjs(r.date).format("ddd, DD MMM")}

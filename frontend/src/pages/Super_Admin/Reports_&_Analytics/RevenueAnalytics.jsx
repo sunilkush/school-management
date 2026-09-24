@@ -228,7 +228,7 @@ const RevenueAnalytics = () => {
       render: (name) => (
         <Space>
           <div style={avatarStyle(name, 30)}><BankOutlined style={{ fontSize: 13 }} /></div>
-          <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{name}</span>
+          <span className="u-label">{name}</span>
         </Space>
       ),
     },
@@ -246,7 +246,7 @@ const RevenueAnalytics = () => {
       dataIndex: "totalInvoiced",
       sorter: (a, b) => a.totalInvoiced - b.totalInvoiced,
       render: (v) => (
-        <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>
+        <span className="u-title-sm">
           {formatCurrency(v)}
         </span>
       ),
@@ -312,7 +312,7 @@ const RevenueAnalytics = () => {
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, marginBottom: 20 }} className="revenue-charts-grid">
         <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Revenue Trend</span>
+            <span className="u-title-sm">Revenue Trend</span>
             <span style={pill("var(--primary)")}>Invoiced vs Paid</span>
           </div>
           <ResponsiveContainer width="100%" height={280}>
@@ -352,16 +352,11 @@ const RevenueAnalytics = () => {
         </div>
       </div>
 
-      <style>{`
-        @media (max-width: 900px) {
-          .revenue-charts-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-
+      
       <div className="section-panel" style={{ padding: 0 }}>
         <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 10 }}>
           <BankOutlined style={{ color: "var(--primary)" }} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>School Revenue Breakdown</span>
+          <span className="u-title-sm">School Revenue Breakdown</span>
           <span style={pill("var(--text-muted)")}>{schoolRevenue.length} schools</span>
         </div>
         <div className="revenue-tbl data-table table-container" style={{ border: "none", borderRadius: 0 }}>

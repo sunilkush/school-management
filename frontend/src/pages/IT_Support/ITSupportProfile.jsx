@@ -78,7 +78,7 @@ const ITSupportProfile = () => {
 
   const _InputField = ({ icon, label, name, value, onChange, type = "text", required = false }) => (
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+      <span className="u-meta-xs">{label}</span>
       <div style={_fieldStyle}>
         <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{icon}</span>
         <input type={type} name={name} value={value || ""} onChange={onChange} required={required}
@@ -118,7 +118,7 @@ const ITSupportProfile = () => {
             </div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>{profileForm.name || roleName}</div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{profileForm.email || "No email"}</div>
+              <div className="u-meta-md">{profileForm.email || "No email"}</div>
               <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "rgba(var(--success-rgb), 0.2)", color: "var(--success)", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
                 {user?.isActive ? "Active" : "Inactive"}
               </span>
@@ -143,7 +143,7 @@ const ITSupportProfile = () => {
       <form onSubmit={handleSaveProfile} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
         <div className="page-card" style={{ padding: "20px 24px", gridColumn: "span 2" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Basic Profile</div>
+            <div className="u-title">Basic Profile</div>
             <button type="submit" disabled={saving} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "var(--primary)", color: "#fff", border: "none", cursor: saving ? "not-allowed" : "pointer", fontSize: 13, opacity: saving ? 0.6 : 1 }}>
               {saving ? <_Loader2 style={{ width: 14, height: 14 }} /> : <_Save style={{ width: 14, height: 14 }} />}
               {saving ? "Saving…" : "Save Changes"}
@@ -161,8 +161,8 @@ const ITSupportProfile = () => {
           <div className="page-card" style={{ padding: "16px 20px" }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><_Building2 style={{ width: 14, height: 14 }} /> School</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{user?.school?.name || "—"}</div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{roleName}</div>
+              <div className="u-title-sm">{user?.school?.name || "—"}</div>
+              <div className="u-meta">{roleName}</div>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, background: "rgba(var(--success-rgb), 0.4)", color: "var(--success-hover)", padding: "3px 10px", borderRadius: 99, fontWeight: 600, width: "fit-content", marginTop: 4 }}>
                 <_CheckCircle style={{ width: 11, height: 11 }} /> {user?.isActive ? "Active Member" : "Inactive"}
               </span>
@@ -171,8 +171,8 @@ const ITSupportProfile = () => {
           <div className="page-card" style={{ padding: "16px 20px" }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}><_Mail style={{ width: 14, height: 14 }} /> Contact</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div><div style={{ fontSize: 11, color: "var(--text-muted)" }}>Email</div><div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", wordBreak: "break-all" }}>{profileForm.email || "—"}</div></div>
-              <div><div style={{ fontSize: 11, color: "var(--text-muted)" }}>Phone</div><div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{profileForm.phone || "Not set"}</div></div>
+              <div><div className="u-meta-xs">Email</div><div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", wordBreak: "break-all" }}>{profileForm.email || "—"}</div></div>
+              <div><div className="u-meta-xs">Phone</div><div className="u-label">{profileForm.phone || "Not set"}</div></div>
             </div>
           </div>
         </div>
@@ -191,7 +191,7 @@ const ITSupportProfile = () => {
               { key: "confirm", label: "Confirm Password", placeholder: "Repeat new password" },
             ].map(({ key, label, placeholder }) => (
               <label key={key} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+                <span className="u-meta-xs">{label}</span>
                 <div style={{ ..._fieldStyle, paddingRight: 8 }}>
                   <_Lock style={{ width: 14, height: 14, color: "var(--text-muted)", flexShrink: 0 }} />
                   <input type={showPwd[key] ? "text" : "password"} value={pwdForm[key]} placeholder={placeholder} onChange={(e) => setPwdForm((p) => ({ ...p, [key]: e.target.value }))}

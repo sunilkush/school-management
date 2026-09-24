@@ -46,7 +46,7 @@ const QuickCard = ({ icon: Icon, label, color, onClick }) => (
     }}>
       <Icon size={20} color={color} strokeWidth={1.8} />
     </div>
-    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{label}</div>
+    <div className="u-label">{label}</div>
   </button>
 );
 
@@ -89,7 +89,7 @@ const MyClassPage = () => {
           <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
             No Class Assigned Yet
           </div>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          <div className="u-meta-md">
             The school admin has not assigned you as a class teacher yet.
             Please contact your administrator.
           </div>

@@ -107,7 +107,7 @@ function PeriodCard({ entry, isActive }) {
         </div>
 
         {/* Info */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="u-grow-min">
           <div
             style={{
               display: "flex",
@@ -118,11 +118,7 @@ function PeriodCard({ entry, isActive }) {
             }}
           >
             <span
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: "var(--text-primary)",
-              }}
+              className="u-title-sm"
             >
               {subject}
             </span>
@@ -439,7 +435,7 @@ export default function StudentTimeTable() {
             >
               No Classes on {activeDay}
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            <div className="u-meta-md">
               Enjoy your free day — no periods scheduled!
             </div>
           </div>

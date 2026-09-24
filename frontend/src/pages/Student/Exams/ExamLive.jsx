@@ -64,7 +64,7 @@ const QuestionNav = ({ questions, answers, onNavigate }) => {
         <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>
           Questions
         </span>
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           <span style={{ color: "var(--success)", fontWeight: 700 }}>{answeredCount}</span>
           {" / "}
           {questions.length} answered
@@ -239,15 +239,15 @@ const ExamLive = () => {
             <ClockCircleOutlined />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{examTitle}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <div className="u-title">{examTitle}</div>
+            <div className="u-meta">
               <span style={{ color: "var(--success)", fontWeight: 700 }}>{answeredCount}</span>
               {" / "}{questions.length} answered
             </div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Tag color={currentAttempt?.status === "in_progress" ? "blue" : "default"} style={{ margin: 0 }}>
+        <div className="u-row">
+          <Tag color={currentAttempt?.status === "in_progress" ? "blue" : "default"} className="u-m-0">
             {currentAttempt?.status || "in_progress"}
           </Tag>
           {/* Timer rendered inline in header */}
@@ -303,9 +303,9 @@ const ExamLive = () => {
               display: "flex", justifyContent: "space-between", alignItems: "center",
               flexWrap: "wrap", gap: 12, marginTop: 4,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="u-row">
                 <AutosaveIndicator status={autosaveStatus} />
-                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                <span className="u-meta">
                   {answeredCount}/{questions.length} answered
                 </span>
               </div>

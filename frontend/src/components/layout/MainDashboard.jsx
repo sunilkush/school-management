@@ -109,26 +109,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <style>{`
-        .dash-main {
-          transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1);
-        }
-        .dash-drawer .ant-drawer-body {
-          padding: 0 !important;
-          overflow: hidden !important;
-        }
-        .dash-drawer .ant-drawer-content-wrapper {
-          box-shadow: 4px 0 32px rgba(0,0,0,0.15) !important;
-        }
-        .dash-outlet {
-          animation: outletFadeIn 0.22s ease forwards;
-        }
-        @keyframes outletFadeIn {
-          from { opacity:0; transform:translateY(5px); }
-          to   { opacity:1; transform:translateY(0);   }
-        }
-      `}</style>
-
+      
       <div style={{ display: "flex", minHeight: "100vh", background: "var(--surface-page)" }}>
 
         {/* ── DESKTOP SIDEBAR ── */}

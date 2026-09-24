@@ -100,7 +100,7 @@ const TaskCard = ({ task, colColor, currentUserId, onDragStart, onDragEnd, isDra
       }}
     >
       {/* Drag handle + priority */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div className="u-row-sm">
         <span style={{ display: "flex", alignItems: "center", color: "var(--text-disabled)", flexShrink: 0 }}>
           <GripVertical size={14} />
         </span>
@@ -308,13 +308,6 @@ const MyTasks = () => {
 
   return (
     <>
-      <style>{`
-        .mt-board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:12px}
-        .mt-board::-webkit-scrollbar{height:5px}
-        .mt-board::-webkit-scrollbar-thumb{background:${border};border-radius:4px}
-        .mt-stats>div{flex:1 1 110px}
-        @media(max-width:639px){.mt-stats>div{flex:1 1 calc(50% - 6px) !important}}
-      `}</style>
 
       <PageHeader
         title="My Tasks"

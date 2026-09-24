@@ -221,7 +221,7 @@ export default function PaymentsPage() {
         }
       />
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         {error ? <Alert type="error" showIcon message={error} style={{ marginBottom: 16, borderRadius: 14 }} /> : null}
 
         <div style={{ ...statGrid(200), marginBottom: 20 }}>
@@ -235,12 +235,12 @@ export default function PaymentsPage() {
         <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
             <FileTextOutlined style={{ color: "var(--primary)" }} />
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Invoices</span>
+            <span className="u-title-sm">Invoices</span>
             <span style={pill("var(--primary)")}>{filteredInvoices.length}</span>
 
             <Input
               allowClear
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search invoice or school"
               value={invoiceSearch}
               onChange={(e) => setInvoiceSearch(e.target.value)}
@@ -273,14 +273,14 @@ export default function PaymentsPage() {
                   render: (value) => (
                     <Space>
                       <div style={iconWell("var(--primary)", 34)}><FileTextOutlined /></div>
-                      <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{value}</span>
+                      <span className="u-strong-bold">{value}</span>
                     </Space>
                   ),
                 },
                 {
                   title: "School",
                   dataIndex: "schoolName",
-                  render: (value) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{value}</span>,
+                  render: (value) => <span className="u-strong">{value}</span>,
                 },
                 {
                   title: "Amount",
@@ -292,7 +292,7 @@ export default function PaymentsPage() {
                   dataIndex: "dueDate",
                   render: (date) =>
                     date ? (
-                      <span style={{ color: "var(--text-muted)" }}>
+                      <span className="u-muted">
                         {new Date(date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                       </span>
                     ) : (
@@ -352,15 +352,15 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        <div className="section-panel" style={{ marginTop: 20 }}>
+        <div className="section-panel u-mt-5">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
             <CreditCardOutlined style={{ color: "var(--accent)" }} />
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Payment History</span>
+            <span className="u-title-sm">Payment History</span>
             <span style={pill("var(--accent)")}>{filteredPayments.length}</span>
 
             <Input
               allowClear
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search invoice, school or transaction ID"
               value={paymentSearch}
               onChange={(e) => setPaymentSearch(e.target.value)}
@@ -380,7 +380,7 @@ export default function PaymentsPage() {
                 {
                   title: "School",
                   dataIndex: "schoolName",
-                  render: (value) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{value}</span>,
+                  render: (value) => <span className="u-strong">{value}</span>,
                 },
                 {
                   title: "Mode",
@@ -423,31 +423,31 @@ export default function PaymentsPage() {
       >
         {selectedInvoice ? (
           <div className="section-panel" style={{ marginBottom: 0, background: "var(--surface-soft)" }}>
-            <Space direction="vertical" size={10} style={{ width: "100%" }}>
+            <Space direction="vertical" size={10} className="u-full">
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted)" }}>Invoice</span>
-                <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.invoiceNumber}</span>
+                <span className="u-muted">Invoice</span>
+                <span className="u-strong-bold">{selectedInvoice.invoiceNumber}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted)" }}>School</span>
-                <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>
+                <span className="u-muted">School</span>
+                <span className="u-strong-bold">{selectedInvoice.schoolName}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted)" }}>Plan Price</span>
+                <span className="u-muted">Plan Price</span>
                 <span style={{ color: "var(--text-primary)" }}>{formatCurrency(selectedInvoice.planPrice)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted)" }}>Discount</span>
+                <span className="u-muted">Discount</span>
                 <span style={{ color: "var(--text-primary)" }}>{formatCurrency(selectedInvoice.discount)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted)" }}>Tax/GST</span>
+                <span className="u-muted">Tax/GST</span>
                 <span style={{ color: "var(--text-primary)" }}>{formatCurrency(selectedInvoice.taxGst)}</span>
               </div>
 
               <div style={{ borderTop: "1px dashed var(--border-muted)", paddingTop: 10 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Total Amount</span>
+                  <span className="u-strong-bold">Total Amount</span>
                   <span style={{ fontWeight: 700, color: "var(--success-hover)", fontSize: 18 }}>{formatCurrency(selectedInvoice.totalAmount)}</span>
                 </div>
               </div>
@@ -471,9 +471,9 @@ export default function PaymentsPage() {
       >
         {selectedInvoice ? (
           <div className="section-panel" style={{ padding: 12, background: "var(--surface-soft)" }}>
-            <span style={{ color: "var(--text-muted)" }}>Selected Invoice</span>
+            <span className="u-muted">Selected Invoice</span>
             <div style={{ marginTop: 4 }}>
-              <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>{" "}
+              <span className="u-strong-bold">{selectedInvoice.schoolName}</span>{" "}
               <Tag color="blue">{selectedInvoice.invoiceNumber}</Tag>
               <span style={pill(statusConfig[selectedInvoice.status]?.color || "var(--text-secondary)", statusConfig[selectedInvoice.status]?.bg)}>
                 {statusConfig[selectedInvoice.status]?.label || selectedInvoice.status}
@@ -486,10 +486,10 @@ export default function PaymentsPage() {
           form={paymentForm}
           layout="vertical"
           initialValues={{ status: "success", paymentMode: "bank transfer" }}
-          style={{ marginTop: 16 }}
+          className="u-mt-4"
         >
           <Form.Item name="amount" label="Amount" rules={[{ required: true, message: "Please enter amount" }]}>
-            <InputNumber min={1} prefix="₹" style={{ width: "100%" }} />
+            <InputNumber min={1} prefix="₹" className="u-full" />
           </Form.Item>
 
           <Form.Item name="paymentMode" label="Payment Mode" rules={[{ required: true, message: "Please select payment mode" }]}>

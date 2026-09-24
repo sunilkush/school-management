@@ -178,7 +178,7 @@ const MySurveys = () => {
 
             {active.isAnonymous && (
               <Alert
-                type="info" showIcon icon={<EyeInvisibleOutlined />} style={{ marginBottom: 16 }}
+                type="info" showIcon icon={<EyeInvisibleOutlined />} className="u-mb-4"
                 message="This survey is anonymous"
                 description={
                   locked

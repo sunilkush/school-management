@@ -100,7 +100,7 @@ const ModuleCard = ({ mod, meta, onClick }) => (
     </div>
 
     {/* Text */}
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <div className="u-grow-min">
       <Flex align="center" justify="space-between" gap={6} style={{ marginBottom: 5 }}>
         <Text strong style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: 1.3 }}>
           {mod.title}
@@ -215,7 +215,7 @@ const ModuleOverview = () => {
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>
               Welcome to the Module Center
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            <div className="u-meta-md">
               You have access to <strong style={{ color: "var(--primary)" }}>{modules.length} modules</strong> with{" "}
               <strong style={{ color: "var(--purple)" }}>{totalFeatures}+ features</strong> as{" "}
               <strong style={{ color: "var(--success)" }}>{roleName || "your role"}</strong>.
@@ -257,7 +257,7 @@ const ModuleOverview = () => {
             <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
               No Module Access
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            <div className="u-meta-md">
               No module access has been configured for <strong>{roleName || "this role"}</strong>.
               Contact your administrator.
             </div>
@@ -267,7 +267,7 @@ const ModuleOverview = () => {
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <span style={{ color: "var(--text-muted)" }}>
+                <span className="u-muted">
                   No modules match "<strong>{search}</strong>"
                 </span>
               }

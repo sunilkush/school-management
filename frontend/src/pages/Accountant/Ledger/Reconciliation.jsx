@@ -51,7 +51,7 @@ const Reconciliation = () => {
     { title: "In the books", dataIndex: "posted", align: "right", width: 130 },
     {
       title: "Not posted", dataIndex: "unposted", align: "right", width: 130,
-      render: (v) => (v ? <span style={pill("var(--danger)")}>{v}</span> : <span style={{ color: "var(--text-muted)" }}>0</span>),
+      render: (v) => (v ? <span style={pill("var(--danger)")}>{v}</span> : <span className="u-muted">0</span>),
     },
     {
       title: "Value not posted", dataIndex: "unpostedValue", align: "right", width: 180,
@@ -67,7 +67,7 @@ const Reconciliation = () => {
         subtitle="Money the system recorded, checked against what is actually in the ledger"
         icon={<SyncOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <RangePicker value={range} onChange={(v) => setRange(v || [])} />
             <Tooltip title="Refresh">
               <Button icon={<ReloadOutlined />} onClick={load} />
@@ -100,7 +100,7 @@ const Reconciliation = () => {
                   ? "Every recorded money event is in the ledger"
                   : `${reconciliation?.totalUnposted || 0} money event(s) are not in the ledger yet`}
               </div>
-              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+              <div className="u-meta-md">
                 {fullyPosted
                   ? "The statements can be trusted as they stand."
                   : "Until these are posted, the trial balance and the statements understate the real position."}
@@ -136,7 +136,7 @@ const Reconciliation = () => {
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 16 }}
+          className="u-mb-4"
           message="These are still counted as unposted"
           description="They are not skipped quietly — fix the cause below and run the sweep again."
         />

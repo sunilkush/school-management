@@ -170,7 +170,7 @@ const SystemMaintenance = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="dueDate" label="Due Date">
-                <DatePicker style={{ width: "100%" }} />
+                <DatePicker className="u-full" />
               </Form.Item>
             </Col>
           </Row>

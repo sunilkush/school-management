@@ -20,7 +20,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -92,13 +92,13 @@ const SchoolClassSectionFilter = () => {
       key: "idx",
       width: 50,
       render: (_, __, i) => (
-        <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{i + 1}</span>
+        <span className="u-meta">{i + 1}</span>
       ),
     },
     {
       title: "Class",
       dataIndex: ["schoolClassId", "name"],
-      render: (name) => <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{name || "N/A"}</span>,
+      render: (name) => <span className="u-strong-bold">{name || "N/A"}</span>,
     },
     {
       title: "Section",
@@ -110,7 +110,7 @@ const SchoolClassSectionFilter = () => {
       dataIndex: ["classTeacherId", "name"],
       render: (name) => name
         ? <span style={{ color: "var(--text-primary)" }}><UserOutlined style={{ color: "var(--text-muted)", marginRight: 6 }} />{name}</span>
-        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>Not assigned</span>,
+        : <span className="u-meta">Not assigned</span>,
     },
     {
       title: "Enrollment",
@@ -146,14 +146,14 @@ const SchoolClassSectionFilter = () => {
         icon={<ApartmentOutlined />}
       />
 
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div className="toolbar-row">
           <div style={{ flex: "1 1 220px" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6 }}>Select School</div>
             <Select
               placeholder="Choose School"
               loading={schoolLoading}
-              style={{ width: "100%" }}
+              className="u-full"
               onChange={(value) => setSelectedSchool(value)}
               value={selectedSchool}
               allowClear
@@ -172,7 +172,7 @@ const SchoolClassSectionFilter = () => {
               <Select
                 placeholder="Choose Class"
                 disabled={!selectedSchool}
-                style={{ width: "100%" }}
+                className="u-full"
                 onChange={(value) => setSelectedClass(value)}
                 value={selectedClass}
                 allowClear
@@ -189,7 +189,7 @@ const SchoolClassSectionFilter = () => {
             <Input
               allowClear
               disabled={!selectedSchool}
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search by class, section or teacher"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -208,9 +208,9 @@ const SchoolClassSectionFilter = () => {
       )}
 
 
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Sections</span>
+          <span className="u-title-sm">Sections</span>
           {selectedSchool && (
             yearLoading ? (
               <Spin size="small" />

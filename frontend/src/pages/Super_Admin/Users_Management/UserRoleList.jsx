@@ -19,7 +19,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -150,7 +150,7 @@ const UserRoleList = ({
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{record.name}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{record.email}</div>
+            <div className="u-meta-xs">{record.email}</div>
           </div>
         </Space>
       ),
@@ -160,7 +160,7 @@ const UserRoleList = ({
       dataIndex: ["school", "name"],
       render: (school) => school
         ? <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{school}</span>
-        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
+        : <span className="u-meta">—</span>,
     },
     {
       title: "Status",
@@ -219,7 +219,7 @@ const UserRoleList = ({
         <div className="toolbar-row" style={{ padding: "16px 20px", marginBottom: 0, borderBottom: "1px solid var(--border-muted)" }}>
           <Input
             allowClear
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             placeholder={`Search by name, email or school...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}

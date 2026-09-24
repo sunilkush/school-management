@@ -177,7 +177,7 @@ const ChildProgress = () => {
                           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
                             Summary
                           </div>
-                          <Space direction="vertical" style={{ width: "100%" }}>
+                          <Space direction="vertical" className="u-full">
                             {[
                               { label: "Total Days",  value: attStats.total,   color: "var(--accent)" },
                               { label: "Present",     value: attStats.present, color: "var(--success)" },
@@ -185,7 +185,7 @@ const ChildProgress = () => {
                               { label: "Late",        value: attStats.late,    color: "var(--warning)" },
                             ].map(({ label, value, color }) => (
                               <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border-muted)" }}>
-                                <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{label}</span>
+                                <span className="u-meta-md">{label}</span>
                                 <Tag color={color === "var(--success)" ? "green" : color === "var(--danger)" ? "red" : color === "var(--warning)" ? "orange" : "purple"}>
                                   {value}
                                 </Tag>
@@ -245,7 +245,7 @@ const ChildProgress = () => {
                           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
                             Homework Summary
                           </div>
-                          <Space direction="vertical" style={{ width: "100%" }}>
+                          <Space direction="vertical" className="u-full">
                             {[
                               { label: "Total Assigned", value: hwStats.total     },
                               { label: "Pending",        value: hwStats.pending   },
@@ -254,7 +254,7 @@ const ChildProgress = () => {
                               { label: "Avg Grade",      value: hwStats.avgGrade !== null ? `${hwStats.avgGrade}/100` : "—" },
                             ].map(({ label, value }) => (
                               <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border-muted)" }}>
-                                <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{label}</span>
+                                <span className="u-meta-md">{label}</span>
                                 <strong style={{ color: "var(--text-primary)" }}>{value}</strong>
                               </div>
                             ))}

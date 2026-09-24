@@ -115,28 +115,28 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId,
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
           <Form.Item label="Basic Salary (₹)" name="basic" rules={[{ required: true }]} style={fi}>
             <InputNumber
-              min={0} style={{ width: "100%" }} placeholder="0"
+              min={0} className="u-full" placeholder="0"
               formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
               parser={(v) => v.replace(/₹\s?|(,*)/g, "")}
             />
           </Form.Item>
           <Form.Item label="HRA (₹)" name="hra" initialValue={0} style={fi}>
             <InputNumber
-              min={0} style={{ width: "100%" }} placeholder="0"
+              min={0} className="u-full" placeholder="0"
               formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
               parser={(v) => v.replace(/₹\s?|(,*)/g, "")}
             />
           </Form.Item>
           <Form.Item label="DA — Dearness Allowance (₹)" name="da" initialValue={0} style={fi}>
             <InputNumber
-              min={0} style={{ width: "100%" }} placeholder="0"
+              min={0} className="u-full" placeholder="0"
               formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
               parser={(v) => v.replace(/₹\s?|(,*)/g, "")}
             />
           </Form.Item>
           <Form.Item label="Special Allowance (₹)" name="specialAllowance" initialValue={0} style={fi}>
             <InputNumber
-              min={0} style={{ width: "100%" }} placeholder="0"
+              min={0} className="u-full" placeholder="0"
               formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
               parser={(v) => v.replace(/₹\s?|(,*)/g, "")}
             />
@@ -145,7 +145,7 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId,
 
         <Form.Item label="Gross Monthly (₹)" name="grossMonthly" rules={[{ required: true }]} style={fi}>
           <InputNumber
-            min={0} style={{ width: "100%" }} placeholder="Total gross monthly salary"
+            min={0} className="u-full" placeholder="Total gross monthly salary"
             formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
             parser={(v) => v.replace(/₹\s?|(,*)/g, "")}
           />
@@ -174,7 +174,7 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId,
             tooltip="Extra employee-elected PF contribution, on top of the statutory rate — unlike the statutory rate, this genuinely varies per employee, so it stays here rather than in Payroll Settings"
             style={fi}
           >
-            <InputNumber min={0} max={100} style={{ width: "100%" }} />
+            <InputNumber min={0} max={100} className="u-full" />
           </Form.Item>
         )}
 
@@ -182,11 +182,11 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId,
         <SectionLabel icon={<CalendarOutlined />} title="Validity" />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
           <Form.Item label="Effective From" name="effectiveFrom" rules={[{ required: true }]} style={fi}>
-            <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+            <DatePicker className="u-full" format="DD-MM-YYYY" />
           </Form.Item>
           <Form.Item label="Effective To (optional)" name="effectiveTo" style={fi}>
             <DatePicker
-              style={{ width: "100%" }} format="DD-MM-YYYY"
+              className="u-full" format="DD-MM-YYYY"
               disabledDate={(d) => effectiveFrom && d.isBefore(dayjs(effectiveFrom), "day")}
             />
           </Form.Item>

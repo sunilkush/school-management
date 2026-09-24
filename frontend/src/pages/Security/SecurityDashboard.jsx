@@ -41,7 +41,7 @@ const KpiCard = ({ label, value, icon, color, sub, onClick }) => (
     }}
   >
     <div style={iconWell(color, 46)}>{icon}</div>
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <div className="u-grow-min">
       <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
         {label}
       </div>
@@ -175,13 +175,13 @@ const SecurityDashboard = () => {
         <Col xs={24} lg={14}>
           <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="u-row">
                 <div style={iconWell("var(--primary)", 32)}><AuditOutlined style={{ fontSize: 14 }} /></div>
                 <div>
                   <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                     Recent Gate Activity
                   </Text>
-                  <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>Latest entries at all gates</Text>
+                  <Text className="u-meta-xs">Latest entries at all gates</Text>
                 </div>
               </div>
               <Button type="link" size="small" onClick={() => navigate("/dashboard/security/gate-logs")}>
@@ -205,13 +205,13 @@ const SecurityDashboard = () => {
         <Col xs={24} lg={10}>
           <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="u-row">
                 <div style={iconWell("var(--danger-hover)", 32)}><AlertOutlined style={{ fontSize: 14 }} /></div>
                 <div>
                   <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                     Active Alerts
                   </Text>
-                  <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>Unresolved emergencies</Text>
+                  <Text className="u-meta-xs">Unresolved emergencies</Text>
                 </div>
               </div>
               <Button type="link" size="small" onClick={() => navigate("/dashboard/security/alerts")}>
@@ -226,7 +226,7 @@ const SecurityDashboard = () => {
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No active alerts" />
               </div>
             ) : (
-              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+              <Space direction="vertical" size={10} className="u-full">
                 {activeAlerts.slice(0, 6).map((a) => (
                   <div key={a._id} style={{
                     display: "flex", alignItems: "center", gap: 10,
@@ -235,11 +235,11 @@ const SecurityDashboard = () => {
                     border: `1px solid ${severityColor(a.severity)}30`,
                   }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: severityColor(a.severity), flexShrink: 0 }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="u-grow-min">
                       <Text strong style={{ fontSize: 12, color: "var(--text-primary)", display: "block" }}>
                         {a.type}
                       </Text>
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      <Text className="u-meta-xs">
                         {a.location || "Location not set"}
                         {a.raisedAt ? ` · ${new Date(a.raisedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
                       </Text>

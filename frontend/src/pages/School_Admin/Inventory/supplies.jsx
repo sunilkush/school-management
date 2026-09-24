@@ -29,7 +29,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -122,7 +122,7 @@ const Supplies = () => {
   );
 
   const columns = [
-    { title: "Supply Name", dataIndex: "name", key: "name", render: (v) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v}</span> },
+    { title: "Supply Name", dataIndex: "name", key: "name", render: (v) => <span className="u-strong">{v}</span> },
     { title: "Category", dataIndex: "category", key: "category" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
     { title: "Allocated", dataIndex: "allocated", key: "allocated" },
@@ -171,7 +171,7 @@ const Supplies = () => {
         }
       />
       <div className="page-wrapper">
-        {error ? <Alert style={{ marginBottom: 16 }} type="error" showIcon message={error} /> : null}
+        {error ? <Alert className="u-mb-4" type="error" showIcon message={error} /> : null}
 
         <div style={{ ...statGrid(180), marginTop: 0 }}>
           <StatCard icon={<AppstoreOutlined />} label="Total Supplies" value={totalSupplies} color="var(--primary)" />
@@ -222,7 +222,7 @@ const Supplies = () => {
               </Select>
             </Form.Item>
             <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}>
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
             <Form.Item label="Allocated" name="allocated" initialValue={0} dependencies={["quantity"]}
               rules={[({ getFieldValue }) => ({ validator(_, value) {
@@ -232,13 +232,13 @@ const Supplies = () => {
                 return Promise.reject(new Error("Allocated cannot be greater than quantity"));
               } })]}
             >
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
             <Form.Item label="Unit" name="unit" rules={[{ required: true, message: "Enter unit" }]}>
               <Input placeholder="pcs / box / bottle" />
             </Form.Item>
             <Form.Item label="Low Stock Alert" name="minThreshold" initialValue={10}>
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
             <Form.Item style={{ textAlign: "right", marginBottom: 0 }}>
               <Space>

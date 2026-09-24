@@ -44,7 +44,7 @@ const RazorpayButton = ({ invoiceId, invoiceNumber, amount, onSuccess }) => {
         prefill: {
           name: orderRes.schoolName || "",
         },
-        theme: { color: "#2563EB" },
+        theme: { color: "var(--primary)" },
         modal: {
           ondismiss: () => setLoading(false),
         },

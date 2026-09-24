@@ -18,7 +18,7 @@ const renderDiff = (oldData = {}, newData = {}) => {
       <div key={k} style={{ marginBottom: 6 }}>
         <div style={{ fontSize: 13, color: "var(--text)", fontWeight: 600 }}>{k}</div>
         <div style={{ fontSize: 12 }}>
-          <span style={{ color: "var(--text-muted)" }}>Old: </span>
+          <span className="u-muted">Old: </span>
           <span style={{ textDecoration: "line-through", marginRight: 12 }}>{typeof o === "object" ? JSON.stringify(o) : String(o)}</span>
           <span style={{ color: "var(--primary)" }}>New: </span>
           <span>{typeof n === "object" ? JSON.stringify(n) : String(n)}</span>
@@ -48,7 +48,7 @@ const PlanLogs = ({ planId }) => {
             <Button icon={<ArrowLeftOutlined />}>Back to Plans</Button>
           </Link>
         )}</div>
-        <h2 style={{ margin: 0 }}>Plan Update Logs</h2>
+        <h2 className="u-m-0">Plan Update Logs</h2>
       </div>
 
       <Card>
@@ -72,11 +72,11 @@ const PlanLogs = ({ planId }) => {
                   </div>
                 </div>
 
-                <div style={{ marginTop: 8 }}>
+                <div className="u-mt-2">
                   {renderDiff(log.oldData, log.newData)}
                 </div>
 
-                <div style={{ marginTop: 12 }}>
+                <div className="u-mt-3">
                   <Tag color="gold">Changed at {dayjs(log.createdAt).format("DD-MMM-YYYY HH:mm")}</Tag>
                    {typeof log.newData?.isActive === "boolean" && (
                     <Tag color="green">{log.newData.isActive ? "Active" : "Inactive"}</Tag>

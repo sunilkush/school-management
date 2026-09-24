@@ -313,7 +313,7 @@ const handleSubmit = async () => {
                 <Select
                   value={q.questionId}
                   onChange={(val) => handleQuestionSelect(index, val)}
-                  style={{ width: "100%" }}
+                  className="u-full"
                   showSearch
                   optionFilterProp="children"
                 >
@@ -329,7 +329,7 @@ const handleSubmit = async () => {
                 <InputNumber
                   value={q.marks}
                   disabled
-                  style={{ width: "100%" }}
+                  className="u-full"
                 />
               </Col>
 

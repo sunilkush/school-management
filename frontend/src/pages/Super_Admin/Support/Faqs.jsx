@@ -128,7 +128,7 @@ const Faqs = () => {
           items={items.map((f, i) => ({
             key: f._id || String(i),
             label: (
-              <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>
+              <span className="u-label">
                 {f.question}
               </span>
             ),
@@ -238,7 +238,7 @@ const Faqs = () => {
       />
 
       {/* Toolbar */}
-      <div className="toolbar-row" style={{ marginTop: 20 }}>
+      <div className="toolbar-row u-mt-5">
         <Search
           placeholder="Search FAQs by question..."
           allowClear
@@ -251,7 +251,7 @@ const Faqs = () => {
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
-        style={{ marginBottom: 16 }}
+        className="u-mb-4"
         items={CATEGORIES.map((c) => ({
           key: c.key,
           label: (
@@ -303,7 +303,7 @@ const Faqs = () => {
         {loading ? (
           <div style={{ padding: 24 }}>
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} active paragraph={{ rows: 1 }} style={{ marginBottom: 16 }} />
+              <Skeleton key={i} active paragraph={{ rows: 1 }} className="u-mb-4" />
             ))}
           </div>
         ) : grouped.length === 0 ? (
@@ -311,7 +311,7 @@ const Faqs = () => {
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <span style={{ color: "var(--text-muted)" }}>
+                <span className="u-muted">
                   {search ? `No FAQs found matching "${search}"` : "No FAQs in this category yet"}
                 </span>
               }
@@ -343,7 +343,7 @@ const Faqs = () => {
         footer={null}
         width={560}
       >
-        <Form form={form} layout="vertical" onFinish={handleSave} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleSave} className="u-mt-2">
           <Form.Item
             name="question"
             label="Question"
@@ -362,7 +362,7 @@ const Faqs = () => {
             <Form.Item
               name="category"
               label="Category"
-              style={{ flex: 1 }}
+              className="u-grow"
               rules={[{ required: true, message: "Please select a category" }]}
             >
               <Select placeholder="Select category">
@@ -374,7 +374,7 @@ const Faqs = () => {
               </Select>
             </Form.Item>
             <Form.Item name="order" label="Display Order" style={{ width: 140 }}>
-              <InputNumber min={0} style={{ width: "100%" }} placeholder="0" />
+              <InputNumber min={0} className="u-full" placeholder="0" />
             </Form.Item>
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>

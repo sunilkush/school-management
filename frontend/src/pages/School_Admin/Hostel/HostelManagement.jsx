@@ -70,7 +70,7 @@ const OccupancyBar = ({ occupied, capacity }) => {
         size={["100%", 6]}
         strokeColor={color}
         trailColor={C.border}
-        style={{ margin: 0 }}
+        className="u-m-0"
       />
     </div>
   );
@@ -216,7 +216,7 @@ const HostelManagement = () => {
       title: "Room",
       dataIndex: "roomNumber",
       render: (v) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 38, height: 38, borderRadius: 10, flexShrink: 0,
             background: C.primaryLighter, border: "1.5px solid " + C.primaryLight,
@@ -312,7 +312,7 @@ const HostelManagement = () => {
       render: (_, r) => {
         const isFull = (r.students?.length || 0) >= Number(r.capacity || 0);
         return (
-          <Space direction="vertical" size={5} style={{ width: "100%" }}>
+          <Space direction="vertical" size={5} className="u-full">
             <Button
               size="small"
               icon={<UserAddOutlined />}
@@ -517,7 +517,7 @@ const HostelManagement = () => {
         ]}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" onFinish={handleSaveRoom} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleSaveRoom} className="u-mt-2">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item
               label="Room Number"
@@ -534,7 +534,7 @@ const HostelManagement = () => {
               name="capacity"
               rules={[{ required: true, message: "Enter capacity" }]}
             >
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 4" addonAfter="beds" />
+              <InputNumber min={1} className="u-full" placeholder="e.g. 4" addonAfter="beds" />
             </Form.Item>
           </div>
         </Form>

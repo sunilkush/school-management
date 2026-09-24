@@ -232,7 +232,7 @@ const Profile = () => {
             </div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>{profileForm.name || roleName || "—"}</div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <div className="u-meta-md">
                 {isEmployee && user?.designation?.title ? `${user.designation.title} · ` : ""}{profileForm.email || "No email"}
               </div>
               <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "var(--success-light)", color: "var(--success)", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
@@ -265,7 +265,7 @@ const Profile = () => {
 
         <div className="page-card" style={{ padding: "20px 24px", gridColumn: "span 2" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+            <div className="u-title">
               {isStudent ? "Student Profile" : isEmployee ? "Employee Profile" : "My Profile"}
             </div>
             <button type="submit" disabled={saving} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "var(--primary)", color: "#fff", border: "none", cursor: saving ? "not-allowed" : "pointer", fontSize: 13, opacity: saving ? 0.6 : 1 }}>
@@ -344,13 +344,13 @@ const Profile = () => {
                   <Building2 style={{ width: 14, height: 14 }} /> {isEmployee ? "Work Info" : "School"}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{user?.school?.name || "—"}</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{roleName}</div>
+                  <div className="u-title-sm">{user?.school?.name || "—"}</div>
+                  <div className="u-meta">{roleName}</div>
                   {isEmployee && user?.department?.name && (
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{user.department.name}</div>
+                    <div className="u-meta">{user.department.name}</div>
                   )}
                   {isEmployee && user?.joiningDate && (
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    <div className="u-meta">
                       Joined: {new Date(user.joiningDate).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" })}
                     </div>
                   )}
@@ -421,7 +421,7 @@ const Profile = () => {
 /* ── Sub-components ── */
 
 const Section = ({ title, children }) => (
-  <div style={{ marginBottom: 20 }}>
+  <div className="u-mb-5">
     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>{title}</div>
     {children}
   </div>
@@ -442,7 +442,7 @@ const fieldStyle = {
 
 const InputField = ({ icon, label, name, value, onChange, type = "text", required = false }) => (
   <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+    <span className="u-meta-xs">{label}</span>
     <div style={fieldStyle}>
       {icon && <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{icon}</span>}
       <input type={type} name={name} value={value || ""} onChange={onChange} required={required}
@@ -453,7 +453,7 @@ const InputField = ({ icon, label, name, value, onChange, type = "text", require
 
 const ReadField = ({ icon, label, value }) => (
   <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+    <span className="u-meta-xs">{label}</span>
     <div style={{ ...fieldStyle, background: "var(--surface-soft)", cursor: "default" }}>
       {icon && <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{icon}</span>}
       <span style={{ flex: 1, fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{value || "—"}</span>
@@ -463,7 +463,7 @@ const ReadField = ({ icon, label, value }) => (
 
 const SelectField = ({ label, name, value, onChange, options }) => (
   <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+    <span className="u-meta-xs">{label}</span>
     <div style={fieldStyle}>
       <select name={name} value={value || ""} onChange={onChange}
         style={{ flex: 1, border: "none", outline: "none", fontSize: 13, background: "transparent", color: "var(--text-primary)" }}>
@@ -478,7 +478,7 @@ const PwdField = ({ label, value, onChange, placeholder }) => {
   const [show, setShow] = useState(false);
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+      <span className="u-meta-xs">{label}</span>
       <div style={{ ...fieldStyle, paddingRight: 8 }}>
         <Lock style={{ width: 14, height: 14, color: "var(--text-muted)", flexShrink: 0 }} />
         <input type={show ? "text" : "password"} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)}

@@ -304,9 +304,9 @@ const Classes = () => {
         <StatRow classes={stats.classes} sections={stats.sections} subjects={stats.subjects} />
 
         {/* ── Toolbar ── */}
-        <div style={{ marginBottom: 16 }}>
+        <div className="u-mb-4">
           <Input
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)", fontSize: 13 }} />}
+            prefix={<SearchOutlined className="u-meta-md" />}
             placeholder="Search class…"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
@@ -352,7 +352,7 @@ const Classes = () => {
           destroyOnClose
           width={420}
           title={
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="u-row">
               <div style={{
                 width: 30, height: 30, borderRadius: 8,
                 background: "rgba(var(--purple-rgb), 0.1)",
@@ -395,7 +395,7 @@ const Classes = () => {
                 Section
               </Text>
               <Select
-                style={{ width: "100%" }}
+                className="u-full"
                 placeholder="Select section"
                 value={selectedSection}
                 onChange={(val) => { setSelectedSection(val); setSelectedSubject(null); }}
@@ -412,7 +412,7 @@ const Classes = () => {
                 Subject
               </Text>
               <Select
-                style={{ width: "100%" }}
+                className="u-full"
                 placeholder="Select subject"
                 value={selectedSubject}
                 onChange={setSelectedSubject}
@@ -435,7 +435,7 @@ const Classes = () => {
                 Teacher
               </Text>
               <Select
-                style={{ width: "100%" }}
+                className="u-full"
                 showSearch
                 placeholder="Search & select teacher…"
                 value={selectedTeacher}

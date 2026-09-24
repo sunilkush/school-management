@@ -333,8 +333,8 @@ const SchoolBoards = () => {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
+                    <div className="u-grow-min">
+                      <div className="u-title">
                         {titleCase(board.name)}
                       </div>
                       {board.code && (
@@ -394,7 +394,7 @@ const SchoolBoards = () => {
           editing?._id ? editing.name : "Its name, its short code, and whether schools can follow it",
         )}
       >
-        <Form form={form} layout="vertical" onFinish={save} style={{ marginTop: 16 }} requiredMark={false}>
+        <Form form={form} layout="vertical" onFinish={save} className="u-mt-4" requiredMark={false}>
           <Form.Item name="createdByRole" hidden><Input /></Form.Item>
 
           <Form.Item

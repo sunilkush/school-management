@@ -51,7 +51,7 @@ const StudentGrades = () => {
       <div className="page-card" style={{ margin: "16px 0" }}>
         <div style={{ padding: "16px 20px" }}>
           {summary && (
-            <Space wrap style={{ marginBottom: 16 }}>
+            <Space wrap className="u-mb-4">
               <Tag color="blue">Total Exams: {summary.total}</Tag>
               <Tag color="green">Passed: {summary.passCount}</Tag>
               <Tag color="red">Failed: {summary.failCount}</Tag>
@@ -67,7 +67,7 @@ const StudentGrades = () => {
                 key: grade._id,
                 label: `${grade.examId?.title || "Exam"} • ${grade.percentage}% • Grade ${grade.grade}`,
                 children: (
-                  <Space direction="vertical" style={{ width: "100%" }}>
+                  <Space direction="vertical" className="u-full">
                     <Table
                       className="grades-tbl data-table"
                       rowKey={(row) => `${row.subjectId || row.subjectName}`}

@@ -42,7 +42,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -147,7 +147,7 @@ const TeacherTimetable = () => {
         marginBottom: 12,
       }}
     >
-      <Space direction="vertical" size={8} style={{ width: "100%" }}>
+      <Space direction="vertical" size={8} className="u-full">
         <div
           style={{
             display: "flex",
@@ -198,7 +198,7 @@ const TeacherTimetable = () => {
 
 
         <div className="section-panel">
-          <Space direction="vertical" size={12} style={{ width: "100%" }}>
+          <Space direction="vertical" size={12} className="u-full">
             <Alert
               type="info"
               showIcon

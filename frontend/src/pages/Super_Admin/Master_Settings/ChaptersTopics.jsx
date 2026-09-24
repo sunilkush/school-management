@@ -361,7 +361,7 @@ const ChaptersTopics = () => {
             />
           </div>
         ) : (
-          <div style={{ color: "var(--text-muted)", fontSize: 13 }}>This board has no classes yet.</div>
+          <div className="u-meta-md">This board has no classes yet.</div>
         )}
 
         <div style={{ height: 16 }} />
@@ -420,7 +420,7 @@ const ChaptersTopics = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Add chapter</Button>
           </div>
 
-          <div style={{ marginTop: 12 }}>
+          <div className="u-mt-3">
             {loadingClass ? (
               <Skeleton active paragraph={{ rows: 6 }} />
             ) : !shownChapters.length ? (
@@ -455,7 +455,7 @@ const ChaptersTopics = () => {
                       </button>
                       {book && (
                         <Tooltip title={`Chapter ${ch.bookChapterNo} of ${book.title}`}>
-                          <Tag color="blue" style={{ margin: 0 }}>{book.title} · {ch.bookChapterNo}</Tag>
+                          <Tag color="blue" className="u-m-0">{book.title} · {ch.bookChapterNo}</Tag>
                         </Tooltip>
                       )}
                       {ch.pdfUrl && (
@@ -492,7 +492,7 @@ const ChaptersTopics = () => {
           {/* ── Textbook chapters still waiting for a title ── */}
           {unnamed.length > 0 && !loadingClass && (
             <div style={{ marginTop: 20, border: "1px dashed var(--warning)", borderRadius: 14, padding: 16, background: "color-mix(in srgb, var(--warning) 6%, transparent)" }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+              <div className="u-title">
                 {unnamed.length} textbook chapter{unnamed.length === 1 ? "" : "s"} need a name
               </div>
               <div style={{ fontSize: 13, color: "var(--text-secondary)", margin: "2px 0 12px" }}>
@@ -536,7 +536,7 @@ const ChaptersTopics = () => {
         onCancel={() => setModal(null)}
         destroyOnHidden
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 12 }}>
+        <Form form={form} layout="vertical" className="u-mt-3">
           <div style={{ display: "grid", gridTemplateColumns: "110px 1fr", gap: 12 }}>
             <Form.Item
               name="chapterNo"
@@ -550,7 +550,7 @@ const ChaptersTopics = () => {
                 },
               ]}
             >
-              <InputNumber min={1} max={999} style={{ width: "100%" }} />
+              <InputNumber min={1} max={999} className="u-full" />
             </Form.Item>
             <Form.Item name="name" label="Chapter name" rules={[{ required: true, whitespace: true, message: "Enter the chapter name" }]}>
               <Input autoFocus placeholder="e.g. Chemical Reactions and Equations" />

@@ -42,7 +42,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -108,7 +108,7 @@ const Permissions = () => {
           <div style={iconWell("var(--primary)", 34)}>
             <LockOutlined />
           </div>
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{text}</span>
+          <span className="u-strong-bold">{text}</span>
         </Space>
       ),
     },
@@ -233,7 +233,7 @@ const Permissions = () => {
       title: "Module",
       dataIndex: "module",
       key: "module",
-      render: (value) => <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{value}</span>,
+      render: (value) => <span className="u-strong-bold">{value}</span>,
     },
     {
       title: "Added Actions",
@@ -247,7 +247,7 @@ const Permissions = () => {
             ))}
           </Space>
         ) : (
-          <span style={{ color: "var(--text-muted)" }}>None</span>
+          <span className="u-muted">None</span>
         ),
     },
     {
@@ -262,7 +262,7 @@ const Permissions = () => {
             ))}
           </Space>
         ) : (
-          <span style={{ color: "var(--text-muted)" }}>None</span>
+          <span className="u-muted">None</span>
         ),
     },
     {
@@ -322,7 +322,7 @@ const Permissions = () => {
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
           <SafetyCertificateOutlined style={{ color: "var(--primary)" }} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Role Permission Matrix</span>
+          <span className="u-title-sm">Role Permission Matrix</span>
           <span style={pill("var(--primary)")}>{dataSource.length} modules</span>
         </div>
 
@@ -348,10 +348,10 @@ const Permissions = () => {
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
           <DiffOutlined style={{ color: "var(--primary)" }} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Permission Diff Viewer</span>
+          <span className="u-title-sm">Permission Diff Viewer</span>
         </div>
 
-        <span style={{ color: "var(--text-muted)" }}>
+        <span className="u-muted">
           Do roles compare karke added/removed actions aur high-risk changes dekhein.
         </span>
 
@@ -387,7 +387,7 @@ const Permissions = () => {
           <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
               <WarningOutlined style={{ color: "var(--warning)" }} />
-              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>High-Risk Approval Queue</span>
+              <span className="u-title-sm">High-Risk Approval Queue</span>
               <span style={pill("var(--warning-hover)", "var(--warning-light)")}>{approvalQueue.length}</span>
             </div>
 
@@ -414,7 +414,7 @@ const Permissions = () => {
                   <List.Item.Meta
                     title={
                       <Space>
-                        <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{item.module}</span>
+                        <span className="u-strong-bold">{item.module}</span>
                         <span style={item.status === "Approved" ? pill("var(--success-hover)", "var(--success-light)") : pill("var(--warning-hover)", "var(--warning-light)")}>
                           {item.status}
                         </span>
@@ -436,7 +436,7 @@ const Permissions = () => {
           <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
               <AuditOutlined style={{ color: "var(--success)" }} />
-              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Audit Trail</span>
+              <span className="u-title-sm">Audit Trail</span>
               <span style={pill("var(--success-hover)", "var(--success-light)")}>{auditTrail.length}</span>
             </div>
 
@@ -446,7 +446,7 @@ const Permissions = () => {
               renderItem={(item) => (
                 <List.Item>
                   <List.Item.Meta
-                    title={<span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{item.message}</span>}
+                    title={<span className="u-strong-bold">{item.message}</span>}
                     description={new Date(item.timestamp).toLocaleString()}
                   />
                 </List.Item>

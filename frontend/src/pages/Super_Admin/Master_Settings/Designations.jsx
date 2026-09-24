@@ -73,11 +73,11 @@ function StatusBadge({ status }) {
 
 function DesignationCell({ title }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <div className="u-row">
       <div style={iconWell("var(--primary)", 32)}>
         <IdcardOutlined style={{ fontSize: 14 }} />
       </div>
-      <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{title}</span>
+      <span className="u-label">{title}</span>
     </div>
   );
 }
@@ -206,7 +206,7 @@ export default function Designations() {
       title: "#",
       width: 52,
       render: (_, __, i) => (
-        <span style={{ color: "var(--text-muted)", fontSize: 12 }}>{i + 1}</span>
+        <span className="u-meta">{i + 1}</span>
       ),
     },
     {
@@ -218,7 +218,7 @@ export default function Designations() {
       key: "department",
       render: (_, record) => (record.departmentId?.name
         ? <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{record.departmentId.name}</span>
-        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>),
+        : <span className="u-meta">—</span>),
     },
     {
       title: "Level",
@@ -232,9 +232,9 @@ export default function Designations() {
       ellipsis: true,
       render: (v) =>
         v ? (
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v}</span>
+          <span className="u-meta">{v}</span>
         ) : (
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+          <span className="u-meta">—</span>
         ),
     },
     {
@@ -358,7 +358,7 @@ export default function Designations() {
         >
           <Space wrap>
             <Input
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search designations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -397,7 +397,7 @@ export default function Designations() {
               <Option value="inactive">Inactive</Option>
             </Select>
           </Space>
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <span className="u-meta">
             Showing <strong>{filtered.length}</strong> of <strong>{total}</strong>
           </span>
         </div>
@@ -444,7 +444,7 @@ export default function Designations() {
           layout="vertical"
           form={form}
           onFinish={onFinish}
-          style={{ marginTop: 16 }}
+          className="u-mt-4"
           initialValues={{ status: "active", level: "Mid" }}
         >
           <Form.Item

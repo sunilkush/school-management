@@ -252,7 +252,7 @@ export default function HealthRecordsPage() {
       render: (v, row) => (
         <div>
           <div style={{ fontWeight: 600 }}>{v || "—"}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{[row.className, row.sectionName].filter(Boolean).join(" - ")}</div>
+          <div className="u-meta-xs">{[row.className, row.sectionName].filter(Boolean).join(" - ")}</div>
         </div>
       ),
     }] : []),
@@ -292,18 +292,18 @@ export default function HealthRecordsPage() {
         )}
 
         {/* ── Student picker ─────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
-          <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
+          <Flex align="center" gap={10} className="u-mb-4">
             <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Select Student</Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>View/edit a health profile and record visits</Text>
+              <Text className="u-meta">View/edit a health profile and record visits</Text>
             </div>
           </Flex>
           <Row gutter={[12, 12]}>
             <Col xs={24} sm={12} md={6}>
               <Select
-                placeholder="Select Class" style={{ width: "100%" }}
+                placeholder="Select Class" className="u-full"
                 value={selectedClass} onChange={setSelectedClass}
                 options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))}
                 showSearch optionFilterProp="label" disabled={!canFilter} size="large"
@@ -311,7 +311,7 @@ export default function HealthRecordsPage() {
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Select
-                placeholder="Select Section" style={{ width: "100%" }}
+                placeholder="Select Section" className="u-full"
                 value={selectedSection} onChange={setSelectedSection}
                 options={sectionOptions} showSearch optionFilterProp="label"
                 disabled={!selectedClass} size="large"
@@ -319,7 +319,7 @@ export default function HealthRecordsPage() {
             </Col>
             <Col xs={24} sm={24} md={12}>
               <Select
-                placeholder="Select Student" style={{ width: "100%" }}
+                placeholder="Select Student" className="u-full"
                 value={studentId} onChange={setStudentId}
                 options={studentOptions} showSearch optionFilterProp="label"
                 disabled={!selectedSection} loading={rollLoading} size="large"
@@ -331,7 +331,7 @@ export default function HealthRecordsPage() {
         {studentId && (
           <>
             {/* ── Health Profile ─────────────────────────────── */}
-            <div className="section-panel" style={{ marginBottom: 16 }}>
+            <div className="section-panel u-mb-4">
               <Flex align="center" justify="space-between" style={{ marginBottom: 14 }}>
                 <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>Health Profile</Text>
                 <Button type="primary" icon={<SaveOutlined />} loading={savingProfile} onClick={handleSaveProfile}>
@@ -345,32 +345,32 @@ export default function HealthRecordsPage() {
                 <>
                   <Row gutter={[12, 12]}>
                     <Col xs={24} sm={8}>
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>BLOOD GROUP</Text>
+                      <Text className="u-meta-xs">BLOOD GROUP</Text>
                       <Input value={profileForm.bloodGroup} onChange={(e) => setProfileForm((p) => ({ ...p, bloodGroup: e.target.value }))} placeholder="e.g. O+" />
                     </Col>
                     <Col xs={24} sm={8}>
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>HEIGHT (cm)</Text>
-                      <InputNumber style={{ width: "100%" }} value={profileForm.height} onChange={(v) => setProfileForm((p) => ({ ...p, height: v }))} />
+                      <Text className="u-meta-xs">HEIGHT (cm)</Text>
+                      <InputNumber className="u-full" value={profileForm.height} onChange={(v) => setProfileForm((p) => ({ ...p, height: v }))} />
                     </Col>
                     <Col xs={24} sm={8}>
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>WEIGHT (kg)</Text>
-                      <InputNumber style={{ width: "100%" }} value={profileForm.weight} onChange={(v) => setProfileForm((p) => ({ ...p, weight: v }))} />
+                      <Text className="u-meta-xs">WEIGHT (kg)</Text>
+                      <InputNumber className="u-full" value={profileForm.weight} onChange={(v) => setProfileForm((p) => ({ ...p, weight: v }))} />
                     </Col>
                   </Row>
 
-                  <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+                  <Row gutter={[12, 12]} className="u-mt-3">
                     <Col xs={24} sm={12}>
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>ALLERGIES</Text>
+                      <Text className="u-meta-xs">ALLERGIES</Text>
                       <Select
-                        mode="tags" style={{ width: "100%" }} value={profileForm.allergies}
+                        mode="tags" className="u-full" value={profileForm.allergies}
                         onChange={(v) => setProfileForm((p) => ({ ...p, allergies: v }))}
                         placeholder="Type and press enter" tokenSeparators={[","]}
                       />
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>CHRONIC CONDITIONS</Text>
+                      <Text className="u-meta-xs">CHRONIC CONDITIONS</Text>
                       <Select
-                        mode="tags" style={{ width: "100%" }} value={profileForm.chronicConditions}
+                        mode="tags" className="u-full" value={profileForm.chronicConditions}
                         onChange={(v) => setProfileForm((p) => ({ ...p, chronicConditions: v }))}
                         placeholder="Type and press enter" tokenSeparators={[","]}
                       />
@@ -378,15 +378,15 @@ export default function HealthRecordsPage() {
                   </Row>
 
                   {/* Medications */}
-                  <div style={{ marginTop: 16 }}>
+                  <div className="u-mt-4">
                     <Flex align="center" justify="space-between">
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>MEDICATIONS</Text>
+                      <Text className="u-meta-xs">MEDICATIONS</Text>
                       <Button size="small" icon={<PlusOutlined />} onClick={() => setProfileForm((p) => ({ ...p, medications: [...p.medications, { name: "", dosage: "", notes: "" }] }))}>
                         Add
                       </Button>
                     </Flex>
                     {profileForm.medications.map((m, idx) => (
-                      <Row gutter={[8, 8]} key={idx} style={{ marginTop: 8 }}>
+                      <Row gutter={[8, 8]} key={idx} className="u-mt-2">
                         <Col xs={7}><Input placeholder="Name" value={m.name} onChange={(e) => updateMedication(idx, "name", e.target.value)} /></Col>
                         <Col xs={6}><Input placeholder="Dosage" value={m.dosage} onChange={(e) => updateMedication(idx, "dosage", e.target.value)} /></Col>
                         <Col xs={9}><Input placeholder="Notes" value={m.notes} onChange={(e) => updateMedication(idx, "notes", e.target.value)} /></Col>
@@ -398,18 +398,18 @@ export default function HealthRecordsPage() {
                   </div>
 
                   {/* Vaccinations */}
-                  <div style={{ marginTop: 16 }}>
+                  <div className="u-mt-4">
                     <Flex align="center" justify="space-between">
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>VACCINATIONS</Text>
+                      <Text className="u-meta-xs">VACCINATIONS</Text>
                       <Button size="small" icon={<PlusOutlined />} onClick={() => setProfileForm((p) => ({ ...p, vaccinations: [...p.vaccinations, { name: "", date: null, nextDueDate: null }] }))}>
                         Add
                       </Button>
                     </Flex>
                     {profileForm.vaccinations.map((v, idx) => (
-                      <Row gutter={[8, 8]} key={idx} style={{ marginTop: 8 }}>
+                      <Row gutter={[8, 8]} key={idx} className="u-mt-2">
                         <Col xs={8}><Input placeholder="Vaccine name" value={v.name} onChange={(e) => updateVaccination(idx, "name", e.target.value)} /></Col>
-                        <Col xs={7}><DatePicker style={{ width: "100%" }} placeholder="Date given" value={v.date ? dayjs(v.date) : null} onChange={(d) => updateVaccination(idx, "date", d)} /></Col>
-                        <Col xs={7}><DatePicker style={{ width: "100%" }} placeholder="Next due" value={v.nextDueDate ? dayjs(v.nextDueDate) : null} onChange={(d) => updateVaccination(idx, "nextDueDate", d)} /></Col>
+                        <Col xs={7}><DatePicker className="u-full" placeholder="Date given" value={v.date ? dayjs(v.date) : null} onChange={(d) => updateVaccination(idx, "date", d)} /></Col>
+                        <Col xs={7}><DatePicker className="u-full" placeholder="Next due" value={v.nextDueDate ? dayjs(v.nextDueDate) : null} onChange={(d) => updateVaccination(idx, "nextDueDate", d)} /></Col>
                         <Col xs={2}>
                           <Button danger icon={<DeleteOutlined />} onClick={() => setProfileForm((p) => ({ ...p, vaccinations: p.vaccinations.filter((_, i) => i !== idx) }))} />
                         </Col>
@@ -417,9 +417,9 @@ export default function HealthRecordsPage() {
                     ))}
                   </div>
 
-                  <Row gutter={[12, 12]} style={{ marginTop: 16 }}>
+                  <Row gutter={[12, 12]} className="u-mt-4">
                     <Col xs={24} md={12}>
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>EMERGENCY CONTACT</Text>
+                      <Text className="u-meta-xs">EMERGENCY CONTACT</Text>
                       <Row gutter={[6, 6]}>
                         <Col span={8}><Input placeholder="Name" value={profileForm.emergencyContact.name} onChange={(e) => updateEmergencyContact("name", e.target.value)} /></Col>
                         <Col span={8}><Input placeholder="Phone" value={profileForm.emergencyContact.phone} onChange={(e) => updateEmergencyContact("phone", e.target.value)} /></Col>
@@ -427,7 +427,7 @@ export default function HealthRecordsPage() {
                       </Row>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>DOCTOR / CLINIC CONTACT</Text>
+                      <Text className="u-meta-xs">DOCTOR / CLINIC CONTACT</Text>
                       <Row gutter={[6, 6]}>
                         <Col span={8}><Input placeholder="Doctor Name" value={profileForm.doctorContact.name} onChange={(e) => updateDoctorContact("name", e.target.value)} /></Col>
                         <Col span={8}><Input placeholder="Phone" value={profileForm.doctorContact.phone} onChange={(e) => updateDoctorContact("phone", e.target.value)} /></Col>
@@ -436,8 +436,8 @@ export default function HealthRecordsPage() {
                     </Col>
                   </Row>
 
-                  <div style={{ marginTop: 16 }}>
-                    <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>NOTES</Text>
+                  <div className="u-mt-4">
+                    <Text className="u-meta-xs">NOTES</Text>
                     <TextArea rows={2} value={profileForm.notes} onChange={(e) => setProfileForm((p) => ({ ...p, notes: e.target.value }))} />
                   </div>
                 </>
@@ -447,7 +447,7 @@ export default function HealthRecordsPage() {
         )}
 
         {/* ── Visit Log ────────────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <Flex align="center" justify="space-between" wrap="wrap" gap={10} style={{ marginBottom: 14 }}>
             <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
               {showAllStudents || !studentId ? "All Health Visits" : "Visit Log"}
@@ -467,14 +467,14 @@ export default function HealthRecordsPage() {
           <Row gutter={[12, 12]} style={{ marginBottom: 14 }}>
             <Col xs={24} sm={8} md={6}>
               <Select
-                placeholder="Filter by Status" allowClear style={{ width: "100%" }}
+                placeholder="Filter by Status" allowClear className="u-full"
                 value={filterStatus} onChange={setFilterStatus}
                 options={[{ value: "Open", label: "Open" }, { value: "Resolved", label: "Resolved" }]}
               />
             </Col>
             <Col xs={24} sm={8} md={6}>
               <Select
-                placeholder="Filter by Severity" allowClear style={{ width: "100%" }}
+                placeholder="Filter by Severity" allowClear className="u-full"
                 value={filterSeverity} onChange={setFilterSeverity}
                 options={[{ value: "Minor", label: "Minor" }, { value: "Moderate", label: "Moderate" }, { value: "Severe", label: "Severe" }]}
               />
@@ -518,26 +518,26 @@ export default function HealthRecordsPage() {
         okText="Record Visit"
         title="Record New Health Visit"
       >
-        <Space direction="vertical" style={{ width: "100%" }} size={12}>
+        <Space direction="vertical" className="u-full" size={12}>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>SYMPTOMS / REASON *</Text>
+            <Text className="u-meta-xs">SYMPTOMS / REASON *</Text>
             <TextArea rows={2} value={symptoms} onChange={(e) => setSymptoms(e.target.value)} placeholder="e.g. Fever, headache" />
           </div>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>SEVERITY</Text>
+              <Text className="u-meta-xs">SEVERITY</Text>
               <Select
-                style={{ width: "100%" }} value={severity} onChange={setSeverity}
+                className="u-full" value={severity} onChange={setSeverity}
                 options={["Minor", "Moderate", "Severe"].map((s) => ({ value: s, label: s }))}
               />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>TEMPERATURE (°F)</Text>
-              <InputNumber style={{ width: "100%" }} value={temperature} onChange={setTemperature} />
+              <Text className="u-meta-xs">TEMPERATURE (°F)</Text>
+              <InputNumber className="u-full" value={temperature} onChange={setTemperature} />
             </Col>
           </Row>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>TREATMENT GIVEN</Text>
+            <Text className="u-meta-xs">TREATMENT GIVEN</Text>
             <TextArea rows={2} value={treatmentGiven} onChange={(e) => setTreatmentGiven(e.target.value)} />
           </div>
           <Checkbox checked={referredToHospital} onChange={(e) => setReferredToHospital(e.target.checked)}>
@@ -550,8 +550,8 @@ export default function HealthRecordsPage() {
             Parent has been notified
           </Checkbox>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>FOLLOW-UP DATE (optional)</Text>
-            <DatePicker style={{ width: "100%" }} value={followUpDate} onChange={setFollowUpDate} />
+            <Text className="u-meta-xs">FOLLOW-UP DATE (optional)</Text>
+            <DatePicker className="u-full" value={followUpDate} onChange={setFollowUpDate} />
           </div>
         </Space>
       </Modal>
@@ -566,17 +566,17 @@ export default function HealthRecordsPage() {
         title={`Update Visit — ${editingVisit ? fmtDateTime(editingVisit.visitDate) : ""}`}
       >
         {editingVisit && (
-          <Space direction="vertical" style={{ width: "100%" }} size={12}>
+          <Space direction="vertical" className="u-full" size={12}>
             <Paragraph style={{ fontSize: 13, marginBottom: 0 }}><Text strong>Symptoms:</Text> {editingVisit.symptoms}</Paragraph>
             <div>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>STATUS</Text>
+              <Text className="u-meta-xs">STATUS</Text>
               <Select
-                style={{ width: "100%" }} value={editStatus} onChange={setEditStatus}
+                className="u-full" value={editStatus} onChange={setEditStatus}
                 options={[{ value: "Open", label: "Open" }, { value: "Resolved", label: "Resolved" }]}
               />
             </div>
             <div>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>TREATMENT NOTES</Text>
+              <Text className="u-meta-xs">TREATMENT NOTES</Text>
               <TextArea rows={2} value={editTreatment} onChange={(e) => setEditTreatment(e.target.value)} />
             </div>
             <Checkbox checked={editParentNotified} onChange={(e) => setEditParentNotified(e.target.checked)}>

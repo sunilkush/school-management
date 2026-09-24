@@ -87,12 +87,12 @@ export default function PTMBooking() {
 
       <div className="page-wrapper">
         {/* ── Child picker ─────────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
-          <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
+          <Flex align="center" gap={10} className="u-mb-4">
             <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Select Child</Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>Available PTM slots are shown for your child's class</Text>
+              <Text className="u-meta">Available PTM slots are shown for your child's class</Text>
             </div>
           </Flex>
           <Select
@@ -103,7 +103,7 @@ export default function PTMBooking() {
         </div>
 
         {/* ── Available slots ──────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <Text strong style={{ fontSize: 14, marginBottom: 14, display: "block" }}>Available Slots</Text>
           {!selectedChild ? (
             <Alert type="info" showIcon message="Select a child to see available PTM slots." style={{ borderRadius: 10 }} />
@@ -141,12 +141,12 @@ export default function PTMBooking() {
           {myBookings.filter((b) => b.status === "Booked").length === 0 ? (
             <Empty description="No upcoming PTM bookings" style={{ padding: "30px 0" }} />
           ) : (
-            <Space direction="vertical" style={{ width: "100%" }} size={10}>
+            <Space direction="vertical" className="u-full" size={10}>
               {myBookings.filter((b) => b.status === "Booked").map((b) => (
                 <Flex key={b._id} align="center" justify="space-between" style={{ border: "1px solid var(--border-muted)", borderRadius: 10, padding: "10px 14px" }}>
                   <div>
                     <Text strong>{b.ptmSessionId?.title || "PTM Session"}</Text>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    <div className="u-meta">
                       {fmtDate(b.ptmSessionId?.date)} · {fmtTime(b.startTime)} – {fmtTime(b.endTime)}
                       {b.ptmSessionId?.teacherId?.name && ` · ${b.ptmSessionId.teacherId.name}`}
                     </div>

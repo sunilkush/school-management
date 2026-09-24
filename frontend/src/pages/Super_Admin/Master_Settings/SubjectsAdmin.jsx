@@ -60,7 +60,7 @@ function StatCard({ label, value, icon, accentColor }) {
       <div style={iconWell(accentColor, 42)}>{icon}</div>
       <div>
         <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+        <div className="u-title-lg">{value}</div>
       </div>
     </div>
   );
@@ -69,7 +69,7 @@ function StatCard({ label, value, icon, accentColor }) {
 /* ─── Subject Name Cell ─── */
 function SubjectCell({ name }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div className="u-row">
       <div style={{
         width: 30, height: 30, borderRadius: 8,
         background: "rgba(20,184,166,0.2)",
@@ -78,14 +78,14 @@ function SubjectCell({ name }) {
       }}>
         <BookOutlined style={{ color: "var(--accent)", fontSize: 13 }} />
       </div>
-      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{name}</span>
+      <span className="u-label">{name}</span>
     </div>
   );
 }
 
 /* ─── Type Chip ─── */
 function TypeChip({ type }) {
-  if (!type) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
+  if (!type) return <span className="u-meta">—</span>;
   const map = {
     theory:    { bg: "var(--info-light)", color: "var(--info)", border: "rgba(var(--info-rgb), 0.4)" },
     practical: { bg: "var(--orange-light)", color: "var(--orange)", border: "rgba(var(--orange-rgb), 0.4)" },
@@ -105,7 +105,7 @@ function TypeChip({ type }) {
 
 /* ─── Category Chip ─── */
 function CategoryChip({ category }) {
-  if (!category) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
+  if (!category) return <span className="u-meta">—</span>;
   return (
     <span style={{
       background: "var(--accent-light)", color: "var(--accent-hover)",
@@ -119,7 +119,7 @@ function CategoryChip({ category }) {
 
 /* ─── Marks Cell ─── */
 function MarksCell({ max, pass }) {
-  if (max == null && pass == null) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>;
+  if (max == null && pass == null) return <span className="u-meta">—</span>;
   return (
     <div>
       <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{max ?? "—"}</span>
@@ -373,7 +373,7 @@ const SubjectsAdmin = () => {
         <div className="toolbar-row" style={{ justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid var(--border-muted)", marginBottom: 0 }}>
           <Space wrap>
             <Input
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search subject..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

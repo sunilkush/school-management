@@ -64,7 +64,7 @@ const ACTION_STYLES = {
 const getActionStyle = (action = "") => {
   const lower = action.toLowerCase();
   const key = Object.keys(ACTION_STYLES).find((k) => lower.includes(k));
-  return key ? ACTION_STYLES[key] : { color: "#475569", bg: "var(--surface-soft)" };
+  return key ? ACTION_STYLES[key] : { color: "var(--text-disabled)", bg: "var(--surface-soft)" };
 };
 
 /* ── Component ───────────────────────────────────────────────────── */
@@ -152,7 +152,7 @@ const RoleWorkspace = () => {
             </div>
 
             {/* Name + role */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="u-grow-min">
               <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
                 {userName}
               </div>
@@ -271,7 +271,7 @@ const RoleWorkspace = () => {
                     }}>
                       <Icon size={18} />
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="u-grow-min">
                       <div style={{
                         fontSize:   14,
                         fontWeight: 700,
@@ -312,7 +312,7 @@ const RoleWorkspace = () => {
 
                   {/* Action pills */}
                   {actions.length === 0 ? (
-                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No actions mapped</span>
+                    <span className="u-meta">No actions mapped</span>
                   ) : (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {actions.map((action) => {

@@ -21,7 +21,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -46,7 +46,7 @@ const ClassCard = ({ cls, onView, onAttendance }) => {
             <BookOutlined />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+            <div className="u-title">
               {cls?.name || "Class"}
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
@@ -77,15 +77,15 @@ const ClassCard = ({ cls, onView, onAttendance }) => {
               </span>
             ))
           ) : (
-            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No subjects assigned</span>
+            <span className="u-meta">No subjects assigned</span>
           )}
         </div>
       </div>
 
       {/* Students */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <TeamOutlined style={{ color: "var(--text-muted)" }} />
+        <div className="u-row">
+          <TeamOutlined className="u-muted" />
           <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{cls?.studentCount ?? 0} Students</span>
         </div>
         <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Active</span>
@@ -198,7 +198,7 @@ const AssignedClasses = () => {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             placeholder="Search by class, section or subject"
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             style={{ width: 260 }}
           />
         }

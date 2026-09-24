@@ -53,8 +53,8 @@ export default function ReturnPage() {
       title: "Item", key: "item",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{r.itemName}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.issuedTo}</div>
+          <div className="u-label">{r.itemName}</div>
+          <div className="u-meta-xs">{r.issuedTo}</div>
         </div>
       ),
     },
@@ -62,10 +62,10 @@ export default function ReturnPage() {
       title: "Qty Pending", key: "qty",
       render: (_, r) => (
         <div>
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+          <span className="u-title-sm">
             {r.quantity - (r.returnedQuantity || 0)}
           </span>
-          <span style={{ fontSize: 11, color: "var(--text-muted)" }}> / {r.quantity} {r.unit}</span>
+          <span className="u-meta-xs"> / {r.quantity} {r.unit}</span>
         </div>
       ),
     },
@@ -78,7 +78,7 @@ export default function ReturnPage() {
             {dayjs(r.expectedReturnDate).format("DD MMM YYYY")}
           </span>
         )
-        : <span style={{ color: "var(--text-muted)" }}>—</span>,
+        : <span className="u-muted">—</span>,
     },
     {
       title: "Status", key: "status",
@@ -153,7 +153,7 @@ export default function ReturnPage() {
         destroyOnClose
       >
         {returnModal && (
-          <div style={{ marginTop: 12 }}>
+          <div className="u-mt-3">
             {/* Info summary */}
             <div style={{ background: "var(--surface-soft)", borderRadius: 12, padding: "14px 16px", marginBottom: 20, border: "1px solid var(--border-muted)" }}>
               {[
@@ -163,19 +163,19 @@ export default function ReturnPage() {
                 ["Already Returned", returnModal.returnedQuantity || 0],
               ].map(([k, v]) => (
                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid var(--border-muted)" }}>
-                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{k}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{v}</span>
+                  <span className="u-meta">{k}</span>
+                  <span className="u-label">{v}</span>
                 </div>
               ))}
               <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
-                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Pending</span>
+                <span className="u-meta">Pending</span>
                 <span style={{ fontSize: 15, fontWeight: 800, color: "var(--primary)" }}>{returnModal.quantity - (returnModal.returnedQuantity || 0)} {returnModal.unit}</span>
               </div>
             </div>
 
             <Form form={form} layout="vertical" onFinish={onReturn}>
               <Form.Item label="Return Quantity" name="returnedQuantity" rules={[{ required: true }]}>
-                <InputNumber min={1} max={returnModal.quantity - (returnModal.returnedQuantity || 0)} style={{ width: "100%" }} size="large" />
+                <InputNumber min={1} max={returnModal.quantity - (returnModal.returnedQuantity || 0)} className="u-full" size="large" />
               </Form.Item>
               <Form.Item label="Item Condition" name="condition" initialValue="good">
                 <Select size="large">

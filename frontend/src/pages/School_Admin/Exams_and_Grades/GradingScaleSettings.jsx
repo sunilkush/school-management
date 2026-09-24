@@ -96,7 +96,7 @@ const GradingScaleSettings = () => {
         </div>
       )}
 
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 4 }}>
           Grade Bands
         </div>
@@ -121,7 +121,7 @@ const GradingScaleSettings = () => {
                 value={row.minPercentage}
                 min={0}
                 max={100}
-                style={{ width: "100%" }}
+                className="u-full"
                 addonAfter="%"
                 onChange={(v) => updateRow(row.key, "minPercentage", v ?? 0)}
               />
@@ -154,7 +154,7 @@ const GradingScaleSettings = () => {
             <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
               Preview
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <div className="u-row-wrap">
               {sortedForPreview.map((row, idx) => {
                 const upperBound = idx === 0 ? 100 : sortedForPreview[idx - 1].minPercentage;
                 const rangeLabel = idx === 0 ? `${row.minPercentage}% – 100%` : `${row.minPercentage}% – ${upperBound}%`;

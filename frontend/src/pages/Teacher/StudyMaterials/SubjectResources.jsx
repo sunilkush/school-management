@@ -29,7 +29,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -220,7 +220,7 @@ const SubjectResources = () => {
       render: (_, r) => {
         if (r.fileUrl) return <Button type="link" size="small" href={r.fileUrl} target="_blank" icon={<BookOutlined />}>Download</Button>;
         if (r.externalLink) return <Button type="link" size="small" href={r.externalLink} target="_blank" icon={<LinkOutlined />}>Open Link</Button>;
-        return <span style={{ color: "var(--text-muted)" }}>No file</span>;
+        return <span className="u-muted">No file</span>;
       },
     },
     {

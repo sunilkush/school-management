@@ -190,7 +190,7 @@ export default function CanteenPage() {
             message.error("Payment verification failed. Contact support.");
           }
         },
-        theme: { color: "#2563EB" },
+        theme: { color: "var(--primary)" },
         modal: { ondismiss: () => setRazorpayLoading(false) },
       };
 
@@ -265,26 +265,26 @@ export default function CanteenPage() {
 
   /* ── Student picker (shared) ───────────────────────────── */
   const StudentPicker = (
-    <div className="section-panel" style={{ marginBottom: 16 }}>
-      <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+    <div className="section-panel u-mb-4">
+      <Flex align="center" gap={10} className="u-mb-4">
         <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
         <div>
           <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Select Student</Text>
-          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>Used for wallet top-up and placing orders</Text>
+          <Text className="u-meta">Used for wallet top-up and placing orders</Text>
         </div>
       </Flex>
       <Row gutter={[12, 12]}>
         <Col xs={24} sm={12} md={6}>
-          <Select placeholder="Select Class" style={{ width: "100%" }} value={selectedClass} onChange={setSelectedClass}
+          <Select placeholder="Select Class" className="u-full" value={selectedClass} onChange={setSelectedClass}
             options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))}
             showSearch optionFilterProp="label" disabled={!canFilter} size="large" />
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Select placeholder="Select Section" style={{ width: "100%" }} value={selectedSection} onChange={setSelectedSection}
+          <Select placeholder="Select Section" className="u-full" value={selectedSection} onChange={setSelectedSection}
             options={sectionOptions} showSearch optionFilterProp="label" disabled={!selectedClass} size="large" />
         </Col>
         <Col xs={24} sm={24} md={12}>
-          <Select placeholder="Select Student" style={{ width: "100%" }} value={studentId} onChange={setStudentId}
+          <Select placeholder="Select Student" className="u-full" value={studentId} onChange={setStudentId}
             options={studentOptions} showSearch optionFilterProp="label" disabled={!selectedSection} loading={rollLoading} size="large" />
         </Col>
       </Row>
@@ -337,14 +337,14 @@ export default function CanteenPage() {
     <div>
       {studentId ? (
         <>
-          <div className="section-panel" style={{ marginBottom: 16 }}>
+          <div className="section-panel u-mb-4">
             <Flex align="center" gap={16} wrap="wrap">
               <div style={iconWell("var(--success)", 44)}><WalletOutlined style={{ fontSize: 20 }} /></div>
               <div>
                 <Text style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase" }}>Current Balance</Text>
                 <div style={{ fontSize: 26, fontWeight: 800, color: "var(--success)" }}>₹{wallet?.balance ?? 0}</div>
               </div>
-              <div style={{ flex: 1 }} />
+              <div className="u-grow" />
               <InputNumber min={1} placeholder="Amount" value={topUpAmount} onChange={setTopUpAmount} size="large" style={{ width: 140 }} />
               <Button icon={<PlusOutlined />} loading={cashSaving} onClick={handleCashTopUp} size="large">Top Up (Cash)</Button>
               <Button type="primary" icon={<CreditCardOutlined />} loading={razorpayLoading} onClick={handleRazorpayTopUp} size="large">
@@ -385,7 +385,7 @@ export default function CanteenPage() {
                       style={{ border: "1px solid var(--border-muted)", borderRadius: 10, padding: 12, cursor: "pointer", background: "var(--surface)" }}
                     >
                       <div style={{ fontWeight: 600, fontSize: 13 }}>{item.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{item.category}</div>
+                      <div className="u-meta-xs">{item.category}</div>
                       <div style={{ fontWeight: 700, color: "var(--primary)", marginTop: 4 }}>₹{item.price}</div>
                     </div>
                   </Col>
@@ -407,7 +407,7 @@ export default function CanteenPage() {
                     <Flex key={c.itemId} align="center" justify="space-between" style={{ marginBottom: 10 }}>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>₹{c.price} × {c.quantity}</div>
+                        <div className="u-meta-xs">₹{c.price} × {c.quantity}</div>
                       </div>
                       <Space>
                         <Button size="small" icon={<MinusOutlined />} onClick={() => changeQty(c.itemId, -1)} />
@@ -512,19 +512,19 @@ export default function CanteenPage() {
         okText="Save"
         title={editingItem?._id ? "Edit Menu Item" : "Add Menu Item"}
       >
-        <Space direction="vertical" style={{ width: "100%" }} size={12}>
+        <Space direction="vertical" className="u-full" size={12}>
           <div>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>NAME</Text>
+            <Text className="u-meta-xs">NAME</Text>
             <Input value={itemForm.name} onChange={(e) => setItemForm((f) => ({ ...f, name: e.target.value }))} />
           </div>
           <Row gutter={12}>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>CATEGORY</Text>
-              <Select style={{ width: "100%" }} value={itemForm.category} onChange={(v) => setItemForm((f) => ({ ...f, category: v }))} options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
+              <Text className="u-meta-xs">CATEGORY</Text>
+              <Select className="u-full" value={itemForm.category} onChange={(v) => setItemForm((f) => ({ ...f, category: v }))} options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
             </Col>
             <Col span={12}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>PRICE (₹)</Text>
-              <InputNumber min={0} precision={2} step={0.5} style={{ width: "100%" }} value={itemForm.price} onChange={(v) => setItemForm((f) => ({ ...f, price: v }))} />
+              <Text className="u-meta-xs">PRICE (₹)</Text>
+              <InputNumber min={0} precision={2} step={0.5} className="u-full" value={itemForm.price} onChange={(v) => setItemForm((f) => ({ ...f, price: v }))} />
             </Col>
           </Row>
           <Flex align="center" gap={10}>

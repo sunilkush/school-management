@@ -296,7 +296,7 @@ const Profile = () => {
               <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
                 {profileForm.name || "Student Profile"}
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{profileForm.email || "No email"}</div>
+              <div className="u-meta-md">{profileForm.email || "No email"}</div>
               <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, background: "rgba(220,252,231,0.2)", color: "var(--success)", padding: "2px 10px", borderRadius: 99, fontWeight: 600 }}>
                 Active Student
               </span>
@@ -314,7 +314,7 @@ const Profile = () => {
       <form onSubmit={handleSave} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
         <div className="page-card" style={{ padding: "20px 24px", gridColumn: "span 2" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Basic Profile</div>
+            <div className="u-title">Basic Profile</div>
             <button
               type="submit"
               disabled={saveState.saving}
@@ -365,7 +365,7 @@ const Profile = () => {
 };
 
 const Section = ({ title, children }) => (
-  <div style={{ marginBottom: 20 }}>
+  <div className="u-mb-5">
     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>{title}</div>
     {children}
   </div>
@@ -391,7 +391,7 @@ const fieldStyle = {
 
 const InputField = ({ icon, label, name, value, onChange, type = "text", required = false }) => (
   <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+    <span className="u-meta-xs">{label}</span>
     <div style={fieldStyle}>
       <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{icon}</span>
       <input
@@ -408,7 +408,7 @@ const InputField = ({ icon, label, name, value, onChange, type = "text", require
 
 const SelectField = ({ label, name, value, onChange, options }) => (
   <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</span>
+    <span className="u-meta-xs">{label}</span>
     <div style={fieldStyle}>
       <select
         name={name}

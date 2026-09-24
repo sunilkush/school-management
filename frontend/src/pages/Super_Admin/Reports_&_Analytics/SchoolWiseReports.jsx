@@ -21,7 +21,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -148,9 +148,9 @@ const SchoolWiseReports = () => {
       title: "School",
       dataIndex: "name",
       render: (name) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={avatarStyle(name, 34)}><BankOutlined style={{ fontSize: 14 }} /></div>
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{name}</span>
+          <span className="u-strong-bold">{name}</span>
         </div>
       ),
       sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
@@ -160,14 +160,14 @@ const SchoolWiseReports = () => {
       dataIndex: "boards",
       render: (boards) => boards.length
         ? <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{boards.map((b) => <span key={b} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>{b}</span>)}</div>
-        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
+        : <span className="u-meta">—</span>,
     },
     {
       title: "Plan",
       dataIndex: "plan",
       render: (plan) => plan
         ? <span style={pill("var(--accent)", "rgba(20,184,166,0.15)")}>{plan.name}</span>
-        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>No plan</span>,
+        : <span className="u-meta">No plan</span>,
     },
     {
       title: "Status",
@@ -182,7 +182,7 @@ const SchoolWiseReports = () => {
       align: "center",
       sorter: (a, b) => (a.attendanceRate ?? -1) - (b.attendanceRate ?? -1),
       render: (rate) => {
-        if (rate === null) return <span style={{ color: "var(--text-muted)", fontSize: 12 }}>No data</span>;
+        if (rate === null) return <span className="u-meta">No data</span>;
         const color = rate >= 85 ? "var(--success-hover)" : rate >= 60 ? "var(--warning-hover)" : "var(--danger-hover)";
         const bg = rate >= 85 ? "rgba(220,252,231,0.5)" : rate >= 60 ? "rgba(254,243,199,0.5)" : "rgba(254,226,226,0.5)";
         return <span style={pill(color, bg)}>{rate}%</span>;
@@ -197,7 +197,7 @@ const SchoolWiseReports = () => {
       render: (revenue, row) => (
         <div>
           <div style={{ fontWeight: 700, color: "var(--success-hover)" }}>{formatCurrency(revenue)}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{row.paymentCount} payment{row.paymentCount === 1 ? "" : "s"}</div>
+          <div className="u-meta-xs">{row.paymentCount} payment{row.paymentCount === 1 ? "" : "s"}</div>
         </div>
       ),
     },
@@ -242,7 +242,7 @@ const SchoolWiseReports = () => {
         <div className="toolbar-row">
           <Input
             allowClear
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             placeholder="Search by school name"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -288,7 +288,7 @@ const SchoolWiseReports = () => {
             {/* School info */}
             <div className="section-panel">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <EnvironmentOutlined style={{ color: "var(--text-muted)" }} />
+                <EnvironmentOutlined className="u-muted" />
                 <span style={{ color: "var(--text-primary)" }}>{reportSchool?.address || "No address provided"}</span>
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -322,14 +322,14 @@ const SchoolWiseReports = () => {
             <div className="section-panel">
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 12 }}>Today's Attendance</div>
               {reportAttendance ? (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div className="u-row-wrap">
                   <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Present: {reportAttendance.presentToday}</span>
                   <span style={pill("var(--danger-hover)", "rgba(254,226,226,0.5)")}>Absent: {reportAttendance.absentToday}</span>
                   <span style={pill("var(--warning-hover)", "rgba(254,243,199,0.5)")}>Late: {reportAttendance.lateToday}</span>
                   <span style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>Rate: {reportAttendance.attendanceRate}%</span>
                 </div>
               ) : (
-                <span style={{ color: "var(--text-muted)", fontSize: 12 }}>No attendance marked today</span>
+                <span className="u-meta">No attendance marked today</span>
               )}
             </div>
 
@@ -338,7 +338,7 @@ const SchoolWiseReports = () => {
                 Revenue — FY {reportYear}-{String((reportYear || 0) + 1).slice(-2)}
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, color: "var(--success-hover)" }}>{formatCurrency(reportFinance?.totalIncome)}</div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{reportFinance?.paymentCount ?? 0} payments collected</div>
+              <div className="u-meta">{reportFinance?.paymentCount ?? 0} payments collected</div>
             </div>
           </div>
         )}

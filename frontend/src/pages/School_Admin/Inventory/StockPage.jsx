@@ -70,13 +70,13 @@ export default function StockPage() {
       render: (_, r) => {
         const isLow = (r.quantity || 0) <= (r.minThreshold || 10);
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={iconWell(isLow ? "var(--danger)" : "var(--primary)", 34)}>
               {isLow ? <WarningOutlined style={{ fontSize: 13 }} /> : <InboxOutlined style={{ fontSize: 13 }} />}
             </div>
             <div>
-              <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{r.name}</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.category}</div>
+              <div className="u-label">{r.name}</div>
+              <div className="u-meta-xs">{r.category}</div>
             </div>
           </div>
         );
@@ -92,7 +92,7 @@ export default function StockPage() {
           <div style={{ minWidth: 130 }}>
             <div style={{ fontSize: 12, color: "var(--text-primary)", marginBottom: 4 }}>
               <strong>{fmt(avail)}</strong>
-              <span style={{ color: "var(--text-muted)" }}> / {fmt(r.quantity)} {r.unit}</span>
+              <span className="u-muted"> / {fmt(r.quantity)} {r.unit}</span>
             </div>
             <Progress percent={pct} size="small" showInfo={false} strokeColor={color} trailColor="var(--border-muted)" />
           </div>
@@ -101,7 +101,7 @@ export default function StockPage() {
     },
     { title: "Allocated", key: "allocated", render: (_, r) => <span style={{ fontSize: 12 }}>{fmt(r.allocated)} {r.unit}</span>, responsive: ["md"] },
     { title: "Location",  dataIndex: "location", key: "location", responsive: ["lg"],
-      render: (t) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t || "—"}</span> },
+      render: (t) => <span className="u-meta">{t || "—"}</span> },
     {
       title: "Status", key: "status",
       render: (_, r) => {
@@ -173,7 +173,7 @@ export default function StockPage() {
         footer={null}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" onFinish={onFinish} className="u-mt-4">
           <Form.Item label="Item Name" name="name" rules={[{ required: true, message: "Required" }]}>
             <Input size="large" />
           </Form.Item>
@@ -182,9 +182,9 @@ export default function StockPage() {
               <Select>{CATEGORIES.map((c) => <Option key={c} value={c}>{c}</Option>)}</Select>
             </Form.Item>
             <Form.Item label="Unit" name="unit" initialValue="pcs"><Input placeholder="pcs / box / kg" /></Form.Item>
-            <Form.Item label="Total Quantity" name="quantity" initialValue={0}><InputNumber min={0} style={{ width: "100%" }} /></Form.Item>
-            <Form.Item label="Allocated" name="allocated" initialValue={0}><InputNumber min={0} style={{ width: "100%" }} /></Form.Item>
-            <Form.Item label="Low Stock Alert (min)" name="minThreshold" initialValue={10}><InputNumber min={0} style={{ width: "100%" }} /></Form.Item>
+            <Form.Item label="Total Quantity" name="quantity" initialValue={0}><InputNumber min={0} className="u-full" /></Form.Item>
+            <Form.Item label="Allocated" name="allocated" initialValue={0}><InputNumber min={0} className="u-full" /></Form.Item>
+            <Form.Item label="Low Stock Alert (min)" name="minThreshold" initialValue={10}><InputNumber min={0} className="u-full" /></Form.Item>
             <Form.Item label="Location" name="location"><Input placeholder="Room / Store" /></Form.Item>
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>

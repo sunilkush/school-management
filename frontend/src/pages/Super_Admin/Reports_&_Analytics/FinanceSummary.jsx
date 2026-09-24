@@ -108,7 +108,7 @@ const FinanceSummary = () => {
     {
       title: "School",
       dataIndex: "schoolName",
-      render: (n) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{n || "—"}</span>,
+      render: (n) => <span className="u-strong">{n || "—"}</span>,
     },
     {
       title: "Total Collected",
@@ -152,7 +152,7 @@ const FinanceSummary = () => {
       />
 
       {/* Toolbar */}
-      <div className="toolbar-row" style={{ marginTop: 20 }}>
+      <div className="toolbar-row u-mt-5">
         <Select
           value={selectedYear}
           onChange={handleYearChange}
@@ -250,7 +250,7 @@ const FinanceSummary = () => {
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <span style={{ color: "var(--text-muted)" }}>
+                <span className="u-muted">
                   No school-wise breakdown available for {selectedYear}
                 </span>
               }
@@ -269,7 +269,7 @@ const FinanceSummary = () => {
           }}>
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={<span style={{ color: "var(--text-muted)" }}>No finance data available</span>}
+              description={<span className="u-muted">No finance data available</span>}
             >
               <Button type="primary" onClick={handleRefresh}>Load Data</Button>
             </Empty>

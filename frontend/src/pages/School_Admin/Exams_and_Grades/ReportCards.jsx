@@ -345,7 +345,7 @@ export default function ReportCards() {
                 <Alert
                   type="info"
                   showIcon
-                  style={{ marginTop: 12 }}
+                  className="u-mt-3"
                   message="Regenerating keeps what you typed"
                   description="Re-running Generate refreshes the marks but preserves co-scholastic grades and remarks. Published cards are skipped — unpublish them first to change them."
                 />
@@ -427,7 +427,7 @@ export default function ReportCards() {
             name="coScholastic"
             label="Co-scholastic areas"
             extra="Comma separated — e.g. Discipline, Sports, Art"
-            style={{ marginTop: 16 }}
+            className="u-mt-4"
           >
             <Input placeholder="Discipline, Sports, Art" />
           </Form.Item>
@@ -469,11 +469,11 @@ export default function ReportCards() {
               <Alert
                 type="warning"
                 showIcon
-                style={{ marginTop: 16 }}
+                className="u-mt-4"
                 message="Published — unpublish it before editing"
               />
             ) : (
-              <Form form={reviewForm} layout="vertical" onFinish={saveReview} style={{ marginTop: 16 }}>
+              <Form form={reviewForm} layout="vertical" onFinish={saveReview} className="u-mt-4">
                 {(reviewCard.coScholastic || []).map((entry) => (
                   <Form.Item key={entry.area} name={`co_${entry.area}`} label={entry.area}>
                     <Input placeholder="A / B+ / Satisfactory" />

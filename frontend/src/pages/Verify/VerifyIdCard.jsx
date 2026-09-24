@@ -36,7 +36,7 @@ export default function VerifyIdCard() {
             title="ID Card Verified Genuine"
             subTitle={`Issued by ${result.schoolName || "the school"}`}
           >
-            <Flex align="center" gap={16} style={{ marginBottom: 16 }}>
+            <Flex align="center" gap={16} className="u-mb-4">
               {result.photoUrl
                 ? <Avatar src={result.photoUrl} size={72} />
                 : <Avatar size={72} style={{ background: "var(--primary)" }}>{(result.fullName || "?")[0]?.toUpperCase()}</Avatar>}

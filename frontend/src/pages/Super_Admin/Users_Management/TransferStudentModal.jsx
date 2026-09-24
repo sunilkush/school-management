@@ -90,7 +90,7 @@ const TransferStudentModal = ({ user }) => {
         okButtonProps={{ disabled: !canSubmit, loading: submitting }}
         destroyOnClose
       >
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+        <Space direction="vertical" size={14} className="u-full">
           <Alert
             type="warning"
             showIcon
@@ -100,7 +100,7 @@ const TransferStudentModal = ({ user }) => {
           <div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Destination School</div>
             <Select
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select school"
               showSearch
               optionFilterProp="label"
@@ -113,7 +113,7 @@ const TransferStudentModal = ({ user }) => {
           <div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Academic Year</div>
             <Select
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select academic year"
               disabled={!targetSchoolId}
               value={targetAcademicYearId}
@@ -125,7 +125,7 @@ const TransferStudentModal = ({ user }) => {
           <div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Class</div>
             <Select
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select class"
               disabled={!targetAcademicYearId}
               value={targetSchoolClassId}
@@ -137,7 +137,7 @@ const TransferStudentModal = ({ user }) => {
           <div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>Section</div>
             <Select
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select section"
               disabled={!targetSchoolClassId}
               value={targetSectionId}

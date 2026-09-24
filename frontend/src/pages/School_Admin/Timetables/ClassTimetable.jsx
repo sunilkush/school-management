@@ -60,7 +60,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -333,7 +333,7 @@ const ClassTimetable = () => {
         marginBottom: 12,
       }}
     >
-      <Space direction="vertical" style={{ width: "100%" }} size={10}>
+      <Space direction="vertical" className="u-full" size={10}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
           <div>
             <Text strong>
@@ -591,7 +591,7 @@ const ClassTimetable = () => {
                     name="startTime"
                     rules={[{ required: true, message: "Select start time" }]}
                   >
-                    <TimePicker style={{ width: "100%" }} format="HH:mm" minuteStep={5} />
+                    <TimePicker className="u-full" format="HH:mm" minuteStep={5} />
                   </Form.Item>
                 </Col>
 
@@ -601,7 +601,7 @@ const ClassTimetable = () => {
                     name="endTime"
                     rules={[{ required: true, message: "Select end time" }]}
                   >
-                    <TimePicker style={{ width: "100%" }} format="HH:mm" minuteStep={5} />
+                    <TimePicker className="u-full" format="HH:mm" minuteStep={5} />
                   </Form.Item>
                 </Col>
               </Row>

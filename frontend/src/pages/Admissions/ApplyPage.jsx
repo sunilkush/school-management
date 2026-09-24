@@ -104,7 +104,7 @@ export default function ApplyPage() {
       />
 
       {step === 0 && (
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <Space direction="vertical" size={16} className="u-full">
           {schoolsError && <Alert type="error" showIcon message={schoolsError} />}
           {loadingSchools ? (
             <div style={{ textAlign: "center", padding: 32 }}><Spin /></div>
@@ -160,7 +160,7 @@ export default function ApplyPage() {
       {step === 1 && (
         <Form form={form} layout="vertical" onFinish={submit} requiredMark="optional">
           {submitError && (
-            <Alert type="error" showIcon message={submitError} style={{ marginBottom: 16 }} />
+            <Alert type="error" showIcon message={submitError} className="u-mb-4" />
           )}
 
           <Text type="secondary" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: ".08em" }}>
@@ -182,7 +182,7 @@ export default function ApplyPage() {
               )}
             </Form.Item>
             <Form.Item name="dateOfBirth" label="Date of birth">
-              <DatePicker style={{ width: "100%" }} format="DD MMM YYYY" />
+              <DatePicker className="u-full" format="DD MMM YYYY" />
             </Form.Item>
             <Form.Item name="gender" label="Gender">
               <Select
@@ -238,7 +238,7 @@ export default function ApplyPage() {
             </Form.Item>
           </div>
 
-          <Space style={{ marginTop: 8 }}>
+          <Space className="u-mt-2">
             <Button onClick={() => setStep(0)}>Back</Button>
             <Button type="primary" htmlType="submit" loading={submitting}>
               Submit application
@@ -284,7 +284,7 @@ export default function ApplyPage() {
             <Alert
               type="info"
               showIcon
-              style={{ marginTop: 16 }}
+              className="u-mt-4"
               message="We already had an application for this student, so we've shown you the original."
             />
           )}

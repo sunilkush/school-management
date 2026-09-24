@@ -65,13 +65,7 @@ const MenuSkeleton = ({ collapsed }) => (
         animationDelay: `${i * 0.07}s`,
       }} />
     ))}
-    <style>{`
-      @keyframes sbPulse {
-        0%,100% { opacity:0.45; }
-        50%      { opacity:1; }
-      }
-    `}</style>
-  </div>
+      </div>
 );
 
 /* ── Sidebar ────────────────────────────────────────────────────── */
@@ -115,113 +109,17 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
   return (
     <>
-      <style>{`
-        /* Sidebar container */
-        .sb-root {
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-          width: 100%;
-          background: ${t.bg};
-          border-right: 1px solid ${t.border};
-          position: sticky;
-          top: 0;
-          overflow: hidden;
-        }
 
-        /* Scroll area */
-        .sb-scroll::-webkit-scrollbar        { width: 3px; }
-        .sb-scroll::-webkit-scrollbar-track  { background: transparent; }
-        .sb-scroll::-webkit-scrollbar-thumb  {
-          background: ${t.scrollbar};
-          border-radius: 3px;
-        }
-
-        /* Toggle button */
-        .sb-toggle {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          border: 1px solid ${t.border};
-          background: ${t.bg};
-          color: ${t.textMuted};
-          cursor: pointer;
-          transition: all 0.18s ease;
-          flex-shrink: 0;
-        }
-        .sb-toggle:hover {
-          background: ${t.accentBg};
-          border-color: ${t.accentBorder};
-          color: ${t.accent};
-          transform: scale(1.06);
-        }
-
-        /* User button */
-        .sb-user-btn {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          width: 100%;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          padding: ${collapsed ? "8px 0" : "8px 10px"};
-          border-radius: 10px;
-          transition: background 0.18s ease;
-          justify-content: ${collapsed ? "center" : "flex-start"};
-        }
-        .sb-user-btn:hover { background: ${t.hover}; }
-
-        /* Logout button */
-        .sb-logout {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 30px;
-          height: 30px;
-          border-radius: 8px;
-          border: none;
-          background: transparent;
-          color: ${t.textMuted};
-          cursor: pointer;
-          transition: all 0.18s ease;
-          flex-shrink: 0;
-        }
-        .sb-logout:hover {
-          background: rgba(var(--danger-rgb), 0.1);
-          color: var(--danger);
-        }
-
-        /* Page search (opens GlobalSearch, mounted once in the top bar) */
-        .sb-search {
-          display: flex; align-items: center; gap: 8px; width: 100%; height: 38px; padding: 0 8px 0 12px;
-          background: var(--surface-soft); border: 1px solid ${t.border}; border-radius: 10px;
-          color: ${t.textMuted}; font: inherit; font-size: 13px; cursor: pointer; text-align: left;
-          transition: border-color 0.18s ease, box-shadow 0.18s ease;
-        }
-        .sb-search:hover, .sb-search:focus-visible {
-          border-color: ${t.accent}; box-shadow: 0 0 0 3px ${t.accentBg}; outline: none;
-        }
-        .sb-search-icon {
-          display: flex; align-items: center; justify-content: center; width: 40px; height: 36px; margin: 0 auto;
-          border-radius: 10px; border: 1px solid ${t.border}; background: var(--surface-soft);
-          color: ${t.textMuted}; cursor: pointer; transition: all 0.18s ease;
-        }
-        .sb-search-icon:hover, .sb-search-icon:focus-visible {
-          border-color: ${t.accentBorder}; background: ${t.accentBg}; color: ${t.accent}; outline: none;
-        }
-
-        /* Online pulse */
-        @keyframes onlineDot {
-          0%,100% { box-shadow: 0 0 0 2px rgba(var(--success-rgb), 0.15); }
-          50%      { box-shadow: 0 0 0 4px rgba(var(--success-rgb), 0.06); }
-        }
-      `}</style>
-
-      <div className="sb-root">
+      <div
+        className={`sb-root${collapsed ? " is-collapsed" : ""}`}
+        /* The role accent is the one colour the stylesheet cannot know; hand it over as variables
+           (see styles/_sidebar.scss). */
+        style={{
+          "--sb-accent": t.accent,
+          "--sb-accent-bg": t.accentBg,
+          "--sb-accent-border": t.accentBorder,
+        }}
+      >
 
         {/* ── BRAND HEADER ─────────────────────────────────── */}
         <div style={{
@@ -292,7 +190,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
           ) : (
             <button type="button" className="sb-search" onClick={openGlobalSearch} aria-label="Search pages">
               <SearchOutlined style={{ fontSize: 14 }} />
-              <span style={{ flex: 1 }}>Search pages…</span>
+              <span className="u-grow">Search pages…</span>
               <span style={{
                 fontSize: 10, fontWeight: 600, letterSpacing: "0.03em", color: t.textMuted,
                 background: t.bg, border: `1px solid ${t.border}`, padding: "1px 6px", borderRadius: 5,

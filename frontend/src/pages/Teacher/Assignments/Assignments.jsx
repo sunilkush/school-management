@@ -41,7 +41,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -437,7 +437,7 @@ const Assignments = () => {
             />
           </Form.Item>
           <Form.Item label="Due Date" name="dueDate" rules={[{ required: true, message: "Required" }]}>
-            <DatePicker style={{ width: "100%" }} />
+            <DatePicker className="u-full" />
           </Form.Item>
           <Button type="primary" htmlType="submit" block loading={saving}>
             {editTarget ? "Update Assignment" : "Create Assignment"}
@@ -466,7 +466,7 @@ const Assignments = () => {
                   </Button>,
                 ]}
               >
-                <Space direction="vertical" size={0} style={{ flex: 1 }}>
+                <Space direction="vertical" size={0} className="u-grow">
                   <Text strong>{studentUser?.name || "Student"}</Text>
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     Reg: {enrollment?.registrationNumber || "—"} | {enrollment?.sectionId?.name || "—"}
@@ -507,7 +507,7 @@ const Assignments = () => {
       >
         <Form form={gradeForm} layout="vertical" onFinish={handleGrade}>
           <Form.Item label="Grade (0–100)" name="grade" rules={[{ required: true, message: "Required" }]}>
-            <InputNumber min={0} max={100} style={{ width: "100%" }} />
+            <InputNumber min={0} max={100} className="u-full" />
           </Form.Item>
           <Form.Item label="Feedback" name="feedback">
             <Input.TextArea rows={3} placeholder="Optional feedback for the student" />

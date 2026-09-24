@@ -96,13 +96,13 @@ const STRENGTH = [
 
 /* ── Small reusable pieces ───────────────────────────────────────── */
 const SectionTitle = ({ icon, label, description, color = "var(--primary)" }) => (
-  <Flex align="center" gap={12} style={{ marginBottom: 20 }}>
+  <Flex align="center" gap={12} className="u-mb-5">
     <div style={iconWell(color, 38)}>
       <span style={{ fontSize: 17 }}>{icon}</span>
     </div>
     <div>
       <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>{label}</Text>
-      {description && <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>{description}</Text>}
+      {description && <Text className="u-meta">{description}</Text>}
     </div>
   </Flex>
 );
@@ -437,7 +437,7 @@ const Settings = () => {
                 beforeUpload={handleAvatarSelect} onRemove={handleAvatarRemove} accept="image/*"
                 style={{ marginTop: 8 }}
               >
-                <Button size="small" icon={<UploadOutlined />} style={{ marginTop: 8 }}>
+                <Button size="small" icon={<UploadOutlined />} className="u-mt-2">
                   {avatarPreview ? "Change Photo" : "Upload Photo"}
                 </Button>
               </Upload>
@@ -484,7 +484,7 @@ const Settings = () => {
           <Row gutter={[16, 0]}>
             <Col xs={24} md={8}>
               <Form.Item label="Theme" name="theme"
-                extra={<Text style={{ fontSize: 11, color: "var(--text-muted)" }}>Applied instantly on change</Text>}>
+                extra={<Text className="u-meta-xs">Applied instantly on change</Text>}>
                 <Select
                   options={[
                     { value: "light",  label: "☀️  Light" },
@@ -541,7 +541,7 @@ const Settings = () => {
           <Flex align="center" justify="space-between" wrap="wrap" gap={12} style={{ marginBottom: 12 }}>
             <Form.Item
               label="Accept online applications"
-              style={{ margin: 0 }}
+              className="u-m-0"
               extra={
                 admissionsOpen
                   ? "Your school is listed on the public portal and can receive applications."
@@ -627,11 +627,11 @@ const Settings = () => {
                             <MessageOutlined style={{ color: TAB_COLORS.communication }} />
                             <Text strong style={{ color: "var(--text-primary)" }}>Enable SMS</Text>
                           </Flex>
-                          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          <Text className="u-meta">
                             Send SMS notifications via this Twilio account.
                           </Text>
                         </div>
-                        <Form.Item name="isSmsEnabled" valuePropName="checked" style={{ margin: 0 }}>
+                        <Form.Item name="isSmsEnabled" valuePropName="checked" className="u-m-0">
                           <Switch />
                         </Form.Item>
                       </Flex>
@@ -643,11 +643,11 @@ const Settings = () => {
                             <WhatsAppOutlined style={{ color: TAB_COLORS.communication }} />
                             <Text strong style={{ color: "var(--text-primary)" }}>Enable WhatsApp</Text>
                           </Flex>
-                          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          <Text className="u-meta">
                             Send WhatsApp notifications via this Twilio account.
                           </Text>
                         </div>
-                        <Form.Item name="isWhatsappEnabled" valuePropName="checked" style={{ margin: 0 }}>
+                        <Form.Item name="isWhatsappEnabled" valuePropName="checked" className="u-m-0">
                           <Switch />
                         </Form.Item>
                       </Flex>
@@ -699,7 +699,7 @@ const Settings = () => {
                 <div style={{ marginTop: -12, marginBottom: 16 }}>
                   <Progress
                     percent={str.pct} strokeColor={str.color} showInfo={false}
-                    size="small" style={{ margin: 0 }}
+                    size="small" className="u-m-0"
                   />
                   <Text style={{ fontSize: 11, color: str.color, fontWeight: 600 }}>
                     {str.label} password
@@ -738,7 +738,7 @@ const Settings = () => {
                   ? <Spin size="small" />
                   : <Tag color={twoFactor.enabled ? "success" : "default"} style={{ borderRadius: 99 }}>{twoFactor.enabled ? "On" : "Off"}</Tag>}
               </Flex>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <Text className="u-meta">
                 {twoFactor.enabled
                   ? "A code sent to your email is required every time you log in."
                   : "Protect this admin account: require a code from your email in addition to your password."}
@@ -758,55 +758,7 @@ const Settings = () => {
   /* ── Render ────────────────────────────────────────────────────── */
   return (
     <>
-      <style>{`
-        /* Tab nav */
-        .settings-tabs .ant-tabs-nav {
-          background: var(--surface-soft) !important;
-          border-right: 1px solid var(--border-muted) !important;
-          margin: 0 !important;
-          min-width: 190px !important;
-          padding: 12px 8px !important;
-        }
-        .settings-tabs .ant-tabs-tab {
-          border-radius: 10px !important;
-          padding: 10px 14px !important;
-          margin: 2px 0 !important;
-          transition: background 0.18s ease !important;
-        }
-        .settings-tabs .ant-tabs-tab:hover { background: var(--surface) !important; }
-        .settings-tabs .ant-tabs-tab-active { background: rgba(37,99,235,0.09) !important; }
-        .settings-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--primary) !important; font-weight: 600 !important; }
-        .settings-tabs .ant-tabs-ink-bar { display: none !important; }
-        .settings-tabs .ant-tabs-content-holder { padding: 28px 28px !important; }
-
-        /* Dirty dot pulse */
-        @keyframes settings-dot-pulse {
-          0%,100% { opacity: 1; transform: scale(1); }
-          50%      { opacity: 0.55; transform: scale(0.75); }
-        }
-        .settings-dirty-dot { animation: settings-dot-pulse 1.4s ease-in-out infinite; }
-
-        /* Save-button pulse when dirty */
-        @keyframes settings-btn-glow {
-          0%   { box-shadow: 0 0 0 0   rgba(var(--primary-rgb),0.45); }
-          70%  { box-shadow: 0 0 0 9px rgba(var(--primary-rgb),0);    }
-          100% { box-shadow: 0 0 0 0   rgba(var(--primary-rgb),0);    }
-        }
-        .settings-save-dirty { animation: settings-btn-glow 1.8s ease-in-out infinite; }
-
-        /* Success flash */
-        @keyframes settings-save-flash {
-          0%,100% { background: var(--success); border-color: var(--success); }
-          50%      { background: var(--success-hover); border-color: var(--success-hover); }
-        }
-        .settings-save-success { animation: settings-save-flash 0.5s ease-in-out 2; }
-
-        @media (max-width: 575px) {
-          .settings-tabs .ant-tabs-content-holder { padding: 16px !important; }
-          .settings-tabs .ant-tabs-nav { min-width: unset !important; padding: 8px !important; }
-        }
-      `}</style>
-
+      
       <PageHeader
         title="Settings"
         subtitle="Manage your profile, preferences, security, and system configuration."

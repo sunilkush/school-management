@@ -244,12 +244,12 @@ const MyStudents = () => {
 
   return (
     <div style={{ padding: 20 }}>
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space direction="vertical" size={16} className="u-full">
         <Card bordered={false}>
           <Row gutter={[16, 16]} align="middle" justify="space-between">
             <Col>
               <Space direction="vertical" size={2}>
-                <Title level={3} style={{ margin: 0 }}>
+                <Title level={3} className="u-m-0">
                   My Class Students
                 </Title>
                 <Text type="secondary">
@@ -312,7 +312,7 @@ const MyStudents = () => {
                     allowClear
                     value={searchText}
                     onChange={(event) => setSearchText(event.target.value)}
-                    style={{ marginTop: 8 }}
+                    className="u-mt-2"
                     placeholder="Name / Registration"
                     prefix={<SearchOutlined />}
                   />

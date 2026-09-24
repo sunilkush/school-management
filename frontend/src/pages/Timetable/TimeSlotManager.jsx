@@ -252,10 +252,10 @@ export default function TimeSlotManager() {
         ]}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" className="u-mt-2">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item name="order" label="Order" rules={[{ required: true, message: "Required" }]}>
-              <InputNumber style={{ width: "100%" }} min={1} placeholder="1" />
+              <InputNumber className="u-full" min={1} placeholder="1" />
             </Form.Item>
             <Form.Item name="type" label="Type" initialValue="period">
               <Select

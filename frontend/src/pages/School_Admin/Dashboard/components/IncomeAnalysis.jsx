@@ -44,7 +44,7 @@ const CustomTooltip = ({ active, payload }) => {
 const renderLegend = ({ payload }) => (
   <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "6px 14px", marginTop: 8 }}>
     {payload.map((entry) => (
-      <div key={entry.value} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div key={entry.value} className="u-row-sm">
         <span style={{ width: 10, height: 10, borderRadius: "50%", background: entry.color, flexShrink: 0 }} />
         <Text style={{ fontSize: 11, color: "var(--text-secondary)" }}>{entry.value}</Text>
       </div>

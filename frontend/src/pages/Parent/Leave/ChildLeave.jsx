@@ -212,7 +212,7 @@ const ChildLeave = () => {
         confirmLoading={saving}
         width={500}
       >
-        <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit} className="u-mt-4">
           <Form.Item name="leaveType" label="Leave Type" rules={[{ required: true }]}>
             <Select options={LEAVE_TYPES.map((t) => ({ label: t.charAt(0).toUpperCase() + t.slice(1), value: t }))} />
           </Form.Item>

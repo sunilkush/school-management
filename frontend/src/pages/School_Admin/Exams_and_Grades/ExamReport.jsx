@@ -106,7 +106,7 @@ const ExamReports = () => {
         ]}
       />
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         <div className="stat-grid" style={statGrid(160)}>
           {[
             { key: "total", title: "Total Records", value: stats.total, color: "var(--primary)" },
@@ -192,7 +192,7 @@ const ExamReports = () => {
             >
               PDF
             </Button>
-            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+            <span className="u-meta-xs">
               (select exam + class above)
             </span>
           </div>

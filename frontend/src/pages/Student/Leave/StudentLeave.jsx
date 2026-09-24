@@ -29,7 +29,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -157,7 +157,7 @@ const StudentLeave = () => {
             <Select placeholder="Select leave type" options={LEAVE_TYPES} />
           </Form.Item>
           <Form.Item label="Date Range" name="dateRange" rules={[{ required: true, message: "Required" }]}>
-            <RangePicker style={{ width: "100%" }} disabledDate={(d) => d && d.isBefore(dayjs(), "day")} />
+            <RangePicker className="u-full" disabledDate={(d) => d && d.isBefore(dayjs(), "day")} />
           </Form.Item>
           <Form.Item label="Reason" name="reason" rules={[{ required: true, message: "Required" }]}>
             <Input.TextArea rows={3} placeholder="Reason for leave" />

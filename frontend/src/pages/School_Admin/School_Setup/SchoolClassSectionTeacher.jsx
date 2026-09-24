@@ -168,7 +168,7 @@ const SchoolClassSectionTeacher = ({ next }) => {
   const TeacherPicker = ({ record, size = "middle" }) => {
     const selectedTeacher = users.find((u) => u._id === record.teacherId);
     return (
-      <Space direction="vertical" size={4} style={{ width: "100%" }}>
+      <Space direction="vertical" size={4} className="u-full">
         {selectedTeacher ? (
           <Tag color="success" icon={<CheckCircleFilled />} style={{ width: "fit-content" }}>
             {selectedTeacher.name}
@@ -178,7 +178,7 @@ const SchoolClassSectionTeacher = ({ next }) => {
             Not assigned
           </span>
         )}
-        <Space size={6} style={{ width: "100%" }}>
+        <Space size={6} className="u-full">
           <Select
             placeholder="Select teacher…"
             value={record.teacherId || undefined}
@@ -248,7 +248,7 @@ const SchoolClassSectionTeacher = ({ next }) => {
           flexWrap: "wrap",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div
             style={{
               width: 30,

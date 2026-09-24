@@ -193,24 +193,24 @@ const TeacherExamsPage = () => {
       title: "Student",
       dataIndex: "studentName",
       render: (name) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 32, height: 32, borderRadius: "50%",
             background: "rgba(var(--purple-rgb),0.09)", color: "var(--purple)",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontWeight: 700, fontSize: 13, flexShrink: 0,
           }}>{(name || "S")[0].toUpperCase()}</div>
-          <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{name}</span>
+          <span className="u-label">{name}</span>
         </div>
       ),
     },
     {
       title: "Total", dataIndex: "totalMarks", width: 80,
-      render: (v) => <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{v}</span>,
+      render: (v) => <span className="u-meta-md">{v}</span>,
     },
     {
       title: "Passing", dataIndex: "passingMarks", width: 90,
-      render: (v) => <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{v}</span>,
+      render: (v) => <span className="u-meta-md">{v}</span>,
     },
     {
       title: "Obtained", width: 150,
@@ -239,7 +239,7 @@ const TeacherExamsPage = () => {
         const pct = Math.min(100, Math.round((r.obtainedMarks / (r.totalMarks || 1)) * 100));
         const color = pct >= 60 ? "var(--success)" : pct >= 33 ? "var(--warning)" : "var(--danger)";
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div className="u-row-sm">
             <div style={{ flex: 1, height: 6, background: "var(--border-muted)", borderRadius: 99, overflow: "hidden" }}>
               <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.3s" }} />
             </div>
@@ -265,7 +265,7 @@ const TeacherExamsPage = () => {
       />
 
       {/* ── Exam Selector ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div style={{
           fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
           textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10,
@@ -279,7 +279,7 @@ const TeacherExamsPage = () => {
               <Select
                 showSearch
                 optionFilterProp="label"
-                style={{ width: "100%" }}
+                className="u-full"
                 placeholder="Choose an exam to enter marks…"
                 options={examOptions}
                 value={selectedExamId}
@@ -339,7 +339,7 @@ const TeacherExamsPage = () => {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search student…"
-                prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+                prefix={<SearchOutlined className="u-muted" />}
                 style={{ width: 220, borderRadius: 9 }}
               />
               <Segmented
@@ -361,7 +361,7 @@ const TeacherExamsPage = () => {
               )}
             </div>
 
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="u-row-wrap">
               <Upload {...uploadProps}>
                 <Button icon={<UploadOutlined />} size="small">Bulk JSON</Button>
               </Upload>
@@ -400,7 +400,7 @@ const TeacherExamsPage = () => {
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
                 No Students Found
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <div className="u-meta-md">
                 Select an exam with an assigned class to see students.
               </div>
             </div>
@@ -426,7 +426,7 @@ const TeacherExamsPage = () => {
           <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
             No Exams Found
           </div>
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          <div className="u-meta-md">
             No exams have been assigned to you yet. Contact your school admin.
           </div>
         </div>

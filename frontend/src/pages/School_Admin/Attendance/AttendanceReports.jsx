@@ -163,7 +163,7 @@ const AttendanceReports = () => {
     {
       title: "Student Name",
       render: (_, r) => (
-        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+        <span className="u-strong">
           {r.userId?.name || "—"}
         </span>
       ),
@@ -171,7 +171,7 @@ const AttendanceReports = () => {
     {
       title: "Class",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {r.schoolClassId?.name || r.classId?.name || "—"}
         </span>
       ),
@@ -179,7 +179,7 @@ const AttendanceReports = () => {
     {
       title: "Section",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {r.sectionId?.name || "—"}
         </span>
       ),
@@ -199,7 +199,7 @@ const AttendanceReports = () => {
     {
       title: "Remarks",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {r.remarks || "—"}
         </span>
       ),
@@ -210,7 +210,7 @@ const AttendanceReports = () => {
     {
       title: "Name",
       render: (_, r) => (
-        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+        <span className="u-strong">
           {r.userId?.name || "—"}
         </span>
       ),
@@ -218,7 +218,7 @@ const AttendanceReports = () => {
     {
       title: "Role / Dept",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {r.userId?.role?.name || r.userId?.department || "—"}
         </span>
       ),
@@ -288,7 +288,7 @@ const AttendanceReports = () => {
       />
 
       {/* ── Filters ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div style={{ marginBottom: 14 }}>
           <Segmented
             options={REPORT_TYPES}
@@ -444,7 +444,7 @@ const AttendanceReports = () => {
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
-                  <span style={{ color: "var(--text-muted)" }}>
+                  <span className="u-muted">
                     {loading
                       ? "Loading records…"
                       : "No attendance records found. Adjust filters and click Generate Report."}

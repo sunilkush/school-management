@@ -81,9 +81,7 @@ const Topbar = ({ toggleSidebar, sidebarCollapsed, isMobile }) => {
 
   return (
     <>
-      <style>{`
-      `}</style>
-
+      
       {/* Topbar */}
       <div style={{
         height: 60,

@@ -134,9 +134,9 @@ const ExamCoordinatorDashboard = () => {
         </Col>
 
         <Col xs={24} lg={8}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space direction="vertical" size={16} className="u-full">
             <Card title="Quick Actions">
-              <Space direction="vertical" style={{ width: "100%" }}>
+              <Space direction="vertical" className="u-full">
                 <Button block onClick={() => navigate("/dashboard/examcoordinator/exams/question-bank")}>
                   <QuestionCircleOutlined /> Question Bank
                 </Button>
@@ -159,7 +159,7 @@ const ExamCoordinatorDashboard = () => {
             </Card>
 
             <Card title="Evaluation Status">
-              <Space direction="vertical" style={{ width: "100%" }}>
+              <Space direction="vertical" className="u-full">
                 <Row justify="space-between">
                   <Text>Completed Exams</Text>
                   <Tag color="green">{completed.length}</Tag>

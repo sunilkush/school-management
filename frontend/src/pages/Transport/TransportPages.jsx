@@ -219,7 +219,7 @@ export const DriversPage = () => {
               }}>
                 {(viewDriver.userId?.name || viewDriver.name || "D")[0].toUpperCase()}
               </div>
-              <Title level={4} style={{ margin: 0 }}>{viewDriver.userId?.name || viewDriver.name || "—"}</Title>
+              <Title level={4} className="u-m-0">{viewDriver.userId?.name || viewDriver.name || "—"}</Title>
               <Tag color={viewDriver.isActive ? "green" : "red"} style={{ marginTop: 4 }}>
                 {viewDriver.isActive ? "Active" : "Inactive"}
               </Tag>

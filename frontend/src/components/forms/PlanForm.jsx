@@ -115,7 +115,7 @@ const PlanForm = ({ initialValues, onClose }) => {
       initialValues={{ category: "Starter", isActive: true, isTrialPlan: false, limits: {} }}
       onFinish={onFinish}
     >
-      {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
+      {error && <Alert type="error" showIcon message={error} className="u-mb-4" />}
 
       {/* ── the plan itself ── */}
       {sectionTitle("Plan")}
@@ -141,7 +141,7 @@ const PlanForm = ({ initialValues, onClose }) => {
           <InputNumber
             min={0}
             size="large"
-            style={{ width: "100%" }}
+            className="u-full"
             prefix="₹"
             formatter={(v) => (v === undefined || v === "" ? "" : `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ","))}
             parser={(v) => (v || "").replace(/,/g, "")}
@@ -154,7 +154,7 @@ const PlanForm = ({ initialValues, onClose }) => {
           rules={[{ required: true, message: "How many days does the plan run for?" }]}
           style={{ flex: "1 1 180px" }}
         >
-          <InputNumber min={1} size="large" style={{ width: "100%" }} addonAfter="days" />
+          <InputNumber min={1} size="large" className="u-full" addonAfter="days" />
         </Form.Item>
       </div>
 
@@ -194,7 +194,7 @@ const PlanForm = ({ initialValues, onClose }) => {
           rules={[{ required: true, message: "How long does the trial last?" }]}
           style={{ maxWidth: 220 }}
         >
-          <InputNumber min={1} style={{ width: "100%" }} addonAfter="days" />
+          <InputNumber min={1} className="u-full" addonAfter="days" />
         </Form.Item>
       )}
 
@@ -253,7 +253,7 @@ const PlanForm = ({ initialValues, onClose }) => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
         {PLAN_LIMITS.map((l) => (
           <Form.Item key={l.key} label={l.label} name={["limits", l.key]} style={{ marginBottom: 0 }}>
-            <InputNumber min={0} placeholder="Unlimited" style={{ width: "100%" }} />
+            <InputNumber min={0} placeholder="Unlimited" className="u-full" />
           </Form.Item>
         ))}
       </div>
@@ -266,7 +266,7 @@ const PlanForm = ({ initialValues, onClose }) => {
           <Switch checkedChildren="Live" unCheckedChildren="Draft" />
         </Form.Item>
         <Tooltip title="A draft plan stays out of the list schools can be put on">
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Schools can be put on a live plan</span>
+          <span className="u-meta">Schools can be put on a live plan</span>
         </Tooltip>
 
         <Space style={{ marginLeft: "auto" }}>

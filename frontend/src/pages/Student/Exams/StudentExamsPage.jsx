@@ -117,7 +117,7 @@ const ExamCard = ({ exam, attempt, onStart, onResume, onReview, starting }) => {
           ].map(([icon, text], i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ color: "var(--primary)", fontSize: 12, flexShrink: 0 }}>{icon}</span>
-              <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{text}</span>
+              <span className="u-meta">{text}</span>
             </div>
           ))}
         </div>
@@ -176,13 +176,13 @@ const ResultCard = ({ result }) => {
             {grade}
           </div>
           <div>
-            <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>
+            <div className="u-title-sm">
               {result.examId?.title || "Exam"}
             </div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{pct}% overall</div>
+            <div className="u-meta">{pct}% overall</div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="u-row">
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             background: pass ? "var(--success-light)" : "var(--danger-light)",
@@ -191,7 +191,7 @@ const ResultCard = ({ result }) => {
           }}>
             {pass ? <CheckCircleOutlined /> : <CloseCircleOutlined />} {result.resultStatus}
           </span>
-          <span style={{ color: "var(--text-muted)", fontSize: 11 }}>{open ? "▲" : "▼"}</span>
+          <span className="u-meta-xs">{open ? "▲" : "▼"}</span>
         </div>
       </div>
 
@@ -336,7 +336,7 @@ const StudentExamsPage = () => {
             <div style={iconWell("var(--primary)", 38)}><CalendarOutlined /></div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Next Exam</div>
-              <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{nextExam.title}</div>
+              <div className="u-title-sm">{nextExam.title}</div>
             </div>
           </div>
           <div style={{ fontWeight: 600, color: "var(--primary)", fontSize: 13 }}>
@@ -358,9 +358,9 @@ const StudentExamsPage = () => {
       {/* ── Exam Schedule ── */}
       <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={iconWell("var(--warning-hover)", 34)}><CalendarOutlined /></div>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Exam Schedule</span>
+            <span className="u-title">Exam Schedule</span>
           </div>
           <Segmented
             value={filter}
@@ -392,7 +392,7 @@ const StudentExamsPage = () => {
         ) : (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={<span style={{ color: "var(--text-muted)" }}>No {filter} exams found</span>}
+            description={<span className="u-muted">No {filter} exams found</span>}
           />
         )}
       </div>
@@ -401,7 +401,7 @@ const StudentExamsPage = () => {
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <div style={iconWell("var(--success-hover)", 34)}><TrophyOutlined /></div>
-          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Published Results</span>
+          <span className="u-title">Published Results</span>
         </div>
 
         {loading || aLoading ? (
@@ -409,7 +409,7 @@ const StudentExamsPage = () => {
         ) : !safeResults.length ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={<span style={{ color: "var(--text-muted)" }}>No published results yet</span>}
+            description={<span className="u-muted">No published results yet</span>}
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

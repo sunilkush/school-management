@@ -80,7 +80,7 @@ const SmsEmailHistory = () => {
       dataIndex: "message",
       key: "message",
       ellipsis: true,
-      render: (v) => <Text style={{ color: "var(--text-muted)", fontSize: 13 }}>{v}</Text>,
+      render: (v) => <Text className="u-meta-md">{v}</Text>,
     },
     {
       title: "Audience",
@@ -148,7 +148,7 @@ const SmsEmailHistory = () => {
 
       <div className="page-wrapper">
         {/* Stat Cards */}
-        <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
+        <Row gutter={[14, 14]} className="u-mb-5">
           {statCards.map((s) => (
             <Col xs={24} sm={8} key={s.label}>
               <div style={{

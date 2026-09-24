@@ -387,7 +387,7 @@ const ModuleRoleGuide = () => {
         icon={<ApartmentOutlined />}
         extra={
           <Input
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             placeholder="Search a module or a role…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -419,12 +419,12 @@ const ModuleRoleGuide = () => {
           <div key={module.id} className="section-panel">
             <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
               <div style={iconWell(module.color, 44)}>{module.icon}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="u-grow-min">
                 <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                   <span style={{ fontSize: 17, fontWeight: 800, color: "var(--text-primary)" }}>{module.title}</span>
                   <Tag>{module.group}</Tag>
                 </div>
-                <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{module.subtitle}</div>
+                <div className="u-meta-md">{module.subtitle}</div>
               </div>
             </div>
 

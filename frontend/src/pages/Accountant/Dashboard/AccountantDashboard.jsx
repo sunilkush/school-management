@@ -43,7 +43,7 @@ const ChartTip = ({ active, payload, label }) => {
       {payload.map((p, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
-          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{p.name}:</span>
+          <span className="u-meta-xs">{p.name}:</span>
           <span style={{ fontSize: 13, fontWeight: 700, color: p.color }}>{money(p.value)}</span>
         </div>
       ))}
@@ -76,7 +76,7 @@ const KpiCard = ({ label, value, icon, color, sub, onClick, accent }) => (
     }}
   >
     <div style={iconWell(color, 46)}>{icon}</div>
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <div className="u-grow-min">
       <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
         {label}
       </div>
@@ -153,7 +153,7 @@ const DashboardSkeleton = () => (
         </div>
       ))}
     </div>
-    <div className="section-panel" style={{ marginBottom: 20 }}>
+    <div className="section-panel u-mb-5">
       <Skeleton active paragraph={{ rows: 2 }} />
     </div>
     <Row gutter={[16, 16]}>
@@ -214,11 +214,11 @@ const AccountantDashboard = () => {
       title: "Mode", dataIndex: "mode", width: 90,
       render: (m) => m
         ? <Tag style={{ fontSize: 10, borderRadius: 6, textTransform: "capitalize" }}>{m}</Tag>
-        : <span style={{ color: "var(--text-muted)" }}>—</span>,
+        : <span className="u-muted">—</span>,
     },
     {
       title: "Date", dataIndex: "date", width: 115,
-      render: (d) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{dayjs(d).format("DD MMM YYYY")}</span>,
+      render: (d) => <span className="u-meta">{dayjs(d).format("DD MMM YYYY")}</span>,
     },
   ], []);
 
@@ -363,7 +363,7 @@ const AccountantDashboard = () => {
       </div>
 
       {/* ── Charts ───────────────────────────────────────────────── */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+      <Row gutter={[16, 16]} className="u-mb-5">
         {/* Income vs Expense — Area Chart */}
         <Col xs={24} lg={14}>
           <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
@@ -373,7 +373,7 @@ const AccountantDashboard = () => {
                 <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                   Income vs Expense
                 </Text>
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>Last 6 months trend</Text>
+                <Text className="u-meta-xs">Last 6 months trend</Text>
               </div>
             </div>
 
@@ -416,7 +416,7 @@ const AccountantDashboard = () => {
                 <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                   Fee Collection
                 </Text>
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>Last 6 months</Text>
+                <Text className="u-meta-xs">Last 6 months</Text>
               </div>
             </div>
 
@@ -446,11 +446,11 @@ const AccountantDashboard = () => {
       {/* ── Recent Transactions ───────────────────────────────────── */}
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={iconWell("var(--accent)", 32)}><FileTextOutlined style={{ fontSize: 14 }} /></div>
             <div>
               <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>Recent Transactions</Text>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>Latest financial activity</Text>
+              <Text className="u-meta-xs">Latest financial activity</Text>
             </div>
           </div>
           {recentActivity.length > 0 && (

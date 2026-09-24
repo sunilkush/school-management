@@ -190,7 +190,7 @@ const FinancialReports = () => {
                 <div style={iconWell(color, 40)}>{icon}</div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+                  <div className="u-title-lg">{value}</div>
                 </div>
               </div>
             ))}
@@ -251,7 +251,7 @@ const FinancialReports = () => {
           </div>
 
           {/* ── Income & Expense Charts ────────────────────────────── */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+          <Row gutter={[16, 16]} className="u-mb-5">
             <Col xs={24} lg={12}>
               <div className="section-panel is-last">
                 <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Income by Category</div>
@@ -269,7 +269,7 @@ const FinancialReports = () => {
                         <Tooltip formatter={(v) => money(v)} />
                       </PieChart>
                     </ResponsiveContainer>
-                    <Table className="rep-tbl data-table" rowKey="_id" columns={incColumns} dataSource={incomeByCategory} pagination={false} size="small" style={{ marginTop: 12 }} />
+                    <Table className="rep-tbl data-table" rowKey="_id" columns={incColumns} dataSource={incomeByCategory} pagination={false} size="small" className="u-mt-3" />
                   </>
                 )}
               </div>
@@ -290,7 +290,7 @@ const FinancialReports = () => {
                         <Bar dataKey="total" fill="var(--danger)" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
-                    <Table className="rep-tbl data-table" rowKey="_id" columns={expColumns} dataSource={expenseByCategory} pagination={false} size="small" style={{ marginTop: 12 }} />
+                    <Table className="rep-tbl data-table" rowKey="_id" columns={expColumns} dataSource={expenseByCategory} pagination={false} size="small" className="u-mt-3" />
                   </>
                 )}
               </div>

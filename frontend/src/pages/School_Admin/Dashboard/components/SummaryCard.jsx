@@ -73,7 +73,7 @@ const SummaryCard = ({
 
       {/* Header row */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="u-grow-min">
           <Text style={{ fontSize: 12, color: textSec, fontWeight: 500, letterSpacing: "0.03em" }}>
             {title}
           </Text>

@@ -170,7 +170,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
       render: (title, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{title}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.schoolClassId?.name || ""}{r.sectionId?.name ? ` · ${r.sectionId.name}` : " · all sections"}
             {r.subjectId?.name ? ` · ${r.subjectId.name}` : ""}
             {r.teacherId?.name ? ` · ${r.teacherId.name}` : ""}
@@ -183,7 +183,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
       render: (_, r) => (
         <div style={{ fontSize: 13 }}>
           <div>{dayjs(r.scheduledStart).format("ddd D MMM, h:mm A")}</div>
-          <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+          <div className="u-meta">
             to {dayjs(r.scheduledEnd).format("h:mm A")}
           </div>
         </div>
@@ -242,7 +242,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
         subtitle={canHost ? "Schedule live classes and see who joined" : "Your live classes"}
         icon={<VideoCameraOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <RangePicker value={range} onChange={(v) => setRange(v || [])} />
             <Button icon={<ReloadOutlined />} onClick={load} />
             {canHost && <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>Schedule class</Button>}
@@ -266,7 +266,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
         <div className="empty-state">
           <Empty description="No online classes in this period" />
           {canHost && (
-            <Button type="primary" icon={<PlusOutlined />} style={{ marginTop: 12 }} onClick={openAdd}>
+            <Button type="primary" icon={<PlusOutlined />} className="u-mt-3" onClick={openAdd}>
               Schedule one
             </Button>
           )}
@@ -295,7 +295,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
         confirmLoading={actionLoading}
         okText={editing ? "Save" : "Schedule"}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="u-mt-4">
           {!editing && (
             <>
               <Form.Item name="schoolClassId" label="Class" rules={[{ required: true, message: "Pick the class" }]}>
@@ -338,7 +338,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
           </Form.Item>
 
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="passcode" label="Passcode" style={{ flex: 1 }}>
+            <Form.Item name="passcode" label="Passcode" className="u-grow">
               <Input placeholder="Optional" />
             </Form.Item>
             <Form.Item
@@ -346,7 +346,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
               extra="A link visible for days gets forwarded outside the school."
               style={{ width: 220 }}
             >
-              <InputNumber min={0} max={1440} style={{ width: "100%" }} />
+              <InputNumber min={0} max={1440} className="u-full" />
             </Form.Item>
           </div>
 
@@ -376,7 +376,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 16 }}
+          className="u-mb-4"
           message="These are link opens, not verified attendance"
           description="The video call itself is outside this system, so this shows who clicked join — not who sat through the lesson. Check it before marking the register; a record already entered by hand is left alone."
         />

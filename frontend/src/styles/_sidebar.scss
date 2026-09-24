@@ -1,0 +1,270 @@
+// The sidebar: its shell, the toggle, the search box, the user footer, and the menu inside it.
+//
+// This used to be two <style> blocks built as template strings inside Sidebar.jsx and
+// SidebarMenu.jsx. Two things kept it there, and both have a plain CSS answer:
+//
+//   • the accent colour changes per role (a Teacher's sidebar is green, a Parent's amber), so the
+//     component now sets --sb-accent / --sb-accent-bg / --sb-accent-border on .sb-root and the
+//     rules below read them;
+//   • collapsed/expanded differences are a class on the same root, .is-collapsed.
+//
+// The menu's own colours were never dynamic — SidebarMenu's "tokens" were fixed purple strings —
+// so those are written out literally here.
+
+/* ── Shell ───────────────────────────────────────────────────────── */
+.sb-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+
+  // Fallback so the sidebar is never unstyled if a render forgets to pass the role accent.
+  --sb-accent: var(--primary);
+  --sb-accent-bg: rgba(var(--primary-rgb), 0.09);
+  --sb-accent-border: rgba(var(--primary-rgb), 0.19);
+}
+
+/* ── Scroll area ─────────────────────────────────────────────────── */
+.sb-scroll::-webkit-scrollbar { width: 3px; }
+.sb-scroll::-webkit-scrollbar-track { background: transparent; }
+.sb-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* ── Collapse toggle ─────────────────────────────────────────────── */
+.sb-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--sb-accent-bg);
+    border-color: var(--sb-accent-border);
+    color: var(--sb-accent);
+    transform: scale(1.06);
+  }
+}
+
+/* ── User footer ─────────────────────────────────────────────────── */
+.sb-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background 0.18s ease;
+  justify-content: flex-start;
+
+  &:hover { background: var(--surface-soft-hover); }
+
+  .sb-root.is-collapsed & {
+    padding: 8px 0;
+    justify-content: center;
+  }
+}
+
+.sb-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(var(--danger-rgb), 0.1);
+    color: var(--danger);
+  }
+}
+
+/* ── Page search (opens the search window mounted in the top bar) ── */
+.sb-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 38px;
+  padding: 0 8px 0 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-md);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--sb-accent);
+    box-shadow: 0 0 0 3px var(--sb-accent-bg);
+    outline: none;
+  }
+}
+
+.sb-search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 36px;
+  margin: 0 auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--sb-accent-border);
+    background: var(--sb-accent-bg);
+    color: var(--sb-accent);
+    outline: none;
+  }
+}
+
+/* ── Online pulse on the avatar ──────────────────────────────────── */
+@keyframes onlineDot {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(var(--success-rgb), 0.15); }
+  50%      { box-shadow: 0 0 0 4px rgba(var(--success-rgb), 0.06); }
+}
+
+/* ── The menu itself (was SidebarMenu.jsx) ───────────────────────── */
+/* ── Item base ── */
+.sidebar-nav .ant-menu-item,
+.sidebar-nav .ant-menu-submenu-title {
+  border-radius: 8px !important;
+  margin: 1px 8px !important;
+  width: calc(100% - 16px) !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: background 0.18s ease, color 0.18s ease !important;
+}
+
+/* ── Sub-item ── */
+.sidebar-nav .ant-menu-sub .ant-menu-item {
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  border-radius: 6px !important;
+  margin: 1px 8px 1px 20px !important;
+  width: calc(100% - 28px) !important;
+  padding-left: 14px !important;
+  position: relative;
+}
+
+/* Sub-item left accent bar */
+.sidebar-nav .ant-menu-sub .ant-menu-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 16px;
+  border-radius: 2px;
+  background: rgba(var(--purple-rgb), 0.15);
+  transition: background 0.18s ease;
+}
+
+.sidebar-nav .ant-menu-sub .ant-menu-item-selected::before,
+.sidebar-nav .ant-menu-sub .ant-menu-item:hover::before {
+  background: var(--purple);
+}
+
+/* ── Selected item ── */
+.sidebar-nav.ant-menu-light .ant-menu-item-selected,
+.sidebar-nav.ant-menu-dark .ant-menu-item-selected {
+  background: rgba(var(--purple-rgb), 0.08) !important;
+  color: var(--purple) !important;
+  font-weight: 600 !important;
+}
+
+/* ── Hover ── */
+.sidebar-nav .ant-menu-item:hover,
+.sidebar-nav .ant-menu-submenu-title:hover {
+  background: rgba(var(--purple-rgb), 0.04) !important;
+  color: var(--purple) !important;
+}
+
+/* ── Submenu parent open state ── */
+.sidebar-nav .ant-menu-submenu-open > .ant-menu-submenu-title {
+  color: var(--purple) !important;
+  font-weight: 600 !important;
+}
+
+/* ── Remove default left border indicator ── */
+.sidebar-nav.ant-menu-inline .ant-menu-item-selected::after,
+.sidebar-nav.ant-menu-inline .ant-menu-item::after {
+  display: none !important;
+}
+
+/* ── Icon alignment ── */
+.sidebar-nav .ant-menu-item .ant-menu-item-icon,
+.sidebar-nav .ant-menu-submenu-title .ant-menu-item-icon {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* ── Inline submenu background ── */
+.sidebar-nav .ant-menu-sub.ant-menu-inline {
+  background: transparent !important;
+  padding: 2px 0 4px !important;
+}
+
+/* ── Remove default submenu arrow padding weirdness ── */
+.sidebar-nav .ant-menu-submenu-arrow {
+  right: 12px !important;
+  opacity: 0.5;
+  transition: opacity 0.18s ease !important;
+}
+.sidebar-nav .ant-menu-submenu-open .ant-menu-submenu-arrow {
+  opacity: 1;
+}
+
+/* ── Not in the school's plan ── */
+.sidebar-nav .ant-menu-item.menu-locked,
+.sidebar-nav .ant-menu-submenu.menu-locked > .ant-menu-submenu-title {
+  opacity: 0.55;
+}
+.sidebar-nav .ant-menu-item.menu-locked:hover,
+.sidebar-nav .ant-menu-submenu.menu-locked > .ant-menu-submenu-title:hover {
+  opacity: 0.8;
+}
+
+/* ── Overall menu container ── */
+.sidebar-nav.ant-menu {
+  border-inline-end: none !important;
+  padding: 0 !important;
+}

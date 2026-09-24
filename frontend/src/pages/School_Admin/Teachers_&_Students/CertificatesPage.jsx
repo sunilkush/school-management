@@ -233,8 +233,8 @@ export default function CertificatesPage() {
       dataIndex: "studentName",
       render: (v, row) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v || "—"}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          <div className="u-strong">{v || "—"}</div>
+          <div className="u-meta-xs">
             {[row.className, row.sectionName].filter(Boolean).join(" - ") || "—"}
           </div>
         </div>
@@ -243,7 +243,7 @@ export default function CertificatesPage() {
     {
       title: "Issue Date",
       dataIndex: "issueDate",
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{fmt(v)}</span>,
+      render: (v) => <span className="u-meta">{fmt(v)}</span>,
     },
     {
       title: "Status",
@@ -299,8 +299,8 @@ export default function CertificatesPage() {
         )}
 
         {/* ── Generate panel ─────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
-          <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
+          <Flex align="center" gap={10} className="u-mb-4">
             <div style={iconWell("var(--primary)", 38)}>
               <SafetyCertificateOutlined style={{ fontSize: 17 }} />
             </div>
@@ -308,7 +308,7 @@ export default function CertificatesPage() {
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                 Generate Certificate
               </Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <Text className="u-meta">
                 Select a class and section to find the student, then choose a certificate type
               </Text>
             </div>
@@ -318,7 +318,7 @@ export default function CertificatesPage() {
             <Col xs={24} sm={12} md={6}>
               <Select
                 placeholder="Select Class"
-                style={{ width: "100%" }}
+                className="u-full"
                 value={selectedClass}
                 onChange={(v) => setSelectedClass(v)}
                 options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))}
@@ -330,7 +330,7 @@ export default function CertificatesPage() {
             <Col xs={24} sm={12} md={6}>
               <Select
                 placeholder="Select Section"
-                style={{ width: "100%" }}
+                className="u-full"
                 value={selectedSection}
                 onChange={(v) => setSelectedSection(v)}
                 options={sectionOptions}
@@ -342,7 +342,7 @@ export default function CertificatesPage() {
             <Col xs={24} sm={24} md={12}>
               <Select
                 placeholder="Select Student"
-                style={{ width: "100%" }}
+                className="u-full"
                 value={studentId}
                 onChange={setStudentId}
                 options={studentOptions}
@@ -356,11 +356,11 @@ export default function CertificatesPage() {
 
           {studentId && (
             <>
-              <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+              <Row gutter={[12, 12]} className="u-mt-3">
                 <Col xs={24} sm={12} md={6}>
                   <Select
                     placeholder="Certificate Type"
-                    style={{ width: "100%" }}
+                    className="u-full"
                     value={certificateType}
                     onChange={setCertificateType}
                     options={CERT_TYPES.map((t) => ({ value: t.value, label: t.value }))}
@@ -370,7 +370,7 @@ export default function CertificatesPage() {
                 <Col xs={24} sm={12} md={6}>
                   <DatePicker
                     placeholder="Issue Date"
-                    style={{ width: "100%" }}
+                    className="u-full"
                     value={issueDate}
                     onChange={setIssueDate}
                     size="large"
@@ -395,11 +395,11 @@ export default function CertificatesPage() {
               </Row>
 
               {(certificateType === "Transfer Certificate" || certificateType === "Character Certificate") && (
-                <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+                <Row gutter={[12, 12]} className="u-mt-3">
                   <Col xs={24} sm={12} md={6}>
                     <Select
                       placeholder="Conduct"
-                      style={{ width: "100%" }}
+                      className="u-full"
                       value={conduct}
                       onChange={setConduct}
                       options={["Excellent", "Very Good", "Good", "Satisfactory"].map((c) => ({ value: c, label: c }))}
@@ -411,7 +411,7 @@ export default function CertificatesPage() {
                       <Col xs={24} sm={12} md={6}>
                         <DatePicker
                           placeholder="Date of Leaving"
-                          style={{ width: "100%" }}
+                          className="u-full"
                           value={dateOfLeaving}
                           onChange={setDateOfLeaving}
                           size="large"
@@ -431,7 +431,7 @@ export default function CertificatesPage() {
               )}
 
               {(certificateType === "Bonafide Certificate" || certificateType === "Study Certificate") && (
-                <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+                <Row gutter={[12, 12]} className="u-mt-3">
                   <Col xs={24} md={12}>
                     <Input
                       placeholder="Purpose (e.g. for passport application)"
@@ -443,7 +443,7 @@ export default function CertificatesPage() {
                 </Row>
               )}
 
-              <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+              <Row gutter={[12, 12]} className="u-mt-3">
                 <Col xs={24} md={18}>
                   <Input
                     placeholder="Remarks (optional)"
@@ -469,13 +469,13 @@ export default function CertificatesPage() {
         </div>
 
         {/* ── Filter row ─────────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <Row gutter={[12, 12]}>
             <Col xs={24} sm={8} md={6}>
               <Select
                 placeholder="Filter by Type"
                 allowClear
-                style={{ width: "100%" }}
+                className="u-full"
                 value={filterType}
                 onChange={setFilterType}
                 options={CERT_TYPES.map((t) => ({ value: t.value, label: t.value }))}
@@ -485,7 +485,7 @@ export default function CertificatesPage() {
               <Select
                 placeholder="Filter by Status"
                 allowClear
-                style={{ width: "100%" }}
+                className="u-full"
                 value={filterStatus}
                 onChange={setFilterStatus}
                 options={[{ value: "Issued", label: "Issued" }, { value: "Revoked", label: "Revoked" }]}
@@ -576,7 +576,7 @@ export default function CertificatesPage() {
         okButtonProps={{ danger: true }}
         title={`Revoke ${revokeTarget?.certificateNumber || ""}`}
       >
-        <Paragraph style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <Paragraph className="u-meta-md">
           This action is permanent and cannot be undone. Please provide a reason for revoking this certificate.
         </Paragraph>
         <TextArea

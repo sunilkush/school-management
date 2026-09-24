@@ -24,7 +24,7 @@ const YearField = ({ year, schoolChosen, loading = false }) => {
       // Nothing to edit here, so Tab goes past it instead of stopping to select its text.
       tabIndex={-1}
       value={text}
-      prefix={<CalendarOutlined style={{ color: "var(--text-muted)" }} />}
+      prefix={<CalendarOutlined className="u-muted" />}
       style={{
         width: "100%",
         cursor: "default",

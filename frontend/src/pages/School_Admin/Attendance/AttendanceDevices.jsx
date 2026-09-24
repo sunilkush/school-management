@@ -122,7 +122,7 @@ const AttendanceDevices = () => {
       render: (name, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{name}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.location || "no location set"} · {r.deviceType}
           </div>
         </div>
@@ -133,7 +133,7 @@ const AttendanceDevices = () => {
       render: (mode, r) => (
         <div style={{ fontSize: 12 }}>
           <div>{mode === "auto" ? "first in, last out" : mode}</div>
-          <div style={{ color: "var(--text-muted)" }}>{(r.appliesTo || []).join(", ")}</div>
+          <div className="u-muted">{(r.appliesTo || []).join(", ")}</div>
         </div>
       ),
     },
@@ -276,7 +276,7 @@ const AttendanceDevices = () => {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
                       <div>
                         <div style={{ fontWeight: 700 }}>{unmatched.length} card(s) scanned that belong to nobody</div>
-                        <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                        <div className="u-meta-md">
                           The scans are kept. Enrol the card and reprocess — the days already
                           scanned become attendance instead of absences to fix by hand.
                         </div>
@@ -285,7 +285,7 @@ const AttendanceDevices = () => {
                         Reprocess scans
                       </Button>
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <div className="u-row-wrap">
                       {unmatched.map((u) => (
                         <Button
                           key={u.externalId}
@@ -373,7 +373,7 @@ const AttendanceDevices = () => {
         confirmLoading={actionLoading}
         okText={editing ? "Save" : "Register"}
       >
-        <Form form={deviceForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={deviceForm} layout="vertical" className="u-mt-4">
           <Form.Item name="name" label="Name" rules={[{ required: true, message: "Give the device a name" }]}>
             <Input placeholder="Main Gate Reader" />
           </Form.Item>
@@ -422,7 +422,7 @@ const AttendanceDevices = () => {
         <Alert
           type="warning"
           showIcon
-          style={{ marginBottom: 16 }}
+          className="u-mb-4"
           message="The secret is shown only now"
           description="It is stored for checking signatures but never displayed again. If it is lost, rotate it and re-enter the new one on the device."
         />

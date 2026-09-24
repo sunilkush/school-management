@@ -22,7 +22,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -39,7 +39,7 @@ const SectionCard = ({ section, onAttendance }) => {
             <AppstoreOutlined />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>{name}</div>
+            <div className="u-title-sm">{name}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
               <TeamOutlined /> {section?.studentCount ?? 0} Students
             </div>
@@ -68,7 +68,7 @@ const SectionCard = ({ section, onAttendance }) => {
               </span>
             ))
           ) : (
-            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No subjects assigned</span>
+            <span className="u-meta">No subjects assigned</span>
           )}
         </div>
       </div>
@@ -150,7 +150,7 @@ const ClassDetails = () => {
             </Button>
           }
         />
-        <div className="empty-state" style={{ marginTop: 20 }}>
+        <div className="empty-state u-mt-5">
           <Empty description="Class details not found" />
         </div>
       </div>
@@ -188,9 +188,9 @@ const ClassDetails = () => {
             <div style={iconWell("var(--purple)", 34)}>
               <BookOutlined />
             </div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>All Subjects</div>
+            <div className="u-title-sm">All Subjects</div>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <div className="u-row-wrap">
             {classData?.subjects?.length ? (
               classData.subjects.map((sub, i) => (
                 <span key={sub?.subjectId?._id || i} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>
@@ -198,7 +198,7 @@ const ClassDetails = () => {
                 </span>
               ))
             ) : (
-              <span style={{ fontSize: 13, color: "var(--text-muted)" }}>No subjects assigned</span>
+              <span className="u-meta-md">No subjects assigned</span>
             )}
           </div>
         </div>

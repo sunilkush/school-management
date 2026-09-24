@@ -58,7 +58,7 @@ const EmployeeSalaries = () => {
       />
 
       <div style={{ padding: "20px" }}>
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <Space wrap style={{ justifyContent: "space-between", width: "100%" }}>
             <PayrollHeaderActions
               selectedMonth={selectedMonth}
@@ -92,7 +92,7 @@ const EmployeeSalaries = () => {
             flexWrap: "wrap",
             gap: 12,
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="u-row">
               {cycle.status === "paid"
                 ? <CheckCircleOutlined style={{ fontSize: 18, color: "var(--success)" }} />
                 : <LockOutlined style={{ fontSize: 18, color: "var(--primary)" }} />}
@@ -148,7 +148,7 @@ const EmployeeSalaries = () => {
           </div>
         )}
 
-        <div style={{ marginBottom: 16 }}>
+        <div className="u-mb-4">
           <PayrollSummaryCards summary={summary} />
         </div>
 

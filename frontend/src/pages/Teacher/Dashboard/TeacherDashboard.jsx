@@ -152,11 +152,11 @@ const TeacherDashboard = () => {
                     dataSource={dashboardData.upcomingExams}
                     renderItem={(item) => (
                       <List.Item style={{ padding: "10px 0", borderBottom: "1px solid var(--border-muted)" }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{item.name}</div>
+                        <div className="u-grow">
+                          <div className="u-label">{item.name}</div>
                           <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{item.className}</div>
                         </div>
-                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        <span className="u-meta">
                           {item.date ? dayjs(item.date).format("DD MMM YYYY") : "N/A"}
                         </span>
                       </List.Item>
@@ -171,7 +171,7 @@ const TeacherDashboard = () => {
             <Col xs={24} md={10}>
               <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 16 }}>Quick Actions</div>
-                <Space direction="vertical" style={{ width: "100%" }}>
+                <Space direction="vertical" className="u-full">
                   {isMedicalOfficer ? (
                     <>
                       <Button type="primary" block onClick={() => navigate(`/dashboard/${rolePath}/health-records`)}>
@@ -235,7 +235,7 @@ const TeacherDashboard = () => {
             </Col>
           </Row>
 
-          <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          <Row gutter={[16, 16]} className="u-mt-4">
             <Col xs={24} md={12}>
               <div className="section-panel">
                 <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>Attendance Rate</div>

@@ -245,7 +245,7 @@ const AttendanceTablePage = () => {
         const email = row?.userId?.email || "";
         const initial = name[0]?.toUpperCase() || "?";
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={{
               width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
               background: C.primaryLighter, color: C.primary,
@@ -369,7 +369,7 @@ const AttendanceTablePage = () => {
       />
 
       {/* ── Filters ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <FilterGrid>
           {isSuperAdmin && (
             <FilterField label="School">
@@ -474,8 +474,7 @@ const AttendanceTablePage = () => {
         ) : (
           <>
             {/* Loading bar — non-blocking, above the table */}
-            <style>{`@keyframes att-progress{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}`}</style>
-            {loading && (
+                        {loading && (
               <div style={{
                 height: 3,
                 background: `linear-gradient(90deg, ${C.primary}, ${C.accent})`,
@@ -670,7 +669,7 @@ const AttendanceTablePage = () => {
 
           {/* Where it was marked from */}
           {gpsPoints.length > 0 && (
-            <div style={{ marginTop: 12 }}>
+            <div className="u-mt-3">
               <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
                 Marked From
               </div>

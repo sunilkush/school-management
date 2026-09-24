@@ -30,7 +30,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -41,7 +41,7 @@ const MaterialCard = ({ item }) => {
   return (
     <div className="section-panel" style={{ padding: "16px 20px", marginBottom: 0, display: "flex", flexDirection: "column", gap: 8, transition: "box-shadow 0.2s" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ flex: 1 }}>
+        <div className="u-grow">
           <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 4 }}>{item.title}</div>
           <Space wrap size={6}>
             <Tag color={TYPE_COLOR[item.type] || "default"}>{typeInfo.label}</Tag>

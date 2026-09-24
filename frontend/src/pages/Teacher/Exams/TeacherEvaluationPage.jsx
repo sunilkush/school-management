@@ -81,13 +81,13 @@ const AnswerRow = ({ ans, idx, marksOverride, onChangeMarks, readOnly }) => {
           display: "flex", alignItems: "center", justifyContent: "center",
           fontWeight: 700, fontSize: 11,
         }}>{idx + 1}</span>
-        <div style={{ flex: 1 }}>
+        <div className="u-grow">
           <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", marginBottom: 6, lineHeight: 1.5 }}>
             {snap.statement || "—"}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             {qTypePill(snap.questionType)}
-            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <span className="u-meta">
               Max: <b>{maxMarks}</b> marks
             </span>
             {ans.isCorrect !== null && (
@@ -236,7 +236,7 @@ const TeacherEvaluationPage = () => {
           <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13 }}>
             {r.examId?.title || "—"}
           </div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          <div className="u-meta-xs">
             {r.examId?.subjectId?.name || "—"}
           </div>
         </div>
@@ -245,7 +245,7 @@ const TeacherEvaluationPage = () => {
     {
       title: "Student",
       render: (_, r) => (
-        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+        <div className="u-label">
           {r.studentId?.name || r.studentId || "—"}
         </div>
       ),
@@ -347,7 +347,7 @@ const TeacherEvaluationPage = () => {
         }
       />
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         {/* Stats */}
         <div style={{ ...statGrid(160), marginBottom: 20 }}>
           {statsMeta.map((s) => (
@@ -360,7 +360,7 @@ const TeacherEvaluationPage = () => {
           ))}
         </div>
 
-        {error && <Alert type="error" showIcon message="Attempts load nahi hue" style={{ marginBottom: 16 }} />}
+        {error && <Alert type="error" showIcon message="Attempts load nahi hue" className="u-mb-4" />}
 
         {/* Tabs */}
         <div className="page-card">
@@ -393,7 +393,7 @@ const TeacherEvaluationPage = () => {
               {
                 key: "evaluated",
                 label: (
-                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span className="u-row-sm">
                     <RobotOutlined style={{ color: "var(--success-hover)" }} />
                     Auto / Graded
                     <Badge count={evaluated.length} size="small" color="var(--success-hover)" />
@@ -424,7 +424,7 @@ const TeacherEvaluationPage = () => {
         onClose={() => setDrawerAttempt(null)}
         width={600}
         title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             {isReadOnly
               ? <EyeOutlined style={{ color: "var(--primary)" }} />
               : <ThunderboltOutlined style={{ color: "var(--warning-hover)" }} />}

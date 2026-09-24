@@ -343,7 +343,7 @@ const MyAttendancePage = () => {
 
         {/* Attendance % */}
         <div style={{ ...PANEL, padding: "14px 20px", display: "flex", alignItems: "center", gap: 16, flex: 1, minWidth: 160 }}>
-          <div style={{ flex: 1 }}>
+          <div className="u-grow">
             <div style={{ fontSize: 10, fontWeight: 700, color: pctColor, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
               Attendance %
             </div>

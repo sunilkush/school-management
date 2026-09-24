@@ -262,7 +262,7 @@ const StudentAttendance = () => {
       render: (_, r) => {
         const name = r?.user?.name || r?.name || "—";
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div
               style={{
                 width: 36, height: 36, borderRadius: "50%",
@@ -283,7 +283,7 @@ const StudentAttendance = () => {
               >
                 {name}
               </div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <div className="u-meta">
                 Reg: {r?.registrationNumber || "—"}
               </div>
             </div>
@@ -333,7 +333,7 @@ const StudentAttendance = () => {
       />
 
       {/* ── Filters ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div
           style={{
             display: "grid",
@@ -351,13 +351,13 @@ const StudentAttendance = () => {
             }))}
             showSearch
             optionFilterProp="label"
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <DatePicker
             value={attendanceDate}
             onChange={(d) => setAttendanceDate(d || dayjs())}
             disabledDate={(c) => c && c > dayjs().endOf("day")}
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <Select
             placeholder="Filter by Status"
@@ -368,7 +368,7 @@ const StudentAttendance = () => {
               value: o.value,
               label: o.fullLabel,
             }))}
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <Input
             placeholder="Search name / reg no"
@@ -522,7 +522,7 @@ const StudentAttendance = () => {
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
-                  <span style={{ color: "var(--text-muted)" }}>
+                  <span className="u-muted">
                     {!selectedClassObj
                       ? "Select a class to begin"
                       : "No students match the current filters"}

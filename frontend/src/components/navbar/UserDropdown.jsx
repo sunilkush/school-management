@@ -61,7 +61,7 @@ const UserDropdown = () => {
           )}
           </Text>
           
-          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <Text className="u-meta">
             {user?.email || ""}
           </Text>
           

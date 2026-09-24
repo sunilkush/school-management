@@ -26,7 +26,7 @@ const TYPE_STYLE = {
   // #0e7490 / #ecfeff (cyan-700 / cyan-50) aren't an exact match for any table entry
   // (closest is #0891b2 → var(--cyan), a visibly different shade) — left as literal
   // hex rather than guess; see final report.
-  Reminder: { color: "#0e7490", bg: "#ecfeff" },
+  Reminder: { color: "var(--cyan-hover)", bg: "#ecfeff" },
 };
 
 const STATUS_STYLE = {
@@ -103,7 +103,7 @@ const Events = () => {
             type: "Event",
             audience: "All",
             status: "scheduled",
-            color: "#14B8A6",
+            color: "var(--accent)",
             allDay: true,
             dateRange: [dayjs(), dayjs()],
           }
@@ -154,8 +154,8 @@ const Events = () => {
       key: "title",
       render: (title, record) => (
         <Space direction="vertical" size={0}>
-          <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{title}</span>
-          {record.location ? <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{record.location}</span> : null}
+          <span className="u-label">{title}</span>
+          {record.location ? <span className="u-meta">{record.location}</span> : null}
         </Space>
       ),
     },
@@ -196,7 +196,7 @@ const Events = () => {
       dataIndex: "description",
       key: "description",
       ellipsis: true,
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v || "—"}</span>,
+      render: (v) => <span className="u-meta">{v || "—"}</span>,
     },
     {
       title: "Actions",
@@ -267,7 +267,7 @@ const Events = () => {
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Events
               </span>
-              <div style={{ flex: 1 }} />
+              <div className="u-grow" />
               <Input.Search
                 allowClear
                 placeholder="Search events"
@@ -300,7 +300,7 @@ const Events = () => {
               pagination={{
                 pageSize: 10,
                 size: "small",
-                showTotal: (total) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{total} events</span>,
+                showTotal: (total) => <span className="u-meta">{total} events</span>,
               }}
               scroll={{ x: 800 }}
             />
@@ -312,7 +312,7 @@ const Events = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={iconWell("var(--primary)", 34)}><CalendarOutlined /></div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                <div className="u-title">
                   {editingEvent ? "Edit Event" : "Add Event"}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Fill in the event details</div>
@@ -325,7 +325,7 @@ const Events = () => {
           destroyOnClose
           centered
         >
-          <Form form={form} layout="vertical" onFinish={handleSaveEvent} style={{ marginTop: 8 }}>
+          <Form form={form} layout="vertical" onFinish={handleSaveEvent} className="u-mt-2">
             <Form.Item label="Event Name" name="title" rules={[{ required: true, message: "Enter event name" }]}>
               <Input placeholder="Enter event name" />
             </Form.Item>
@@ -342,7 +342,7 @@ const Events = () => {
               </Col>
             </Row>
             <Form.Item label="Date Range" name="dateRange" rules={[{ required: true, message: "Select event dates" }]}>
-              <RangePicker style={{ width: "100%" }} />
+              <RangePicker className="u-full" />
             </Form.Item>
             <Row gutter={12}>
               <Col span={12}>

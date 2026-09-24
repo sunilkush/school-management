@@ -19,7 +19,6 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
-import { useTheme } from "../../../context/ThemeContext.jsx";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
 import MyAttendanceSection from "../../../components/attendance/MyAttendanceSection";
 
@@ -48,11 +47,6 @@ const tokens = {
   textSecondary:"var(--text-muted)",
   accent:       "var(--primary)",
   accentBg:     "var(--primary-light)",
-  // No single token captures this bespoke colored hover shadow in both
-  // themes; kept isDark-branched (rgba, not hex — outside this task's scope).
-  shadowHover:  (isDark) => isDark
-    ? "0 6px 24px rgba(0,0,0,0.5)"
-    : "0 6px 24px rgba(37,99,235,0.14)",
 };
 
 /* ─────────────────────────────────────────
@@ -165,8 +159,6 @@ const SectionHeader = ({ icon, title, tag, tagColor = "blue" }) => {
    Main dashboard
 ───────────────────────────────────────── */
 const SchoolAdminDashboard = () => {
-  const { isDark } = useTheme();
-  const t = tokens;
   // Principal and Vice Principal share this dashboard and check in like other staff; a School Admin
   // has no My Attendance page, so the section is theirs only.
   const { pathname } = useLocation();
@@ -203,36 +195,6 @@ const SchoolAdminDashboard = () => {
       {ownsSelfAttendance && <MyAttendanceSection style={{ marginTop: 16 }} />}
 
     <div style={{ padding: "clamp(12px, 3vw, 24px)" }}>
-      <style>{`
-        /* Card hover lift */
-        .dash-card {
-          transition: box-shadow 0.22s ease, transform 0.22s ease !important;
-          border-radius: 12px !important;
-        }
-        .dash-card:hover {
-          box-shadow: ${t.shadowHover(isDark)} !important;
-          transform: translateY(-1px);
-        }
-
-        /* Section panel */
-        .dash-section {
-          background: ${t.sectionBg};
-          border: 1px solid ${t.sectionBorder};
-          border-radius: 14px;
-          padding: 20px;
-          margin-bottom: 20px;
-        }
-
-        /* Staggered fade-in for sections */
-        @keyframes dashFadeUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .dash-section:nth-child(1) { animation: dashFadeUp 0.3s ease 0.05s both; }
-        .dash-section:nth-child(2) { animation: dashFadeUp 0.3s ease 0.12s both; }
-        .dash-section:nth-child(3) { animation: dashFadeUp 0.3s ease 0.19s both; }
-        .dash-section:nth-child(4) { animation: dashFadeUp 0.3s ease 0.26s both; }
-      `}</style>
 
       {/* ── API error banner ── */}
       {isError && (
@@ -304,7 +266,7 @@ const SchoolAdminDashboard = () => {
           </Col>
         </Row>
 
-        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Row gutter={[16, 16]} className="u-mt-4">
           <Col span={24}>
             {isLoading ? (
               <ChartSkeleton height={180} />

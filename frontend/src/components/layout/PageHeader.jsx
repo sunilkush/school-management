@@ -64,7 +64,7 @@ const PageHeader = ({
           {c.label}
         </Link>
       ) : (
-        <span style={{ color: "var(--text-primary)", fontSize: 13, fontWeight: 600 }}>
+        <span className="u-label">
           {c.label}
         </span>
       ),

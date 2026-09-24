@@ -174,7 +174,7 @@ export default function SchoolAdminTimetablePage() {
         subtitle="Build and manage weekly class timetables, detect conflicts, and publish schedules"
         icon={<ScheduleOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <Button
               icon={<ThunderboltOutlined />}
               disabled={!academicYearId || !filters.schoolClassId || !filters.sectionId}
@@ -244,7 +244,7 @@ export default function SchoolAdminTimetablePage() {
               Class
             </div>
             <Select
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select class"
               value={filters.schoolClassId || undefined}
               onChange={(v) => setFilters({ schoolClassId: v, sectionId: "" })}
@@ -262,7 +262,7 @@ export default function SchoolAdminTimetablePage() {
               Section
             </div>
             <Select
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select section"
               value={filters.sectionId || undefined}
               onChange={(v) => setFilters((f) => ({ ...f, sectionId: v }))}
@@ -344,7 +344,7 @@ export default function SchoolAdminTimetablePage() {
         footer={modalFooter(() => setCopyOpen(false), copyWeek, saving, "Copy")}
         destroyOnClose
       >
-        <Form form={copyForm} layout="vertical" style={{ marginTop: 8 }}>
+        <Form form={copyForm} layout="vertical" className="u-mt-2">
           <Form.Item name="fromSchoolClassId" label="From Class" rules={[{ required: true }]}>
             <Select
               options={masters.classes.map((c) => ({ value: c._id, label: getName(c) }))}
@@ -380,7 +380,7 @@ export default function SchoolAdminTimetablePage() {
         footer={modalFooter(() => setModalOpen(false), save, saving, editing ? "Update" : "Add")}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" className="u-mt-2">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item name="dayOfWeek" label="Day" rules={[{ required: true }]}>
               <Select options={DAYS_OPTS} />

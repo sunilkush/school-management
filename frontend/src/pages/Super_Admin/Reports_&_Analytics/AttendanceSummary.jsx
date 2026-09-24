@@ -151,7 +151,7 @@ const AttendanceSummary = () => {
       dataIndex: "schoolName",
       render: (n) => (
         <span
-          style={{ fontWeight: 600, color: "var(--text-primary)" }}
+          className="u-strong"
         >
           {n || "—"}
         </span>
@@ -205,7 +205,7 @@ const AttendanceSummary = () => {
         const pct  = Number(v).toFixed(1);
         const low  = Number(v) < LOW_THRESHOLD;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="u-row">
             <Progress
               percent={Number(pct)}
               size="small"
@@ -252,7 +252,7 @@ const AttendanceSummary = () => {
       />
 
       {/* ── Toolbar ── */}
-      <div className="toolbar-row" style={{ marginTop: 20 }}>
+      <div className="toolbar-row u-mt-5">
         <Select
           placeholder="All Schools"
           allowClear
@@ -426,7 +426,7 @@ const AttendanceSummary = () => {
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
-                  <span style={{ color: "var(--text-muted)" }}>
+                  <span className="u-muted">
                     No school-wise breakdown available
                   </span>
                 }
@@ -449,7 +449,7 @@ const AttendanceSummary = () => {
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <span style={{ color: "var(--text-muted)" }}>
+                <span className="u-muted">
                   No attendance data available
                 </span>
               }

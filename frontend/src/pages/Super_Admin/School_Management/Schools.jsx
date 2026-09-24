@@ -73,8 +73,8 @@ const Section = ({ title, extra, children }) => (
 
 const Fact = ({ label, children }) => (
   <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 10, padding: "4px 0", fontSize: 13 }}>
-    <span style={{ color: "var(--text-muted)" }}>{label}</span>
-    <span style={{ color: "var(--text-primary)", wordBreak: "break-word" }}>{children || <span style={{ color: "var(--text-muted)" }}>—</span>}</span>
+    <span className="u-muted">{label}</span>
+    <span style={{ color: "var(--text-primary)", wordBreak: "break-word" }}>{children || <span className="u-muted">—</span>}</span>
   </div>
 );
 
@@ -132,7 +132,7 @@ const SubscriptionPanel = ({ school, plans, onChanged }) => {
       <div>
         <Alert type="warning" showIcon style={{ marginBottom: 12 }} message="No plan yet" description="Pick the plan this school is on." />
         <Select
-          style={{ width: "100%" }} placeholder="Pick a plan" value={newPlanId || undefined} onChange={setNewPlanId}
+          className="u-full" placeholder="Pick a plan" value={newPlanId || undefined} onChange={setNewPlanId}
           options={offered.map((p) => ({ value: p._id, label: planLabel(p) }))}
           notFoundContent="No active plans — create one under Subscription Plans"
         />
@@ -172,7 +172,7 @@ const SubscriptionPanel = ({ school, plans, onChanged }) => {
           <Tag color={state.color}>{state.label}</Tag>
           {sub.status === "trial" && state.key === "ending" && <Tag color="processing">Trial</Tag>}
         </div>
-        <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <div className="u-meta-md">
           {rupees(currentPrice)} for {sub.snapshot?.durationInDays} days · {start.format(DAY)} – {end.format(DAY)}
         </div>
         {["cancelled", "suspended"].includes(state.key) && (
@@ -231,7 +231,7 @@ const SubscriptionPanel = ({ school, plans, onChanged }) => {
 
       <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>Move to another plan</div>
       <Select
-        style={{ width: "100%" }} placeholder="Pick a plan" value={newPlanId || undefined} onChange={setNewPlanId} allowClear
+        className="u-full" placeholder="Pick a plan" value={newPlanId || undefined} onChange={setNewPlanId} allowClear
         options={changeTo.map((p) => ({ value: p._id, label: planLabel(p) }))}
         notFoundContent="No other active plan"
       />
@@ -325,7 +325,7 @@ const SchoolForm = ({ open, school, boards, plans, onClose, onSaved }) => {
         </div>
       )}
     >
-      {serverError && <Alert type="error" showIcon message={serverError} style={{ marginBottom: 16 }} />}
+      {serverError && <Alert type="error" showIcon message={serverError} className="u-mb-4" />}
       <Form form={form} layout="vertical" requiredMark={false}>
         <Form.Item name="name" label="School name" rules={[{ required: true, whitespace: true, message: "Enter the school's name" }]}>
           <Input placeholder="Sunrise Public School" maxLength={120} />
@@ -497,7 +497,7 @@ const Schools = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
           <SchoolMark school={s} />
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{s.name}</div>
+            <div className="u-strong-bold">{s.name}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>
               {[s.address, s.email].filter(Boolean).join(" · ") || "No contact details"}
             </div>
@@ -510,7 +510,7 @@ const Schools = () => {
       key: "boards",
       render: (_, s) => (s.boards?.length
         ? s.boards.map((b) => <Tag key={b._id}>{b.name}</Tag>)
-        : <span style={{ color: "var(--text-muted)" }}>—</span>),
+        : <span className="u-muted">—</span>),
     },
     {
       title: "Subscription",
@@ -555,7 +555,7 @@ const Schools = () => {
             options={[segment("all", "All"), segment("attention", "Needs attention"), segment("off", "Switched off")]}
           />
           <Input
-            allowClear prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            allowClear prefix={<SearchOutlined className="u-muted" />}
             placeholder="Search by name, city, email or phone"
             value={search} onChange={(e) => setSearch(e.target.value)}
             style={{ flex: "1 1 240px", maxWidth: 360 }}
@@ -614,7 +614,7 @@ const Schools = () => {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <SchoolMark school={open} size={40} />
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{open.name}</div>
+              <div className="u-strong-bold">{open.name}</div>
               <div style={{ fontSize: 12, fontWeight: 400, color: "var(--text-muted)" }}>
                 {open.isActive ? "Can sign in" : "Switched off — nobody can sign in"} · added {dayjs(open.createdAt).format(DAY)}
               </div>

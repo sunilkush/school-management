@@ -215,7 +215,7 @@ const TeacherAttendance = () => {
         const name   = r?.name || "—";
         const gpsRec = gpsRecords[r._id];
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div
               style={{
                 width: 36, height: 36, borderRadius: "50%",
@@ -227,7 +227,7 @@ const TeacherAttendance = () => {
               {name[0]?.toUpperCase() || "T"}
             </div>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div className="u-row-sm">
                 <span style={{ fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
                   {name}
                 </span>
@@ -245,7 +245,7 @@ const TeacherAttendance = () => {
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <div className="u-meta">
                 {r?.email || "—"}
               </div>
             </div>
@@ -256,7 +256,7 @@ const TeacherAttendance = () => {
     {
       title: "Department",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {r?.department || "—"}
         </span>
       ),
@@ -314,7 +314,7 @@ const TeacherAttendance = () => {
             )}
           </div>
         ) : (
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+          <span className="u-meta">—</span>
         );
       },
     },
@@ -341,7 +341,7 @@ const TeacherAttendance = () => {
       />
 
       {/* ── Filters ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div
           style={{
             display: "grid",
@@ -353,7 +353,7 @@ const TeacherAttendance = () => {
             value={selectedDate}
             onChange={(d) => setSelectedDate(d || dayjs())}
             disabledDate={(c) => c && c > dayjs().endOf("day")}
-            style={{ width: "100%" }}
+            className="u-full"
           />
           <Input
             placeholder="Search name / employee ID"
@@ -497,7 +497,7 @@ const TeacherAttendance = () => {
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
-                  <span style={{ color: "var(--text-muted)" }}>
+                  <span className="u-muted">
                     {usersLoading ? "Loading teachers…" : "No teachers found"}
                   </span>
                 }

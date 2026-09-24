@@ -189,10 +189,10 @@ const ChildAttendancePage = () => {
       sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
       render: (v) => v ? (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+          <div className="u-strong">
             {dayjs(v).format("DD MMM YYYY")}
           </div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          <div className="u-meta-xs">
             {dayjs(v).format("dddd")}
           </div>
         </div>
@@ -220,7 +220,7 @@ const ChildAttendancePage = () => {
       width: 110,
       render: (v) => v
         ? <span style={{ fontWeight: 600, color: "var(--success)" }}>{dayjs(v).format("hh:mm A")}</span>
-        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
+        : <span className="u-meta">—</span>,
     },
     {
       title: "Check Out",
@@ -228,12 +228,12 @@ const ChildAttendancePage = () => {
       width: 110,
       render: (v) => v
         ? <span style={{ fontWeight: 600, color: "var(--primary)" }}>{dayjs(v).format("hh:mm A")}</span>
-        : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
+        : <span className="u-meta">—</span>,
     },
     {
       title: "Remarks",
       dataIndex: "remarks",
-      render: (v) => v || <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>,
+      render: (v) => v || <span className="u-meta">—</span>,
     },
   ];
 
@@ -246,7 +246,7 @@ const ChildAttendancePage = () => {
         subtitle="View your child's monthly attendance with calendar and statistics."
         icon={<CalendarOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <Select
               placeholder="Select child"
               value={childId}
@@ -338,7 +338,7 @@ const ChildAttendancePage = () => {
 
                 {/* inline progress bar */}
                 {summary.total > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div className="u-row-sm">
                     <div style={{
                       width: 80, height: 6, borderRadius: 3,
                       background: "var(--border-muted)", overflow: "hidden",

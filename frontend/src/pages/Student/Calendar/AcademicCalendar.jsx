@@ -20,7 +20,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -160,14 +160,14 @@ const AcademicCalendar = () => {
                       {dayjs(ev.startDate || ev.date).format("MMM")}
                     </div>
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div className="u-grow">
                     <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>{ev.title}</div>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
                       <Tag color={EVENT_TYPE_COLOR[ev.type] || "default"} style={{ fontSize: 11 }}>
                         {ev.type || "Event"}
                       </Tag>
                       {ev.description && (
-                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{ev.description}</span>
+                        <span className="u-meta">{ev.description}</span>
                       )}
                     </div>
                   </div>

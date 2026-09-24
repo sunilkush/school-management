@@ -139,7 +139,7 @@ const AppraisalPage = () => {
       render: (name, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{name}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {dayjs(r.periodStart).format("MMM YYYY")} – {dayjs(r.periodEnd).format("MMM YYYY")} · {r.criteria?.length || 0} criteria
           </div>
         </div>
@@ -153,16 +153,16 @@ const AppraisalPage = () => {
         return total ? (
           <div>
             <Progress percent={Math.round((done / total) * 100)} size="small" />
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{done} of {total} finalised</div>
+            <div className="u-meta">{done} of {total} finalised</div>
           </div>
-        ) : <span style={{ color: "var(--text-muted)", fontSize: 12 }}>not started</span>;
+        ) : <span className="u-meta">not started</span>;
       },
     },
     {
       title: "Average", width: 110, align: "right",
       render: (_, r) => (r.progress?.averageScore != null
         ? <b>{r.progress.averageScore} / 5</b>
-        : <span style={{ color: "var(--text-muted)" }}>—</span>),
+        : <span className="u-muted">—</span>),
     },
     {
       title: "Status", dataIndex: "status", width: 100,
@@ -190,7 +190,7 @@ const AppraisalPage = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{r.employeeId?.userId?.name || "—"}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{r.employeeId?.userId?.email || ""}</div>
+          <div className="u-meta">{r.employeeId?.userId?.email || ""}</div>
         </div>
       ),
     },
@@ -201,8 +201,8 @@ const AppraisalPage = () => {
     {
       title: "Score", width: 170, align: "right",
       render: (_, r) => (r.overallScore != null
-        ? <div><b>{r.overallScore} / 5</b><div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.overallBand}</div></div>
-        : <span style={{ color: "var(--text-muted)" }}>—</span>),
+        ? <div><b>{r.overallScore} / 5</b><div className="u-meta-xs">{r.overallBand}</div></div>
+        : <span className="u-muted">—</span>),
     },
     {
       title: "", width: 110, align: "right",
@@ -277,12 +277,12 @@ const AppraisalPage = () => {
         onCancel={() => setCycleModal(false)} onOk={saveCycle}
         confirmLoading={actionLoading} okText="Create draft"
       >
-        <Form form={cycleForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={cycleForm} layout="vertical" className="u-mt-4">
           <Form.Item name="name" label="Name" rules={[{ required: true, message: "Give the cycle a name" }]}>
             <Input placeholder="Annual Review 2025-26" />
           </Form.Item>
           <Form.Item name="period" label="Period under review" rules={[{ required: true, message: "Pick the period" }]}>
-            <RangePicker style={{ width: "100%" }} picker="date" />
+            <RangePicker className="u-full" picker="date" />
           </Form.Item>
           <Form.Item name="selfAssessmentRequired" label="Ask staff to score themselves first" valuePropName="checked">
             <Select options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
@@ -298,11 +298,11 @@ const AppraisalPage = () => {
               <>
                 {fields.map(({ key, name, ...rest }) => (
                   <div key={key} style={{ display: "flex", gap: 8 }}>
-                    <Form.Item {...rest} name={[name, "name"]} style={{ flex: 1 }} rules={[{ required: true, message: "Name it" }]}>
+                    <Form.Item {...rest} name={[name, "name"]} className="u-grow" rules={[{ required: true, message: "Name it" }]}>
                       <Input placeholder="Teaching quality" />
                     </Form.Item>
                     <Form.Item {...rest} name={[name, "weight"]} style={{ width: 110 }} rules={[{ required: true }]}>
-                      <InputNumber min={1} max={100} addonAfter="%" style={{ width: "100%" }} />
+                      <InputNumber min={1} max={100} addonAfter="%" className="u-full" />
                     </Form.Item>
                     <Button type="text" danger onClick={() => remove(name)}>×</Button>
                   </div>
@@ -335,13 +335,13 @@ const AppraisalPage = () => {
         ) : (
           <>
             {review.status === "finalised" && (
-              <Alert type="success" showIcon style={{ marginBottom: 16 }}
+              <Alert type="success" showIcon className="u-mb-4"
                      message={`${review.overallScore} / 5 — ${review.overallBand}`}
                      description="A finalised appraisal cannot be changed. Reopen the cycle if it is wrong." />
             )}
 
             {review.selfScores?.length > 0 && (
-              <div className="section-panel" style={{ marginBottom: 16 }}>
+              <div className="section-panel u-mb-4">
                 <div style={{ fontWeight: 700, marginBottom: 8 }}>What they said about themselves</div>
                 {review.selfScores.map((s) => (
                   <div key={s.criterion} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
@@ -359,7 +359,7 @@ const AppraisalPage = () => {
 
             {review.gaps?.length > 0 && (
               <Alert
-                type="warning" showIcon style={{ marginBottom: 16 }}
+                type="warning" showIcon className="u-mb-4"
                 message="Where you and they see it differently"
                 description={
                   <div style={{ fontSize: 13 }}>

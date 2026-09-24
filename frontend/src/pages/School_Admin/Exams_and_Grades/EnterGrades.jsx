@@ -291,7 +291,7 @@ const EnterGrades = () => {
         icon={<EditOutlined />}
       />
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         <div className="section-panel">
           <Divider orientation="left" style={{ marginTop: 0 }}>Grade System Setup</Divider>
 
@@ -319,7 +319,7 @@ const EnterGrades = () => {
                 render: (_, record) => (
                   <InputNumber
                     min={0} max={100}
-                    style={{ width: "100%" }}
+                    className="u-full"
                     value={record.min}
                     onChange={(value) => updateGradeBand(record.key, "min", value)}
                   />
@@ -331,7 +331,7 @@ const EnterGrades = () => {
                 render: (_, record) => (
                   <InputNumber
                     min={0} max={100}
-                    style={{ width: "100%" }}
+                    className="u-full"
                     value={record.max}
                     onChange={(value) => updateGradeBand(record.key, "max", value)}
                   />
@@ -359,7 +359,7 @@ const EnterGrades = () => {
             ]}
           />
 
-          <Space style={{ marginTop: 12 }} wrap>
+          <Space className="u-mt-3" wrap>
             <Button icon={<PlusOutlined />} onClick={addGradeBand}>Add Grade Row</Button>
             <Button type="primary" onClick={saveGradeConfig}>Save Grade System</Button>
             <Button onClick={resetGradeConfig}>Reset Default</Button>
@@ -367,7 +367,7 @@ const EnterGrades = () => {
 
           {gradeConfigErrors.length > 0 && (
             <Alert
-              style={{ marginTop: 12 }}
+              className="u-mt-3"
               type="warning"
               showIcon
               message="Please fix grade setup"
@@ -459,7 +459,7 @@ const EnterGrades = () => {
             locale={{ emptyText: "Please select class, exam & subject to enter grades" }}
           />
 
-          <Row justify="end" style={{ marginTop: 16 }}>
+          <Row justify="end" className="u-mt-4">
             <Button
               type="primary"
               onClick={handleSubmit}

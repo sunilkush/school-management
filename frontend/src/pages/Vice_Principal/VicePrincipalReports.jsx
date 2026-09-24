@@ -140,7 +140,7 @@ const GenderCard = ({ genderStats }) => {
       </div>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {slices.map((s) => (
-          <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div key={s.label} className="u-row-sm">
             <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.color }} />
             <span style={{ fontSize: 12, color: t.textSec }}>{s.label}</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: t.textPri }}>
@@ -196,7 +196,7 @@ const SectionTable = ({ rows }) => {
                   {row._id || "—"}
                 </td>
                 <td style={{ padding: "10px 12px", borderBottom: `1px solid ${t.divider}` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div className="u-row">
                     <div style={{ height: 4, width: Math.min((row.count / 40) * 80, 80), borderRadius: 99, background: "var(--purple)" }} />
                     <span style={{ fontSize: 13, fontWeight: 600, color: t.textPri }}>{row.count}</span>
                   </div>
@@ -266,7 +266,7 @@ const VicePrincipalReports = () => {
         subtitle="Academic and operational snapshot for the selected year"
         icon={<FileBarChart2 size={18} />}
         extra={
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="u-row">
             {selectedYear && (
               <Tag color="purple" style={{ borderRadius: 99, padding: "3px 10px", fontSize: 11 }}>
                 {selectedYear.name}

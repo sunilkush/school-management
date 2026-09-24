@@ -38,7 +38,7 @@ const ChartTip = ({ active, payload, label }) => {
     }}>
       <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 6 }}>{label}</div>
       {payload.map((p) => (
-        <div key={p.dataKey} style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <div key={p.dataKey} className="u-meta">
           <span style={{ color: p.color, fontWeight: 700 }}>●</span>{" "}
           {p.name}: <strong style={{ color: "var(--text-primary)" }}>{formatCurrencyINR(p.value)}</strong>
         </div>
@@ -98,9 +98,9 @@ const MonthlyPayrollReport = () => {
       dataIndex: "employees",
       width: 120,
       render: (v) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="u-row-sm">
           <TeamOutlined style={{ color: "var(--primary)", fontSize: 13 }} />
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{v}</span>
+          <span className="u-strong-bold">{v}</span>
         </div>
       ),
     },
@@ -122,7 +122,7 @@ const MonthlyPayrollReport = () => {
       render: (v) => {
         const pct = totalNetPay > 0 ? ((v / totalNetPay) * 100).toFixed(1) : 0;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="u-row">
             <div style={{
               flex: 1, height: 6, borderRadius: 3,
               background: "var(--border-muted)", overflow: "hidden",
@@ -163,11 +163,11 @@ const MonthlyPayrollReport = () => {
       {/* ── Toolbar ───────────────────────────────────────────────── */}
       <div className="section-panel" style={{ marginBottom: 16, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div style={iconWell("var(--purple)", 32)}><BarChartOutlined style={{ fontSize: 14 }} /></div>
-        <div style={{ flex: 1 }}>
+        <div className="u-grow">
           <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
             Report Period
           </Text>
-          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          <Text className="u-meta-xs">
             Viewing {selectedMonth.format("MMMM YYYY")} payroll data
           </Text>
         </div>
@@ -186,10 +186,10 @@ const MonthlyPayrollReport = () => {
           <Text strong style={{ fontSize: 16, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
             No Report for {selectedMonth.format("MMMM YYYY")}
           </Text>
-          <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          <Text className="u-meta-md">
             Generate the payroll cycle for this month first, then refresh.
           </Text>
-          <div style={{ marginTop: 20 }}>
+          <div className="u-mt-5">
             <Alert
               type="info"
               showIcon
@@ -201,7 +201,7 @@ const MonthlyPayrollReport = () => {
       ) : (
         <>
           {/* ── KPI Cards ─────────────────────────────────────────── */}
-          <div style={{ marginBottom: 16 }}>
+          <div className="u-mb-4">
             <MonthlyPayrollReportCards
               summary={report?.summary || {
                 totalEmployees: 0, totalGross: 0, totalDeductions: 0,
@@ -224,7 +224,7 @@ const MonthlyPayrollReport = () => {
                   <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                     Dept-wise Distribution
                   </Text>
-                  <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  <Text className="u-meta-xs">
                     Net payout by department
                   </Text>
                 </div>
@@ -271,11 +271,11 @@ const MonthlyPayrollReport = () => {
                 display: "flex", alignItems: "center", gap: 10,
               }}>
                 <div style={iconWell("var(--success)", 32)}><TeamOutlined style={{ fontSize: 14 }} /></div>
-                <div style={{ flex: 1 }}>
+                <div className="u-grow">
                   <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                     Department Breakdown
                   </Text>
-                  <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  <Text className="u-meta-xs">
                     {deptRows.length} department{deptRows.length !== 1 ? "s" : ""} — {formatCurrencyINR(totalNetPay)} total
                   </Text>
                 </div>

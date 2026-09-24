@@ -126,11 +126,11 @@ const MyAttendanceSection = ({ basePath: basePathProp, style }) => {
   return (
     <div className="section-panel" style={{ ...style }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={iconWell("var(--primary)", 36)}><ClockCircleOutlined /></div>
           <div>
             <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text-primary)" }}>My Attendance</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{dayjs().format("dddd, D MMMM")}</div>
+            <div className="u-meta">{dayjs().format("dddd, D MMMM")}</div>
           </div>
         </div>
         <Button size="small" type="text" icon={<ReloadOutlined />} onClick={load} loading={loading} aria-label="Refresh attendance" />

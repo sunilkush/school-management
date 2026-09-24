@@ -152,7 +152,7 @@ const DriverTrip = () => {
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6 }}>BUS</div>
               <Select
-                style={{ width: "100%" }}
+                className="u-full"
                 value={vehicleId}
                 onChange={setVehicleId}
                 options={vehicles.map((v) => ({ value: v._id, label: `${v.busNumber} — ${v.route || "no route set"}` }))}
@@ -161,7 +161,7 @@ const DriverTrip = () => {
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6 }}>ROUTE</div>
               <Select
-                style={{ width: "100%" }}
+                className="u-full"
                 placeholder="Which route are you running?"
                 value={routeId}
                 onChange={setRouteId}
@@ -198,12 +198,12 @@ const DriverTrip = () => {
           <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>{route?.name || "Trip running"}</div>
-              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+              <div className="u-meta-md">
                 {activeTrip.direction === "pickup" ? "Morning pickup" : "Afternoon drop"} ·{" "}
                 {lastPingAt ? `last sent ${new Date(lastPingAt).toLocaleTimeString("en-IN")}` : "waiting for the first position"}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div className="u-row">
               <span style={pill(geoError ? "var(--danger)" : "var(--success)")}>
                 <AimOutlined /> {geoError ? "no location" : "tracking"}
               </span>

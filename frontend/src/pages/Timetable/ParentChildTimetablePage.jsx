@@ -108,7 +108,7 @@ export default function ParentChildTimetablePage() {
         subtitle="View your child's active weekly class schedule."
         icon={<ScheduleOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <Select
               placeholder="Select child"
               value={studentId || undefined}
@@ -159,7 +159,7 @@ export default function ParentChildTimetablePage() {
             gap: 8,
           }}>
             <CalendarOutlined style={{ color: "var(--primary)", fontSize: 16 }} />
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+            <span className="u-title-sm">
               Weekly Schedule
             </span>
             {today && (

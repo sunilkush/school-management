@@ -66,22 +66,22 @@ const MyChildren = () => {
                     </div>
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div className="u-row">
                         <div style={iconWell(color, 26)}><IdcardOutlined style={{ fontSize: 11 }} /></div>
-                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                        <span className="u-meta-md">
                           Class {child.className || "—"} — {child.sectionName || "—"}
                         </span>
                       </div>
                       {child.email && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="u-row">
                           <div style={iconWell(color, 26)}><MailOutlined style={{ fontSize: 11 }} /></div>
-                          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{child.email}</span>
+                          <span className="u-meta-md">{child.email}</span>
                         </div>
                       )}
                       {child.dateOfBirth && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="u-row">
                           <div style={iconWell(color, 26)}><CalendarOutlined style={{ fontSize: 11 }} /></div>
-                          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                          <span className="u-meta-md">
                             {dayjs(child.dateOfBirth).format("DD MMM YYYY")}
                           </span>
                         </div>

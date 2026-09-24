@@ -192,7 +192,7 @@ const NotifItem = ({ item, isMobile, onMarkRead }) => {
     >
       <LevelAvatar level={level} size={38} />
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="u-grow-min">
         {/* Row 1: title + tags */}
         <Flex align="center" justify="space-between" gap={8} wrap="wrap">
           <Flex align="center" gap={6}>
@@ -228,7 +228,7 @@ const NotifItem = ({ item, isMobile, onMarkRead }) => {
 
         {/* Row 3: meta */}
         <Flex align="center" justify="space-between" wrap="wrap" gap={6}>
-          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          <Text className="u-meta-xs">
             By {createdBy} · {dayjs(item.createdAt).fromNow()}
           </Text>
           {channels.length > 0 && (
@@ -248,7 +248,7 @@ const NotifItem = ({ item, isMobile, onMarkRead }) => {
 
 /* ─── Skeleton ───────────────────────────────────────────────────── */
 const NotifSkeleton = () => (
-  <Space direction="vertical" size={10} style={{ width: "100%" }}>
+  <Space direction="vertical" size={10} className="u-full">
     {[1, 2, 3].map((i) => (
       <div key={i} className="section-panel" style={{ padding: 16, marginBottom: 0, borderRadius: 14 }}>
         <Skeleton active avatar paragraph={{ rows: 2 }} />
@@ -449,7 +449,7 @@ const Notification = () => {
       <div className="page-wrapper">
 
         {/* ── Stat cards ──────────────────────────────────────────── */}
-        <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+        <Row gutter={[12, 12]} className="u-mb-5">
           {STAT_CARDS.map((s) => (
             <Col xs={12} md={6} key={s.title}>
               <div style={{
@@ -490,9 +490,9 @@ const Notification = () => {
 
         {/* ── Create / Broadcast Form ──────────────────────────────── */}
         {canCreateNotification && (
-          <div className="section-panel" style={{ marginBottom: 20 }}>
+          <div className="section-panel u-mb-5">
             {/* Form header */}
-            <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+            <Flex align="center" gap={10} className="u-mb-5">
               <div style={iconWell("var(--purple)", 38)}>
                 <SendOutlined style={{ fontSize: 17 }} />
               </div>
@@ -500,7 +500,7 @@ const Notification = () => {
                 <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block" }}>
                   Create / Broadcast Notification
                 </Text>
-                <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                <Text className="u-meta">
                   Compose an announcement, choose audience, and send now or schedule.
                 </Text>
               </div>
@@ -565,7 +565,7 @@ const Notification = () => {
                 </Col>
                 <Col xs={24} md={10}>
                   <Form.Item label="Schedule (optional)" name="scheduledAt" extra="Leave empty to send immediately.">
-                    <DatePicker showTime style={{ width: "100%" }} placeholder="Choose date & time" />
+                    <DatePicker showTime className="u-full" placeholder="Choose date & time" />
                   </Form.Item>
                 </Col>
               </Row>
@@ -601,7 +601,7 @@ const Notification = () => {
             vertical={isMobile} gap={10}
             align={isMobile ? "stretch" : "center"}
             justify="space-between"
-            style={{ marginBottom: 16 }}
+            className="u-mb-4"
           >
             <Flex align="center" gap={8}>
               <Text strong style={{ fontSize: 15, color: "var(--text-primary)" }}>My Notifications</Text>
@@ -640,19 +640,19 @@ const Notification = () => {
               <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block", marginBottom: 4 }}>
                 {search || filterLevel !== "all" ? "No matching notifications" : "You're all caught up!"}
               </Text>
-              <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <Text className="u-meta-md">
                 {search || filterLevel !== "all"
                   ? "Try adjusting your search or filter."
                   : "No notifications available for your account right now."}
               </Text>
               {unreadCount === 0 && filteredNotifications.length === 0 && (search || filterLevel !== "all") && (
-                <Button size="small" style={{ marginTop: 12 }} onClick={() => { setSearch(""); setFilterLevel("all"); }}>
+                <Button size="small" className="u-mt-3" onClick={() => { setSearch(""); setFilterLevel("all"); }}>
                   Clear filters
                 </Button>
               )}
             </div>
           ) : (
-            <Space direction="vertical" size={20} style={{ width: "100%" }}>
+            <Space direction="vertical" size={20} className="u-full">
               {groupedNotifications.map(([label, items]) => (
                 <div key={label}>
                   {/* Date group header */}
@@ -661,10 +661,10 @@ const Notification = () => {
                       {label}
                     </Text>
                     <div style={{ flex: 1, height: 1, background: "var(--border-muted)" }} />
-                    <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{items.length}</Text>
+                    <Text className="u-meta-xs">{items.length}</Text>
                   </Flex>
 
-                  <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                  <Space direction="vertical" size={8} className="u-full">
                     {items.map((item) => (
                       <NotifItem
                         key={item._id || item.id}

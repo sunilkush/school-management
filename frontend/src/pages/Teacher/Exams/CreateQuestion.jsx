@@ -248,7 +248,7 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp,
         size="middle"
       >
         {/* ── Class & Subject ── */}
-        <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <Divider orientation="left" className="u-meta-md">
           Class & Subject
         </Divider>
 
@@ -287,7 +287,7 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp,
         </Row>
 
         {/* ── Question ── */}
-        <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <Divider orientation="left" className="u-meta-md">
           Question
         </Divider>
 
@@ -317,7 +317,7 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp,
         {/* ── Options (MCQ / Match) ── */}
         {needsOptions && (
           <>
-            <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            <Divider orientation="left" className="u-meta-md">
               Options ({options.length})
             </Divider>
 
@@ -360,7 +360,7 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp,
         )}
 
         {/* ── Correct Answers ── */}
-        <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <Divider orientation="left" className="u-meta-md">
           Correct Answers
         </Divider>
 
@@ -400,7 +400,7 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp,
         )}
 
         {/* ── Evaluation ── */}
-        <Divider orientation="left" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <Divider orientation="left" className="u-meta-md">
           Evaluation
         </Divider>
 
@@ -410,7 +410,7 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp,
               <Select>
                 {DIFFICULTY.map((d) => (
                   <Option key={d.value} value={d.value}>
-                    <Tag color={d.color === "var(--success-hover)" ? "green" : d.color === "var(--warning-hover)" ? "gold" : "red"} style={{ margin: 0 }}>
+                    <Tag color={d.color === "var(--success-hover)" ? "green" : d.color === "var(--warning-hover)" ? "gold" : "red"} className="u-m-0">
                       {d.label}
                     </Tag>
                   </Option>
@@ -420,12 +420,12 @@ const CreateQuestion = ({ initialData = null, onSuccess, schoolId: schoolIdProp,
           </Col>
           <Col md={6} xs={12}>
             <Form.Item name="marks" label="Marks">
-              <InputNumber min={0} step={0.5} style={{ width: "100%" }} />
+              <InputNumber min={0} step={0.5} className="u-full" />
             </Form.Item>
           </Col>
           <Col md={6} xs={12}>
             <Form.Item name="negativeMarks" label="Negative Marks">
-              <InputNumber min={0} step={0.25} style={{ width: "100%" }} />
+              <InputNumber min={0} step={0.25} className="u-full" />
             </Form.Item>
           </Col>
           <Col md={6} xs={12}>

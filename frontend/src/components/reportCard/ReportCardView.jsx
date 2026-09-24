@@ -68,17 +68,17 @@ export default function ReportCardView({ card, showStudent = false }) {
 
   return (
     <div>
-      <div className="section-panel" style={{ marginBottom: 16 }}>
+      <div className="section-panel u-mb-4">
         <div style={{ display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             {showStudent && (
-              <Title level={5} style={{ margin: 0 }}>
+              <Title level={5} className="u-m-0">
                 {card.studentId?.name || "Student"}
               </Title>
             )}
             <Text type="secondary">{card.templateId?.name || "Report card"}</Text>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <div className="u-row-wrap">
             <span style={pill(failed ? "var(--danger)" : "var(--success)")}>
               {failed ? "FAIL" : "PASS"}
             </span>
@@ -103,7 +103,7 @@ export default function ReportCardView({ card, showStudent = false }) {
         dataSource={card.subjects || []}
         pagination={false}
         scroll={{ x: 640 }}
-        style={{ marginBottom: 16 }}
+        className="u-mb-4"
       />
 
       {(card.coScholastic || []).some((c) => c.area) && (

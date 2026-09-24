@@ -26,7 +26,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -90,7 +90,7 @@ const StaffDashboard = () => {
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }} className="staff-dash-grid">
         <div className="section-panel">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>My Pending Tasks</span>
+            <span className="u-title-sm">My Pending Tasks</span>
             <Button size="small" onClick={() => navigate("/dashboard/staff/tasks")}>View All</Button>
           </div>
           {pendingTasks.length === 0 ? (
@@ -112,7 +112,7 @@ const StaffDashboard = () => {
                     }}
                   >
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{task.title}</div>
+                      <div className="u-label">{task.title}</div>
                       <div style={{ fontSize: 12, color: overdue ? "var(--danger-hover)" : "var(--text-muted)", marginTop: 2 }}>
                         {task.dueDate ? `Due ${dayjs(task.dueDate).format("DD MMM YYYY")}${overdue ? " (Overdue)" : ""}` : "No due date"}
                       </div>
@@ -127,7 +127,7 @@ const StaffDashboard = () => {
 
         <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Quick Actions</div>
-          <Space direction="vertical" style={{ width: "100%" }} size={8}>
+          <Space direction="vertical" className="u-full" size={8}>
             <Button block icon={<IdcardOutlined />} onClick={() => navigate("/dashboard/staff/attendance/self")}>
               My Attendance
             </Button>
@@ -147,12 +147,7 @@ const StaffDashboard = () => {
         </div>
       </div>
 
-      <style>{`
-        @media (max-width: 900px) {
-          .staff-dash-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </div>
+          </div>
   );
 };
 

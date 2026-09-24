@@ -63,11 +63,11 @@ const EntryRegister = () => {
     {
       title: "Visitor",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={avatarStyle(r.name, 34)}>{getInitials(r.name)}</div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.name}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+            <div className="u-label">{r.name}</div>
+            <div className="u-meta-xs">
               {r.type}{r.purpose ? ` · ${r.purpose}` : ""}
             </div>
           </div>
@@ -93,7 +93,7 @@ const EntryRegister = () => {
             Mark Exit
           </Button>
         ) : (
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+          <span className="u-meta">—</span>
         ),
     },
   ];
@@ -141,7 +141,7 @@ const EntryRegister = () => {
               options={["All", "Visitor", "Parent", "Vendor", "Contractor", "Staff", "Other"].map((v) => ({ value: v, label: v }))}
             />
             <Input
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               placeholder="Search name, vehicle, gate..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}

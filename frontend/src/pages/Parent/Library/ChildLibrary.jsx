@@ -57,7 +57,7 @@ const ChildLibrary = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{r.bookId?.title || "—"}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{r.bookId?.author || ""}</div>
+          <div className="u-meta">{r.bookId?.author || ""}</div>
         </div>
       ),
     },

@@ -122,7 +122,7 @@ const TeacherReports = () => {
       title: "Report Title",
       dataIndex: "title",
       render: (v) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 32, height: 32, borderRadius: 9, flexShrink: 0,
             background: "rgba(var(--purple-rgb),0.08)",
@@ -130,7 +130,7 @@ const TeacherReports = () => {
           }}>
             <FileText size={14} color="var(--purple)" strokeWidth={1.8} />
           </div>
-          <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>
+          <span className="u-label">
             {v || "Untitled Report"}
           </span>
         </div>
@@ -152,9 +152,9 @@ const TeacherReports = () => {
     {
       title: "Created On", dataIndex: "createdAt", width: 140,
       render: (v) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="u-row-sm">
           <Clock size={12} color="var(--text-muted)" />
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <span className="u-meta">
             {v ? dayjs(v).format("DD MMM YYYY") : "—"}
           </span>
         </div>
@@ -201,13 +201,13 @@ const TeacherReports = () => {
             {filteredReports.length} report{filteredReports.length !== 1 ? "s" : ""}
             {selectedType !== "all" || searchText ? " (filtered)" : ""}
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <Input
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               placeholder="Search title, type, creator…"
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+              prefix={<SearchOutlined className="u-muted" />}
               style={{ width: 240, borderRadius: 9 }}
             />
             <Select
@@ -230,7 +230,7 @@ const TeacherReports = () => {
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
               No Reports Found
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            <div className="u-meta-md">
               {items.length === 0
                 ? "No reports have been generated yet."
                 : "No reports match your current filter."}

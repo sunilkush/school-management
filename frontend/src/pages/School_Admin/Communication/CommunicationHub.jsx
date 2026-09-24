@@ -251,12 +251,12 @@ const BroadcastPanel = ({ user }) => {
     <div>
       {/* Compose section */}
       {canCreate && (
-        <div className="section-panel" style={{ marginBottom: 20 }}>
+        <div className="section-panel u-mb-5">
           <Flex align="center" gap={10} style={{ marginBottom: 18 }}>
             <div style={iconWell("var(--purple)", 38)}><SendOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Create Broadcast</Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>Send announcement to specific roles, levels, or all users.</Text>
+              <Text className="u-meta">Send announcement to specific roles, levels, or all users.</Text>
             </div>
             {unread > 0 && (
               <Button size="small" icon={<CheckCircleOutlined />} onClick={handleMarkAllRead} style={{ marginLeft: "auto" }}>
@@ -295,7 +295,7 @@ const BroadcastPanel = ({ user }) => {
                 <ChannelToggle />
               </Form.Item>
               <Form.Item label="Schedule (optional)" name="scheduledAt" extra="Empty = send now">
-                <DatePicker showTime style={{ width: "100%" }} placeholder="Pick date & time" />
+                <DatePicker showTime className="u-full" placeholder="Pick date & time" />
               </Form.Item>
             </div>
 
@@ -333,7 +333,7 @@ const BroadcastPanel = ({ user }) => {
         </Flex>
 
         {loading ? (
-          <Space direction="vertical" size={10} style={{ width: "100%" }}>
+          <Space direction="vertical" size={10} className="u-full">
             {[1, 2, 3].map((i) => <div key={i} className="section-panel" style={{ padding: 14, marginBottom: 0, borderRadius: 12 }}><Skeleton active avatar paragraph={{ rows: 2 }} /></div>)}
           </Space>
         ) : filtered.length === 0 ? (
@@ -344,7 +344,7 @@ const BroadcastPanel = ({ user }) => {
             </Text>
           </div>
         ) : (
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
+          <Space direction="vertical" size={8} className="u-full">
             {filtered.map((n) => {
               const lm = LEVEL_META[n.level] || LEVEL_META.all;
               const st = STATUS_COLOR[n.status] || "var(--text-muted)";
@@ -361,7 +361,7 @@ const BroadcastPanel = ({ user }) => {
                   }}
                 >
                   <LevelAvatar level={n.level} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="u-grow-min">
                     <Flex align="center" justify="space-between" gap={6} wrap="wrap">
                       <Flex align="center" gap={6}>
                         {!n.isRead && <span style={{ width: 7, height: 7, borderRadius: "50%", background: lm.color, flexShrink: 0, display: "inline-block" }} />}
@@ -375,7 +375,7 @@ const BroadcastPanel = ({ user }) => {
                     <Paragraph style={{ margin: "4px 0 6px", fontSize: 12.5, color: "var(--text-muted)", lineHeight: 1.5 }} ellipsis={{ rows: 2 }}>
                       {safeText(n.message)}
                     </Paragraph>
-                    <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    <Text className="u-meta-xs">
                       By {safeText(n.createdBy)} · {fmtShort(n.createdAt)}
                     </Text>
                   </div>
@@ -473,7 +473,7 @@ const MessagesPanel = ({ user }) => {
           <Tabs
             activeKey={mailbox}
             onChange={setMailbox}
-            style={{ margin: 0 }}
+            className="u-m-0"
             tabBarStyle={{ margin: 0, borderBottom: "none" }}
             items={MAILBOX_TABS.map(({ key, label, icon }) => ({
               key,
@@ -508,7 +508,7 @@ const MessagesPanel = ({ user }) => {
       {/* List */}
       <div className="section-panel">
         {loading ? (
-          <Space direction="vertical" size={10} style={{ width: "100%" }}>
+          <Space direction="vertical" size={10} className="u-full">
             {[1, 2, 3].map((i) => <div key={i} className="section-panel" style={{ padding: 14, marginBottom: 0 }}><Skeleton active avatar paragraph={{ rows: 2 }} /></div>)}
           </Space>
         ) : rows.length === 0 ? (
@@ -540,7 +540,7 @@ const MessagesPanel = ({ user }) => {
                       <div style={iconWell(accent, 38, { flexShrink: 0 })}>
                         {isUnread ? <MailOpen size={16} /> : <Mail size={16} />}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="u-grow-min">
                         <Flex justify="space-between" align="center" gap={6} wrap="wrap">
                           <Flex align="center" gap={6}>
                             {isUnread && <Badge status="processing" />}
@@ -559,7 +559,7 @@ const MessagesPanel = ({ user }) => {
                           <Tag color={PRIORITY_COLOR[pri]} style={{ borderRadius: 99, fontSize: 10, margin: 0 }}>
                             {pri.toUpperCase()}
                           </Tag>
-                          <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                          <Text className="u-meta-xs">
                             {mailbox === "sent"
                               ? `To: ${safeText(item.recipientIds?.map?.((r) => r?.name || r))}`
                               : `From: ${safeText(item.senderId?.name || item.senderId)}`}
@@ -629,7 +629,7 @@ const MessagesPanel = ({ user }) => {
         open={Boolean(selected)} onClose={() => setSelected(null)} width={isMobile ? "100%" : 700}
       >
         {selected && (
-          <Space direction="vertical" size={14} style={{ width: "100%" }}>
+          <Space direction="vertical" size={14} className="u-full">
             <div className="section-panel" style={{ padding: 12, background: "var(--surface-soft)" }}>
               <Flex gap={6} wrap="wrap" align="center">
                 <Tag color={PRIORITY_COLOR[selected.priority] || "blue"} style={{ borderRadius: 99 }}>
@@ -714,7 +714,7 @@ const HistoryPanel = () => {
 
   const columns = [
     { title: "Title", dataIndex: "title", key: "title", render: (v) => <Text strong style={{ color: "var(--text-primary)", fontSize: 13 }}>{v}</Text> },
-    { title: "Message", dataIndex: "message", key: "message", ellipsis: true, render: (v) => <Text style={{ color: "var(--text-muted)", fontSize: 12 }}>{v}</Text> },
+    { title: "Message", dataIndex: "message", key: "message", ellipsis: true, render: (v) => <Text className="u-meta">{v}</Text> },
     {
       title: "Audience", key: "audience",
       render: (_, r) => {
@@ -754,7 +754,7 @@ const HistoryPanel = () => {
             <div style={iconWell(s.color, 34)}>{React.cloneElement(s.icon, { style: { fontSize: 14 } })}</div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{s.value}</div>
+              <div className="u-title-lg">{s.value}</div>
             </div>
           </div>
         ))}
@@ -844,16 +844,7 @@ export default function CommunicationHub() {
       />
 
       <div className="page-wrapper">
-        <style>{`
-          .comm-hub-tabs .ant-tabs-tab { font-size: 13px !important; padding: 8px 16px !important; color: var(--text-muted) !important; }
-          .comm-hub-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--primary) !important; font-weight: 600 !important; }
-          .comm-hub-tabs .ant-tabs-ink-bar { background: var(--primary) !important; }
-          .comm-hub-tabs .ant-tabs-nav::before { border-color: var(--border-muted) !important; }
-          .comm-hub-tabs .ant-tabs-nav { margin-bottom: 20px !important; }
-          @keyframes commFadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-          .comm-panel { animation: commFadeUp 0.25s ease both; }
-        `}</style>
-
+        
         {/* KPI */}
         <div style={statGrid(150)}>
           {KPI.map((k) => (

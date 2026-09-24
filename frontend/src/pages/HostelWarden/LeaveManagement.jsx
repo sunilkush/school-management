@@ -119,7 +119,7 @@ const LeaveManagement = () => {
   };
 
   const columns = [
-    { title: "Student", render: (_, r) => (<div><div style={{ fontWeight: 600, fontSize: 13 }}>{r.studentId?.name || "—"}</div><div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.studentId?.admissionNo}</div></div>) },
+    { title: "Student", render: (_, r) => (<div><div style={{ fontWeight: 600, fontSize: 13 }}>{r.studentId?.name || "—"}</div><div className="u-meta-xs">{r.studentId?.admissionNo}</div></div>) },
     { title: "Room", dataIndex: "roomNumber", render: (v) => v || "—" },
     { title: "Type", dataIndex: "leaveType", render: (v) => {
       const c = TYPE_COLORS[v] || "var(--text-secondary)";
@@ -212,7 +212,7 @@ const LeaveManagement = () => {
 
       {/* ── Add Leave Modal ───────────────────────────────────── */}
       <Modal title="Create Leave Request" open={addModal} onCancel={() => setAddModal(false)} onOk={() => form.submit()} confirmLoading={actionLoading} width={600} destroyOnClose>
-        <Form form={form} layout="vertical" onFinish={handleCreate} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} className="u-mt-2">
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item name="studentId" label="Student" rules={[{ required: true }]}>
@@ -234,7 +234,7 @@ const LeaveManagement = () => {
             </Col>
           </Row>
           <Form.Item name="dateRange" label="Leave Period" rules={[{ required: true }]}>
-            <RangePicker style={{ width: "100%" }} />
+            <RangePicker className="u-full" />
           </Form.Item>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
@@ -282,7 +282,7 @@ const LeaveManagement = () => {
           />
         )}
         {(actionType === "checkout" || actionType === "checkin") && (
-          <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
+          <p className="u-meta-md">
             Current time will be recorded as {actionType === "checkout" ? "check-out" : "check-in"} time.
           </p>
         )}

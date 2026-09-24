@@ -75,7 +75,7 @@ const ChildBusLive = () => {
         <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div>
             <div style={{ fontWeight: 800, fontSize: 18 }}>{myBus.routeName || "Bus"}</div>
-            <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+            <div className="u-meta-md">
               {myBus.direction === "pickup" ? "Morning pickup" : "Afternoon drop"}
               {myBus.stopName ? ` · your stop: ${myBus.stopName}` : ""}
             </div>
@@ -86,7 +86,7 @@ const ChildBusLive = () => {
               <div style={{ fontSize: 28, fontWeight: 800, color: "var(--primary)" }}>
                 <ClockCircleOutlined /> ~{myBus.eta.minutes} min
               </div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <div className="u-meta">
                 {myBus.eta.stopsAway} stop(s) away · estimate, not an exact time
               </div>
             </div>

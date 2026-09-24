@@ -81,7 +81,7 @@ const EmployeePerformance = ({ employees = [] }) => {
                   style={{ background: "linear-gradient(135deg, var(--purple), var(--cyan))", flexShrink: 0 }}>
                   {emp?.name?.[0] || "E"}
                 </Avatar>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="u-grow-min">
                   <Text style={{ fontSize: 13, fontWeight: 600, color: textPri,
                     display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {emp.name}
@@ -95,7 +95,7 @@ const EmployeePerformance = ({ employees = [] }) => {
               </div>
 
               {/* Row 2: Dept + Designation chips */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div className="u-row-wrap">
                 <span style={{
                   fontSize: 11, color: textSec,
                   background: "var(--primary-light)",
@@ -133,7 +133,7 @@ const EmployeePerformance = ({ employees = [] }) => {
               {list.map((emp) => (
                 <tr key={emp.email} style={{ borderBottom: `1px solid ${rowSep}` }}>
                   <td style={{ padding: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div className="u-row">
                       <Avatar src={emp.avatar} size={34}>{emp?.name?.[0] || "E"}</Avatar>
                       <div>
                         <Text style={{ fontSize: 13, color: textPri }}>{emp.name}</Text>

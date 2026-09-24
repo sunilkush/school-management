@@ -17,7 +17,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-lighter)",
   accent: "var(--accent)", accentLight: "var(--accent-light)",
   warning: "var(--warning)", warningLight: "var(--warning-light)",
   success: "var(--success)", successLight: "var(--success-light)",
@@ -395,7 +395,7 @@ const Vehicles = () => {
         destroyOnClose
         width={520}
       >
-        <Form form={form} layout="vertical" onFinish={handleSaveVehicle} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleSaveVehicle} className="u-mt-2">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item label="Vehicle Type" name="type" rules={[{ required: true, message: "Required" }]}>
               <Select placeholder="Select type">
@@ -446,7 +446,7 @@ const Vehicles = () => {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item label="Capacity" name="capacity" rules={[{ required: true, message: "Required" }]}>
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="0" addonAfter="seats" />
+              <InputNumber min={1} className="u-full" placeholder="0" addonAfter="seats" />
             </Form.Item>
             <Form.Item label="Status" name="status" rules={[{ required: true, message: "Required" }]}>
               <Select placeholder="Select status">

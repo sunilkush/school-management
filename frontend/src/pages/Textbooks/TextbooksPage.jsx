@@ -55,8 +55,8 @@ const BookCard = ({ book }) => {
         }}>
           <BookOutlined />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{book.title}</div>
+        <div className="u-grow-min">
+          <div className="u-title">{book.title}</div>
           <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
             {book.chapterCount} chapter{book.chapterCount === 1 ? "" : "s"} · {book.publisher || "NCERT"}
             {book.medium && book.medium !== "English" ? ` · ${book.medium}` : ""}
@@ -86,7 +86,7 @@ const BookCard = ({ book }) => {
           ) : state.error ? (
             <div style={{ color: "var(--danger)", fontSize: 13 }}>{state.error}</div>
           ) : !state.chapters?.length ? (
-            <div style={{ color: "var(--text-muted)", fontSize: 13 }}>No chapters listed for this book.</div>
+            <div className="u-meta-md">No chapters listed for this book.</div>
           ) : (
             state.chapters.map((ch) => (
               <div key={ch._id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px dashed var(--border-muted)" }}>
@@ -97,7 +97,7 @@ const BookCard = ({ book }) => {
                     Open PDF
                   </Button>
                 ) : (
-                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No PDF</span>
+                  <span className="u-meta">No PDF</span>
                 )}
               </div>
             ))
@@ -176,7 +176,7 @@ const TextbooksPage = () => {
         {subjects.length > 0 && (
           <>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", margin: "16px 0 8px" }}>Subject</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <div className="u-row-wrap">
               <Tag.CheckableTag checked={!subjectId} onChange={() => setSubjectId(null)} style={{ padding: "4px 12px", borderRadius: 99 }}>
                 All ({state.books.length})
               </Tag.CheckableTag>

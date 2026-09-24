@@ -208,7 +208,7 @@ const MyAttendanceMonthlyReport = () => {
                 }}
               />
               <div>
-                <Title level={3} style={{ margin: 0 }}>
+                <Title level={3} className="u-m-0">
                   My Attendance
                 </Title>
                 <Text type="secondary" style={{ fontSize: 15 }}>
@@ -246,8 +246,8 @@ const MyAttendanceMonthlyReport = () => {
       </Card>
 
       {(error || successMessage) && (
-        <div style={{ marginTop: 16 }}>
-          <Space direction="vertical" style={{ width: "100%" }}>
+        <div className="u-mt-4">
+          <Space direction="vertical" className="u-full">
             {error ? <Alert type="error" showIcon message={error} /> : null}
             {successMessage ? (
               <Alert type="success" showIcon message={successMessage} />
@@ -311,7 +311,7 @@ const MyAttendanceMonthlyReport = () => {
         </Card>
       ) : null}
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+      <Row gutter={[16, 16]} className="u-mt-4">
         <Col xs={12} md={8} lg={4}>
           <Card
             bordered={false}
@@ -397,7 +397,7 @@ const MyAttendanceMonthlyReport = () => {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+      <Row gutter={[16, 16]} className="u-mt-4">
         <Col xs={24} xl={17}>
           <Card
             bordered={false}
@@ -432,7 +432,7 @@ const MyAttendanceMonthlyReport = () => {
               height: "100%",
             }}
           >
-            <Space direction="vertical" size={14} style={{ width: "100%" }}>
+            <Space direction="vertical" size={14} className="u-full">
               <div>
                 <Title level={5} style={{ marginBottom: 4 }}>
                   Selected Day Details
@@ -442,10 +442,10 @@ const MyAttendanceMonthlyReport = () => {
                 </Text>
               </div>
 
-              <Divider style={{ margin: 0 }} />
+              <Divider className="u-m-0" />
 
               {selectedDayRecord ? (
-                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                <Space direction="vertical" size={12} className="u-full">
                   <Card
                     size="small"
                     style={{

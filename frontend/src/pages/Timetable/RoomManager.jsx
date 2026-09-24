@@ -247,7 +247,7 @@ export default function RoomManager() {
         ]}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" className="u-mt-2">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item name="name" label="Room Name" rules={[{ required: true, message: "Required" }]}>
               <Input placeholder="e.g. Room 101" />
@@ -258,7 +258,7 @@ export default function RoomManager() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item name="capacity" label="Capacity" initialValue={0}>
-              <InputNumber style={{ width: "100%" }} min={0} placeholder="0" />
+              <InputNumber className="u-full" min={0} placeholder="0" />
             </Form.Item>
             <Form.Item name="type" label="Room Type" initialValue="classroom">
               <Select

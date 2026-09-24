@@ -274,7 +274,7 @@ const SchoolClass = ({ next }) => {
           flexWrap: "wrap",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div
             style={{
               width: 30,
@@ -581,7 +581,7 @@ const SchoolClass = ({ next }) => {
                       {safeText(record?.classId?.name)}
                     </span>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className="u-row">
                       {assigned && (
                         <Popconfirm
                           title="Remove this class?"
@@ -688,20 +688,7 @@ const SchoolClass = ({ next }) => {
         </div>
       </div>
 
-      <style>{`
-        .class-table-mobile { display: none; }
-
-        @media (max-width: 768px) {
-          .class-table-desktop { display: none; }
-          .class-table-mobile { display: block; }
-        }
-
-        @media (min-width: 769px) {
-          .class-table-desktop { display: block; }
-          .class-table-mobile { display: none; }
-        }
-      `}</style>
-
+      
       {next && (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button

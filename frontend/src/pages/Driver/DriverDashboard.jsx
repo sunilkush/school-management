@@ -20,31 +20,31 @@ const STATUS_COLOR = {
 const VehicleCard = ({ vehicle }) => {
   const [color, bg] = STATUS_COLOR[vehicle.status] || STATUS_COLOR.Available;
   return (
-    <div className="section-panel" style={{ marginBottom: 16 }}>
+    <div className="section-panel u-mb-4">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={iconWell("var(--primary)", 48)}><CarOutlined style={{ fontSize: 20 }} /></div>
           <div>
             <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text-primary)" }}>{vehicle.busNumber}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{vehicle.vehicleType} · {vehicle.capacity || 0} seats</div>
+            <div className="u-meta">{vehicle.vehicleType} · {vehicle.capacity || 0} seats</div>
           </div>
         </div>
         <span style={pill(color, bg)}>{vehicle.status}</span>
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 20, marginTop: 18 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <EnvironmentOutlined style={{ color: "var(--text-muted)" }} />
+        <div className="u-row">
+          <EnvironmentOutlined className="u-muted" />
           <div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Route</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{vehicle.route || "Not assigned"}</div>
+            <div className="u-meta-xs">Route</div>
+            <div className="u-label">{vehicle.route || "Not assigned"}</div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <IdcardOutlined style={{ color: "var(--text-muted)" }} />
+        <div className="u-row">
+          <IdcardOutlined className="u-muted" />
           <div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Driving License</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{vehicle.drivingLicense || "—"}</div>
+            <div className="u-meta-xs">Driving License</div>
+            <div className="u-label">{vehicle.drivingLicense || "—"}</div>
           </div>
         </div>
       </div>
@@ -88,7 +88,7 @@ const DriverDashboard = () => {
 
         <div className="section-panel">
           <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>Quick Actions</div>
-          <Space direction="vertical" style={{ width: "100%" }} size={8}>
+          <Space direction="vertical" className="u-full" size={8}>
             <Button block icon={<CarOutlined />} onClick={() => navigate("/dashboard/driver/attendance/self")}>
               My Attendance
             </Button>
@@ -108,12 +108,7 @@ const DriverDashboard = () => {
         </div>
       </div>
 
-      <style>{`
-        @media (max-width: 900px) {
-          .driver-dash-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </div>
+          </div>
   );
 };
 

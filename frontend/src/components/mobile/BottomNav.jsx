@@ -144,8 +144,6 @@ const BottomNav = ({ onMenuOpen }) => {
   const border  = "var(--border)";
   const txtActive = "var(--primary)";
   const txtMuted  = "var(--text-muted)";
-  const dotColor  = "var(--primary)";
-  const ripple    = "rgba(var(--primary-rgb), 0.08)";
 
   /* All 5 tabs: 4 nav links + Menu */
   const allTabs = [
@@ -172,68 +170,6 @@ const BottomNav = ({ onMenuOpen }) => {
 
   return (
     <>
-      <style>{`
-        .bottom-nav-btn {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 3px;
-          padding: 8px 4px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          transition: transform 0.15s ease;
-          -webkit-tap-highlight-color: transparent;
-          position: relative;
-          min-width: 0;
-        }
-        .bottom-nav-btn:active {
-          transform: scale(0.90);
-        }
-        .bottom-nav-btn::after {
-          content: '';
-          position: absolute;
-          inset: 4px;
-          border-radius: 12px;
-          background: transparent;
-          transition: background 0.18s ease;
-        }
-        .bottom-nav-btn:active::after {
-          background: ${ripple};
-        }
-        .bn-icon-wrap {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 42px;
-          height: 28px;
-          border-radius: 14px;
-          transition: background 0.2s ease;
-        }
-        .bn-active-dot {
-          position: absolute;
-          top: -2px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background: ${dotColor};
-        }
-        .bn-label {
-          font-size: 9.5px;
-          font-weight: 600;
-          letter-spacing: 0.02em;
-          line-height: 1;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 56px;
-        }
-      `}</style>
 
       <div style={{
         position:   "fixed",

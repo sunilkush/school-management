@@ -74,7 +74,7 @@ const MyAppraisal = () => {
           <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>{myReview.cycleId?.name}</div>
-              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+              <div className="u-meta-md">
                 {myReview.cycleId?.periodStart && dayjs(myReview.cycleId.periodStart).format("MMM YYYY")}
                 {" – "}
                 {myReview.cycleId?.periodEnd && dayjs(myReview.cycleId.periodEnd).format("MMM YYYY")}
@@ -100,7 +100,7 @@ const MyAppraisal = () => {
                       <span>{s.criterion}</span>
                       <b>{s.score} / 5</b>
                     </div>
-                    {s.comment && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{s.comment}</div>}
+                    {s.comment && <div className="u-meta">{s.comment}</div>}
                   </div>
                 ))}
               </div>

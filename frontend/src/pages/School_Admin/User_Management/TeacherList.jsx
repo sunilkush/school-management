@@ -171,7 +171,7 @@ const TeacherList = () => {
         const dot    = active ? "var(--success)" : "var(--danger)";
         const dotRing = active ? "rgba(var(--success-rgb), 0.19)" : "rgba(var(--danger-rgb), 0.19)";
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div className="u-row-sm">
             <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, boxShadow: `0 0 0 2px ${dotRing}` }} />
             <span style={{ fontSize: 12, fontWeight: 600, color }}>{active ? "Active" : "Inactive"}</span>
           </div>
@@ -262,7 +262,7 @@ const TeacherList = () => {
                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
               }}>🧑‍🏫</div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Add New Staff Member</div>
+                <div className="u-title">Add New Staff Member</div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Fill in the details below</div>
               </div>
             </Space>
@@ -276,7 +276,7 @@ const TeacherList = () => {
           open={roleModal.open}
           title={
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+              <div className="u-title">
                 Assign Additional Roles
               </div>
               {roleModal.user && (
@@ -292,13 +292,13 @@ const TeacherList = () => {
           confirmLoading={savingRoles}
           width={480}
         >
-          <div style={{ marginTop: 16 }}>
+          <div className="u-mt-4">
             <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 10 }}>
               Select one or more additional roles. These allow the user to access extra sidebar sections and pages.
             </div>
             <Select
               mode="multiple"
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Select additional roles…"
               value={selectedExtraRoles}
               onChange={setSelectedExtraRoles}
@@ -340,7 +340,7 @@ const TeacherList = () => {
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Staff
               </span>
-              <div style={{ flex: 1 }} />
+              <div className="u-grow" />
               <Input.Search
                 placeholder="Search by name, email or phone…"
                 allowClear
@@ -364,7 +364,7 @@ const TeacherList = () => {
                 <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
                   {searchText || selectedRole !== "all" ? "No staff match your filters" : "No staff found"}
                 </div>
-                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                <div className="u-meta-md">
                   {searchText || selectedRole !== "all"
                     ? "Try clearing your search or role filter"
                     : "Add a staff member to get started"}
@@ -381,7 +381,7 @@ const TeacherList = () => {
                   pageSize: 10,
                   size: "small",
                   showTotal: (total) => (
-                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{total} staff members</span>
+                    <span className="u-meta">{total} staff members</span>
                   ),
                 }}
                 scroll={{ x: 700 }}

@@ -168,7 +168,7 @@ export default function TeacherTimetablePage() {
           borderBottom: "1px solid " + C.border,
           display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="u-row">
             <CalendarOutlined style={{ color: C.primary }} />
             <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>Weekly Schedule</span>
           </div>

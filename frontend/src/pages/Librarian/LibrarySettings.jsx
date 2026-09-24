@@ -12,7 +12,7 @@ import {
 import PageHeader from "../../components/layout/PageHeader";
 
 const Section = ({ title, children }) => (
-  <div className="section-panel" style={{ marginBottom: 20 }}>
+  <div className="section-panel u-mb-5">
     <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border)", paddingBottom: 10 }}>
       {title}
     </div>
@@ -87,17 +87,17 @@ const LibrarySettings = () => {
           <Row gutter={[20, 0]}>
             <Col xs={24} sm={8}>
               <Form.Item name="maxBooksPerStudent" label={<FieldLabel label="Max Books per Student" hint="How many books a student can hold" />} rules={[{ required: true }]}>
-                <InputNumber min={1} max={20} style={{ width: "100%" }} addonAfter="books" />
+                <InputNumber min={1} max={20} className="u-full" addonAfter="books" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="maxBooksPerTeacher" label={<FieldLabel label="Max Books per Teacher" hint="How many books a teacher can hold" />} rules={[{ required: true }]}>
-                <InputNumber min={1} max={20} style={{ width: "100%" }} addonAfter="books" />
+                <InputNumber min={1} max={20} className="u-full" addonAfter="books" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="maxBooksPerStaff" label={<FieldLabel label="Max Books per Staff" hint="How many books staff can hold" />} rules={[{ required: true }]}>
-                <InputNumber min={1} max={20} style={{ width: "100%" }} addonAfter="books" />
+                <InputNumber min={1} max={20} className="u-full" addonAfter="books" />
               </Form.Item>
             </Col>
           </Row>
@@ -108,17 +108,17 @@ const LibrarySettings = () => {
           <Row gutter={[20, 0]}>
             <Col xs={24} sm={8}>
               <Form.Item name="maxDaysToReturnStudent" label={<FieldLabel label="Student Return Period" hint="Days allowed before a fine is applied" />} rules={[{ required: true }]}>
-                <InputNumber min={1} max={90} style={{ width: "100%" }} addonAfter="days" />
+                <InputNumber min={1} max={90} className="u-full" addonAfter="days" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="maxDaysToReturnTeacher" label={<FieldLabel label="Teacher Return Period" hint="Days allowed for teachers" />} rules={[{ required: true }]}>
-                <InputNumber min={1} max={90} style={{ width: "100%" }} addonAfter="days" />
+                <InputNumber min={1} max={90} className="u-full" addonAfter="days" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="gracePeriodDays" label={<FieldLabel label="Grace Period" hint="Extra days before fine starts (0 = no grace)" />} rules={[{ required: true }]}>
-                <InputNumber min={0} max={14} style={{ width: "100%" }} addonAfter="days" />
+                <InputNumber min={0} max={14} className="u-full" addonAfter="days" />
               </Form.Item>
             </Col>
           </Row>
@@ -129,24 +129,24 @@ const LibrarySettings = () => {
           <Row gutter={[20, 0]}>
             <Col xs={24} sm={8}>
               <Form.Item name="finePerDay" label={<FieldLabel label="Fine per Overdue Day" hint="Amount charged for each overdue day" />} rules={[{ required: true }]}>
-                <InputNumber min={0} max={1000} style={{ width: "100%" }} addonBefore="₹" />
+                <InputNumber min={0} max={1000} className="u-full" addonBefore="₹" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="maxFinePerBook" label={<FieldLabel label="Max Fine per Book" hint="Overdue fine will not exceed this amount" />} rules={[{ required: true }]}>
-                <InputNumber min={0} max={10000} style={{ width: "100%" }} addonBefore="₹" />
+                <InputNumber min={0} max={10000} className="u-full" addonBefore="₹" />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={[20, 0]}>
             <Col xs={24} sm={8}>
               <Form.Item name="lostBookFine" label={<FieldLabel label="Lost Book Fine" hint="Fixed fine when book is reported lost" />} rules={[{ required: true }]}>
-                <InputNumber min={0} max={10000} style={{ width: "100%" }} addonBefore="₹" />
+                <InputNumber min={0} max={10000} className="u-full" addonBefore="₹" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={8}>
               <Form.Item name="damagedBookFine" label={<FieldLabel label="Damaged Book Fine" hint="Fixed fine for returned damaged books" />} rules={[{ required: true }]}>
-                <InputNumber min={0} max={10000} style={{ width: "100%" }} addonBefore="₹" />
+                <InputNumber min={0} max={10000} className="u-full" addonBefore="₹" />
               </Form.Item>
             </Col>
           </Row>

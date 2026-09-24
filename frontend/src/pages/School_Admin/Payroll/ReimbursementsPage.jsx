@@ -22,7 +22,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-lighter)",
   accent: "var(--accent)", accentLight: "var(--accent-light)",
   success: "var(--success)", successLight: "var(--success-light)",
   danger: "var(--danger)", dangerLight: "var(--danger-light)",
@@ -175,7 +175,7 @@ const ReimbursementsPage = () => {
     Modal.confirm({
       title: "Reject this reimbursement claim?",
       content: (
-        <Input.TextArea rows={3} placeholder="Reason for rejection…" onChange={(e) => { reason = e.target.value; }} style={{ marginTop: 12 }} />
+        <Input.TextArea rows={3} placeholder="Reason for rejection…" onChange={(e) => { reason = e.target.value; }} className="u-mt-3" />
       ),
       okText: "Reject", okButtonProps: { danger: true, style: { borderRadius: 8 } },
       cancelButtonProps: { style: { borderRadius: 8 } },
@@ -210,7 +210,7 @@ const ReimbursementsPage = () => {
     {
       title: "Employee",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 34, height: 34, borderRadius: 9, flexShrink: 0,
             background: `linear-gradient(135deg, ${C.accent}, ${C.primary})`,
@@ -234,12 +234,12 @@ const ReimbursementsPage = () => {
     {
       title: "Amount",
       dataIndex: "amount",
-      render: (v) => <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{fmt(v)}</span>,
+      render: (v) => <span className="u-title-sm">{fmt(v)}</span>,
     },
     {
       title: "Claim Date",
       dataIndex: "claimDate",
-      render: (v) => v ? <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{dayjs(v).format("DD MMM YYYY")}</span> : "—",
+      render: (v) => v ? <span className="u-meta">{dayjs(v).format("DD MMM YYYY")}</span> : "—",
     },
     { title: "Approval", render: (_, r) => <ApprovalPipeline approvals={r.approvals} /> },
     {
@@ -328,7 +328,7 @@ const ReimbursementsPage = () => {
       {/* Table */}
       <div className="section-panel is-flush">
         <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Claims</span>
+          <span className="u-title">All Claims</span>
           <span style={{
             fontSize: 12, padding: "2px 9px", borderRadius: 20,
             background: C.accentLight, color: "var(--accent-hover)", border: "1px solid rgba(var(--accent-rgb), 0.3)", fontWeight: 600,
@@ -364,7 +364,7 @@ const ReimbursementsPage = () => {
         destroyOnClose
         width={480}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} className="u-mt-2">
           <Form.Item name="employeeId" label="Employee" rules={[{ required: true }]}>
             <Select showSearch optionFilterProp="label" options={employeeOptions} placeholder="Select employee…" size="large" />
           </Form.Item>
@@ -379,13 +379,13 @@ const ReimbursementsPage = () => {
               </Select>
             </Form.Item>
             <Form.Item name="amount" label="Claim Amount (₹)" rules={[{ required: true }]}>
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 1500"
+              <InputNumber min={1} className="u-full" placeholder="e.g. 1500"
                 formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 parser={(v) => v.replace(/₹\s?|(,*)/g, "")} />
             </Form.Item>
           </div>
           <Form.Item name="claimDate" label="Expense Date" initialValue={dayjs()}>
-            <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+            <DatePicker className="u-full" format="DD-MM-YYYY" />
           </Form.Item>
           <Form.Item name="description" label="Description / Details">
             <Input.TextArea rows={3} placeholder="Describe the expense — route taken, purpose, etc." />

@@ -75,8 +75,8 @@ export default function IssuePage() {
       title: "Item", key: "item",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{r.itemName}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{fmt(r.quantity)} {r.unit}</div>
+          <div className="u-label">{r.itemName}</div>
+          <div className="u-meta-xs">{fmt(r.quantity)} {r.unit}</div>
         </div>
       ),
     },
@@ -85,7 +85,7 @@ export default function IssuePage() {
       render: (_, r) => (
         <div>
           <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{r.issuedTo}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.department || ""}</div>
+          <div className="u-meta-xs">{r.department || ""}</div>
         </div>
       ),
     },
@@ -169,7 +169,7 @@ export default function IssuePage() {
         footer={null}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" onFinish={onFinish} className="u-mt-4">
           <Form.Item label="Item" name="inventoryItemId" rules={[{ required: true, message: "Select item" }]}>
             <Select showSearch optionFilterProp="children" placeholder="Select available item" size="large">
               {availableItems.map((i) => {
@@ -184,7 +184,7 @@ export default function IssuePage() {
           </Form.Item>
 
           <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}>
-            <InputNumber min={1} style={{ width: "100%" }} />
+            <InputNumber min={1} className="u-full" />
           </Form.Item>
 
           <Form.Item label="Issued To (Name)" name="issuedTo" rules={[{ required: true, message: "Required" }]}>
@@ -195,10 +195,10 @@ export default function IssuePage() {
             <Form.Item label="Department" name="department"><Input placeholder="Science / Office" /></Form.Item>
             <Form.Item label="Purpose" name="purpose"><Input placeholder="Lab / General use" /></Form.Item>
             <Form.Item label="Issue Date" name="issueDate" initialValue={dayjs()}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
             <Form.Item label="Expected Return" name="expectedReturnDate">
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
           </div>
 

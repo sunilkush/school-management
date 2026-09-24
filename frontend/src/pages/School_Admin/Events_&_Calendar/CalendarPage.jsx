@@ -35,7 +35,7 @@ const TYPE_STYLE = {
   // #0e7490 / #ecfeff (cyan-700 / cyan-50) aren't an exact match for any table entry
   // (closest is #0891b2 → var(--cyan), a visibly different shade) — left as literal
   // hex rather than guess; see final report.
-  Reminder: { color: "#0e7490", bg: "#ecfeff" },
+  Reminder: { color: "var(--cyan-hover)", bg: "#ecfeff" },
 };
 
 const toPayload = (values) => ({
@@ -119,7 +119,7 @@ const CalendarPage = () => {
             type: "Event",
             audience: "All",
             status: "scheduled",
-            color: "#14B8A6",
+            color: "var(--accent)",
             dateRange: [date, date],
           }
     );
@@ -202,7 +202,7 @@ const CalendarPage = () => {
         <List.Item.Meta
           title={
             <Space size={6}>
-              <span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{event.title}</span>
+              <span className="u-label">{event.title}</span>
               <span style={pill(s.color, s.bg)}>{event.type}</span>
             </Space>
           }
@@ -265,14 +265,14 @@ const CalendarPage = () => {
               ) : (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={<span style={{ fontSize: 12, color: "var(--text-muted)" }}>No events for this date</span>}
+                  description={<span className="u-meta">No events for this date</span>}
                 />
               )}
               <Button
                 type="dashed"
                 block
                 icon={<PlusOutlined />}
-                style={{ marginTop: 12 }}
+                className="u-mt-3"
                 onClick={() => openModal(null, selectedDate)}
               >
                 Add Event Here
@@ -311,7 +311,7 @@ const CalendarPage = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={iconWell("var(--primary)", 34)}><CalendarOutlined /></div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                <div className="u-title">
                   {editingEvent ? "Edit Event" : "Add Event"}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Fill in the event details</div>
@@ -324,7 +324,7 @@ const CalendarPage = () => {
           destroyOnClose
           centered
         >
-          <Form form={form} layout="vertical" onFinish={handleSaveEvent} style={{ marginTop: 8 }}>
+          <Form form={form} layout="vertical" onFinish={handleSaveEvent} className="u-mt-2">
             <Form.Item label="Event Title" name="title" rules={[{ required: true, message: "Please enter event title" }]}>
               <Input placeholder="Enter event title" />
             </Form.Item>
@@ -341,7 +341,7 @@ const CalendarPage = () => {
               </Col>
             </Row>
             <Form.Item label="Date Range" name="dateRange" rules={[{ required: true, message: "Please select event dates" }]}>
-              <RangePicker style={{ width: "100%" }} />
+              <RangePicker className="u-full" />
             </Form.Item>
             <Row gutter={12}>
               <Col span={12}>

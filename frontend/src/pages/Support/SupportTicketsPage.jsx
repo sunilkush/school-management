@@ -361,7 +361,7 @@ export default function SupportTicketsPage() {
       <div className="page-wrapper">
 
         {/* ── Stat cards ─────────────────────────────────────────── */}
-        <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+        <Row gutter={[12, 12]} className="u-mb-5">
           {STAT_LIST.map((s) => {
             const m = STATUS_META[s.key];
             const active = filters.status === s.key;
@@ -401,7 +401,7 @@ export default function SupportTicketsPage() {
           <Flex gap={8} wrap="wrap" align="center" justify="space-between">
             <Flex gap={8} wrap="wrap" align="center">
               <Input
-                prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+                prefix={<SearchOutlined className="u-muted" />}
                 placeholder="Search tickets…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -435,7 +435,7 @@ export default function SupportTicketsPage() {
                 </Button>
               )}
             </Flex>
-            <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <Text className="u-meta">
               {visibleTickets.length} of {pagination.total} tickets
             </Text>
           </Flex>
@@ -484,7 +484,7 @@ export default function SupportTicketsPage() {
               <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", lineHeight: 1.3, maxWidth: 340, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {detail?.title || "Ticket"}
               </div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              <div className="u-meta-xs">
                 #{detail?._id?.slice(-6)} · {dayjs(detail?.createdAt).format("DD MMM YYYY")}
               </div>
             </div>
@@ -510,7 +510,7 @@ export default function SupportTicketsPage() {
             <Spin />
           </Flex>
         ) : detail ? (
-          <Space direction="vertical" size={20} style={{ width: "100%" }}>
+          <Space direction="vertical" size={20} className="u-full">
 
             {/* Status + Priority + Category pills */}
             <Flex gap={8} wrap="wrap">
@@ -529,14 +529,14 @@ export default function SupportTicketsPage() {
                   <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>
                     {detail.createdBy.name}
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  <div className="u-meta-xs">
                     {detail.createdBy.email || ""}
                   </div>
                 </div>
               </Flex>
             )}
 
-            <Divider style={{ margin: 0 }} />
+            <Divider className="u-m-0" />
 
             {/* Description */}
             <div>
@@ -563,10 +563,10 @@ export default function SupportTicketsPage() {
             {/* Timeline */}
             {timelineItems.length > 0 && (
               <>
-                <Divider style={{ margin: 0 }} />
+                <Divider className="u-m-0" />
                 <div>
                   <Flex align="center" gap={6} style={{ marginBottom: 12 }}>
-                    <HistoryOutlined style={{ color: "var(--text-muted)" }} />
+                    <HistoryOutlined className="u-muted" />
                     <Text style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                       Activity
                     </Text>
@@ -603,8 +603,8 @@ export default function SupportTicketsPage() {
                   <PlusOutlined style={{ fontSize: 16 }} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Create Support Ticket</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Describe your issue and we'll help you resolve it</div>
+                  <div className="u-title">Create Support Ticket</div>
+                  <div className="u-meta">Describe your issue and we'll help you resolve it</div>
                 </div>
               </Flex>
             </div>
@@ -679,8 +679,8 @@ export default function SupportTicketsPage() {
                   <CustomerServiceOutlined style={{ fontSize: 16 }} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>Update Ticket</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  <div className="u-title">Update Ticket</div>
+                  <div className="u-meta">
                     #{editingTicket._id?.slice(-6)} · {editingTicket.title?.slice(0, 40)}
                   </div>
                 </div>

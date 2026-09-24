@@ -177,7 +177,7 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
       <div className="page-card" style={{ padding: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, gap: 12 }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Excel Template Download Karein</div>
+            <div className="u-title-sm">Excel Template Download Karein</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4, lineHeight: 1.6 }}>
               Template mein <strong>3 sheets</strong> hain — sample rows, aapki school ki real class/section names, aur instructions.
             </div>
@@ -209,10 +209,10 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
         )}
 
         {rows.length > 0 && (
-          <Space direction="vertical" size={14} style={{ width: "100%" }}>
+          <Space direction="vertical" size={14} className="u-full">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Preview</span>
+                <span className="u-strong-bold">Preview</span>
                 <Tag color="blue" style={{ marginLeft: 8 }}>{rows.length} students</Tag>
               </div>
               <Button size="small" icon={<DeleteOutlined />} onClick={() => setRows([])} danger>Clear</Button>
@@ -226,7 +226,7 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
         )}
 
         {bulkImportResult && (
-          <Space direction="vertical" size={14} style={{ width: "100%" }}>
+          <Space direction="vertical" size={14} className="u-full">
             <Alert
               type={errors.length && !created.length ? "error" : created.length && errors.length ? "warning" : "success"}
               showIcon

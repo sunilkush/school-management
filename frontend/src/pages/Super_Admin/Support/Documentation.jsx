@@ -701,7 +701,7 @@ const CodeBlock = ({ lines }) => (
     {lines.map((line, i) => (
       <div key={i} style={{ fontFamily: "monospace", fontSize: 12.5, color: "var(--text-primary)", lineHeight: 2, whiteSpace: "nowrap" }}>
         <span style={{ color: "var(--primary)", fontWeight: 700 }}>{line.split("   ")[0]}</span>
-        <span style={{ color: "var(--text-muted)" }}>{"   " + line.split("   ").slice(1).join("   ")}</span>
+        <span className="u-muted">{"   " + line.split("   ").slice(1).join("   ")}</span>
       </div>
     ))}
   </div>
@@ -743,7 +743,7 @@ const Documentation = () => {
         icon={<FileProtectOutlined />}
         extra={
           <Input
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             placeholder="Search docs..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -848,7 +848,7 @@ const Documentation = () => {
             <div style={iconWell(activeSection.color, 52)}>
               {activeSection.icon}
             </div>
-            <div style={{ flex: 1 }}>
+            <div className="u-grow">
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                 <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.3 }}>
                   {activeSection.title}
@@ -875,7 +875,7 @@ const Documentation = () => {
 
           {/* Sections */}
           {activeSection.sections?.map((sec, si) => (
-            <div key={si} className="section-panel" style={{ marginBottom: 16 }}>
+            <div key={si} className="section-panel u-mb-4">
               <h3 style={{
                 margin: "0 0 12px",
                 fontSize: 14,
@@ -913,7 +913,7 @@ const Documentation = () => {
 
           {/* Checklist */}
           {activeSection.checklist?.length > 0 && (
-            <div className="section-panel" style={{ marginBottom: 16 }}>
+            <div className="section-panel u-mb-4">
               <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
                 ✅ Checklist
               </h3>
@@ -954,10 +954,10 @@ const Documentation = () => {
           {/* Footer navigation */}
           <Divider style={{ margin: "28px 0 20px" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <div className="u-meta">
               EduOS Documentation · Last updated July 2025
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="u-row-wrap">
               {(() => {
                 const idx = SECTIONS.findIndex((s) => s.id === activeId);
                 const prev = SECTIONS[idx - 1];

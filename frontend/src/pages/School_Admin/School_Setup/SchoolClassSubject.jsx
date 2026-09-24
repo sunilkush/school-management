@@ -171,7 +171,7 @@ const SchoolClassSubject = ({ next }) => {
       {/* ══════ TOOLBAR ══════ */}
       <div style={S.toolbar}>
         <Space>
-          <FilterOutlined style={{ color: "var(--text-muted)" }} />
+          <FilterOutlined className="u-muted" />
           <Text style={{ fontSize: 13, color: "var(--text-secondary)" }}>Filter by class:</Text>
         </Space>
         <Select

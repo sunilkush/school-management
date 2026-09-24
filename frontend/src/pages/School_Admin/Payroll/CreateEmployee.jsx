@@ -15,7 +15,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-lighter)",
   accent: "var(--accent)", accentLight: "var(--accent-light)",
   success: "var(--success)", successLight: "var(--success-light)",
   danger: "var(--danger)", dangerLight: "var(--danger-light)",
@@ -349,7 +349,7 @@ const CreateEmployee = () => {
         onClose={() => { setDrawerOpen(false); setEditingEmployee(null); }}
         width={Math.min(760, typeof window !== "undefined" ? window.innerWidth * 0.92 : 700)}
         title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={{
               width: 32, height: 32, borderRadius: 9,
               background: C.primaryLighter, color: C.primary,

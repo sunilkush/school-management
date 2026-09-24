@@ -18,10 +18,6 @@ const classOrder = (name = "") => Number(String(name).match(/\d+/)?.[0]) || 99;
 /* Categorical colours for the gender split — checked for colour-blind separation and contrast on
    both themes; the dark set is the same hues stepped for the dark surface. "Not recorded" is a
    neutral grey, not a fourth hue. */
-const CSS = `
-  .school-overview { --so-male: #2a78d6; --so-female: #eb6834; --so-other: #1baf7a; --so-unknown: #94a3b8; }
-  [data-theme="dark"] .school-overview { --so-male: #3987e5; --so-female: #d95926; --so-other: #199e70; --so-unknown: #64748b; }
-`;
 const GENDERS = [
   { key: "Male", label: "Male", color: "var(--so-male)" },
   { key: "Female", label: "Female", color: "var(--so-female)" },
@@ -35,7 +31,7 @@ export const StatTile = ({ label, value, note, lead }) => (
     padding: "14px 16px", borderRadius: 14,
     border: "1px solid var(--border-muted)", background: "var(--surface)",
   }}>
-    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{label}</div>
+    <div className="u-meta-md">{label}</div>
     <div style={{ fontSize: lead ? 40 : 26, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.15 }}>
       {formatCount(value)}
     </div>
@@ -92,7 +88,7 @@ const GenderSplit = ({ rows }) => {
             <span style={{ width: 10, height: 10, borderRadius: 3, background: r.color }} />
             {r.label}
             <strong style={{ color: "var(--text-primary)" }}>{formatCount(r.count)}</strong>
-            <span style={{ color: "var(--text-muted)" }}>{percent(r.count, total)}%</span>
+            <span className="u-muted">{percent(r.count, total)}%</span>
           </span>
         ))}
       </div>
@@ -121,8 +117,7 @@ const SchoolOverview = ({ data, yearName }) => {
 
   return (
     <div className="school-overview">
-      <style>{CSS}</style>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
         <StatTile lead label="Students" value={summary.studentCount} note={yearName ? `studied in ${yearName}` : undefined} />
         <StatTile label="Teachers" value={summary.teacherCount} note="on the school today" />
         <StatTile label="Parents" value={summary.parentCount} note="on the school today" />

@@ -113,9 +113,9 @@ const SchoolReports = () => {
       key: "year",
       render: (_, r) => (
         <div>
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{r.year.name}</span>{" "}
+          <span className="u-strong-bold">{r.year.name}</span>{" "}
           {yearTag(r.year)}
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {dayjs(r.year.startDate).format(DAY)} – {dayjs(r.year.endDate).format(DAY)}
           </div>
         </div>
@@ -126,7 +126,7 @@ const SchoolReports = () => {
       key: "students",
       width: "40%",
       render: (_, r) => (overviews[r.year._id]?.error ? (
-        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Could not load</span>
+        <span className="u-meta-md">Could not load</span>
       ) : r.students == null ? (
         <Skeleton.Input active size="small" style={{ width: 160, minWidth: 0 }} />
       ) : (
@@ -141,11 +141,11 @@ const SchoolReports = () => {
       key: "change",
       align: "right",
       render: (_, r) => (r.change == null ? (
-        <span style={{ color: "var(--text-muted)" }}>—</span>
+        <span className="u-muted">—</span>
       ) : (
         <span style={{ color: "var(--text-secondary)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }} title={`Compared with ${r.olderName}`}>
           {r.change > 0 ? "+" : r.change < 0 ? "−" : ""}{count(Math.abs(r.change))}
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}> vs {r.olderName}</span>
+          <span className="u-meta"> vs {r.olderName}</span>
         </span>
       )),
     },
@@ -153,8 +153,7 @@ const SchoolReports = () => {
 
   return (
     <div className="page-wrapper">
-      <style>{`.sr-open td { background: var(--primary-light) !important; } .sr-row { cursor: pointer; }`}</style>
-      <PageHeader
+            <PageHeader
         title="School Reports"
         subtitle="Pick a school to see its students class by class — for this year or any year before"
         icon={<BankOutlined />}
@@ -187,7 +186,7 @@ const SchoolReports = () => {
         <div className="section-panel"><Empty description="Pick a school to see its report" /></div>
       ) : yearsError ? (
         <Alert
-          type="error" showIcon style={{ marginBottom: 16 }} message={yearsError}
+          type="error" showIcon className="u-mb-4" message={yearsError}
           action={<Button size="small" icon={<ReloadOutlined />} onClick={loadYears}>Try again</Button>}
         />
       ) : yearsLoading ? (
@@ -196,7 +195,7 @@ const SchoolReports = () => {
         <Alert
           type="info"
           showIcon
-          style={{ marginBottom: 16 }}
+          className="u-mb-4"
           message={`${school?.name || "This school"} has no academic years yet`}
           description="A report counts the students enrolled in a year, so the school needs one set up first."
           action={(
@@ -208,11 +207,11 @@ const SchoolReports = () => {
       ) : (
         <>
           <div className="section-panel">
-            <div style={{ marginBottom: 16 }}>
+            <div className="u-mb-4">
               <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
                 {school?.name || "School"} · {year.name} {yearTag(year)}
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <div className="u-meta-md">
                 {dayjs(year.startDate).format(DAY)} – {dayjs(year.endDate).format(DAY)}
               </div>
             </div>

@@ -261,7 +261,7 @@ const CreateExam = () => {
         icon={<FormOutlined />}
       />
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         <Spin spinning={loading}>
           <div className="page-card">
             <div style={{ padding: 24 }}>
@@ -369,7 +369,7 @@ const CreateExam = () => {
                       label="Exam Date"
                       rules={[{ required: true }]}
                     >
-                      <DatePicker style={{ width: "100%" }} />
+                      <DatePicker className="u-full" />
                     </Form.Item>
                   </Col>
 
@@ -379,7 +379,7 @@ const CreateExam = () => {
                       label="Start Time"
                       rules={[{ required: true }]}
                     >
-                      <TimePicker style={{ width: "100%" }} onChange={calculateDuration} />
+                      <TimePicker className="u-full" onChange={calculateDuration} />
                     </Form.Item>
                   </Col>
 
@@ -389,7 +389,7 @@ const CreateExam = () => {
                       label="End Time"
                       rules={[{ required: true }]}
                     >
-                      <TimePicker style={{ width: "100%" }} onChange={calculateDuration} />
+                      <TimePicker className="u-full" onChange={calculateDuration} />
                     </Form.Item>
                   </Col>
 
@@ -399,7 +399,7 @@ const CreateExam = () => {
                       label="Duration (Minutes)"
                       rules={[{ required: true }]}
                     >
-                      <InputNumber min={1} style={{ width: "100%" }} />
+                      <InputNumber min={1} className="u-full" />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -423,12 +423,12 @@ const CreateExam = () => {
                   </Col>
                   <Col md={4} span={12}>
                     <Form.Item name={["settings", "negativeMarking"]} label="Negative Marking">
-                      <InputNumber min={0} style={{ width: "100%" }} />
+                      <InputNumber min={0} className="u-full" />
                     </Form.Item>
                   </Col>
                   <Col md={4} span={12}>
                     <Form.Item name={["settings", "maxAttempts"]} label="Max Attempts" initialValue={1}>
-                      <InputNumber min={1} style={{ width: "100%" }} />
+                      <InputNumber min={1} className="u-full" />
                     </Form.Item>
                   </Col>
                   <Col md={4} span={12}>
@@ -447,7 +447,7 @@ const CreateExam = () => {
                       label="Total Marks"
                       rules={[{ required: true }]}
                     >
-                      <InputNumber min={1} style={{ width: "100%" }} />
+                      <InputNumber min={1} className="u-full" />
                     </Form.Item>
                   </Col>
 
@@ -467,7 +467,7 @@ const CreateExam = () => {
                         }),
                       ]}
                     >
-                      <InputNumber min={0} style={{ width: "100%" }} />
+                      <InputNumber min={0} className="u-full" />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -503,7 +503,7 @@ const CreateExam = () => {
                           <Select
                             value={question.questionId}
                             onChange={(value) => handleQuestionSelect(index, value)}
-                            style={{ width: "100%" }}
+                            className="u-full"
                             showSearch
                             optionFilterProp="children"
                             placeholder="Select question"
@@ -517,7 +517,7 @@ const CreateExam = () => {
                         </Col>
 
                         <Col span={4}>
-                          <InputNumber value={question.marks} disabled style={{ width: "100%" }} />
+                          <InputNumber value={question.marks} disabled className="u-full" />
                         </Col>
 
                         <Col span={4}>
@@ -528,7 +528,7 @@ const CreateExam = () => {
                   </>
                 )}
 
-                <Button type="primary" htmlType="submit" block style={{ marginTop: 8 }}>
+                <Button type="primary" htmlType="submit" block className="u-mt-2">
                   Save Exam
                 </Button>
               </Form>

@@ -138,7 +138,7 @@ const RoleDynamicPortal = () => {
       <Card>
         <Title level={3} style={{ marginBottom: 4 }}>{config.title}</Title>
         <Text type="secondary">{config.subtitle}</Text>
-        <div style={{ marginTop: 12 }}>
+        <div className="u-mt-3">
           <Tag color="blue">Role: {roleName}</Tag>
           <Tag color="purple">Section: {activeSection}</Tag>
         </div>

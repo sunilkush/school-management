@@ -257,7 +257,7 @@ const ActionCard = ({ action, color, onClick, isPrimary }) => (
     <div style={iconWell(color, 38)}>
       <ThunderboltOutlined style={{ fontSize: 15 }} />
     </div>
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <div className="u-grow-min">
       <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
         {action.label}
       </Text>
@@ -376,7 +376,7 @@ const ModuleDetail = () => {
             <Text style={{ fontSize: 14, color: "var(--text-muted)", display: "block", marginTop: 4, lineHeight: 1.5 }}>
               {moduleData.description}
             </Text>
-            <Flex gap={8} style={{ marginTop: 12 }} wrap="wrap">
+            <Flex gap={8} className="u-mt-3" wrap="wrap">
               <Tag
                 style={{
                   borderRadius: 99, padding: "3px 12px", fontSize: 12, fontWeight: 600,
@@ -420,7 +420,7 @@ const ModuleDetail = () => {
                   <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                     Quick Access
                   </Text>
-                  <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  <Text className="u-meta">
                     Jump directly to your most-used pages
                   </Text>
                 </div>
@@ -439,7 +439,7 @@ const ModuleDetail = () => {
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
-                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    <span className="u-meta-md">
                       No quick actions configured for <strong>{roleName || "your role"}</strong> in this module.
                     </span>
                   }
@@ -487,7 +487,7 @@ const ModuleDetail = () => {
           {features.length > 0 && (
             <Col xs={24} lg={9}>
               <div className="section-panel" style={{ height: "100%" }}>
-                <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+                <Flex align="center" gap={10} className="u-mb-4">
                   <div style={iconWell(meta.color, 36)}>
                     <CheckOutlined style={{ fontSize: 14 }} />
                   </div>
@@ -495,7 +495,7 @@ const ModuleDetail = () => {
                     <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                       Module Capabilities
                     </Text>
-                    <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    <Text className="u-meta">
                       What this module covers
                     </Text>
                   </div>
@@ -526,7 +526,7 @@ const ModuleDetail = () => {
         {/* ── Footer navigation ── */}
         <div className="section-panel" style={{ marginTop: 4, padding: "14px 20px" }}>
           <Flex align="center" justify="space-between" wrap="wrap" gap={10}>
-            <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            <Text className="u-meta-md">
               Viewing{" "}
               <strong style={{ color: meta.color }}>{moduleData.title}</strong>
               {" "}as{" "}

@@ -127,7 +127,7 @@ const JournalEntries = () => {
           <div style={{ fontFamily: "monospace", fontWeight: 700 }}>{n}</div>
           {r.source?.model && (
             <Tooltip title={`Posted automatically from a ${r.source.model} record`}>
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>auto · {r.source.model}</span>
+              <span className="u-meta-xs">auto · {r.source.model}</span>
             </Tooltip>
           )}
         </div>
@@ -139,7 +139,7 @@ const JournalEntries = () => {
       render: (n, r) => (
         <div>
           <div style={{ color: "var(--text-primary)" }}>{n || "—"}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.lines?.map((l, i) => (
               <span key={i}>
                 {i > 0 && " · "}
@@ -242,12 +242,12 @@ const JournalEntries = () => {
           </Button>,
         ]}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="u-mt-4">
           <div style={{ display: "flex", gap: 12 }}>
             <Form.Item name="date" label="Date" rules={[{ required: true }]} style={{ width: 180 }}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
-            <Form.Item name="narration" label="Narration" style={{ flex: 1 }}>
+            <Form.Item name="narration" label="Narration" className="u-grow">
               <Input placeholder="What this entry is for" />
             </Form.Item>
           </div>
@@ -258,17 +258,17 @@ const JournalEntries = () => {
                 {fields.map(({ key, name, ...rest }) => (
                   <div key={key} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                     <Form.Item
-                      {...rest} name={[name, "accountId"]} style={{ flex: 1 }}
+                      {...rest} name={[name, "accountId"]} className="u-grow"
                       rules={[{ required: true, message: "Pick an account" }]}
                     >
                       <Select showSearch optionFilterProp="label" placeholder="Account" options={accountOptions} />
                     </Form.Item>
                     <Form.Item {...rest} name={[name, "debit"]} style={{ width: 140 }}>
-                      <InputNumber min={0} placeholder="Debit" style={{ width: "100%" }}
+                      <InputNumber min={0} placeholder="Debit" className="u-full"
                         onChange={(v) => { if (v) form.setFields([{ name: ["lines", name, "credit"], value: null }]); }} />
                     </Form.Item>
                     <Form.Item {...rest} name={[name, "credit"]} style={{ width: 140 }}>
-                      <InputNumber min={0} placeholder="Credit" style={{ width: "100%" }}
+                      <InputNumber min={0} placeholder="Credit" className="u-full"
                         onChange={(v) => { if (v) form.setFields([{ name: ["lines", name, "debit"], value: null }]); }} />
                     </Form.Item>
                     <Button
@@ -291,8 +291,8 @@ const JournalEntries = () => {
             className="section-panel" style={{ marginTop: 18, marginBottom: 0, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: totals.difference === 0 ? "var(--border-muted)" : "var(--danger)" }}
           >
             <div style={{ display: "flex", gap: 24 }}>
-              <span><span style={{ color: "var(--text-muted)" }}>Debits </span><b>{money(totals.debit)}</b></span>
-              <span><span style={{ color: "var(--text-muted)" }}>Credits </span><b>{money(totals.credit)}</b></span>
+              <span><span className="u-muted">Debits </span><b>{money(totals.debit)}</b></span>
+              <span><span className="u-muted">Credits </span><b>{money(totals.credit)}</b></span>
             </div>
             <span style={pill(totals.difference === 0 ? "var(--success)" : "var(--danger)")}>
               {totals.difference === 0 ? "Balanced" : `Out by ${money(Math.abs(totals.difference))}`}
@@ -309,11 +309,11 @@ const JournalEntries = () => {
         confirmLoading={actionLoading}
         okText="Reverse"
       >
-        <p style={{ color: "var(--text-muted)" }}>
+        <p className="u-muted">
           A posted entry is never edited or deleted — somebody may already have reported the figure.
           This writes a mirror-image entry instead, so both the original and the correction stay visible.
         </p>
-        <DatePicker value={reverseDate} onChange={(d) => setReverseDate(d || dayjs())} style={{ width: "100%" }} />
+        <DatePicker value={reverseDate} onChange={(d) => setReverseDate(d || dayjs())} className="u-full" />
       </Modal>
     </div>
   );

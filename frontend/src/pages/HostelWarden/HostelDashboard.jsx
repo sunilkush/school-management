@@ -25,7 +25,7 @@ const KpiCard = ({ icon, label, value, color, sub, onClick }) => (
     onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
   >
     <div style={iconWell(color, 44)}>{icon}</div>
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <div className="u-grow-min">
       <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2 }}>{value ?? "—"}</div>
       {sub && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{sub}</div>}
@@ -100,10 +100,10 @@ const HostelDashboard = () => {
       </div>
 
       {/* ── Occupancy Progress ───────────────────────────────── */}
-      <div className="section-panel" style={{ marginBottom: 20 }}>
+      <div className="section-panel u-mb-5">
         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Overall Occupancy Rate</div>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <span className="u-meta">
             {kpis.totalOccupied || 0} / {kpis.totalCapacity || 0} beds occupied
           </span>
           <span style={{ fontWeight: 700, fontSize: 12 }}>{kpis.occupancyRate || 0}%</span>
@@ -135,7 +135,7 @@ const HostelDashboard = () => {
       </div>
 
       {/* ── Charts Row ───────────────────────────────────────── */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+      <Row gutter={[16, 16]} className="u-mb-5">
         <Col xs={24} lg={14}>
           <div className="section-panel is-last">
             <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 14 }}>Monthly Leave Trend</div>

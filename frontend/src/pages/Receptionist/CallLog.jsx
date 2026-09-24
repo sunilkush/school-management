@@ -47,11 +47,11 @@ const CallLog = () => {
     {
       title: "Caller",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <Avatar name={r.callerName || "?"} color={CALL_COLORS[r.type] || "var(--purple)"} />
           <div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.callerName || "—"}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.phone || ""}</div>
+            <div className="u-label">{r.callerName || "—"}</div>
+            <div className="u-meta-xs">{r.phone || ""}</div>
           </div>
         </div>
       ),
@@ -70,11 +70,11 @@ const CallLog = () => {
     { title: "Purpose", dataIndex: "purpose", render: (v) => <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{v || "—"}</span> },
     {
       title: "Duration", dataIndex: "duration", width: 100,
-      render: (v) => v ? <span style={pill("var(--purple)", "color-mix(in srgb, var(--purple) 8%, transparent)")}>{v} min</span> : <span style={{ color: "var(--text-muted)" }}>—</span>,
+      render: (v) => v ? <span style={pill("var(--purple)", "color-mix(in srgb, var(--purple) 8%, transparent)")}>{v} min</span> : <span className="u-muted">—</span>,
     },
     {
       title: "Time", dataIndex: "callTime", width: 140,
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{fmtFull(v)}</span>,
+      render: (v) => <span className="u-meta">{fmtFull(v)}</span>,
     },
     {
       title: "", width: 70, align: "center",
@@ -118,7 +118,7 @@ const CallLog = () => {
           <div className="empty-state">
             <div style={{ fontSize: 34, marginBottom: 10 }}>📞</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>No Calls Logged</div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Click "Log Call" to record the first call.</div>
+            <div className="u-meta-md">Click "Log Call" to record the first call.</div>
           </div>
         ) : (
           <Table className="call-table data-table" rowKey="_id" dataSource={logs} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 680 }} />
@@ -126,7 +126,7 @@ const CallLog = () => {
       </div>
 
       <Modal title={<span style={{ fontWeight: 700 }}>Log a Call</span>} open={open} onCancel={() => setOpen(false)} footer={null} destroyOnClose>
-        <Form form={form} layout="vertical" onFinish={handleCreate} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} className="u-mt-2">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
             <Form.Item label="Caller Name" name="callerName" rules={[{ required: true }]}><Input placeholder="Full name" /></Form.Item>
             <Form.Item label="Phone" name="phone"><Input placeholder="Contact number" /></Form.Item>

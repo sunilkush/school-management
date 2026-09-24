@@ -116,7 +116,7 @@ const ChartOfAccounts = () => {
       title: "Account", dataIndex: "name",
       render: (name, r) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+          <div className="u-strong">
             {name}{" "}
             {r.isSystem && (
               <Tooltip title="Part of the default chart. It can be renamed or deactivated, but not deleted.">
@@ -124,7 +124,7 @@ const ChartOfAccounts = () => {
               </Tooltip>
             )}
           </div>
-          {r.description ? <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{r.description}</div> : null}
+          {r.description ? <div className="u-meta">{r.description}</div> : null}
         </div>
       ),
     },
@@ -246,7 +246,7 @@ const ChartOfAccounts = () => {
         confirmLoading={actionLoading}
         okText={editing ? "Save" : "Create"}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="u-mt-4">
           <Form.Item
             name="code" label="Code"
             rules={[{ required: true, message: "A code is required" }]}

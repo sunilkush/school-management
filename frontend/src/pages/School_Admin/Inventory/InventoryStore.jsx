@@ -10,7 +10,6 @@ import {
   ToolOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../../../components/layout/PageHeader";
-import { useTheme } from "../../../context/ThemeContext";
 
 const StockPage           = lazy(() => import("./StockPage"));
 const VendorPage          = lazy(() => import("./VendorPage"));
@@ -37,7 +36,6 @@ const TABS = [
 ];
 
 export default function InventoryStore() {
-  const { isDark } = useTheme();
 
   return (
     <>
@@ -48,42 +46,14 @@ export default function InventoryStore() {
       />
 
       <div className="page-wrapper">
-        <style>{`
-          .inv-tabs .ant-tabs-nav {
-            margin-bottom: 20px !important;
-          }
-          .inv-tabs .ant-tabs-tab {
-            font-size: 13px !important;
-            padding: 8px 16px !important;
-            gap: 6px;
-            color: var(--text-muted) !important;
-          }
-          .inv-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-            color: var(--primary) !important;
-            font-weight: 600 !important;
-          }
-          .inv-tabs .ant-tabs-ink-bar {
-            background: var(--primary) !important;
-          }
-          .inv-tabs .ant-tabs-nav::before {
-            border-color: var(--border-muted) !important;
-          }
-          @keyframes invFadeUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-          }
-          .inv-tab-content {
-            animation: invFadeUp 0.25s ease both;
-          }
-        `}</style>
-
+        
         <Tabs
           className="inv-tabs"
           defaultActiveKey="stock"
           items={TABS.map(({ key, label, icon, component }) => ({
             key,
             label: (
-              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span className="u-row-sm">
                 {icon}
                 {label}
               </span>

@@ -140,7 +140,7 @@ const Books = () => {
       key: "title",
       render: (text, r) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{text}</div>
+          <div className="u-label">{text}</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{r.author}</div>
         </div>
       ),
@@ -149,7 +149,7 @@ const Books = () => {
       render: (v) => <span style={pill("var(--accent)", "rgba(var(--accent-rgb), 0.2)")}>{v}</span>,
     },
     { title: "ISBN", dataIndex: "isbn", key: "isbn",
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v || "—"}</span>,
+      render: (v) => <span className="u-meta">{v || "—"}</span>,
     },
     {
       title: "Available",
@@ -170,7 +170,7 @@ const Books = () => {
     {
       title: "Shelf",
       dataIndex: "shelfLocation",
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{v || "—"}</span>,
+      render: (v) => <span className="u-meta">{v || "—"}</span>,
     },
     {
       title: "Actions",
@@ -253,7 +253,7 @@ const Books = () => {
               <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 All Books
               </span>
-              <div style={{ flex: 1 }} />
+              <div className="u-grow" />
               <Input.Search
                 prefix={<SearchOutlined />}
                 placeholder="Search book / author / ISBN"
@@ -293,7 +293,7 @@ const Books = () => {
                 <div style={{ fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
                   {searchText || categoryFilter || statusFilter ? "No books match your filters" : "No books in the library yet"}
                 </div>
-                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                <div className="u-meta-md">
                   {searchText || categoryFilter || statusFilter ? "Try clearing your filters" : 'Click "Add Book" to add the first book'}
                 </div>
               </div>
@@ -308,7 +308,7 @@ const Books = () => {
                 pagination={{
                   pageSize: 10,
                   size: "small",
-                  showTotal: (total) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{total} books</span>,
+                  showTotal: (total) => <span className="u-meta">{total} books</span>,
                 }}
                 scroll={{ x: 800 }}
                 locale={{ emptyText: "No books found" }}
@@ -322,7 +322,7 @@ const Books = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={iconWell("var(--primary)", 34)}><BookOutlined /></div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                <div className="u-title">
                   {editingBook ? "Edit Book" : "Add Book"}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Fill in the book details</div>
@@ -336,7 +336,7 @@ const Books = () => {
           okText="Save"
           centered
         >
-          <Form form={form} layout="vertical" onFinish={handleSave} style={{ marginTop: 8 }}>
+          <Form form={form} layout="vertical" onFinish={handleSave} className="u-mt-2">
             <Row gutter={16}>
               <Col xs={24} sm={12}>
                 <Form.Item name="title" label="Book Title" rules={[{ required: true }]}>

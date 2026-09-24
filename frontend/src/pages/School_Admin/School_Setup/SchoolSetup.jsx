@@ -168,13 +168,7 @@ const SchoolSetup = () => {
 
   return (
     <>
-      <style>{`
-        .setup-panel { animation: setupFade 0.25s ease forwards; }
-        @keyframes setupFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-        @media (max-width: 640px)  { .setup-stepper-desktop { display:none!important; } .setup-tabbar { display:block!important; } }
-        @media (min-width: 641px)  { .setup-stepper-desktop { display:block!important; } .setup-tabbar { display:none!important; } }
-      `}</style>
-
+      
       <div style={{ minHeight: "100dvh", padding: 24, background: "var(--bg)" }}>
 
         {/* ── Page header ─────────────────────────────────────── */}

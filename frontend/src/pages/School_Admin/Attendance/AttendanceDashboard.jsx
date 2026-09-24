@@ -89,7 +89,7 @@ const KpiCard = ({ icon, label, value, color, sub }) => (
     }}
   >
     <div style={iconWell(color, 44)}>{icon}</div>
-    <div style={{ flex: 1 }}>
+    <div className="u-grow">
       <div
         style={{
           fontSize: 11,
@@ -213,7 +213,7 @@ const AttendanceDashboard = () => {
     {
       title: "Student",
       render: (_, r) => (
-        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+        <span className="u-strong">
           {r.name || r.userId?.name || "—"}
         </span>
       ),
@@ -225,7 +225,7 @@ const AttendanceDashboard = () => {
         const total   = r.totalDays   || 0;
         const pct     = total > 0 ? Math.round((present / total) * 100) : 0;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="u-row">
             <Progress
               percent={pct}
               size="small"
@@ -381,11 +381,7 @@ const AttendanceDashboard = () => {
             }}
           >
             <div
-              style={{
-                fontWeight: 700,
-                fontSize: 14,
-                color: "var(--text-primary)",
-              }}
+              className="u-title-sm"
             >
               Monthly Attendance Trend
             </div>
@@ -472,7 +468,7 @@ const AttendanceDashboard = () => {
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
-                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    <span className="u-meta-md">
                       No data for selected month
                     </span>
                   }

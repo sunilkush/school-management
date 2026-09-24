@@ -13,94 +13,6 @@ const EXCLUDED_ROLES_FOR_SCHOOL_ADMIN = ["super admin", "school admin", "student
 const MAX_AVATAR_SIZE_BYTES = 1024 * 1024;
 
 /* ─── shared CSS injected once ─── */
-const FORM_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-  .reg-form .ant-form-item-label > label {
-    font-size: 11px !important; font-weight: 700 !important; color: var(--text-muted) !important;
-    text-transform: uppercase !important; letter-spacing: 0.07em !important; height: auto !important;
-  }
-  .reg-form .ant-input, .reg-form .ant-input-affix-wrapper,
-  .reg-form .ant-input-number, .reg-form .ant-picker {
-    border-radius: 10px !important; border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important;
-    font-size: 12px !important; height: 30px !important;
-    background: var(--surface-soft) !important; color: var(--text) !important; width: 100% !important;
-  }
-  .reg-form .ant-input-affix-wrapper { padding: 0 12px !important; }
-  .reg-form .ant-input-affix-wrapper input { height: 30px !important; background: transparent !important; }
-  .reg-form .ant-input:focus, .reg-form .ant-input-affix-wrapper-focused,
-  .reg-form .ant-input-number-focused, .reg-form .ant-picker-focused {
-    border-color: var(--purple) !important; box-shadow: 0 0 0 3px rgba(var(--purple-rgb), 0.1) !important;
-  }
-  .reg-form .ant-select .ant-select-selector {
-    border-radius: 10px !important; border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important;
-    height: 30px !important; background: var(--surface-soft) !important;
-    align-items: center !important; font-size: 12px !important;
-  }
-  .reg-form .ant-select-focused .ant-select-selector {
-    border-color: var(--purple) !important; box-shadow: 0 0 0 3px rgba(var(--purple-rgb), 0.1) !important;
-  }
-  .reg-form .ant-checkbox-checked .ant-checkbox-inner {
-    background: var(--purple) !important; border-color: var(--purple) !important;
-  }
-  .reg-form .ant-form-item-explain-error { font-size: 11px !important; margin-top: 3px !important; }
-  .reg-form .ant-form-item { margin-bottom: 14px !important; }
-  .reg-form .ant-input-number-handler-wrap { display: none; }
-
-  .reg-alert {
-    padding: 10px 14px; border-radius: 10px; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500;
-  }
-  .reg-alert.success { background: var(--success-light); color: var(--success-hover); border: 1px solid rgba(var(--success-rgb), 0.3); }
-  .reg-alert.error   { background: var(--danger-light); color: var(--danger-hover); border: 1px solid rgba(var(--danger-rgb), 0.3); }
-
-  .reg-btn {
-    height: 30px; border-radius: 10px; font-size: 12px; font-weight: 600;
-    cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.01em;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
-  .reg-btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--purple-hover) 100%);
-    color: #fff; box-shadow: 0 4px 14px rgba(var(--purple-rgb),0.35); padding: 0 20px;
-  }
-  .reg-btn-primary:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(var(--purple-rgb),0.45); transform: translateY(-1px);
-  }
-  .reg-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-  .reg-btn-ghost { background: transparent; color: var(--purple); border: 1.5px solid rgba(var(--purple-rgb), 0.25) !important; padding: 0 16px; }
-  .reg-btn-ghost:hover { border-color: var(--purple) !important; }
-
-  .upload-zone {
-    display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-    border: 1.5px dashed rgba(var(--purple-rgb), 0.25); border-radius: 10px; background: var(--surface-soft);
-    cursor: pointer; transition: border-color 0.2s, background 0.2s;
-  }
-  .upload-zone:hover { border-color: var(--purple); background: rgba(var(--purple-rgb), 0.12); }
-
-  .step-status-row {
-    display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;
-  }
-  .step-status-item {
-    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-    border-radius: 10px; font-size: 12px; font-weight: 500;
-  }
-  .step-status-item.done    { background: var(--success-light); color: var(--success-hover); }
-  .step-status-item.loading { background: rgba(var(--purple-rgb), 0.08); color: var(--purple); }
-  .step-status-item.error   { background: var(--danger-light); color: var(--danger-hover); }
-  .step-status-item.idle    { background: var(--background); color: var(--text-muted); }
-
-  .reg-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 16px;
-  }
-  @media (max-width: 600px) {
-    .reg-grid-2 { grid-template-columns: 1fr; }
-  }
-
-  .spin { animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-`;
 
 /* ─── status icon helper ─── */
 const StatusIcon = ({ status }) => {
@@ -289,8 +201,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}>
-      <style>{FORM_CSS}</style>
-
+      
       {/* Steps indicator */}
       <Steps
         current={currentStep}
@@ -420,7 +331,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
             </Form.Item>
           </div>
 
-          <button type="button" className="reg-btn reg-btn-primary" style={{ width: "100%" }} onClick={goToStep2}>
+          <button type="button" className="reg-btn reg-btn-primary u-full" onClick={goToStep2}>
             Next: Employee Details →
           </button>
         </div>
@@ -468,7 +379,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
               ]} />
             </Form.Item>
             <Form.Item label="Join Date" name="joinDate" rules={[{ required: true, message: "Required" }]}>
-              <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+              <DatePicker className="u-full" format="DD/MM/YYYY" />
             </Form.Item>
           </div>
 
@@ -480,7 +391,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
           <Form.Item label="Basic Salary (₹/month)" name="basicSalary">
             <InputNumber
               min={0} step={500}
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="e.g. 25000"
               formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
               parser={(v) => v.replace(/₹\s?|(,*)/g, "")}
@@ -493,7 +404,7 @@ const RegisterForm = ({ onClose, allowedRoleNames }) => {
 
           {/* Action buttons */}
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button type="button" className="reg-btn reg-btn-ghost" style={{ flex: 1 }} onClick={() => setCurrentStep(0)} disabled={isProcessing}>
+            <button type="button" className="reg-btn reg-btn-ghost u-grow" onClick={() => setCurrentStep(0)} disabled={isProcessing}>
               ← Back
             </button>
             <button type="submit" className="reg-btn reg-btn-primary" style={{ flex: 2 }} disabled={isProcessing || allDone}>

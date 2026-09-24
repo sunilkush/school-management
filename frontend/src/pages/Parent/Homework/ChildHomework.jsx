@@ -172,7 +172,7 @@ const ChildHomework = () => {
           width={560}
         >
           {detailHw && (
-            <Space direction="vertical" style={{ width: "100%" }} size={12}>
+            <Space direction="vertical" className="u-full" size={12}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 4 }}>Subject</div>
                 <div style={{ fontWeight: 600 }}>{detailHw.subjectId?.name || "—"}</div>

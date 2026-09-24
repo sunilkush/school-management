@@ -95,7 +95,7 @@ const QuestionRow = ({ question: q, index, open, onToggleOpen, onEdit, onDelete,
           <span style={{ color: "var(--text-muted)", fontSize: 11, marginTop: 4, width: 22, flexShrink: 0 }}>
             {open ? <DownOutlined /> : <RightOutlined />}
           </span>
-          <span style={{ flex: 1, minWidth: 0 }}>
+          <span className="u-grow-min">
             <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.45 }}>
               {q.statement || "—"}
             </span>
@@ -106,8 +106,8 @@ const QuestionRow = ({ question: q, index, open, onToggleOpen, onEdit, onDelete,
                 {q.marks ?? 0} mark{(q.marks ?? 0) === 1 ? "" : "s"}
                 {q.negativeMarks > 0 ? ` · −${q.negativeMarks}` : ""}
               </span>
-              {q.chapterId?.name && <Tag color="blue" style={{ margin: 0 }}>{q.chapterId.name}</Tag>}
-              {q.isActive === false && <Tag style={{ margin: 0 }}>Hidden</Tag>}
+              {q.chapterId?.name && <Tag color="blue" className="u-m-0">{q.chapterId.name}</Tag>}
+              {q.isActive === false && <Tag className="u-m-0">Hidden</Tag>}
             </span>
           </span>
         </button>
@@ -163,7 +163,7 @@ const QuestionRow = ({ question: q, index, open, onToggleOpen, onEdit, onDelete,
           )}
           {Array.isArray(q.tags) && q.tags.length > 0 && (
             <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {q.tags.map((t) => <Tag key={t} style={{ margin: 0 }}>{t}</Tag>)}
+              {q.tags.map((t) => <Tag key={t} className="u-m-0">{t}</Tag>)}
             </div>
           )}
         </div>
@@ -495,15 +495,15 @@ const QuestionBank = () => {
                 />
               </div>
             ) : (
-              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>This year has no classes yet.</div>
+              <div className="u-meta-md">This year has no classes yet.</div>
             )}
 
             <div style={{ height: 16 }} />
             {label("Subject")}
             {!classId ? (
-              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Pick a class first.</div>
+              <div className="u-meta-md">Pick a class first.</div>
             ) : subjects.length ? (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div className="u-row-wrap">
                 {subjects.map((s) => (
                   <Tag.CheckableTag
                     key={s.id}
@@ -516,7 +516,7 @@ const QuestionBank = () => {
                 ))}
               </div>
             ) : (
-              <div style={{ color: "var(--text-muted)", fontSize: 13 }}>This class has no subjects yet.</div>
+              <div className="u-meta-md">This class has no subjects yet.</div>
             )}
           </div>
 

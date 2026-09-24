@@ -89,7 +89,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -250,7 +250,7 @@ const Roles = () => {
       dataIndex: "name",
       render: (name, r) => (
         <Space>
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{name}</span>
+          <span className="u-strong-bold">{name}</span>
           {r.type === "system" && <span style={pill("var(--text-muted)")}>System</span>}
         </Space>
       ),
@@ -259,7 +259,7 @@ const Roles = () => {
       title: "Description",
       dataIndex: "description",
       ellipsis: true,
-      render: (v) => v || <span style={{ color: "var(--text-muted)" }}>—</span>,
+      render: (v) => v || <span className="u-muted">—</span>,
     },
     {
       title: "Permissions",
@@ -309,7 +309,7 @@ const Roles = () => {
     {
       title: "User",
       dataIndex: "userId",
-      render: (user) => <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{user?.name || user?.email || "—"}</span>,
+      render: (user) => <span className="u-strong-bold">{user?.name || user?.email || "—"}</span>,
     },
     {
       title: "Role",
@@ -319,7 +319,7 @@ const Roles = () => {
     {
       title: "Scope",
       dataIndex: "scope",
-      render: (value) => <span style={{ color: "var(--text-muted)" }}>{value}</span>,
+      render: (value) => <span className="u-muted">{value}</span>,
     },
     {
       title: "Valid Till",
@@ -413,7 +413,7 @@ const Roles = () => {
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <TeamOutlined style={{ color: "var(--primary)" }} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Role Templates by School Size</span>
+          <span className="u-title-sm">Role Templates by School Size</span>
         </div>
 
         <Row gutter={[16, 16]}>
@@ -441,10 +441,10 @@ const Roles = () => {
                     </div>
 
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                      <div className="u-title">
                         {meta.title}
                       </div>
-                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                      <div className="u-meta">
                         {meta.desc}
                       </div>
                       <div style={{ marginTop: 10 }}>
@@ -461,7 +461,7 @@ const Roles = () => {
         </Row>
 
         <div style={{ marginTop: 18 }}>
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Included Roles</span>
+          <span className="u-strong-bold">Included Roles</span>
           <div style={{ marginTop: 10 }}>
             <Space wrap>
               {templateRoles.map((role) => (
@@ -477,7 +477,7 @@ const Roles = () => {
       <div className="section-panel">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <SafetyCertificateOutlined style={{ color: "var(--primary)" }} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>All Roles</span>
+          <span className="u-title-sm">All Roles</span>
           <span style={pill("var(--primary)")}>{roles.length}</span>
         </div>
 
@@ -516,14 +516,14 @@ const Roles = () => {
           <div className="section-panel" style={{ marginBottom: 0, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <PlusOutlined style={{ color: "var(--primary)" }} />
-              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Create / Manage Roles</span>
+              <span className="u-title-sm">Create / Manage Roles</span>
             </div>
 
-            <span style={{ color: "var(--text-muted)" }}>
+            <span className="u-muted">
               Role definitions aur permissions ke liye existing role form use karein.
             </span>
 
-            <div style={{ marginTop: 16 }}>
+            <div className="u-mt-4">
               <AddRoleForm />
             </div>
           </div>
@@ -533,7 +533,7 @@ const Roles = () => {
           <div className="section-panel is-last">
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               <ClockCircleOutlined style={{ color: "var(--warning)" }} />
-              <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Time-bound Temporary Access</span>
+              <span className="u-title-sm">Time-bound Temporary Access</span>
               <span style={pill("var(--primary)")}>{temporaryAccess.length}</span>
               <Button
                 type="primary"
@@ -579,7 +579,7 @@ const Roles = () => {
         width={620}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="u-mt-4">
           <Row gutter={12}>
             <Col xs={24} md={12}>
               <Form.Item
@@ -637,7 +637,7 @@ const Roles = () => {
                 label="Valid Till"
                 rules={[{ required: true, message: "Date is required" }]}
               >
-                <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+                <DatePicker className="u-full" format="YYYY-MM-DD" />
               </Form.Item>
             </Col>
 

@@ -16,7 +16,7 @@ import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const C = {
-  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "#EFF6FF",
+  primary: "var(--primary)", primaryLight: "var(--primary-light)", primaryLighter: "var(--primary-lighter)",
   accent: "var(--accent)", accentLight: "var(--accent-light)",
   success: "var(--success)", successLight: "var(--success-light)",
   danger: "var(--danger)", dangerLight: "var(--danger-light)",
@@ -180,7 +180,7 @@ const BonusIncentivePage = () => {
     {
       title: "Employee",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 34, height: 34, borderRadius: 9, flexShrink: 0,
             background: `linear-gradient(135deg, ${C.warning}, var(--danger))`,
@@ -194,7 +194,7 @@ const BonusIncentivePage = () => {
       ),
     },
     { title: "Type",   dataIndex: "type",   render: (v) => <TypeBadge type={v} /> },
-    { title: "Title",  dataIndex: "title",  render: (v) => <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{v}</span> },
+    { title: "Title",  dataIndex: "title",  render: (v) => <span className="u-meta-md">{v}</span> },
     {
       title: "Amount",
       dataIndex: "amount",
@@ -203,7 +203,7 @@ const BonusIncentivePage = () => {
     {
       title: "Payout",
       render: (_, r) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {MONTHS[(r.payoutMonth || 1) - 1]} {r.payoutYear}
         </span>
       ),
@@ -280,7 +280,7 @@ const BonusIncentivePage = () => {
       {/* Table */}
       <div className="section-panel is-flush">
         <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-muted)", display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>All Bonuses & Incentives</span>
+          <span className="u-title">All Bonuses & Incentives</span>
           <span style={{
             fontSize: 12, padding: "2px 9px", borderRadius: 20,
             background: C.warningLight, color: "var(--warning-hover)", border: "1px solid var(--warning-light)", fontWeight: 600,
@@ -316,7 +316,7 @@ const BonusIncentivePage = () => {
         destroyOnClose
         width={500}
       >
-        <Form form={form} layout="vertical" onFinish={handleSave} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleSave} className="u-mt-2">
           <Form.Item name="employeeId" label="Employee" rules={[{ required: true }]}>
             <Select showSearch optionFilterProp="label" options={employeeOptions} placeholder="Select employee…" size="large" />
           </Form.Item>
@@ -329,7 +329,7 @@ const BonusIncentivePage = () => {
               </Select>
             </Form.Item>
             <Form.Item name="amount" label="Amount (₹)" rules={[{ required: true }]}>
-              <InputNumber min={1} style={{ width: "100%" }} placeholder="e.g. 5000"
+              <InputNumber min={1} className="u-full" placeholder="e.g. 5000"
                 formatter={(v) => `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 parser={(v) => v.replace(/₹\s?|(,*)/g, "")} />
             </Form.Item>

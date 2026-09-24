@@ -86,7 +86,7 @@ const UserSupportTickets = () => {
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space direction="vertical" size={16} className="u-full">
       <Card title="Create Support Ticket">
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Row gutter={16}>
@@ -156,7 +156,7 @@ const UserSupportTickets = () => {
           placeholder="Resolution note (optional)"
           value={resolveNote}
           onChange={(e) => setResolveNote(e.target.value)}
-          style={{ marginTop: 12 }}
+          className="u-mt-3"
         />
       </Modal>
     </Space>

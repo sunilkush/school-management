@@ -80,7 +80,7 @@ export default function MySubstitutions() {
         <Alert
           type="info"
           showIcon
-          style={{ marginTop: 12 }}
+          className="u-mt-3"
           message="These are one-off covers"
           description="They do not appear on your regular timetable, and only apply to the dates listed above."
         />

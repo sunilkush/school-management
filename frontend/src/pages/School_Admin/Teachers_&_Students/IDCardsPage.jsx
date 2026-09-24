@@ -256,8 +256,8 @@ export default function IDCardsPage() {
       dataIndex: "fullName",
       render: (v, row) => (
         <div>
-          <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v || "—"}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          <div className="u-strong">{v || "—"}</div>
+          <div className="u-meta-xs">
             {row.holderType === "Student"
               ? [row.className, row.sectionName].filter(Boolean).join(" - ") || "—"
               : (row.designation || row.department || "—")}
@@ -268,7 +268,7 @@ export default function IDCardsPage() {
     {
       title: "Valid Until",
       dataIndex: "validUntil",
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{fmt(v)}</span>,
+      render: (v) => <span className="u-meta">{fmt(v)}</span>,
     },
     {
       title: "Status",
@@ -321,7 +321,7 @@ export default function IDCardsPage() {
           />
         )}
 
-        <div style={{ marginBottom: 16 }}>
+        <div className="u-mb-4">
           <Segmented
             size="large"
             value={mode}
@@ -334,8 +334,8 @@ export default function IDCardsPage() {
         </div>
 
         {/* ── Generate panel ─────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
-          <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
+          <Flex align="center" gap={10} className="u-mb-4">
             <div style={iconWell("var(--primary)", 38)}>
               <IdcardOutlined style={{ fontSize: 17 }} />
             </div>
@@ -343,7 +343,7 @@ export default function IDCardsPage() {
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                 Generate {mode === "Student" ? "Student" : "Staff"} ID Card
               </Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <Text className="u-meta">
                 Generate one card at a time, or bulk-generate for a whole {mode === "Student" ? "class/section" : "department"}
               </Text>
             </div>
@@ -354,7 +354,7 @@ export default function IDCardsPage() {
               <Col xs={24} sm={12} md={6}>
                 <Select
                   placeholder="Select Class"
-                  style={{ width: "100%" }}
+                  className="u-full"
                   value={selectedClass}
                   onChange={setSelectedClass}
                   options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))}
@@ -366,7 +366,7 @@ export default function IDCardsPage() {
               <Col xs={24} sm={12} md={6}>
                 <Select
                   placeholder="Select Section"
-                  style={{ width: "100%" }}
+                  className="u-full"
                   value={selectedSection}
                   onChange={setSelectedSection}
                   options={sectionOptions}
@@ -378,7 +378,7 @@ export default function IDCardsPage() {
               <Col xs={24} sm={12} md={7}>
                 <Select
                   placeholder="Select Student (for single card)"
-                  style={{ width: "100%" }}
+                  className="u-full"
                   value={studentId}
                   onChange={setStudentId}
                   options={studentOptions}
@@ -391,7 +391,7 @@ export default function IDCardsPage() {
               <Col xs={24} sm={12} md={5}>
                 <DatePicker
                   placeholder="Valid Until"
-                  style={{ width: "100%" }}
+                  className="u-full"
                   value={validUntil}
                   onChange={setValidUntil}
                   size="large"
@@ -404,7 +404,7 @@ export default function IDCardsPage() {
                 <Select
                   placeholder="Filter by Department (optional)"
                   allowClear
-                  style={{ width: "100%" }}
+                  className="u-full"
                   value={department}
                   onChange={setDepartment}
                   options={departmentOptions}
@@ -415,7 +415,7 @@ export default function IDCardsPage() {
               <Col xs={24} sm={12} md={7}>
                 <Select
                   placeholder="Select Staff Member (for single card)"
-                  style={{ width: "100%" }}
+                  className="u-full"
                   value={employeeId}
                   onChange={setEmployeeId}
                   options={employeeOptions}
@@ -427,7 +427,7 @@ export default function IDCardsPage() {
               <Col xs={24} sm={12} md={5}>
                 <DatePicker
                   placeholder="Valid Until"
-                  style={{ width: "100%" }}
+                  className="u-full"
                   value={validUntil}
                   onChange={setValidUntil}
                   size="large"
@@ -436,7 +436,7 @@ export default function IDCardsPage() {
             </Row>
           )}
 
-          <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
+          <Row gutter={[12, 12]} className="u-mt-3">
             <Col xs={24} md={12}>
               <Button
                 type="primary" icon={<ThunderboltOutlined />}
@@ -463,13 +463,13 @@ export default function IDCardsPage() {
         </div>
 
         {/* ── Filter row ─────────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <Row gutter={[12, 12]} align="middle">
             <Col xs={24} sm={8} md={6}>
               <Select
                 placeholder="Filter by Status"
                 allowClear
-                style={{ width: "100%" }}
+                className="u-full"
                 value={filterStatus}
                 onChange={setFilterStatus}
                 options={[{ value: "Active", label: "Active" }, { value: "Inactive", label: "Inactive" }]}
@@ -581,7 +581,7 @@ export default function IDCardsPage() {
         okButtonProps={{ danger: true }}
         title={`Deactivate ${deactivateTarget?.cardNumber || ""}`}
       >
-        <Paragraph style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <Paragraph className="u-meta-md">
           Use this for lost/damaged cards or when reissuing. The card will be marked inactive; generate a new one afterwards if needed.
         </Paragraph>
         <Input

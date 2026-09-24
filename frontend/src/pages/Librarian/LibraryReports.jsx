@@ -178,14 +178,14 @@ const LibraryReports = () => {
                 <div style={iconWell(color, 38)}>{icon}</div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+                  <div className="u-title-lg">{value}</div>
                 </div>
               </div>
             ))}
           </div>
 
           {/* ── Utilization bar ──────────────────────────────────────── */}
-          <div className="section-panel" style={{ marginBottom: 20 }}>
+          <div className="section-panel u-mb-5">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 10 }}>Collection Utilization</div>
             <div style={{ marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -197,7 +197,7 @@ const LibraryReports = () => {
           </div>
 
           {/* ── Charts row ───────────────────────────────────────────── */}
-          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+          <Row gutter={[16, 16]} className="u-mb-5">
             <Col xs={24} lg={14}>
               <div className="section-panel is-last">
                 <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Monthly Issue vs. Return Trend</div>
@@ -238,7 +238,7 @@ const LibraryReports = () => {
           </Row>
 
           {/* ── Category breakdown ───────────────────────────────────── */}
-          <div className="section-panel" style={{ marginBottom: 20 }}>
+          <div className="section-panel u-mb-5">
             <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 14 }}>Books by Category</div>
             {categoryData.length === 0 ? (
               <Empty description="No books added yet" />
@@ -280,7 +280,7 @@ const LibraryReports = () => {
                   sorter: (a, b) => a.count - b.count,
                   defaultSortOrder: "descend",
                   render: (c) => (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className="u-row">
                       <Tag color="blue">{c}</Tag>
                       <Progress percent={topBorrowed.length > 0 ? Math.round((c / topBorrowed[0]?.count) * 100) : 0} size="small" showInfo={false} style={{ width: 80 }} strokeColor="var(--accent)" />
                     </div>

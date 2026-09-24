@@ -85,14 +85,14 @@ function BreakdownTable({ title, icon: Icon, color, rows, emptyText }) {
         <div style={{ ...iconWell(color, 32), borderRadius: 9, flexShrink: 0 }}>
           <Icon size={15} />
         </div>
-        <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+        <span className="u-title-sm">
           {title}
         </span>
       </div>
 
       {rows.length === 0 ? (
         <div style={{ padding: "32px 20px", textAlign: "center" }}>
-          <Empty description={<span style={{ color: "var(--text-muted)", fontSize: 13 }}>{emptyText}</span>} />
+          <Empty description={<span className="u-meta-md">{emptyText}</span>} />
         </div>
       ) : (
         <div>
@@ -217,7 +217,7 @@ export default function PayrollSelfServicePage() {
       title:  "Month",
       key:    "month",
       render: (_, r) => (
-        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+        <span className="u-strong">
           {fmtMonth(r.month, r.year)}
         </span>
       ),
@@ -268,7 +268,7 @@ export default function PayrollSelfServicePage() {
       title:  "Payment Mode",
       dataIndex: "paymentMode",
       render: (v) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {v ? String(v).toUpperCase() : "—"}
         </span>
       ),
@@ -316,7 +316,7 @@ export default function PayrollSelfServicePage() {
         </div>
       )}
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         <Spin spinning={loading}>
 
           {/* ── Summary stat cards ── */}
@@ -407,7 +407,7 @@ export default function PayrollSelfServicePage() {
                   <FileText size={15} />
                 </div>
                 <div>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+                  <span className="u-title-sm">
                     Payroll History
                   </span>
                   <span style={{
@@ -423,7 +423,7 @@ export default function PayrollSelfServicePage() {
               {payslips.length === 0 ? (
                 <div style={{ padding: "56px 24px", textAlign: "center" }}>
                   <Empty description={
-                    <span style={{ color: "var(--text-muted)" }}>No payslips generated yet</span>
+                    <span className="u-muted">No payslips generated yet</span>
                   } />
                 </div>
               ) : (
@@ -456,7 +456,7 @@ export default function PayrollSelfServicePage() {
                   <div style={{ ...iconWell("var(--primary)", 32), borderRadius: 9, flexShrink: 0 }}>
                     <BarChart3 size={15} />
                   </div>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+                  <span className="u-title-sm">
                     Active Structure
                   </span>
                 </div>
@@ -546,7 +546,7 @@ export default function PayrollSelfServicePage() {
                   width:        "fit-content",
                 }}>
                   <CalendarDays size={15} style={{ color: "var(--primary)" }} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                  <span className="u-label">
                     Showing attendance for{" "}
                     <span style={{ color: "var(--primary)" }}>
                       {fmtMonth(latestPayslip.month, latestPayslip.year)}
@@ -568,7 +568,7 @@ export default function PayrollSelfServicePage() {
                 {latestPayslip.workingDays > 0 && (
                   <div className="page-card" style={{ padding:   20, marginTop: 20 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                      <span className="u-label">
                         Attendance Rate
                       </span>
                       <span style={{ fontSize: 13, fontWeight: 800, color: "var(--success-hover)" }}>
@@ -602,7 +602,7 @@ export default function PayrollSelfServicePage() {
               <div className="page-card" style={{ padding:   "56px 24px", textAlign: "center" }}>
                 <Empty
                   description={
-                    <span style={{ color: "var(--text-muted)" }}>
+                    <span className="u-muted">
                       Attendance data appears after the monthly payroll is generated.
                     </span>
                   }

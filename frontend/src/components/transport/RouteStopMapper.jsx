@@ -113,14 +113,14 @@ const RouteStopMapper = ({ open, route, onClose, onSave, saving }) => {
       title: <Tooltip title="How close the bus must get before it counts as arrived">Radius (m)</Tooltip>,
       width: 110,
       render: (_, r, i) => (
-        <InputNumber min={20} max={2000} value={r.radiusMeters} onChange={(v) => patch(i, { radiusMeters: v || 150 })} style={{ width: "100%" }} />
+        <InputNumber min={20} max={2000} value={r.radiusMeters} onChange={(v) => patch(i, { radiusMeters: v || 150 })} className="u-full" />
       ),
     },
     {
       title: <Tooltip title="Minutes after the trip starts that the bus is normally here. Used to flag a late bus.">Due (min)</Tooltip>,
       width: 100,
       render: (_, r, i) => (
-        <InputNumber min={0} value={r.expectedOffsetMin} onChange={(v) => patch(i, { expectedOffsetMin: v })} style={{ width: "100%" }} />
+        <InputNumber min={0} value={r.expectedOffsetMin} onChange={(v) => patch(i, { expectedOffsetMin: v })} className="u-full" />
       ),
     },
     {
@@ -151,7 +151,7 @@ const RouteStopMapper = ({ open, route, onClose, onSave, saving }) => {
       <Alert
         type="info"
         showIcon
-        style={{ marginBottom: 16 }}
+        className="u-mb-4"
         message="Click the map to place the highlighted stop"
         description="Select a row, then click where that stop is. Without coordinates the bus can still be watched moving, but nobody gets an automatic 'reached your stop' update."
       />
@@ -161,7 +161,7 @@ const RouteStopMapper = ({ open, route, onClose, onSave, saving }) => {
           <OsmTileLayer />
           <ClickToPlace onPick={(lat, lng) => patch(activeIndex, { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) })} />
           {placed.length > 1 && (
-            <Polyline positions={placed.map((s) => [s.lat, s.lng])} pathOptions={{ color: "#2563EB", weight: 3, dashArray: "6 8" }} />
+            <Polyline positions={placed.map((s) => [s.lat, s.lng])} pathOptions={{ color: "var(--primary)", weight: 3, dashArray: "6 8" }} />
           )}
           {rows.map((r, i) =>
             r.lat != null ? (

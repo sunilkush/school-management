@@ -311,7 +311,7 @@ const SchoolAcademicYear = ({ next }) => {
                         </td>
 
                         <td style={{ padding: "12px 16px" }}>
-                          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <div className="u-row-sm">
                             <Tooltip title={isArchived ? "Cannot edit archived year" : "Edit dates"}>
                               <Button
                                 type="text" size="small" icon={<EditOutlined />}
@@ -406,7 +406,7 @@ const SchoolAcademicYear = ({ next }) => {
                       onChange={() => handleSetActive(yr._id)}
                     />
                     <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Set active</span>
-                    <div style={{ flex: 1 }} />
+                    <div className="u-grow" />
                     <Button size="small" icon={<EditOutlined />} disabled={isArchived} onClick={() => openEdit(yr)} style={{ borderRadius: 6 }}>
                       Edit
                     </Button>
@@ -431,7 +431,7 @@ const SchoolAcademicYear = ({ next }) => {
         open={!!editTarget}
         onCancel={() => setEditTarget(null)}
         title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={{
               width: 32, height: 32, borderRadius: 8,
               background: "rgba(var(--purple-rgb),0.1)",
@@ -489,15 +489,7 @@ const SchoolAcademicYear = ({ next }) => {
         </div>
       )}
 
-      <style>{`
-        .ay-mobile  { display: none; }
-        .ay-desktop { display: block; }
-        @media (max-width: 640px) {
-          .ay-desktop { display: none; }
-          .ay-mobile  { display: block; }
-        }
-      `}</style>
-    </div>
+          </div>
   );
 };
 

@@ -216,7 +216,7 @@ export default function RollNumberManagement() {
             <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)", lineHeight: 1.3 }}>
               {name || "—"}
             </div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{row.email || ""}</div>
+            <div className="u-meta-xs">{row.email || ""}</div>
           </div>
         </Flex>
       ),
@@ -287,8 +287,8 @@ export default function RollNumberManagement() {
         )}
 
         {/* ── Filter Panel ─────────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
-          <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
+          <Flex align="center" gap={10} className="u-mb-4">
             <div style={iconWell("var(--primary)", 38)}>
               <NumberOutlined style={{ fontSize: 17 }} />
             </div>
@@ -296,7 +296,7 @@ export default function RollNumberManagement() {
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                 Select Class & Section
               </Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <Text className="u-meta">
                 Choose a class and section to view and manage roll numbers
               </Text>
             </div>
@@ -306,7 +306,7 @@ export default function RollNumberManagement() {
             <Col xs={24} sm={10} md={7}>
               <Select
                 placeholder="Select Class"
-                style={{ width: "100%" }}
+                className="u-full"
                 value={selectedClass}
                 onChange={(v) => { setSelectedClass(v); setSelectedSection(null); setEditingId(null); }}
                 options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))}
@@ -319,7 +319,7 @@ export default function RollNumberManagement() {
             <Col xs={24} sm={10} md={7}>
               <Select
                 placeholder="Select Section"
-                style={{ width: "100%" }}
+                className="u-full"
                 value={selectedSection}
                 onChange={(v) => { setSelectedSection(v); setEditingId(null); }}
                 options={sectionOptions}
@@ -354,7 +354,7 @@ export default function RollNumberManagement() {
 
         {/* ── Stats ────────────────────────────────────────── */}
         {rollNumberList.length > 0 && (
-          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+          <Row gutter={[12, 12]} className="u-mb-4">
             {[
               { label: "Total Students", value: rollNumberList.length, color: "var(--primary)", emoji: "👨‍🎓" },
               { label: "Assigned",       value: assignedCount,         color: "var(--success)", emoji: "✅" },
@@ -391,7 +391,7 @@ export default function RollNumberManagement() {
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
                 Student Roll Numbers
               </Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <Text className="u-meta">
                 Click ✏️ to edit a roll number · Click "Auto-Assign" to set all at once
               </Text>
             </Flex>
@@ -416,10 +416,7 @@ export default function RollNumberManagement() {
               rowClassName={(r) => r.rollNumber == null ? "row-unassigned" : ""}
             />
 
-            <style>{`
-              .row-unassigned td { opacity: 0.7; }
-            `}</style>
-          </div>
+                      </div>
         ) : (
           !rollLoading && (
             <div className="section-panel" style={{ textAlign: "center", padding: "60px 0" }}>
@@ -427,7 +424,7 @@ export default function RollNumberManagement() {
               <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
                 Select a Class & Section
               </Text>
-              <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <Text className="u-meta-md">
                 Choose a class and section from the dropdowns above to view and manage roll numbers.
               </Text>
             </div>

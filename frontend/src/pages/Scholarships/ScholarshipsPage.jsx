@@ -178,7 +178,7 @@ const ScholarshipsPage = () => {
       render: (name, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{name} <Tag>{r.code}</Tag></div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.category} · {r.discountType === "percent" ? `${r.value}% off` : `${money(r.value)} off`}
             {r.requiresApproval ? " · needs approval" : " · granted outright"}
           </div>
@@ -189,7 +189,7 @@ const ScholarshipsPage = () => {
       title: "Places", width: 190,
       render: (_, r) => {
         if (r.usage?.maxAwards == null) {
-          return <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{r.usage?.approved ?? 0} given · no cap</span>;
+          return <span className="u-meta">{r.usage?.approved ?? 0} given · no cap</span>;
         }
         const taken = (r.usage.approved || 0) + (r.usage.pending || 0);
         return (
@@ -199,7 +199,7 @@ const ScholarshipsPage = () => {
               size="small"
               status={r.usage.isFull ? "exception" : "normal"}
             />
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <div className="u-meta">
               {taken} of {r.usage.maxAwards} taken{r.usage.pending ? ` (${r.usage.pending} pending)` : ""}
             </div>
           </div>
@@ -233,7 +233,7 @@ const ScholarshipsPage = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{r.studentId?.userId?.name || "—"}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.schemeId?.name} · {r.schemeId?.discountType === "percent" ? `${r.schemeId?.value}%` : money(r.schemeId?.value)}
           </div>
         </div>
@@ -243,7 +243,7 @@ const ScholarshipsPage = () => {
       title: "Reason", dataIndex: "reason",
       render: (reason, r) => (
         <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-          {reason || <span style={{ color: "var(--text-muted)" }}>—</span>}
+          {reason || <span className="u-muted">—</span>}
           {r.decisionNote && <div style={{ fontStyle: "italic" }}>Decision: {r.decisionNote}</div>}
         </div>
       ),
@@ -251,8 +251,8 @@ const ScholarshipsPage = () => {
     {
       title: "Approved by", width: 150,
       render: (_, r) => (r.approvedBy?.name
-        ? <div style={{ fontSize: 12 }}>{r.approvedBy.name}<div style={{ color: "var(--text-muted)" }}>{dayjs(r.approvedAt).format("D MMM YYYY")}</div></div>
-        : <span style={{ color: "var(--text-muted)" }}>—</span>),
+        ? <div style={{ fontSize: 12 }}>{r.approvedBy.name}<div className="u-muted">{dayjs(r.approvedAt).format("D MMM YYYY")}</div></div>
+        : <span className="u-muted">—</span>),
     },
     {
       title: "Status", dataIndex: "status", width: 110,
@@ -296,7 +296,7 @@ const ScholarshipsPage = () => {
         subtitle="Named schemes, who holds them, and what the school is giving away"
         icon={<GiftOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <Button icon={<ReloadOutlined />} onClick={load} />
             <Tooltip title="Writes each student's combined concession onto their enrolment, which is what fee assignment reads.">
               <Button icon={<SyncOutlined />} loading={actionLoading} onClick={applyToFees}>Apply to fees</Button>
@@ -393,7 +393,7 @@ const ScholarshipsPage = () => {
                 <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                   <div>
                     <div style={{ fontSize: 24, fontWeight: 800 }}>{money(report?.totalWaived)}</div>
-                    <div style={{ color: "var(--text-muted)", fontSize: 13 }}>{report?.note}</div>
+                    <div className="u-meta-md">{report?.note}</div>
                   </div>
                   <Button loading={actionLoading} onClick={costThem}>Recalculate from the bills</Button>
                 </div>
@@ -444,9 +444,9 @@ const ScholarshipsPage = () => {
         onCancel={() => setSchemeModal(false)} onOk={saveScheme}
         confirmLoading={actionLoading} okText={editingScheme ? "Save" : "Create"}
       >
-        <Form form={schemeForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={schemeForm} layout="vertical" className="u-mt-4">
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="name" label="Name" rules={[{ required: true }]} style={{ flex: 1 }}>
+            <Form.Item name="name" label="Name" rules={[{ required: true }]} className="u-grow">
               <Input placeholder="Staff Ward" />
             </Form.Item>
             <Form.Item name="code" label="Code" rules={[{ required: true }]} style={{ width: 140 }}>
@@ -460,26 +460,26 @@ const ScholarshipsPage = () => {
             <Form.Item name="discountType" label="Type" style={{ width: 170 }}>
               <Select options={[{ value: "percent", label: "Percentage" }, { value: "amount", label: "Flat amount" }]} />
             </Form.Item>
-            <Form.Item name="value" label="Value" rules={[{ required: true }]} style={{ flex: 1 }}>
-              <InputNumber min={0} style={{ width: "100%" }} />
+            <Form.Item name="value" label="Value" rules={[{ required: true }]} className="u-grow">
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
             <Form.Item
               name="maxAwards" label="Funded places"
               extra="Leave blank for no limit."
               style={{ width: 160 }}
             >
-              <InputNumber min={1} style={{ width: "100%" }} />
+              <InputNumber min={1} className="u-full" />
             </Form.Item>
           </div>
           <Form.Item name="eligibility" label="Who qualifies">
             <TextArea rows={2} placeholder="Children of full-time staff, one per family" />
           </Form.Item>
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="validFrom" label="Valid from" style={{ flex: 1 }}>
-              <DatePicker style={{ width: "100%" }} />
+            <Form.Item name="validFrom" label="Valid from" className="u-grow">
+              <DatePicker className="u-full" />
             </Form.Item>
-            <Form.Item name="validUntil" label="Valid until" style={{ flex: 1 }}>
-              <DatePicker style={{ width: "100%" }} />
+            <Form.Item name="validUntil" label="Valid until" className="u-grow">
+              <DatePicker className="u-full" />
             </Form.Item>
           </div>
           <Form.Item
@@ -502,7 +502,7 @@ const ScholarshipsPage = () => {
         onCancel={() => setAwardModal(false)} onOk={saveAward}
         confirmLoading={actionLoading} okText="Record"
       >
-        <Form form={awardForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={awardForm} layout="vertical" className="u-mt-4">
           <Form.Item name="schemeId" label="Scheme" rules={[{ required: true, message: "Pick a scheme" }]}>
             <Select showSearch optionFilterProp="label" options={schemeOptions} />
           </Form.Item>
@@ -516,11 +516,11 @@ const ScholarshipsPage = () => {
             <TextArea rows={3} />
           </Form.Item>
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="validFrom" label="From" style={{ flex: 1 }}>
-              <DatePicker style={{ width: "100%" }} />
+            <Form.Item name="validFrom" label="From" className="u-grow">
+              <DatePicker className="u-full" />
             </Form.Item>
-            <Form.Item name="validUntil" label="Until" style={{ flex: 1 }}>
-              <DatePicker style={{ width: "100%" }} />
+            <Form.Item name="validUntil" label="Until" className="u-grow">
+              <DatePicker className="u-full" />
             </Form.Item>
           </div>
         </Form>

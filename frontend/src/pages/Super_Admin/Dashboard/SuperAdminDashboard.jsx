@@ -64,19 +64,6 @@ const planTag = (plan) => {
 };
 
 /* Hover and focus states cannot be written inline. */
-const CSS = `
-  .pov-lift { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
-  .pov-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-strong); }
-  .pov-lift:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  .pov-tile .pov-go { opacity: 0; transform: translateX(-4px); transition: opacity .18s ease, transform .18s ease; }
-  .pov-tile:hover .pov-go, .pov-tile:focus-visible .pov-go { opacity: 1; transform: none; }
-  .pov-shortcut:hover { border-color: var(--primary) !important; }
-  .pov-attn:hover { background: var(--surface-soft); }
-  @media (max-width: 560px) {
-    .pov-attn { flex-wrap: wrap; }
-    .pov-attn .pov-attn-action { width: 100%; }
-  }
-`;
 
 /* ─────────────────────────── pieces ─────────────────────────── */
 const Tile = ({ label, value, note, icon, color, onClick, tone }) => {
@@ -88,10 +75,10 @@ const Tile = ({ label, value, note, icon, color, onClick, tone }) => {
       className={onClick ? "pov-lift pov-tile" : undefined}
       className="section-panel" style={{ marginBottom: 0, padding: "18px 20px", textAlign: "left", width: "100%", cursor: onClick ? "pointer" : "default", font: "inherit", color: "inherit", borderTop: `3px solid ${color}`, display: "flex", flexDirection: "column", gap: 6 }}
     >
-      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span className="u-row">
         <span style={iconWell(color, 34)}>{icon}</span>
         <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>{label}</span>
-        {onClick && <ArrowRightOutlined className="pov-go" style={{ color: "var(--text-muted)", fontSize: 12 }} />}
+        {onClick && <ArrowRightOutlined className="pov-go u-meta" />}
       </span>
       <span style={{ fontSize: 30, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>{value}</span>
       <span style={{ fontSize: 12, color: tone === "warn" ? "var(--danger)" : "var(--text-muted)", fontWeight: tone === "warn" ? 600 : 400 }}>{note}</span>
@@ -182,7 +169,7 @@ const MonthlyColumns = ({ months }) => {
           </span>
         ))}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="u-grow-min">
         <div style={{ position: "relative", height: HEIGHT }}>
           {[1, 0.5].map((f) => (
             <div key={f} aria-hidden style={{ position: "absolute", left: 0, right: 0, top: `${(1 - f) * 100}%`, borderTop: "1px dashed var(--border-muted)" }} />
@@ -282,7 +269,7 @@ const SuperAdminDashboard = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
           <SchoolMark name={s.name} logo={s.logo} />
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{s.name}</div>
+            <div className="u-strong-bold">{s.name}</div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 260 }}>
               {s.address || "No address"}
             </div>
@@ -329,13 +316,12 @@ const SuperAdminDashboard = () => {
 
   return (
     <div className="page-wrapper">
-      <style>{CSS}</style>
-      <PageHeader
+            <PageHeader
         title="Platform overview"
         subtitle={data ? `What needs doing, and how the platform stands — updated ${dayjs(data.generatedAt).format("h:mm A")}` : "What needs doing, and how the platform stands"}
         icon={<DashboardOutlined />}
         extra={(
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             <Button icon={<ReloadOutlined />} loading={loading && Boolean(data)} onClick={() => load(true)}>Refresh</Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`${SCHOOLS}?add=1`)}>Add school</Button>
           </div>
@@ -350,14 +336,14 @@ const SuperAdminDashboard = () => {
       )}
 
       {!data && loading ? (
-        <div style={{ marginTop: 16 }}>
+        <div className="u-mt-4">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 16, marginBottom: 16 }}>
             {[0, 1, 2, 3].map((i) => <div key={i} className="section-panel is-last"><Skeleton active paragraph={{ rows: 1 }} /></div>)}
           </div>
           <div className="section-panel"><Skeleton active paragraph={{ rows: 6 }} /></div>
         </div>
       ) : data && (
-        <div style={{ marginTop: 16 }}>
+        <div className="u-mt-4">
           {/* ── headline numbers ── */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))", gap: 16, marginBottom: 16 }}>
             <Tile
@@ -501,9 +487,9 @@ const SuperAdminDashboard = () => {
               ) : data.recentPayments.map((p, i) => (
                 <div key={p._id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: i ? "1px solid var(--border-muted)" : "none" }}>
                   <SchoolMark name={p.schoolName} size={34} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{p.schoolName}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{day(p.paymentDate)}</div>
+                  <div className="u-grow-min">
+                    <div className="u-strong">{p.schoolName}</div>
+                    <div className="u-meta">{day(p.paymentDate)}</div>
                   </div>
                   <Tag style={{ marginInlineEnd: 0 }}>{p.paymentMode}</Tag>
                   <strong style={{ color: "var(--text-primary)", fontVariantNumeric: "tabular-nums", minWidth: 80, textAlign: "right" }}>{money(p.amount)}</strong>

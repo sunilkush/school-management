@@ -15,6 +15,8 @@
   --primary:        #2563EB;
   --primary-hover:  #1D4ED8;
   --primary-light:  #DBEAFE;
+  /* One step paler than --primary-light: the tint behind a highlighted row. */
+  --primary-lighter: #EFF6FF;
   --primary-light-rgb: rgba(219, 234, 254, 0.5);
   --secondary:      #0F172A;
   --secondary-light: rgba(15, 23, 42, 0.06);
@@ -91,6 +93,8 @@
   /* ── Shadows (Soft UI — diffuse, low-opacity, layered) ── */
   --shadow-soft:    0 2px 6px rgba(17,24,39,0.04), 0 12px 32px rgba(17,24,39,0.06);
   --shadow-strong:  0 6px 16px rgba(17,24,39,0.06), 0 24px 56px rgba(17,24,39,0.10);
+  /* The dashboard card lift: a tinted shadow in light, a plain dark one at night. */
+  --shadow-card-hover: 0 6px 24px rgba(37,99,235,0.14);
   --shadow-xl:      0 32px 80px rgba(17,24,39,0.16);
   --shadow-primary: 0 8px 22px rgba(37, 99, 235, 0.28);
   --shadow-inset:   inset 0 0 0 1px rgba(17,24,39,0.03);
@@ -170,6 +174,7 @@
 
   --shadow-soft:    0 2px 8px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.38);
   --shadow-strong:  0 8px 20px rgba(0, 0, 0, 0.4), 0 28px 64px rgba(0, 0, 0, 0.55);
+  --shadow-card-hover: 0 6px 24px rgba(0,0,0,0.5);
   --shadow-xl:      0 32px 80px rgba(0, 0, 0, 0.7);
   --shadow-primary: 0 8px 24px rgba(37, 99, 235, 0.4);
   --shadow-inset:   inset 0 0 0 1px rgba(255,255,255,0.04);
@@ -181,6 +186,7 @@
 
   --logo:           brightness(0) invert(1);
   --primary-light:  rgba(37, 99, 235, 0.15);
+  --primary-lighter: rgba(37, 99, 235, 0.10);
   --accent-light:   rgba(20, 184, 166, 0.15);
   --success-light:  rgba(34, 197, 94, 0.15);
   --warning-light:  rgba(245, 158, 11, 0.15);

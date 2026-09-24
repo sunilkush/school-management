@@ -405,7 +405,7 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, academicYearId, classOptions
         ellipsis:  true,
         width:     140,
         render:    (v) => (v === "" || v == null)
-          ? <span style={{ color: "var(--text-muted)" }}>—</span>
+          ? <span className="u-muted">—</span>
           : String(v),
       }))
     : [];
@@ -417,7 +417,7 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, academicYearId, classOptions
       <div className="page-card" style={{ padding: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, gap: 12 }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+            <div className="u-title-sm">
               Excel Template Download Karein
             </div>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4, lineHeight: 1.6 }}>
@@ -476,18 +476,18 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, academicYearId, classOptions
         {done ? (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <CheckCircleOutlined style={{ fontSize: 40, color: "var(--success)", display: "block", marginBottom: 10 }} />
-            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+            <div className="u-title">
               Upload successful!
             </div>
             <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>
               Questions question bank mein add ho gaye.
             </div>
-            <Button style={{ marginTop: 16 }} onClick={() => setDone(false)}>
+            <Button className="u-mt-4" onClick={() => setDone(false)}>
               Aur Upload Karein
             </Button>
           </div>
         ) : (
-          <Space direction="vertical" size={14} style={{ width: "100%" }}>
+          <Space direction="vertical" size={14} className="u-full">
             {error && (
               <Alert type="error" showIcon message={error} closable onClose={() => setError(null)} />
             )}
@@ -509,7 +509,7 @@ const BulkUploadQuestions = ({ onSuccess, schoolId, academicYearId, classOptions
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Preview</span>
+                    <span className="u-strong-bold">Preview</span>
                     <Tag color="blue" style={{ marginLeft: 8 }}>{rows.length} records</Tag>
                     <Tag color="default">{Object.keys(rows[0]).length} columns</Tag>
                     {rows.length > 5 && (

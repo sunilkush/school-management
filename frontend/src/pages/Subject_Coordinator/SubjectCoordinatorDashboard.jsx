@@ -178,9 +178,9 @@ const SubjectCoordinatorDashboard = () => {
         </Col>
 
         <Col xs={24} lg={8}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space direction="vertical" size={16} className="u-full">
             <Card title="Quick Links">
-              <Space direction="vertical" style={{ width: "100%" }}>
+              <Space direction="vertical" className="u-full">
                 <Button block onClick={() => navigate("subjects")}>
                   <BookOutlined /> Subject Overview
                 </Button>
@@ -203,7 +203,7 @@ const SubjectCoordinatorDashboard = () => {
               {thisMonthExams.length === 0 ? (
                 <Text type="secondary">No exams scheduled this month.</Text>
               ) : (
-                <Space direction="vertical" style={{ width: "100%" }}>
+                <Space direction="vertical" className="u-full">
                   {thisMonthExams.slice(0, 5).map((e) => (
                     <Row key={e._id} justify="space-between" align="middle">
                       <Col>
@@ -230,7 +230,7 @@ const SubjectCoordinatorDashboard = () => {
             </Card>
 
             <Card title="Lesson Plan Summary">
-              <Space direction="vertical" style={{ width: "100%" }}>
+              <Space direction="vertical" className="u-full">
                 <Row justify="space-between">
                   <Text>Total Plans</Text><Tag>{plans.length}</Tag>
                 </Row>

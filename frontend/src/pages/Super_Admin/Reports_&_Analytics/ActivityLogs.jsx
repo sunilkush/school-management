@@ -282,7 +282,7 @@ const normalizedLogs = useMemo(() => {
       dataIndex: "school",
       key: "school",
       render: (school) => (
-        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{school?.name || "—"}</span>
+        <span className="u-meta-md">{school?.name || "—"}</span>
       ),
     },
     {
@@ -340,7 +340,7 @@ const normalizedLogs = useMemo(() => {
           <Space wrap size={8}>
             <Input
               placeholder="Search user or action…"
-              prefix={<SearchOutlined style={{ color: "var(--text-muted)", fontSize: 13 }} />}
+              prefix={<SearchOutlined className="u-meta-md" />}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ width: 210 }}

@@ -216,14 +216,14 @@ export default function RevenuePage() {
       render: (value) => (
         <Space>
           <div style={iconWell("var(--primary)", 34)}><FileTextOutlined /></div>
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{value}</span>
+          <span className="u-strong-bold">{value}</span>
         </Space>
       ),
     },
     {
       title: "School",
       dataIndex: "schoolName",
-      render: (value) => <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{value}</span>,
+      render: (value) => <span className="u-strong">{value}</span>,
     },
     {
       title: "Amount",
@@ -234,7 +234,7 @@ export default function RevenuePage() {
     {
       title: "Due Date",
       dataIndex: "dueDate",
-      render: (value) => <span style={{ color: "var(--text-muted)" }}>{value}</span>,
+      render: (value) => <span className="u-muted">{value}</span>,
     },
     {
       title: "Status",
@@ -298,7 +298,7 @@ export default function RevenuePage() {
         <div className="toolbar-row">
           <Input
             allowClear
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             placeholder="Search by school or invoice no."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -372,13 +372,13 @@ export default function RevenuePage() {
           <Row gutter={12}>
             <Col xs={24} md={12}>
               <Form.Item label="Discount" name="discount">
-                <InputNumber min={0} prefix="₹" style={{ width: "100%" }} placeholder="0" />
+                <InputNumber min={0} prefix="₹" className="u-full" placeholder="0" />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12}>
               <Form.Item label="Tax / GST" name="taxGst">
-                <InputNumber min={0} prefix="₹" style={{ width: "100%" }} placeholder="0" />
+                <InputNumber min={0} prefix="₹" className="u-full" placeholder="0" />
               </Form.Item>
             </Col>
           </Row>
@@ -386,7 +386,7 @@ export default function RevenuePage() {
           <Row gutter={12}>
             <Col xs={24} md={12}>
               <Form.Item label="Due Date" name="dueDate">
-                <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+                <DatePicker className="u-full" format="YYYY-MM-DD" />
               </Form.Item>
             </Col>
 
@@ -414,9 +414,9 @@ export default function RevenuePage() {
       >
         {selectedInvoice && (
           <div className="section-panel" style={{ padding: 12, background: "var(--surface-soft)" }}>
-            <span style={{ color: "var(--text-muted)" }}>Selected Invoice</span>
+            <span className="u-muted">Selected Invoice</span>
             <div style={{ marginTop: 4 }}>
-              <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>{selectedInvoice.schoolName}</span>{" "}
+              <span className="u-strong-bold">{selectedInvoice.schoolName}</span>{" "}
               <Tag color="blue">{selectedInvoice.invoiceNumber}</Tag>
               <span style={pill(statusMap[selectedInvoice.status]?.color, statusMap[selectedInvoice.status]?.bg)}>
                 {statusMap[selectedInvoice.status]?.label}
@@ -425,9 +425,9 @@ export default function RevenuePage() {
           </div>
         )}
 
-        <Form form={paymentForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={paymentForm} layout="vertical" className="u-mt-4">
           <Form.Item label="Amount" name="amount" rules={[{ required: true, message: "Please enter amount" }]}>
-            <InputNumber min={1} prefix="₹" style={{ width: "100%" }} />
+            <InputNumber min={1} prefix="₹" className="u-full" />
           </Form.Item>
 
           <Form.Item label="Payment Mode" name="paymentMode" rules={[{ required: true, message: "Please select payment mode" }]}>

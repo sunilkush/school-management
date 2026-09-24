@@ -35,9 +35,9 @@ const StudentHostel = () => {
   if (!allocation) return (
     <div className="page-wrapper">
       <PageHeader title="Hostel" subtitle="Your hostel room allocation" icon={<HomeOutlined />} />
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={<span style={{ color: "var(--text-muted)" }}>No hostel allocation found. Contact the hostel office.</span>} />
+          description={<span className="u-muted">No hostel allocation found. Contact the hostel office.</span>} />
       </div>
     </div>
   );
@@ -76,7 +76,7 @@ const StudentHostel = () => {
               dataSource={allocation.roommates}
               renderItem={(name) => (
                 <List.Item>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div className="u-row">
                     <Avatar size={30} icon={<UserOutlined />} style={{ background: "var(--primary)" }} />
                     <span style={{ color: "var(--text-primary)", fontSize: 13 }}>{name}</span>
                   </div>
@@ -84,7 +84,7 @@ const StudentHostel = () => {
               )}
             />
           ) : (
-            <span style={{ color: "var(--text-muted)", fontSize: 13 }}>No roommates assigned to this room.</span>
+            <span className="u-meta-md">No roommates assigned to this room.</span>
           )}
         </div>
       </div>

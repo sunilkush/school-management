@@ -119,7 +119,7 @@ const FineManagement = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontWeight: 600, fontSize: 13 }}>{r.borrowerName}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.memberType}</div>
+          <div className="u-meta-xs">{r.memberType}</div>
         </div>
       ),
     },
@@ -134,7 +134,7 @@ const FineManagement = () => {
       render: (_, r) => (
         <div>
           <div style={{ fontSize: 12 }}>Due: <span style={{ color: "var(--danger)", fontWeight: 600 }}>{r.dueDate}</span></div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Returned: {r.returnDate}</div>
+          <div className="u-meta-xs">Returned: {r.returnDate}</div>
         </div>
       ),
     },

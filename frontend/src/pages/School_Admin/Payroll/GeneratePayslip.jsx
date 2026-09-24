@@ -104,7 +104,7 @@ const GeneratePayslip = () => {
         const desig = r.employeeId?.designation || "Staff";
         const isSelected = r.employeeId?._id === selectedEmployeeId;
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={{
               width: 34, height: 34, borderRadius: 9, flexShrink: 0,
               background: isSelected ? "var(--primary)" : avatarBg(name),
@@ -116,7 +116,7 @@ const GeneratePayslip = () => {
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", lineHeight: 1.3 }}>{name}</div>
-              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{desig}</div>
+              <div className="u-meta-xs">{desig}</div>
             </div>
           </div>
         );
@@ -176,8 +176,7 @@ const GeneratePayslip = () => {
 
   return (
     <div className="page-wrapper">
-      <style>{`.payslip-tbl .ant-table-row.selected-row td { background: var(--primary-light) !important; }`}</style>
-
+      
       <PageHeader
         title="Payslip Center"
         subtitle="Select month & employee to generate and preview payslips"
@@ -190,7 +189,7 @@ const GeneratePayslip = () => {
       />
 
       {/* ── Filters toolbar ───────────────────────────────────────── */}
-      <div className="section-panel" style={{ marginBottom: 16 }}>
+      <div className="section-panel u-mb-4">
         <PayslipFilters
           monthValue={selectedMonth}
           onMonthChange={(v) => v && setSelectedMonth(v)}
@@ -220,7 +219,7 @@ const GeneratePayslip = () => {
               <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                 Payroll Entries
               </Text>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              <Text className="u-meta-xs">
                 {selectedMonth.format("MMMM YYYY")} — click a row to load payslip
               </Text>
             </div>
@@ -240,7 +239,7 @@ const GeneratePayslip = () => {
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
                 No Cycle for {selectedMonth.format("MMMM YYYY")}
               </Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <Text className="u-meta">
                 Generate the payroll cycle first from the Monthly Payroll page.
               </Text>
             </div>
@@ -278,7 +277,7 @@ const GeneratePayslip = () => {
               <Text strong style={{ fontSize: 13, color: "var(--text-primary)", display: "block" }}>
                 Payslip Preview
               </Text>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              <Text className="u-meta-xs">
                 {selectedEmployeeId ? selectedMonth.format("MMMM YYYY") : "Select an employee to preview"}
               </Text>
             </div>

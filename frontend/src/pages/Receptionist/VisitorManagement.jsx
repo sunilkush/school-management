@@ -40,11 +40,11 @@ const VisitorManagement = () => {
     {
       title: "Visitor",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <Avatar name={r.name || "?"} color={VISITOR_COLORS[r.type] || "var(--purple)"} />
           <div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.name || "—"}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.purpose || ""}</div>
+            <div className="u-label">{r.name || "—"}</div>
+            <div className="u-meta-xs">{r.purpose || ""}</div>
           </div>
         </div>
       ),
@@ -56,14 +56,14 @@ const VisitorManagement = () => {
         return <span style={pill(c, `color-mix(in srgb, ${c} 8%, transparent)`)}>{v || "Visitor"}</span>;
       },
     },
-    { title: "Phone", dataIndex: "phone", width: 130, render: (v) => <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{v || "—"}</span> },
+    { title: "Phone", dataIndex: "phone", width: 130, render: (v) => <span className="u-meta-md">{v || "—"}</span> },
     {
       title: "Entry", dataIndex: "entryTime", width: 90,
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{fmt(v)}</span>,
+      render: (v) => <span className="u-meta">{fmt(v)}</span>,
     },
     {
       title: "Exit", dataIndex: "exitTime", width: 90,
-      render: (v) => <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{fmt(v)}</span>,
+      render: (v) => <span className="u-meta">{fmt(v)}</span>,
     },
     {
       title: "Status", dataIndex: "status", width: 100,
@@ -119,7 +119,7 @@ const VisitorManagement = () => {
           <div className="empty-state">
             <div style={{ fontSize: 34, marginBottom: 10 }}>🚪</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>No Visitor Entries</div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Click "Check In Visitor" to log the first entry.</div>
+            <div className="u-meta-md">Click "Check In Visitor" to log the first entry.</div>
           </div>
         ) : (
           <Table className="visitor-table data-table" rowKey="_id" dataSource={entries} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 700 }} />
@@ -127,7 +127,7 @@ const VisitorManagement = () => {
       </div>
 
       <Modal title={<span style={{ fontWeight: 700 }}>Visitor Check-In</span>} open={open} onCancel={() => setOpen(false)} footer={null} destroyOnClose>
-        <Form form={form} layout="vertical" onFinish={handleCreate} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} className="u-mt-2">
           <Form.Item label="Visitor Name" name="name" rules={[{ required: true }]}><Input placeholder="Full name" /></Form.Item>
           <Form.Item label="Visitor Type" name="type" initialValue="Visitor">
             <Select options={["Visitor", "Parent", "Vendor", "Contractor", "Other"].map((v) => ({ value: v, label: v }))} />

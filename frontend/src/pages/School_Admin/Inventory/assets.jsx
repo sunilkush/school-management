@@ -30,7 +30,7 @@ const StatCard = ({ icon, label, value, color }) => (
     <div style={iconWell(color, 42)}>{icon}</div>
     <div>
       <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{value}</div>
+      <div className="u-title-lg">{value}</div>
     </div>
   </div>
 );
@@ -124,7 +124,7 @@ const Assets = () => {
   );
 
   const columns = [
-    { title: "Asset Name", dataIndex: "name", key: "name", render: (v) => <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{v}</span> },
+    { title: "Asset Name", dataIndex: "name", key: "name", render: (v) => <span className="u-strong">{v}</span> },
     { title: "Category", dataIndex: "category", key: "category" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
     { title: "Allocated", dataIndex: "allocated", key: "allocated" },
@@ -172,7 +172,7 @@ const Assets = () => {
       />
       <div className="page-wrapper">
 
-        {error ? <Alert style={{ marginBottom: 16 }} type="error" showIcon message={error} /> : null}
+        {error ? <Alert className="u-mb-4" type="error" showIcon message={error} /> : null}
 
         <div style={statGrid(160)}>
           <StatCard icon={<AppstoreOutlined />} label="Total Assets" value={totalAssets} color="var(--primary)" />
@@ -221,7 +221,7 @@ const Assets = () => {
               </Select>
             </Form.Item>
             <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: "Enter quantity" }]}>
-              <InputNumber min={1} style={{ width: "100%" }} />
+              <InputNumber min={1} className="u-full" />
             </Form.Item>
             <Form.Item
               label="Allocated"
@@ -239,7 +239,7 @@ const Assets = () => {
                 }),
               ]}
             >
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
             <Form.Item label="Location" name="location" rules={[{ required: true, message: "Enter location" }]}>
               <Input placeholder="e.g., Physics Lab" />

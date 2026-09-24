@@ -51,7 +51,7 @@ const NetworkStatus = () => {
   ];
 
   return (
-    <Space direction="vertical" size={16} style={{ width: "100%" }}>
+    <Space direction="vertical" size={16} className="u-full">
       <Alert
         type={isOnline ? "success" : loading ? "info" : "error"}
         message={loading ? "Checking system status…" : isOnline ? "All critical systems are operational" : "Backend unreachable — check your connection"}
@@ -65,7 +65,7 @@ const NetworkStatus = () => {
             dataSource={services}
             renderItem={(svc) => (
               <List.Item>
-                <Row style={{ width: "100%" }} gutter={16} align="middle">
+                <Row className="u-full" gutter={16} align="middle">
                   <Col xs={24} md={8}>
                     <Text strong>{svc.name}</Text>
                   </Col>

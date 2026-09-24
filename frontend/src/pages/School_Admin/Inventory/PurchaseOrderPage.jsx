@@ -110,14 +110,14 @@ export default function PurchaseOrderPage() {
       render: (_, r) => (
         <div>
           <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{r.poNumber}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.createdAt ? dayjs(r.createdAt).format("DD MMM YYYY") : "—"}</div>
+          <div className="u-meta-xs">{r.createdAt ? dayjs(r.createdAt).format("DD MMM YYYY") : "—"}</div>
         </div>
       ),
     },
     {
       title: "Vendor", key: "vendor",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="u-row">
           <div style={iconWell("var(--purple)", 30)}>
             <ShoppingCartOutlined style={{ fontSize: 12 }} />
           </div>
@@ -129,8 +129,8 @@ export default function PurchaseOrderPage() {
       title: "Items / Total", key: "total",
       render: (_, r) => (
         <div>
-          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 14 }}>{fmt(r.totalAmount)}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.items?.length || 0} line items</div>
+          <div className="u-title-sm">{fmt(r.totalAmount)}</div>
+          <div className="u-meta-xs">{r.items?.length || 0} line items</div>
         </div>
       ),
     },
@@ -194,7 +194,7 @@ export default function PurchaseOrderPage() {
         width={720}
         destroyOnClose
       >
-        <Form form={form} layout="vertical" onFinish={onCreateFinish} style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" onFinish={onCreateFinish} className="u-mt-4">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
             <Form.Item label="Vendor" name="vendorId" rules={[{ required: true, message: "Select vendor" }]}>
               <Select showSearch optionFilterProp="children" placeholder="Select vendor">
@@ -202,28 +202,28 @@ export default function PurchaseOrderPage() {
               </Select>
             </Form.Item>
             <Form.Item label="Expected Delivery" name="expectedDate"><Input type="date" /></Form.Item>
-            <Form.Item label="Tax Rate (%)" name="taxRate" initialValue={0}><InputNumber min={0} max={100} style={{ width: "100%" }} /></Form.Item>
+            <Form.Item label="Tax Rate (%)" name="taxRate" initialValue={0}><InputNumber min={0} max={100} className="u-full" /></Form.Item>
             <Form.Item label="Notes" name="notes"><Input.TextArea rows={1} /></Form.Item>
           </div>
 
-          <Divider style={{ color: "var(--text-muted)", fontSize: 12 }}>Line Items</Divider>
+          <Divider className="u-meta">Line Items</Divider>
 
           <Form.List name="items" initialValue={[{ itemName: "", quantity: 1, unit: "pcs", unitPrice: 0 }]}>
             {(fields, { add, remove }) => (
               <>
                 {fields.map(({ key, name, ...rest }) => (
                   <div key={key} style={{ display: "grid", gridTemplateColumns: "3fr 1fr 1fr 2fr auto", gap: 8, marginBottom: 8, alignItems: "start" }}>
-                    <Form.Item {...rest} name={[name, "itemName"]} style={{ margin: 0 }} rules={[{ required: true, message: "Name" }]}>
+                    <Form.Item {...rest} name={[name, "itemName"]} className="u-m-0" rules={[{ required: true, message: "Name" }]}>
                       <Input placeholder="Item name" />
                     </Form.Item>
-                    <Form.Item {...rest} name={[name, "quantity"]} style={{ margin: 0 }}>
-                      <InputNumber min={1} style={{ width: "100%" }} placeholder="Qty" />
+                    <Form.Item {...rest} name={[name, "quantity"]} className="u-m-0">
+                      <InputNumber min={1} className="u-full" placeholder="Qty" />
                     </Form.Item>
-                    <Form.Item {...rest} name={[name, "unit"]} style={{ margin: 0 }}>
+                    <Form.Item {...rest} name={[name, "unit"]} className="u-m-0">
                       <Input placeholder="pcs" />
                     </Form.Item>
-                    <Form.Item {...rest} name={[name, "unitPrice"]} style={{ margin: 0 }}>
-                      <InputNumber min={0} style={{ width: "100%" }} placeholder="Unit ₹" />
+                    <Form.Item {...rest} name={[name, "unitPrice"]} className="u-m-0">
+                      <InputNumber min={0} className="u-full" placeholder="Unit ₹" />
                     </Form.Item>
                     <Button danger icon={<MinusCircleOutlined />} onClick={() => remove(name)} size="small" style={{ marginTop: 4 }} />
                   </div>
@@ -251,7 +251,7 @@ export default function PurchaseOrderPage() {
         width={640}
       >
         {viewOrder && (
-          <div style={{ marginTop: 12 }}>
+          <div className="u-mt-3">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               {[
                 ["Vendor",   viewOrder.vendorId?.name || "—"],

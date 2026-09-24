@@ -1,0 +1,334 @@
+// Page-level odds and ends, each block lifted out of the page it belonged to.
+// Moved here in the SASS clean-up — components no longer inject <style> tags.
+
+/* ── from components/layout/MainDashboard.jsx ─────────────────────────────── */
+        .dash-main {
+          transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1);
+        }
+        .dash-drawer .ant-drawer-body {
+          padding: 0 !important;
+          overflow: hidden !important;
+        }
+        .dash-drawer .ant-drawer-content-wrapper {
+          box-shadow: 4px 0 32px rgba(0,0,0,0.15) !important;
+        }
+        .dash-outlet {
+          animation: outletFadeIn 0.22s ease forwards;
+        }
+        @keyframes outletFadeIn {
+          from { opacity:0; transform:translateY(5px); }
+          to   { opacity:1; transform:translateY(0);   }
+        }
+
+/* ── from components/navbar/NotificationDropdown.jsx ─────────────────────────────── */
+  @keyframes nd-ring { 0%,100% { transform: rotate(0) } 15% { transform: rotate(16deg) } 30% { transform: rotate(-14deg) } 45% { transform: rotate(10deg) } 60% { transform: rotate(-8deg) } 75% { transform: rotate(4deg) } }
+  .nd-ring { animation: nd-ring 1s ease-in-out 2; transform-origin: 50% 4px; }
+  .nd-bell { transition: border-color .15s ease, box-shadow .15s ease; }
+  .nd-bell:hover, .nd-bell:focus-visible { border-color: var(--primary) !important; outline: none; }
+  .nd-item { transition: background .15s ease; }
+  .nd-item:hover, .nd-item:focus-visible { background: var(--surface-soft); outline: none; }
+  .nd-item .nd-quick { opacity: 0; transition: opacity .15s ease; }
+  .nd-item:hover .nd-quick, .nd-item:focus-within .nd-quick { opacity: 1; }
+  @media (hover: none) { .nd-item .nd-quick { opacity: 1; } }
+  .nd-clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ── from components/navbar/Topbar.jsx ─────────────────────────────── */
+
+
+/* ── from components/reports/SchoolOverview.jsx ─────────────────────────────── */
+  .school-overview { --so-male: #2a78d6; --so-female: #eb6834; --so-other: #1baf7a; --so-unknown: #94a3b8; }
+  [data-theme="dark"] .school-overview { --so-male: #3987e5; --so-female: #d95926; --so-other: #199e70; --so-unknown: #64748b; }
+
+/* ── from components/sidebar/Sidebar.jsx ─────────────────────────────── */
+      @keyframes sbPulse {
+        0%,100% { opacity:0.45; }
+        50%      { opacity:1; }
+      }
+
+/* ── from components/sidebar/SidebarMenu.jsx ─────────────────────────────── */
+        @keyframes menuPulse {
+          0%, 100% { opacity: 0.5; }
+          50%       { opacity: 1; }
+        }
+
+/* ── from pages/Attendance/AttendanceTablePage.jsx ─────────────────────────────── */
+@keyframes att-progress{0%{opacity:.4}50%{opacity:1}100%{opacity:.4}}
+
+/* ── from pages/Attendance/EmployeeSelfAttendance.jsx ─────────────────────────────── */
+@keyframes att-pulse { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.14);opacity:.15} }
+
+/* ── from pages/Driver/DriverDashboard.jsx ─────────────────────────────── */
+        @media (max-width: 900px) {
+          .driver-dash-grid { grid-template-columns: 1fr !important; }
+        }
+
+/* ── from pages/School_Admin/Communication/CommunicationHub.jsx ─────────────────────────────── */
+          .comm-hub-tabs .ant-tabs-tab { font-size: 13px !important; padding: 8px 16px !important; color: var(--text-muted) !important; }
+          .comm-hub-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--primary) !important; font-weight: 600 !important; }
+          .comm-hub-tabs .ant-tabs-ink-bar { background: var(--primary) !important; }
+          .comm-hub-tabs .ant-tabs-nav::before { border-color: var(--border-muted) !important; }
+          .comm-hub-tabs .ant-tabs-nav { margin-bottom: 20px !important; }
+          @keyframes commFadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+          .comm-panel { animation: commFadeUp 0.25s ease both; }
+
+/* ── from pages/School_Admin/Inventory/InventoryStore.jsx ─────────────────────────────── */
+          .inv-tabs .ant-tabs-nav {
+            margin-bottom: 20px !important;
+          }
+          .inv-tabs .ant-tabs-tab {
+            font-size: 13px !important;
+            padding: 8px 16px !important;
+            gap: 6px;
+            color: var(--text-muted) !important;
+          }
+          .inv-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+            color: var(--primary) !important;
+            font-weight: 600 !important;
+          }
+          .inv-tabs .ant-tabs-ink-bar {
+            background: var(--primary) !important;
+          }
+          .inv-tabs .ant-tabs-nav::before {
+            border-color: var(--border-muted) !important;
+          }
+          @keyframes invFadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          .inv-tab-content {
+            animation: invFadeUp 0.25s ease both;
+          }
+
+/* ── from pages/School_Admin/Payroll/GeneratePayslip.jsx ─────────────────────────────── */
+.payslip-tbl .ant-table-row.selected-row td { background: var(--primary-light) !important; }
+
+/* ── from pages/School_Admin/School_Setup/SchoolAcademicYear.jsx ─────────────────────────────── */
+        .ay-mobile  { display: none; }
+        .ay-desktop { display: block; }
+        @media (max-width: 640px) {
+          .ay-desktop { display: none; }
+          .ay-mobile  { display: block; }
+        }
+
+/* ── from pages/School_Admin/School_Setup/SchoolBoard.jsx ─────────────────────────────── */
+        .board-mb { display: none; }
+        .board-dt { display: block; }
+        @media (max-width: 768px) {
+          .board-dt { display: none; }
+          .board-mb { display: block; }
+        }
+
+/* ── from pages/School_Admin/School_Setup/SchoolClass.jsx ─────────────────────────────── */
+        .class-table-mobile { display: none; }
+
+        @media (max-width: 768px) {
+          .class-table-desktop { display: none; }
+          .class-table-mobile { display: block; }
+        }
+
+        @media (min-width: 769px) {
+          .class-table-desktop { display: block; }
+          .class-table-mobile { display: none; }
+        }
+
+/* ── from pages/School_Admin/School_Setup/SchoolSetup.jsx ─────────────────────────────── */
+        .setup-panel { animation: setupFade 0.25s ease forwards; }
+        @keyframes setupFade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        @media (max-width: 640px)  { .setup-stepper-desktop { display:none!important; } .setup-tabbar { display:block!important; } }
+        @media (min-width: 641px)  { .setup-stepper-desktop { display:block!important; } .setup-tabbar { display:none!important; } }
+
+/* ── from pages/School_Admin/Settings/SettingsPage.jsx ─────────────────────────────── */
+        /* Tab nav */
+        .settings-tabs .ant-tabs-nav {
+          background: var(--surface-soft) !important;
+          border-right: 1px solid var(--border-muted) !important;
+          margin: 0 !important;
+          min-width: 190px !important;
+          padding: 12px 8px !important;
+        }
+        .settings-tabs .ant-tabs-tab {
+          border-radius: 10px !important;
+          padding: 10px 14px !important;
+          margin: 2px 0 !important;
+          transition: background 0.18s ease !important;
+        }
+        .settings-tabs .ant-tabs-tab:hover { background: var(--surface) !important; }
+        .settings-tabs .ant-tabs-tab-active { background: rgba(37,99,235,0.09) !important; }
+        .settings-tabs .ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--primary) !important; font-weight: 600 !important; }
+        .settings-tabs .ant-tabs-ink-bar { display: none !important; }
+        .settings-tabs .ant-tabs-content-holder { padding: 28px 28px !important; }
+
+        /* Dirty dot pulse */
+        @keyframes settings-dot-pulse {
+          0%,100% { opacity: 1; transform: scale(1); }
+          50%      { opacity: 0.55; transform: scale(0.75); }
+        }
+        .settings-dirty-dot { animation: settings-dot-pulse 1.4s ease-in-out infinite; }
+
+        /* Save-button pulse when dirty */
+        @keyframes settings-btn-glow {
+          0%   { box-shadow: 0 0 0 0   rgba(var(--primary-rgb),0.45); }
+          70%  { box-shadow: 0 0 0 9px rgba(var(--primary-rgb),0);    }
+          100% { box-shadow: 0 0 0 0   rgba(var(--primary-rgb),0);    }
+        }
+        .settings-save-dirty { animation: settings-btn-glow 1.8s ease-in-out infinite; }
+
+        /* Success flash */
+        @keyframes settings-save-flash {
+          0%,100% { background: var(--success); border-color: var(--success); }
+          50%      { background: var(--success-hover); border-color: var(--success-hover); }
+        }
+        .settings-save-success { animation: settings-save-flash 0.5s ease-in-out 2; }
+
+        @media (max-width: 575px) {
+          .settings-tabs .ant-tabs-content-holder { padding: 16px !important; }
+          .settings-tabs .ant-tabs-nav { min-width: unset !important; padding: 8px !important; }
+        }
+
+/* ── from pages/School_Admin/Tasks/TaskManagement.jsx ─────────────────────────────── */
+        .tm-board { display:flex; gap:14px; align-items:flex-start; overflow-x:auto; padding-bottom:12px; }
+        .tm-board::-webkit-scrollbar { height:5px; }
+        .tm-board::-webkit-scrollbar-thumb { background:var(--border-muted); border-radius:4px; }
+        .tm-board::-webkit-scrollbar-track { background:transparent; }
+
+/* ── from pages/School_Admin/Teachers_&_Students/RollNumberManagement.jsx ─────────────────────────────── */
+              .row-unassigned td { opacity: 0.7; }
+
+/* ── from pages/Staff/Dashboard/StaffDashboard.jsx ─────────────────────────────── */
+        @media (max-width: 900px) {
+          .staff-dash-grid { grid-template-columns: 1fr !important; }
+        }
+
+/* ── from pages/Student/Exams/components/ExamTimer.jsx ─────────────────────────────── */
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.6; }
+          }
+
+/* ── from pages/Student/Exams/components/ExamTimer.jsx ─────────────────────────────── */
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.7; }
+        }
+
+/* ── from pages/StyleGuide.jsx ─────────────────────────────── */
+              @keyframes sgPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+              .sg-skeleton { background:var(--surface-soft); border-radius:8px; animation:sgPulse 1.6s ease-in-out infinite; }
+
+/* ── from pages/Super_Admin/Dashboard/SuperAdminDashboard.jsx ─────────────────────────────── */
+  .pov-lift { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .pov-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-strong); }
+  .pov-lift:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .pov-tile .pov-go { opacity: 0; transform: translateX(-4px); transition: opacity .18s ease, transform .18s ease; }
+  .pov-tile:hover .pov-go, .pov-tile:focus-visible .pov-go { opacity: 1; transform: none; }
+  .pov-shortcut:hover { border-color: var(--primary) !important; }
+  .pov-attn:hover { background: var(--surface-soft); }
+  @media (max-width: 560px) {
+    .pov-attn { flex-wrap: wrap; }
+    .pov-attn .pov-attn-action { width: 100%; }
+  }
+
+/* ── from pages/Super_Admin/Reports_&_Analytics/PlatfromUsage.jsx ─────────────────────────────── */
+          @media (max-width: 900px) {
+            .platform-usage-grid { grid-template-columns: 1fr !important; }
+          }
+
+/* ── from pages/Super_Admin/Reports_&_Analytics/RevenueAnalytics.jsx ─────────────────────────────── */
+        @media (max-width: 900px) {
+          .revenue-charts-grid { grid-template-columns: 1fr !important; }
+        }
+
+/* ── from pages/Super_Admin/School_Management/SchoolReports.jsx ─────────────────────────────── */
+.sr-open td { background: var(--primary-light) !important; } .sr-row { cursor: pointer; }
+
+/* ── from pages/Transport/LiveTracking.jsx ─────────────────────────────── */
+        .live-row-selected > td { background: var(--surface-soft) !important; }
+        @media (max-width: 1100px) {
+          .live-track-grid { grid-template-columns: 1fr !important; }
+        }
+
+/* ── from pages/School_Admin/Teachers_&_Students/StudentPromotion.jsx ─────────────────────────────── */
+.promo-tbl .ant-table-tbody > tr.ant-table-row-selected > td {
+  background: var(--primary-light) !important;
+}
+.promo-tbl .ant-checkbox-checked .ant-checkbox-inner {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+.promo-sel .ant-select-selector {
+  border-radius: 8px !important;
+  border: 1.5px solid var(--border-muted) !important;
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+}
+.promo-sel:hover .ant-select-selector {
+  border-color: var(--primary) !important;
+}
+.promo-sel.ant-select-focused .ant-select-selector {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+}
+.promo-sel.ant-select-disabled .ant-select-selector {
+  opacity: 0.6 !important;
+}
+
+/* ── from pages/Teacher/Attendance/MonthlyAttendanceReport.jsx ─────────────────────────────── */
+.teacher-monthly-tbl .row-at-risk > td { background: rgba(var(--danger-rgb), 0.024) !important; }
+.teacher-monthly-tbl .row-at-risk:hover > td { background: rgba(var(--danger-rgb), 0.07) !important; }
+.teacher-monthly-tbl .row-excellent > td { background: rgba(var(--success-rgb), 0.024) !important; }
+.teacher-monthly-tbl .row-excellent:hover > td { background: rgba(var(--success-rgb), 0.07) !important; }
+.teacher-monthly-tbl .ant-table-thead > tr > th { padding: 8px 6px !important; }
+.teacher-monthly-tbl .ant-table-tbody > tr > td { padding: 8px 6px !important; }
+.teacher-monthly-tbl .ant-table-fixed-left .ant-table-cell,
+.teacher-monthly-tbl .ant-table-fixed-right .ant-table-cell { background: var(--surface) !important; }
+.teacher-monthly-tbl .ant-table-tbody > tr.row-at-risk .ant-table-cell-fix-left,
+.teacher-monthly-tbl .ant-table-tbody > tr.row-at-risk .ant-table-cell-fix-right { background: var(--danger-light) !important; }
+.teacher-monthly-tbl .ant-table-tbody > tr.row-excellent .ant-table-cell-fix-left,
+.teacher-monthly-tbl .ant-table-tbody > tr.row-excellent .ant-table-cell-fix-right { background: var(--success-light) !important; }
+
+/* ── from pages/Tasks/MyTasks.jsx ─────────────────────────────── */
+.mt-board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:12px}
+.mt-board::-webkit-scrollbar{height:5px}
+.mt-board::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.mt-stats>div{flex:1 1 110px}
+@media(max-width:639px){.mt-stats>div{flex:1 1 calc(50% - 6px) !important}}
+
+/* ── from pages/Timetable/TimetableGrid.jsx ─────────────────────────────── */
+.tt-today-col { background: var(--primary-light) !important; }
+.ant-table-row:hover .tt-today-col { background: var(--primary-light) !important; }
+.ant-table-bordered .ant-table-cell { border-color: var(--border) !important; }
+
+/* ── from pages/School_Admin/Dashboard/SchoolAdminDashboard.jsx ─── */
+/* Card hover lift */
+.dash-card {
+  transition: box-shadow 0.22s ease, transform 0.22s ease !important;
+  border-radius: 12px !important;
+}
+.dash-card:hover {
+  box-shadow: var(--shadow-card-hover) !important;
+  transform: translateY(-1px);
+}
+
+/* Section panel */
+.dash-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Staggered fade-in for sections */
+@keyframes dashFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.dash-section:nth-child(1) { animation: dashFadeUp 0.3s ease 0.05s both; }
+.dash-section:nth-child(2) { animation: dashFadeUp 0.3s ease 0.12s both; }
+.dash-section:nth-child(3) { animation: dashFadeUp 0.3s ease 0.19s both; }
+.dash-section:nth-child(4) { animation: dashFadeUp 0.3s ease 0.26s both; }
+
+/* ── from components/navbar/GlobalSearch.jsx ────────────────────── */
+/* The page-search box draws its own focus ring; the global :focus-visible outline
+   (see _mobile.scss) would sit inside it as a second square. */
+.gs-input:focus-visible { outline: none !important; }

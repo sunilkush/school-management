@@ -148,7 +148,7 @@ const ParentDashboard = () => {
             <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 12 }}>
               <BellOutlined style={{ marginRight: 8 }} />Alerts
             </div>
-            <Space direction="vertical" style={{ width: "100%" }} size={8}>
+            <Space direction="vertical" className="u-full" size={8}>
               {alerts.map((a) => (
                 <Alert key={a.key} type={a.type} showIcon message={a.text} style={{ borderRadius: 8 }} />
               ))}
@@ -181,10 +181,10 @@ const ParentDashboard = () => {
                         {(child.name || "?")[0].toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                        <div className="u-title">
                           {child.name}
                         </div>
-                        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        <div className="u-meta">
                           {child.className}{child.sectionName ? ` — ${child.sectionName}` : ""}
                         </div>
                       </div>

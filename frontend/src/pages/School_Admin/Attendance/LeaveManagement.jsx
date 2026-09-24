@@ -77,7 +77,7 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
   {
     title: "Name",
     render: (_, r) => (
-      <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+      <span className="u-strong">
         {r?.userId?.name || "—"}
       </span>
     ),
@@ -97,7 +97,7 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
   {
     title: "Date Range",
     render: (_, r) => (
-      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+      <span className="u-meta">
         {fmtDate(r?.startDate)} — {fmtDate(r?.endDate)}
       </span>
     ),
@@ -116,7 +116,7 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
       return (
         <span
           title={txt}
-          style={{ fontSize: 12, color: "var(--text-muted)" }}
+          className="u-meta"
         >
           {txt.length > 40 ? txt.slice(0, 40) + "…" : txt}
         </span>
@@ -424,7 +424,7 @@ const LeaveManagement = () => {
       </div>
 
       {/* ── Tabs ── */}
-      <div className="section-panel" style={{ marginTop: 16 }}>
+      <div className="section-panel u-mt-4">
         <Spin spinning={loading}>
           <Tabs items={tabItems} defaultActiveKey="pending" />
         </Spin>
@@ -434,7 +434,7 @@ const LeaveManagement = () => {
       <Modal
         open={approveModal.open}
         title={
-          <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>
+          <span className="u-strong-bold">
             Approve Leave Request
           </span>
         }
@@ -459,7 +459,7 @@ const LeaveManagement = () => {
       <Modal
         open={rejectModal.open}
         title={
-          <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>
+          <span className="u-strong-bold">
             Reject Leave Request
           </span>
         }
@@ -470,7 +470,7 @@ const LeaveManagement = () => {
         confirmLoading={loading}
         width={420}
       >
-        <div style={{ marginTop: 16 }}>
+        <div className="u-mt-4">
           <div
             style={{
               fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8,
@@ -491,7 +491,7 @@ const LeaveManagement = () => {
       <Modal
         open={createModalOpen}
         title={
-          <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>
+          <span className="u-strong-bold">
             Create Leave Request
           </span>
         }
@@ -501,7 +501,7 @@ const LeaveManagement = () => {
         confirmLoading={saving}
         width={480}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={form} layout="vertical" className="u-mt-4">
           <Form.Item label="Person" name="userId" rules={[{ required: true, message: "Choose who the leave is for" }]}>
             <Select
               showSearch
@@ -531,10 +531,10 @@ const LeaveManagement = () => {
           </Form.Item>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Form.Item label="Start Date" name="startDate" rules={[{ required: true, message: "Required" }]}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
             <Form.Item label="End Date" name="endDate" rules={[{ required: true, message: "Required" }]}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
           </div>
           <Form.Item label="Reason" name="reason" rules={[{ required: true, message: "Required" }]}>

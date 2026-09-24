@@ -140,7 +140,7 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
           <span style={{ fontSize: 30, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
             {plan.price > 0 ? `₹${Number(plan.price).toLocaleString("en-IN")}` : "Free"}
           </span>
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>/ {plan.durationInDays} days</span>
+          <span className="u-meta">/ {plan.durationInDays} days</span>
         </div>
 
         {/* Limits strip */}
@@ -166,7 +166,7 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
             <Text style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Modules
             </Text>
-            <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{includedCount}/{ALL_MODULES.length} included</Text>
+            <Text className="u-meta-xs">{includedCount}/{ALL_MODULES.length} included</Text>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             {ALL_MODULES.map((mod) => {
@@ -196,7 +196,7 @@ const PlanCard = ({ plan, index, onEdit, onDelete, onViewLogs }) => {
                       ))}
                     </div>
                     {included && MODULE_DESCRIPTIONS[mod] && (
-                      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                      <Text className="u-meta-xs">
                         {MODULE_DESCRIPTIONS[mod]}
                       </Text>
                     )}
@@ -331,7 +331,7 @@ const SubscriptionPlans = () => {
             <div style={iconWell(stat.color, 38)}>{stat.icon}</div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{stat.value}</div>
+              <div className="u-title-lg">{stat.value}</div>
             </div>
           </div>
         ))}
@@ -355,7 +355,7 @@ const SubscriptionPlans = () => {
         <div className="empty-state">
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={<span style={{ color: "var(--text-muted)" }}>No subscription plans yet</span>}
+            description={<span className="u-muted">No subscription plans yet</span>}
           >
             <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>Add first plan</Button>
           </Empty>

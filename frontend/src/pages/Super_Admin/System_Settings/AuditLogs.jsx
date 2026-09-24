@@ -157,8 +157,8 @@ const AuditLogs = () => {
         key: "actorName",
         render: (_, record) => (
           <div>
-            <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{record.actorName || "Unknown User"}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{record.actorEmail || "-"}</div>
+            <div className="u-strong">{record.actorName || "Unknown User"}</div>
+            <div className="u-meta">{record.actorEmail || "-"}</div>
           </div>
         ),
       },
@@ -211,7 +211,7 @@ const AuditLogs = () => {
         }
       />
 
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <div className="toolbar-row">
           <Input
             allowClear
@@ -294,7 +294,7 @@ const AuditLogs = () => {
         open={Boolean(selectedLog)}
       >
         {selectedLog ? (
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Space direction="vertical" size="middle" className="u-full">
             <div><span style={{ fontWeight: 700 }}>Actor:</span> {selectedLog.actorName || "-"}</div>
             <div><span style={{ fontWeight: 700 }}>Email:</span> {selectedLog.actorEmail || "-"}</div>
             <div><span style={{ fontWeight: 700 }}>Action:</span> {selectedLog.action || "-"}</div>

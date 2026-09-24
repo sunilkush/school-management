@@ -168,7 +168,6 @@ const GlobalSearch = () => {
       aria-label="Search pages"
     >
       {/* The whole header row is the field; the app-wide focus ring on the bare input drew a box inside it. */}
-      <style>{".gs-input:focus-visible { outline: none !important; }"}</style>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: "1px solid var(--border-muted)" }}>
         <SearchOutlined style={{ fontSize: 18, color: "var(--text-muted)" }} />
         <input
@@ -228,13 +227,13 @@ const GlobalSearch = () => {
               }}>
                 {query.trim() || !Icon ? (Icon ? <Icon size={15} strokeWidth={1.9} /> : <SearchOutlined />) : <ClockCircleOutlined />}
               </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
+              <span className="u-grow-min">
                 <span style={{ display: "block", fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   <Highlight text={page.title} query={query} />
                 </span>
                 {page.parent && <span style={{ display: "block", fontSize: 12, color: "var(--text-muted)" }}>{page.parent}</span>}
               </span>
-              {isActive && <EnterOutlined style={{ color: "var(--text-muted)" }} />}
+              {isActive && <EnterOutlined className="u-muted" />}
             </div>
           );
         })}

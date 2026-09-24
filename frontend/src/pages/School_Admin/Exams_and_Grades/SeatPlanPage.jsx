@@ -176,7 +176,7 @@ const SeatPlanPage = () => {
       dataIndex: "studentName",
       sorter: (a, b) => (a.studentName || "").localeCompare(b.studentName || ""),
       render: (v) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <div style={{
             width: 34, height: 34, borderRadius: 10, flexShrink: 0,
             background: `linear-gradient(135deg, ${C.primary}, ${C.accent})`,
@@ -273,7 +273,7 @@ const SeatPlanPage = () => {
               value={examId}
               onChange={setExamId}
               placeholder="Search and select exam…"
-              style={{ width: "100%" }}
+              className="u-full"
               size="large"
               showSearch
               optionFilterProp="label"
@@ -394,7 +394,7 @@ const SeatPlanPage = () => {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           flexWrap: "wrap", gap: 10,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="u-row">
             <span style={{ fontWeight: 700, fontSize: 15, color: C.text }}>Seat Assignments</span>
             {seats.length > 0 && (
               <span style={{

@@ -36,8 +36,8 @@ const ExamAnalyticsPage = () => {
         icon={<BarChartOutlined />}
       />
 
-      <div style={{ marginTop: 20 }}>
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+      <div className="u-mt-5">
+        <div className="section-panel u-mb-4">
           <div className="page-toolbar toolbar-row">
             <Select
               value={examId}
@@ -85,7 +85,7 @@ const ExamAnalyticsPage = () => {
             </div>
 
             <div className="section-panel">
-              <Space direction="vertical" size={6} style={{ width: "100%" }}>
+              <Space direction="vertical" size={6} className="u-full">
                 <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
                   Risk Level:{" "}
                   <Text style={{ color: "var(--text-secondary)" }}>

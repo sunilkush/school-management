@@ -1317,7 +1317,7 @@ const RoleDocumentation = () => {
         icon={<FileProtectOutlined />}
         extra={
           <Input
-            prefix={<SearchOutlined style={{ color: "var(--text-muted)" }} />}
+            prefix={<SearchOutlined className="u-muted" />}
             placeholder="Search docs..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -1396,7 +1396,7 @@ const RoleDocumentation = () => {
           {/* Hero */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 24 }}>
             <div style={iconWell(activeSection.color, 52)}>{activeSection.icon}</div>
-            <div style={{ flex: 1 }}>
+            <div className="u-grow">
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                 <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.3 }}>
                   {activeSection.title}
@@ -1423,7 +1423,7 @@ const RoleDocumentation = () => {
 
           {/* Section blocks */}
           {activeSection.sections?.map((sec, si) => (
-            <div key={si} className="section-panel" style={{ marginBottom: 16 }}>
+            <div key={si} className="section-panel u-mb-4">
               <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8 }}>
                 <RightOutlined style={{ color: activeSection.color, fontSize: 11 }} />
                 {sec.heading}
@@ -1438,7 +1438,7 @@ const RoleDocumentation = () => {
 
           {/* Checklist */}
           {activeSection.checklist?.length > 0 && (
-            <div className="section-panel" style={{ marginBottom: 16 }}>
+            <div className="section-panel u-mb-4">
               <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>✅ Checklist</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {activeSection.checklist.map((item, i) => (
@@ -1467,7 +1467,7 @@ const RoleDocumentation = () => {
           {/* Footer nav */}
           <Divider style={{ margin: "28px 0 20px" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <div className="u-meta">
               EduOS Documentation · {roleName} Guide
             </div>
             <div style={{ display: "flex", gap: 8 }}>

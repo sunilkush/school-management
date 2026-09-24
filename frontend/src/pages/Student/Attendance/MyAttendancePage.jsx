@@ -159,11 +159,11 @@ const MyAttendancePage = () => {
       render: (v) => (
         <div>
           <div
-            style={{ fontWeight: 600, color: "var(--text-primary)" }}
+            className="u-strong"
           >
             {dayjs(v).format("DD MMM YYYY")}
           </div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {dayjs(v).format("dddd")}
           </div>
         </div>
@@ -179,7 +179,7 @@ const MyAttendancePage = () => {
       dataIndex: "remarks",
       render: (r) =>
         r ? (
-          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          <span className="u-meta-md">
             {r}
           </span>
         ) : (
@@ -246,11 +246,7 @@ const MyAttendancePage = () => {
         >
           <div>
             <div
-              style={{
-                fontWeight: 700,
-                color: "var(--text-primary)",
-                fontSize: 15,
-              }}
+              className="u-title"
             >
               Mark Today&apos;s Attendance
             </div>
@@ -264,7 +260,7 @@ const MyAttendancePage = () => {
               {dayjs().format("dddd, DD MMMM YYYY")}
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div className="u-row">
             <Select
               value={todayStatus}
               onChange={setTodayStatus}
@@ -436,11 +432,7 @@ const MyAttendancePage = () => {
             }}
           >
             <span
-              style={{
-                fontWeight: 700,
-                color: "var(--text-primary)",
-                fontSize: 14,
-              }}
+              className="u-title-sm"
             >
               Attendance History
             </span>
@@ -470,7 +462,7 @@ const MyAttendancePage = () => {
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
-                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    <span className="u-meta-md">
                       No attendance records for {selectedMonth.format("MMMM YYYY")}
                     </span>
                   }

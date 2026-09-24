@@ -60,11 +60,11 @@ const Enquiries = () => {
     {
       title: "Student / Parent",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <Avatar name={r.studentName || "S"} color="var(--purple)" />
           <div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.studentName || "—"}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.parentName || ""} {r.parentPhone ? `· ${r.parentPhone}` : ""}</div>
+            <div className="u-label">{r.studentName || "—"}</div>
+            <div className="u-meta-xs">{r.parentName || ""} {r.parentPhone ? `· ${r.parentPhone}` : ""}</div>
           </div>
         </div>
       ),
@@ -133,7 +133,7 @@ const Enquiries = () => {
           <div className="empty-state">
             <div style={{ fontSize: 34, marginBottom: 10 }}>📋</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>No Enquiries Yet</div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Click "New Enquiry" to log the first admission enquiry.</div>
+            <div className="u-meta-md">Click "New Enquiry" to log the first admission enquiry.</div>
           </div>
         ) : (
           <Table className="enq-table data-table" rowKey="_id" dataSource={inquiries} columns={columns} loading={loading} size="small" pagination={{ pageSize: 10, showSizeChanger: false, size: "small" }} scroll={{ x: 680 }} />
@@ -141,7 +141,7 @@ const Enquiries = () => {
       </div>
 
       <Modal title={<span style={{ fontWeight: 700 }}>New Admission Enquiry</span>} open={open} onCancel={() => setOpen(false)} footer={null} destroyOnClose>
-        <Form form={form} layout="vertical" onFinish={handleCreate} style={{ marginTop: 8 }}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} className="u-mt-2">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 14px" }}>
             <Form.Item label="Student Name"  name="studentName"   rules={[{ required: true }]}><Input placeholder="Student's full name" /></Form.Item>
             <Form.Item label="Applying Class" name="applyingClass" rules={[{ required: true }]}><Input placeholder="e.g. Class 5" /></Form.Item>

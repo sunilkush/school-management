@@ -9,7 +9,7 @@ const CustomTooltip = ({ active, payload, label, color }) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 14px" }}>
-      <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>{label}</Text>
+      <Text className="u-meta-xs">{label}</Text>
       <div style={{ fontSize: 16, fontWeight: 700, color, marginTop: 2 }}>₹{Number(payload[0]?.value || 0).toLocaleString("en-IN")}</div>
     </div>
   );

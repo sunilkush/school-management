@@ -71,13 +71,13 @@ const BusMap = ({
         {stops.length > 1 && (
           <Polyline
             positions={stops.map((s) => [s.lat, s.lng])}
-            pathOptions={{ color: "#94A3B8", weight: 3, dashArray: "6 8" }}
+            pathOptions={{ color: "var(--text-muted)", weight: 3, dashArray: "6 8" }}
           />
         )}
 
         {/* Where the bus actually went. */}
         {trailPositions.length > 1 && (
-          <Polyline positions={trailPositions} pathOptions={{ color: "#2563EB", weight: 4 }} />
+          <Polyline positions={trailPositions} pathOptions={{ color: "var(--primary)", weight: 4 }} />
         )}
 
         {stops.map((stop) => (

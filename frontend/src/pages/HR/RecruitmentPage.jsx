@@ -159,7 +159,7 @@ const RecruitmentPage = () => {
       render: (title, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{title}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.employmentType} · {r.openings} opening{r.openings > 1 ? "s" : ""}
             {r.departmentId?.name ? ` · ${r.departmentId.name}` : ""}
           </div>
@@ -171,7 +171,7 @@ const RecruitmentPage = () => {
       render: (_, r) => (
         <div style={{ fontSize: 13 }}>
           <b>{r.applicants?.active ?? 0}</b> in the running
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.applicants?.total ?? 0} applied · {r.applicants?.hired ?? 0} hired
           </div>
         </div>
@@ -211,7 +211,7 @@ const RecruitmentPage = () => {
       render: (name, r) => (
         <div>
           <div style={{ fontWeight: 600 }}>{name}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <div className="u-meta">
             {r.email}{r.experienceYears ? ` · ${r.experienceYears} yr exp` : ""}
             {r.currentEmployer ? ` · ${r.currentEmployer}` : ""}
           </div>
@@ -273,7 +273,7 @@ const RecruitmentPage = () => {
         ) : !postings?.length ? (
           <div className="empty-state">
             <Empty description="No vacancies yet" />
-            <Button type="primary" icon={<PlusOutlined />} style={{ marginTop: 12 }} onClick={() => openPosting()}>
+            <Button type="primary" icon={<PlusOutlined />} className="u-mt-3" onClick={() => openPosting()}>
               Create the first one
             </Button>
           </div>
@@ -310,19 +310,19 @@ const RecruitmentPage = () => {
         onCancel={() => setPostingModal(false)} onOk={savePosting}
         confirmLoading={actionLoading} okText={editingPosting ? "Save" : "Create draft"}
       >
-        <Form form={postingForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={postingForm} layout="vertical" className="u-mt-4">
           <Form.Item name="title" label="Job title" rules={[{ required: true, message: "A title is required" }]}>
             <Input placeholder="PGT Mathematics" />
           </Form.Item>
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="employmentType" label="Type" style={{ flex: 1 }}>
+            <Form.Item name="employmentType" label="Type" className="u-grow">
               <Select options={["Full Time", "Part Time", "Contract", "Temporary", "Visiting"].map((v) => ({ value: v, label: v }))} />
             </Form.Item>
             <Form.Item name="openings" label="Openings" style={{ width: 130 }}>
-              <InputNumber min={1} style={{ width: "100%" }} />
+              <InputNumber min={1} className="u-full" />
             </Form.Item>
             <Form.Item name="closesAt" label="Closes on" style={{ width: 170 }}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker className="u-full" />
             </Form.Item>
           </div>
           <Form.Item name="description" label="Description">
@@ -332,11 +332,11 @@ const RecruitmentPage = () => {
             <TextArea rows={3} placeholder={"B.Ed\n5 years teaching CBSE\nFluent English"} />
           </Form.Item>
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="salaryMin" label="Salary from" style={{ flex: 1 }}>
-              <InputNumber min={0} style={{ width: "100%" }} />
+            <Form.Item name="salaryMin" label="Salary from" className="u-grow">
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
-            <Form.Item name="salaryMax" label="Salary to" style={{ flex: 1 }}>
-              <InputNumber min={0} style={{ width: "100%" }} />
+            <Form.Item name="salaryMax" label="Salary to" className="u-grow">
+              <InputNumber min={0} className="u-full" />
             </Form.Item>
           </div>
         </Form>
@@ -348,24 +348,24 @@ const RecruitmentPage = () => {
         onCancel={() => setCandidateModal(false)} onOk={saveCandidate}
         confirmLoading={actionLoading} okText="Add"
       >
-        <Form form={candidateForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={candidateForm} layout="vertical" className="u-mt-4">
           <Form.Item name="jobPostingId" label="Applying for" rules={[{ required: true, message: "Pick the vacancy" }]}>
             <Select showSearch optionFilterProp="label" options={postingOptions} />
           </Form.Item>
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="candidateName" label="Name" rules={[{ required: true }]} style={{ flex: 1 }}>
+            <Form.Item name="candidateName" label="Name" rules={[{ required: true }]} className="u-grow">
               <Input />
             </Form.Item>
-            <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]} style={{ flex: 1 }}>
+            <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]} className="u-grow">
               <Input />
             </Form.Item>
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            <Form.Item name="phone" label="Phone" style={{ flex: 1 }}>
+            <Form.Item name="phone" label="Phone" className="u-grow">
               <Input />
             </Form.Item>
             <Form.Item name="experienceYears" label="Experience (years)" style={{ width: 170 }}>
-              <InputNumber min={0} max={60} style={{ width: "100%" }} />
+              <InputNumber min={0} max={60} className="u-full" />
             </Form.Item>
           </div>
           <Form.Item name="qualification" label="Qualification">
@@ -386,7 +386,7 @@ const RecruitmentPage = () => {
         onCancel={() => setMoving(null)} onOk={doMove}
         confirmLoading={actionLoading} okText="Move"
       >
-        <Form form={moveForm} layout="vertical" style={{ marginTop: 16 }}>
+        <Form form={moveForm} layout="vertical" className="u-mt-4">
           <Form.Item name="stage" label="To" rules={[{ required: true, message: "Pick a stage" }]}>
             <Select
               options={[...STAGES, "rejected", "withdrawn"]
@@ -402,10 +402,10 @@ const RecruitmentPage = () => {
           </Form.Item>
           <div style={{ display: "flex", gap: 12 }}>
             <Form.Item name="rating" label="Rating (1-5)" style={{ width: 150 }}>
-              <InputNumber min={1} max={5} style={{ width: "100%" }} />
+              <InputNumber min={1} max={5} className="u-full" />
             </Form.Item>
-            <Form.Item name="scheduledFor" label="Scheduled for" style={{ flex: 1 }}>
-              <DatePicker showTime style={{ width: "100%" }} />
+            <Form.Item name="scheduledFor" label="Scheduled for" className="u-grow">
+              <DatePicker showTime className="u-full" />
             </Form.Item>
           </div>
         </Form>
@@ -418,7 +418,7 @@ const RecruitmentPage = () => {
       >
         {openCandidate && (
           <>
-            <div className="section-panel" style={{ marginBottom: 16 }}>
+            <div className="section-panel u-mb-4">
               <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.8 }}>
                 <div>{openCandidate.email}{openCandidate.phone ? ` · ${openCandidate.phone}` : ""}</div>
                 {openCandidate.qualification && <div>{openCandidate.qualification}</div>}
@@ -446,7 +446,7 @@ const RecruitmentPage = () => {
                       {STAGE_LABEL[h.stage]}
                       {h.rating ? <Tag style={{ marginLeft: 8 }}>{h.rating}/5</Tag> : null}
                     </div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    <div className="u-meta">
                       {dayjs(h.at).format("D MMM YYYY, h:mm A")}
                       {h.scheduledFor ? ` · scheduled ${dayjs(h.scheduledFor).format("D MMM, h:mm A")}` : ""}
                     </div>

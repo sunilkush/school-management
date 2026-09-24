@@ -164,7 +164,7 @@ const LibraryMembers = () => {
     {
       title: "Member",
       render: (_, r) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="u-row">
           <Avatar
             style={{ background: MEMBER_TYPE_COLORS[r.type] || "var(--text-secondary)", flexShrink: 0 }}
             size={34}
@@ -172,7 +172,7 @@ const LibraryMembers = () => {
           />
           <div>
             <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name}</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{r.regNo}</div>
+            <div className="u-meta-xs">{r.regNo}</div>
           </div>
         </div>
       ),
@@ -193,7 +193,7 @@ const LibraryMembers = () => {
       width: 110,
       sorter: (a, b) => a.activeIssued - b.activeIssued,
       render: (c, r) => (
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <div className="u-row-sm">
           <Tag color={c > 0 ? "blue" : "default"}>{c}</Tag>
           {r.overdueCount > 0 && <Tag color="red">{r.overdueCount} overdue</Tag>}
         </div>
@@ -218,7 +218,7 @@ const LibraryMembers = () => {
       render: (_, r) => {
         if (r.overdueCount > 0) return <Badge status="error" text={<span style={{ fontSize: 12, color: "var(--danger)", fontWeight: 600 }}>Overdue</span>} />;
         if (r.activeIssued > 0) return <Badge status="warning" text={<span style={{ fontSize: 12 }}>Active</span>} />;
-        return <Badge status="default" text={<span style={{ fontSize: 12, color: "var(--text-muted)" }}>No Books</span>} />;
+        return <Badge status="default" text={<span className="u-meta">No Books</span>} />;
       },
     },
     {
@@ -311,7 +311,7 @@ const LibraryMembers = () => {
       {/* ── Borrowing history modal ────────────────────────────────── */}
       <Modal
         title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <Avatar style={{ background: MEMBER_TYPE_COLORS[historyMember?.type] || "var(--text-secondary)" }} icon={<UserOutlined />} />
             <div>
               <div style={{ fontWeight: 700 }}>{historyMember?.name}</div>
@@ -327,7 +327,7 @@ const LibraryMembers = () => {
       >
         {historyMember && (
           <div>
-            <Row gutter={12} style={{ marginBottom: 16 }}>
+            <Row gutter={12} className="u-mb-4">
               {[
                 { label: "Total Borrowed",  value: historyMember.totalIssued },
                 { label: "Currently Active", value: historyMember.activeIssued },

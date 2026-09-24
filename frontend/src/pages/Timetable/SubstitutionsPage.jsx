@@ -198,7 +198,7 @@ export default function SubstitutionsPage() {
       />
 
       {!academicYearId && (
-        <Alert type="warning" showIcon message="Select an academic year first" style={{ marginBottom: 16 }} />
+        <Alert type="warning" showIcon message="Select an academic year first" className="u-mb-4" />
       )}
 
       <div className="section-panel">
@@ -269,7 +269,7 @@ export default function SubstitutionsPage() {
       <Alert
         type="info"
         showIcon
-        style={{ marginTop: 12 }}
+        className="u-mt-3"
         message="Cover is for this date only"
         description="Assigning a substitute does not change the weekly timetable — next week's schedule keeps the original teacher. Candidates exclude anyone already teaching in that slot, already covering another class, or away themselves."
       />

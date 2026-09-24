@@ -296,7 +296,7 @@ const ExamsPage = () => {
         ]}
       />
 
-      <div style={{ marginTop: 20 }}>
+      <div className="u-mt-5">
         <Alert
           type="info"
           showIcon

@@ -103,8 +103,8 @@ const FeeMobileCard = ({ fee, isSelected, onToggle, customAmount, onCustomChange
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+        <div className="u-grow-min">
+          <div className="u-title-sm">
             {fee.feeHeadId?.name || fee.name || "—"}
           </div>
           {fee.description && (
@@ -476,7 +476,7 @@ const AssignStudentFee = () => {
           <Text strong style={{ color: "var(--text-primary)" }}>
             {record.feeHeadId?.name || record.name || "—"}
           </Text>
-          <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          <Text className="u-meta">
             {record.description || "Fee structure"}
           </Text>
         </Space>
@@ -534,7 +534,7 @@ const AssignStudentFee = () => {
             <Text strong style={{ fontSize: 13, color: "var(--text-primary)" }}>
               {s.user?.name || s.name || "—"}
             </Text>
-            <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            <Text className="u-meta">
               {s.registrationNumber || s.regId || "No Reg. No."}
             </Text>
           </Space>
@@ -620,12 +620,12 @@ const AssignStudentFee = () => {
                   <FilterOutlined />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Filters</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Select mode &amp; class</div>
+                  <div className="u-title-sm">Filters</div>
+                  <div className="u-meta">Select mode &amp; class</div>
                 </div>
               </div>
 
-              <Form.Item label={<span style={{ color: "var(--text-primary)", fontWeight: 600 }}>Assignment Mode</span>}>
+              <Form.Item label={<span className="u-strong">Assignment Mode</span>}>
                 <Radio.Group
                   value={mode}
                   onChange={(e) => {
@@ -642,12 +642,12 @@ const AssignStudentFee = () => {
 
               <Form.Item
                 name="academicYearId"
-                label={<span style={{ color: "var(--text-primary)", fontWeight: 600 }}>Academic Year</span>}
+                label={<span className="u-strong">Academic Year</span>}
                 rules={[{ required: true, message: "Please select academic year" }]}
               >
                 <Select
                   placeholder="Select Academic Year"
-                  suffixIcon={<CalendarOutlined style={{ color: "var(--text-muted)" }} />}
+                  suffixIcon={<CalendarOutlined className="u-muted" />}
                 >
                   {selectedAcademicYear?._id && (
                     <Select.Option key={selectedAcademicYear._id} value={selectedAcademicYear._id}>
@@ -660,7 +660,7 @@ const AssignStudentFee = () => {
               {mode === "bulk" && (
                 <Form.Item
                   name="schoolClassId"
-                  label={<span style={{ color: "var(--text-primary)", fontWeight: 600 }}>Class</span>}
+                  label={<span className="u-strong">Class</span>}
                   rules={[{ required: true, message: "Please select class" }]}
                 >
                   <Select placeholder="Select Class" showSearch allowClear optionFilterProp="children">
@@ -676,7 +676,7 @@ const AssignStudentFee = () => {
               {mode === "single" && (
                 <Form.Item
                   name="studentId"
-                  label={<span style={{ color: "var(--text-primary)", fontWeight: 600 }}>Student</span>}
+                  label={<span className="u-strong">Student</span>}
                   rules={[{ required: true, message: "Please select student" }]}
                 >
                   <Select
@@ -693,13 +693,13 @@ const AssignStudentFee = () => {
               )}
 
               {mode === "bulk" && (
-                <Form.Item label={<span style={{ color: "var(--text-primary)", fontWeight: 600 }}>Search Students</span>}>
+                <Form.Item label={<span className="u-strong">Search Students</span>}>
                   <Input
                     allowClear
                     placeholder="Name, email, reg no."
                     value={studentSearch}
                     onChange={(e) => setStudentSearch(e.target.value)}
-                    prefix={<UserOutlined style={{ color: "var(--text-muted)" }} />}
+                    prefix={<UserOutlined className="u-muted" />}
                   />
                 </Form.Item>
               )}
@@ -727,7 +727,7 @@ const AssignStudentFee = () => {
                   <div style={iconWell("var(--cyan)", 28)}>
                     <TeamOutlined style={{ fontSize: 13 }} />
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                  <div className="u-label">
                     {filteredStudentsForClass.length} student{filteredStudentsForClass.length !== 1 ? "s" : ""} in class
                   </div>
                 </div>
@@ -739,13 +739,13 @@ const AssignStudentFee = () => {
           <Col xs={24} lg={16}>
             <div className="section-panel" style={{ background: cardBg }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div className="u-row">
                   <div style={iconWell("var(--cyan)", 36)}>
                     <WalletOutlined />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Fee Structures</div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    <div className="u-title-sm">Fee Structures</div>
+                    <div className="u-meta">
                       {feeStructures.length} available · {selectedFeeIds.length} selected
                     </div>
                   </div>
@@ -771,7 +771,7 @@ const AssignStudentFee = () => {
               {!effectiveClassId ? (
                 <Empty
                   description={
-                    <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                    <span className="u-meta-md">
                       Select a class or student above to load fee structures
                     </span>
                   }
@@ -785,7 +785,7 @@ const AssignStudentFee = () => {
                     </div>
                   ) : feeStructures.length === 0 ? (
                     <Empty
-                      description={<span style={{ color: "var(--text-muted)", fontSize: 13 }}>No fee structures found for selected class and year</span>}
+                      description={<span className="u-meta-md">No fee structures found for selected class and year</span>}
                       style={{ padding: "40px 0" }}
                     />
                   ) : (
@@ -827,12 +827,12 @@ const AssignStudentFee = () => {
       {/* ── Preview Drawer ── */}
       <Drawer
         title={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="u-row">
             <div style={iconWell("var(--purple-hover)", 34)}>
               <EyeOutlined style={{ fontSize: 15 }} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>Assignment Preview</div>
+              <div className="u-title-sm">Assignment Preview</div>
               <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 400 }}>Review before assigning</div>
             </div>
           </div>
@@ -855,7 +855,7 @@ const AssignStudentFee = () => {
           </Button>
         }
       >
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+        <Space direction="vertical" size={14} className="u-full">
           {/* Summary banner */}
           <div style={{
             padding: "14px 16px", borderRadius: 12,
@@ -894,7 +894,7 @@ const AssignStudentFee = () => {
                 marginBottom: 8,
               }}>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>
+                  <div className="u-label">
                     {fee.feeHeadId?.name || fee.name || "—"}
                   </div>
                   <div style={{ marginTop: 4 }}><FrequencyTag frequency={fee.frequency} /></div>
@@ -903,7 +903,7 @@ const AssignStudentFee = () => {
                   <div style={{ fontSize: 16, fontWeight: 800, color: "var(--success)" }}>
                     {perPeriodLabel(previewById.get(String(fee._id))?.perPeriodAmount ?? fee.amount, fee.frequency)}
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  <div className="u-meta-xs">
                     {money(previewById.get(String(fee._id))?.yearlyAmount ?? fee.yearlyAmount)} a year
                     {previewById.get(String(fee._id))?.isCustom ? ` · standard ${perPeriodLabel(fee.amount, fee.frequency)}` : ""}
                   </div>
@@ -928,10 +928,10 @@ const AssignStudentFee = () => {
                   {(selectedStudent?.user?.name || selectedStudent?.name || "S")[0].toUpperCase()}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+                  <div className="u-title-sm">
                     {selectedStudent?.user?.name || selectedStudent?.name || "—"}
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                  <div className="u-meta">
                     {selectedStudent?.class?.name || selectedStudent?.schoolClass?.name || "—"} ·{" "}
                     {selectedStudent?.section?.name || "—"}
                   </div>

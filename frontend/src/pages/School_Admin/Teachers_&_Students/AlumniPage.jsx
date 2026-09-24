@@ -153,7 +153,7 @@ export default function AlumniPage() {
       render: (v, row) => (
         <div>
           <div style={{ fontWeight: 600 }}>{v || "—"}</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{[row.lastClassName, row.lastSectionName].filter(Boolean).join(" - ")}</div>
+          <div className="u-meta-xs">{[row.lastClassName, row.lastSectionName].filter(Boolean).join(" - ")}</div>
         </div>
       ),
     },
@@ -169,7 +169,7 @@ export default function AlumniPage() {
     {
       title: "Contact", key: "contact",
       render: (_, row) => (
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        <span className="u-meta">
           {row.currentPhone || row.currentEmail || "—"}
         </span>
       ),
@@ -207,18 +207,18 @@ export default function AlumniPage() {
         )}
 
         {/* ── Mark as Alumni panel ─────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
-          <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
+          <Flex align="center" gap={10} className="u-mb-4">
             <div style={iconWell("var(--primary)", 38)}><UserOutlined style={{ fontSize: 17 }} /></div>
             <div>
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>Mark Student as Alumni</Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>This is a one-way action — the student will move out of active class rolls</Text>
+              <Text className="u-meta">This is a one-way action — the student will move out of active class rolls</Text>
             </div>
           </Flex>
           <Row gutter={[12, 12]}>
             <Col xs={24} sm={12} md={6}>
               <Select
-                placeholder="Select Class" style={{ width: "100%" }}
+                placeholder="Select Class" className="u-full"
                 value={selectedClass} onChange={setSelectedClass}
                 options={(schoolClasses || []).map((c) => ({ value: c._id, label: c.name }))}
                 showSearch optionFilterProp="label" disabled={!canFilter} size="large"
@@ -226,7 +226,7 @@ export default function AlumniPage() {
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Select
-                placeholder="Select Section" style={{ width: "100%" }}
+                placeholder="Select Section" className="u-full"
                 value={selectedSection} onChange={setSelectedSection}
                 options={sectionOptions} showSearch optionFilterProp="label"
                 disabled={!selectedClass} size="large"
@@ -234,7 +234,7 @@ export default function AlumniPage() {
             </Col>
             <Col xs={24} sm={12} md={7}>
               <Select
-                placeholder="Select Student" style={{ width: "100%" }}
+                placeholder="Select Student" className="u-full"
                 value={studentId} onChange={setStudentId}
                 options={studentOptions} showSearch optionFilterProp="label"
                 disabled={!selectedSection} loading={rollLoading} size="large"
@@ -242,12 +242,12 @@ export default function AlumniPage() {
             </Col>
             <Col xs={24} sm={12} md={5}>
               <InputNumber
-                style={{ width: "100%" }} size="large" placeholder="Graduation Year"
+                className="u-full" size="large" placeholder="Graduation Year"
                 value={graduationYear} onChange={setGraduationYear} min={2000} max={CURRENT_YEAR + 1}
               />
             </Col>
           </Row>
-          <Row style={{ marginTop: 12 }}>
+          <Row className="u-mt-3">
             <Col span={24}>
               <Popconfirm
                 title="Mark as Alumni"
@@ -274,13 +274,13 @@ export default function AlumniPage() {
           <Row gutter={[12, 12]} style={{ marginBottom: 14 }}>
             <Col xs={24} sm={8} md={6}>
               <InputNumber
-                style={{ width: "100%" }} placeholder="Filter by Graduation Year"
+                className="u-full" placeholder="Filter by Graduation Year"
                 value={filterYear} onChange={setFilterYear} min={2000} max={CURRENT_YEAR + 1}
               />
             </Col>
             <Col xs={24} sm={8} md={6}>
               <Select
-                placeholder="Filter by Reachable" allowClear style={{ width: "100%" }}
+                placeholder="Filter by Reachable" allowClear className="u-full"
                 value={filterReachable} onChange={setFilterReachable}
                 options={[{ value: true, label: "Reachable" }, { value: false, label: "Unreachable" }]}
               />
@@ -318,64 +318,64 @@ export default function AlumniPage() {
         title={editing ? `${editing.fullName} — Alumni Profile` : ""}
       >
         {editing && (
-          <Space direction="vertical" style={{ width: "100%" }} size={12}>
+          <Space direction="vertical" className="u-full" size={12}>
             <Row gutter={12}>
               <Col span={12}>
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>OCCUPATION</Text>
+                <Text className="u-meta-xs">OCCUPATION</Text>
                 <Input value={form.currentOccupation} onChange={(e) => setForm((f) => ({ ...f, currentOccupation: e.target.value }))} />
               </Col>
               <Col span={12}>
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>EMPLOYER</Text>
+                <Text className="u-meta-xs">EMPLOYER</Text>
                 <Input value={form.currentEmployer} onChange={(e) => setForm((f) => ({ ...f, currentEmployer: e.target.value }))} />
               </Col>
             </Row>
             <Row gutter={12}>
               <Col span={12}>
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>HIGHER EDUCATION — INSTITUTION</Text>
+                <Text className="u-meta-xs">HIGHER EDUCATION — INSTITUTION</Text>
                 <Input value={form.higherEducation?.institution} onChange={(e) => setForm((f) => ({ ...f, higherEducation: { ...f.higherEducation, institution: e.target.value } }))} />
               </Col>
               <Col span={12}>
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>COURSE</Text>
+                <Text className="u-meta-xs">COURSE</Text>
                 <Input value={form.higherEducation?.course} onChange={(e) => setForm((f) => ({ ...f, higherEducation: { ...f.higherEducation, course: e.target.value } }))} />
               </Col>
             </Row>
             <Row gutter={12}>
               <Col span={12}>
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>PHONE</Text>
+                <Text className="u-meta-xs">PHONE</Text>
                 <Input value={form.currentPhone} onChange={(e) => setForm((f) => ({ ...f, currentPhone: e.target.value }))} />
               </Col>
               <Col span={12}>
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>EMAIL</Text>
+                <Text className="u-meta-xs">EMAIL</Text>
                 <Input value={form.currentEmail} onChange={(e) => setForm((f) => ({ ...f, currentEmail: e.target.value }))} />
               </Col>
             </Row>
             <div>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>ADDRESS</Text>
+              <Text className="u-meta-xs">ADDRESS</Text>
               <Input value={form.currentAddress} onChange={(e) => setForm((f) => ({ ...f, currentAddress: e.target.value }))} />
             </div>
             <div>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>LINKEDIN URL</Text>
+              <Text className="u-meta-xs">LINKEDIN URL</Text>
               <Input value={form.linkedInUrl} onChange={(e) => setForm((f) => ({ ...f, linkedInUrl: e.target.value }))} />
             </div>
 
             <div>
               <Flex align="center" justify="space-between">
-                <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>ACHIEVEMENTS</Text>
+                <Text className="u-meta-xs">ACHIEVEMENTS</Text>
                 <Button size="small" icon={<PlusOutlined />} onClick={() => setForm((f) => ({ ...f, achievements: [...(f.achievements || []), { title: "", description: "", year: CURRENT_YEAR }] }))}>
                   Add
                 </Button>
               </Flex>
               {(form.achievements || []).map((a, idx) => (
-                <Row gutter={[8, 8]} key={idx} style={{ marginTop: 8 }}>
+                <Row gutter={[8, 8]} key={idx} className="u-mt-2">
                   <Col xs={8}><Input placeholder="Title" value={a.title} onChange={(e) => updateAchievement(idx, "title", e.target.value)} /></Col>
                   <Col xs={10}><Input placeholder="Description" value={a.description} onChange={(e) => updateAchievement(idx, "description", e.target.value)} /></Col>
-                  <Col xs={6}><InputNumber style={{ width: "100%" }} placeholder="Year" value={a.year} onChange={(v) => updateAchievement(idx, "year", v)} /></Col>
+                  <Col xs={6}><InputNumber className="u-full" placeholder="Year" value={a.year} onChange={(v) => updateAchievement(idx, "year", v)} /></Col>
                 </Row>
               ))}
             </div>
 
             <div>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)" }}>ENGAGEMENT NOTES</Text>
+              <Text className="u-meta-xs">ENGAGEMENT NOTES</Text>
               <TextArea rows={2} value={form.engagementNotes} onChange={(e) => setForm((f) => ({ ...f, engagementNotes: e.target.value }))} />
             </div>
 

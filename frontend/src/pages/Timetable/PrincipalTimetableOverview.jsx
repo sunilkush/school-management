@@ -35,7 +35,7 @@ const KpiCard = ({ label, value, icon, color, sub }) => (
     }}
   >
     <div style={iconWell(color, 46)}>{icon}</div>
-    <div style={{ flex: 1, minWidth: 0 }}>
+    <div className="u-grow-min">
       <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
         {label}
       </div>
@@ -170,7 +170,7 @@ export default function PrincipalTimetableOverview() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
             <Select
               allowClear
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Class"
               value={filters.schoolClassId}
               onChange={(v) =>
@@ -183,7 +183,7 @@ export default function PrincipalTimetableOverview() {
             />
             <Select
               allowClear
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Section"
               value={filters.sectionId}
               onChange={(v) => setFilters((f) => ({ ...f, sectionId: v }))}
@@ -194,7 +194,7 @@ export default function PrincipalTimetableOverview() {
             />
             <Select
               allowClear
-              style={{ width: "100%" }}
+              className="u-full"
               placeholder="Teacher"
               value={filters.teacherId}
               onChange={(v) => setFilters((f) => ({ ...f, teacherId: v }))}

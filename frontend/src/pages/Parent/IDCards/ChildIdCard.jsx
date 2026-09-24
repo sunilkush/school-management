@@ -52,7 +52,7 @@ export default function ChildIdCard() {
     <>
       <PageHeader title="ID Card" subtitle="Your child's issued school ID card(s)" icon={<IdcardOutlined />} />
       <div className="page-wrapper">
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
           <Select
             placeholder="Select Child" style={{ width: "100%", maxWidth: 360 }}
             value={selectedChildId} onChange={setSelectedChildId} loading={childrenLoading} size="large"
@@ -65,7 +65,7 @@ export default function ChildIdCard() {
           </div>
         ) : (
           filtered.map((card) => (
-            <div key={card._id} className="section-panel" style={{ marginBottom: 16 }}>
+            <div key={card._id} className="section-panel u-mb-4">
               <Flex align="center" gap={16} wrap="wrap">
                 {card.photoUrl
                   ? <Avatar src={card.photoUrl} size={64} />

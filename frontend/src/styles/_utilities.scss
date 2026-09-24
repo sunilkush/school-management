@@ -1,0 +1,103 @@
+// The handful of things pages were writing inline over and over.
+//
+// This is deliberately NOT a utility framework. Each class below earned its place by appearing
+// dozens — in one case hundreds — of times as an identical inline style object across the app.
+// Everything rarer stays inline, where a one-off value belongs: 2,622 of the 3,491 distinct inline
+// shapes are used exactly once, and naming those would be noise, not a system.
+//
+// Values come from the scale in _tokens.scss, so "the small muted line under a heading" is the
+// same size everywhere by construction.
+
+/* ── Text ────────────────────────────────────────────────────────────
+   The meta line under a title, the muted caption in a table cell — the
+   single most repeated pattern in the app.
+──────────────────────────────────────────────────────────────────── */
+.u-muted { color: var(--text-muted); }
+
+.u-meta {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+.u-meta-xs {
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+}
+
+.u-meta-md {
+  color: var(--text-muted);
+  font-size: var(--font-md);
+}
+
+/* Headings inside cards and rows, in the three sizes pages actually used. */
+.u-title {
+  color: var(--text-primary);
+  font-size: var(--font-lg);
+  font-weight: var(--weight-bold);
+}
+
+.u-title-sm {
+  color: var(--text-primary);
+  font-size: var(--font-base);
+  font-weight: var(--weight-bold);
+}
+
+.u-title-lg {
+  color: var(--text-primary);
+  font-size: var(--font-xl);
+  font-weight: var(--weight-bold);
+}
+
+.u-label {
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  font-weight: var(--weight-semibold);
+}
+
+.u-strong {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.u-strong-bold {
+  color: var(--text-primary);
+  font-weight: var(--weight-bold);
+}
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+.u-full { width: 100%; }
+
+.u-grow { flex: 1; }
+
+// flex:1 with minWidth:0 — the pair that stops a long name from pushing a row wider than its card.
+.u-grow-min {
+  flex: 1;
+  min-width: 0;
+}
+
+.u-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.u-row-sm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.u-row-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ── Spacing between blocks ──────────────────────────────────────── */
+.u-mt-2 { margin-top: var(--space-2); }
+.u-mt-3 { margin-top: var(--space-3); }
+.u-mt-4 { margin-top: var(--space-4); }
+.u-mt-5 { margin-top: var(--space-5); }
+.u-mb-4 { margin-bottom: var(--space-4); }
+.u-mb-5 { margin-bottom: var(--space-5); }
+.u-m-0  { margin: 0; }

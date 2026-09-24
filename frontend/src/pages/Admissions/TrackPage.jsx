@@ -83,7 +83,7 @@ export default function TrackPage() {
         </Button>
       </Form>
 
-      {error && <Alert type="error" showIcon message={error} style={{ marginTop: 20 }} />}
+      {error && <Alert type="error" showIcon message={error} className="u-mt-5" />}
 
       {application && (
         <div style={{ marginTop: 28 }}>

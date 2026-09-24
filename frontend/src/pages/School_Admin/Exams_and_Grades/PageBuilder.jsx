@@ -91,7 +91,7 @@ const SectionRow = ({ sec, totalMarks, onChange, onDelete, index }) => {
           bordered={false}
         />
 
-        <div style={{ flex: 1 }} />
+        <div className="u-grow" />
 
         {/* Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
@@ -129,12 +129,12 @@ const SectionRow = ({ sec, totalMarks, onChange, onDelete, index }) => {
 
       {/* Progress bar */}
       {totalMarks > 0 && (
-        <div style={{ marginTop: 12 }}>
+        <div className="u-mt-3">
           <Progress
             percent={pct} size="small"
             strokeColor={strokeColor}
             trailColor="var(--border-muted)"
-            format={(p) => <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{p}%</span>}
+            format={(p) => <span className="u-meta-xs">{p}%</span>}
           />
         </div>
       )}
@@ -285,7 +285,7 @@ const PaperBuilder = () => {
                 label: (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <span>{e.title}</span>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    <span className="u-meta-xs">
                       {e.examDate ? dayjs(e.examDate).format("DD MMM YYYY") : ""}
                     </span>
                   </div>
@@ -317,7 +317,7 @@ const PaperBuilder = () => {
               <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>
                 No Exam Selected
               </div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              <div className="u-meta-md">
                 Select an exam above to start building the paper blueprint
               </div>
             </div>
@@ -328,7 +328,7 @@ const PaperBuilder = () => {
                 justifyContent: "space-between", marginBottom: 16,
               }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Paper Sections</div>
+                  <div className="u-title">Paper Sections</div>
                   <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
                     Configure question types and mark distribution
                   </div>
@@ -390,9 +390,9 @@ const PaperBuilder = () => {
 
             {/* Overall allocation bar */}
             {totalMarks > 0 && (
-              <div style={{ marginTop: 16 }}>
+              <div className="u-mt-4">
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Allocation</span>
+                  <span className="u-meta-xs">Allocation</span>
                   <span style={{ fontSize: 11, color: isOver ? C.danger : "var(--text-muted)" }}>
                     {Math.min(100, Math.round((blueprintTotal / totalMarks) * 100))}%
                   </span>
@@ -408,7 +408,7 @@ const PaperBuilder = () => {
             )}
 
             {/* Status pill */}
-            <div style={{ marginTop: 16 }}>
+            <div className="u-mt-4">
               {!selectedExam ? (
                 <div style={{ textAlign: "center", color: "var(--text-muted)", fontSize: 12 }}>Select an exam to see summary</div>
               ) : isOver ? (
@@ -439,7 +439,7 @@ const PaperBuilder = () => {
                   <div key={sec.key} style={{ marginBottom: 14 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: sec.color }}>{sec.section}</span>
-                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{sectionTotal(sec)} / {totalMarks} marks ({pct}%)</span>
+                      <span className="u-meta">{sectionTotal(sec)} / {totalMarks} marks ({pct}%)</span>
                     </div>
                     <Progress
                       percent={pct} size="small" strokeColor={sec.color}
@@ -499,7 +499,7 @@ const PaperBuilder = () => {
 
           {/* Sections */}
           {sections.map((sec) => (
-            <div key={sec.key} style={{ marginBottom: 16 }}>
+            <div key={sec.key} className="u-mb-4">
               <div style={{
                 display: "flex", justifyContent: "space-between",
                 background: `color-mix(in srgb, ${sec.color} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${sec.color} 25%, transparent)`,

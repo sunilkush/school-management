@@ -91,8 +91,8 @@ const FinancialStatements = () => {
     <>
       <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <span><span style={{ color: "var(--text-muted)" }}>Total debits </span><b>{money(trialBalance?.totalDebit)}</b></span>
-          <span><span style={{ color: "var(--text-muted)" }}>Total credits </span><b>{money(trialBalance?.totalCredit)}</b></span>
+          <span><span className="u-muted">Total debits </span><b>{money(trialBalance?.totalDebit)}</b></span>
+          <span><span className="u-muted">Total credits </span><b>{money(trialBalance?.totalCredit)}</b></span>
         </div>
         {trialBalance && balanceBadge(trialBalance.isBalanced)}
       </div>
@@ -133,7 +133,7 @@ const FinancialStatements = () => {
     <>
       {balanceSheet && (
         <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ color: "var(--text-muted)" }}>As at {asOf.format("D MMM YYYY")}</span>
+          <span className="u-muted">As at {asOf.format("D MMM YYYY")}</span>
           {balanceBadge(balanceSheet.isBalanced)}
         </div>
       )}
@@ -173,7 +173,7 @@ const FinancialStatements = () => {
         subtitle="Built from posted entries only — drafts are never counted"
         icon={<FundOutlined />}
         extra={
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="u-row-wrap">
             {tab === "bs" ? (
               <DatePicker value={asOf} onChange={(d) => setAsOf(d || dayjs())} />
             ) : (

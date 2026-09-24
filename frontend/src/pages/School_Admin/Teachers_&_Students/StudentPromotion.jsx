@@ -155,7 +155,7 @@ export default function StudentPromotion() {
     {
       title: "Email",
       dataIndex: "email",
-      render: (v) => <Text style={{ color: "var(--text-muted)", fontSize: 12 }}>{v || "—"}</Text>,
+      render: (v) => <Text className="u-meta">{v || "—"}</Text>,
     },
     {
       title: "Current Class",
@@ -173,31 +173,6 @@ export default function StudentPromotion() {
 
   return (
     <>
-      <style>{`
-        .${TBL} .ant-table-tbody > tr.ant-table-row-selected > td {
-          background: var(--primary-light) !important;
-        }
-        .${TBL} .ant-checkbox-checked .ant-checkbox-inner {
-          background: var(--primary) !important;
-          border-color: var(--primary) !important;
-        }
-        .promo-sel .ant-select-selector {
-          border-radius: 8px !important;
-          border: 1.5px solid var(--border-muted) !important;
-          background: var(--surface) !important;
-          color: var(--text-primary) !important;
-        }
-        .promo-sel:hover .ant-select-selector {
-          border-color: var(--primary) !important;
-        }
-        .promo-sel.ant-select-focused .ant-select-selector {
-          border-color: var(--primary) !important;
-          box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
-        }
-        .promo-sel.ant-select-disabled .ant-select-selector {
-          opacity: 0.6 !important;
-        }
-      `}</style>
 
       <PageHeader
         title="Student Promotion"
@@ -208,10 +183,10 @@ export default function StudentPromotion() {
       <div className="page-wrapper">
 
         {/* ── Config panel ──────────────────────────────── */}
-        <div className="section-panel" style={{ marginBottom: 16 }}>
+        <div className="section-panel u-mb-4">
 
           {/* Panel label */}
-          <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+          <Flex align="center" gap={10} className="u-mb-5">
             <div style={iconWell("var(--primary)", 38)}>
               <UsergroupAddOutlined style={{ fontSize: 17 }} />
             </div>
@@ -219,7 +194,7 @@ export default function StudentPromotion() {
               <Text strong style={{ fontSize: 14, color: "var(--text-primary)", display: "block" }}>
                 Promotion Configuration
               </Text>
-              <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+              <Text className="u-meta">
                 Set source and destination for the promotion
               </Text>
             </div>
@@ -243,12 +218,11 @@ export default function StudentPromotion() {
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--primary)" }} />
                   FROM
                 </div>
-                <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                <Space direction="vertical" className="u-full" size={12}>
                   <div>
                     <FL>Academic Year</FL>
                     <Select
-                      className="promo-sel"
-                      style={{ width: "100%" }}
+                      className="promo-sel u-full"
                       placeholder="Select source year"
                       value={fromYearId}
                       options={academicYears.map((y) => ({ label: y.name, value: y._id }))}
@@ -258,8 +232,7 @@ export default function StudentPromotion() {
                   <div>
                     <FL>Class</FL>
                     <Select
-                      className="promo-sel"
-                      style={{ width: "100%" }}
+                      className="promo-sel u-full"
                       placeholder="Select source class"
                       value={srcClassId}
                       disabled={!fromYearId}
@@ -302,12 +275,11 @@ export default function StudentPromotion() {
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-hover)" }} />
                   TO
                 </div>
-                <Space direction="vertical" style={{ width: "100%" }} size={12}>
+                <Space direction="vertical" className="u-full" size={12}>
                   <div>
                     <FL>Academic Year</FL>
                     <Select
-                      className="promo-sel"
-                      style={{ width: "100%" }}
+                      className="promo-sel u-full"
                       placeholder="Select target year"
                       value={toYearId}
                       options={academicYears
@@ -320,8 +292,7 @@ export default function StudentPromotion() {
                     <Col span={12}>
                       <FL>Class</FL>
                       <Select
-                        className="promo-sel"
-                        style={{ width: "100%" }}
+                        className="promo-sel u-full"
                         placeholder="Target class"
                         value={tgtClassId}
                         disabled={!toYearId}
@@ -332,8 +303,7 @@ export default function StudentPromotion() {
                     <Col span={12}>
                       <FL>Section</FL>
                       <Select
-                        className="promo-sel"
-                        style={{ width: "100%" }}
+                        className="promo-sel u-full"
                         placeholder="Section"
                         value={tgtSectionId}
                         disabled={!tgtClassId || !sections.length}
@@ -348,7 +318,7 @@ export default function StudentPromotion() {
           </Row>
 
           {/* Load button */}
-          <Flex justify="flex-end" style={{ marginTop: 20 }}>
+          <Flex justify="flex-end" className="u-mt-5">
             <Button
               icon={<ReloadOutlined />}
               type="default"
@@ -364,7 +334,7 @@ export default function StudentPromotion() {
 
         {/* ── Stat cards ────────────────────────────────── */}
         {candidates.length > 0 && (
-          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+          <Row gutter={[12, 12]} className="u-mb-4">
             {[
               {
                 label: "Total Students",
@@ -440,7 +410,7 @@ export default function StudentPromotion() {
             <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
               No students loaded
             </Text>
-            <Text style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            <Text className="u-meta-md">
               Select a source year and class, then click "Load Students"
             </Text>
           </div>
@@ -454,7 +424,7 @@ export default function StudentPromotion() {
                 <Text strong style={{ fontSize: 14, color: "var(--text-primary)" }}>
                   Student List
                 </Text>
-                <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                <Text className="u-meta">
                   {selected.length > 0
                     ? `${selected.length} of ${candidates.length} selected`
                     : `${candidates.length} student${candidates.length !== 1 ? "s" : ""}`}
@@ -505,7 +475,7 @@ export default function StudentPromotion() {
                   : `${selected.length} student${selected.length !== 1 ? "s" : ""} selected`}
               </Text>
               {selected.length > 0 && canPromote && (
-                <Text style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                <Text className="u-meta">
                   Ready to promote
                 </Text>
               )}

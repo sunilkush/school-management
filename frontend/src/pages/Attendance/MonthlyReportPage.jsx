@@ -277,7 +277,7 @@ const MonthlyReportPage = () => {
       />
 
       {/* ── Filter Panel ── */}
-      <div className="section-panel" style={{ marginTop: 20 }}>
+      <div className="section-panel u-mt-5">
         <FilterGrid>
           {isSuperAdmin && (
             <FilterField label="School">
@@ -502,7 +502,7 @@ const MonthlyReportPage = () => {
 
                         {/* Name */}
                         <td style={{ padding: "11px 14px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div className="u-row">
                             <div style={{
                               width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
                               background: bg, color, display: "flex",
