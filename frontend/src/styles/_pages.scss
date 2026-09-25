@@ -348,3 +348,145 @@
 .kpi-card .kpi-card-cue { opacity: 0; transition: opacity 0.2s ease; }
 .kpi-card-link:hover .kpi-card-cue,
 .kpi-card-link:focus-visible .kpi-card-cue { opacity: 1; }
+
+/* ── from pages/School_Admin/School_Setup/SchoolSetup.jsx ───────── */
+/* The line under the stepper: what this step is for, and whether it is already done. */
+.setup-step-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.setup-step-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: rgba(var(--primary-rgb), 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.setup-step-chip {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+  background: var(--surface-soft);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+
+  &.is-done {
+    color: var(--success);
+    background: rgba(var(--success-rgb), 0.1);
+  }
+}
+
+/* ── from pages/School_Admin/School_Setup/SchoolClassSectionTeacher.jsx ── */
+/* One card per class instead of a flat 38-row table: the class name is said once and
+   every section of that class sits under it, so a school with 13 classes reads as 13
+   things rather than 38. */
+.ct-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.ct-card {
+  background: var(--surface);
+  border: 1px solid var(--border-muted);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: rgba(var(--primary-rgb), 0.35);
+  }
+}
+
+.ct-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 11px 14px;
+  background: rgba(var(--primary-rgb), 0.06);
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.ct-card.is-complete .ct-card-head {
+  background: rgba(var(--success-rgb), 0.08);
+}
+
+.ct-card-name {
+  font-size: var(--font-base);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
+/* "1/3" — amber while sections are still open, green once the class is fully staffed. */
+.ct-card-count {
+  margin-left: auto;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-semibold);
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  color: var(--warning-hover);
+  background: rgba(var(--warning-rgb), 0.14);
+
+  &.is-complete {
+    color: var(--success-hover);
+    background: rgba(var(--success-rgb), 0.14);
+  }
+}
+
+.ct-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+
+  & + .ct-row { border-top: 1px dashed var(--border-muted); }
+  &.is-empty { background: rgba(var(--warning-rgb), 0.05); }
+}
+
+.ct-sec {
+  min-width: 30px;
+  padding: 0 7px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-bold);
+  color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.1);
+}
+
+.ct-row.is-empty .ct-sec {
+  color: var(--warning-hover);
+  background: rgba(var(--warning-rgb), 0.16);
+}
+
+.ct-pick {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* How many sections a teacher already holds, shown only inside the open dropdown — small schools
+   reuse teachers on purpose, so this is a fact at the moment of choosing, not a warning at rest. */
+.ct-opt-load {
+  float: right;
+  margin-left: var(--space-3);
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}

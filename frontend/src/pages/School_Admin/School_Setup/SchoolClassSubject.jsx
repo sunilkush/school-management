@@ -28,7 +28,7 @@ const { Title, Text } = Typography;
 
 /* ─── app theme colours ──────────────────────────────────────── */
 const C = {
-  primary: "var(--purple)",
+  primary: "var(--primary)",
   success: "var(--success)",
   warning: "var(--warning)",
   danger:  "var(--danger)",
@@ -39,7 +39,7 @@ const C = {
 // 7 distinct hues cycling across classes (categorical use — differentiating many class cards at
 // once), so this stays a local multi-color array rather than collapsing to one semantic token.
 const CLASS_COLORS = [
-  { bg: "rgba(var(--purple-rgb),0.08)",  text: "var(--purple-hover)", border: "rgba(var(--purple-rgb),0.2)"  },
+  { bg: "rgba(var(--primary-rgb),0.08)",  text: "var(--primary-hover)", border: "rgba(var(--primary-rgb),0.2)"  },
   { bg: "rgba(var(--primary-rgb),0.08)",   text: "var(--primary-hover)", border: "rgba(var(--primary-rgb),0.2)"   },
   { bg: "rgba(var(--success-rgb),0.08)",  text: "var(--success-hover)", border: "rgba(var(--success-rgb),0.2)"  },
   { bg: "rgba(var(--warning-rgb),0.08)",  text: "var(--warning-hover)", border: "rgba(var(--warning-rgb),0.2)"  },
@@ -83,13 +83,28 @@ const SchoolClassSubject = ({ next }) => {
     const init = {}, initSaved = {};
     schoolClasses.forEach((cls) => {
       cls.sections?.forEach((sec) => {
-        init[sec._id]      = sec.subjects?.map((s) => s._id || s) || [];
+        init[sec._id]      = (sec.subjects || []).map((s) => s._id || s).filter(Boolean);
         if (sec.subjects?.length) initSaved[sec._id] = true;
       });
     });
     setMapping(init);
     setSaved(initSaved);
   }, [schoolClasses]);
+
+  /* Options: every global subject, plus any subject already sitting on a section. Without the
+     second half, a subject this school added itself shows as its own id. */
+  const subjectOptions = useMemo(() => {
+    const byId = new Map();
+    schoolClasses.forEach((cls) =>
+      (cls.sections || []).forEach((sec) =>
+        (sec.subjects || []).forEach((sub) => {
+          if (sub?._id) byId.set(sub._id, sub.name || "Unnamed subject");
+        })
+      )
+    );
+    subjects.forEach((s) => byId.set(s._id, s.name));
+    return [...byId.entries()].map(([value, label]) => ({ value, label }));
+  }, [schoolClasses, subjects]);
 
   /* ─── derived ────────────────────────────────────────────── */
   const allSections = useMemo(
@@ -256,8 +271,8 @@ const SchoolClassSubject = ({ next }) => {
                             </Text>
                             <Text style={{ fontSize: 11, color: hasSubjects ? C.success : C.warning }}>
                               {hasSubjects
-                                ? <><CheckOutlined style={{ marginRight: 3 }} />{mapping[row._id].length} subject{mapping[row._id].length !== 1 ? "s" : ""} assigned</>
-                                : "⚠ No subjects assigned"
+                                ? <><CheckOutlined style={{ marginRight: 3 }} />{mapping[row._id].length} assigned</>
+                                : "Nothing assigned yet"
                               }
                             </Text>
                           </div>
@@ -270,9 +285,9 @@ const SchoolClassSubject = ({ next }) => {
                             placeholder="Select subjects"
                             value={mapping[row._id] || []}
                             onChange={(val) => handleChange(row._id, val)}
-                            style={{ width: 260, maxWidth: "min(260px, calc(100vw - 220px))" }}
+                            style={{ flex: "1 1 320px", minWidth: 220, maxWidth: 560 }}
                             maxTagCount="responsive"
-                            options={subjects.map((s) => ({ label: s.name, value: s._id }))}
+                            options={subjectOptions}
                             status={!hasSubjects ? "warning" : ""}
                           />
                           <Tooltip title={isSaved && !saving[row._id] ? "Saved" : "Save subjects"}>
@@ -401,7 +416,8 @@ const S = {
     display: "flex",
     alignItems: "center",
     gap: 8,
-    flexShrink: 0,
+    flex: "1 1 340px",
+    justifyContent: "flex-end",
     flexWrap: "wrap",
   },
   footer: {

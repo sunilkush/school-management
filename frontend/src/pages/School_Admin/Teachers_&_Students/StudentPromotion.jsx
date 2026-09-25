@@ -43,6 +43,17 @@ const Pill = ({ children, color = "var(--primary)", bg = "var(--primary-light)",
   </span>
 );
 
+/* Class names are strings like "CLASS 10", "Nursery", "UKG": plain alphabetical sorting puts
+   CLASS 10 before CLASS 2. Pre-primary names get a fixed rank ahead of the numbered ones. */
+const PRE_PRIMARY_RANK = { "pre-nursery": 0, playgroup: 1, nursery: 2, lkg: 3, kg: 3, ukg: 4 };
+const classRank = (name) => {
+  const n = (name || "").trim().toLowerCase();
+  if (n in PRE_PRIMARY_RANK) return PRE_PRIMARY_RANK[n];
+  const m = n.match(/(\d+)/);
+  return m ? 100 + Number(m[1]) : 9999;
+};
+const byClassOrder = (a, b) => classRank(a.name) - classRank(b.name) || (a.name || "").localeCompare(b.name || "");
+
 /* ─── Main ──────────────────────────────────────────────────────── */
 export default function StudentPromotion() {
   const dispatch = useDispatch();
@@ -95,6 +106,48 @@ export default function StudentPromotion() {
     dispatch(fetchPromotionSections({ schoolClassId: tgtClassId }));
     setTgtSectionId(null);
   }, [tgtClassId, dispatch]);
+
+  /* The year after the source one. A promotion almost always runs into the next year, and picking
+     it by hand every time is four clicks nobody enjoys. */
+  useEffect(() => {
+    if (!fromYearId || toYearId) return;
+    const from = academicYears.find((y) => y._id === fromYearId);
+    if (!from) return;
+    const later = academicYears
+      .filter((y) => y._id !== fromYearId && new Date(y.startDate) > new Date(from.startDate))
+      .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    if (later[0]) setToYearId(later[0]._id);
+  }, [fromYearId, toYearId, academicYears]);
+
+  /* …and the class above the source one: CLASS 9 → CLASS 10. */
+  useEffect(() => {
+    if (!srcClassId || tgtClassId || !targetClasses.length) return;
+    const src = sourceClasses.find((c) => c._id === srcClassId);
+    if (!src) return;
+    const next = [...targetClasses].sort(byClassOrder).find((c) => classRank(c.name) > classRank(src.name));
+    if (next) setTgtClassId(next._id);
+  }, [srcClassId, tgtClassId, sourceClasses, targetClasses]);
+
+  /* One section means there is nothing to choose. */
+  useEffect(() => {
+    if (tgtClassId && sections.length === 1 && !tgtSectionId) setTgtSectionId(sections[0]._id);
+  }, [sections, tgtClassId, tgtSectionId]);
+
+  /* The student list is the point of the page; it should not wait for a button. */
+  useEffect(() => {
+    if (!srcClassId || !fromYearId) return;
+    dispatch(fetchPromotionCandidates({ schoolClassId: srcClassId, academicYearId: fromYearId }))
+      .unwrap()
+      .then(() => setSelected([]))
+      .catch((err) => message.error(err || "Failed to load students"));
+  }, [srcClassId, fromYearId, dispatch]);
+
+  const nameOf       = (list, id) => list.find((x) => x._id === id)?.name || "";
+  const srcClassName = nameOf(sourceClasses, srcClassId);
+  const tgtClassName = nameOf(targetClasses, tgtClassId);
+  const tgtSection   = nameOf(sections, tgtSectionId);
+  const fromYearName = nameOf(academicYears, fromYearId);
+  const toYearName   = nameOf(academicYears, toYearId);
 
   const canLoad    = !!srcClassId && !!fromYearId;
   const canPromote = selected.length > 0 && !!fromYearId && !!toYearId && !!tgtClassId && !!tgtSectionId;
@@ -317,19 +370,20 @@ export default function StudentPromotion() {
             </Col>
           </Row>
 
-          {/* Load button */}
-          <Flex justify="flex-end" className="u-mt-5">
-            <Button
-              icon={<ReloadOutlined />}
-              type="default"
-              onClick={handleLoad}
-              disabled={!canLoad}
-              loading={loading}
-              style={{ borderRadius: 8, fontWeight: 600 }}
-            >
-              Load Students
-            </Button>
-          </Flex>
+          {/* The list loads itself; this is here for when someone edits the class in another tab */}
+          {canLoad && (
+            <Flex justify="flex-end" className="u-mt-5">
+              <Button
+                icon={<ReloadOutlined />}
+                type="text"
+                onClick={handleLoad}
+                loading={loading}
+                className="u-meta"
+              >
+                Refresh list
+              </Button>
+            </Flex>
+          )}
         </div>
 
         {/* ── Stat cards ────────────────────────────────── */}
@@ -408,10 +462,12 @@ export default function StudentPromotion() {
               🎓
             </div>
             <Text strong style={{ fontSize: 15, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-              No students loaded
+              {srcClassId ? `No students in ${srcClassName || "this class"}` : "Pick a class to begin"}
             </Text>
             <Text className="u-meta-md">
-              Select a source year and class, then click "Load Students"
+              {srcClassId
+                ? `${srcClassName || "This class"} has no active students in ${fromYearName || "this year"}. Try another class.`
+                : "Choose the class these students are in today. The list loads by itself."}
             </Text>
           </div>
         )}
@@ -476,7 +532,8 @@ export default function StudentPromotion() {
               </Text>
               {selected.length > 0 && canPromote && (
                 <Text className="u-meta">
-                  Ready to promote
+                  {`${srcClassName} · ${fromYearName}`} <ArrowRightOutlined style={{ fontSize: 10 }} />{" "}
+                  {`${tgtClassName}${tgtSection ? ` ${tgtSection}` : ""} · ${toYearName}`}
                 </Text>
               )}
               {selected.length > 0 && !canPromote && (
@@ -496,7 +553,7 @@ export default function StudentPromotion() {
             )}
             <Popconfirm
               title="Promote Students"
-              description={`Promote ${selected.length} student${selected.length !== 1 ? "s" : ""} to the selected class and section?`}
+              description={`Move ${selected.length} student${selected.length !== 1 ? "s" : ""} from ${srcClassName} (${fromYearName}) to ${tgtClassName}${tgtSection ? " " + tgtSection : ""} (${toYearName})?`}
               onConfirm={handlePromote}
               okText="Yes, Promote"
               cancelText="Cancel"

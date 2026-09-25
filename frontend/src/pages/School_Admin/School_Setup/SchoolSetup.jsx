@@ -1,4 +1,5 @@
-import React, { lazy, Suspense, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Typography, Skeleton, Progress } from "antd";
 import {
   AppstoreOutlined,
@@ -9,6 +10,11 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 
+import { fetchAllAcademicYears } from "../../../features/academicYearSlice";
+import { getSchoolBoards } from "../../../features/boardSlice";
+import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
+import { fetchSections } from "../../../features/sectionSlice";
+
 const { Text, Title } = Typography;
 
 const SchoolClass              = lazy(() => import("./SchoolClass.jsx"));
@@ -17,7 +23,7 @@ const SchoolAcademicYear       = lazy(() => import("./SchoolAcademicYear.jsx"));
 const SchoolClassSubject       = lazy(() => import("./SchoolClassSubject.jsx"));
 const SchoolClassSectionTeacher = lazy(() => import("./SchoolClassSectionTeacher.jsx"));
 
-const C = { primary: "var(--purple)", success: "var(--success)" };
+const C = { primary: "var(--primary)", success: "var(--success)" };
 
 const STEPS = [
   { key: "1", title: "Academic Year", desc: "Set up the current academic year",   icon: CalendarOutlined  },
@@ -52,11 +58,11 @@ const StepNav = ({ steps, activeKey, completedKeys, onStep }) => (
       return (
         <React.Fragment key={step.key}>
           <button
-            onClick={() => (isDone || isActive) && onStep(step.key)}
+            onClick={() => onStep(step.key)}
             style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
               background: "transparent", border: "none",
-              cursor: isDone || isActive ? "pointer" : "default",
+              cursor: "pointer",
               padding: "0 4px", flex: "0 0 auto", minWidth: 80,
             }}
           >
@@ -67,8 +73,8 @@ const StepNav = ({ steps, activeKey, completedKeys, onStep }) => (
               ...(isDone ? {
                 background: "rgba(var(--success-rgb),0.12)", border: `2px solid ${C.success}`, color: C.success,
               } : isActive ? {
-                background: "rgba(var(--purple-rgb),0.12)", border: `2px solid ${C.primary}`, color: C.primary,
-                boxShadow: "0 0 0 4px rgba(var(--purple-rgb),0.08)",
+                background: "rgba(var(--primary-rgb),0.12)", border: `2px solid ${C.primary}`, color: C.primary,
+                boxShadow: "0 0 0 4px rgba(var(--primary-rgb),0.08)",
               } : {
                 background: "var(--surface-soft)", border: "2px solid var(--border)", color: "var(--text-muted)",
               }),
@@ -115,17 +121,16 @@ const TabBar = ({ steps, activeKey, completedKeys, onTab }) => (
       const isActive  = step.key === activeKey;
       const isDone    = completedKeys.includes(step.key);
       const Icon      = step.icon;
-      const canClick  = isDone || isActive;
 
       return (
         <button
           key={step.key}
-          onClick={() => canClick && onTab(step.key)}
+          onClick={() => onTab(step.key)}
           style={{
             flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             padding: "8px 12px", borderRadius: 7, border: "none",
             fontSize: 12.5, fontWeight: isActive ? 600 : 500,
-            cursor: canClick ? "pointer" : "not-allowed",
+            cursor: "pointer",
             transition: "all 0.18s ease", whiteSpace: "nowrap",
             ...(isActive ? {
               background: "var(--surface)", color: C.primary,
@@ -152,19 +157,59 @@ const TabBar = ({ steps, activeKey, completedKeys, onTab }) => (
    SchoolSetup
 ════════════════════════════════════════════════════════════════ */
 const SchoolSetup = () => {
-  const [activeKey, setActiveKey] = useState("1");
-  const [completed, setCompleted] = useState([]);
+  const dispatch = useDispatch();
+  const [activeKey, setActiveKey] = useState(null);
+
+  const user = useSelector((s) => s.auth?.user);
+  const schoolId = user?.school?._id;
+  const { academicYears = [], activeYear, selectedAcademicYear } = useSelector((s) => s.academicYear || {});
+  const { schoolBoards = [] } = useSelector((s) => s.boards || {});
+  const { schoolClasses = [] } = useSelector((s) => s.schoolClass || {});
+  const { sections = [] } = useSelector((s) => s.section || {});
+
+  const academicYearId = selectedAcademicYear?._id || activeYear?._id;
+
+  /* A step is done when the school HAS the thing, not when someone pressed Next during this visit.
+     Before this, a school that finished its setup months ago still came back to "0/5 steps done"
+     and five grey circles. */
+  useEffect(() => {
+    if (!schoolId) return;
+    dispatch(fetchAllAcademicYears(schoolId));
+    dispatch(getSchoolBoards(schoolId));
+  }, [dispatch, schoolId]);
+
+  useEffect(() => {
+    if (!schoolId || !academicYearId) return;
+    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+    dispatch(fetchSections({ schoolId, academicYearId }));
+  }, [dispatch, schoolId, academicYearId]);
+
+  const completed = useMemo(() => {
+    const done = [];
+    if (academicYears.length) done.push("1");
+    if (schoolBoards.length) done.push("2");
+    if (schoolClasses.length) done.push("3");
+    if (sections.some((s) => (s.subjects || []).length)) done.push("4");
+    if (sections.some((s) => s.classTeacherId)) done.push("5");
+    return done;
+  }, [academicYears, schoolBoards, schoolClasses, sections]);
+
+  /* Which step to show, until the person picks one themselves: the first one still to do, so a
+     half-finished setup carries on where it stopped. Derived rather than stored — the five answers
+     arrive one at a time, and a stored choice made on a half-loaded picture opened a finished
+     school on step 2 or 3, whichever had answered first. Once they click, their choice stands. */
+  const firstUndone = STEPS.find((s) => !completed.includes(s.key))?.key ?? "1";
+  const currentKey  = activeKey ?? firstUndone;
 
   const goTo    = (key) => setActiveKey(key);
   const advance = (fromKey) => {
-    if (!completed.includes(fromKey)) setCompleted((p) => [...p, fromKey]);
     const nextIdx = STEPS.findIndex((s) => s.key === fromKey) + 1;
     if (nextIdx < STEPS.length) setActiveKey(STEPS[nextIdx].key);
   };
-
-  const activeStep = STEPS.find((s) => s.key === activeKey);
-  const StepIcon   = activeStep.icon;
+  const activeStep  = STEPS.find((s) => s.key === currentKey);
+  const StepIcon    = activeStep.icon;
   const progressPct = Math.round((completed.length / STEPS.length) * 100);
+  const allDone     = completed.length === STEPS.length;
 
   return (
     <>
@@ -177,9 +222,9 @@ const SchoolSetup = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{
                 width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-                background: "linear-gradient(135deg,var(--purple) 0%,var(--purple-hover) 100%)",
+                background: "linear-gradient(135deg,var(--primary) 0%,var(--primary-hover) 100%)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(var(--purple-rgb),0.35)",
+                boxShadow: "0 4px 12px rgba(var(--primary-rgb),0.35)",
               }}>
                 <AppstoreOutlined style={{ fontSize: 22, color: "#fff" }} />
               </div>
@@ -195,13 +240,15 @@ const SchoolSetup = () => {
               background: "var(--surface)", borderRadius: 12, padding: "10px 16px",
               border: "1px solid var(--border)", boxShadow: "var(--shadow-soft)",
             }}>
-              <Text style={{ fontSize: 11, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>
-                {completed.length}/{STEPS.length} steps done
+              <Text style={{ fontSize: 11, color: allDone ? C.success : "var(--text-muted)", display: "block", marginBottom: 4, fontWeight: allDone ? 600 : 400 }}>
+                {allDone
+                  ? "Setup complete"
+                  : `${completed.length} of ${STEPS.length} done · on step ${currentKey}`}
               </Text>
               <Progress
                 percent={progressPct}
                 size="small"
-                strokeColor={progressPct === 100 ? C.success : C.primary}
+                strokeColor={allDone ? C.success : C.primary}
                 trailColor="var(--border)"
                 showInfo={false}
                 style={{ width: 130, margin: 0 }}
@@ -218,47 +265,36 @@ const SchoolSetup = () => {
         }}>
           {/* Stepper — desktop */}
           <div className="setup-stepper-desktop">
-            <StepNav steps={STEPS} activeKey={activeKey} completedKeys={completed} onStep={goTo} />
+            <StepNav steps={STEPS} activeKey={currentKey} completedKeys={completed} onStep={goTo} />
           </div>
 
           {/* Tab bar — mobile */}
           <div className="setup-tabbar" style={{ display: "none" }}>
-            <TabBar steps={STEPS} activeKey={activeKey} completedKeys={completed} onTab={goTo} />
+            <TabBar steps={STEPS} activeKey={currentKey} completedKeys={completed} onTab={goTo} />
           </div>
 
-          {/* Active step label */}
-          <div style={{
-            display: "flex", alignItems: "center", gap: 10,
-            marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid var(--border)",
-          }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-              background: "rgba(var(--purple-rgb),0.1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
+          {/* One line about the step in hand. The stepper above already names it, so this says the
+              thing the stepper cannot: what this step is for, and whether it is already done. */}
+          <div className="setup-step-line">
+            <div className="setup-step-icon">
               <StepIcon style={{ fontSize: 16, color: C.primary }} />
             </div>
-            <div>
-              <Text strong style={{ fontSize: 13.5, color: "var(--text)", display: "block" }}>{activeStep.title}</Text>
-              <Text type="secondary" style={{ fontSize: 11.5 }}>{activeStep.desc}</Text>
-            </div>
-            <div style={{
-              marginLeft: "auto", fontSize: 11, fontWeight: 600,
-              color: "var(--text-muted)", background: "var(--surface-soft)",
-              padding: "3px 10px", borderRadius: 99,
-            }}>
-              Step {activeKey} of {STEPS.length}
-            </div>
+            <Text type="secondary" style={{ fontSize: 12.5 }}>{activeStep.desc}</Text>
+            <span className={`setup-step-chip${completed.includes(currentKey) ? " is-done" : ""}`}>
+              {completed.includes(currentKey)
+                ? <><CheckCircleFilled style={{ fontSize: 11 }} /> Done</>
+                : `Step ${currentKey} of ${STEPS.length}`}
+            </span>
           </div>
 
           {/* Content panel */}
-          <div className="setup-panel" key={activeKey}>
+          <div className="setup-panel" key={currentKey}>
             <Suspense fallback={<StepSkeleton />}>
-              {activeKey === "1" && <SchoolAcademicYear       next={() => advance("1")} />}
-              {activeKey === "2" && <SchoolBoard              next={() => advance("2")} />}
-              {activeKey === "3" && <SchoolClass              next={() => advance("3")} />}
-              {activeKey === "4" && <SchoolClassSubject       next={() => advance("4")} />}
-              {activeKey === "5" && <SchoolClassSectionTeacher next={() => advance("5")} />}
+              {currentKey === "1" && <SchoolAcademicYear       next={() => advance("1")} />}
+              {currentKey === "2" && <SchoolBoard              next={() => advance("2")} />}
+              {currentKey === "3" && <SchoolClass              next={() => advance("3")} />}
+              {currentKey === "4" && <SchoolClassSubject       next={() => advance("4")} />}
+              {currentKey === "5" && <SchoolClassSectionTeacher next={() => advance("5")} />}
             </Suspense>
           </div>
         </div>

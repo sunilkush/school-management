@@ -1,17 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import {
-  Table,
   Select,
   Button,
   Space,
-  Tag,
+  Input,
+  Empty,
   message,
   Spin,
-  Grid,
   Skeleton,
 } from "antd";
-import { TeamOutlined, CheckCircleFilled } from "@ant-design/icons";
+import { TeamOutlined, SearchOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 
 import { fetchAllUser } from "../../../features/authSlice";
@@ -22,20 +21,14 @@ import {
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 
 const { Option } = Select;
-const { useBreakpoint } = Grid;
 
 const tokens = () => ({
-  cardBg: "var(--surface)",
   innerBg: "var(--background)",
   border: "var(--border-muted)",
   textPri: "var(--text)",
   textSec: "var(--text-secondary)",
   accent: "var(--primary)",
   accentBg: "rgba(var(--primary-rgb), 0.08)",
-  success: "var(--success)",
-  successBg: "rgba(var(--success-rgb), 0.08)",
-  thBg: "var(--background)",
-  thBorder: "var(--border-muted)",
 });
 
 // Class names are plain strings like "Class 10", "Nursery", "UKG" — a plain alphabetical sort
@@ -61,9 +54,6 @@ const SchoolClassSectionTeacher = ({ next }) => {
   const dispatch = useDispatch();
   const t = tokens();
 
-  const screens = useBreakpoint();
-  const isMobile = !screens.md;
-
   const { sections = [], loading } = useSelector((s) => s.section || {});
   const { users = [], user } = useSelector((s) => s.auth);
   const { selectedAcademicYear, activeYear } = useSelector((s) => s.academicYear);
@@ -73,6 +63,8 @@ const SchoolClassSectionTeacher = ({ next }) => {
 
   const [savingKey, setSavingKey] = useState(null);
   const [classFilter, setClassFilter] = useState(null);
+  const [onlyUnassigned, setOnlyUnassigned] = useState(false);
+  const [search, setSearch] = useState("");
 
   // selectedAcademicYear is normally populated as a side effect of <AcademicYearSwitcher> mounting
   // in the Topbar — but this is Step 5 of the setup wizard, right after Step 1 creates the academic
@@ -97,10 +89,10 @@ const SchoolClassSectionTeacher = ({ next }) => {
     );
   }, [dispatch, schoolId, academicYearId]);
 
-  /* ───────── TABLE DATA ───────── */
+  /* ───────── DATA ───────── */
   // sections arrives in raw DB order — sort by class (Nursery → Class 12), then by section within
   // a class, so this step reads in the same order a school admin thinks in.
-  const tableData = useMemo(() => {
+  const allRows = useMemo(() => {
     return sections
       // A section with no schoolClassId (or a class ref that failed to populate — e.g. the class
       // was deleted) has nothing meaningful to assign a teacher to; skip it instead of showing an
@@ -120,21 +112,69 @@ const SchoolClassSectionTeacher = ({ next }) => {
       });
   }, [sections]);
 
+  // How many sections each teacher is already class teacher of. Small schools reuse teachers on
+  // purpose, so this is never a warning — it is shown inside the dropdown, next to the name, so the
+  // load is visible at the moment of choosing and nowhere else.
+  const sectionsPerTeacher = useMemo(() => {
+    const map = new Map();
+    allRows.forEach((r) => {
+      if (r.teacherId) map.set(r.teacherId, (map.get(r.teacherId) || 0) + 1);
+    });
+    return map;
+  }, [allRows]);
+
+  // Progress is always counted over every section, never over what the filters left on screen —
+  // otherwise "Without a teacher" would report 0 of 3 assigned for a class that is nearly done.
+  const perClass = useMemo(() => {
+    const map = new Map();
+    allRows.forEach((r) => {
+      const stat = map.get(r.classId) || { total: 0, assigned: 0 };
+      stat.total += 1;
+      if (r.teacherId) stat.assigned += 1;
+      map.set(r.classId, stat);
+    });
+    return map;
+  }, [allRows]);
+
   const classOptions = useMemo(() => {
     const seen = new Map();
-    tableData.forEach((r) => { if (r.classId && !seen.has(r.classId)) seen.set(r.classId, r.className); });
+    allRows.forEach((r) => { if (r.classId && !seen.has(r.classId)) seen.set(r.classId, r.className); });
     return [...seen.entries()]
       .sort((a, b) => compareClassNames(a[1], b[1]))
       .map(([value, label]) => ({ value, label }));
-  }, [tableData]);
+  }, [allRows]);
 
-  const filteredData = useMemo(
-    () => (classFilter ? tableData.filter((r) => r.classId === classFilter) : tableData),
-    [tableData, classFilter]
-  );
+  const visibleRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return allRows.filter((r) => {
+      if (classFilter && r.classId !== classFilter) return false;
+      if (onlyUnassigned && r.teacherId) return false;
+      if (!q) return true;
+      const teacher = users.find((u) => u._id === r.teacherId)?.name || "";
+      return `${r.className} ${r.sectionName} ${teacher}`.toLowerCase().includes(q);
+    });
+  }, [allRows, classFilter, onlyUnassigned, search, users]);
 
-  const assignedCount = tableData.filter((r) => r.teacherId).length;
-  const isAllAssigned = tableData.length > 0 && assignedCount === tableData.length;
+  // One card per class. visibleRows is already in class-then-section order, so a single grouping
+  // pass keeps that order.
+  const classCards = useMemo(() => {
+    const cards = [];
+    const byId = new Map();
+    visibleRows.forEach((row) => {
+      let card = byId.get(row.classId);
+      if (!card) {
+        card = { classId: row.classId, className: row.className, rows: [] };
+        byId.set(row.classId, card);
+        cards.push(card);
+      }
+      card.rows.push(row);
+    });
+    return cards;
+  }, [visibleRows]);
+
+  const assignedCount = allRows.filter((r) => r.teacherId).length;
+  const isAllAssigned = allRows.length > 0 && assignedCount === allRows.length;
+  const isFiltered = Boolean(classFilter || onlyUnassigned || search.trim());
 
   /* ───────── SAVE ───────── */
   const UNASSIGN = "__unassign__";
@@ -165,65 +205,49 @@ const SchoolClassSectionTeacher = ({ next }) => {
     }
   };
 
-  const TeacherPicker = ({ record, size = "middle" }) => {
-    const selectedTeacher = users.find((u) => u._id === record.teacherId);
+  const SectionRow = ({ record }) => {
     return (
-      <Space direction="vertical" size={4} className="u-full">
-        {selectedTeacher ? (
-          <Tag color="success" icon={<CheckCircleFilled />} style={{ width: "fit-content" }}>
-            {selectedTeacher.name}
-          </Tag>
-        ) : (
-          <span style={{ fontSize: 11, color: t.textSec, background: "var(--surface-soft)", padding: "2px 8px", borderRadius: 99, width: "fit-content" }}>
-            Not assigned
-          </span>
-        )}
-        <Space size={6} className="u-full">
+      <div className={record.teacherId ? "ct-row" : "ct-row is-empty"}>
+        <div className="ct-sec" title={`Section ${record.sectionName}`}>
+          {record.sectionName}
+        </div>
+        <div className="ct-pick">
           <Select
             placeholder="Select teacher…"
             value={record.teacherId || undefined}
             onChange={(val) => handleTeacherChange(val, record)}
-            style={{ width: isMobile ? "100%" : 220 }}
-            size={size}
+            className="u-full"
+            size="small"
             loading={savingKey === record.key}
             disabled={savingKey === record.key}
             showSearch
-            optionFilterProp="children"
+            // The dropdown shows "name + how many sections they already hold", but the closed
+            // picker must stay just the name — optionLabelProp keeps the load out of the card.
+            optionLabelProp="label"
+            optionFilterProp="label"
           >
-            <Option value={UNASSIGN}>
+            <Option value={UNASSIGN} label="Not Selected">
               <span style={{ color: t.textSec }}>Not Selected</span>
             </Option>
-            {users.map((u) => (
-              <Option key={u._id} value={u._id}>
-                {u.name}
-              </Option>
-            ))}
+            {users.map((u) => {
+              const load = sectionsPerTeacher.get(u._id) || 0;
+              return (
+                <Option key={u._id} value={u._id} label={u.name}>
+                  {u.name}
+                  {load > 0 && (
+                    <span className="ct-opt-load">
+                      {load === 1 ? "1 section" : `${load} sections`}
+                    </span>
+                  )}
+                </Option>
+              );
+            })}
           </Select>
-          {savingKey === record.key && <Spin size="small" />}
-        </Space>
-      </Space>
+        </div>
+        {savingKey === record.key && <Spin size="small" />}
+      </div>
     );
   };
-
-  /* ───────── COLUMNS ───────── */
-  const columns = [
-    {
-      title: "Class",
-      dataIndex: "className",
-      width: 120,
-      render: (val) => <Tag color="geekblue">{val}</Tag>,
-    },
-    {
-      title: "Section",
-      dataIndex: "sectionName",
-      width: 100,
-      render: (val) => <Tag color="purple">{val}</Tag>,
-    },
-    {
-      title: "Class Teacher",
-      render: (_, record) => <TeacherPicker record={record} size="small" />,
-    },
-  ];
 
   const handleFinish = () => {
     message.success("🎉 School setup completed successfully!");
@@ -267,77 +291,88 @@ const SchoolClassSectionTeacher = ({ next }) => {
               Class Teacher Assignment
             </div>
             <div style={{ fontSize: 11.5, color: t.textSec }}>
-              {assignedCount} of {tableData.length} sections assigned
+              {assignedCount} of {allRows.length} sections assigned
             </div>
           </div>
         </div>
 
-        <Select
-          allowClear
-          placeholder="Filter by class"
-          style={{ width: 200 }}
-          value={classFilter}
-          onChange={setClassFilter}
-          options={classOptions}
-        />
+        <Space size={8} wrap>
+          <Input
+            allowClear
+            prefix={<SearchOutlined style={{ color: t.textSec }} />}
+            placeholder="Search class, section or teacher"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: 240 }}
+          />
+          {allRows.length > assignedCount && (
+            <Button
+              type={onlyUnassigned ? "primary" : "default"}
+              onClick={() => setOnlyUnassigned((v) => !v)}
+            >
+              {onlyUnassigned ? "Showing unassigned" : `Without a teacher (${allRows.length - assignedCount})`}
+            </Button>
+          )}
+          <Select
+            allowClear
+            placeholder="Filter by class"
+            style={{ width: 180 }}
+            value={classFilter}
+            onChange={setClassFilter}
+            options={classOptions}
+          />
+        </Space>
       </div>
 
-      <div
-        style={{
-          background: t.cardBg,
-          border: `1px solid ${t.border}`,
-          borderRadius: 12,
-          overflow: "hidden",
-        }}
-      >
-        {isMobile ? (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {loading && !tableData.length ? (
-              [1, 2].map((i) => (
-                <div key={i} style={{ padding: 14 }}>
-                  <Skeleton active paragraph={{ rows: 2 }} />
+      {loading && !allRows.length ? (
+        <div className="ct-grid">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="ct-card" style={{ padding: 14 }}>
+              <Skeleton active paragraph={{ rows: 3 }} />
+            </div>
+          ))}
+        </div>
+      ) : classCards.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            allRows.length === 0
+              ? "No sections yet — add classes and sections in the previous step"
+              : isFiltered
+                ? "No sections match this filter"
+                : "No sections found"
+          }
+          style={{ padding: "48px 0" }}
+        >
+          {allRows.length > 0 && isFiltered && (
+            <Button
+              onClick={() => { setClassFilter(null); setOnlyUnassigned(false); setSearch(""); }}
+            >
+              Clear filters
+            </Button>
+          )}
+        </Empty>
+      ) : (
+        <div className="ct-grid">
+          {classCards.map((card) => {
+            const stat = perClass.get(card.classId) || { total: 0, assigned: 0 };
+            const done = stat.total > 0 && stat.assigned === stat.total;
+            return (
+              <div key={card.classId} className={done ? "ct-card is-complete" : "ct-card"}>
+                <div className="ct-card-head">
+                  <span className="ct-card-name">{card.className}</span>
+                  <span className={done ? "ct-card-count is-complete" : "ct-card-count"}>
+                    {stat.assigned}/{stat.total}
+                  </span>
                 </div>
-              ))
-            ) : filteredData.length === 0 ? (
-              <div style={{ padding: 40, textAlign: "center", color: t.textSec }}>
-                No sections found
+                {card.rows.map((row) => (
+                  <SectionRow key={row.key} record={row} />
+                ))}
               </div>
-            ) : (
-              filteredData.map((item) => (
-                <div
-                  key={item.key}
-                  style={{
-                    padding: 14,
-                    borderBottom: `1px solid ${t.border}`,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
-                  }}
-                >
-                  <Space>
-                    <Tag color="geekblue">{item.className}</Tag>
-                    <Tag color="purple">{item.sectionName}</Tag>
-                  </Space>
-                  <TeacherPicker record={item} />
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            rowKey="key"
-            pagination={false}
-            loading={loading}
-            locale={{
-              emptyText: (
-                <div style={{ padding: "32px 0" }}>No sections found</div>
-              ),
-            }}
-          />
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <Button

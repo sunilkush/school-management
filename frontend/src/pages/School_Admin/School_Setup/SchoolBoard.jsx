@@ -15,7 +15,7 @@ import {
 const { Option } = Select;
 const { Text } = Typography;
 
-const C = { primary: "var(--purple)", success: "var(--success)", warning: "var(--warning)", danger: "var(--danger)" };
+const C = { primary: "var(--primary)", success: "var(--success)", warning: "var(--warning)", danger: "var(--danger)" };
 
 /* ─── helpers ────────────────────────────────────────────────── */
 const normalizeToArray = (value) => {
@@ -186,7 +186,7 @@ const SchoolBoard = ({ next }) => {
           <Text style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Assigned Boards</Text>
           <span style={{
             fontSize: 11, fontWeight: 700, color: C.primary,
-            background: "rgba(var(--purple-rgb),0.1)", padding: "2px 10px", borderRadius: 99,
+            background: "rgba(var(--primary-rgb),0.1)", padding: "2px 10px", borderRadius: 99,
           }}>
             {schoolBoards.length}
           </span>
@@ -233,7 +233,7 @@ const SchoolBoard = ({ next }) => {
                       onMouseEnter={() => setHovered(i)}
                       onMouseLeave={() => setHovered(null)}
                       style={{
-                        background: hovered === i ? "rgba(var(--purple-rgb),0.03)" : "transparent",
+                        background: hovered === i ? "rgba(var(--primary-rgb),0.03)" : "transparent",
                         borderBottom: "1px solid var(--border)",
                         transition: "background 0.15s ease",
                       }}
@@ -257,7 +257,7 @@ const SchoolBoard = ({ next }) => {
                         {item?.isPrimary ? (
                           <span style={{
                             fontSize: 11, fontWeight: 600, color: C.primary,
-                            background: "rgba(var(--purple-rgb),0.1)", padding: "2px 8px", borderRadius: 99,
+                            background: "rgba(var(--primary-rgb),0.1)", padding: "2px 8px", borderRadius: 99,
                           }}>Primary</span>
                         ) : (
                           <span className="u-muted">—</span>
@@ -342,7 +342,7 @@ const SchoolBoard = ({ next }) => {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", gap: 6 }}>
                     {item?.isPrimary && (
-                      <span style={{ fontSize: 11, color: C.primary, background: "rgba(var(--purple-rgb),0.1)", padding: "2px 8px", borderRadius: 99 }}>
+                      <span style={{ fontSize: 11, color: C.primary, background: "rgba(var(--primary-rgb),0.1)", padding: "2px 8px", borderRadius: 99 }}>
                         Primary
                       </span>
                     )}
