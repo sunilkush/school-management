@@ -9,13 +9,28 @@ import { resolveSchoolId as getSchoolId } from "../utils/resolveSchoolId.js";
 
 const getRoleName = (user) => user?.roleId?.name || user?.role?.name || user?.role || "";
 
+const TASK_STATUSES = Task.schema.path("status").enumValues;
+
+// completedAt is on the schema but nothing was ever writing it, so "when was this finished?" had
+// no answer. Every status change goes through here: entering "done" stamps it, leaving "done"
+// (reopened, or cancelled) clears it again.
+const applyStatus = (task, status) => {
+  if (task.status === status) return;
+  task.status = status;
+  task.completedAt = status === "done" ? new Date() : null;
+};
+
 /* ── Create task (School Admin only) ── */
 export const createTask = asyncHandler(async (req, res) => {
   const roleName = getRoleName(req.user);
   if (roleName !== "School Admin") throw new ApiError(403, "Only School Admin can create tasks");
 
-  const { title, description, priority, dueDate, assignedTo } = req.body;
+  const { title, description, priority, dueDate, assignedTo, status } = req.body;
   if (!title?.trim()) throw new ApiError(400, "Title is required");
+  // The board offers "Add task" under every column, so a task must be creatable straight into
+  // that column — this used to be dropped, and everything landed in To Do whatever was picked.
+  if (status !== undefined && !TASK_STATUSES.includes(status))
+    throw new ApiError(400, `Status must be one of: ${TASK_STATUSES.join(", ")}`);
 
   const schoolId = getSchoolId(req.user);
   if (!schoolId) throw new ApiError(400, "School not found for this user");
@@ -28,7 +43,9 @@ export const createTask = asyncHandler(async (req, res) => {
     title: title.trim(),
     description: description?.trim() || "",
     priority: priority || "medium",
+    status: status || "todo",
     dueDate: dueDate ? new Date(dueDate) : null,
+    completedAt: status === "done" ? new Date() : null,
     assignedTo: assignees,
     assignedBy: req.user._id,
     schoolId,
@@ -106,7 +123,11 @@ export const updateTask = asyncHandler(async (req, res) => {
     if (title !== undefined) task.title = title.trim();
     if (description !== undefined) task.description = description.trim();
     if (priority !== undefined) task.priority = priority;
-    if (status !== undefined) task.status = status;
+    if (status !== undefined) {
+      if (!TASK_STATUSES.includes(status))
+        throw new ApiError(400, `Status must be one of: ${TASK_STATUSES.join(", ")}`);
+      applyStatus(task, status);
+    }
     if (dueDate !== undefined) task.dueDate = dueDate ? new Date(dueDate) : null;
 
     if (Array.isArray(assignedTo)) {
@@ -133,9 +154,9 @@ export const updateTask = asyncHandler(async (req, res) => {
 
     // Roll up overall status
     const statuses = task.assigneeStatus.map((a) => a.status);
-    if (statuses.every((s) => s === "done")) task.status = "done";
-    else if (statuses.some((s) => s === "in_progress" || s === "done")) task.status = "in_progress";
-    else task.status = "todo";
+    if (statuses.every((s) => s === "done")) applyStatus(task, "done");
+    else if (statuses.some((s) => s === "in_progress" || s === "done")) applyStatus(task, "in_progress");
+    else applyStatus(task, "todo");
   }
 
   await task.save();

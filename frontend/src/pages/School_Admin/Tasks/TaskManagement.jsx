@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Avatar, Button, DatePicker, Flex, Form, Input,
-  Modal, Popconfirm, Select, Skeleton, Tooltip, Typography, message,
+  Avatar, Button, DatePicker, Drawer, Dropdown, Empty, Flex, Form, Input,
+  Modal, Select, Skeleton, Tooltip, Typography, message,
 } from "antd";
 import {
   CheckCircleOutlined, ClockCircleOutlined, DeleteOutlined, EditOutlined,
-  PlusOutlined, SnippetsOutlined, StopOutlined, SyncOutlined,
+  ExclamationCircleOutlined, MoreOutlined, PlusOutlined, SnippetsOutlined,
+  StopOutlined, SyncOutlined, UserOutlined,
 } from "@ant-design/icons";
 import { AlertTriangle, ChevronDown, Flame, Minus } from "lucide-react";
 import dayjs from "dayjs";
@@ -20,23 +21,20 @@ import { categoricalColorFor } from "../../../utils/colorPalette";
 
 dayjs.extend(relativeTime);
 
-const { Text } = Typography;
+const { Text, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
 /* ── Config ─────────────────────────────────────────────────────────── */
-// col.color values are var(--token) references. Every consumer below that used to derive a
-// tinted border/background/shadow via hex-alpha-suffix concatenation (e.g. `${col.color}22`)
-// now wraps the same math in color-mix(in srgb, ${col.color} N%, transparent) instead, which
-// works with both literal hex and var() color strings.
+// col.color feeds the --tm-col custom property on each column; every tint (header wash, drop-zone
+// border, card hover shadow) is mixed from that one variable in _pages.scss.
 const COLUMNS = [
   { key: "todo",        label: "To Do",       color: "var(--warning)", icon: <ClockCircleOutlined /> },
-  { key: "in_progress", label: "In Progress",  color: "var(--primary)", icon: <SyncOutlined />        },
-  { key: "done",        label: "Done",         color: "var(--success)", icon: <CheckCircleOutlined /> },
-  { key: "cancelled",   label: "Cancelled",    color: "var(--text-secondary)", icon: <StopOutlined />        },
+  { key: "in_progress", label: "In Progress", color: "var(--primary)", icon: <SyncOutlined />        },
+  { key: "done",        label: "Done",        color: "var(--success)", icon: <CheckCircleOutlined /> },
+  { key: "cancelled",   label: "Cancelled",   color: "var(--text-secondary)", icon: <StopOutlined /> },
 ];
 
-// Same reasoning as COLUMNS above: PRIORITY[x].color is consumed via color-mix() in PriorityPill.
 const PRIORITY = {
   low:    { label: "Low",    color: "var(--text-secondary)", icon: <Minus size={9} /> },
   medium: { label: "Medium", color: "var(--warning-hover)", icon: <ChevronDown size={9} /> },
@@ -45,9 +43,30 @@ const PRIORITY = {
 };
 const PRIORITY_LABEL = { low: "Low", medium: "Medium", high: "High", urgent: "Urgent" };
 const STATUS_LABEL   = { todo: "To Do", in_progress: "In Progress", done: "Done", cancelled: "Cancelled" };
+const CLOSED = new Set(["done", "cancelled"]);
 
 // Stable per-person color (same user always gets the same avatar color across renders/pages).
 const avatarBg = (name = "") => categoricalColorFor(name);
+
+/* ── Date helpers ───────────────────────────────────────────────────── */
+// A closed task is never "overdue" or "due today": the work is finished or withdrawn, so a date
+// in the past says nothing the board should act on.
+const isOverdue  = (t) => Boolean(t.dueDate) && !CLOSED.has(t.status) && dayjs(t.dueDate).isBefore(dayjs(), "day");
+const isDueToday = (t) => Boolean(t.dueDate) && !CLOSED.has(t.status) && dayjs(t.dueDate).isSame(dayjs(), "day");
+const isUnassigned = (t) => !CLOSED.has(t.status) && !(t.assignedTo?.length > 0);
+
+// Inside a column: late work first, then whatever is due soonest, undated last, newest first among
+// equals. The API returns creation order, which buries the task that actually needs attention.
+const sortTasks = (list) => {
+  const due = (t) => (t.dueDate ? dayjs(t.dueDate).valueOf() : Number.MAX_SAFE_INTEGER);
+  return [...list].sort((a, b) => {
+    const late = (isOverdue(a) ? 0 : 1) - (isOverdue(b) ? 0 : 1);
+    if (late !== 0) return late;
+    const byDue = due(a) - due(b);
+    if (byDue !== 0) return byDue;
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+};
 
 /* ── Priority pill ──────────────────────────────────────────────────── */
 const PriorityPill = ({ priority }) => {
@@ -64,11 +83,11 @@ const PriorityPill = ({ priority }) => {
 };
 
 /* ── Due date chip ──────────────────────────────────────────────────── */
-const DueChip = ({ date, status }) => {
-  if (!date) return null;
-  const d       = dayjs(date);
-  const overdue = d.isBefore(dayjs(), "day") && status !== "done" && status !== "cancelled";
-  const today   = d.isSame(dayjs(), "day");
+const DueChip = ({ task }) => {
+  if (!task.dueDate) return null;
+  const d       = dayjs(task.dueDate);
+  const overdue = isOverdue(task);
+  const today   = isDueToday(task);
   const color   = overdue ? "var(--danger)" : today ? "var(--warning-hover)" : "var(--text-muted)";
   return (
     <span style={{
@@ -78,243 +97,119 @@ const DueChip = ({ date, status }) => {
       padding: "2px 7px", borderRadius: 6,
     }}>
       <ClockCircleOutlined style={{ fontSize: 9 }} />
-      {overdue ? "Overdue · " : today ? "Today · " : ""}{d.format("DD MMM")}
+      {overdue ? `Overdue · ${d.fromNow(true)} late` : today ? "Due today" : d.format("DD MMM")}
     </span>
   );
 };
 
+/* ── Assignee faces ─────────────────────────────────────────────────── */
+const Faces = ({ users = [], size = 22 }) => {
+  if (users.length === 0) {
+    return (
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 4,
+        fontSize: 10, fontWeight: 600, color: "var(--text-muted)",
+      }}>
+        <UserOutlined style={{ fontSize: 10 }} /> Unassigned
+      </span>
+    );
+  }
+  return (
+    <Avatar.Group max={{ count: 3 }} size={size}>
+      {users.map((u) => (
+        <Tooltip key={u._id} title={u.name}>
+          <Avatar size={size} src={u.avatar}
+            style={{ background: avatarBg(u.name), fontSize: 9, border: "1.5px solid var(--surface)" }}
+          >
+            {!u.avatar && u.name?.[0]?.toUpperCase()}
+          </Avatar>
+        </Tooltip>
+      ))}
+    </Avatar.Group>
+  );
+};
+
 /* ── Task Card ──────────────────────────────────────────────────────── */
-const TaskCard = ({ task, col, onEdit, onDelete, onDragStart, onDragEnd, isDragOver }) => {
-  const [hovered, setHovered] = useState(false);
-  const isOverdue = task.dueDate
-    && dayjs(task.dueDate).isBefore(dayjs(), "day")
-    && task.status !== "done" && task.status !== "cancelled";
+const TaskCard = ({ task, onOpen, onMenu, onDragStart, onDragEnd, isDragging }) => {
+  const overdue = isOverdue(task);
+  const classes = ["tm-card"];
+  if (overdue) classes.push("is-overdue");
+  if (isDragging) classes.push("is-dragging");
+  if (task.status === "cancelled") classes.push("is-muted");
 
   return (
     <div
+      className={classes.join(" ")}
       draggable
+      role="button"
+      tabIndex={0}
       onDragStart={() => onDragStart(task)}
       onDragEnd={onDragEnd}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: "var(--surface)",
-        borderRadius: 12,
-        padding: "12px 14px",
-        border: `1px solid ${hovered ? `color-mix(in srgb, ${col.color} 31%, transparent)` : "var(--border-muted)"}`,
-        borderLeft: `3px solid ${isOverdue ? "var(--danger)" : col.color}`,
-        boxShadow: hovered
-          ? `0 6px 20px color-mix(in srgb, ${col.color} 13%, transparent)`
-          : "0 1px 3px rgba(0,0,0,0.06)",
-        transition: "box-shadow 0.18s, border-color 0.18s, opacity 0.15s",
-        position: "relative",
-        cursor: "grab",
-        opacity: isDragOver ? 0.42 : 1,
-      }}
+      onClick={() => onOpen(task)}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
     >
-      {/* Priority + overdue badge */}
-      <Flex align="center" justify="space-between" style={{ marginBottom: 8 }}>
+      <Flex align="center" justify="space-between" style={{ marginBottom: 7 }}>
         <PriorityPill priority={task.priority} />
-        {isOverdue && (
-          <span style={{
-            fontSize: 9, fontWeight: 700, color: "var(--danger)",
-            background: "var(--danger-light)", borderRadius: 99, padding: "1px 7px",
-          }}>
-            OVERDUE
-          </span>
-        )}
       </Flex>
 
-      {/* Title */}
-      <div style={{
-        fontWeight: 700, fontSize: 13, color: "var(--text-primary)", lineHeight: 1.45,
-        marginBottom: 6,
-        paddingRight: hovered ? 60 : 0,
-        transition: "padding 0.15s",
-      }}>
-        {task.title}
-      </div>
+      <div className="tm-card-title">{task.title}</div>
 
-      {/* Description */}
-      {task.description && (
-        <div style={{
-          fontSize: 12, color: "var(--text-muted)", lineHeight: 1.55, marginBottom: 8,
-          display: "-webkit-box", WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical", overflow: "hidden",
-        }}>
-          {task.description}
-        </div>
-      )}
+      {task.description && <div className="tm-card-desc">{task.description}</div>}
 
-      {/* Footer */}
       <Flex align="center" justify="space-between" wrap="wrap" gap={6}>
-        <DueChip date={task.dueDate} status={task.status} />
-        {task.assignedTo?.length > 0 && (
-          <Avatar.Group maxCount={3} size={22}>
-            {task.assignedTo.map((u) => (
-              <Tooltip key={u._id} title={u.name}>
-                <Avatar size={22} src={u.avatar}
-                  style={{
-                    background: avatarBg(u.name), fontSize: 9,
-                    border: "1.5px solid var(--surface)",
-                  }}
-                >
-                  {!u.avatar && u.name?.[0]?.toUpperCase()}
-                </Avatar>
-              </Tooltip>
-            ))}
-          </Avatar.Group>
-        )}
+        <DueChip task={task} />
+        <Faces users={task.assignedTo || []} />
       </Flex>
 
-      {/* Hover actions */}
-      {hovered && (
-        <div style={{
-          position: "absolute", top: 10, right: 10,
-          display: "flex", gap: 4, zIndex: 2,
-        }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-            style={{
-              background: "var(--surface-soft)",
-              border: "1px solid var(--border-muted)",
-              borderRadius: 7, padding: "4px 7px", cursor: "pointer",
-              color: "var(--primary)",
-            }}
-          >
-            <EditOutlined style={{ fontSize: 11 }} />
-          </button>
-          <Popconfirm
-            title="Delete this task?"
-            onConfirm={() => onDelete(task._id)}
-            okText="Delete" okButtonProps={{ danger: true }}
-          >
-            <button
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: "var(--danger-light)", border: "1px solid rgba(var(--danger-rgb), 0.3)",
-                borderRadius: 7, padding: "4px 7px", cursor: "pointer", color: "var(--danger)",
-              }}
-            >
-              <DeleteOutlined style={{ fontSize: 11 }} />
-            </button>
-          </Popconfirm>
-        </div>
-      )}
+      <Dropdown menu={onMenu(task)} trigger={["click"]} placement="bottomRight">
+        <button
+          className="tm-card-menu"
+          aria-label="Task actions"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreOutlined />
+        </button>
+      </Dropdown>
     </div>
   );
 };
 
-/* ── Add task button ────────────────────────────────────────────────── */
-const AddBtn = ({ col, onAdd }) => {
-  const [hov, setHov] = useState(false);
-  return (
-    <button
-      onClick={() => onAdd(col.key)}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        padding: "10px 14px", width: "100%",
-        background: hov ? `color-mix(in srgb, ${col.color} 4%, transparent)` : "transparent",
-        border: `1.5px dashed ${hov ? `color-mix(in srgb, ${col.color} 44%, transparent)` : `color-mix(in srgb, ${col.color} 16%, transparent)`}`,
-        borderTop: "none",
-        borderRadius: "0 0 14px 14px",
-        cursor: "pointer",
-        color: hov ? col.color : "var(--text-muted)",
-        fontSize: 12, fontWeight: 600,
-        display: "flex", alignItems: "center", gap: 6,
-        transition: "all 0.15s",
-      }}
-    >
-      <PlusOutlined style={{ fontSize: 10 }} /> Add task
-    </button>
-  );
-};
-
 /* ── Kanban Column ──────────────────────────────────────────────────── */
-const KanbanColumn = ({ col, tasks, onEdit, onDelete, onAdd, dragState, onDragStart, onDragEnd, onDrop }) => {
+const KanbanColumn = ({ col, tasks, onOpen, onMenu, onAdd, dragState, onDragStart, onDragEnd, onDrop }) => {
   const [over, setOver] = useState(false);
 
   return (
-    <div style={{ flex: "1 1 260px", minWidth: 260, maxWidth: 310, display: "flex", flexDirection: "column" }}>
-      {/* Column header */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 16px",
-        background: `color-mix(in srgb, ${col.color} 5%, transparent)`,
-        border: `1px solid color-mix(in srgb, ${col.color} 16%, transparent)`,
-        borderBottom: "none",
-        borderRadius: "14px 14px 0 0",
-      }}>
-        <Flex align="center" gap={8}>
-          <span style={{ color: col.color, fontSize: 14 }}>{col.icon}</span>
-          <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{col.label}</span>
-        </Flex>
-        <Flex align="center" gap={8}>
-          {tasks.length > 0 && (
-            <div style={{
-              width: 44, height: 4, borderRadius: 4,
-              background: "var(--border-muted)", overflow: "hidden",
-            }}>
-              <div style={{
-                height: "100%", borderRadius: 4, background: col.color,
-                width: col.key === "done" ? "100%" : "40%",
-                opacity: 0.7,
-              }} />
-            </div>
-          )}
-          <span style={{
-            background: col.color, color: "#fff",
-            fontSize: 11, fontWeight: 800,
-            borderRadius: 99, padding: "1px 9px", minWidth: 22,
-            textAlign: "center",
-          }}>
-            {tasks.length}
-          </span>
-        </Flex>
+    <div className="tm-col" style={{ "--tm-col": col.color }}>
+      <div className="tm-col-head">
+        <span className="tm-col-title">
+          <span className="tm-col-icon">{col.icon}</span>
+          {col.label}
+        </span>
+        <span className="tm-col-count">{tasks.length}</span>
       </div>
 
-      {/* Drop zone */}
       <div
+        className={over ? "tm-drop is-over" : "tm-drop"}
         onDragOver={(e) => { e.preventDefault(); setOver(true); }}
         onDragLeave={() => setOver(false)}
         onDrop={() => { setOver(false); onDrop(col.key); }}
-        style={{
-          flex: 1, minHeight: 240,
-          padding: "10px 10px 8px",
-          display: "flex", flexDirection: "column", gap: 8,
-          border: `1px solid ${over ? `color-mix(in srgb, ${col.color} 33%, transparent)` : `color-mix(in srgb, ${col.color} 13%, transparent)`}`,
-          borderTop: "none",
-          background: over ? `color-mix(in srgb, ${col.color} 3%, transparent)` : "var(--surface-page)",
-          transition: "all 0.15s",
-          boxShadow: over ? `inset 0 0 0 2px color-mix(in srgb, ${col.color} 16%, transparent)` : "none",
-        }}
       >
         {tasks.length === 0 && (
-          <div style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", gap: 6,
-            color: "var(--text-muted)", fontSize: 12, fontWeight: 500,
-            border: "1.5px dashed var(--border-muted)",
-            borderRadius: 10, minHeight: 90, margin: "2px 0",
-          }}>
-            <span style={{ fontSize: 20, opacity: 0.4 }}>
-              {col.key === "todo" ? "📝" : col.key === "in_progress" ? "⚡" : col.key === "done" ? "✅" : "🚫"}
-            </span>
-            <span>{dragState ? "Drop here" : "No tasks"}</span>
-          </div>
+          <div className="tm-col-empty">{dragState ? "Drop here" : "Nothing here"}</div>
         )}
         {tasks.map((t) => (
           <TaskCard
-            key={t._id} task={t} col={col}
-            onEdit={onEdit} onDelete={onDelete}
+            key={t._id} task={t}
+            onOpen={onOpen} onMenu={onMenu}
             onDragStart={onDragStart} onDragEnd={onDragEnd}
-            isDragOver={dragState?.task?._id === t._id}
+            isDragging={dragState?.task?._id === t._id}
           />
         ))}
       </div>
 
-      <AddBtn col={col} onAdd={onAdd} />
+      <button className="tm-add" onClick={() => onAdd(col.key)}>
+        <PlusOutlined style={{ fontSize: 10 }} /> Add task
+      </button>
     </div>
   );
 };
@@ -331,9 +226,12 @@ const TaskManagement = () => {
 
   const [modalOpen,   setModalOpen]   = useState(false);
   const [editTask,    setEditTask]    = useState(null);
+  const [detail,      setDetail]      = useState(null);
   const [saving,      setSaving]      = useState(false);
   const [initStatus,  setInitStatus]  = useState("todo");
   const [filterPri,   setFilterPri]   = useState(null);
+  const [filterWho,   setFilterWho]   = useState(null);
+  const [quick,       setQuick]       = useState(null);
   const [search,      setSearch]      = useState("");
   const [dragState,   setDragState]   = useState(null);
   const [form] = Form.useForm();
@@ -389,12 +287,34 @@ const TaskManagement = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (task) => {
+    Modal.confirm({
+      title: "Delete this task?",
+      icon: <ExclamationCircleOutlined />,
+      content: task.title,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await dispatch(deleteTask(task._id)).unwrap();
+          setDetail((d) => (d?._id === task._id ? null : d));
+          message.success("Task deleted");
+        } catch (err) {
+          message.error(typeof err === "string" ? err : "Failed to delete task");
+        }
+      },
+    });
+  };
+
+  // One path for every status change — the ⋯ menu, the drawer buttons and a drag all land here.
+  const moveTo = async (task, status) => {
+    if (!task || task.status === status) return;
     try {
-      await dispatch(deleteTask(id)).unwrap();
-      message.success("Task deleted");
-    } catch (err) {
-      message.error(typeof err === "string" ? err : "Failed to delete task");
+      await dispatch(updateTask({ id: task._id, status })).unwrap();
+      setDetail((d) => (d?._id === task._id ? { ...d, status } : d));
+      message.success(`Moved to ${STATUS_LABEL[status]}`);
+    } catch {
+      message.error("Failed to move task");
     }
   };
 
@@ -402,40 +322,89 @@ const TaskManagement = () => {
     if (!dragState?.task) return;
     const { task } = dragState;
     setDragState(null);
-    if (task.status === targetStatus) return;
-    try {
-      await dispatch(updateTask({ id: task._id, status: targetStatus })).unwrap();
-    } catch {
-      message.error("Failed to move task");
-    }
+    await moveTo(task, targetStatus);
   };
 
+  // Dragging works with a mouse; this menu is how the same move happens on a laptop trackpad or a
+  // phone, where a cross-column drag is not realistic.
+  const cardMenu = (task) => ({
+    items: [
+      { key: "open", label: "Open details", icon: <SnippetsOutlined /> },
+      { key: "edit", label: "Edit task", icon: <EditOutlined /> },
+      { type: "divider" },
+      ...COLUMNS.filter((c) => c.key !== task.status).map((c) => ({
+        key: `move:${c.key}`,
+        label: `Move to ${c.label}`,
+        icon: c.icon,
+      })),
+      { type: "divider" },
+      { key: "delete", label: "Delete", icon: <DeleteOutlined />, danger: true },
+    ],
+    onClick: ({ key, domEvent }) => {
+      domEvent.stopPropagation();
+      if (key === "open") setDetail(task);
+      else if (key === "edit") openEdit(task);
+      else if (key === "delete") handleDelete(task);
+      else if (key.startsWith("move:")) moveTo(task, key.slice(5));
+    },
+  });
+
   /* ── Derived data ─────────────────────────────────────────────────── */
-  const q        = search.toLowerCase();
-  const filtered = tasks.filter((t) => {
+  const QUICK = useMemo(() => ({
+    open:       (t) => !CLOSED.has(t.status),
+    today:      isDueToday,
+    overdue:    isOverdue,
+    unassigned: isUnassigned,
+  }), []);
+
+  const q = search.trim().toLowerCase();
+  const filtered = useMemo(() => tasks.filter((t) => {
     if (filterPri && t.priority !== filterPri) return false;
+    if (filterWho && !(t.assignedTo || []).some((u) => u._id === filterWho)) return false;
+    if (quick && !QUICK[quick](t)) return false;
     if (q && !t.title?.toLowerCase().includes(q) && !t.description?.toLowerCase().includes(q)) return false;
     return true;
-  });
-  const byColumn = Object.fromEntries(
-    COLUMNS.map((c) => [c.key, filtered.filter((t) => t.status === c.key)])
-  );
-  const overdueCount = tasks.filter(
-    (t) => t.dueDate && dayjs(t.dueDate).isBefore(dayjs(), "day") && t.status !== "done" && t.status !== "cancelled"
-  ).length;
-  const doneCount = tasks.filter((t) => t.status === "done").length;
-  const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+  }), [tasks, filterPri, filterWho, quick, q, QUICK]);
 
-  const KPI = [
-    { label: "Total Tasks",  value: tasks.length,                                          color: "var(--purple)", icon: <SnippetsOutlined />    },
-    { label: "In Progress",  value: tasks.filter((t) => t.status === "in_progress").length, color: "var(--primary)", icon: <SyncOutlined />         },
-    { label: "Completed",    value: doneCount,                                              color: "var(--success)", icon: <CheckCircleOutlined /> },
-    { label: "Overdue",      value: overdueCount,                                           color: "var(--danger)", icon: <ClockCircleOutlined />  },
+  const byColumn = useMemo(() => Object.fromEntries(
+    COLUMNS.map((c) => [c.key, sortTasks(filtered.filter((t) => t.status === c.key))])
+  ), [filtered]);
+
+  // Everyone who currently holds a task — no extra request, and it lists exactly the people worth
+  // filtering by.
+  const assigneeOptions = useMemo(() => {
+    const seen = new Map();
+    tasks.forEach((t) => (t.assignedTo || []).forEach((u) => { if (!seen.has(u._id)) seen.set(u._id, u.name); }));
+    return [...seen.entries()]
+      .sort((a, b) => (a[1] || "").localeCompare(b[1] || ""))
+      .map(([value, label]) => ({ value, label }));
+  }, [tasks]);
+
+  const counts = useMemo(() => ({
+    open:       tasks.filter(QUICK.open).length,
+    today:      tasks.filter(isDueToday).length,
+    overdue:    tasks.filter(isOverdue).length,
+    unassigned: tasks.filter(isUnassigned).length,
+  }), [tasks, QUICK]);
+
+  // Cancelled work was withdrawn, not left undone — counting it as incomplete makes a board that
+  // is actually finished read as 0%.
+  const doneCount    = tasks.filter((t) => t.status === "done").length;
+  const trackedCount = tasks.filter((t) => t.status !== "cancelled").length;
+  const pct = trackedCount ? Math.round((doneCount / trackedCount) * 100) : 0;
+
+  const STATS = [
+    { key: "open",       label: "Open",       value: counts.open,       color: "var(--primary)", icon: <SyncOutlined />        },
+    { key: "today",      label: "Due today",  value: counts.today,      color: "var(--warning)", icon: <ClockCircleOutlined /> },
+    { key: "overdue",    label: "Overdue",    value: counts.overdue,    color: "var(--danger)",  icon: <AlertTriangle size={17} /> },
+    { key: "unassigned", label: "Unassigned", value: counts.unassigned, color: "var(--purple)",  icon: <UserOutlined />        },
   ];
+
+  const isFiltered = Boolean(filterPri || filterWho || quick || q);
+  const clearFilters = () => { setFilterPri(null); setFilterWho(null); setQuick(null); setSearch(""); };
 
   return (
     <>
-      
       <PageHeader
         title="Task Management"
         subtitle="Create, assign and track tasks across your school"
@@ -448,71 +417,55 @@ const TaskManagement = () => {
       />
 
       <div className="page-wrapper">
-        {/* ── KPI Cards ── */}
-        <div style={{ ...statGrid(150), marginBottom: 20 }}>
-          {KPI.map((k) => (
-            <div key={k.label} style={{
-              padding: "16px 18px", background: "var(--surface)", borderRadius: 14,
-              border: "1px solid var(--border-muted)", borderLeft: `4px solid ${k.color}`,
-              display: "flex", alignItems: "center", gap: 14,
-            }}>
-              <div style={iconWell(k.color, 42)}>
-                {React.cloneElement(k.icon, { style: { fontSize: 17 } })}
+        {/* ── Stat tiles — each one is also a filter ── */}
+        <div style={{ ...statGrid(170), marginBottom: 16 }}>
+          {STATS.map((s) => (
+            <button
+              key={s.key}
+              className={quick === s.key ? "tm-stat is-active" : "tm-stat"}
+              style={{ "--tm-col": s.color }}
+              disabled={s.value === 0 && quick !== s.key}
+              onClick={() => setQuick((cur) => (cur === s.key ? null : s.key))}
+            >
+              <div style={iconWell(s.color, 42)}>
+                {React.cloneElement(s.icon, { style: { fontSize: 17 } })}
               </div>
               <div className="u-grow-min">
-                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>
-                  {k.value}
-                </div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 5 }}>
-                  {k.label}
-                </div>
+                <div className="tm-stat-value">{s.value}</div>
+                <div className="tm-stat-label">{s.label}</div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
 
-        {/* ── Progress + Filter toolbar ── */}
-        <div className="section-panel" style={{ padding: "12px 16px", marginBottom: 18 }}>
+        {/* ── Progress + filter toolbar ── */}
+        <div className="section-panel" style={{ padding: "12px 16px", marginBottom: 16 }}>
           <Flex align="center" justify="space-between" gap={12} wrap="wrap">
-            {/* Completion progress */}
-            <Flex align="center" gap={12}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>
-                  Completion
-                </div>
-                <Flex align="center" gap={8}>
-                  <div style={{ width: 120, height: 6, background: "var(--border-muted)", borderRadius: 4, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: "var(--success)", borderRadius: 4, transition: "width 0.4s" }} />
-                  </div>
-                  <Text style={{ fontSize: 12, fontWeight: 700, color: "var(--success)" }}>{pct}%</Text>
-                </Flex>
+            <Flex align="center" gap={10}>
+              <div style={{ width: 120, height: 6, background: "var(--border-muted)", borderRadius: 4, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: "var(--success)", borderRadius: 4, transition: "width 0.4s" }} />
               </div>
-              {overdueCount > 0 && (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 5,
-                  background: "var(--danger-light)", border: "1px solid rgba(var(--danger-rgb), 0.3)",
-                  borderRadius: 8, padding: "5px 10px",
-                }}>
-                  <ClockCircleOutlined style={{ color: "var(--danger)", fontSize: 12 }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)" }}>{overdueCount} overdue</span>
-                </div>
-              )}
+              <Text className="u-meta">
+                <b style={{ color: "var(--success)" }}>{pct}%</b>
+                {" · "}
+                {doneCount} of {trackedCount} done
+                {tasks.length !== trackedCount && ` · ${tasks.length - trackedCount} cancelled`}
+              </Text>
             </Flex>
 
-            {/* Search + priority filter */}
-            <Flex gap={10} align="center" wrap="wrap">
+            <Flex gap={8} align="center" wrap="wrap">
               <Input.Search
                 placeholder="Search tasks…"
                 allowClear
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onSearch={setSearch}
-                style={{ width: 220 }}
+                style={{ width: 210 }}
               />
               <Select
                 allowClear
-                placeholder="All Priorities"
-                style={{ width: 150 }}
+                placeholder="All priorities"
+                style={{ width: 145 }}
                 value={filterPri}
                 onChange={setFilterPri}
               >
@@ -522,25 +475,58 @@ const TaskManagement = () => {
                   </Option>
                 ))}
               </Select>
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Anyone"
+                style={{ width: 160 }}
+                value={filterWho}
+                onChange={setFilterWho}
+                options={assigneeOptions}
+              />
+              {isFiltered && <Button onClick={clearFilters}>Clear</Button>}
             </Flex>
           </Flex>
+
+          {isFiltered && (
+            <Text className="u-meta u-mt-2" style={{ display: "block" }}>
+              Showing {filtered.length} of {tasks.length} tasks
+            </Text>
+          )}
         </div>
 
-        {/* ── Kanban Board ── */}
+        {/* ── Board ── */}
         {loading && tasks.length === 0 ? (
-          <div style={{ display: "flex", gap: 14 }}>
+          <div className="tm-board">
             {COLUMNS.map((c) => (
-              <div key={c.key} style={{ flex: "1 1 260px", minWidth: 260 }}>
-                <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid var(--border-muted)" }}>
-                  <div style={{ padding: "12px 16px", background: `color-mix(in srgb, ${c.color} 5%, transparent)`, borderBottom: "1px solid var(--border-muted)" }}>
-                    <Skeleton active title={{ width: "60%" }} paragraph={false} />
-                  </div>
-                  <div style={{ padding: 12, background: "var(--surface-page)" }}>
-                    <Skeleton active paragraph={{ rows: 4 }} />
-                  </div>
-                </div>
+              <div key={c.key} className="tm-col" style={{ "--tm-col": c.color }}>
+                <div className="tm-col-head"><Skeleton active title={{ width: 90 }} paragraph={false} /></div>
+                <div className="tm-drop"><Skeleton active paragraph={{ rows: 4 }} /></div>
               </div>
             ))}
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="page-card" style={{ padding: "56px 0" }}>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>No tasks yet</div>
+                  <Text className="u-meta">Create a task, assign it to your staff and track it across the board.</Text>
+                </>
+              }
+            >
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => openCreate()}>
+                Create your first task
+              </Button>
+            </Empty>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="page-card" style={{ padding: "48px 0" }}>
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No tasks match these filters">
+              <Button onClick={clearFilters}>Clear filters</Button>
+            </Empty>
           </div>
         ) : (
           <div className="tm-board">
@@ -548,8 +534,8 @@ const TaskManagement = () => {
               <KanbanColumn
                 key={col.key} col={col}
                 tasks={byColumn[col.key] || []}
-                onEdit={openEdit}
-                onDelete={handleDelete}
+                onOpen={setDetail}
+                onMenu={cardMenu}
                 onAdd={openCreate}
                 dragState={dragState}
                 onDragStart={(t) => setDragState({ task: t })}
@@ -560,6 +546,85 @@ const TaskManagement = () => {
           </div>
         )}
       </div>
+
+      {/* ── Detail drawer ── */}
+      <Drawer
+        open={Boolean(detail)}
+        onClose={() => setDetail(null)}
+        width={460}
+        title="Task details"
+        footer={
+          detail && (
+            <Flex gap={8} wrap="wrap">
+              {detail.status !== "done" ? (
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => moveTo(detail, "done")}>
+                  Mark done
+                </Button>
+              ) : (
+                <Button icon={<SyncOutlined />} onClick={() => moveTo(detail, "in_progress")}>
+                  Reopen
+                </Button>
+              )}
+              <Button icon={<EditOutlined />} onClick={() => { openEdit(detail); setDetail(null); }}>Edit</Button>
+              <Button danger icon={<DeleteOutlined />} onClick={() => handleDelete(detail)}>Delete</Button>
+            </Flex>
+          )
+        }
+      >
+        {detail && (
+          <>
+            <Flex align="center" gap={8} wrap="wrap" style={{ marginBottom: 10 }}>
+              <PriorityPill priority={detail.priority} />
+              <DueChip task={detail} />
+            </Flex>
+
+            <div style={{ fontSize: 17, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.4, marginBottom: 12 }}>
+              {detail.title}
+            </div>
+
+            {detail.description ? (
+              <Paragraph style={{ whiteSpace: "pre-wrap", color: "var(--text-secondary)", marginBottom: 20 }}>
+                {detail.description}
+              </Paragraph>
+            ) : (
+              <Text className="u-meta" style={{ display: "block", marginBottom: 20 }}>No description</Text>
+            )}
+
+            <div className="tm-facts">
+              <span className="tm-fact-label">Status</span>
+              <Select
+                value={detail.status}
+                onChange={(v) => moveTo(detail, v)}
+                style={{ width: "100%", maxWidth: 220 }}
+                options={COLUMNS.map((c) => ({ value: c.key, label: c.label }))}
+              />
+
+              <span className="tm-fact-label">Due</span>
+              <span>{detail.dueDate ? dayjs(detail.dueDate).format("DD MMM YYYY") : "—"}</span>
+
+              <span className="tm-fact-label">Assigned to</span>
+              <span>
+                {detail.assignedTo?.length
+                  ? detail.assignedTo.map((u) => u.name).join(", ")
+                  : "Nobody yet"}
+              </span>
+
+              <span className="tm-fact-label">Assigned by</span>
+              <span>{detail.assignedBy?.name || "—"}</span>
+
+              <span className="tm-fact-label">Created</span>
+              <span>{detail.createdAt ? dayjs(detail.createdAt).format("DD MMM YYYY") : "—"}</span>
+
+              {detail.completedAt && (
+                <>
+                  <span className="tm-fact-label">Completed</span>
+                  <span>{dayjs(detail.completedAt).format("DD MMM YYYY")}</span>
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </Drawer>
 
       {/* ── Create / Edit Modal ── */}
       <Modal
