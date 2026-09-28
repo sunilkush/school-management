@@ -24,6 +24,7 @@ import { fetchActivityLogs, deleteActivityLog } from "../../../features/activity
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid } from "../../../styles/pageStyles";
 import { categoricalColorFor } from "../../../utils/colorPalette";
+import { downloadCsv } from "../../../utils/exportFormat";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -171,21 +172,8 @@ const normalizedLogs = useMemo(() => {
     ]);
 
     const csvHeader = ["#", "User", "Role", "Action", "Description", "School", "Date"];
-    const csvContent = [csvHeader, ...rows]
-      .map((row) =>
-        row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")
-      )
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `activity-logs-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // User names and descriptions are user-typed: the shared helper keeps "=..." as text.
+    downloadCsv(`activity-logs-${new Date().toISOString().slice(0, 10)}.csv`, [csvHeader, ...rows]);
   }, [filteredLogs]);
 
 

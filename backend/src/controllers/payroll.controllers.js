@@ -11,6 +11,7 @@ import { PayrollStructure } from "../models/payrollStructure.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
+import { toCsv } from "../utils/csv.js";
 import { calculatePayrollEntry } from "../services/payrollCalculator.service.js";
 
 // Roles allowed to view/download any employee's payslip for payroll administration —
@@ -845,14 +846,13 @@ export const updateEmployeeStatutory = asyncHandler(async (req, res) => {
 // PF / ESI statutory reports
 // ══════════════════════════════════════════════════════════════════════════════
 
-const escapeCsvCell = (value) => `"${`${value ?? ""}`.replace(/"/g, '""')}"`;
-const toCsv = (headers, rows) => [headers, ...rows].map((row) => row.map(escapeCsvCell).join(",")).join("\n");
-
 const sendCsvOrJson = (res, { isExport, fileName, headers, rows, message, data }) => {
   if (isExport) {
-    res.setHeader("Content-Type", "text/csv");
+    // Shared toCsv: quoted cells, formula-like text kept as text (employee names are typed by
+    // users), and a UTF-8 BOM so Excel reads Hindi names.
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    return res.status(200).send(toCsv(headers, rows));
+    return res.status(200).send(toCsv([headers, ...rows]));
   }
   return sendSuccess(res, { message, data });
 };

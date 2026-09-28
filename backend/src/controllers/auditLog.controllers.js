@@ -1,5 +1,6 @@
 import AuditLog from "../models/AuditLog.model.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
+import { toCsv } from "../utils/csv.js";
 
 const resolveRoleName = (req) => req.userRole?.name || req.user?.roleId?.name || req.user?.role?.name || req.user?.role;
 
@@ -61,11 +62,8 @@ const generateCsv = (rows) => {
     "Timestamp",
   ];
 
-  const escapeCell = (value) => {
-    const sanitized = `${value ?? ""}`.replace(/"/g, '""');
-    return `"${sanitized}"`;
-  };
-
+  // Actor names are whatever users call themselves in their profile, so a name like
+  // "=HYPERLINK(...)" ran as a formula in the Super Admin's Excel. toCsv keeps it text.
   const csvRows = rows.map((item) => [
     item.actorName,
     item.actorEmail,
@@ -78,7 +76,7 @@ const generateCsv = (rows) => {
     item.createdAt,
   ]);
 
-  return [headers, ...csvRows].map((row) => row.map(escapeCell).join(",")).join("\n");
+  return toCsv([headers, ...csvRows]);
 };
 
 export const createAuditLog = async (req, res) => {
@@ -208,7 +206,7 @@ export const exportAuditLogs = async (req, res) => {
 
     const fileName = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
 
-    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename=\"${fileName}\"`);
 
     return res.status(200).send(csv);
