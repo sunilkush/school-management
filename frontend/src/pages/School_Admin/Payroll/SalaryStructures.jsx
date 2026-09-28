@@ -47,7 +47,10 @@ const SalaryStructures = () => {
   // column below would silently fall back to statutory defaults, which can look wrong for
   // any school that has actually customized its Payroll Settings.
   useEffect(() => {
-    dispatch(fetchPayrollSettings()).unwrap().catch(() => {});
+    dispatch(fetchPayrollSettings()).unwrap().catch(() => {
+      // Say so: otherwise the deductions below quietly use statutory defaults and look final.
+      message.warning("Could not load Payroll Settings — PF / ESI / PT shown here use the standard rates, not your school's.");
+    });
   }, [dispatch]);
 
   useEffect(() => {

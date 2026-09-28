@@ -54,7 +54,7 @@ const LibraryMembers = () => {
     setUsersLoading(true);
     apiClient.get("/user/all")
       .then((r) => setAllUsers(Array.isArray(r?.data?.data) ? r.data.data : []))
-      .catch(() => {})
+      .catch(() => message.error("Could not load staff — the list below shows students only."))
       .finally(() => setUsersLoading(false));
   }, [dispatch, schoolId]);
 

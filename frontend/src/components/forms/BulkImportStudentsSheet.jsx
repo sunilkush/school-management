@@ -160,7 +160,13 @@ const BulkImportStudentsSheet = ({ schoolId, academicYearId, classOptions = [], 
   const handleUpload = async () => {
     if (!rows.length || !schoolId || !academicYearId) return;
     setShowCredentials(false);
-    await dispatch(bulkImportStudents({ schoolId, academicYearId, rows })).unwrap().catch(() => {});
+    try {
+      await dispatch(bulkImportStudents({ schoolId, academicYearId, rows })).unwrap();
+    } catch {
+      // The slice already toasts the reason. Keep the rows: a failed request (network, server
+      // error) imported nothing, and clearing them made the user pick the file all over again.
+      return;
+    }
     setRows([]);
     onSuccess?.();
   };
