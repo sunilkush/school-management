@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
+import { getRoleName } from "../utils/roles";
 
 // 🔐 Token helper
 
@@ -43,10 +44,19 @@ export const getClassData = createAsyncThunk(
 // ==============================
 export const fetchSchoolClasses = createAsyncThunk(
   "schoolClass/fetchAll",
-  async (params, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue, getState }) => {
     try {
-      const res = await apiClient.get(`/school-class`, {params, // { schoolId, academicYearId }
-      });
+      // A school keeps next year's classes alongside this year's, so a caller that names no year
+      // got both — every class twice in its picker. Default to the active year; callers that want
+      // a particular year (promotion, setup) pass it. Super Admin browses any school, whose year
+      // is not the one in the store, so it is left alone.
+      const query = { ...params };
+      if (!("academicYearId" in query) || !query.academicYearId) {
+        const { academicYear = {}, auth = {} } = getState() || {};
+        const year = academicYear.selectedAcademicYear || academicYear.activeYear;
+        if (year?._id && getRoleName(auth.user) !== "Super Admin") query.academicYearId = year._id;
+      }
+      const res = await apiClient.get(`/school-class`, { params: query });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
