@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
+import { resolveActiveYearId } from "./academicYearSlice";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -29,10 +30,19 @@ export const createSection = createAsyncThunk(
 // ==============================
 export const fetchSections = createAsyncThunk(
   "section/fetchAll",
-  async (params, { rejectWithValue }) => {
+  async (params = {}, thunkApi) => {
+    const { rejectWithValue } = thunkApi;
     try {
-      const res = await apiClient.get(`/sections`, {        params, // { schoolId, academicYearId, schoolClassId }
-      });
+      // { schoolId, academicYearId, schoolClassId }. The school has next year's sections set up
+      // too (36 of them). Pages pass their academicYearId, but it is undefined until the year has
+      // loaded (first load, phone) — then the unscoped call returned both years. A class already
+      // pins the year, so only the school-wide list needs the default.
+      const query = { ...params };
+      if (!query.academicYearId && !query.schoolClassId) {
+        const yearId = await resolveActiveYearId(thunkApi);
+        if (yearId) query.academicYearId = yearId;
+      }
+      const res = await apiClient.get(`/sections`, { params: query });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
