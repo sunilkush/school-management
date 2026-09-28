@@ -61,6 +61,7 @@ const ExamSchedule = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExam, setEditingExam] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [selectedClassFilter, setSelectedClassFilter] = useState("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("all");
   const [form] = Form.useForm();
@@ -143,6 +144,7 @@ const ExamSchedule = () => {
   };
 
   const handleSubmit = async () => {
+    if (saving) return;
     try {
       const values = await form.validateFields();
       if (!schoolId || !academicYearId || !userId) {
@@ -181,6 +183,7 @@ const ExamSchedule = () => {
         passingMarks: Number(values.passingMarks),
         status: editingExam?.status || "draft",
       };
+      setSaving(true);
       if (editingExam?._id) {
         await dispatch(updateExam({ Id: editingExam._id, payload })).unwrap();
         message.success("Exam updated successfully");
@@ -191,7 +194,10 @@ const ExamSchedule = () => {
       handleCloseModal();
       dispatch(getExams({ schoolId, academicYearId }));
     } catch (error) {
-      message.error(error || "Failed to save exam");
+      if (error?.errorFields) return; // the form already marks the missing fields
+      message.error(typeof error === "string" ? error : "Failed to save exam");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -411,6 +417,7 @@ const ExamSchedule = () => {
         open={isModalOpen}
         onCancel={handleCloseModal}
         onOk={handleSubmit}
+        confirmLoading={saving}
         okText={editingExam ? "Update Exam" : "Create Exam"}
         width={760}
         destroyOnClose

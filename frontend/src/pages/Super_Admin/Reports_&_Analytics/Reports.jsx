@@ -115,6 +115,7 @@ const Reports = () => {
   const [filterYears, setFilterYears] = useState([]);
   const [viewing, setViewing] = useState(null);
   const [customOpen, setCustomOpen] = useState(false);
+  const [savingCustom, setSavingCustom] = useState(false);
   const [customYears, setCustomYears] = useState([]);
   const [customForm] = Form.useForm();
 
@@ -237,12 +238,14 @@ const Reports = () => {
   }, [customSchool, yearsOf, customForm]);
 
   const saveCustom = async () => {
+    if (savingCustom) return;
     let values;
     try {
       values = await customForm.validateFields();
     } catch {
       return; // the form already shows what is missing
     }
+    setSavingCustom(true);
     try {
       await dispatch(createReport({ ...values, status: values.status || "finalized" })).unwrap();
       message.success("Report saved");
@@ -251,6 +254,8 @@ const Reports = () => {
       loadSaved();
     } catch (e) {
       message.error(e?.message || "Could not save the report");
+    } finally {
+      setSavingCustom(false);
     }
   };
 
@@ -484,6 +489,7 @@ const Reports = () => {
         open={customOpen}
         onCancel={() => setCustomOpen(false)}
         onOk={saveCustom}
+        confirmLoading={savingCustom}
         okText="Save report"
         destroyOnClose
         centered

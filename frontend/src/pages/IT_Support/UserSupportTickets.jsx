@@ -34,6 +34,7 @@ const UserSupportTickets = () => {
   const [filter, setFilter]        = useState("All");
   const [resolveModal, setResolveModal] = useState(null);
   const [resolveNote, setResolveNote]   = useState("");
+  const [resolving, setResolving]       = useState(false);
 
   useEffect(() => { dispatch(fetchTickets()); }, [dispatch]);
 
@@ -53,11 +54,19 @@ const UserSupportTickets = () => {
   };
 
   const handleResolve = async () => {
-    if (!resolveModal) return;
-    await dispatch(resolveTicket({ id: resolveModal._id, resolution: resolveNote }));
-    setResolveModal(null);
-    setResolveNote("");
-    message.success("Ticket resolved");
+    if (!resolveModal || resolving) return;
+    setResolving(true);
+    try {
+      // unwrap(): a failed request used to fall through to "Ticket resolved" and close the modal.
+      await dispatch(resolveTicket({ id: resolveModal._id, resolution: resolveNote })).unwrap();
+      setResolveModal(null);
+      setResolveNote("");
+      message.success("Ticket resolved");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to resolve ticket");
+    } finally {
+      setResolving(false);
+    }
   };
 
   const columns = [
@@ -148,6 +157,7 @@ const UserSupportTickets = () => {
         open={!!resolveModal}
         onCancel={() => { setResolveModal(null); setResolveNote(""); }}
         onOk={handleResolve}
+        confirmLoading={resolving}
         okText="Mark Resolved"
       >
         <Text>Title: <strong>{resolveModal?.title}</strong></Text>

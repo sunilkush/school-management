@@ -41,6 +41,7 @@ const FeeStructure = () => {
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [formSaving, setFormSaving] = useState(false);
   const [classFilter, setClassFilter] = useState(undefined);
 
   const watchFrequency = Form.useWatch("frequency", form);
@@ -86,6 +87,8 @@ const FeeStructure = () => {
   const closeForm = () => { setOpen(false); setEditingRecord(null); form.resetFields(); };
 
   const handleSubmit = async (values) => {
+    if (formSaving) return;
+    setFormSaving(true);
     try {
       if (editingRecord?._id) {
         await dispatch(updateFeeStructure({ id: editingRecord._id, data: { ...values, academicYearId } })).unwrap();
@@ -99,6 +102,8 @@ const FeeStructure = () => {
       loadSummary();
     } catch (err) {
       message.error(err || "Duplicate fee structure already exists");
+    } finally {
+      setFormSaving(false);
     }
   };
 
@@ -326,6 +331,7 @@ const FeeStructure = () => {
           open={open}
           onCancel={closeForm}
           onOk={() => form.submit()}
+          confirmLoading={formSaving}
           okText={editingRecord ? "Update" : "Save"}
           centered
           forceRender

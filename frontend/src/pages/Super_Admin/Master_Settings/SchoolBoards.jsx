@@ -167,6 +167,7 @@ const SchoolBoards = () => {
   const { boardClass = [] } = useSelector((s) => s.boardClass || {});
 
   const [editing, setEditing] = useState(null);      // null | {} | board
+  const [savingBoard, setSavingBoard] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [show, setShow] = useState("all");
@@ -223,6 +224,8 @@ const SchoolBoards = () => {
   };
 
   const save = async (values) => {
+    if (savingBoard) return;
+    setSavingBoard(true);
     try {
       if (editing?._id) await dispatch(updateBoard({ id: editing._id, boardData: values })).unwrap();
       else await dispatch(createBoard(values)).unwrap();
@@ -231,6 +234,8 @@ const SchoolBoards = () => {
       dispatch(getBoards());
     } catch (e) {
       message.error(errorText(e, "Could not save the board"));
+    } finally {
+      setSavingBoard(false);
     }
   };
 
@@ -385,6 +390,7 @@ const SchoolBoards = () => {
         open={Boolean(editing)}
         onCancel={() => setEditing(null)}
         onOk={() => form.submit()}
+        confirmLoading={savingBoard}
         okText={editing?._id ? "Save changes" : "Add board"}
         destroyOnClose
         centered
