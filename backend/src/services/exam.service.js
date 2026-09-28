@@ -170,7 +170,9 @@ export const createExamService = async ({ body, user }) => {
 
 export const getExamsService = async ({ query, user }) => {
   const page = Math.max(Number(query.page) || 1, 1);
-  const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 100);
+  // Most exam screens load the year's exams once and filter them themselves; a 100 cap cut a
+  // school with many classes short. ExamPage still pages with its own small limit.
+  const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 2000);
   const skip = (page - 1) * limit;
 
   const filters = {};

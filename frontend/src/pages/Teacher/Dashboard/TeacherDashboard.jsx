@@ -47,7 +47,7 @@ const TeacherDashboard = () => {
     if (!selectedAcademicYear?._id) return;
     dispatch(fetchAssignedClasses({ academicYearId: selectedAcademicYear._id }));
     dispatch(fetchMyAttendance({ academicYearId: selectedAcademicYear._id, limit: 31 }));
-    dispatch(getExams({ academicYearId: selectedAcademicYear._id, limit: 20 }));
+    dispatch(getExams({ academicYearId: selectedAcademicYear._id }));
     apiClient.get("/student-portal/teacher/homework", { params: { academicYearId: selectedAcademicYear._id } })
       .then((res) => setAssignmentCount((res.data?.data || []).length))
       .catch(() => {});

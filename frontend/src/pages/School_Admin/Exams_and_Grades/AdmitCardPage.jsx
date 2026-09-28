@@ -156,7 +156,7 @@ const AdmitCardPage = () => {
 
   useEffect(() => {
     if (!academicYear?._id) return;
-    dispatch(getExams({ schoolId: academicYear.schoolId, academicYearId: academicYear._id, limit: 100 }));
+    dispatch(getExams({ schoolId: academicYear.schoolId, academicYearId: academicYear._id }));
   }, [dispatch, academicYear]);
 
   const loadCards = async (id) => {

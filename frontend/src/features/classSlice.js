@@ -21,7 +21,9 @@ export const fetchAllClasses = createAsyncThunk(
   "class/fetchAllClasses",
   async (params, { rejectWithValue}) => {
     try {
-      const res = await apiClient.get(`/class`, { params });
+      // Every caller wants the whole class list (dropdowns, the Classes page paging it itself);
+      // the API returns 15 by default.
+      const res = await apiClient.get(`/class`, { params: { limit: 500, ...params } });
       return res.data; // ✅ full response
     } catch (error) {
       return rejectWithValue(

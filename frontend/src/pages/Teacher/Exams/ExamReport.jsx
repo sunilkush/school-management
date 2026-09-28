@@ -38,7 +38,7 @@ const ExamReports = () => {
   });
 
   useEffect(() => {
-    dispatch(getExams({ limit: 100 }));
+    dispatch(getExams());
   }, [dispatch]);
 
   useEffect(() => {

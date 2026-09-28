@@ -12,8 +12,11 @@ export const createExam = createAsyncThunk("exams/createExam", async (payload, {
 
 export const getExams = createAsyncThunk("exams/getExams", async (params = {}, { rejectWithValue }) => {
   try {
+    // The API returns 20 by default, but most callers want the whole list (schedule, analytics,
+    // seat plan, student/teacher exam pages) and filter it themselves — Delhi Public School has
+    // 50 exams, so those pages showed 20. Pages that really page (ExamPage) pass their own limit.
     const clean = Object.fromEntries(
-      Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== "")
+      Object.entries({ limit: 1000, ...params }).filter(([, v]) => v !== null && v !== undefined && v !== "")
     );
     const query = new URLSearchParams(clean).toString();
     const res = await apiClient.get(`/exams?${query}`);

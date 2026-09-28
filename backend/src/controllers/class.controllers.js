@@ -87,9 +87,11 @@ const deleteClass = asyncHandler(async (req, res) => {
 
 const getAllClasses = asyncHandler(async (req, res) => {
   const page = Number(req.query.page || 1);
+  // The cap used to be 15 even when more was asked for, so a 16th class (Nursery, LKG, UKG on top
+  // of 1-12 is already 15) would silently drop out of every class dropdown and the Classes page.
   const requestedLimit = Number(req.query.limit || 15);
   const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
-    ? Math.min(requestedLimit, 15)
+    ? Math.min(requestedLimit, 500)
     : 15;
   const search = req.query.search || "";
 

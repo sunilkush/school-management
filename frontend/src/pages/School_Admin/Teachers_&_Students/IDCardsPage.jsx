@@ -113,7 +113,10 @@ export default function IDCardsPage() {
       status: filterStatus || undefined,
       search: searchText || undefined,
       page: 1,
-      limit: 50,
+      // The table pages this list itself and shows its length as the total, so it needs every
+      // card — with 50 here, a school past 50 students (cards are auto-issued on admission) lost
+      // the rest from this page with no sign anything was missing.
+      limit: 5000,
     }));
   };
 

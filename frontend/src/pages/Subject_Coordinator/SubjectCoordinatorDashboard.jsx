@@ -30,7 +30,7 @@ const SubjectCoordinatorDashboard = () => {
 
   useEffect(() => {
     reduxDispatch(getAllSubjects({ limit: 200 }));
-    reduxDispatch(getExams({ limit: 100 }));
+    reduxDispatch(getExams());
     setPlansLoading(true);
     apiClient
       .get("/lesson-plans", { params: { limit: 500 } })

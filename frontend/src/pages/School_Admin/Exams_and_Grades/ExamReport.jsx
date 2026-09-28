@@ -25,7 +25,7 @@ const ExamReports = () => {
 
   useEffect(() => {
     if (!schoolId || !academicYearId) return;
-    dispatch(getExams({ schoolId, academicYearId, limit: 100 }));
+    dispatch(getExams({ schoolId, academicYearId }));
     dispatch(getClassData({ schoolId, academicYearId }));
   }, [dispatch, schoolId, academicYearId]);
 
