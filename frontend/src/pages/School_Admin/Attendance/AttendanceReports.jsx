@@ -10,6 +10,7 @@ import {
   Spin,
   Empty,
   Segmented,
+  Alert,
 } from "antd";
 import {
   FileTextOutlined,
@@ -66,7 +67,10 @@ const downloadCSV = (data, filename) => {
 /* ── Main component ──────────────────────────────────────────────── */
 const AttendanceReports = () => {
   const dispatch = useDispatch();
-  const { list = [], loading }         = useSelector((s) => s.attendance || {});
+  const { list = [], loading, pagination } = useSelector((s) => s.attendance || {});
+  // The report is built from what came back; if the range holds more records than that, say so
+  // instead of showing partial counts as if they were the whole picture.
+  const truncated = Number(pagination?.total) > list.length;
   const { schoolClasses = [] }         = useSelector((s) => s.schoolClass || {});
   const { user: currentUser }          = useSelector((s) => s.auth || {});
 
@@ -108,7 +112,7 @@ const AttendanceReports = () => {
     const params = {
       schoolId,
       role: reportType,
-      limit: 500,
+      limit: 5000,
     };
     if (selectedClass)   params.classId   = selectedClass;
     if (selectedSection) params.sectionId = selectedSection;
@@ -349,6 +353,16 @@ const AttendanceReports = () => {
           </Button>
         </div>
       </div>
+
+      {truncated && !loading && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16, borderRadius: 10 }}
+          message={`Showing the newest ${list.length} of ${pagination.total} records`}
+          description="The counts and the CSV below cover only these. Choose a shorter date range, or one class, to see everything."
+        />
+      )}
 
       {/* ── Summary stat cards ── */}
       <div style={statGrid(130)}>

@@ -159,7 +159,7 @@ const TeacherEvaluationPage = () => {
 
   /* Fetch submitted + evaluated attempts */
   useEffect(() => {
-    dispatch(getAttempts({ limit: 200 }));
+    dispatch(getAttempts({ limit: 2000 }));
   }, [dispatch]);
 
   const pending   = useMemo(() => attempts.filter((a) => a.status === "submitted"),  [attempts]);
@@ -219,7 +219,7 @@ const TeacherEvaluationPage = () => {
 
       await dispatch(evaluateAttempt({ attemptId: attempt._id, evaluations, grade })).unwrap();
       setDrawerAttempt(null);
-      dispatch(getAttempts({ limit: 200 }));
+      dispatch(getAttempts({ limit: 2000 }));
     } catch (e) {
       /* toast shown by thunk */
     } finally {

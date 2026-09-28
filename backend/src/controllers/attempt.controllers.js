@@ -369,13 +369,14 @@ export const getAttempts = asyncHandler(async (req, res) => {
     filters.studentId = child.userId?._id || child.userId;
   }
 
-  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+  const pageSize = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 2000);
+  const skip = (parseInt(page, 10) - 1) * pageSize;
 
   const [attempts, total] = await Promise.all([
     ExamAttempt.find(filters)
       .populate("examId studentId answers.questionId")
       .skip(skip)
-      .limit(parseInt(limit, 10))
+      .limit(pageSize)
       .sort(sort),
     ExamAttempt.countDocuments(filters),
   ]);

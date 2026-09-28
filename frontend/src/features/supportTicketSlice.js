@@ -5,7 +5,8 @@ export const fetchTickets = createAsyncThunk(
   "tickets/fetchAll",
   async (params = {}, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get("/support-tickets", { params });
+      // Every screen shows the whole ticket list and filters it itself; the API default is 20.
+      const res = await apiClient.get("/support-tickets", { params: { limit: 1000, ...params } });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch tickets");

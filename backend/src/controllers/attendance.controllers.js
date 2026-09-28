@@ -306,7 +306,9 @@ export const getAttendance = asyncHandler(async (req, res) => {
   applyReadScope(req, filter);
 
   const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-  const limitNum = Math.min(parseInt(limit, 10) || 20, 200);
+  // 200 was below what the Attendance Report asks for (and below one class for one month), so the
+  // report's counts and CSV silently covered only the newest 200 records.
+  const limitNum = Math.min(parseInt(limit, 10) || 20, 5000);
   const skip = (pageNum - 1) * limitNum;
 
   const query = Attendance.find(filter)

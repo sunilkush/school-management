@@ -68,7 +68,7 @@ export const createSupportTicket = asyncHandler(async (req, res) => {
 });
 
 export const getSupportTickets = asyncHandler(async (req, res) => {
-  const limit = Math.min(Number(req.query.limit) || 20, 100);
+  const limit = Math.min(Number(req.query.limit) || 20, 1000);
   const page = Math.max(Number(req.query.page) || 1, 1);
   const skip = (page - 1) * limit;
 
