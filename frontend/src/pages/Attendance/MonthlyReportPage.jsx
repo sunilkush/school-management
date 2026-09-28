@@ -17,6 +17,7 @@ import { FilterGrid, FilterField } from "../../components/attendance/FilterGrid"
 import { FULL_WIDTH }         from "../../components/attendance/filterStyles";
 import YearField              from "../../components/attendance/YearField";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
+import { downloadCsv } from "../../utils/exportFormat";
 
 /* ── theme ── */
 const C = {
@@ -79,11 +80,7 @@ const exportCSV = (data, filename) => {
     r.totalDays ?? 0,
     Number(r.attendancePercentage || 0).toFixed(1),
   ]);
-  const csv  = [headers, ...rows].map((row) => row.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a"); a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
+  downloadCsv(filename, [headers, ...rows]);
 };
 
 /* ── Stat Card ── */

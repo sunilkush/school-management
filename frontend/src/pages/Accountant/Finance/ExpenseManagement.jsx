@@ -15,6 +15,7 @@ import {
 import PageHeader from "../../../components/layout/PageHeader";
 import StatCardsRow from "../../../components/layout/StatCardsRow";
 import { pill } from "../../../styles/pageStyles";
+import { downloadCsv } from "../../../utils/exportFormat";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -135,12 +136,7 @@ const ExpenseManagement = () => {
       r.title, r.category, r.amount, dayjs(r.date).format("DD-MM-YYYY"),
       r.paymentMode, r.paidTo, r.invoiceNo, r.status,
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v ?? ""}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `expenses-${dayjs().format("YYYY-MM-DD")}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`expenses-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   const byCategory = useMemo(() => expenseSummary?.byCategory || [], [expenseSummary]);

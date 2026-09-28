@@ -15,6 +15,7 @@ import {
 import { iconWell, statGrid } from "../../styles/pageStyles";
 import { BarChartOutlined } from "@ant-design/icons";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
+import { downloadCsv } from "../../utils/exportFormat";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -84,12 +85,7 @@ const HostelReports = () => {
       ["Visitors Today", kpis.visitorsToday || 0],
       ["Open Complaints", kpis.openComplaints || 0],
     ];
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `hostel-summary-${dayjs().format("YYYY-MM-DD")}.csv`;
-    a.click();
+    downloadCsv(`hostel-summary-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   const printReport = () => window.print();

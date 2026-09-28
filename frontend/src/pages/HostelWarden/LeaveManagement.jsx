@@ -16,6 +16,7 @@ import {
 import { fetchLibraryStudents } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { pill, statGrid, iconWell } from "../../styles/pageStyles";
+import { downloadCsv } from "../../utils/exportFormat";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -110,12 +111,7 @@ const LeaveManagement = () => {
       l.reason, l.status, l.checkOutTime ? dayjs(l.checkOutTime).format("DD-MM-YYYY HH:mm") : "—",
       l.checkInTime ? dayjs(l.checkInTime).format("DD-MM-YYYY HH:mm") : "—",
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `leave-report-${dayjs().format("YYYY-MM-DD")}.csv`;
-    a.click();
+    downloadCsv(`leave-report-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   const columns = [

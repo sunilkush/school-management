@@ -18,6 +18,7 @@ import { fetchExpenseSummary } from "../../../features/financeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { iconWell, statGrid } from "../../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
+import { downloadCsv } from "../../../utils/exportFormat";
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -79,24 +80,14 @@ const FinancialReports = () => {
   const handleExportIncome = () => {
     const headers = ["Category", "Total Amount", "Count"];
     const rows = incomeByCategory.map((r) => [r._id, r.total, r.count]);
-    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `income-report-${dayjs().format("YYYY-MM-DD")}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`income-report-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   // CSV export — expense by category
   const handleExportExpense = () => {
     const headers = ["Category", "Total Amount", "Count"];
     const rows = expenseByCategory.map((r) => [r._id, r.total, r.count]);
-    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `expense-report-${dayjs().format("YYYY-MM-DD")}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`expense-report-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   // Print

@@ -16,6 +16,7 @@ import {
 import PageHeader from "../../../components/layout/PageHeader";
 import StatCardsRow from "../../../components/layout/StatCardsRow";
 import { pill } from "../../../styles/pageStyles";
+import { downloadCsv } from "../../../utils/exportFormat";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -134,12 +135,7 @@ const IncomeManagement = () => {
       dayjs(r.date).format("DD-MM-YYYY"),
       r.paymentMode, r.receivedFrom, r.referenceNo,
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v ?? ""}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `income-${dayjs().format("YYYY-MM-DD")}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`income-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   const byCategory = useMemo(() => incomeSummary?.byCategory || [], [incomeSummary]);

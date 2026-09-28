@@ -24,6 +24,7 @@ import dayjs from "dayjs";
 import { fetchAttendance } from "../../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
 import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
+import { downloadCsv } from "../../../utils/exportFormat";
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 
@@ -47,22 +48,20 @@ const REPORT_TYPES = [
 ];
 
 /* ── CSV export utility ──────────────────────────────────────────── */
+// Class and Section are the same columns the table shows; the CSV used to leave them out, so a
+// school-wide export could not tell one "Aarav" from another. Cells go through the shared helper:
+// the old line-join broke on a comma in a remark and showed Hindi names as garbage in Excel.
 const downloadCSV = (data, filename) => {
+  const header = ["Name", "Class", "Section", "Date", "Status", "Remarks"];
   const rows = data.map((r) => [
     r.userId?.name || "",
+    r.schoolClassId?.name || r.classId?.name || "",
+    r.sectionId?.name || "",
     dayjs(r.date).format("DD-MM-YYYY"),
     r.status,
     r.remarks || "",
   ]);
-  const header = ["Name", "Date", "Status", "Remarks"];
-  const csv = [header, ...rows].map((row) => row.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCsv(filename, [header, ...rows]);
 };
 
 /* ── Main component ──────────────────────────────────────────────── */
@@ -302,7 +301,10 @@ const AttendanceReports = () => {
             onClick={() =>
               downloadCSV(
                 filteredList,
-                `attendance-${reportType}-${dayjs().format("YYYY-MM-DD")}.csv`
+                // Name the file after the range it covers, not the day it was downloaded.
+                dateRange?.[0] && dateRange?.[1]
+                  ? `attendance-${reportType}-${dateRange[0].format("YYYY-MM-DD")}_to_${dateRange[1].format("YYYY-MM-DD")}.csv`
+                  : `attendance-${reportType}-all-dates.csv`
               )
             }
             disabled={!filteredList.length}

@@ -16,6 +16,7 @@ import { fetchStudentFeeSummary } from "../../../features/studentFeeSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { iconWell, pill, statGrid } from "../../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
+import { downloadCsv } from "../../../utils/exportFormat";
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -108,12 +109,7 @@ const FeeReports = () => {
       dayjs(p.paymentDate).format("DD-MM-YYYY"),
       p.status,
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v ?? ""}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `fee-report-${dayjs().format("YYYY-MM-DD")}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`fee-report-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   const handlePrint = () => {

@@ -14,6 +14,7 @@ import {
 import { fetchLibraryStudents } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { iconWell, pill, statGrid } from "../../styles/pageStyles";
+import { downloadCsv } from "../../utils/exportFormat";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -73,12 +74,7 @@ const VisitorLog = () => {
       v.exitTime ? dayjs(v.exitTime).format("DD-MM-YYYY HH:mm") : "—",
       v.status,
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `visitors-${dayjs().format("YYYY-MM-DD")}.csv`;
-    a.click();
+    downloadCsv(`visitors-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   const columns = [

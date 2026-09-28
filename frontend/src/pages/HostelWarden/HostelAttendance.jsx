@@ -10,6 +10,7 @@ import {
 } from "../../features/hostelWardenSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { iconWell, statGrid } from "../../styles/pageStyles";
+import { downloadCsv } from "../../utils/exportFormat";
 
 const { Option } = Select;
 
@@ -72,12 +73,7 @@ const HostelAttendance = () => {
   const handleExport = () => {
     const headers = ["Student", "Room", "Status"];
     const rows = sheetStudents.map((s) => [s.name || s.studentName, s.roomNumber || "—", markedStatus[s.studentId] || "present"]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `hostel-attendance-${date.format("YYYY-MM-DD")}-${session}.csv`;
-    a.click();
+    downloadCsv(`hostel-attendance-${date.format("YYYY-MM-DD")}-${session}.csv`, [headers, ...rows]);
   };
 
   const presentCount  = Object.values(markedStatus).filter((s) => s === "present").length;

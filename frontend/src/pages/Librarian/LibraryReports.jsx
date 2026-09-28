@@ -19,6 +19,7 @@ import {
 import PageHeader from "../../components/layout/PageHeader";
 import { iconWell, statGrid } from "../../styles/pageStyles";
 import { CATEGORICAL_COLORS } from "../../utils/colorPalette";
+import { downloadCsv } from "../../utils/exportFormat";
 
 const { Text } = Typography;
 
@@ -133,14 +134,7 @@ const LibraryReports = () => {
   const handleExportCSV = () => {
     const headers = ["Book Title", "Times Issued"];
     const rows = topBorrowed.map((r) => [r.title, r.count]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `library-report-${dayjs().format("YYYY-MM-DD")}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`library-report-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   const isLoading = booksLoading || issuedLoading;

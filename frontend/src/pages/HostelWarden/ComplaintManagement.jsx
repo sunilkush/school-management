@@ -14,6 +14,7 @@ import {
 import { fetchLibraryStudents } from "../../features/librarySlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { iconWell, pill, statGrid } from "../../styles/pageStyles";
+import { downloadCsv } from "../../utils/exportFormat";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -91,12 +92,7 @@ const ComplaintManagement = () => {
       dayjs(c.createdAt).format("DD-MM-YYYY"),
       c.resolvedAt ? dayjs(c.resolvedAt).format("DD-MM-YYYY") : "—",
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `complaints-${dayjs().format("YYYY-MM-DD")}.csv`;
-    a.click();
+    downloadCsv(`complaints-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows]);
   };
 
   const columns = [
