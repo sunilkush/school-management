@@ -87,7 +87,7 @@ export default function AlumniPage() {
       isReachable: filterReachable === null ? undefined : filterReachable,
       search: searchText || undefined,
       page: 1,
-      limit: 50,
+      limit: 1000,
     }));
   };
 

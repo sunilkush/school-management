@@ -170,7 +170,7 @@ export const getCertificates = asyncHandler(async (req, res) => {
   }
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = parseInt(limit, 10) || 20;
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 2000);
   const skip = (pageNum - 1) * limitNum;
   const sortBy = sort ? sort.split(",").join(" ") : "-createdAt";
 

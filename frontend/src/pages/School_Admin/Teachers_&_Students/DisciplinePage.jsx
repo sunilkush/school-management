@@ -124,7 +124,7 @@ export default function DisciplinePage() {
       category: filterCategory || undefined,
       search: searchText || undefined,
       page: 1,
-      limit: 50,
+      limit: 1000,
     }));
   };
 

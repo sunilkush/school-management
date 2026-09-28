@@ -100,7 +100,7 @@ export default function CanteenPage() {
   }, [dispatch]);
 
   const refreshOrders = () => {
-    dispatch(fetchOrders({ studentId: studentId || undefined, status: filterStatus || undefined, page: 1, limit: 50 }));
+    dispatch(fetchOrders({ studentId: studentId || undefined, status: filterStatus || undefined, page: 1, limit: 1000 }));
   };
   useEffect(() => {
     refreshOrders();

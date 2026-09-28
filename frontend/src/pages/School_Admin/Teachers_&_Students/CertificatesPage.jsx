@@ -109,7 +109,7 @@ export default function CertificatesPage() {
       status: filterStatus || undefined,
       search: searchText || undefined,
       page: 1,
-      limit: 50,
+      limit: 1000,
     }));
   };
 

@@ -217,7 +217,7 @@ export const getTransactions = asyncHandler(async (req, res) => {
   const { page, limit } = req.query;
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = parseInt(limit, 10) || 20;
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 2000);
   const skip = (pageNum - 1) * limitNum;
 
   const filter = { schoolId, studentId };
@@ -304,7 +304,7 @@ export const getOrders = asyncHandler(async (req, res) => {
   }
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = parseInt(limit, 10) || 20;
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 2000);
   const skip = (pageNum - 1) * limitNum;
   const sortBy = sort ? sort.split(",").join(" ") : "-orderDate";
 

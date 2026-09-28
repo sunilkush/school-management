@@ -137,7 +137,7 @@ export default function HealthRecordsPage() {
       severity: filterSeverity || undefined,
       search: searchText || undefined,
       page: 1,
-      limit: 50,
+      limit: 1000,
     }));
   };
 
