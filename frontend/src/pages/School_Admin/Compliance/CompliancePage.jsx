@@ -71,6 +71,10 @@ const CompliancePage = () => {
 
   const openStudent = (row) => {
     setEditing(row);
+    // setFieldsValue only touches the keys it is given, and a student with nothing recorded has
+    // no `compliance` keys at all — without this reset, the previous student's PEN / APAAR ID /
+    // category would still be sitting in the form and get saved onto this student.
+    studentForm.resetFields();
     studentForm.setFieldsValue({
       ...row.compliance,
       apaarConsent: row.compliance?.apaarConsent?.given || false,
