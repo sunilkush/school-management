@@ -59,7 +59,8 @@ export const getLessonPlans = asyncHandler(async (req, res) => {
     filter.teacherId = req.user._id;
   }
 
-  const skip  = (Number(page) - 1) * Number(limit);
+  const pageSize = Math.min(Math.max(Number(limit) || 20, 1), 2000);
+  const skip  = (Number(page) - 1) * pageSize;
   const total = await LessonPlan.countDocuments(filter);
   const items = await LessonPlan.find(filter)
     .populate("schoolClassId", "name")
@@ -67,9 +68,9 @@ export const getLessonPlans = asyncHandler(async (req, res) => {
     .populate("teacherId", "name email")
     .sort({ plannedDate: -1 })
     .skip(skip)
-    .limit(Number(limit));
+    .limit(pageSize);
 
-  return res.json(new ApiResponse(200, { items, total, page: Number(page), limit: Number(limit) }, "Lesson plans fetched"));
+  return res.json(new ApiResponse(200, { items, total, page: Number(page), limit: pageSize }, "Lesson plans fetched"));
 });
 
 export const getLessonPlanById = asyncHandler(async (req, res) => {

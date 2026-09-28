@@ -93,7 +93,8 @@ const LessonPlans = () => {
     if (!selectedAcademicYear?._id) return;
     setLoading(true);
     try {
-      const params = { academicYearId: selectedAcademicYear._id };
+      // The table pages the list itself; without a limit the API stopped at 20 plans.
+      const params = { academicYearId: selectedAcademicYear._id, limit: 1000 };
       if (filterStatus) params.status = filterStatus;
       const res = await apiClient.get("/lesson-plans", { params });
       setPlans(res.data?.data?.items || []);

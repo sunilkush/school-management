@@ -224,13 +224,15 @@ export const getQuestions = asyncHandler(async (req, res) => {
     if (tags) filters.tags = { $in: tags.split(",").map((t) => t.trim().toLowerCase()) };
     if (search) filters.statement = { $regex: escapeRegex(search), $options: "i" };
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    // Capped: the exam builders and the bank page ask for the whole bank and filter it themselves.
+    const pageSize = Math.min(Math.max(parseInt(limit) || 10, 1), 2000);
+    const skip = (parseInt(page) - 1) * pageSize;
 
     const [questions, total] = await Promise.all([
       Question.find(filters)
         .populate("subjectId schoolId schoolClassId chapterId createdBy", "name")
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(pageSize)
         .sort(sort),
       Question.countDocuments(filters),
     ]);
@@ -241,7 +243,7 @@ export const getQuestions = asyncHandler(async (req, res) => {
         pagination: {
           total,
           page: parseInt(page),
-          pages: Math.ceil(total / limit),
+          pages: Math.ceil(total / pageSize),
         },
       }, "Questions fetched successfully")
     );

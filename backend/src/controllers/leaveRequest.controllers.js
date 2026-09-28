@@ -106,7 +106,9 @@ export const getLeaveRequests = asyncHandler(async (req, res) => {
   if (startDate) filter.startDate = { $gte: new Date(startDate) };
   if (endDate) filter.endDate = { ...filter.endDate, $lte: new Date(endDate) };
 
-  const skip = (Number(page) - 1) * Number(limit);
+  // Capped: the leave screen asks for the whole list, since it splits it into tabs itself.
+  const pageSize = Math.min(Math.max(Number(limit) || 20, 1), 2000);
+  const skip = (Number(page) - 1) * pageSize;
 
   const [requests, total] = await Promise.all([
     LeaveRequest.find(filter)
@@ -114,14 +116,14 @@ export const getLeaveRequests = asyncHandler(async (req, res) => {
       .populate("approvedBy", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit)),
+      .limit(pageSize),
     LeaveRequest.countDocuments(filter),
   ]);
 
   res.status(200).json(
     new ApiResponse(
       200,
-      { requests, total, page: Number(page), limit: Number(limit) },
+      { requests, total, page: Number(page), limit: pageSize },
       "Leave requests fetched successfully"
     )
   );

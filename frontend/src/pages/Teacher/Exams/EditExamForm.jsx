@@ -87,7 +87,8 @@ const EditExamForm = ({ examId }) => {
   useEffect(() => {
   if (schoolId) {
     dispatch(fetchAllClasses({ schoolId }));
-    dispatch(getQuestions({ schoolId }));
+    // Filtered by class + subject on this side, so fetch the whole bank (the API default is 10).
+    dispatch(getQuestions({ schoolId, limit: 1000 }));
   }
 
   if (examId) {

@@ -60,7 +60,9 @@ const CreateExam = () => {
   useEffect(() => {
     if (schoolId) {
       dispatch(getClassData({ schoolId, academicYearId }));
-      dispatch(getQuestions({ schoolId }));
+      // The picker filters by class + subject on this side, so it needs the whole bank — without a
+      // limit the API returned the 10 newest questions school-wide, usually none for the subject.
+      dispatch(getQuestions({ schoolId, limit: 1000 }));
     }
   }, [schoolId, dispatch, academicYearId]);
 

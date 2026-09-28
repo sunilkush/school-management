@@ -247,7 +247,9 @@ const LeaveManagement = () => {
   /* ── Fetch ── */
   useEffect(() => {
     if (!schoolId) return;
-    dispatch(fetchLeaveRequests({ schoolId }));
+    // The page splits one list into Pending / Approved / Rejected tabs itself, so it needs all of
+    // it — the API returns 20 by default, which hid every older request, pending ones included.
+    dispatch(fetchLeaveRequests({ schoolId, limit: 1000 }));
   }, [schoolId, dispatch]);
 
   /* ── Derived lists ── */
