@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
-import { getRoleName } from "../utils/roles";
-import { fetchActiveAcademicYear } from "./academicYearSlice";
+import { resolveActiveYearId } from "./academicYearSlice";
 
 // 🔐 Token helper
 
@@ -45,25 +44,17 @@ export const getClassData = createAsyncThunk(
 // ==============================
 export const fetchSchoolClasses = createAsyncThunk(
   "schoolClass/fetchAll",
-  async (params = {}, { rejectWithValue, getState, dispatch }) => {
+  async (params = {}, thunkApi) => {
+    const { rejectWithValue } = thunkApi;
     try {
       // A school keeps next year's classes alongside this year's, so a caller that names no year
-      // got both — every class twice in its picker. Default to the active year; callers that want
-      // a particular year (promotion, setup) pass it. Super Admin browses any school, whose year
-      // is not the one in the store, so it is left alone.
+      // got both — every class twice in its picker. Default to the active year (waiting for it on
+      // a first load / phone); callers that want a particular year (promotion, setup) pass it.
+      // Super Admin browses any school, whose year is not the one in the store, so it is left alone.
       const query = { ...params };
-      if (!("academicYearId" in query) || !query.academicYearId) {
-        const { academicYear = {}, auth = {} } = getState() || {};
-        if (getRoleName(auth.user) !== "Super Admin") {
-          let year = academicYear.selectedAcademicYear || academicYear.activeYear;
-          // A page can ask for classes before the layout has loaded the year (first load, phone):
-          // wait for it rather than fall back to every year's classes. Shares the layout's request.
-          const schoolId = auth.user?.school?._id || auth.user?.schoolId?._id || auth.user?.schoolId;
-          if (!year?._id && schoolId) {
-            year = await dispatch(fetchActiveAcademicYear(schoolId)).unwrap().catch(() => null);
-          }
-          if (year?._id) query.academicYearId = year._id;
-        }
+      if (!query.academicYearId) {
+        const yearId = await resolveActiveYearId(thunkApi);
+        if (yearId) query.academicYearId = yearId;
       }
       const res = await apiClient.get(`/school-class`, { params: query });
       return res.data.data;

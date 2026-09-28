@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
+import { resolveActiveYearId } from "./academicYearSlice";
 
 export const createExam = createAsyncThunk("exams/createExam", async (payload, { rejectWithValue }) => {
   try {
@@ -10,13 +11,22 @@ export const createExam = createAsyncThunk("exams/createExam", async (payload, {
   }
 });
 
-export const getExams = createAsyncThunk("exams/getExams", async (params = {}, { rejectWithValue }) => {
+export const getExams = createAsyncThunk("exams/getExams", async (params = {}, thunkApi) => {
+  const { rejectWithValue } = thunkApi;
   try {
     // The API returns 20 by default, but most callers want the whole list (schedule, analytics,
     // seat plan, student/teacher exam pages) and filter it themselves — Delhi Public School has
     // 50 exams, so those pages showed 20. Pages that really page (ExamPage) pass their own limit.
+    const requested = { limit: 1000, ...params };
+    // The school already has next year's exams (13 of the 50). A staff page naming no year got
+    // them mixed in with this year's, so default to the active year. Student / Parent are scoped
+    // by the child's own enrolment on the server — forcing the active year there would hide every
+    // exam from a student already promoted into next year.
+    if (!requested.academicYearId) {
+      requested.academicYearId = await resolveActiveYearId(thunkApi, ["Super Admin", "Student", "Parent"]);
+    }
     const clean = Object.fromEntries(
-      Object.entries({ limit: 1000, ...params }).filter(([, v]) => v !== null && v !== undefined && v !== "")
+      Object.entries(requested).filter(([, v]) => v !== null && v !== undefined && v !== "")
     );
     const query = new URLSearchParams(clean).toString();
     const res = await apiClient.get(`/exams?${query}`);

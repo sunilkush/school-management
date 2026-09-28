@@ -54,6 +54,32 @@ export const fetchActiveAcademicYear = createAsyncThunk(
   }
 );
 
+/**
+ * For thunks that list year-scoped data (classes, exams): the id of the school's active year, to
+ * use when the caller named none. Schools keep next year's classes / exams alongside this year's,
+ * so an unscoped list mixes the two. Waits for the year if it has not been loaded yet (first load,
+ * phone) — sharing the layout's request — instead of falling back to every year.
+ *
+ * Returns undefined (= do not add a year) for roles in `skipRoles`: Super Admin browses other
+ * schools, and Student / Parent lists are scoped server-side by the child's own enrolment.
+ */
+export const resolveActiveYearId = async (
+  { getState, dispatch },
+  skipRoles = ["Super Admin"]
+) => {
+  const { academicYear = {}, auth = {} } = getState() || {};
+  const user = auth.user;
+  const roleName = typeof user?.role === "string" ? user.role : user?.role?.name || user?.roleId?.name || "";
+  if (!user || skipRoles.includes(roleName)) return undefined;
+
+  let year = academicYear.selectedAcademicYear || academicYear.activeYear;
+  const schoolId = user.school?._id || user.schoolId?._id || user.schoolId;
+  if (!year?._id && schoolId) {
+    year = await dispatch(fetchActiveAcademicYear(schoolId)).unwrap().catch(() => null);
+  }
+  return year?._id || undefined;
+};
+
 /* ================= SET ACTIVE ================= */
 
 export const setActiveAcademicYear = createAsyncThunk(
