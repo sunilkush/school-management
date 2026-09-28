@@ -328,6 +328,21 @@ export const addManualPayment = asyncHandler(async (req, res) => {
   if (!existing) throw new ApiError(404, "Invoice not found");
   if (existing.status === "paid") throw new ApiError(400, "Invoice is already paid");
 
+  // Billing has no partial payments: one successful payment marks the invoice paid and renews the
+  // school's plan. So the amount has to be real, and a successful one has to cover the invoice —
+  // otherwise a typo (99 for 999) renewed a whole year for 99, and 0 renewed it for nothing.
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    throw new ApiError(400, "Enter the amount received");
+  }
+  if (status === "success" && numericAmount + 0.005 < Number(existing.totalAmount || 0)) {
+    throw new ApiError(
+      400,
+      `₹${numericAmount} is less than this invoice's total of ₹${existing.totalAmount}. ` +
+        "Part payments are not supported — record it as pending, or correct the amount."
+    );
+  }
+
   // Nothing used to stop a second payment on an invoice that was already paid — a double-click on
   // Save Payment recorded the same payment twice, and revenue counted it twice. Claiming the invoice
   // with a conditional update (not read-then-save) means two requests racing each other cannot
