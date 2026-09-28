@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Avatar, Button, Col, Descriptions, Empty, List, Row, Select, Skeleton, Space, Tag, message } from "antd";
 import { HomeOutlined, ReloadOutlined, UserOutlined } from "@ant-design/icons";
@@ -21,16 +21,25 @@ const ChildHostel = () => {
     if (!selectedChildId && children.length) setSelectedChildId(children[0].userId);
   }, [children, selectedChildId]);
 
+  // The child picked now. A parent switching A → B quickly can get A's slower answer after B's;
+  // only the answer for the child still selected may be shown.
+  const latestChildRef = useRef(selectedChildId);
+  latestChildRef.current = selectedChildId;
+
   const fetchHostel = useCallback(async () => {
     if (!selectedChildId) return;
+    const childId = selectedChildId;
+    const isCurrent = () => latestChildRef.current === childId;
+    setHostel(null); // never leave the previous child's data up while this one loads (or fails)
     setLoading(true);
     try {
       const res = await apiClient.get(`/student-portal/child/${selectedChildId}/hostel`);
+      if (!isCurrent()) return;
       setHostel(res.data?.data || null);
     } catch (err) {
-      message.error(err?.response?.data?.message || "Failed to load hostel info");
+      if (isCurrent()) message.error(err?.response?.data?.message || "Failed to load hostel info");
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
   }, [selectedChildId]);
 

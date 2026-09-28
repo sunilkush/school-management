@@ -25,11 +25,16 @@ export default function ChildReportCards() {
 
   useEffect(() => {
     if (!selectedChildId) return;
+    // Switching child: clear the previous child's cards (a failed load used to leave them showing
+    // under the new name) and ignore an older child's answer that arrives after this one's.
+    let current = true;
+    setCards([]);
     setLoading(true);
     fetchChildReportCards(selectedChildId)
-      .then(setCards)
-      .catch((err) => message.error(err?.response?.data?.message || "Could not load report cards"))
-      .finally(() => setLoading(false));
+      .then((rows) => { if (current) setCards(rows); })
+      .catch((err) => { if (current) message.error(err?.response?.data?.message || "Could not load report cards"); })
+      .finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
   }, [selectedChildId]);
 
   const childName = children.find((c) => c.userId === selectedChildId)?.name;

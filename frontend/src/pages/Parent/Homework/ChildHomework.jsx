@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { Button, Empty, Modal, Select, Skeleton, Space, Table, Tag, message } from "antd";
@@ -39,16 +39,25 @@ const ChildHomework = () => {
     setSelectedChildId(requested ? requestedChildId : children[0].userId);
   }, [children, selectedChildId, requestedChildId]);
 
+  // The child picked now. A parent switching A → B quickly can get A's slower answer after B's;
+  // only the answer for the child still selected may be shown.
+  const latestChildRef = useRef(selectedChildId);
+  latestChildRef.current = selectedChildId;
+
   const fetchHomework = useCallback(async () => {
     if (!selectedChildId) return;
+    const childId = selectedChildId;
+    const isCurrent = () => latestChildRef.current === childId;
+    setHomework([]); // never leave the previous child's data up while this one loads (or fails)
     setLoading(true);
     try {
       const res = await apiClient.get(`/student-portal/child/${selectedChildId}/homework`);
+      if (!isCurrent()) return;
       setHomework(res.data?.data?.homework || []);
     } catch (err) {
-      message.error(err?.response?.data?.message || "Failed to load homework");
+      if (isCurrent()) message.error(err?.response?.data?.message || "Failed to load homework");
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
   }, [selectedChildId]);
 

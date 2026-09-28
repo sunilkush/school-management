@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Col, Empty, Row, Select, Skeleton, Space, Tabs, Tag } from "antd";
+import { Button, Col, Empty, Row, Select, Skeleton, Space, Tabs, Tag, message } from "antd";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell,
@@ -33,29 +33,37 @@ const ChildProgress = () => {
     if (!selectedChildId && children.length) setSelectedChildId(children[0].userId);
   }, [children, selectedChildId]);
 
+  // Only the answers for the child still selected may be shown — switching A → B quickly can
+  // bring A's slower answer back after B's.
+  const latestChildRef = useRef(selectedChildId);
+  latestChildRef.current = selectedChildId;
+
   const loadAll = useCallback(async () => {
     if (!selectedChildId) return;
+    const childId = selectedChildId;
+    const isCurrent = () => latestChildRef.current === childId;
     const now   = dayjs();
     const month = now.month() + 1;
     const year  = now.year();
 
-    dispatch(getParentResults({ studentId: selectedChildId }));
+    dispatch(getParentResults({ studentId: childId }));
+    setAttendance([]);
+    setHomework([]);
 
+    // Loaded side by side, each on its own: before, a failed attendance request threw out of this
+    // function, so homework was never even asked for (and the error went unhandled).
     setAttLoading(true);
-    try {
-      const res = await apiClient.get("/attendance/my", { params: { childId: selectedChildId, month, year } });
-      setAttendance(res.data?.data || []);
-    } finally {
-      setAttLoading(false);
-    }
-
     setHwLoading(true);
-    try {
-      const res = await apiClient.get(`/student-portal/child/${selectedChildId}/homework`);
-      setHomework(res.data?.data?.homework || []);
-    } finally {
-      setHwLoading(false);
-    }
+    await Promise.all([
+      apiClient.get("/attendance/my", { params: { childId, month, year } })
+        .then((res) => { if (isCurrent()) setAttendance(res.data?.data || []); })
+        .catch(() => { if (isCurrent()) message.error("Could not load attendance"); })
+        .finally(() => { if (isCurrent()) setAttLoading(false); }),
+      apiClient.get(`/student-portal/child/${childId}/homework`)
+        .then((res) => { if (isCurrent()) setHomework(res.data?.data?.homework || []); })
+        .catch(() => { if (isCurrent()) message.error("Could not load homework"); })
+        .finally(() => { if (isCurrent()) setHwLoading(false); }),
+    ]);
   }, [dispatch, selectedChildId]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
