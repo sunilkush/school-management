@@ -1186,6 +1186,7 @@ const router = createBrowserRouter([
               { path: "book-catalog",     element: <Books /> },
               { path: "issue-return",     element: <IssueBook /> },
               { path: "members",          element: <LibraryMembers /> },
+              { path: "cards",            element: <LibraryCard /> },
               { path: "reports",          element: <LibraryReports /> },
               { path: "fines",            element: <FineManagement /> },
               { path: "settings",         element: <LibrarySettings /> },

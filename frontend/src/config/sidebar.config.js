@@ -640,6 +640,7 @@ export const sidebarMenu = {
     { title: "Book Catalog", path: "librarian/book-catalog", icon: Book },
     { title: "Issue / Return", path: "librarian/issue-return", icon: ClipboardCheck },
     { title: "Members", path: "librarian/members", icon: Users },
+    { title: "Library Cards", path: "librarian/cards", icon: CreditCard },
     { title: "Fine Management", path: "librarian/fines", icon: RupeeIcon },
     { title: "Reports", path: "librarian/reports", icon: FileBarChart2 },
     { title: "Library Settings", path: "librarian/settings", icon: Settings },
