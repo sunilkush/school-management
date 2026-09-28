@@ -17,6 +17,7 @@ import { fetchSchoolClasses } from "../../features/schoolClassSlice";
 import { fetchSections } from "../../features/sectionSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { pill } from "../../styles/pageStyles";
+import { safeHref } from "../../utils/safeUrl";
 
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
@@ -123,7 +124,11 @@ const OnlineClassesPage = ({ canHost = false }) => {
   const openLink = async (row) => {
     const res = await dispatch(joinOnlineClass(row._id));
     if (joinOnlineClass.fulfilled.match(res)) {
-      window.open(res.payload.meetingLink, "_blank", "noopener,noreferrer");
+      // The server checks the link is http(s) when it is saved; checked again here because an
+      // older or directly-edited record is not guaranteed to have gone through that.
+      const link = safeHref(res.payload.meetingLink);
+      if (link) window.open(link, "_blank", "noopener,noreferrer");
+      else message.error("This class has no valid meeting link");
       load();
     } else {
       message.error(res.payload || "Could not open the class");
@@ -227,7 +232,7 @@ const OnlineClassesPage = ({ canHost = false }) => {
             </>
           )}
           {r.recordingUrl && (
-            <Button size="small" href={r.recordingUrl} target="_blank" rel="noreferrer">Recording</Button>
+            <Button size="small" href={safeHref(r.recordingUrl)} target="_blank" rel="noreferrer">Recording</Button>
           )}
         </div>
       ),

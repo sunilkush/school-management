@@ -17,6 +17,7 @@ import { fetchSubscriptionPlans } from "../../../features/subscriptionPlanSlice"
 import { getBoards } from "../../../features/boardSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { avatarStyle, modalTitle } from "../../../styles/pageStyles";
+import { safeHref } from "../../../utils/safeUrl";
 
 /**
  * Schools — every school on the platform, whether it can sign in, and whose subscription needs
@@ -632,7 +633,7 @@ const Schools = () => {
             <Section title="Details" extra={<Button size="small" icon={<EditOutlined />} onClick={() => setFormFor({ school: open })}>Edit</Button>}>
               <Fact label="Email">{open.email}</Fact>
               <Fact label="Phone">{open.phone}</Fact>
-              <Fact label="Website">{open.website && <a href={open.website} target="_blank" rel="noreferrer">{open.website}</a>}</Fact>
+              <Fact label="Website">{open.website && <a href={safeHref(open.website)} target="_blank" rel="noreferrer">{open.website}</a>}</Fact>
               <Fact label="Address">{open.address}</Fact>
               <Fact label="Boards">
                 {open.boards?.length ? open.boards.map((b) => <Tag key={b._id}>{b.name}</Tag>) : null}

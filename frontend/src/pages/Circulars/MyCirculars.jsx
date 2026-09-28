@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { acknowledgeCircular, fetchCircular, fetchMyCirculars, clearCurrent } from "../../features/circularSlice";
 import PageHeader from "../../components/layout/PageHeader";
 import { pill } from "../../styles/pageStyles";
+import { safeHref } from "../../utils/safeUrl";
 
 const { TextArea } = Input;
 
@@ -162,7 +163,7 @@ const MyCirculars = () => {
             {current.attachments?.length > 0 && (
               <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {current.attachments.map((a) => (
-                  <Button key={a.url} size="small" href={a.url} target="_blank" rel="noreferrer">{a.name}</Button>
+                  <Button key={a.url} size="small" href={safeHref(a.url)} target="_blank" rel="noreferrer">{a.name}</Button>
                 ))}
               </div>
             )}

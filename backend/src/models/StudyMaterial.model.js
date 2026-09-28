@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { optionalHttpUrlValidator } from "../utils/safeUrl.js";
 const { Schema } = mongoose;
 
 const studyMaterialSchema = new Schema(
@@ -57,6 +58,7 @@ const studyMaterialSchema = new Schema(
       type: String,
       trim: true,
       default: "",
+      validate: optionalHttpUrlValidator,
     },
     fileName: {
       type: String,
@@ -67,10 +69,12 @@ const studyMaterialSchema = new Schema(
       type: Number,
       default: 0,
     },
+    // Typed by a teacher, opened by every student in the class: http(s) only (see utils/safeUrl.js).
     externalLink: {
       type: String,
       trim: true,
       default: "",
+      validate: optionalHttpUrlValidator,
     },
     isActive: {
       type: Boolean,

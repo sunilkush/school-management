@@ -9,6 +9,7 @@ import {
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { modalTitle, pill } from "../../../styles/pageStyles";
+import { safeHref } from "../../../utils/safeUrl";
 
 /**
  * Chapters & Topics — pick a board, a class and a subject; everything for that subject is on one
@@ -459,7 +460,7 @@ const ChaptersTopics = () => {
                         </Tooltip>
                       )}
                       {ch.pdfUrl && (
-                        <Button size="small" icon={<FilePdfOutlined />} href={ch.pdfUrl} target="_blank" rel="noopener noreferrer">PDF</Button>
+                        <Button size="small" icon={<FilePdfOutlined />} href={safeHref(ch.pdfUrl)} target="_blank" rel="noopener noreferrer">PDF</Button>
                       )}
                       <Button size="small" type={open ? "default" : "text"} onClick={() => setOpenChapter(open ? null : ch._id)}>
                         {activeTopicCount} topic{activeTopicCount === 1 ? "" : "s"}
@@ -506,7 +507,7 @@ const ChaptersTopics = () => {
                     <span style={{ minWidth: 190, fontSize: 13, color: "var(--text-secondary)" }}>
                       {book.title} · chapter {entry.bookChapterNo}
                     </span>
-                    <Button size="small" icon={<FilePdfOutlined />} href={entry.pdfUrl} target="_blank" rel="noopener noreferrer">Open PDF</Button>
+                    <Button size="small" icon={<FilePdfOutlined />} href={safeHref(entry.pdfUrl)} target="_blank" rel="noopener noreferrer">Open PDF</Button>
                     <Input
                       size="small"
                       placeholder="Chapter name"

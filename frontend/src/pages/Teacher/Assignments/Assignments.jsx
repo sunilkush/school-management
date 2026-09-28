@@ -31,6 +31,7 @@ import { fetchAssignedClasses } from "../../../features/classSlice";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
+import { safeHref } from "../../../utils/safeUrl";
 
 const { Text } = Typography;
 
@@ -487,7 +488,7 @@ const Assignments = () => {
                         const name = (typeof att === "object" && att?.name) || `File ${idx + 1}`;
                         if (!url) return null;
                         return (
-                          <Button key={idx} size="small" type="link" href={url} target="_blank" rel="noreferrer">{name}</Button>
+                          <Button key={idx} size="small" type="link" href={safeHref(url)} target="_blank" rel="noreferrer">{name}</Button>
                         );
                       })}
                     </Space>

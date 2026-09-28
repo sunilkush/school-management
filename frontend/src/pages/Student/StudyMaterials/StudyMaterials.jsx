@@ -11,6 +11,7 @@ import apiClient from "../../../api/httpClient";
 import { fetchStudentEnrollment } from "../../../features/studentPortalSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
+import { safeHref } from "../../../utils/safeUrl";
 
 const TYPE_OPTIONS = [
   { value: "notes",          label: "Notes",          icon: <FileTextOutlined /> },
@@ -58,7 +59,7 @@ const MaterialCard = ({ item }) => {
           {item.fileUrl && (
             <Button
               size="small" type="primary" icon={<DownloadOutlined />}
-              href={item.fileUrl} target="_blank" rel="noreferrer"
+              href={safeHref(item.fileUrl)} target="_blank" rel="noreferrer"
             >
               Download
             </Button>
@@ -66,7 +67,7 @@ const MaterialCard = ({ item }) => {
           {item.externalLink && (
             <Button
               size="small" icon={<LinkOutlined />}
-              href={item.externalLink} target="_blank" rel="noreferrer"
+              href={safeHref(item.externalLink)} target="_blank" rel="noreferrer"
             >
               Open Link
             </Button>

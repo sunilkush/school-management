@@ -9,6 +9,7 @@ import {
   activateSchoolGateway, deactivateSchoolGateway, fetchSchoolGateways, saveSchoolGateway, testSchoolGateway,
 } from "../../features/paymentGatewaySlice";
 import { iconWell } from "../../styles/pageStyles";
+import { safeHref } from "../../utils/safeUrl";
 
 const { Text } = Typography;
 
@@ -309,7 +310,7 @@ const PaymentGatewaySettings = () => {
               </Space.Compact>
               {gateway.docsUrl && (
                 <div style={{ marginTop: 10 }}>
-                  <a href={gateway.docsUrl} target="_blank" rel="noreferrer"><LinkOutlined /> {gateway.label} integration docs</a>
+                  <a href={safeHref(gateway.docsUrl)} target="_blank" rel="noreferrer"><LinkOutlined /> {gateway.label} integration docs</a>
                 </div>
               )}
             </div>

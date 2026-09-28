@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { optionalHttpUrlValidator } from "../utils/safeUrl.js";
 
 /**
  * A circular — a numbered notice the school issues and can be held to later.
@@ -16,7 +17,7 @@ export const CIRCULAR_STATUSES = ["draft", "published", "archived"];
 const attachmentSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
-    url: { type: String, required: true, trim: true },
+    url: { type: String, required: true, trim: true, validate: optionalHttpUrlValidator },
     mimeType: { type: String, trim: true, default: "" },
   },
   { _id: false }

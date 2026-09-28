@@ -10,6 +10,7 @@ import apiClient from "../../../api/httpClient";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
+import { safeHref } from "../../../utils/safeUrl";
 
 const TYPE_OPTIONS = [
   { value: "notes",          label: "Notes" },
@@ -218,8 +219,8 @@ const SubjectResources = () => {
     {
       title: "File / Link",
       render: (_, r) => {
-        if (r.fileUrl) return <Button type="link" size="small" href={r.fileUrl} target="_blank" icon={<BookOutlined />}>Download</Button>;
-        if (r.externalLink) return <Button type="link" size="small" href={r.externalLink} target="_blank" icon={<LinkOutlined />}>Open Link</Button>;
+        if (r.fileUrl) return <Button type="link" size="small" href={safeHref(r.fileUrl)} target="_blank" icon={<BookOutlined />}>Download</Button>;
+        if (r.externalLink) return <Button type="link" size="small" href={safeHref(r.externalLink)} target="_blank" icon={<LinkOutlined />}>Open Link</Button>;
         return <span className="u-muted">No file</span>;
       },
     },

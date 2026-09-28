@@ -4,6 +4,7 @@ import { BookOutlined, DownloadOutlined, FilePdfOutlined, ReloadOutlined, RightO
 import apiClient from "../../api/httpClient";
 import PageHeader from "../../components/layout/PageHeader";
 import { pill } from "../../styles/pageStyles";
+import { safeHref } from "../../utils/safeUrl";
 
 /**
  * Textbooks class-wise and subject-wise, every chapter opening as its official PDF.
@@ -67,7 +68,7 @@ const BookCard = ({ book }) => {
             <Button
               size="small"
               icon={<DownloadOutlined />}
-              href={book.bookUrl}
+              href={safeHref(book.bookUrl)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -93,7 +94,7 @@ const BookCard = ({ book }) => {
                 <span style={{ ...pill("var(--primary)"), minWidth: 34, textAlign: "center" }}>{ch.bookChapterNo ?? ch.chapterNo}</span>
                 <span style={{ flex: 1, fontSize: 14, color: "var(--text-primary)" }}>{ch.name}</span>
                 {ch.pdfUrl ? (
-                  <Button size="small" type="link" icon={<FilePdfOutlined />} href={ch.pdfUrl} target="_blank" rel="noopener noreferrer">
+                  <Button size="small" type="link" icon={<FilePdfOutlined />} href={safeHref(ch.pdfUrl)} target="_blank" rel="noopener noreferrer">
                     Open PDF
                   </Button>
                 ) : (

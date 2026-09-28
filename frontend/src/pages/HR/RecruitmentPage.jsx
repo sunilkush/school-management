@@ -15,6 +15,7 @@ import {
 import PageHeader from "../../components/layout/PageHeader";
 import StatCardsRow from "../../components/layout/StatCardsRow";
 import { pill } from "../../styles/pageStyles";
+import { safeHref } from "../../utils/safeUrl";
 
 const { TextArea } = Input;
 
@@ -233,7 +234,7 @@ const RecruitmentPage = () => {
           ) : (
             <Button size="small" type="primary" onClick={() => { setMoving(r); moveForm.resetFields(); }}>Move</Button>
           )}
-          {r.resumeUrl && <Button size="small" href={r.resumeUrl} target="_blank" rel="noreferrer">CV</Button>}
+          {r.resumeUrl && <Button size="small" href={safeHref(r.resumeUrl)} target="_blank" rel="noreferrer">CV</Button>}
         </div>
       ),
     },

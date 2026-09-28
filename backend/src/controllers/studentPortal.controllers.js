@@ -12,6 +12,7 @@ import { StudentTransportAssignment } from "../models/StudentTransportAssignment
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { isHttpUrl } from "../utils/safeUrl.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const getMyActiveEnrollment = async (user) => {
@@ -314,7 +315,10 @@ export const createTeacherHomework = asyncHandler(async (req, res) => {
     title,
     description,
     dueDate: new Date(dueDate),
-    attachments,
+    // Every student in the class opens these; keep only real http(s) links.
+    attachments: (Array.isArray(attachments) ? attachments : []).filter(
+      (item) => item && typeof item === "object" && isHttpUrl(item.url)
+    ),
   });
 
   const assignment = await Assignment.findById(created._id)
@@ -362,7 +366,9 @@ export const submitHomework = asyncHandler(async (req, res) => {
           mimeType: item.mimeType || "",
           publicId: item.publicId || "",
         }))
-        .filter((item) => item.url)
+        // The teacher opens these links. A student's "javascript:" link would run as script in the
+        // teacher's session, so only http(s) links are kept (uploaded files come from Cloudinary).
+        .filter((item) => isHttpUrl(item.url))
     : [];
 
   // file uploads handle karo

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { optionalHttpUrlValidator } from "../utils/safeUrl.js";
 
 /**
  * One candidate against one posting, and everything that happened to them.
@@ -41,7 +42,7 @@ const jobApplicationSchema = new Schema(
 
     /** A link, not an upload. A school's CVs already live in Drive or email; asking them to move
      *  the files somewhere new is a bigger ask than it looks and buys nothing here. */
-    resumeUrl: { type: String, trim: true, default: "" },
+    resumeUrl: { type: String, trim: true, default: "", validate: optionalHttpUrlValidator },
 
     qualification: { type: String, trim: true, default: "" },
     experienceYears: { type: Number, default: 0, min: 0, max: 60 },
