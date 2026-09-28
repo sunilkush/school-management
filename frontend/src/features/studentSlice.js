@@ -394,12 +394,21 @@ const studentSlice = createSlice({
         state.error = action.payload;
         state.success = false;
       } )
-      .addCase(fetchStudentsBySchoolId.pending, (state) => {
+      .addCase(fetchStudentsBySchoolId.pending, (state, action) => {
         state.loading = true;
         state.error = null;
         state.success = false;
+        // Attendance is marked straight off this list, and the server does not check that the
+        // students sent belong to the class. So: clear the previous class's students the moment
+        // another is asked for (a failed load used to leave them under the new class), and let
+        // only the newest request fill the list (class A's slower answer arriving after B's put
+        // A's students under B — and "Save" then marked them).
+        state.schoolStudents = [];
+        state.schoolStudentsPagination = null;
+        state.schoolStudentsRequestId = action.meta.requestId;
       })
       .addCase(fetchStudentsBySchoolId.fulfilled, (state, action) => {
+        if (action.meta.requestId !== state.schoolStudentsRequestId) return;
         state.loading = false;
          state.schoolStudents =
           action.payload?.data?.students ||
@@ -412,6 +421,7 @@ const studentSlice = createSlice({
         state.success = true;
       })
       .addCase(fetchStudentsBySchoolId.rejected, (state, action) => {
+        if (action.meta.requestId !== state.schoolStudentsRequestId) return;
         state.loading = false;
         state.error = action.payload;
         state.success = false;
