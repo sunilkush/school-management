@@ -11,6 +11,12 @@ WORKDIR /app
 # Create non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
+# Run on the school calendar. Without this the container is UTC while every developer machine is
+# IST, so "today" / "this month" ranges built with new Date(y, m, 1) and setHours(0) started at
+# 5:30 AM IST in production and midnight everywhere it was tested.
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Kolkata
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
