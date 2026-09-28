@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 
 import { fetchAttendance } from "../../../features/attendanceSlice";
 import { fetchSchoolClasses } from "../../../features/schoolClassSlice";
+import { fetchActiveAcademicYear } from "../../../features/academicYearSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 
@@ -73,8 +74,11 @@ const AttendanceReports = () => {
   const truncated = Number(pagination?.total) > list.length;
   const { schoolClasses = [] }         = useSelector((s) => s.schoolClass || {});
   const { user: currentUser }          = useSelector((s) => s.auth || {});
+  const { activeYear, selectedAcademicYear } = useSelector((s) => s.academicYear || {});
 
   const schoolId = currentUser?.school?._id;
+  // Only the active academic year's classes belong in the class picker.
+  const academicYearId = (selectedAcademicYear || activeYear)?._id;
 
   /* ── Filters state ── */
   const [reportType,       setReportType]       = useState("student");
@@ -85,10 +89,14 @@ const AttendanceReports = () => {
 
   /* ── Normalised classes ── */
   const classes = useMemo(() => {
-    if (Array.isArray(schoolClasses)) return schoolClasses;
-    if (Array.isArray(schoolClasses?.classes)) return schoolClasses.classes;
-    return [];
-  }, [schoolClasses]);
+    const all = Array.isArray(schoolClasses)
+      ? schoolClasses
+      : Array.isArray(schoolClasses?.classes) ? schoolClasses.classes : [];
+    // The class list is shared store state — another page may have loaded every year's classes
+    // into it — so filter here too, not just in the request below.
+    if (!academicYearId) return [];
+    return all.filter((c) => String(c.academicYearId?._id || c.academicYearId) === String(academicYearId));
+  }, [schoolClasses, academicYearId]);
 
   const selectedClassObj = useMemo(
     () => classes.find((c) => c._id === selectedClass) || null,
@@ -101,10 +109,23 @@ const AttendanceReports = () => {
   );
 
   /* ── Fetch on mount ── */
+  // The top-bar year switcher normally loads the active year, but it is hidden on phones.
   useEffect(() => {
-    if (!schoolId) return;
-    dispatch(fetchSchoolClasses({ schoolId }));
-  }, [schoolId, dispatch]);
+    if (schoolId && !activeYear && !selectedAcademicYear) dispatch(fetchActiveAcademicYear(schoolId));
+  }, [schoolId, activeYear, selectedAcademicYear, dispatch]);
+
+  useEffect(() => {
+    if (!schoolId || !academicYearId) return;
+    dispatch(fetchSchoolClasses({ schoolId, academicYearId }));
+  }, [schoolId, academicYearId, dispatch]);
+
+  // A class picked before the year was known may not be in this year's list.
+  useEffect(() => {
+    if (selectedClass && !classes.some((c) => c._id === selectedClass)) {
+      setSelectedClass(null);
+      setSelectedSection(null);
+    }
+  }, [classes, selectedClass]);
 
   /* ── Fetch attendance on filter change ── */
   const fetchReport = useCallback(() => {
