@@ -324,25 +324,47 @@ export const addManualPayment = asyncHandler(async (req, res) => {
   const { invoiceId } = req.params;
   const { amount, paymentMode, transactionId, paymentProofUrl, status = "success" } = req.body;
 
-  const invoice = await SubscriptionInvoice.findById(invoiceId);
-  if (!invoice) throw new ApiError(404, "Invoice not found");
+  const existing = await SubscriptionInvoice.findById(invoiceId);
+  if (!existing) throw new ApiError(404, "Invoice not found");
+  if (existing.status === "paid") throw new ApiError(400, "Invoice is already paid");
 
-  const payment = await SubscriptionPayment.create({
-    schoolId: invoice.schoolId,
-    invoiceId,
-    amount,
-    paymentMode,
-    transactionId,
-    paymentProofUrl,
-    status,
-  });
-
+  // Nothing used to stop a second payment on an invoice that was already paid — a double-click on
+  // Save Payment recorded the same payment twice, and revenue counted it twice. Claiming the invoice
+  // with a conditional update (not read-then-save) means two requests racing each other cannot
+  // both see it unpaid: only one gets the invoice back, the other gets null.
+  let invoice = existing;
   if (status === "success") {
-    invoice.status = "paid";
-    invoice.paidDate = new Date();
-    await invoice.save();
-    await applyPaidInvoice(invoice);
+    invoice = await SubscriptionInvoice.findOneAndUpdate(
+      { _id: invoiceId, status: { $ne: "paid" } },
+      { $set: { status: "paid", paidDate: new Date() } },
+      { new: true }
+    );
+    if (!invoice) throw new ApiError(400, "Invoice is already paid");
   }
+
+  let payment;
+  try {
+    payment = await SubscriptionPayment.create({
+      schoolId: invoice.schoolId,
+      invoiceId,
+      amount,
+      paymentMode,
+      transactionId,
+      paymentProofUrl,
+      status,
+    });
+  } catch (err) {
+    // The invoice was claimed as paid above; put it back so a rejected payment does not leave it paid.
+    if (status === "success") {
+      await SubscriptionInvoice.updateOne(
+        { _id: invoiceId },
+        { $set: { status: existing.status, paidDate: existing.paidDate ?? null } }
+      );
+    }
+    throw err;
+  }
+
+  if (status === "success") await applyPaidInvoice(invoice);
 
   return res.status(201).json(new ApiResponse(201, payment, "Payment added"));
 });

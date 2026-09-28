@@ -87,6 +87,7 @@ export default function PaymentsPage() {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
   const [invoiceSearch, setInvoiceSearch] = useState("");
   const [paymentSearch, setPaymentSearch] = useState("");
   const [invoiceStatus, setInvoiceStatus] = useState("");
@@ -176,11 +177,12 @@ export default function PaymentsPage() {
   }, [paymentRows, paymentSearch]);
 
   const submitManualPayment = async () => {
-    if (!selectedInvoice) return;
+    if (!selectedInvoice || savingPayment) return;
 
     try {
       const values = await paymentForm.validateFields();
 
+      setSavingPayment(true);
       await dispatch(
         addManualSubscriptionPayment({
           invoiceId: selectedInvoice._id,
@@ -203,6 +205,8 @@ export default function PaymentsPage() {
     } catch (err) {
       if (err?.errorFields) return;
       message.error(err || "Failed to record payment");
+    } finally {
+      setSavingPayment(false);
     }
   };
 
@@ -465,6 +469,7 @@ export default function PaymentsPage() {
           paymentForm.resetFields();
         }}
         onOk={submitManualPayment}
+        confirmLoading={savingPayment}
         okText="Save Payment"
         width={620}
         destroyOnClose

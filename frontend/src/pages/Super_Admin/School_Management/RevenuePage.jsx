@@ -95,6 +95,8 @@ export default function RevenuePage() {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [savingInvoice, setSavingInvoice] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
 
   const [invoiceForm] = Form.useForm();
   const [paymentForm] = Form.useForm();
@@ -151,9 +153,11 @@ export default function RevenuePage() {
   }, [rows, search, status]);
 
   const handleCreateInvoice = async () => {
+    if (savingInvoice) return;
     try {
       const values = await invoiceForm.validateFields();
 
+      setSavingInvoice(true);
       await dispatch(
         generateSchoolInvoice({
           schoolId: values.schoolId,
@@ -176,15 +180,18 @@ export default function RevenuePage() {
     } catch (error) {
       if (error?.errorFields) return;
       message.error(error || "Invoice generation failed");
+    } finally {
+      setSavingInvoice(false);
     }
   };
 
   const handleAddPayment = async () => {
-    if (!selectedInvoice?._id) return;
+    if (!selectedInvoice?._id || savingPayment) return;
 
     try {
       const values = await paymentForm.validateFields();
 
+      setSavingPayment(true);
       await dispatch(
         addManualSubscriptionPayment({
           invoiceId: selectedInvoice._id,
@@ -206,6 +213,8 @@ export default function RevenuePage() {
     } catch (error) {
       if (error?.errorFields) return;
       message.error(error || "Payment save failed");
+    } finally {
+      setSavingPayment(false);
     }
   };
 
@@ -335,6 +344,7 @@ export default function RevenuePage() {
           invoiceForm.resetFields();
         }}
         onOk={handleCreateInvoice}
+        confirmLoading={savingInvoice}
         okText="Create Invoice"
         width={620}
         destroyOnClose
@@ -408,6 +418,7 @@ export default function RevenuePage() {
           paymentForm.resetFields();
         }}
         onOk={handleAddPayment}
+        confirmLoading={savingPayment}
         okText="Save Payment"
         width={620}
         destroyOnClose
