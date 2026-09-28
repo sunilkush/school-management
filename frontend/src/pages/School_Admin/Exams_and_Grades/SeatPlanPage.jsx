@@ -8,6 +8,7 @@ import {
 import { getExams, getSeatPlan } from "../../../features/examSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
+import { escapeHtml } from "../../../utils/exportFormat";
 
 // Shared design tokens (frontend/src/styles/main.scss) — replaces a local hardcoded
 // hex palette that never adapted to dark mode.
@@ -91,9 +92,11 @@ const SeatPlanPage = () => {
     // styles/main.scss — CSS custom properties would not resolve there. It should
     // also always print on white paper regardless of the app's active
     // theme, so the hex colors below are intentionally literal.
+    // Every value below is escaped: this window runs in the app's own origin, so an exam title
+    // or a student name containing markup would otherwise run there with the admin's session.
     const html = `<!DOCTYPE html><html><head>
       <meta charset="utf-8"/>
-      <title>Seat Plan — ${selectedExam?.title || "Exam"}</title>
+      <title>Seat Plan — ${escapeHtml(selectedExam?.title || "Exam")}</title>
       <style>
         * { box-sizing: border-box; }
         body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 24px; color: #0F172A; }
@@ -125,11 +128,11 @@ const SeatPlanPage = () => {
     </head><body>
       <div class="header">
         <h1>Seat Plan</h1>
-        <div class="subtitle">${selectedExam?.title || "Exam"} &nbsp;·&nbsp; Room Capacity: ${capacity} seats</div>
+        <div class="subtitle">${escapeHtml(selectedExam?.title || "Exam")} &nbsp;·&nbsp; Room Capacity: ${capacity} seats</div>
       </div>
       ${grouped.map(({ room, seats }) => `
         <div class="room">
-          <div class="room-title">Room ${room} &nbsp;·&nbsp; ${seats.length} student${seats.length !== 1 ? "s" : ""}</div>
+          <div class="room-title">Room ${escapeHtml(room)} &nbsp;·&nbsp; ${seats.length} student${seats.length !== 1 ? "s" : ""}</div>
           <table>
             <thead>
               <tr><th>Seat #</th><th>Student Name</th><th>Roll Number</th></tr>
@@ -138,8 +141,8 @@ const SeatPlanPage = () => {
               ${seats.map((s) => `
                 <tr>
                   <td><span class="seat-num">${s.seatNumber}</span></td>
-                  <td>${s.studentName}</td>
-                  <td>${s.rollNumber}</td>
+                  <td>${escapeHtml(s.studentName)}</td>
+                  <td>${escapeHtml(s.rollNumber)}</td>
                 </tr>`).join("")}
             </tbody>
           </table>
