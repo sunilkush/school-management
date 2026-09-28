@@ -31,11 +31,22 @@ export const fetchAllAcademicYears = createAsyncThunk(
 
 /* ================= FETCH ACTIVE ================= */
 
+// The layout, the top-bar switcher and the class loader can all ask for the active year at the
+// same moment on first load; they share one request instead of sending three.
+const activeYearRequests = new Map();
+
 export const fetchActiveAcademicYear = createAsyncThunk(
   "academicYear/fetchActive",
   async (schoolId, { rejectWithValue }) => {
+    const key = String(schoolId);
+    if (!activeYearRequests.has(key)) {
+      activeYearRequests.set(
+        key,
+        apiClient.get(`/academicYear/active/${schoolId}`).finally(() => activeYearRequests.delete(key))
+      );
+    }
     try {
-      const res = await apiClient.get(`/academicYear/active/${schoolId}`);
+      const res = await activeYearRequests.get(key);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);

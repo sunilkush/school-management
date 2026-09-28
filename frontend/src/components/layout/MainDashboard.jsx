@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { Layout, Drawer, Skeleton } from "antd";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchActiveAcademicYear } from "../../features/academicYearSlice";
 import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import Loader from "../Loader/Loader";
 import BottomNav from "../mobile/BottomNav";
@@ -68,8 +69,21 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthInitialized, isLoggingOut } = useSelector((s) => s.auth);
   const { activeYear }  = useSelector((s) => s.academicYear);
+  const dispatch = useDispatch();
 
   const role = user?.role?.name;
+
+  // Every page reads the active academic year from the store. It used to be loaded only by the
+  // top-bar year switcher, which is not rendered on phones — so on a phone pages ran with no year
+  // and fell back to every year's data. Load it here, for every screen size.
+  const schoolId = user?.school?._id || user?.schoolId?._id || user?.schoolId;
+  const activeYearSchoolId = activeYear?.schoolId?._id || activeYear?.schoolId;
+  useEffect(() => {
+    if (!schoolId || role === "Super Admin") return;
+    if (!activeYear || String(activeYearSchoolId) !== String(schoolId)) {
+      dispatch(fetchActiveAcademicYear(schoolId));
+    }
+  }, [dispatch, schoolId, role, activeYear, activeYearSchoolId]);
   const resizeRef = useRef(null);
 
   const [isMobile,         setIsMobile]         = useState(() => getWindowWidth() < 1024);

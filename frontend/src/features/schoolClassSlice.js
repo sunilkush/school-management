@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../api/httpClient";
 import { getRoleName } from "../utils/roles";
+import { fetchActiveAcademicYear } from "./academicYearSlice";
 
 // 🔐 Token helper
 
@@ -44,7 +45,7 @@ export const getClassData = createAsyncThunk(
 // ==============================
 export const fetchSchoolClasses = createAsyncThunk(
   "schoolClass/fetchAll",
-  async (params = {}, { rejectWithValue, getState }) => {
+  async (params = {}, { rejectWithValue, getState, dispatch }) => {
     try {
       // A school keeps next year's classes alongside this year's, so a caller that names no year
       // got both — every class twice in its picker. Default to the active year; callers that want
@@ -53,8 +54,16 @@ export const fetchSchoolClasses = createAsyncThunk(
       const query = { ...params };
       if (!("academicYearId" in query) || !query.academicYearId) {
         const { academicYear = {}, auth = {} } = getState() || {};
-        const year = academicYear.selectedAcademicYear || academicYear.activeYear;
-        if (year?._id && getRoleName(auth.user) !== "Super Admin") query.academicYearId = year._id;
+        if (getRoleName(auth.user) !== "Super Admin") {
+          let year = academicYear.selectedAcademicYear || academicYear.activeYear;
+          // A page can ask for classes before the layout has loaded the year (first load, phone):
+          // wait for it rather than fall back to every year's classes. Shares the layout's request.
+          const schoolId = auth.user?.school?._id || auth.user?.schoolId?._id || auth.user?.schoolId;
+          if (!year?._id && schoolId) {
+            year = await dispatch(fetchActiveAcademicYear(schoolId)).unwrap().catch(() => null);
+          }
+          if (year?._id) query.academicYearId = year._id;
+        }
       }
       const res = await apiClient.get(`/school-class`, { params: query });
       return res.data.data;
