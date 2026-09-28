@@ -55,7 +55,7 @@ const AttendanceFilters = ({
       <DatePicker
         className="u-full"
         value={filters.date ? dayjs(filters.date) : null}
-        onChange={(value) => onChange({ date: value ? value.toISOString() : null })}
+        onChange={(value) => onChange({ date: value ? value.format("YYYY-MM-DD") : null })}
       />
     </Col>
     {showSearch && (

@@ -127,7 +127,7 @@ const MarkAttendancePage = () => {
     try {
       const res = await dispatch(markBulkAttendance({
         ...filters,
-        date:    filters.date || new Date().toISOString(),
+        date:    filters.date || dayjs().format("YYYY-MM-DD"),
         role:    filters.role || "student",
         records,
       }));
@@ -214,7 +214,7 @@ const MarkAttendancePage = () => {
             <DatePicker
               style={FULL_WIDTH}
               value={filters.date ? dayjs(filters.date) : dayjs()}
-              onChange={(v) => dispatch(setAttendanceFilters({ date: v?.toISOString() || null }))}
+              onChange={(v) => dispatch(setAttendanceFilters({ date: v ? v.format("YYYY-MM-DD") : null }))}
               suffixIcon={<CalendarOutlined />}
             />
           </FilterField>

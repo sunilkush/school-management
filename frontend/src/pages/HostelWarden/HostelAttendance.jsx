@@ -31,7 +31,7 @@ const HostelAttendance = () => {
 
   useEffect(() => {
     if (viewMode === "mark") {
-      dispatch(fetchAttendanceSheet({ session, date: date.toISOString() }));
+      dispatch(fetchAttendanceSheet({ session, date: date.format("YYYY-MM-DD") }));
     } else {
       dispatch(fetchHostelAttendance({ page: historyPage, limit: 20, session }));
     }
@@ -64,7 +64,7 @@ const HostelAttendance = () => {
       status: markedStatus[s.studentId] || "present",
     }));
     try {
-      await dispatch(markHostelAttendance({ date: date.toISOString(), session, records })).unwrap();
+      await dispatch(markHostelAttendance({ date: date.format("YYYY-MM-DD"), session, records })).unwrap();
       message.success("Attendance saved");
     } catch (e) { message.error(e || "Failed to save attendance"); }
   };

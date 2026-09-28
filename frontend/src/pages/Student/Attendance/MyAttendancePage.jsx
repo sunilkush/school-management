@@ -64,7 +64,7 @@ const MyAttendancePage = () => {
       await dispatch(
         markBulkAttendance({
           schoolId: user?.school?._id || user?.schoolId,
-          date: new Date().toISOString(),
+          date: dayjs().format("YYYY-MM-DD"),
           role: "teacher",
           records: [
             { userId: user._id, status: todayStatus, remarks: "Self marked" },

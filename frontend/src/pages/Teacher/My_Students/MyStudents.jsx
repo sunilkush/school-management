@@ -177,7 +177,7 @@ const MyStudents = () => {
       await dispatch(
         submitAttendance({
           schoolId,
-          date: attendanceDate?.toISOString?.() || new Date().toISOString(),
+          date: (attendanceDate || dayjs()).format("YYYY-MM-DD"),
           role: "student",
           classId: selectedClassSection.classId,
           sectionId: selectedClassSection.sectionId,

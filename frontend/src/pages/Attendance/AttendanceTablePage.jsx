@@ -418,7 +418,7 @@ const AttendanceTablePage = () => {
               style={FULL_WIDTH}
               value={filters.date ? dayjs(filters.date) : null}
               allowClear placeholder="Any date"
-              onChange={(v) => dispatch(setAttendanceFilters({ date: v?.toISOString() || null, page: 1 }))}
+              onChange={(v) => dispatch(setAttendanceFilters({ date: v ? v.format("YYYY-MM-DD") : null, page: 1 }))}
               suffixIcon={<CalendarOutlined />}
             />
           </FilterField>
