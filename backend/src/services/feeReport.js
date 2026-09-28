@@ -7,6 +7,10 @@ import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import "../models/student.model.js";
 import "../models/feeStructure.model.js";
 
+// Months and days are counted on the school calendar (IST); left unset, Mongo buckets by UTC,
+// which files anything from midnight to 5:30 AM under the previous day (and the 1st under the previous month).
+const SCHOOL_TZ = "Asia/Kolkata";
+
 const toObjectId = (id) => new mongoose.Types.ObjectId(id);
 
 /**
@@ -28,7 +32,7 @@ const dailyCollection = async ({ schoolId, from, to }) => {
     },
     {
       $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$paymentDate" } },
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$paymentDate", timezone: SCHOOL_TZ } },
         // Nets out refunds so a fully- or partially-refunded payment doesn't overstate collections.
         totalCollected: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } },
         paymentCount: { $sum: 1 },
@@ -65,7 +69,7 @@ const monthWiseCollection = async ({ schoolId, year }) => {
     },
     {
       $group: {
-        _id: { $month: "$paymentDate" },
+        _id: { $month: { date: "$paymentDate", timezone: SCHOOL_TZ } },
         // Nets out refunds so a fully- or partially-refunded payment doesn't overstate collections.
         totalCollected: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } },
         paymentCount: { $sum: 1 },

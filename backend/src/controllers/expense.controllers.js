@@ -6,6 +6,10 @@ import { sendSuccess } from "../utils/response.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 
+// Months and days are counted on the school calendar (IST); left unset, Mongo buckets by UTC,
+// which files anything from midnight to 5:30 AM under the previous day (and the 1st under the previous month).
+const SCHOOL_TZ = "Asia/Kolkata";
+
 /* ── CREATE ──────────────────────────────────────────────────────── */
 export const createExpense = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req.user);
@@ -165,7 +169,7 @@ export const getExpenseSummary = asyncHandler(async (req, res) => {
       { $match: match },
       {
         $group: {
-          _id: { year: { $year: "$date" }, month: { $month: "$date" } },
+          _id: { year: { $year: { date: "$date", timezone: SCHOOL_TZ } }, month: { $month: { date: "$date", timezone: SCHOOL_TZ } } },
           total: { $sum: "$amount" },
           count: { $sum: 1 },
         },

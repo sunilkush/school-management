@@ -18,6 +18,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+// Months and days are counted on the school calendar (IST); left unset, Mongo buckets by UTC,
+// which files anything from midnight to 5:30 AM under the previous day (and the 1st under the previous month).
+const SCHOOL_TZ = "Asia/Kolkata";
+
 const ObjectId = mongoose.Types.ObjectId;
 
 const getMonthRange = (shift = 0) => {
@@ -311,7 +315,7 @@ export const getSchoolAdminDashboardAnalytics = asyncHandler(async (req, res) =>
       {
         $group: {
           _id: {
-            month: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+            month: { $dateToString: { format: "%Y-%m", date: "$createdAt", timezone: SCHOOL_TZ } },
             department: { $ifNull: ["$employee.department", "General"] },
           },
           value: { $sum: "$netPay" },

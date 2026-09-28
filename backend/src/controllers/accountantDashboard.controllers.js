@@ -10,6 +10,10 @@ import { sendSuccess } from "../utils/response.js";
 import { ApiError } from "../utils/ApiError.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 
+// Months and days are counted on the school calendar (IST); left unset, Mongo buckets by UTC,
+// which files anything from midnight to 5:30 AM under the previous day (and the 1st under the previous month).
+const SCHOOL_TZ = "Asia/Kolkata";
+
 const toOid = (id) => new mongoose.Types.ObjectId(String(id));
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -117,7 +121,7 @@ export const getAccountantDashboard = asyncHandler(async (req, res) => {
       { $match: { schoolId: sid, date: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { year: { $year: "$date" }, month: { $month: "$date" } },
+          _id: { year: { $year: { date: "$date", timezone: SCHOOL_TZ } }, month: { $month: { date: "$date", timezone: SCHOOL_TZ } } },
           total: { $sum: "$amount" },
         },
       },
@@ -128,7 +132,7 @@ export const getAccountantDashboard = asyncHandler(async (req, res) => {
       { $match: { schoolId: sid, date: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { year: { $year: "$date" }, month: { $month: "$date" } },
+          _id: { year: { $year: { date: "$date", timezone: SCHOOL_TZ } }, month: { $month: { date: "$date", timezone: SCHOOL_TZ } } },
           total: { $sum: "$amount" },
         },
       },
@@ -139,7 +143,7 @@ export const getAccountantDashboard = asyncHandler(async (req, res) => {
       { $match: { schoolId: sid, status: "success", paymentDate: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { year: { $year: "$paymentDate" }, month: { $month: "$paymentDate" } },
+          _id: { year: { $year: { date: "$paymentDate", timezone: SCHOOL_TZ } }, month: { $month: { date: "$paymentDate", timezone: SCHOOL_TZ } } },
           total: { $sum: { $subtract: ["$amountPaid", { $ifNull: ["$refundedAmount", 0] }] } },
           count: { $sum: 1 },
         },

@@ -7,6 +7,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
 
+// Months and days are counted on the school calendar (IST); left unset, Mongo buckets by UTC,
+// which files anything from midnight to 5:30 AM under the previous day (and the 1st under the previous month).
+const SCHOOL_TZ = "Asia/Kolkata";
+
 export const getHostelWardenDashboard = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);
 
@@ -72,7 +76,7 @@ export const getHostelWardenDashboard = asyncHandler(async (req, res) => {
   // Monthly leave trend (last 6 months)
   const leaveMonthly = await HostelLeave.aggregate([
     { $match: { schoolId, createdAt: { $gte: new Date(new Date().setMonth(new Date().getMonth() - 5)) } } },
-    { $group: { _id: { $dateToString: { format: "%b", date: "$createdAt" } }, count: { $sum: 1 } } },
+    { $group: { _id: { $dateToString: { format: "%b", date: "$createdAt", timezone: SCHOOL_TZ } }, count: { $sum: 1 } } },
     { $sort: { "_id": 1 } },
   ]);
 

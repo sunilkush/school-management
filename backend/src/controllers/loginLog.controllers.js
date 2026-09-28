@@ -4,6 +4,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 
+// Months and days are counted on the school calendar (IST); left unset, Mongo buckets by UTC,
+// which files anything from midnight to 5:30 AM under the previous day (and the 1st under the previous month).
+const SCHOOL_TZ = "Asia/Kolkata";
+
 /* ── Internal helper — called from loginUser ────────────────────────────── */
 export const recordLoginEvent = async ({ userId, schoolId, userRole, academicYearId, req, status = "success" }) => {
   try {
@@ -271,7 +275,7 @@ export const getLoginStats = asyncHandler(async (req, res) => {
     { $match: { ...match, loginTime: { $gte: thirtyDaysAgo } } },
     {
       $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$loginTime" } },
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$loginTime", timezone: SCHOOL_TZ } },
         count: { $sum: 1 },
       },
     },

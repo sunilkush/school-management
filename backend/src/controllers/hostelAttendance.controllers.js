@@ -6,6 +6,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
 
+// Months and days are counted on the school calendar (IST); left unset, Mongo buckets by UTC,
+// which files anything from midnight to 5:30 AM under the previous day (and the 1st under the previous month).
+const SCHOOL_TZ = "Asia/Kolkata";
+
 // POST /hostel/attendance  — mark attendance
 export const markHostelAttendance = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);
@@ -153,7 +157,7 @@ export const getAttendanceSummary = asyncHandler(async (req, res) => {
     { $match: { schoolId, date: { $gte: startDate, $lte: endDate } } },
     {
       $group: {
-        _id: { day: { $dateToString: { format: "%Y-%m-%d", date: "$date" } }, session: "$session" },
+        _id: { day: { $dateToString: { format: "%Y-%m-%d", date: "$date", timezone: SCHOOL_TZ } }, session: "$session" },
         totalPresent: { $sum: "$totalPresent" },
         totalAbsent:  { $sum: "$totalAbsent" },
         totalOnLeave: { $sum: "$totalOnLeave" },
