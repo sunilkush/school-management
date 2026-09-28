@@ -285,7 +285,7 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
 });
 
 export const getAttendance = asyncHandler(async (req, res) => {
-  const { schoolId, schoolClassId, sectionId, subjectId, date, role, userId, search, page, limit } = req.query;
+  const { schoolId, schoolClassId, sectionId, subjectId, date, startDate, endDate, role, userId, search, page, limit } = req.query;
 
   const filter = {
     schoolId: ensureSchoolAccess(req, schoolId),
@@ -301,6 +301,12 @@ export const getAttendance = asyncHandler(async (req, res) => {
       $gte: normalizeDateStart(date),
       $lte: normalizeDateEnd(date),
     };
+  } else if (startDate || endDate) {
+    // The Attendance Report's date range. Never read before, so the report covered every date.
+    // Days are stored at UTC midnight (normalizeDateStart), same as the single-date filter above.
+    filter.date = {};
+    if (startDate) filter.date.$gte = normalizeDateStart(startDate);
+    if (endDate) filter.date.$lte = normalizeDateEnd(endDate);
   }
 
   applyReadScope(req, filter);

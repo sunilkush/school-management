@@ -90,11 +90,17 @@ export const attendanceListQuerySchema = z.object({
         },
         z.coerce.date().optional()
       ),
+      // A date range (the Attendance Report sends one). Unknown keys are stripped by this schema,
+      // so without these two the report's range was silently dropped and every date came back.
+      startDate: optionalDate,
+      endDate: optionalDate,
       role: attendanceRole.optional(),
       userId: objectId.optional(),
       search: z.string().trim().optional(),
       page: z.coerce.number().int().min(1).default(1),
-     limit: z.coerce.number().int().min(1).max(500).default(20),
+      // Matches the controller's own cap. At 500, the Attendance Report's request for the whole
+      // range (limit 5000) was refused outright with "Validation failed".
+      limit: z.coerce.number().int().min(1).max(5000).default(20),
     })
     .transform((data) => ({
       ...data,
