@@ -93,12 +93,14 @@ export default function ClassPage() {
       await dispatch(createClass(formData)).unwrap();
       await dispatch(fetchAllClasses());
       message.success("Class created successfully");
+      // Only on success — this used to sit in `finally`, so a failed save also closed the form
+      // and threw away what was typed.
+      resetForm();
+      setOpen(false);
     } catch (err) {
       message.error(typeof err === "string" ? err : "Failed to create class");
     } finally {
       setSaving(false);
-      resetForm();
-      setOpen(false);
     }
   };
 

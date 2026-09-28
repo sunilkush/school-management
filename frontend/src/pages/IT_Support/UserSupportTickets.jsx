@@ -44,9 +44,14 @@ const UserSupportTickets = () => {
   }, [tickets, filter]);
 
   const handleCreate = async (values) => {
-    await dispatch(createTicket({ title: values.title, priority: values.priority, description: values.description || "" }));
-    form.resetFields();
-    message.success("Ticket submitted");
+    try {
+      // unwrap(): a failed request used to still say "Ticket submitted" and wipe what was typed.
+      await dispatch(createTicket({ title: values.title, priority: values.priority, description: values.description || "" })).unwrap();
+      form.resetFields();
+      message.success("Ticket submitted");
+    } catch (err) {
+      message.error(typeof err === "string" ? err : "Failed to submit ticket");
+    }
   };
 
   const handleStatusChange = (id, status) => {
