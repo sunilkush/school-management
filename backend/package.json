@@ -10,7 +10,8 @@
     "seed": "node src/seed.js",
     "check:numbering": "node scripts/checkNumbering.mjs",
     "check:decide-once": "node scripts/checkDecideOnce.mjs",
-    "check:duplicate-invoices": "node scripts/checkDuplicateInvoices.mjs"
+    "check:duplicate-invoices": "node scripts/checkDuplicateInvoices.mjs",
+    "check:scoping": "node scripts/checkScoping.mjs"
   },
   "keywords": [
     "node.js",

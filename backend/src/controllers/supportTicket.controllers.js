@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { SupportTicket } from "../models/SupportTicket.model.js";
+import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
@@ -16,6 +17,45 @@ const canAccessTicket = (ticket, user, roleName) => {
   if (isPrivileged(roleName) && `${ticket.schoolId}` === `${user.schoolId}`) return true;
 
   return false;
+};
+
+/**
+ * Who a ticket may be handed to.
+ *
+ * Nothing checked this: any id at all was accepted and saved, so a ticket could be assigned to
+ * somebody at another school — who cannot see it, since the lists are scoped by school, but
+ * whose name and email then came back to everyone viewing the ticket, which populates the
+ * assignee. It could also be assigned to an id belonging to nobody, leaving a ticket that looks
+ * handled and is not.
+ *
+ * Handing a ticket to someone is also support work rather than something the person who raised
+ * it does, so only the privileged roles may set it.
+ */
+const resolveAssignee = async (assignedTo, ticket, roleName) => {
+  if (assignedTo === undefined) return undefined; // not being changed
+  if (!isPrivileged(roleName)) {
+    throw new ApiError(403, "Only support staff can assign a ticket");
+  }
+  if (!assignedTo) return null; // cleared
+
+  if (!mongoose.Types.ObjectId.isValid(assignedTo)) throw new ApiError(400, "Invalid assignedTo");
+
+  const assignee = await User.findOne({
+    _id: assignedTo,
+    schoolId: ticket.schoolId ?? null,
+    isDeleted: { $ne: true },
+  })
+    .select("_id")
+    .lean();
+  if (!assignee) {
+    throw new ApiError(
+      404,
+      ticket.schoolId
+        ? "That person is not at this school"
+        : "A platform ticket can only be assigned to a platform user"
+    );
+  }
+  return assignee._id;
 };
 
 const buildTicketQuery = (req) => {
@@ -122,11 +162,13 @@ export const updateSupportTicket = asyncHandler(async (req, res) => {
 
   const { title, description, category, priority, note, assignedTo } = req.body;
 
+  const assignee = await resolveAssignee(assignedTo, ticket, req.userRole?.name);
+
   if (title !== undefined) ticket.title = title;
   if (description !== undefined) ticket.description = description;
   if (category !== undefined) ticket.category = category;
   if (priority !== undefined) ticket.priority = priority;
-  if (assignedTo !== undefined) ticket.assignedTo = assignedTo || null;
+  if (assignee !== undefined) ticket.assignedTo = assignee;
 
   if (note) {
     ticket.updates.push({ note, updatedBy: req.user._id });
