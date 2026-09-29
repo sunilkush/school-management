@@ -356,6 +356,17 @@ export const submitHomework = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Homework not found for this student");
   }
 
+  // Once the teacher has graded it, the work is closed. Before, a resubmission replaced the files
+  // and kept the grade, so a student could hand in anything, get marked, then swap in different work.
+  const graded = await AssignmentSubmission.exists({
+    assignmentId: assignment._id,
+    studentEnrollmentId: enrollment._id,
+    gradedAt: { $ne: null },
+  });
+  if (graded) {
+    throw new ApiError(409, "This homework has already been graded and can no longer be changed");
+  }
+
   // body se aane wale attachments normalize karo
   const normalizedBodyAttachments = Array.isArray(attachments)
     ? attachments
@@ -675,7 +686,13 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
   const { submissionId } = req.params;
   const { grade, feedback } = req.body;
 
-  if (grade === undefined) throw new ApiError(400, "Grade is required");
+  if (grade === undefined || grade === null || grade === "") throw new ApiError(400, "Grade is required");
+  // Grades are out of 100 everywhere they are shown. Only the form limited them, so the API took
+  // -5 or 5000 and showed the student "5000/100".
+  const gradeValue = Number(grade);
+  if (!Number.isFinite(gradeValue) || gradeValue < 0 || gradeValue > 100) {
+    throw new ApiError(400, "Grade must be a number from 0 to 100");
+  }
 
   const submission = await AssignmentSubmission.findOne({
     _id: submissionId,
@@ -691,7 +708,7 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
 
   if (!assignment) throw new ApiError(403, "Not authorized to grade this submission");
 
-  submission.grade     = Number(grade);
+  submission.grade     = gradeValue;
   submission.feedback  = feedback?.trim() || "";
   submission.gradedBy  = req.user._id;
   submission.gradedAt  = new Date();
