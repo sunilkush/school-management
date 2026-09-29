@@ -58,28 +58,51 @@ export const createStockIssue = asyncHandler(async (req, res) => {
   const item = await Inventory.findOne({ _id: inventoryItemId, schoolId });
   if (!item) throw new ApiError(404, "Inventory item not found");
 
+  const qty = Number(quantity);
   const available = (item.quantity || 0) - (item.allocated || 0);
-  if (quantity > available)
+  if (qty > available)
     throw new ApiError(400, `Only ${available} ${item.unit} available in stock`);
 
-  item.allocated = (item.allocated || 0) + Number(quantity);
-  await item.save();
+  // Checking what was left and taking it were separate steps, so two people issuing the last
+  // few units both passed the check and both worked out the new allocation from the same
+  // figure: one of the two issues was not counted, and the store went on showing stock that
+  // had already gone out. The check is part of the same statement now.
+  const claimed = await Inventory.findOneAndUpdate(
+    {
+      _id: inventoryItemId,
+      schoolId,
+      $expr: { $gte: [{ $subtract: ["$quantity", { $ifNull: ["$allocated", 0] }] }, qty] },
+    },
+    { $inc: { allocated: qty } },
+    { new: true }
+  );
+  if (!claimed) {
+    const left = Math.max(0, (item.quantity || 0) - (item.allocated || 0));
+    throw new ApiError(400, `Only ${left} ${item.unit} available in stock`);
+  }
 
-  const issue = await StockIssue.create({
-    schoolId,
-    inventoryItemId,
-    itemName: item.name,
-    unit: item.unit,
-    quantity,
-    issuedTo,
-    issuedToUserId: issuedToUserId || null,
-    department,
-    purpose,
-    issueDate: issueDate || new Date(),
-    expectedReturnDate: expectedReturnDate || null,
-    issuedBy: req.user._id,
-    status: "issued",
-  });
+  let issue;
+  try {
+    issue = await StockIssue.create({
+      schoolId,
+      inventoryItemId,
+      itemName: item.name,
+      unit: item.unit,
+      quantity: qty,
+      issuedTo,
+      issuedToUserId: issuedToUserId || null,
+      department,
+      purpose,
+      issueDate: issueDate || new Date(),
+      expectedReturnDate: expectedReturnDate || null,
+      issuedBy: req.user._id,
+      status: "issued",
+    });
+  } catch (error) {
+    // The stock was taken a moment ago; if no record of the issue survives, give it back.
+    await Inventory.updateOne({ _id: inventoryItemId, schoolId }, { $inc: { allocated: -qty } });
+    throw error;
+  }
 
   return res.status(201).json(new ApiResponse(201, issue, "Stock issued successfully"));
 });
@@ -97,23 +120,52 @@ export const processReturn = asyncHandler(async (req, res) => {
   const qty = Number(returnedQuantity || maxReturn);
   if (qty <= 0 || qty > maxReturn) throw new ApiError(400, `Return qty must be 1–${maxReturn}`);
 
-  issue.returnedQuantity = (issue.returnedQuantity || 0) + qty;
-  issue.returnDate = new Date();
-  issue.status = issue.returnedQuantity >= issue.quantity ? "returned" : "partial";
+  // Working out how much was still outstanding and recording the return were separate steps,
+  // so two returns sent together were both measured against the same figure and both went
+  // through — more could come back than ever went out. How much is left is checked as part of
+  // the same statement now.
+  const returned = await StockIssue.findOneAndUpdate(
+    {
+      _id: id,
+      schoolId,
+      status: { $ne: "returned" },
+      $expr: { $lte: [qty, { $subtract: ["$quantity", { $ifNull: ["$returnedQuantity", 0] }] }] },
+    },
+    [
+      {
+        $set: {
+          returnedQuantity: { $add: [{ $ifNull: ["$returnedQuantity", 0] }, qty] },
+          returnDate: new Date(),
+          status: {
+            $cond: [
+              { $gte: [{ $add: [{ $ifNull: ["$returnedQuantity", 0] }, qty] }, "$quantity"] },
+              "returned",
+              "partial",
+            ],
+          },
+        },
+      },
+    ],
+    { new: true }
+  );
+  if (!returned) throw new ApiError(409, "This return was just recorded by someone else — refresh to see it");
 
-  await issue.save();
+  // Restore stock. One statement, and it still cannot take either figure below zero.
+  await Inventory.updateOne(
+    { _id: issue.inventoryItemId, schoolId },
+    [
+      {
+        $set: {
+          allocated: { $max: [0, { $subtract: [{ $ifNull: ["$allocated", 0] }, qty] }] },
+          ...(condition === "disposed"
+            ? { quantity: { $max: [0, { $subtract: [{ $ifNull: ["$quantity", 0] }, qty] }] } }
+            : {}),
+        },
+      },
+    ]
+  );
 
-  // Restore stock
-  const item = await Inventory.findOne({ _id: issue.inventoryItemId, schoolId });
-  if (item) {
-    item.allocated = Math.max(0, (item.allocated || 0) - qty);
-    if (condition === "disposed") {
-      item.quantity = Math.max(0, (item.quantity || 0) - qty);
-    }
-    await item.save();
-  }
-
-  return res.status(200).json(new ApiResponse(200, issue, "Return processed"));
+  return res.status(200).json(new ApiResponse(200, returned, "Return processed"));
 });
 
 export const deleteStockIssue = asyncHandler(async (req, res) => {

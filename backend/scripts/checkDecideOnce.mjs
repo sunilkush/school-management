@@ -27,6 +27,7 @@ import { expireIfElapsed } from "../src/utils/subscriptionExpiry.js";
 import { Attendance } from "../src/models/attendance.model.js";
 import { ExamAttempt } from "../src/models/ExamAttempts.model.js";
 import { AppraisalReview } from "../src/models/AppraisalReview.model.js";
+import { Inventory } from "../src/models/Inventory.model.js";
 
 const URI = process.env.E2E_MONGO_URI || "mongodb://127.0.0.1:27017/school_management_decide_once_check";
 if (/mongodb\+srv|mongodb\.net/i.test(URI)) {
@@ -568,6 +569,50 @@ console.log("── two people starting the same appraisal round ──");
   );
 
   ok("running it again opens nothing new", (await start()) === employees.length);
+}
+
+console.log("");
+console.log("── two people issuing the last units of stock ──");
+{
+  const stocked = (quantity) =>
+    Inventory.create({ schoolId, itemType: "asset", name: "Projector", unit: "pcs", quantity, allocated: 0 });
+
+  // The same statement createStockIssue runs: take the units only if that many are free.
+  const issue = (itemId, qty) =>
+    Inventory.findOneAndUpdate(
+      {
+        _id: itemId,
+        schoolId,
+        $expr: { $gte: [{ $subtract: ["$quantity", { $ifNull: ["$allocated", 0] }] }, qty] },
+      },
+      { $inc: { allocated: qty } },
+      { new: true }
+    );
+
+  let overIssued = 0;
+  let bothTook = 0;
+  for (let round = 0; round < 10; round += 1) {
+    const item = await stocked(2);
+    const results = await Promise.all([issue(item._id, 2), issue(item._id, 2)]);
+    if (won(results) === 2) bothTook += 1;
+    const after = await Inventory.findById(item._id).lean();
+    if (after.allocated > after.quantity) overIssued += 1;
+  }
+  ok("two people cannot both take the last units", bothTook === 0, `${bothTook} of 10`);
+  ok("the store never shows more out than it holds", overIssued === 0, `${overIssued} of 10`);
+
+  // Separate requests for what is there are all met, and the tally adds up.
+  const shelf = await stocked(10);
+  const taken = await Promise.all(Array.from({ length: 5 }, () => issue(shelf._id, 2)));
+  ok("five requests for two each are all met from ten", won(taken) === 5, `${won(taken)} met`);
+  ok(
+    "and the store shows all ten out",
+    (await Inventory.findById(shelf._id).lean()).allocated === 10,
+    String((await Inventory.findById(shelf._id).lean()).allocated)
+  );
+
+  // A sixth finds nothing left.
+  ok("a request beyond what is left is refused", (await issue(shelf._id, 1)) === null);
 }
 
 await mongoose.connection.db.dropDatabase();

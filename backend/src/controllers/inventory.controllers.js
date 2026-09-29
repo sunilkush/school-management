@@ -122,9 +122,13 @@ export const updateInventoryItem = asyncHandler(async (req, res) => {
     if (req.body[field] !== undefined) item[field] = req.body[field];
   });
 
-  item.quantity = nextQuantity;
-  item.allocated = nextAllocated;
-  item.minThreshold = nextMinThreshold;
+  // Only the figures the request actually sent are written. Each of these used to fall back to
+  // the value read a moment earlier and be saved regardless, so an edit that said nothing about
+  // `allocated` — which the form usually does not — wrote the old figure back over stock issued
+  // in between, and the store showed those units as still on the shelf.
+  if (req.body.quantity !== undefined) item.quantity = nextQuantity;
+  if (req.body.allocated !== undefined) item.allocated = nextAllocated;
+  if (req.body.minThreshold !== undefined) item.minThreshold = nextMinThreshold;
 
   await item.save();
 
