@@ -8,6 +8,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
+import { nextSequence } from "../utils/sequence.js";
 
 const formatDay = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
@@ -232,21 +233,43 @@ export const setActiveAcademicYear = asyncHandler(async (req, res) => {
     throw new ApiError(409, `${academicYear.name} is archived and cannot be set running.`);
   }
 
-  // Deactivate others
+  // Standing the other years down and setting this one running used to be two steps, in that
+  // order. Between them the school had no running year at all, and two people setting
+  // different years running could interleave so that each stood the other's year down — ending
+  // with two running years, or none.
+  //
+  // Both now happen in one statement over the school's years, and each run carries a number
+  // from an atomic counter. A year is only rewritten by a run later than the one that last
+  // touched it, so however the two interleave every year ends up agreeing with whichever run
+  // came last: exactly one running year, and never a moment with none.
+  const runId = await nextSequence(`ayactivation:${academicYear.schoolId}`);
   await AcademicYear.updateMany(
-    { schoolId: academicYear.schoolId },
-    { $set: { isActive: false, status: "inactive" } }
+    {
+      schoolId: academicYear.schoolId,
+      // Archived years keep their status. The old sweep set every year in the school to
+      // "inactive", which quietly un-archived all of them.
+      status: { $ne: "archived" },
+      $or: [{ activationSeq: { $lt: runId } }, { activationSeq: null }],
+    },
+    [
+      {
+        $set: {
+          isActive: { $eq: ["$_id", academicYear._id] },
+          status: { $cond: [{ $eq: ["$_id", academicYear._id] }, "active", "inactive"] },
+          activationSeq: runId,
+        },
+      },
+    ]
   );
 
-  // Activate selected one
-  academicYear.isActive = true;
-  academicYear.status = "active";
-  await academicYear.save();
+  // If a later run got there first, or the year was archived in between, this one did not take.
+  const activated = await AcademicYear.findOne({ _id: academicYear._id, isActive: true });
+  if (!activated) throw new ApiError(409, `${academicYear.name} was just changed — refresh to see it`);
 
   res.status(200).json({
     success: true,
     message: "Academic year set as active successfully",
-    data: academicYear,
+    data: activated,
   });
 });
 
@@ -263,14 +286,25 @@ export const archiveAcademicYear = asyncHandler(async (req, res) => {
     throw new ApiError(409, `${academicYear.name} is the running year. Set the next year running before archiving it.`);
   }
 
-  academicYear.status = "archived";
-  academicYear.isActive = false;
-  await academicYear.save();
+  // Only while the year is still not the running one, in one update — the check above and the
+  // save were separate steps, so a year set running in between was archived anyway and the
+  // school was left with no running year.
+  const archived = await AcademicYear.findOneAndUpdate(
+    {
+      _id: academicYear._id,
+      schoolId: academicYear.schoolId,
+      isActive: false,
+      status: { $ne: "archived" },
+    },
+    { $set: { status: "archived", isActive: false } },
+    { new: true, runValidators: true }
+  );
+  if (!archived) throw new ApiError(409, `${academicYear.name} was just changed — refresh to see it`);
 
   res.status(200).json({
     success: true,
     message: "Academic year archived successfully",
-    data: academicYear,
+    data: archived,
   });
 });
 

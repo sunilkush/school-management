@@ -29,6 +29,15 @@ const academicYearSchema = new mongoose.Schema(
       default: false,
       index:true
     },
+    // Which run of "set this year running" last decided this year's state. Two people setting
+    // different years running at the same moment each have to stand the other years down, and
+    // without this they undid each other and the school was left with two running years, or
+    // none. A year is only rewritten by a later run than the one that last touched it, so every
+    // year ends up agreeing with whichever run came last. See setActiveAcademicYear.
+    activationSeq: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: ["active", "inactive", "archived"],

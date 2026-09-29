@@ -124,15 +124,21 @@ export const cancelSession = asyncHandler(async (req, res) => {
 
   if (session.status === "Cancelled") throw new ApiError(400, "Session already cancelled");
 
-  session.status = "Cancelled";
-  await session.save();
+  // Only while it has not already been cancelled, in one update, so two cancellations do not
+  // both go on to sweep the slots and answer as though each had done it.
+  const cancelled = await PTMSession.findOneAndUpdate(
+    { _id: session._id, schoolId: session.schoolId, status: { $ne: "Cancelled" } },
+    { $set: { status: "Cancelled" } },
+    { new: true, runValidators: true }
+  );
+  if (!cancelled) throw new ApiError(409, "This session was just cancelled by someone else — refresh to see it");
 
   await PTMSlot.updateMany(
-    { ptmSessionId: session._id, status: { $ne: "Completed" } },
+    { ptmSessionId: cancelled._id, status: { $ne: "Completed" } },
     { $set: { status: "Cancelled" } }
   );
 
-  return res.status(200).json(new ApiResponse(200, session, "PTM session cancelled successfully"));
+  return res.status(200).json(new ApiResponse(200, cancelled, "PTM session cancelled successfully"));
 });
 
 export const markAttendance = asyncHandler(async (req, res) => {
@@ -143,12 +149,17 @@ export const markAttendance = asyncHandler(async (req, res) => {
 
   if (slot.status !== "Booked") throw new ApiError(400, "Only a booked slot can be marked");
 
-  slot.attended = !!attended;
-  slot.notes = notes || "";
-  slot.status = "Completed";
-  await slot.save();
+  // Only while the slot is still booked, in one update. Reading the slot, changing it and
+  // saving wrote the whole document back: a booking the parent cancelled a moment earlier was
+  // restored, student and all, and marked Completed.
+  const updated = await PTMSlot.findOneAndUpdate(
+    { _id: req.params.id, schoolId: slot.schoolId, status: "Booked" },
+    { $set: { attended: !!attended, notes: notes || "", status: "Completed" } },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This slot was just changed by someone else — refresh to see it");
 
-  return res.status(200).json(new ApiResponse(200, slot, "Attendance marked successfully"));
+  return res.status(200).json(new ApiResponse(200, updated, "Attendance marked successfully"));
 });
 
 /* ══════════════════════════ Parent: Booking ══════════════════════════ */
@@ -237,15 +248,29 @@ export const cancelBooking = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You can only cancel your own booking");
   }
 
-  slot.status = "Available";
-  slot.studentId = null;
-  slot.studentName = "";
-  slot.parentId = null;
-  slot.bookedAt = null;
-  slot.cancelReason = req.body?.reason || "";
-  await slot.save();
+  // Only while the slot is still booked — and, for a parent, still booked by them. The checks
+  // above and the save were separate steps, so a cancellation sent as the teacher marked the
+  // meeting attended put a Completed slot back to Available and threw away the notes.
+  const claim = { _id: req.params.id, schoolId: slot.schoolId, status: "Booked" };
+  if (actsAsParent(req.user)) claim.parentId = req.user._id;
 
-  return res.status(200).json(new ApiResponse(200, slot, "Booking cancelled successfully"));
+  const updated = await PTMSlot.findOneAndUpdate(
+    claim,
+    {
+      $set: {
+        status: "Available",
+        studentId: null,
+        studentName: "",
+        parentId: null,
+        bookedAt: null,
+        cancelReason: req.body?.reason || "",
+      },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This slot was just changed by someone else — refresh to see it");
+
+  return res.status(200).json(new ApiResponse(200, updated, "Booking cancelled successfully"));
 });
 
 export const getMyBookings = asyncHandler(async (req, res) => {

@@ -18,6 +18,10 @@ import { Reimbursement } from "../src/models/Reimbursement.model.js";
 import { BonusIncentive } from "../src/models/BonusIncentive.model.js";
 import { PayrollCycle } from "../src/models/PayrollCycle.model.js";
 import { PayrollEntry } from "../src/models/PayrollEntry.model.js";
+import { PTMSlot } from "../src/models/PTMSlot.model.js";
+import { Certificate } from "../src/models/Certificate.model.js";
+import { AcademicYear } from "../src/models/AcademicYear.model.js";
+import { nextSequence } from "../src/utils/sequence.js";
 
 const URI = process.env.E2E_MONGO_URI || "mongodb://127.0.0.1:27017/school_management_decide_once_check";
 if (/mongodb\+srv|mongodb\.net/i.test(URI)) {
@@ -231,6 +235,146 @@ console.log("\n── paying the entries of a cycle ──");
       rows.every((r) => r.transactionRef === `${prefix}-${r.employeeId}`),
     rows.map((r) => r.transactionRef).join(" ")
   );
+}
+
+console.log("");
+console.log("── a PTM slot cancelled while the teacher marks it attended ──");
+{
+  const booked = () =>
+    PTMSlot.create({
+      ptmSessionId: id(), schoolId, startTime: new Date(), endTime: new Date(),
+      status: "Booked", studentId: id(), studentName: "Asha", parentId: id(), bookedAt: new Date(),
+    });
+
+  const slot = await booked();
+  const [completed, cancelled] = await Promise.all([
+    PTMSlot.findOneAndUpdate(
+      { _id: slot._id, schoolId, status: "Booked" },
+      { $set: { attended: true, notes: "went well", status: "Completed" } },
+      { new: true }
+    ),
+    PTMSlot.findOneAndUpdate(
+      { _id: slot._id, schoolId, status: "Booked", parentId: slot.parentId },
+      { $set: { status: "Available", studentId: null, studentName: "", parentId: null, bookedAt: null } },
+      { new: true }
+    ),
+  ]);
+  const after = await PTMSlot.findById(slot._id).lean();
+  ok("only one of the two is accepted", won([completed, cancelled]) === 1, `${won([completed, cancelled])} accepted`);
+  ok(
+    "a meeting marked attended is never put back to Available",
+    !(completed && after.status === "Available"),
+    `status=${after.status}`
+  );
+  ok("the notes on it survive", !completed || after.notes === "went well", after.notes);
+
+  const other = await booked();
+  const cancels = await Promise.all(
+    Array.from({ length: 3 }, () =>
+      PTMSlot.findOneAndUpdate(
+        { _id: other._id, schoolId, status: "Booked", parentId: other.parentId },
+        { $set: { status: "Available", parentId: null } },
+        { new: true }
+      )
+    )
+  );
+  ok("three cancels of one booking leave one accepted", won(cancels) === 1, `${won(cancels)} accepted`);
+
+  const intruder = await PTMSlot.findOneAndUpdate(
+    { _id: (await booked())._id, schoolId, status: "Booked", parentId: id() },
+    { $set: { status: "Available" } },
+    { new: true }
+  );
+  ok("one parent cannot cancel a booking made by another", intruder === null);
+}
+
+console.log("");
+console.log("── two admins revoking the same certificate ──");
+{
+  const cert = await Certificate.create({
+    schoolId, studentId: id(), certificateType: "Bonafide Certificate",
+    certificateNumber: "BC/2026/0001", issueDate: new Date(), studentName: "Asha", generatedBy: id(),
+  });
+  const revoke = (by, why) =>
+    Certificate.findOneAndUpdate(
+      { _id: cert._id, schoolId, status: { $ne: "Revoked" } },
+      { $set: { status: "Revoked", revokedAt: new Date(), revokedBy: by, revokeReason: why } },
+      { new: true }
+    );
+  const results = await Promise.all([revoke(id(), "left the school"), revoke(id(), "issued in error")]);
+  const after = await Certificate.findById(cert._id).lean();
+  const winner = results.find(Boolean);
+  ok("exactly one revocation is accepted", won(results) === 1, `${won(results)} accepted`);
+  ok(
+    "the reason on the record belongs to whoever revoked it",
+    `${after.revokedBy}` === `${winner.revokedBy}` && after.revokeReason === winner.revokeReason,
+    `${after.revokedBy} / ${after.revokeReason}`
+  );
+}
+
+console.log("");
+console.log("── two years set running at the same moment ──");
+{
+  const home = id();
+  // The model derives the name from the dates, so each year needs its own range.
+  const year = (from, status) =>
+    AcademicYear.create({
+      schoolId: home,
+      startDate: new Date(`${from}-04-01`),
+      endDate: new Date(`${from + 1}-03-31`),
+      status,
+      isActive: false,
+    });
+  const a = await year(2026, "inactive");
+  const b = await year(2027, "inactive");
+  const old = await year(2024, "archived");
+
+  // The same statement setActiveAcademicYear runs.
+  const setRunning = async (y) => {
+    const runId = await nextSequence(`ayactivation:${home}`);
+    await AcademicYear.updateMany(
+      {
+        schoolId: home,
+        status: { $ne: "archived" },
+        $or: [{ activationSeq: { $lt: runId } }, { activationSeq: null }],
+      },
+      [
+        {
+          $set: {
+            isActive: { $eq: ["$_id", y._id] },
+            status: { $cond: [{ $eq: ["$_id", y._id] }, "active", "inactive"] },
+            activationSeq: runId,
+          },
+        },
+      ]
+    );
+    return AcademicYear.findOne({ _id: y._id, isActive: true });
+  };
+
+  // Once is not a test of a race — run the pair repeatedly so the two interleave differently.
+  let everWrong = null;
+  for (let round = 0; round < 25 && !everWrong; round += 1) {
+    await Promise.all([setRunning(a), setRunning(b)]);
+    const live = await AcademicYear.find({ schoolId: home, isActive: true }).lean();
+    if (live.length !== 1) everWrong = `${live.length} running after round ${round + 1}`;
+  }
+  ok("the school always has exactly one running year", !everWrong, everWrong || "");
+
+  const running = await AcademicYear.find({ schoolId: home, isActive: true }).lean();
+  const archived = await AcademicYear.findById(old._id).lean();
+  ok("setting a year running does not un-archive the old ones", archived.status === "archived", archived.status);
+  ok(
+    "the year that is not running is marked inactive, not left active",
+    (await AcademicYear.countDocuments({ schoolId: home, status: "active" })) === 1
+
+  );
+
+  const pulled = await AcademicYear.findOneAndUpdate(
+    { _id: running[0]._id, schoolId: home, isActive: false, status: { $ne: "archived" } },
+    { $set: { status: "archived" } },
+    { new: true }
+  );
+  ok("the running year cannot be archived out from under the school", pulled === null);
 }
 
 await mongoose.connection.db.dropDatabase();

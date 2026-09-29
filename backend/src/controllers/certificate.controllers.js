@@ -218,15 +218,25 @@ export const revokeCertificate = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Certificate already revoked");
   }
 
-  certificate.status = "Revoked";
-  certificate.revokedAt = new Date();
-  certificate.revokedBy = req.user._id;
-  certificate.revokeReason = revokeReason;
-  await certificate.save();
+  // Conditional update, so revoking twice (or two admins at once) cannot overwrite who revoked
+  // it and why — the second save used to replace both, leaving the wrong name on the record.
+  const revoked = await Certificate.findOneAndUpdate(
+    { _id: certificate._id, schoolId: certificate.schoolId, status: { $ne: "Revoked" } },
+    {
+      $set: {
+        status: "Revoked",
+        revokedAt: new Date(),
+        revokedBy: req.user._id,
+        revokeReason,
+      },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!revoked) throw new ApiError(409, "This certificate was just revoked by someone else — refresh to see it");
 
   return res
     .status(200)
-    .json(new ApiResponse(200, certificate, "Certificate revoked successfully"));
+    .json(new ApiResponse(200, revoked, "Certificate revoked successfully"));
 });
 
 export const downloadCertificatePdf = asyncHandler(async (req, res) => {

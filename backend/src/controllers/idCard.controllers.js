@@ -349,13 +349,23 @@ export const deactivateIdCard = asyncHandler(async (req, res) => {
     throw new ApiError(400, "ID card already inactive");
   }
 
-  card.status = "Inactive";
-  card.deactivatedAt = new Date();
-  card.deactivatedBy = req.user._id;
-  card.deactivateReason = reason || "";
-  await card.save();
+  // Conditional update, for the same reason as revoking a certificate: two admins at once both
+  // saved, and the second replaced who deactivated the card and why.
+  const deactivated = await IDCard.findOneAndUpdate(
+    { _id: card._id, schoolId: card.schoolId, status: { $ne: "Inactive" } },
+    {
+      $set: {
+        status: "Inactive",
+        deactivatedAt: new Date(),
+        deactivatedBy: req.user._id,
+        deactivateReason: reason || "",
+      },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!deactivated) throw new ApiError(409, "This card was just deactivated by someone else — refresh to see it");
 
-  return res.status(200).json(new ApiResponse(200, card, "ID card deactivated successfully"));
+  return res.status(200).json(new ApiResponse(200, deactivated, "ID card deactivated successfully"));
 });
 
 export const downloadIdCardsPdf = asyncHandler(async (req, res) => {
