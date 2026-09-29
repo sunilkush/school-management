@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+import { User } from "../models/user.model.js";
 import { HostelLeave } from "../models/HostelLeave.model.js";
 import { HostelRoom } from "../models/HostelRoom.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -17,9 +19,21 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
     throw new ApiError(400, "studentId, leaveType, fromDate, toDate and reason are required");
   }
 
+  if (Number.isNaN(new Date(fromDate).getTime()) || Number.isNaN(new Date(toDate).getTime())) {
+    throw new ApiError(400, "Invalid fromDate or toDate");
+  }
   if (new Date(toDate) < new Date(fromDate)) {
     throw new ApiError(400, "toDate must be after fromDate");
   }
+
+  // The student must be one of this school's students. Unchecked, another school's user id was
+  // saved and the response populated it with that child's name, email and phone.
+  if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid studentId");
+  const student = await User.findOne({ _id: studentId, schoolId, isDeleted: { $ne: true } })
+    .select("roleId")
+    .populate("roleId", "name")
+    .lean();
+  if (!student || student.roleId?.name !== "Student") throw new ApiError(404, "Student not found in this school");
 
   // Check for overlapping approved/pending leave
   const overlap = await HostelLeave.findOne({
@@ -124,23 +138,46 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
 // PUT /hostel/leaves/:id/checkout  — record actual check-out time
 export const recordCheckOut = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);
-  const leave = await HostelLeave.findOne({ _id: req.params.id, schoolId });
-  if (!leave) throw new ApiError(404, "Leave not found");
-  if (leave.status !== "approved") throw new ApiError(400, "Only approved leaves can be checked out");
+  const at = req.body.checkOutTime ? new Date(req.body.checkOutTime) : new Date();
+  if (Number.isNaN(at.getTime())) throw new ApiError(400, "Invalid checkOutTime");
 
-  leave.checkOutTime = req.body.checkOutTime ? new Date(req.body.checkOutTime) : new Date();
-  await leave.save();
+  // Once, and only on an approved leave. A second call used to move the recorded time.
+  const leave = await HostelLeave.findOneAndUpdate(
+    { _id: req.params.id, schoolId, status: "approved", checkOutTime: null },
+    { $set: { checkOutTime: at } },
+    { new: true }
+  );
+  if (!leave) {
+    const existing = await HostelLeave.findOne({ _id: req.params.id, schoolId }).select("status checkOutTime").lean();
+    if (!existing) throw new ApiError(404, "Leave not found");
+    if (existing.status !== "approved") throw new ApiError(400, "Only approved leaves can be checked out");
+    throw new ApiError(409, "Check-out is already recorded for this leave");
+  }
   return res.json(new ApiResponse(200, leave, "Check-out recorded"));
 });
 
 // PUT /hostel/leaves/:id/checkin  — record actual check-in time
 export const recordCheckIn = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);
-  const leave = await HostelLeave.findOne({ _id: req.params.id, schoolId });
-  if (!leave) throw new ApiError(404, "Leave not found");
+  const at = req.body.checkInTime ? new Date(req.body.checkInTime) : new Date();
+  if (Number.isNaN(at.getTime())) throw new ApiError(400, "Invalid checkInTime");
 
-  leave.checkInTime = req.body.checkInTime ? new Date(req.body.checkInTime) : new Date();
-  await leave.save();
+  // A student can only come back from a leave they went out on. This took any leave, even a
+  // pending, rejected or cancelled one, and before any check-out, so the register showed children
+  // "back" who had never left.
+  const leave = await HostelLeave.findOneAndUpdate(
+    { _id: req.params.id, schoolId, status: "approved", checkOutTime: { $ne: null, $lte: at }, checkInTime: null },
+    { $set: { checkInTime: at } },
+    { new: true }
+  );
+  if (!leave) {
+    const existing = await HostelLeave.findOne({ _id: req.params.id, schoolId }).select("status checkOutTime checkInTime").lean();
+    if (!existing) throw new ApiError(404, "Leave not found");
+    if (existing.status !== "approved") throw new ApiError(400, "Only approved leaves can be checked in");
+    if (!existing.checkOutTime) throw new ApiError(400, "Record the check-out before the check-in");
+    if (existing.checkInTime) throw new ApiError(409, "Check-in is already recorded for this leave");
+    throw new ApiError(400, "Check-in cannot be before the check-out");
+  }
   return res.json(new ApiResponse(200, leave, "Check-in recorded"));
 });
 
