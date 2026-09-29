@@ -77,8 +77,20 @@ const buildMessageScope = (req) => {
   };
 };
 
-const mapMessage = (message, userId) => {
-  const id = String(userId);
+// Students and Parents get names and roles only. A class-wide message listed every recipient with
+// their email, so each child (and parent) got the email of the whole class; staff still see emails.
+const hidesEmails = (viewer) => ["Student", "Parent"].includes(getRoleName(viewer));
+const withoutEmail = (person) => {
+  if (!person || typeof person !== "object" || !("email" in person)) return person;
+  const { email: _email, ...rest } = person;
+  return rest;
+};
+
+const mapMessage = (populated, viewer) => {
+  const id = String(viewer._id);
+  const message = hidesEmails(viewer)
+    ? { ...populated, senderId: withoutEmail(populated.senderId), recipientIds: (populated.recipientIds || []).map(withoutEmail) }
+    : populated;
   const readBy = (message.readBy || []).map(String);
   const archivedBy = (message.archivedBy || []).map(String);
   const deletedBy = (message.deletedBy || []).map(String);
@@ -160,7 +172,7 @@ export const listMessages = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, {
     message: "Messages fetched successfully",
-    data: rows.map((row) => mapMessage(row, userId)),
+    data: rows.map((row) => mapMessage(row, req.user)),
     meta: { pagination: { total, page: pageNumber, limit: limitNumber, totalPages: Math.ceil(total / limitNumber) } },
   });
 });
@@ -177,7 +189,7 @@ export const getMessageThread = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, {
     message: "Message thread fetched successfully",
-    data: rows.map((row) => mapMessage(row, req.user._id)),
+    data: rows.map((row) => mapMessage(row, req.user)),
   });
 });
 
@@ -224,7 +236,7 @@ export const createMessage = asyncHandler(async (req, res) => {
   return sendSuccess(res, {
     statusCode: 201,
     message: "Message sent successfully",
-    data: mapMessage(populated, req.user._id),
+    data: mapMessage(populated, req.user),
   });
 });
 
@@ -242,7 +254,7 @@ export const markMessageRead = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, {
     message: "Message marked as read",
-    data: mapMessage(updated, req.user._id),
+    data: mapMessage(updated, req.user),
   });
 });
 
@@ -260,7 +272,7 @@ export const archiveMessage = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, {
     message: "Message archived successfully",
-    data: mapMessage(updated, req.user._id),
+    data: mapMessage(updated, req.user),
   });
 });
 
