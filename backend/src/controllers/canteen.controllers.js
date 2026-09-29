@@ -8,6 +8,7 @@ import { escapeRegex } from "../utils/escapeRegex.js";
 import { CanteenItem, CANTEEN_CATEGORIES } from "../models/CanteenItem.model.js";
 import { StudentWallet } from "../models/StudentWallet.model.js";
 import { WalletTransaction } from "../models/WalletTransaction.model.js";
+import { WalletTopUpOrder } from "../models/WalletTopUpOrder.model.js";
 import { CanteenOrder } from "../models/CanteenOrder.model.js";
 import { Student } from "../models/student.model.js";
 import { getActiveGateway } from "../services/schoolPaymentGateway.service.js";
@@ -166,6 +167,10 @@ export const createTopUpRazorpayOrder = asyncHandler(async (req, res) => {
     receipt: `WALLET-${studentId}-${Date.now()}`,
     notes: { schoolId: schoolId.toString(), studentId, requestId: req.requestId },
   });
+  // The amount this order is for — what verify will credit (see WalletTopUpOrder.model.js).
+  await WalletTopUpOrder.create({
+    schoolId, studentId, orderId: order.id, amount: numericAmount, createdBy: req.user._id,
+  });
 
   return res.status(200).json(
     new ApiResponse(200, { orderId: order.id, amount: order.amount, currency: order.currency, keyId }, "Razorpay order created")
@@ -174,12 +179,8 @@ export const createTopUpRazorpayOrder = asyncHandler(async (req, res) => {
 
 export const verifyTopUpRazorpay = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
-
-  const numericAmount = Number(amount);
-  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-    throw new ApiError(400, "Valid top-up amount is required");
-  }
+  // `amount` in the body is ignored: the order's own amount is credited (below).
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
   const student = await Student.findById(studentId).select("schoolId").lean();
   if (!student) throw new ApiError(404, "Student not found");
@@ -195,15 +196,35 @@ export const verifyTopUpRazorpay = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Payment verification failed");
   }
 
-  const wallet = await StudentWallet.findOneAndUpdate(
-    { schoolId, studentId },
-    { $inc: { balance: numericAmount }, $setOnInsert: { schoolId, studentId } },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+  // Claim the order: only a top-up order made for this student, and only once. A conditional
+  // update, so a double-click or a retried request cannot both see it unpaid and credit twice.
+  const topUp = await WalletTopUpOrder.findOneAndUpdate(
+    { orderId: razorpay_order_id, schoolId, studentId, status: "created" },
+    { $set: { status: "paid", paymentId: razorpay_payment_id, paidAt: new Date() } },
+    { new: true }
   );
+  if (!topUp) {
+    const known = await WalletTopUpOrder.findOne({ orderId: razorpay_order_id, schoolId, studentId }).lean();
+    if (known?.status === "paid") throw new ApiError(400, "This payment has already been added to the wallet");
+    throw new ApiError(400, "This payment was not made for this student's wallet");
+  }
+
+  let wallet;
+  try {
+    wallet = await StudentWallet.findOneAndUpdate(
+      { schoolId, studentId },
+      { $inc: { balance: topUp.amount }, $setOnInsert: { schoolId, studentId } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  } catch (err) {
+    // Nothing was credited; let the payment be verified again.
+    await WalletTopUpOrder.updateOne({ _id: topUp._id }, { $set: { status: "created", paymentId: null, paidAt: null } });
+    throw err;
+  }
 
   const transaction = await WalletTransaction.create({
     schoolId, studentId, walletId: wallet._id,
-    type: "TopUp", amount: numericAmount, balanceAfter: wallet.balance,
+    type: "TopUp", amount: topUp.amount, balanceAfter: wallet.balance,
     paymentMode: "Razorpay", razorpay: { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
     performedBy: req.user._id,
   });
