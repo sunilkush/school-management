@@ -15,8 +15,6 @@ import {
   getStudentResult,
   publishExam,
   publishResult,
-  startExamAttempt,
-  submitExamAttempt,
   submitFinalMarks,
   updateExam,
   updateMarks,
@@ -107,9 +105,9 @@ router.get("/results/student/:studentId", auth, roleMiddleware(STUDENT_RESULT_RO
 router.get("/results/export", auth, roleMiddleware(TEACHER_ROLES), downloadResultSheet);
 router.patch("/marks/:id", auth, roleMiddleware(TEACHER_ROLES), updateMarks);
 
-// Online exam attempt routes
-router.post("/attempts/start", auth, roleMiddleware([...TEACHER_ROLES, "Student"]), startExamAttempt);
-router.post("/attempts/submit", auth, roleMiddleware([...TEACHER_ROLES, "Student"]), submitExamAttempt);
+// Online exam attempts are taken through routes/attempt.routes.js. An older start/submit pair used
+// to live here too, unused by any screen but open to students — and its submit scored whatever
+// "marks" the request sent, for any question id, any number of times. Removed.
 router.post("/attempts/evaluate", auth, roleMiddleware(TEACHER_ROLES), evaluateAttempt);
 
 router.get("/results/parent/:studentId", auth, roleMiddleware(PARENT_RESULT_ROLES), getParentViewResult);

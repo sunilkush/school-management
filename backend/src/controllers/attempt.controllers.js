@@ -22,6 +22,23 @@ const isWithinExamWindow = (now, startTime, endTime) => {
   return nowTs >= startTs && nowTs <= endTs;
 };
 
+// Slack for a request that left the student's browser just before time ran out.
+const SUBMIT_GRACE_MS = 2 * 60 * 1000;
+
+/**
+ * When an attempt's time is up: the exam's end time, or the attempt's own start plus the exam's
+ * duration, whichever comes first. Only starting was checked against the exam window before, so a
+ * student could start in time, leave the attempt open and keep changing answers — and submit them
+ * — hours after the exam had closed; the timer existed only in the browser.
+ */
+const attemptDeadline = (attempt, exam) => {
+  const limits = [];
+  if (exam?.endTime) limits.push(new Date(exam.endTime).getTime());
+  const minutes = Number(exam?.durationMinutes);
+  if (minutes > 0 && attempt?.startedAt) limits.push(new Date(attempt.startedAt).getTime() + minutes * 60 * 1000);
+  return limits.length ? Math.min(...limits) + SUBMIT_GRACE_MS : Infinity;
+};
+
 // The roles GET / and GET /:id admit (routes/attempt.routes.js), broadest first. Branch on
 // actingRoleName, not the primary role: the routes admit additional roles, so a Librarian holding
 // "Parent" as an additional role got in as a Parent and then, matching no primary-role branch,
@@ -164,11 +181,18 @@ export const submitAttempt = asyncHandler(async (req, res) => {
   if (attempt.studentId.toString() !== req.user._id.toString()) throw new ApiError(403, "Forbidden");
   if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt already submitted");
 
+  // After time is up the attempt is still closed and marked (nothing the student saved in time is
+  // lost), but answers sent with this late request are ignored: only what was saved in time counts.
+  const examTiming = await Exam.findById(attempt.examId).select("endTime durationMinutes").lean();
+  const lateSubmission = Date.now() > attemptDeadline(attempt, examTiming);
+
   let allAutoEvaluatable = true;
 
   attempt.answers = attempt.answers.map((ans) => {
     const questionId = ans.questionId?.toString?.();
-    const submitted  = answers.find((a) => `${a.questionRef || a.questionId}` === `${questionId}`);
+    const submitted  = lateSubmission
+      ? null
+      : answers.find((a) => `${a.questionRef || a.questionId}` === `${questionId}`);
 
     if (submitted) {
       ans.response = submitted.answer ?? submitted.response ?? null;
@@ -241,6 +265,11 @@ export const autosaveAttemptAnswer = asyncHandler(async (req, res) => {
   if (!attempt) throw new ApiError(404, "Attempt not found");
   if (attempt.studentId.toString() !== req.user._id.toString()) throw new ApiError(403, "Forbidden");
   if (attempt.status !== "in_progress") throw new ApiError(400, "Attempt is not active");
+
+  const examTiming = await Exam.findById(attempt.examId).select("endTime durationMinutes").lean();
+  if (Date.now() > attemptDeadline(attempt, examTiming)) {
+    throw new ApiError(400, "Time is up for this exam — the answers saved so far will be submitted");
+  }
 
   const answerIndex = attempt.answers.findIndex(
     (item) => `${item.questionId}` === `${resolvedQuestionId}`
