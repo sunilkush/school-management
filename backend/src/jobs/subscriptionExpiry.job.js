@@ -89,7 +89,16 @@ export async function runSubscriptionChecks(now = new Date()) {
     });
     if (existingInvoice) continue; // Already generated on a previous day's run.
 
-    const invoice = await createInvoiceForSubscription(subscription, { period: "next" });
+    // createInvoiceForSubscription refuses a period that has already been billed, which can
+    // happen if a Super Admin generated the renewal by hand between the check above and here.
+    // That school simply has its invoice already; it must not stop the run for the rest.
+    let invoice;
+    try {
+      invoice = await createInvoiceForSubscription(subscription, { period: "next" });
+    } catch (err) {
+      if (err?.statusCode === 409) continue;
+      throw err;
+    }
     await notifySchoolAdmins({ schoolId: subscription.schoolId, invoice });
     renewalCount += 1;
   }

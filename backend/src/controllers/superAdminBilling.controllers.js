@@ -247,7 +247,6 @@ export const createInvoiceForSubscription = async (
   { discount = 0, taxGst = 0, dueDate, status = "unpaid", period = "current" } = {}
 ) => {
   if (!["current", "next"].includes(period)) throw new ApiError(400, 'period must be "current" or "next"');
-  const invoiceNumber = await nextInvoiceNumber();
   const planPrice = subscription.snapshot.price;
   // A renewal bills the period after the current one. It used to print the current period, so
   // paying it could not say how far the plan should now run.
@@ -255,6 +254,31 @@ export const createInvoiceForSubscription = async (
   const billingPeriodEnd = period === "next"
     ? buildEndDate(subscription.endDate, subscription.snapshot.durationInDays)
     : subscription.endDate;
+
+  // One invoice per school per billing period. Both the renewal job and a Super Admin pressing
+  // "Generate invoice" come through here, and only the job checked — so generating one by hand
+  // for a period the job had already billed, or pressing the button twice, sent the school two
+  // invoices for the same month.
+  //
+  // This is a check before the write, not a guarantee: two requests arriving in the same
+  // instant could still both pass it. Making it impossible needs a unique index on
+  // (schoolId, billingPeriodStart, period), which should not be added without first looking at
+  // whether any school already has duplicates — scripts/checkDuplicateInvoices.mjs reports that.
+  const alreadyBilled = await SubscriptionInvoice.findOne({
+    schoolId: subscription.schoolId,
+    billingPeriodStart,
+    period,
+    status: { $ne: "cancelled" },
+  })
+    .select("invoiceNumber")
+    .lean();
+  if (alreadyBilled) {
+    throw new ApiError(409, `This period has already been invoiced (${alreadyBilled.invoiceNumber})`);
+  }
+
+  // Taken only once the invoice is going to be made, so a refused request does not use up a
+  // number and leave a gap in the sequence.
+  const invoiceNumber = await nextInvoiceNumber();
   let normalizedDueDate = subscription.endDate;
 
   if (dueDate) {

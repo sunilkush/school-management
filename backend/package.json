@@ -9,7 +9,8 @@
     "dev": "node src/index.js",
     "seed": "node src/seed.js",
     "check:numbering": "node scripts/checkNumbering.mjs",
-    "check:decide-once": "node scripts/checkDecideOnce.mjs"
+    "check:decide-once": "node scripts/checkDecideOnce.mjs",
+    "check:duplicate-invoices": "node scripts/checkDuplicateInvoices.mjs"
   },
   "keywords": [
     "node.js",
