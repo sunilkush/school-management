@@ -54,6 +54,21 @@ const nextRegistrationNumber = async ({ schoolId, academicYearId, yearCode }) =>
   return `${prefix}${String(seq).padStart(4, "0")}`;
 };
 
+/**
+ * The next roll number in a class-section for the year, from an atomic counter for the same reason
+ * as registration numbers: read inside the transaction, admissions into one section while a bulk
+ * import filled it all took the same roll number and all but one failed. Starts after the highest
+ * roll number already in the section.
+ */
+const takeRollNumber = ({ schoolId, academicYearId, schoolClassId, sectionId }) =>
+  nextSequence(`roll:${schoolId}:${academicYearId}:${schoolClassId}:${sectionId}`, async () => {
+    const last = await StudentEnrollment.findOne({ schoolId, academicYearId, schoolClassId, sectionId, rollNumber: { $ne: null } })
+      .sort({ rollNumber: -1 })
+      .select("rollNumber")
+      .lean();
+    return last?.rollNumber || 0;
+  });
+
 /* ================= CREATE STUDENT ================= */
 const admitStudentOnce = async (req, res) => {
   const session = await mongoose.startSession();
@@ -262,18 +277,16 @@ const admitStudentOnce = async (req, res) => {
     req.admissionRegNo = req.admissionRegNo || (await nextRegistrationNumber({ schoolId, academicYearId, yearCode: regYear }));
     const nextRegNo = req.admissionRegNo;
 
-    /* 🔢 ROLL NUMBER — sequential within class + section + academic year */
-    const lastRollEnrollment = await StudentEnrollment.findOne({
-      schoolId,
-      academicYearId,
-      schoolClassId,
-      sectionId,
-      rollNumber: { $ne: null },
-    })
-      .sort({ rollNumber: -1 })
-      .session(session);
+    // Checked by reading only: the section's enrollment list is added to after the commit below.
+    const sectionExists = await Section.exists({ _id: sectionId, schoolId, schoolClassId }).session(session);
+    if (!sectionExists) {
+      throw new ApiError(404, "Section not found for selected class");
+    }
 
-    const nextRollNumber = (lastRollEnrollment?.rollNumber || 0) + 1;
+    /* 🔢 ROLL NUMBER — sequential within class + section + academic year */
+    req.admissionRollNo =
+      req.admissionRollNo || (await takeRollNumber({ schoolId, academicYearId, schoolClassId, sectionId }));
+    const nextRollNumber = req.admissionRollNo;
 
     /* 📚 ENROLLMENT */
     const enrollment = (
@@ -295,26 +308,13 @@ const admitStudentOnce = async (req, res) => {
       )
     )[0];
     
-    // ✅ Save student enrollment reference inside selected section
-    const updatedSection = await Section.findOneAndUpdate(
-      {
-        _id: sectionId,
-        schoolId,
-        schoolClassId,
-      },
-      {
-        $addToSet: { StudentEnrollmentId: enrollment._id },
-      },
-      { new: true, session }
-    );
-
-    if (!updatedSection) {
-      throw new ApiError(404, "Section not found for selected class");
-    }
-
-
     await session.commitTransaction();
     session.endSession();
+
+    // The section's enrollment list is a denormalised cache (see class.controllers.js). Written
+    // inside the transaction, every admission and import row into a section updated the same
+    // document, so they conflicted with each other for as long as a bulk import ran.
+    await Section.updateOne({ _id: sectionId, schoolId, schoolClassId }, { $addToSet: { StudentEnrollmentId: enrollment._id } });
 
     // Best-effort — a card-generation hiccup must never surface as an admission failure,
     // since the admission itself already committed above.
@@ -497,6 +497,7 @@ const bulkImportStudents = asyncHandler(async (req, res) => {
     // A row that loses a roll number (or a transaction conflict) to an admission made at the same
     // moment is run again, as a single admission is (see createStudentAdmission).
     let rowRegNo = null;
+    let rowRollNo = null;
     for (let attempt = 1; ; attempt += 1) {
       const session = await mongoose.startSession();
       session.startTransaction();
@@ -590,10 +591,10 @@ const bulkImportStudents = asyncHandler(async (req, res) => {
         rowRegNo = rowRegNo || (await nextRegistrationNumber({ schoolId, academicYearId, yearCode: academicYear.code }));
         const nextRegNo = rowRegNo;
 
-        const lastRollEnrollment = await StudentEnrollment.findOne({
-          schoolId, academicYearId, schoolClassId: schoolClass._id, sectionId: section._id, rollNumber: { $ne: null },
-        }).sort({ rollNumber: -1 }).session(session);
-        const nextRollNumber = (lastRollEnrollment?.rollNumber || 0) + 1;
+        rowRollNo =
+          rowRollNo ||
+          (await takeRollNumber({ schoolId, academicYearId, schoolClassId: schoolClass._id, sectionId: section._id }));
+        const nextRollNumber = rowRollNo;
 
         const enrollment = (
           await StudentEnrollment.create(
@@ -612,13 +613,13 @@ const bulkImportStudents = asyncHandler(async (req, res) => {
           )
         )[0];
 
-        await Section.findOneAndUpdate(
-          { _id: section._id, schoolId, schoolClassId: schoolClass._id },
-          { $addToSet: { StudentEnrollmentId: enrollment._id } },
-          { session }
-        );
-
         await session.commitTransaction();
+
+        // After the commit, as in createStudentAdmission: the section document is shared by every row.
+        await Section.updateOne(
+          { _id: section._id, schoolId, schoolClassId: schoolClass._id },
+          { $addToSet: { StudentEnrollmentId: enrollment._id } }
+        );
 
         existingEmails.add(email);
 
@@ -749,14 +750,12 @@ const transferStudent = asyncHandler(async (req, res) => {
       yearCode: targetAcademicYear.code,
     });
 
-    const lastRollEnrollment = await StudentEnrollment.findOne({
+    const nextRollNumber = await takeRollNumber({
       schoolId: targetSchoolId,
       academicYearId: targetAcademicYearId,
       schoolClassId: targetSchoolClassId,
       sectionId: targetSectionId,
-      rollNumber: { $ne: null },
-    }).sort({ rollNumber: -1 }).session(session);
-    const nextRollNumber = (lastRollEnrollment?.rollNumber || 0) + 1;
+    });
 
     const newEnrollment = (
       await StudentEnrollment.create(
@@ -775,13 +774,13 @@ const transferStudent = asyncHandler(async (req, res) => {
       )
     )[0];
 
-    await Section.findOneAndUpdate(
-      { _id: targetSectionId, schoolId: targetSchoolId, schoolClassId: targetSchoolClassId },
-      { $addToSet: { StudentEnrollmentId: newEnrollment._id } },
-      { session }
-    );
-
     await session.commitTransaction();
+
+    // After the commit, as in createStudentAdmission: the section's list is a shared cache.
+    await Section.updateOne(
+      { _id: targetSectionId, schoolId: targetSchoolId, schoolClassId: targetSchoolClassId },
+      { $addToSet: { StudentEnrollmentId: newEnrollment._id } }
+    );
 
     return res.status(200).json(
       new ApiResponse(
