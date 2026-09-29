@@ -28,7 +28,7 @@ const getRoleByName = async (name, schoolId, session) => {
 };
 
 /* ================= CREATE STUDENT ================= */
-const createStudentAdmission = asyncHandler(async (req, res) => {
+const admitStudentOnce = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -180,7 +180,11 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
     const documents = [];
     for (let i = 0; i < documentFiles.length; i++) {
       const file = documentFiles[i];
-      const uploaded = await uploadOnCloudinary(file.path);
+      // Kept on the request: a retried admission (see createStudentAdmission) reuses them, since the
+      // upload removes the temporary file.
+      req.uploadedAdmissionDocs = req.uploadedAdmissionDocs || [];
+      const uploaded = req.uploadedAdmissionDocs[i] || (await uploadOnCloudinary(file.path));
+      req.uploadedAdmissionDocs[i] = uploaded;
 
       if (!uploaded?.secure_url && !uploaded?.url) {
         throw new ApiError(500, "Failed to upload one or more documents");
@@ -354,6 +358,27 @@ const createStudentAdmission = asyncHandler(async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     throw error;
+  }
+};
+
+// Registration and roll numbers are the next free ones, read inside the transaction. Two
+// admissions at the same moment read the same "next" number; the unique indexes stop a duplicate
+// being saved, but the one that lost was answered with a raw duplicate-key 409 ("A record with
+// that schoolId, academicYearId, … rollNumber already exists") or a 500 write conflict, and the
+// front desk had to type the whole form again. The losing transaction is simply run again, which
+// reads the numbers afresh. A clash on anything else (say an email already in use) is not retried.
+const isNumberClash = (error) => {
+  if (error?.code === 11000) return /registrationNumber|rollNumber/.test(JSON.stringify(error.keyPattern || error.keyValue || {}));
+  return Boolean(error?.errorLabels?.includes?.("TransientTransactionError") || error?.hasErrorLabel?.("TransientTransactionError"));
+};
+
+const createStudentAdmission = asyncHandler(async (req, res) => {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await admitStudentOnce(req, res);
+    } catch (error) {
+      if (attempt >= 4 || !isNumberClash(error)) throw error;
+    }
   }
 });
 
