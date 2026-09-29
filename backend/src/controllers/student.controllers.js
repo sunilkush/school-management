@@ -8,6 +8,7 @@ import { actingRoleName } from "../utils/actingRole.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/Roles.model.js";
 import { generateNextRegNumber } from "../utils/generateRegNumber.js";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import { Section } from "../models/section.model.js";
 import { SchoolClass } from "../models/schoolClass.model.js";
@@ -25,6 +26,32 @@ const getRoleByName = async (name, schoolId, session) => {
     $or: [{ schoolId }, { schoolId: null }], // school specific + global
     isActive: true,
   }).session(session);
+};
+
+/**
+ * The next registration number for a school's academic year: REG{year code}{0001}.
+ *
+ * Taken from an atomic counter (utils/sequence.js), outside any admission transaction. It used to be
+ * "the highest REG number + 1" read inside the transaction, which is one school-wide sequence: every
+ * admission, import row and transfer in the school competed for it, so an admission made while a bulk
+ * import was running lost to the import's rows again and again and failed with a 500. The counter
+ * starts after the highest number already issued in this format (not "most recently created": seed
+ * data in another format would otherwise restart it at 0001). An admission that fails after taking
+ * a number leaves that number unused.
+ */
+const nextRegistrationNumber = async ({ schoolId, academicYearId, yearCode }) => {
+  const prefix = `REG${yearCode || new Date().getFullYear()}`;
+  const seq = await nextSequence(`regno:${schoolId}:${academicYearId}`, async () => {
+    const issued = await StudentEnrollment.find({
+      schoolId,
+      academicYearId,
+      registrationNumber: { $regex: `^${escapeRegex(prefix)}\\d+$` },
+    })
+      .select("registrationNumber")
+      .lean();
+    return highestSuffix(issued.map((e) => e.registrationNumber), prefix);
+  });
+  return `${prefix}${String(seq).padStart(4, "0")}`;
 };
 
 /* ================= CREATE STUDENT ================= */
@@ -230,30 +257,10 @@ const admitStudentOnce = async (req, res) => {
     );
     const regYear = academicYear?.code || new Date().getFullYear();
 
-    // Finding "most recently created" here (regardless of format) previously broke as soon as
-    // any enrollment existed in a different numbering scheme (e.g. seed data using its own
-    // ad-hoc reg-number format) — generateNextRegNumber would then reset to 0001 and collide with
-    // whatever real "REG..."-formatted record already held that number. Scoping the lookup to
-    // enrollments that actually match this year's expected prefix, and taking the lexicographically
-    // highest one (safe because the numeric suffix is fixed-width zero-padded), finds the real
-    // last-issued number in *this* format specifically.
-    const regNoPrefix = `REG${regYear}`;
-    const lastEnrollment = await StudentEnrollment.findOne({
-      schoolId,
-      academicYearId,
-      registrationNumber: { $regex: `^${escapeRegex(regNoPrefix)}` },
-    })
-      .sort({ registrationNumber: -1 })
-      .session(session);
-
-    const nextRegNo = generateNextRegNumber(
-      lastEnrollment?.registrationNumber,
-      {
-        prefix: "REG",
-        year: regYear,
-        digits: 4,
-      }
-    );
+    // Kept on the request so a retried attempt (see createStudentAdmission) reuses its number
+    // rather than leaving a gap; the counter already made it unique.
+    req.admissionRegNo = req.admissionRegNo || (await nextRegistrationNumber({ schoolId, academicYearId, yearCode: regYear }));
+    const nextRegNo = req.admissionRegNo;
 
     /* 🔢 ROLL NUMBER — sequential within class + section + academic year */
     const lastRollEnrollment = await StudentEnrollment.findOne({
@@ -372,12 +379,19 @@ const isNumberClash = (error) => {
   return Boolean(error?.errorLabels?.includes?.("TransientTransactionError") || error?.hasErrorLabel?.("TransientTransactionError"));
 };
 
+const ADMISSION_ATTEMPTS = 6;
+// A short, growing, jittered pause before trying again: retrying at once just meets the same
+// competing transaction (a bulk import commits a row every few milliseconds) and loses again.
+const pauseBeforeRetry = (attempt) =>
+  new Promise((resolve) => setTimeout(resolve, attempt * 60 + Math.floor(Math.random() * 120)));
+
 const createStudentAdmission = asyncHandler(async (req, res) => {
   for (let attempt = 1; ; attempt += 1) {
     try {
       return await admitStudentOnce(req, res);
     } catch (error) {
-      if (attempt >= 4 || !isNumberClash(error)) throw error;
+      if (attempt >= ADMISSION_ATTEMPTS || !isNumberClash(error)) throw error;
+      await pauseBeforeRetry(attempt);
     }
   }
 });
@@ -419,20 +433,10 @@ const bulkImportStudents = asyncHandler(async (req, res) => {
     sections.map((s) => [`${s.schoolClassId}_${String(s.name).trim().toLowerCase()}`, s])
   );
 
-  // Seeds the running registration number from the latest existing enrollment *in this exact
-  // REG{year}{####} format* — not just "most recently created" regardless of format, which
-  // breaks as soon as any enrollment exists in a different numbering scheme (e.g. seed data using
-  // its own ad-hoc reg-number format): generateNextRegNumber would reset to 0001 and collide with
-  // whatever real record already holds that number. Then advances in memory after each successful
-  // row — re-querying the DB after every single row would be both slower and unnecessary (nothing
-  // else can be enrolling concurrently mid-loop).
-  const regNoPrefix = `REG${academicYear.code || new Date().getFullYear()}`;
-  const lastEnrollment = await StudentEnrollment.findOne({
-    schoolId,
-    academicYearId,
-    registrationNumber: { $regex: `^${escapeRegex(regNoPrefix)}` },
-  }).sort({ registrationNumber: -1 });
-  let runningLastRegNo = lastEnrollment?.registrationNumber || null;
+  // Registration numbers are taken per row from nextRegistrationNumber (an atomic counter). They
+  // used to be kept in memory for the whole import, on the assumption nothing else enrols
+  // meanwhile; the front desk can, and one admission during an import made the import's next row
+  // clash with it — and, the running number only advancing on success, every row after it.
 
   // Existing emails in this school, fetched once — email uniqueness is scoped to {email,
   // schoolId} (see user.model.js), so duplicate detection only needs to consider this school.
@@ -490,151 +494,159 @@ const bulkImportStudents = asyncHandler(async (req, res) => {
 
     seenEmailsInBatch.add(email);
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      // crypto.randomBytes().toString("hex") alone is always lowercase [0-9a-f] — it can satisfy
-    // the "lowercase + digit" part of the password complexity validator (user.model.js) but can
-    // never contain an uppercase letter, so User.create() below would reject every auto-generated
-    // account. Appending one guaranteed character from each required class keeps the same
-    // effective entropy while always passing validation.
-    const generatePassword = () => {
-      const base = crypto.randomBytes(6).toString("hex");
-      const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"[crypto.randomInt(24)];
-      const lower = "abcdefghjkmnpqrstuvwxyz"[crypto.randomInt(23)];
-      const digit = String(crypto.randomInt(10));
-      return `${base}${upper}${lower}${digit}`;
-    };
-      const studentPassword = generatePassword();
+    // A row that loses a roll number (or a transaction conflict) to an admission made at the same
+    // moment is run again, as a single admission is (see createStudentAdmission).
+    let rowRegNo = null;
+    for (let attempt = 1; ; attempt += 1) {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      try {
+        // crypto.randomBytes().toString("hex") alone is always lowercase [0-9a-f] — it can satisfy
+      // the "lowercase + digit" part of the password complexity validator (user.model.js) but can
+      // never contain an uppercase letter, so User.create() below would reject every auto-generated
+      // account. Appending one guaranteed character from each required class keeps the same
+      // effective entropy while always passing validation.
+      const generatePassword = () => {
+        const base = crypto.randomBytes(6).toString("hex");
+        const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"[crypto.randomInt(24)];
+        const lower = "abcdefghjkmnpqrstuvwxyz"[crypto.randomInt(23)];
+        const digit = String(crypto.randomInt(10));
+        return `${base}${upper}${lower}${digit}`;
+      };
+        const studentPassword = generatePassword();
 
-      const studentUser = (
-        await User.create(
-          [{ name, email, password: studentPassword, roleId: studentRole._id, schoolId, isEmailVerified: true }],
-          { session }
-        )
-      )[0];
+        const studentUser = (
+          await User.create(
+            [{ name, email, password: studentPassword, roleId: studentRole._id, schoolId, isEmailVerified: true }],
+            { session }
+          )
+        )[0];
 
-      let fatherUser = null;
-      let fatherPassword = null;
-      const fatherEmail = String(row.fatherEmail || "").trim().toLowerCase();
-      if (fatherEmail) {
-        fatherUser = await User.findOne({ email: fatherEmail, schoolId, isActive: true, isDeleted: { $ne: true } }).session(session);
-        if (!fatherUser) {
-          fatherPassword = generatePassword();
-          fatherUser = (
-            await User.create(
-              [{
-                name: String(row.fatherName || "").trim() || "Parent",
-                email: fatherEmail,
-                password: fatherPassword,
-                roleId: parentRole._id,
-                schoolId,
-                isEmailVerified: true,
-              }],
-              { session }
-            )
-          )[0];
+        let fatherUser = null;
+        let fatherPassword = null;
+        const fatherEmail = String(row.fatherEmail || "").trim().toLowerCase();
+        if (fatherEmail) {
+          fatherUser = await User.findOne({ email: fatherEmail, schoolId, isActive: true, isDeleted: { $ne: true } }).session(session);
+          if (!fatherUser) {
+            fatherPassword = generatePassword();
+            fatherUser = (
+              await User.create(
+                [{
+                  name: String(row.fatherName || "").trim() || "Parent",
+                  email: fatherEmail,
+                  password: fatherPassword,
+                  roleId: parentRole._id,
+                  schoolId,
+                  isEmailVerified: true,
+                }],
+                { session }
+              )
+            )[0];
+          }
         }
-      }
 
-      let motherUser = null;
-      let motherPassword = null;
-      const motherEmail = String(row.motherEmail || "").trim().toLowerCase();
-      if (motherEmail) {
-        motherUser = await User.findOne({ email: motherEmail, schoolId, isActive: true, isDeleted: { $ne: true } }).session(session);
-        if (!motherUser) {
-          motherPassword = generatePassword();
-          motherUser = (
-            await User.create(
-              [{
-                name: String(row.motherName || "").trim() || "Parent",
-                email: motherEmail,
-                password: motherPassword,
-                roleId: parentRole._id,
-                schoolId,
-                isEmailVerified: true,
-              }],
-              { session }
-            )
-          )[0];
+        let motherUser = null;
+        let motherPassword = null;
+        const motherEmail = String(row.motherEmail || "").trim().toLowerCase();
+        if (motherEmail) {
+          motherUser = await User.findOne({ email: motherEmail, schoolId, isActive: true, isDeleted: { $ne: true } }).session(session);
+          if (!motherUser) {
+            motherPassword = generatePassword();
+            motherUser = (
+              await User.create(
+                [{
+                  name: String(row.motherName || "").trim() || "Parent",
+                  email: motherEmail,
+                  password: motherPassword,
+                  roleId: parentRole._id,
+                  schoolId,
+                  isEmailVerified: true,
+                }],
+                { session }
+              )
+            )[0];
+          }
         }
+
+        const student = (
+          await Student.create(
+            [{
+              userId: studentUser._id,
+              fatherId: fatherUser?._id || null,
+              motherId: motherUser?._id || null,
+              schoolId,
+              dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
+              gender: row.gender || undefined,
+              address: row.address || undefined,
+              bloodGroup: row.bloodGroup || undefined,
+              fatherInfo: fatherEmail ? { name: row.fatherName, email: fatherEmail, mobile: row.fatherMobile } : undefined,
+              motherInfo: motherEmail ? { name: row.motherName, email: motherEmail, mobile: row.motherMobile } : undefined,
+            }],
+            { session }
+          )
+        )[0];
+
+        // One number per row, reused if the row is retried.
+        rowRegNo = rowRegNo || (await nextRegistrationNumber({ schoolId, academicYearId, yearCode: academicYear.code }));
+        const nextRegNo = rowRegNo;
+
+        const lastRollEnrollment = await StudentEnrollment.findOne({
+          schoolId, academicYearId, schoolClassId: schoolClass._id, sectionId: section._id, rollNumber: { $ne: null },
+        }).sort({ rollNumber: -1 }).session(session);
+        const nextRollNumber = (lastRollEnrollment?.rollNumber || 0) + 1;
+
+        const enrollment = (
+          await StudentEnrollment.create(
+            [{
+              studentId: student._id,
+              schoolId,
+              academicYearId,
+              schoolClassId: schoolClass._id,
+              sectionId: section._id,
+              registrationNumber: nextRegNo,
+              rollNumber: nextRollNumber,
+              mobileNumber: row.fatherMobile || row.motherMobile || row.mobileNumber || null,
+              createdBy: req.user._id,
+            }],
+            { session }
+          )
+        )[0];
+
+        await Section.findOneAndUpdate(
+          { _id: section._id, schoolId, schoolClassId: schoolClass._id },
+          { $addToSet: { StudentEnrollmentId: enrollment._id } },
+          { session }
+        );
+
+        await session.commitTransaction();
+
+        existingEmails.add(email);
+
+        results.created.push({
+          row: rowNum,
+          name,
+          email,
+          registrationNumber: nextRegNo,
+          rollNumber: nextRollNumber,
+          studentId: student._id,
+          credentials: {
+            student: { loginId: email, password: studentPassword },
+            father: fatherPassword ? { loginId: fatherEmail, password: fatherPassword } : null,
+            mother: motherPassword ? { loginId: motherEmail, password: motherPassword } : null,
+          },
+        });
+        break;
+      } catch (err) {
+        await session.abortTransaction();
+        if (attempt < ADMISSION_ATTEMPTS && isNumberClash(err)) {
+          await pauseBeforeRetry(attempt);
+          continue;
+        }
+        results.errors.push({ row: rowNum, name: name || email || "(unnamed)", reasons: [err.message || "Unexpected error"] });
+        break;
+      } finally {
+        session.endSession();
       }
-
-      const student = (
-        await Student.create(
-          [{
-            userId: studentUser._id,
-            fatherId: fatherUser?._id || null,
-            motherId: motherUser?._id || null,
-            schoolId,
-            dateOfBirth: row.dateOfBirth ? new Date(row.dateOfBirth) : undefined,
-            gender: row.gender || undefined,
-            address: row.address || undefined,
-            bloodGroup: row.bloodGroup || undefined,
-            fatherInfo: fatherEmail ? { name: row.fatherName, email: fatherEmail, mobile: row.fatherMobile } : undefined,
-            motherInfo: motherEmail ? { name: row.motherName, email: motherEmail, mobile: row.motherMobile } : undefined,
-          }],
-          { session }
-        )
-      )[0];
-
-      const nextRegNo = generateNextRegNumber(runningLastRegNo, {
-        prefix: "REG",
-        year: academicYear.code || new Date().getFullYear(),
-        digits: 4,
-      });
-
-      const lastRollEnrollment = await StudentEnrollment.findOne({
-        schoolId, academicYearId, schoolClassId: schoolClass._id, sectionId: section._id, rollNumber: { $ne: null },
-      }).sort({ rollNumber: -1 }).session(session);
-      const nextRollNumber = (lastRollEnrollment?.rollNumber || 0) + 1;
-
-      const enrollment = (
-        await StudentEnrollment.create(
-          [{
-            studentId: student._id,
-            schoolId,
-            academicYearId,
-            schoolClassId: schoolClass._id,
-            sectionId: section._id,
-            registrationNumber: nextRegNo,
-            rollNumber: nextRollNumber,
-            mobileNumber: row.fatherMobile || row.motherMobile || row.mobileNumber || null,
-            createdBy: req.user._id,
-          }],
-          { session }
-        )
-      )[0];
-
-      await Section.findOneAndUpdate(
-        { _id: section._id, schoolId, schoolClassId: schoolClass._id },
-        { $addToSet: { StudentEnrollmentId: enrollment._id } },
-        { session }
-      );
-
-      await session.commitTransaction();
-
-      runningLastRegNo = nextRegNo;
-      existingEmails.add(email);
-
-      results.created.push({
-        row: rowNum,
-        name,
-        email,
-        registrationNumber: nextRegNo,
-        rollNumber: nextRollNumber,
-        studentId: student._id,
-        credentials: {
-          student: { loginId: email, password: studentPassword },
-          father: fatherPassword ? { loginId: fatherEmail, password: fatherPassword } : null,
-          mother: motherPassword ? { loginId: motherEmail, password: motherPassword } : null,
-        },
-      });
-    } catch (err) {
-      await session.abortTransaction();
-      results.errors.push({ row: rowNum, name: name || email || "(unnamed)", reasons: [err.message || "Unexpected error"] });
-    } finally {
-      session.endSession();
     }
   }
 
@@ -731,16 +743,10 @@ const transferStudent = asyncHandler(async (req, res) => {
 
     // Registration number, scoped to the destination school's own numbering (see
     // bulkImportStudents for why this specifically matches on format, not just "most recent").
-    const regNoPrefix = `REG${targetAcademicYear.code || new Date().getFullYear()}`;
-    const lastEnrollment = await StudentEnrollment.findOne({
+    const nextRegNo = await nextRegistrationNumber({
       schoolId: targetSchoolId,
       academicYearId: targetAcademicYearId,
-      registrationNumber: { $regex: `^${escapeRegex(regNoPrefix)}` },
-    }).sort({ registrationNumber: -1 }).session(session);
-    const nextRegNo = generateNextRegNumber(lastEnrollment?.registrationNumber, {
-      prefix: "REG",
-      year: targetAcademicYear.code || new Date().getFullYear(),
-      digits: 4,
+      yearCode: targetAcademicYear.code,
     });
 
     const lastRollEnrollment = await StudentEnrollment.findOne({
