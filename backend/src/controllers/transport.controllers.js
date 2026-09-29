@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { AcademicYear } from "../models/AcademicYear.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { StudentTransportAssignment } from "../models/StudentTransportAssignment.model.js";
@@ -19,6 +20,19 @@ const resolveActiveAcademicYear = async (schoolId) => {
   }
 
   return academicYear;
+};
+
+// Students riding a vehicle or route this year. A vehicle or route with riders cannot be deleted or
+// shrunk under them: the assignments kept pointing at nothing and the students vanished from the
+// bus lists.
+const countRiders = async (schoolId, field, id) => {
+  const year = await AcademicYear.findOne({ schoolId, isActive: true }).select("_id").lean();
+  return StudentTransportAssignment.countDocuments({
+    schoolId,
+    [field]: id,
+    isActive: true,
+    ...(year ? { academicYearId: year._id } : {}),
+  });
 };
 
 export const getVehicles = asyncHandler(async (req, res) => {
@@ -82,6 +96,13 @@ export const updateVehicle = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req);
   if (!schoolId) throw new ApiError(400, "schoolId is required");
 
+  if (updates.capacity !== undefined && mongoose.Types.ObjectId.isValid(id)) {
+    const riders = await countRiders(schoolId, "vehicleId", id);
+    if (Number(updates.capacity) < riders) {
+      throw new ApiError(409, `${riders} students ride this vehicle. Move some to another vehicle before lowering its seats.`);
+    }
+  }
+
   const vehicle = await Transport.findOneAndUpdate({ _id: id, schoolId }, updates, { new: true, runValidators: true });
 
   if (!vehicle) throw new ApiError(404, "Vehicle not found");
@@ -93,6 +114,10 @@ export const deleteVehicle = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const schoolId = resolveSchoolId(req);
   if (!schoolId) throw new ApiError(400, "schoolId is required");
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    const riders = await countRiders(schoolId, "vehicleId", id);
+    if (riders) throw new ApiError(409, `${riders} students are assigned to this vehicle. Move them before deleting it.`);
+  }
   const vehicle = await Transport.findOneAndDelete({ _id: id, schoolId });
 
   if (!vehicle) throw new ApiError(404, "Vehicle not found");
@@ -205,6 +230,10 @@ export const deleteRoute = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const schoolId = resolveSchoolId(req);
   if (!schoolId) throw new ApiError(400, "schoolId is required");
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    const riders = await countRiders(schoolId, "routeId", id);
+    if (riders) throw new ApiError(409, `${riders} students are assigned to this route. Move them before deleting it.`);
+  }
   const route = await TransportRoute.findOneAndDelete({ _id: id, schoolId });
 
   if (!route) throw new ApiError(404, "Route not found");
@@ -310,6 +339,21 @@ export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) =
   }
 
   const activeAcademicYear = await resolveActiveAcademicYear(schoolId);
+
+  // All three must belong to this school (and the student to this year). Unchecked, another
+  // school's enrollment or route id was saved and the response populated it: that school's child's
+  // name, class and registration number, or its route and stops.
+  for (const [label, value] of [["studentEnrollmentId", studentEnrollmentId], ["routeId", routeId], ["vehicleId", vehicleId]]) {
+    if (!mongoose.Types.ObjectId.isValid(value)) throw new ApiError(400, `Invalid ${label}`);
+  }
+  const [enrollment, route, vehicleDoc] = await Promise.all([
+    StudentEnrollment.exists({ _id: studentEnrollmentId, schoolId, academicYearId: activeAcademicYear._id }),
+    TransportRoute.exists({ _id: routeId, schoolId }),
+    Transport.exists({ _id: vehicleId, schoolId }),
+  ]);
+  if (!enrollment) throw new ApiError(404, "Student is not enrolled in this school's current academic year");
+  if (!route) throw new ApiError(404, "Route not found");
+  if (!vehicleDoc) throw new ApiError(404, "Vehicle not found");
 
   // Seat-capacity check — Hostel already enforces this for rooms (assignStudentToRoom in
   // hostelRoom.controllers.js), Transport didn't, so a vehicle could be assigned more students
