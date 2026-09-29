@@ -58,11 +58,21 @@ export const updateBonus = asyncHandler(async (req, res) => {
   if (!bonus) throw new ApiError(404, "Bonus not found");
   if (bonus.status === "paid") throw new ApiError(400, "Cannot edit a paid bonus");
 
+  // The check above and the save were separate steps, so an edit sent while the bonus was being
+  // marked paid still went through and changed the amount of something already paid out. The
+  // edit now only applies while the bonus is still unpaid.
   const allowed = ["type", "title", "amount", "payoutMonth", "payoutYear", "rule", "status"];
-  allowed.forEach((f) => { if (req.body[f] !== undefined) bonus[f] = req.body[f]; });
-  await bonus.save();
+  const updates = {};
+  allowed.forEach((f) => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
 
-  return sendSuccess(res, { data: bonus, message: "Bonus updated successfully" });
+  const updated = await BonusIncentive.findOneAndUpdate(
+    { _id: id, schoolId, status: { $ne: "paid" } },
+    { $set: updates },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This bonus was just paid — refresh to see it");
+
+  return sendSuccess(res, { data: updated, message: "Bonus updated successfully" });
 });
 
 export const deleteBonus = asyncHandler(async (req, res) => {
@@ -73,7 +83,9 @@ export const deleteBonus = asyncHandler(async (req, res) => {
   if (!bonus) throw new ApiError(404, "Bonus not found");
   if (bonus.status === "paid") throw new ApiError(400, "Cannot delete a paid bonus");
 
-  await bonus.deleteOne();
+  // Deleting checks it is still unpaid in the same step, so a bonus paid at that moment stays.
+  const removed = await BonusIncentive.findOneAndDelete({ _id: id, schoolId, status: { $ne: "paid" } });
+  if (!removed) throw new ApiError(409, "This bonus was just paid — refresh to see it");
   return sendSuccess(res, { message: "Bonus deleted successfully" });
 });
 
@@ -87,9 +99,15 @@ export const approveBonus = asyncHandler(async (req, res) => {
     throw new ApiError(400, `Bonus is already ${bonus.status}`);
   }
 
-  bonus.status = "approved";
-  await bonus.save();
-  return sendSuccess(res, { data: bonus, message: "Bonus approved" });
+  // Only from a state that can still be approved, in one update. Approve and cancel clicked
+  // together both saved and the last one won.
+  const updated = await BonusIncentive.findOneAndUpdate(
+    { _id: id, schoolId, status: { $nin: ["paid", "approved"] } },
+    { $set: { status: "approved" } },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This bonus was just decided by someone else — refresh to see it");
+  return sendSuccess(res, { data: updated, message: "Bonus approved" });
 });
 
 export const cancelBonus = asyncHandler(async (req, res) => {
@@ -100,7 +118,12 @@ export const cancelBonus = asyncHandler(async (req, res) => {
   if (!bonus) throw new ApiError(404, "Bonus not found");
   if (bonus.status === "paid") throw new ApiError(400, "Cannot cancel a paid bonus");
 
-  bonus.status = "cancelled";
-  await bonus.save();
-  return sendSuccess(res, { data: bonus, message: "Bonus cancelled" });
+  // Only while still unpaid — same reason as approving above.
+  const updated = await BonusIncentive.findOneAndUpdate(
+    { _id: id, schoolId, status: { $ne: "paid" } },
+    { $set: { status: "cancelled" } },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This bonus was just paid — refresh to see it");
+  return sendSuccess(res, { data: updated, message: "Bonus cancelled" });
 });

@@ -484,12 +484,17 @@ export const lockPayrollCycle = asyncHandler(async (req, res) => {
   if (!cycle) throw new ApiError(404, "Payroll cycle not found");
   if (cycle.status === "paid") throw new ApiError(400, "Paid cycle cannot be modified");
 
-  cycle.status = "locked";
-  cycle.lockedAt = new Date();
-  await cycle.save();
+  // Only while the cycle has not been paid, in one update — the check above and the save were
+  // separate steps, so a lock sent as the cycle was being paid still went through.
+  const locked = await PayrollCycle.findOneAndUpdate(
+    { _id: cycle._id, schoolId, status: { $ne: "paid" } },
+    { $set: { status: "locked", lockedAt: new Date() } },
+    { new: true, runValidators: true }
+  );
+  if (!locked) throw new ApiError(409, "This cycle was just paid — refresh to see it");
 
-  await writeAuditLog(req, "PAYROLL_CYCLE_LOCKED", "Payroll cycle locked", { payrollCycleId: cycle._id });
-  return sendSuccess(res, { message: "Payroll cycle locked", data: cycle });
+  await writeAuditLog(req, "PAYROLL_CYCLE_LOCKED", "Payroll cycle locked", { payrollCycleId: locked._id });
+  return sendSuccess(res, { message: "Payroll cycle locked", data: locked });
 });
 
 export const payPayrollCycle = asyncHandler(async (req, res) => {
@@ -502,28 +507,44 @@ export const payPayrollCycle = asyncHandler(async (req, res) => {
   if (cycle.status !== "locked") throw new ApiError(400, "Only locked cycles can be marked as paid");
 
   const now = new Date();
-  const entries = await PayrollEntry.find({ payrollCycleId: cycle._id, paymentStatus: "pending" });
 
-  for (const entry of entries) {
-    entry.paymentStatus = "paid";
-    entry.paymentMode = paymentMode || "bank";
-    entry.paidAt = now;
-    entry.transactionRef = transactionRefPrefix
-      ? `${transactionRefPrefix}-${entry.employeeId}`
-      : `PAY-${cycle.year}${String(cycle.month).padStart(2, "0")}-${entry.employeeId}`;
-    await entry.save();
-  }
+  // Claim the cycle before paying anything. Checking the status and running the payment were
+  // separate steps, so two "Pay" clicks both found the cycle locked and both paid it: entries
+  // were written twice, the second run reported a different number of entries than it had
+  // actually paid, and the audit log recorded two payment runs for the same month. Only the
+  // request that moves the cycle out of "locked" goes on to pay.
+  const paidCycle = await PayrollCycle.findOneAndUpdate(
+    { _id: cycle._id, schoolId, status: "locked" },
+    { $set: { status: "paid", paidAt: now } },
+    { new: true, runValidators: true }
+  );
+  if (!paidCycle) throw new ApiError(409, "This cycle was just paid by someone else — refresh to see it");
 
-  cycle.status = "paid";
-  cycle.paidAt = now;
-  await cycle.save();
+  // One update covering every entry still pending, rather than a save each — a second run has
+  // nothing left to match.
+  const prefix =
+    transactionRefPrefix ||
+    `PAY-${paidCycle.year}${String(paidCycle.month).padStart(2, "0")}`;
+  const { modifiedCount } = await PayrollEntry.updateMany(
+    { payrollCycleId: paidCycle._id, paymentStatus: "pending" },
+    [
+      {
+        $set: {
+          paymentStatus: "paid",
+          paymentMode: paymentMode || "bank",
+          paidAt: now,
+          transactionRef: { $concat: [prefix, "-", { $toString: "$employeeId" }] },
+        },
+      },
+    ]
+  );
 
   await writeAuditLog(req, "PAYROLL_CYCLE_PAID", "Payroll cycle marked as paid", {
-    payrollCycleId: cycle._id,
-    paidEntries: entries.length,
+    payrollCycleId: paidCycle._id,
+    paidEntries: modifiedCount,
   });
 
-  return sendSuccess(res, { message: "Payroll cycle paid", data: { cycle, paidEntries: entries.length } });
+  return sendSuccess(res, { message: "Payroll cycle paid", data: { cycle: paidCycle, paidEntries: modifiedCount } });
 });
 
 // Shared by getPayslip (JSON) and downloadPayslipPdf (PDF) — one fetch-and-authorize path so

@@ -56,17 +56,26 @@ export const approveManagerReimbursement = asyncHandler(async (req, res) => {
   if (!reimb) throw new ApiError(404, "Reimbursement not found");
   if (reimb.status !== "pending_manager") throw new ApiError(400, "Not awaiting manager approval");
 
-  const managerApproval = reimb.approvals.find((a) => a.level === "manager");
-  if (managerApproval) {
-    managerApproval.status = "approved";
-    managerApproval.actedBy = req.user._id;
-    managerApproval.actedAt = new Date();
-    managerApproval.remark = req.body.remark || "";
-  }
-  reimb.status = "pending_finance";
-  await reimb.save();
+  // Only while it is still with the manager, in one update. Reading the claim, changing it and
+  // saving meant an approve and a reject sent together both succeeded and the last save won: a
+  // claim could end up rejected with its manager step marked approved, or approved while
+  // carrying a rejection reason.
+  const updated = await Reimbursement.findOneAndUpdate(
+    { _id: id, schoolId, status: "pending_manager" },
+    {
+      $set: {
+        status: "pending_finance",
+        "approvals.$[step].status": "approved",
+        "approvals.$[step].actedBy": req.user._id,
+        "approvals.$[step].actedAt": new Date(),
+        "approvals.$[step].remark": req.body.remark || "",
+      },
+    },
+    { new: true, runValidators: true, arrayFilters: [{ "step.level": "manager" }] }
+  );
+  if (!updated) throw new ApiError(409, "This claim was just decided by someone else — refresh to see it");
 
-  return sendSuccess(res, { data: reimb, message: "Approved by manager — awaiting finance" });
+  return sendSuccess(res, { data: updated, message: "Approved by manager — awaiting finance" });
 });
 
 export const approveFinanceReimbursement = asyncHandler(async (req, res) => {
@@ -77,17 +86,23 @@ export const approveFinanceReimbursement = asyncHandler(async (req, res) => {
   if (!reimb) throw new ApiError(404, "Reimbursement not found");
   if (reimb.status !== "pending_finance") throw new ApiError(400, "Not awaiting finance approval");
 
-  const financeApproval = reimb.approvals.find((a) => a.level === "finance");
-  if (financeApproval) {
-    financeApproval.status = "approved";
-    financeApproval.actedBy = req.user._id;
-    financeApproval.actedAt = new Date();
-    financeApproval.remark = req.body.remark || "";
-  }
-  reimb.status = "approved";
-  await reimb.save();
+  // Only while it is still with finance — same reason as the manager step above.
+  const updated = await Reimbursement.findOneAndUpdate(
+    { _id: id, schoolId, status: "pending_finance" },
+    {
+      $set: {
+        status: "approved",
+        "approvals.$[step].status": "approved",
+        "approvals.$[step].actedBy": req.user._id,
+        "approvals.$[step].actedAt": new Date(),
+        "approvals.$[step].remark": req.body.remark || "",
+      },
+    },
+    { new: true, runValidators: true, arrayFilters: [{ "step.level": "finance" }] }
+  );
+  if (!updated) throw new ApiError(409, "This claim was just decided by someone else — refresh to see it");
 
-  return sendSuccess(res, { data: reimb, message: "Reimbursement fully approved" });
+  return sendSuccess(res, { data: updated, message: "Reimbursement fully approved" });
 });
 
 export const rejectReimbursement = asyncHandler(async (req, res) => {
@@ -100,11 +115,16 @@ export const rejectReimbursement = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Cannot reject: current status does not allow rejection");
   }
 
-  reimb.status = "rejected";
-  reimb.rejectionReason = req.body.reason || "Rejected";
-  await reimb.save();
+  // Only while it is still awaiting a decision, so a rejection cannot land on top of an
+  // approval that was accepted a moment earlier.
+  const updated = await Reimbursement.findOneAndUpdate(
+    { _id: id, schoolId, status: { $in: ["pending_manager", "pending_finance"] } },
+    { $set: { status: "rejected", rejectionReason: req.body.reason || "Rejected" } },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This claim was just decided by someone else — refresh to see it");
 
-  return sendSuccess(res, { data: reimb, message: "Reimbursement rejected" });
+  return sendSuccess(res, { data: updated, message: "Reimbursement rejected" });
 });
 
 export const deleteReimbursement = asyncHandler(async (req, res) => {
@@ -117,6 +137,13 @@ export const deleteReimbursement = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Only pending or rejected claims can be deleted");
   }
 
-  await reimb.deleteOne();
+  // Deleting checks the status in the same step, so a claim approved at that moment is kept
+  // rather than removed out from under the approval.
+  const removed = await Reimbursement.findOneAndDelete({
+    _id: id,
+    schoolId,
+    status: { $in: ["pending_manager", "rejected"] },
+  });
+  if (!removed) throw new ApiError(409, "This claim was just decided by someone else — refresh to see it");
   return sendSuccess(res, { message: "Reimbursement deleted" });
 });

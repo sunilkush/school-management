@@ -8,7 +8,8 @@
     "start": "nodemon src/index.js",
     "dev": "node src/index.js",
     "seed": "node src/seed.js",
-    "check:numbering": "node scripts/checkNumbering.mjs"
+    "check:numbering": "node scripts/checkNumbering.mjs",
+    "check:decide-once": "node scripts/checkDecideOnce.mjs"
   },
   "keywords": [
     "node.js",
