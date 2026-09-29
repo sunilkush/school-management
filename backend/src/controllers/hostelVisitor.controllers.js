@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { assertSchoolStudents } from "../utils/schoolStudents.js";
 
 // POST /hostel/visitors
 export const logVisitorEntry = asyncHandler(async (req, res) => {
@@ -12,6 +13,7 @@ export const logVisitorEntry = asyncHandler(async (req, res) => {
   if (!studentId || !visitorName || !visitorPhone || !relation || !purpose) {
     throw new ApiError(400, "studentId, visitorName, visitorPhone, relation and purpose are required");
   }
+  await assertSchoolStudents(schoolId, studentId);
 
   const visitor = await HostelVisitor.create({
     schoolId, studentId, visitorName, visitorPhone, relation, purpose,

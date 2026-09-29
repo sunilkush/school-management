@@ -1,11 +1,10 @@
-import mongoose from "mongoose";
-import { User } from "../models/user.model.js";
 import { HostelLeave } from "../models/HostelLeave.model.js";
 import { HostelRoom } from "../models/HostelRoom.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { assertSchoolStudents } from "../utils/schoolStudents.js";
 
 // POST /hostel/leaves
 export const createLeaveRequest = asyncHandler(async (req, res) => {
@@ -26,14 +25,7 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
     throw new ApiError(400, "toDate must be after fromDate");
   }
 
-  // The student must be one of this school's students. Unchecked, another school's user id was
-  // saved and the response populated it with that child's name, email and phone.
-  if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid studentId");
-  const student = await User.findOne({ _id: studentId, schoolId, isDeleted: { $ne: true } })
-    .select("roleId")
-    .populate("roleId", "name")
-    .lean();
-  if (!student || student.roleId?.name !== "Student") throw new ApiError(404, "Student not found in this school");
+  await assertSchoolStudents(schoolId, studentId);
 
   // Check for overlapping approved/pending leave
   const overlap = await HostelLeave.findOne({

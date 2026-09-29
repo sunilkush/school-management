@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { assertSchoolStudents } from "../utils/schoolStudents.js";
 
 // Months and days are counted on the school calendar (IST); left unset, Mongo buckets by UTC,
 // which files anything from midnight to 5:30 AM under the previous day (and the 1st under the previous month).
@@ -22,6 +23,7 @@ export const markHostelAttendance = asyncHandler(async (req, res) => {
   if (!["morning", "evening", "night"].includes(session)) {
     throw new ApiError(400, "session must be morning, evening or night");
   }
+  await assertSchoolStudents(schoolId, records.map((r) => r?.studentId));
 
   const attendDate = new Date(date);
   attendDate.setHours(0, 0, 0, 0);

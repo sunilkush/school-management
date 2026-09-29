@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolIdFromReq as resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { assertSchoolStudents } from "../utils/schoolStudents.js";
 
 // POST /hostel/complaints
 export const createComplaint = asyncHandler(async (req, res) => {
@@ -12,6 +13,7 @@ export const createComplaint = asyncHandler(async (req, res) => {
   if (!studentId || !type || !title || !description) {
     throw new ApiError(400, "studentId, type, title and description are required");
   }
+  await assertSchoolStudents(schoolId, studentId);
 
   const complaint = await HostelComplaint.create({
     schoolId, studentId, type, title, description,
