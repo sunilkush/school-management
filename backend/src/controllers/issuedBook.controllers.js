@@ -47,12 +47,48 @@ export const issueBook = asyncHandler(async (req, res) => {
 
   const settings = await getSettings(schoolId);
 
+  const type = memberType || "Student";
+  if (!["Student", "Teacher", "Staff"].includes(type)) throw new ApiError(400, "Invalid member type");
+  const borrowerId = type === "Student" ? studentId : issuedToUserId;
+  if (!borrowerId || !mongoose.Types.ObjectId.isValid(borrowerId)) {
+    throw new ApiError(400, type === "Student" ? "studentId is required for a student" : "issuedToUserId is required");
+  }
+  const borrowerField = type === "Student" ? "studentId" : "issuedToUserId";
+
+  // The borrower must be one of this school's people. A student is a Student record, anyone else a user.
+  // (Older student records can lack schoolId; those are matched through their user account.)
+  const studentOfSchool = async () => {
+    const student = await Student.findById(borrowerId).select("schoolId userId").lean();
+    if (!student) return false;
+    if (student.schoolId) return String(student.schoolId) === String(schoolId);
+    return Boolean(student.userId && (await User.exists({ _id: student.userId, schoolId })));
+  };
+  const borrowerExists = type === "Student"
+    ? await studentOfSchool()
+    : await User.exists({ _id: borrowerId, schoolId, isDeleted: { $ne: true } });
+  if (!borrowerExists) throw new ApiError(404, "Borrower not found in this school");
+
+  // The "Max books per student / teacher / staff" settings were saved but never checked, so one
+  // person could take any number of books. Books still out (issued or overdue) count.
+  const onLoan = await IssuedBook.find({ schoolId, [borrowerField]: borrowerId, status: { $in: ["Issued", "Overdue"] } })
+    .select("bookId")
+    .lean();
+  if (onLoan.some((loan) => String(loan.bookId) === String(bookId))) {
+    throw new ApiError(409, "This person already has a copy of this book");
+  }
+  const limit = Number(
+    type === "Teacher" ? settings.maxBooksPerTeacher : type === "Staff" ? settings.maxBooksPerStaff : settings.maxBooksPerStudent
+  );
+  if (Number.isFinite(limit) && onLoan.length >= limit) {
+    throw new ApiError(409, `This ${type.toLowerCase()} already has ${onLoan.length} books out; the limit is ${limit}. Return one first.`);
+  }
+
   // Calculate default dueDate if not supplied
   const computedDue = dueDate
     ? new Date(dueDate)
     : (() => {
         const d = new Date(issueDate || Date.now());
-        const days = memberType === "Teacher" ? settings.maxDaysToReturnTeacher : settings.maxDaysToReturnStudent;
+        const days = type === "Teacher" ? settings.maxDaysToReturnTeacher : settings.maxDaysToReturnStudent;
         d.setDate(d.getDate() + (days || 15));
         return d;
       })();
@@ -78,9 +114,9 @@ export const issueBook = asyncHandler(async (req, res) => {
       [{
         schoolId,
         bookId,
-        studentId: studentId || undefined,
-        issuedToUserId: issuedToUserId || undefined,
-        memberType: memberType || "Student",
+        studentId: type === "Student" ? borrowerId : undefined,
+        issuedToUserId: type === "Student" ? undefined : borrowerId,
+        memberType: type,
         issueDate: issueDate ? new Date(issueDate) : new Date(),
         dueDate: computedDue,
         issuedBy: req.user._id,
