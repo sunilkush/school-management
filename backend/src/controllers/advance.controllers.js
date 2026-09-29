@@ -126,28 +126,36 @@ export const deductEmi = asyncHandler(async (req, res) => {
   if (!advance) throw new ApiError(404, "Advance not found");
   if (advance.status !== "active") throw new ApiError(400, "Advance is not active");
 
-  const deduction = Math.min(advance.emiAmount, advance.remainingAmount);
-  advance.remainingAmount -= deduction;
+  const before = advance.remainingAmount;
+  const deduction = Math.min(advance.emiAmount, before);
+  const remaining = before - deduction;
+  const now = new Date();
 
-  advance.history.push({
+  const history = [{
     action: "emi_deducted",
     amount: deduction,
     note: req.body.note || `EMI deduction of ₹${deduction}`,
     actedBy: req.user._id,
-  });
-
-  if (advance.remainingAmount === 0) {
-    advance.status = "closed";
-    advance.history.push({
-      action: "closed",
-      amount: 0,
-      note: "Advance fully repaid",
-      actedBy: req.user._id,
-    });
+    actedAt: now,
+  }];
+  if (remaining === 0) {
+    history.push({ action: "closed", amount: 0, note: "Advance fully repaid", actedBy: req.user._id, actedAt: now });
   }
 
-  await advance.save();
-  return sendSuccess(res, { data: advance, message: "EMI deducted successfully" });
+  // Applied only if the balance is still what was read. Read-modify-save let two deductions (a
+  // double-click) both start from the same balance: the balance fell once while the history
+  // recorded two EMIs, so the two stopped agreeing.
+  const updated = await LoanAdvance.findOneAndUpdate(
+    { _id: advance._id, schoolId, status: "active", remainingAmount: before },
+    {
+      $set: { remainingAmount: remaining, ...(remaining === 0 ? { status: "closed" } : {}) },
+      $push: { history: { $each: history } },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This advance was just updated — refresh and try again");
+
+  return sendSuccess(res, { data: updated, message: "EMI deducted successfully" });
 });
 
 export const closeAdvance = asyncHandler(async (req, res) => {

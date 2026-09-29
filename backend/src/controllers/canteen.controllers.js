@@ -343,15 +343,19 @@ export const getOrders = asyncHandler(async (req, res) => {
 });
 
 export const cancelOrder = asyncHandler(async (req, res) => {
-  const order = await CanteenOrder.findById(req.params.id);
-  ensureAccess(order, req.user, "Order not found");
+  const found = await CanteenOrder.findById(req.params.id);
+  ensureAccess(found, req.user, "Order not found");
 
-  if (order.status === "Cancelled") {
+  // Claim the cancellation with a conditional update. Reading the status and then saving let two
+  // cancels (a double-click) both see "Completed", and both refunded the wallet.
+  const order = await CanteenOrder.findOneAndUpdate(
+    { _id: found._id, status: { $ne: "Cancelled" } },
+    { $set: { status: "Cancelled" } },
+    { new: true }
+  );
+  if (!order) {
     throw new ApiError(400, "Order already cancelled");
   }
-
-  order.status = "Cancelled";
-  await order.save();
 
   const wallet = await StudentWallet.findOneAndUpdate(
     { schoolId: order.schoolId, studentId: order.studentId },
