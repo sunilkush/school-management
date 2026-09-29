@@ -25,6 +25,8 @@ import { nextSequence } from "../src/utils/sequence.js";
 import { SchoolSubscription } from "../src/models/schoolSubscription.model.js";
 import { expireIfElapsed } from "../src/utils/subscriptionExpiry.js";
 import { Attendance } from "../src/models/attendance.model.js";
+import { ExamAttempt } from "../src/models/ExamAttempts.model.js";
+import { AppraisalReview } from "../src/models/AppraisalReview.model.js";
 
 const URI = process.env.E2E_MONGO_URI || "mongodb://127.0.0.1:27017/school_management_decide_once_check";
 if (/mongodb\+srv|mongodb\.net/i.test(URI)) {
@@ -484,6 +486,88 @@ console.log("── tapping Check in twice ──");
     );
   const outs = await Promise.all([checkOut(), checkOut(), checkOut()]);
   ok("only one check-out is accepted", won(outs) === 1, `${won(outs)} accepted`);
+}
+
+console.log("");
+console.log("── an exam submitted twice, one of them late ──");
+{
+  // The late submit ignores the answers it was sent, so it has nothing to mark automatically.
+  // Whichever lands second must not undo the other.
+  const submit = (attemptId, autoEvaluated) =>
+    ExamAttempt.findOneAndUpdate(
+      { _id: attemptId, status: "in_progress" },
+      {
+        $set: autoEvaluated
+          ? { status: "evaluated", autoEvaluated: true, grade: "A", submittedAt: new Date() }
+          : { status: "submitted", submittedAt: new Date() },
+      },
+      { new: true }
+    );
+
+  let muddled = 0;
+  let accepted = 0;
+  for (let round = 0; round < 10; round += 1) {
+    const attempt = await ExamAttempt.create({
+      schoolId, examId: id(), studentId: id(), status: "in_progress",
+      answers: [{ questionId: id(), response: null }],
+    });
+    const results = await Promise.all([submit(attempt._id, true), submit(attempt._id, false)]);
+    accepted += won(results);
+    const after = await ExamAttempt.findById(attempt._id).lean();
+    if (after.status === "submitted" && (after.grade || after.autoEvaluated)) muddled += 1;
+  }
+  ok("only one submit is accepted each time", accepted === 10, `${accepted} of 10`);
+  ok(
+    "an attempt never waits for marking with a grade already on it",
+    muddled === 0,
+    `${muddled} of 10`
+  );
+}
+
+console.log("");
+console.log("── two people starting the same appraisal round ──");
+{
+  await AppraisalReview.syncIndexes();
+  const cycleId = id();
+  const employees = Array.from({ length: 5 }, () => id());
+
+  // The same statement startCycleReviews runs: create the ones that are missing, and treat a
+  // review that already exists as the outcome that was wanted.
+  const start = async () => {
+    const existing = await AppraisalReview.find({ cycleId }).select("employeeId").lean();
+    const already = new Set(existing.map((r) => String(r.employeeId)));
+    const toCreate = employees
+      .filter((e) => !already.has(String(e)))
+      .map((employeeId) => ({ schoolId, cycleId, employeeId, status: "pending" }));
+    if (toCreate.length) {
+      try {
+        await AppraisalReview.insertMany(toCreate, { ordered: false });
+      } catch (error) {
+        const duplicatesOnly =
+          error?.code === 11000 ||
+          (Array.isArray(error?.writeErrors) &&
+            error.writeErrors.length > 0 &&
+            error.writeErrors.every((e) => (e?.err?.code ?? e?.code) === 11000));
+        if (!duplicatesOnly) throw error;
+      }
+    }
+    return AppraisalReview.countDocuments({ cycleId });
+  };
+
+  let failed = false;
+  try {
+    await Promise.all([start(), start()]);
+  } catch {
+    failed = true;
+  }
+  ok("neither caller is handed an error", !failed);
+  ok(
+    "every employee ends up with exactly one review",
+    (await AppraisalReview.countDocuments({ cycleId })) === employees.length,
+    `${await AppraisalReview.countDocuments({ cycleId })} of ${employees.length}`
+  );
+
+  ok("running it again opens nothing new", (await start()) === employees.length);
 }
 
 await mongoose.connection.db.dropDatabase();

@@ -352,9 +352,12 @@ export const startCycleReviews = asyncHandler(async (req, res) => {
   if (cycle.status === "closed") throw new ApiError(400, "That cycle is closed");
   if (!cycle.criteria?.length) throw new ApiError(400, "Add the criteria before starting the reviews");
 
+  // Conditional, so two people starting the round together do not both write the change.
   if (cycle.status === "draft") {
-    cycle.status = "open";
-    await cycle.save();
+    await AppraisalCycle.updateOne(
+      { _id: cycle._id, schoolId, status: "draft" },
+      { $set: { status: "open" } }
+    );
   }
 
   const employees = await Employee.find({ schoolId }).select("_id userId").lean();
@@ -374,13 +377,35 @@ export const startCycleReviews = asyncHandler(async (req, res) => {
       status: "pending",
     }));
 
-  if (toCreate.length) await AppraisalReview.insertMany(toCreate);
+  // Reading which reviews exist and creating the rest were separate steps, so two people
+  // starting the round together both decided to create the same ones. Only one employee may
+  // have a review per cycle, so the second run was refused partway through — some reviews
+  // made, some not, and an error where the HR lead needed to know the round had started.
+  //
+  // The ones that clash are now simply skipped: a review already existing is the outcome that
+  // was wanted, not a failure. Unordered, so one clash does not stop the rest being created.
+  if (toCreate.length) {
+    try {
+      await AppraisalReview.insertMany(toCreate, { ordered: false });
+    } catch (error) {
+      const duplicatesOnly =
+        error?.code === 11000 ||
+        (Array.isArray(error?.writeErrors) &&
+          error.writeErrors.length > 0 &&
+          error.writeErrors.every((e) => (e?.err?.code ?? e?.code) === 11000));
+      if (!duplicatesOnly) throw error;
+    }
+  }
+
+  // Counted from what is actually there, rather than from what this request meant to make.
+  const openedNow = await AppraisalReview.countDocuments({ cycleId: cycle._id });
+  const created = Math.max(0, openedNow - already.size);
 
   return res.json(
     new ApiResponse(
       200,
-      { created: toCreate.length, alreadyExisted: already.size, total: employees.length },
-      toCreate.length ? `${toCreate.length} review(s) opened` : "Every employee already has a review in this cycle"
+      { created, alreadyExisted: already.size, total: employees.length },
+      created ? `${created} review(s) opened` : "Every employee already has a review in this cycle"
     )
   );
 });

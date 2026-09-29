@@ -228,29 +228,43 @@ export const submitAttempt = asyncHandler(async (req, res) => {
     return ans;
   });
 
-  attempt.submittedAt       = new Date();
-  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
+  const totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
+  const result = { submittedAt: new Date(), totalMarksObtained };
 
   if (allAutoEvaluatable) {
     /* fetch total marks from exam to compute percentage + grade */
     const exam = await Exam.findById(attempt.examId).select("totalMarks").lean();
     const total = Number(exam?.totalMarks || 0);
-    const pct   = total > 0 ? Math.round((attempt.totalMarksObtained / total) * 100) : 0;
+    const pct   = total > 0 ? Math.round((totalMarksObtained / total) * 100) : 0;
 
-    attempt.status        = "evaluated";
-    attempt.autoEvaluated = true;
-    attempt.grade         = calcGrade(pct);
+    result.status        = "evaluated";
+    result.autoEvaluated = true;
+    result.grade         = calcGrade(pct);
   } else {
-    attempt.status = "submitted";
+    result.status = "submitted";
   }
 
-  await attempt.save();
+  // Written only while the attempt is still in progress. The check at the top and this write
+  // were separate steps, so a second Submit — a double click, or a phone retrying — got past
+  // "Attempt already submitted" and saved on top of the first.
+  //
+  // That mattered most when one of the two arrived after time was up: the late one ignores the
+  // answers it was sent, so it finds nothing to mark automatically and writes
+  // "submitted — awaiting teacher evaluation" over the grade the in-time submit had just
+  // worked out. The attempt then sat in the marking queue with a grade already on it. Run
+  // against a local mongod, that happened on eight of ten attempts.
+  const submittedAttempt = await ExamAttempt.findOneAndUpdate(
+    { _id: attempt._id, status: "in_progress" },
+    { $set: { ...result, answers: attempt.answers } },
+    { new: true, runValidators: true }
+  );
+  if (!submittedAttempt) throw new ApiError(409, "This attempt has already been submitted");
 
   return sendSuccess(res, {
-    message: attempt.autoEvaluated
+    message: submittedAttempt.autoEvaluated
       ? "Attempt submitted and auto-evaluated successfully"
       : "Attempt submitted successfully — awaiting teacher evaluation",
-    data: attempt,
+    data: submittedAttempt,
   });
 });
 export const autosaveAttemptAnswer = asyncHandler(async (req, res) => {
@@ -356,15 +370,28 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
     return ans;
   });
 
-  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
-  attempt.status = "evaluated";
+  const totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
   // Worked out here, the same way a submit does, rather than taken from the request.
   const exam = await Exam.findById(attempt.examId).select("totalMarks").lean();
   const total = Number(exam?.totalMarks || 0);
-  attempt.grade = calcGrade(total > 0 ? Math.round((attempt.totalMarksObtained / total) * 100) : 0);
 
-  await attempt.save();
-  return sendSuccess(res, { message: "Attempt evaluated successfully", data: attempt });
+  // Only while the attempt has not been marked already, so two teachers marking the same
+  // paper at once cannot each save their own marks over the other's.
+  const evaluated = await ExamAttempt.findOneAndUpdate(
+    { _id: attempt._id, status: { $ne: "evaluated" } },
+    {
+      $set: {
+        answers: attempt.answers,
+        totalMarksObtained,
+        status: "evaluated",
+        grade: calcGrade(total > 0 ? Math.round((totalMarksObtained / total) * 100) : 0),
+      },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!evaluated) throw new ApiError(409, "This attempt was just marked by someone else — refresh to see it");
+
+  return sendSuccess(res, { message: "Attempt evaluated successfully", data: evaluated });
 });
 
 export const getAttemptById = asyncHandler(async (req, res) => {
