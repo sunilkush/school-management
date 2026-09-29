@@ -363,9 +363,10 @@ export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) =
     schoolId,
     academicYearId: activeAcademicYear._id,
     studentEnrollmentId,
-  }).select("vehicleId isActive");
+  }).select("vehicleId routeId pickupStop dropStop isActive seatClaimedAt").lean();
   const isNewOccupant = !existingAssignment || !existingAssignment.isActive || String(existingAssignment.vehicleId) !== String(vehicleId);
 
+  let seats = 0;
   if (isNewOccupant) {
     const vehicle = await Transport.findOne({ _id: vehicleId, schoolId }).select("capacity");
     if (!vehicle) throw new ApiError(404, "Vehicle not found");
@@ -376,7 +377,8 @@ export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) =
       vehicleId,
       isActive: true,
     });
-    if (occupiedSeats >= Number(vehicle.capacity || 0)) {
+    seats = Number(vehicle.capacity || 0);
+    if (occupiedSeats >= seats) {
       throw new ApiError(400, "This vehicle is already at full capacity");
     }
   }
@@ -396,6 +398,7 @@ export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) =
       pickupStop: pickupStop || "",
       dropStop: dropStop || "",
       isActive: true,
+      ...(isNewOccupant ? { seatClaimedAt: new Date() } : {}),
     },
     {
       new: true,
@@ -422,6 +425,42 @@ export const createOrUpdateTransportAssignment = asyncHandler(async (req, res) =
         { path: "sectionId", select: "name" },
       ],
     });
+
+  // The count above and the save are separate steps, so two assignments for the last seat could both
+  // pass the count. Recount now: the earliest claims, up to the number of seats, keep theirs, and a
+  // later claim that does not fit is put back the way it was.
+  if (isNewOccupant) {
+    const seated = await StudentTransportAssignment.find({
+      schoolId,
+      academicYearId: activeAcademicYear._id,
+      vehicleId,
+      isActive: true,
+    })
+      .sort({ seatClaimedAt: 1, _id: 1 })
+      .limit(seats)
+      .select("_id")
+      .lean();
+    if (!seated.some((row) => String(row._id) === String(assignment._id))) {
+      if (existingAssignment) {
+        await StudentTransportAssignment.updateOne(
+          { _id: existingAssignment._id },
+          {
+            $set: {
+              vehicleId: existingAssignment.vehicleId,
+              routeId: existingAssignment.routeId,
+              pickupStop: existingAssignment.pickupStop,
+              dropStop: existingAssignment.dropStop,
+              isActive: existingAssignment.isActive,
+              seatClaimedAt: existingAssignment.seatClaimedAt ?? null,
+            },
+          }
+        );
+      } else {
+        await StudentTransportAssignment.deleteOne({ _id: assignment._id });
+      }
+      throw new ApiError(400, "This vehicle is already at full capacity");
+    }
+  }
 
   return res.status(200).json(new ApiResponse(200, assignment, "Transport assignment saved successfully"));
 });

@@ -45,6 +45,12 @@ const studentTransportAssignmentSchema = new Schema(
       default: true,
       index: true,
     },
+    // When this student took their seat on the current vehicle. Decides who keeps the last seat
+    // when two assignments land at the same moment (see createOrUpdateTransportAssignment).
+    seatClaimedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
