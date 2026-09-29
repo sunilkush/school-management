@@ -510,11 +510,16 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   }
 
   user.password = newPassword;
-  await user.save();
+  await user.save(); // ends every other session (see the pre-save hook in user.model.js)
 
-  return res.status(200).json(
-    new ApiResponse(200, {}, 'Password changed successfully')
-  );
+  // …but keep this one: fresh tokens for the browser that changed the password.
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+
+  return res
+    .status(200)
+    .cookie('accessToken', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' })
+    .cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' })
+    .json(new ApiResponse(200, { accessToken }, 'Password changed — other devices have been signed out'));
 });
 
 /**

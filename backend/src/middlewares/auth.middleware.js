@@ -54,6 +54,11 @@ export const auth = asyncHandler(async (req, _res, next) => {
     throw new ApiError(401, "Unauthorized. User is invalid or inactive.");
   }
 
+  // A token issued before the password last changed belongs to a session that change ended.
+  if (user.passwordChangedAt && Number(decodedToken?.iat) * 1000 < new Date(user.passwordChangedAt).getTime()) {
+    throw new ApiError(401, "Your password was changed. Please sign in again.");
+  }
+
   // Switching a school off, or its subscription expiring or being suspended or cancelled, now ends
   // its users' sessions instead of waiting for their tokens to run out. 401 so the browser tries a
   // refresh, which is refused with the reason and signs them out.

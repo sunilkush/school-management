@@ -107,6 +107,12 @@ const userSchema = new Schema(
       type: String,
       select: false,
     },
+    // Set whenever the password changes (see pre-save below). Access tokens issued before it are
+    // refused by the auth middleware, so a reset actually signs out whoever else was signed in.
+    passwordChangedAt: {
+      type: Date,
+      default: null,
+    },
 
     // 🔹 Email Verification
     emailVerificationToken: {
@@ -228,6 +234,15 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 10);
+
+  // A changed password ends every existing session. Before, a reset or change left the old
+  // refresh token working (10 days) and old access tokens valid (1 day), so someone who had got
+  // into the account stayed in after the owner reset the password. One second back, because a JWT's
+  // issued-at is whole seconds: a token issued straight after this change must not look older.
+  if (!this.isNew) {
+    this.passwordChangedAt = new Date(Date.now() - 1000);
+    this.refreshToken = undefined;
+  }
   next();
 });
 

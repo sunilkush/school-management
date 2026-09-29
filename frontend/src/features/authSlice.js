@@ -160,6 +160,9 @@ export const updateUser = createAsyncThunk("user/updateUser", async (data, { rej
 export const changePassword = createAsyncThunk("user/changePassword", async (data, { rejectWithValue }) => {
   try {
     const res = await apiClient.put("/user/change-password", data);
+    // Changing the password ends every session, this one included; the server hands this browser
+    // a fresh token so it stays signed in (and other devices do not).
+    if (res.data?.data?.accessToken) setAccessToken(res.data.data.accessToken);
     return res.data.message;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message);
