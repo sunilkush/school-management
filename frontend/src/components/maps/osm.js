@@ -11,6 +11,13 @@ import "leaflet/dist/leaflet.css";
  */
 
 export const OSM_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+/**
+ * Kept because the tiles are licensed on condition of it (ODbL) — this credit is not optional
+ * and must not be removed. What it does not have to be is loud: the "Leaflet" prefix that the
+ * control adds by default is a courtesy rather than a requirement and is turned off, and
+ * .leaflet-control-attribution in index.css styles what remains down to something quiet.
+ */
 export const OSM_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 

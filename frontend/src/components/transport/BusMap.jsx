@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { Circle, MapContainer, Marker, Polyline, Popup, Tooltip, useMap } from "react-leaflet";
+import { AttributionControl, Circle, MapContainer, Marker, Polyline, Popup, Tooltip, useMap } from "react-leaflet";
 import { DEFAULT_CENTRE, MAP_COLORS, pinIcon } from "../maps/osm";
 import OsmTileLayer from "../maps/OsmTileLayer";
 
@@ -61,7 +61,9 @@ const BusMap = ({
 
   return (
     <div style={{ borderRadius: 18, overflow: "hidden", border: "1px solid var(--border-muted)" }}>
-      <MapContainer center={centre} zoom={13} style={{ height, width: "100%" }} scrollWheelZoom>
+      <MapContainer center={centre} zoom={13} style={{ height, width: "100%" }} scrollWheelZoom attributionControl={false}>
+        {/* See GeofenceMap: no "Leaflet | " prefix, and the credit the tiles require stays. */}
+        <AttributionControl prefix={false} />
         <OsmTileLayer />
 
         <FitOnce bounds={bounds} />

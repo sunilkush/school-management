@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Drawer, Empty, Input, InputNumber, Space, Table, Tooltip, message } from "antd";
 import { AimOutlined, DeleteOutlined, DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
-import { MapContainer, Marker, Polyline, Tooltip as MapTooltip, useMapEvents } from "react-leaflet";
+import { AttributionControl, MapContainer, Marker, Polyline, Tooltip as MapTooltip, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { DEFAULT_CENTRE } from "../maps/osm";
 import OsmTileLayer from "../maps/OsmTileLayer";
@@ -157,7 +157,9 @@ const RouteStopMapper = ({ open, route, onClose, onSave, saving }) => {
       />
 
       <div className="section-panel" style={{ padding: 0, overflow: "hidden", marginBottom: 16 }}>
-        <MapContainer center={centre} zoom={13} style={{ height: 320, width: "100%" }} scrollWheelZoom>
+        <MapContainer center={centre} zoom={13} style={{ height: 320, width: "100%" }} scrollWheelZoom attributionControl={false}>
+          {/* See GeofenceMap: no "Leaflet | " prefix, and the credit the tiles require stays. */}
+          <AttributionControl prefix={false} />
           <OsmTileLayer />
           <ClickToPlace onPick={(lat, lng) => patch(activeIndex, { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) })} />
           {placed.length > 1 && (

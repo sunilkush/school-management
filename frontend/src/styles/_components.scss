@@ -356,3 +356,40 @@
   @apply size-8 rounded-full object-cover text-center;
   background-color: #e2e8f0;
 }
+
+/*
+  The map credit.
+
+  OpenStreetMap's tiles are licensed on condition that they are credited (ODbL), so the line
+  cannot go — but it does not have to sit there in a white box competing with the map. The
+  "Leaflet | " prefix in front of it is a courtesy rather than a requirement and is turned off
+  where the maps are set up (see components/maps/GeofenceMap.jsx).
+
+  What is left is one small, muted line in the corner: readable if you look for it, and not
+  otherwise. Pointer events stay on so the licence link still works.
+*/
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.6);
+  padding: 0 4px;
+  border-radius: 4px 0 0 0;
+  font-size: 9px;
+  line-height: 14px;
+  color: #94a3b8;
+
+  a {
+    color: #94a3b8;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: #475569;
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .leaflet-control-attribution {
+    background: rgba(15, 23, 42, 0.55);
+  }
+}

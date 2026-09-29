@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Circle, MapContainer, Marker, Polyline, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { AttributionControl, Circle, MapContainer, Marker, Polyline, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { DEFAULT_CENTRE, MAP_COLORS, pinIcon } from "./osm";
 import OsmTileLayer from "./OsmTileLayer";
@@ -124,7 +124,11 @@ const GeofenceMap = ({ school = null, points = [], editable = false, onPick, hei
         zoom={zoom}
         style={{ height, width: "100%", cursor: editable ? "crosshair" : undefined }}
         scrollWheelZoom
+        attributionControl={false}
       >
+        {/* Our own control, so the credit appears without Leaflet's "Leaflet | " prefix. The
+            OpenStreetMap part stays: the tiles are licensed on condition of it. */}
+        <AttributionControl prefix={false} />
         <OsmTileLayer />
         <SettleSize />
 
