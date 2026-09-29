@@ -24,7 +24,10 @@ router.get("/fines",     auth, roleMiddleware(LIBRARY_STAFF), getFineSummary);
 router.post  ("/issue",        auth, roleMiddleware(LIBRARY_STAFF), issueBook);
 router.get   ("/",             auth, roleMiddleware(LIBRARY_STAFF), getAllIssuedBooks);
 router.get   ("/student",      auth, roleMiddleware(["Student"]),   getIssuedBooksForStudent);
-router.put   ("/return/:id",   auth, roleMiddleware([...LIBRARY_STAFF, "Student"]), returnBook);
+// Staff only. "Student" used to be allowed here, and returnBook only checks the school — so a
+// student could mark any issued book, their own included, as returned without handing it back
+// (freeing the copy and dodging the fine). No student screen returns books; the library does.
+router.put   ("/return/:id",   auth, roleMiddleware(LIBRARY_STAFF), returnBook);
 router.patch ("/:id/fine",     auth, roleMiddleware(LIBRARY_STAFF), collectFine);
 router.delete("/:id",          auth, roleMiddleware(["School Admin", "Librarian"]), deleteIssuedBook);
 
