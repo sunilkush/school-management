@@ -110,17 +110,20 @@ export const updateLeaveStatus = asyncHandler(async (req, res) => {
     throw new ApiError(400, "status must be approved, rejected, or cancelled");
   }
 
-  const leave = await HostelLeave.findOne({ _id: req.params.id, schoolId });
+  let leave = await HostelLeave.findOne({ _id: req.params.id, schoolId });
   if (!leave) throw new ApiError(404, "Leave request not found");
   if (leave.status !== "pending") {
     throw new ApiError(409, `Leave is already ${leave.status}`);
   }
 
-  leave.status          = status;
-  leave.approvedBy      = req.user._id;
-  leave.approvalNote    = approvalNote || "";
-  leave.rejectionReason = rejectionReason || "";
-  await leave.save();
+  // Decided once: two wardens (or a double-click of approve and reject) both saved and the last won.
+  const decided = await HostelLeave.findOneAndUpdate(
+    { _id: leave._id, schoolId, status: "pending" },
+    { $set: { status, approvedBy: req.user._id, approvalNote: approvalNote || "", rejectionReason: rejectionReason || "" } },
+    { new: true, runValidators: true }
+  );
+  if (!decided) throw new ApiError(409, "This leave was just decided by someone else — refresh to see it");
+  leave = decided;
 
   await leave.populate("studentId", "name email phone");
 

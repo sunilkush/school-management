@@ -205,14 +205,18 @@ export const approveLeaveRequest = asyncHandler(async (req, res) => {
   if (leaveRequest.status !== "pending")
     throw new ApiError(400, "Request already processed");
 
-  leaveRequest.status = "approved";
-  leaveRequest.approvedBy = req.user._id;
-  leaveRequest.approvedAt = new Date();
-  await leaveRequest.save();
+  // Only while still pending, in one update: approve and reject together both saved before, and
+  // the last one silently replaced a decision the person had already been shown.
+  const decided = await LeaveRequest.findOneAndUpdate(
+    { _id: leaveRequest._id, status: "pending" },
+    { $set: { status: "approved", approvedBy: req.user._id, approvedAt: new Date() } },
+    { new: true, runValidators: true }
+  );
+  if (!decided) throw new ApiError(409, "This leave request was just decided by someone else — refresh to see it");
 
   res
     .status(200)
-    .json(new ApiResponse(200, leaveRequest, "Leave request approved successfully"));
+    .json(new ApiResponse(200, decided, "Leave request approved successfully"));
 });
 
 /* ── REJECT LEAVE REQUEST ────────────────────────────────────────────────── */
@@ -230,15 +234,16 @@ export const rejectLeaveRequest = asyncHandler(async (req, res) => {
   if (leaveRequest.status !== "pending")
     throw new ApiError(400, "Request already processed");
 
-  leaveRequest.status = "rejected";
-  leaveRequest.rejectionReason = rejectionReason.trim();
-  leaveRequest.approvedBy = req.user._id;
-  leaveRequest.approvedAt = new Date();
-  await leaveRequest.save();
+  const decided = await LeaveRequest.findOneAndUpdate(
+    { _id: leaveRequest._id, status: "pending" },
+    { $set: { status: "rejected", rejectionReason: rejectionReason.trim(), approvedBy: req.user._id, approvedAt: new Date() } },
+    { new: true, runValidators: true }
+  );
+  if (!decided) throw new ApiError(409, "This leave request was just decided by someone else — refresh to see it");
 
   res
     .status(200)
-    .json(new ApiResponse(200, leaveRequest, "Leave request rejected successfully"));
+    .json(new ApiResponse(200, decided, "Leave request rejected successfully"));
 });
 
 /* ── DELETE LEAVE REQUEST ────────────────────────────────────────────────── */
@@ -268,7 +273,9 @@ export const deleteLeaveRequest = asyncHandler(async (req, res) => {
   if (leaveRequest.status !== "pending")
     throw new ApiError(400, "Cannot cancel processed request");
 
-  await leaveRequest.deleteOne();
+  // A request approved while this cancel was on its way stays: only a still-pending one is removed.
+  const { deletedCount } = await LeaveRequest.deleteOne({ _id: leaveRequest._id, status: "pending" });
+  if (!deletedCount) throw new ApiError(409, "This leave request was just decided — refresh to see it");
 
   res.status(200).json(new ApiResponse(200, null, "Leave request deleted successfully"));
 });

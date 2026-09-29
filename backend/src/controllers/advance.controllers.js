@@ -85,16 +85,18 @@ export const approveAdvance = asyncHandler(async (req, res) => {
   if (!advance) throw new ApiError(404, "Advance not found");
   if (advance.status !== "pending") throw new ApiError(400, `Cannot approve: status is ${advance.status}`);
 
-  advance.status = "active";
-  advance.history.push({
-    action: "approved",
-    amount: advance.totalAmount,
-    note: req.body.note || "Approved by admin",
-    actedBy: req.user._id,
-  });
-
-  await advance.save();
-  return sendSuccess(res, { data: advance, message: "Advance approved successfully" });
+  // Only while still pending, in one update. Approve and reject clicked together both saved: the
+  // last one won and the history recorded both decisions.
+  const updated = await LoanAdvance.findOneAndUpdate(
+    { _id: advance._id, schoolId, status: "pending" },
+    {
+      $set: { status: "active" },
+      $push: { history: { action: "approved", amount: advance.totalAmount, note: req.body.note || "Approved by admin", actedBy: req.user._id, actedAt: new Date() } },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This advance was just decided by someone else — refresh to see it");
+  return sendSuccess(res, { data: updated, message: "Advance approved successfully" });
 });
 
 export const rejectAdvance = asyncHandler(async (req, res) => {
@@ -105,17 +107,16 @@ export const rejectAdvance = asyncHandler(async (req, res) => {
   if (!advance) throw new ApiError(404, "Advance not found");
   if (advance.status !== "pending") throw new ApiError(400, `Cannot reject: status is ${advance.status}`);
 
-  advance.status = "rejected";
-  advance.rejectionReason = req.body.reason || "Rejected by admin";
-  advance.history.push({
-    action: "rejected",
-    amount: 0,
-    note: req.body.reason || "Rejected by admin",
-    actedBy: req.user._id,
-  });
-
-  await advance.save();
-  return sendSuccess(res, { data: advance, message: "Advance rejected" });
+  const updated = await LoanAdvance.findOneAndUpdate(
+    { _id: advance._id, schoolId, status: "pending" },
+    {
+      $set: { status: "rejected", rejectionReason: req.body.reason || "Rejected by admin" },
+      $push: { history: { action: "rejected", amount: 0, note: req.body.reason || "Rejected by admin", actedBy: req.user._id, actedAt: new Date() } },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!updated) throw new ApiError(409, "This advance was just decided by someone else — refresh to see it");
+  return sendSuccess(res, { data: updated, message: "Advance rejected" });
 });
 
 export const deductEmi = asyncHandler(async (req, res) => {
