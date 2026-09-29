@@ -22,6 +22,8 @@ import { PTMSlot } from "../src/models/PTMSlot.model.js";
 import { Certificate } from "../src/models/Certificate.model.js";
 import { AcademicYear } from "../src/models/AcademicYear.model.js";
 import { nextSequence } from "../src/utils/sequence.js";
+import { SchoolSubscription } from "../src/models/schoolSubscription.model.js";
+import { expireIfElapsed } from "../src/utils/subscriptionExpiry.js";
 
 const URI = process.env.E2E_MONGO_URI || "mongodb://127.0.0.1:27017/school_management_decide_once_check";
 if (/mongodb\+srv|mongodb\.net/i.test(URI)) {
@@ -375,6 +377,56 @@ console.log("── two years set running at the same moment ──");
     { new: true }
   );
   ok("the running year cannot be archived out from under the school", pulled === null);
+}
+
+console.log("");
+console.log("── a school paying at the moment its plan runs out ──");
+{
+  const past = new Date(Date.now() - 86400000);
+  const future = new Date(Date.now() + 30 * 86400000);
+  const expiringPlan = () =>
+    SchoolSubscription.create({
+      schoolId: id(),
+      planId: id(),
+      snapshot: { price: 5000, durationInDays: 30 },
+      endDate: past,
+      status: "active",
+    });
+
+  // What paying does: push the end date out and keep the plan running.
+  const pay = async (sub) => {
+    const doc = await SchoolSubscription.findById(sub._id);
+    doc.endDate = future;
+    if (doc.status === "expired") doc.status = "active";
+    doc.paymentStatus = "completed";
+    await doc.save();
+  };
+
+  // The read happens first and the payment lands before it writes — the interleaving that
+  // used to lock the school out of a plan it had just paid for, every single time.
+  let lockedOut = 0;
+  for (let round = 0; round < 10; round += 1) {
+    const sub = await expiringPlan();
+    const stale = await SchoolSubscription.findById(sub._id);
+    await pay(sub);
+    await expireIfElapsed(stale);
+    const after = await SchoolSubscription.findById(sub._id).lean();
+    if (after.status === "expired" && after.endDate > new Date()) lockedOut += 1;
+  }
+  ok("a plan that has just been paid for is never marked expired", lockedOut === 0, `${lockedOut} of 10`);
+
+  // And a plan that really has run out, with nothing paid, still expires.
+  const lapsed = await expiringPlan();
+  const seen = await expireIfElapsed(await SchoolSubscription.findById(lapsed._id));
+  ok("a plan that really has run out is still marked expired", seen.status === "expired", seen.status);
+
+  // Two reads at once do not both write.
+  const other = await expiringPlan();
+  const both = await Promise.all([
+    SchoolSubscription.findById(other._id).then(expireIfElapsed),
+    SchoolSubscription.findById(other._id).then(expireIfElapsed),
+  ]);
+  ok("two readers agree on the result", both.every((s) => s.status === "expired"));
 }
 
 await mongoose.connection.db.dropDatabase();

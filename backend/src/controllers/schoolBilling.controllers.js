@@ -11,6 +11,7 @@ import {
   assertOrderIsForInvoice,
 } from "./superAdminBilling.controllers.js";
 import { ApiError } from "../utils/ApiError.js";
+import { expireIfElapsed } from "../utils/subscriptionExpiry.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
@@ -30,12 +31,7 @@ export const getMySubscription = asyncHandler(async (req, res) => {
   const subscription = await SchoolSubscription.findOne({ schoolId }).populate("planId");
   if (!subscription) throw new ApiError(404, "No subscription found for your school");
 
-  if (subscription.endDate < new Date() && ["active", "trial"].includes(subscription.status)) {
-    subscription.status = "expired";
-    await subscription.save();
-  }
-
-  return res.status(200).json(new ApiResponse(200, subscription, "Subscription fetched"));
+  return res.status(200).json(new ApiResponse(200, await expireIfElapsed(subscription), "Subscription fetched"));
 });
 
 export const getMyInvoices = asyncHandler(async (req, res) => {

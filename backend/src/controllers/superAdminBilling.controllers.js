@@ -11,6 +11,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { forgetSchoolAccess } from "../utils/schoolAccess.js";
 import { highestSuffix, nextSequence } from "../utils/sequence.js";
+import { expireIfElapsed } from "../utils/subscriptionExpiry.js";
 
 const buildSnapshotFromPlan = (plan) => ({
   price: plan.price,
@@ -233,12 +234,7 @@ export const getSchoolSubscription = asyncHandler(async (req, res) => {
   );
   if (!subscription) throw new ApiError(404, "Subscription not found");
 
-  if (subscription.endDate < new Date() && ["active", "trial"].includes(subscription.status)) {
-    subscription.status = "expired";
-    await subscription.save();
-  }
-
-  return res.status(200).json(new ApiResponse(200, subscription, "Subscription fetched"));
+  return res.status(200).json(new ApiResponse(200, await expireIfElapsed(subscription), "Subscription fetched"));
 });
 
 /**
