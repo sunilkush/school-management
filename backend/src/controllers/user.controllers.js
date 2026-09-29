@@ -1109,6 +1109,13 @@ const getUserById = asyncHandler(async (req, res) => {
   const requesterRole = await getRequesterRoleName(req);
   const requesterSchoolId = req?.user?.schoolId;
 
+  // The route admits every role, and the only check was "same school" — so any Student or Parent
+  // could read any user's email, phone, date of birth and home address: other children's, staff's.
+  // Only the admin user-profile screen uses this; students and parents get their own record only.
+  if (["Student", "Parent"].includes(requesterRole) && String(id) !== String(req.user._id)) {
+    throw new ApiError(403, "You can only view your own profile");
+  }
+
   const userMatch = {
     _id: new mongoose.Types.ObjectId(id),
     isActive: true,
