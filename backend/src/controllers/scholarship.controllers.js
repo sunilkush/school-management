@@ -198,6 +198,21 @@ export const requestAward = asyncHandler(async (req, res) => {
       validUntil: parseDate(validUntil, "valid until") || scheme.validUntil,
     });
 
+    // The fullness check above and this create are separate steps, so two requests for the last
+    // place could both pass it. Recount: the earliest requests keep the places, and one that does
+    // not fit is withdrawn.
+    if (scheme.maxAwards != null) {
+      const holders = await ScholarshipAward.find({ schemeId: scheme._id, status: { $in: ["pending", "approved"] } })
+        .sort({ createdAt: 1, _id: 1 })
+        .limit(scheme.maxAwards)
+        .select("_id")
+        .lean();
+      if (!holders.some((h) => String(h._id) === String(award._id))) {
+        await ScholarshipAward.deleteOne({ _id: award._id });
+        throw new ApiError(400, `All ${scheme.maxAwards} place(s) on this scheme are taken or pending`);
+      }
+    }
+
     return res.status(201).json(new ApiResponse(201, award, award.status === "approved" ? "Concession granted" : "Concession requested"));
   } catch (error) {
     if (error?.code === 11000) throw new ApiError(409, "This student already holds that scheme for the year");
@@ -220,15 +235,24 @@ export const decideAward = asyncHandler(async (req, res) => {
     if (usage?.maxAwards != null && usage.approved >= usage.maxAwards) {
       throw new ApiError(400, `All ${usage.maxAwards} place(s) on this scheme are already approved`);
     }
-    award.approvedBy = req.user._id;
-    award.approvedAt = new Date();
   }
 
-  award.status = decision;
-  award.decisionNote = note || "";
-  await award.save();
+  // Decided once. Two clicks (or two admins, one approving and one rejecting) both passed the
+  // "still pending" read and the last save won, flipping a decision already given.
+  const decided = await ScholarshipAward.findOneAndUpdate(
+    { _id: award._id, schoolId, status: "pending" },
+    {
+      $set: {
+        status: decision,
+        decisionNote: note || "",
+        ...(decision === "approved" ? { approvedBy: req.user._id, approvedAt: new Date() } : {}),
+      },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!decided) throw new ApiError(409, "This award was just decided by someone else — refresh to see it");
 
-  return res.json(new ApiResponse(200, award, decision === "approved" ? "Concession approved" : "Concession rejected"));
+  return res.json(new ApiResponse(200, decided, decision === "approved" ? "Concession approved" : "Concession rejected"));
 });
 
 export const revokeAward = asyncHandler(async (req, res) => {
