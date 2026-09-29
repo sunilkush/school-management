@@ -1,6 +1,7 @@
 import { ApiError } from '../utils/ApiError.js'
 import { ApiResponse } from '../utils/ApiResponse.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { nextSequence } from '../utils/sequence.js'
 import { User } from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { AcademicYear } from '../models/AcademicYear.model.js'
@@ -73,24 +74,27 @@ const getRequesterRoleName = async (req) => {
   return roleDoc?.name || null;
 };
 
-// 🔹 Generate next regId school-wise
-// Not every user in a school has a "#NNNNNN"-style regId — seeded employees get human-readable
-// codes like "TCH001"/"STF001" instead. Picking whichever user was created *last* (regardless
-// of its regId's format) meant that whenever that happened to be one of those, parseInt() on it
-// produced NaN -> 0, silently resetting the counter back to "#000001" and colliding with an
-// already-used id. Scanning for the true max among "#NNNNNN"-format regIds fixes that.
-export const generateNextRegId = async (schoolId) => {
-  const users = await User.find({ schoolId, regId: { $regex: /^#\d{6}$/ } })
-    .select("regId")
-    .lean();
+// 🔹 Generate next regId school-wise, from an atomic counter.
+//
+// Scanning for the highest regId and adding one gave the same id to two users registered at the
+// same moment, and the unique (regId, schoolId) index then refused the second — registration
+// failed with a duplicate-key error and the whole form had to be filled in again.
+//
+// The counter is seeded from the highest "#NNNNNN"-format regId already in the school. Not every
+// user has one — seeded employees get human-readable codes like "TCH001"/"STF001" instead — so the
+// seed looks only at ids in this format. Taking whichever user was created last regardless of its
+// format used to produce NaN -> 0 on those, silently resetting the counter to "#000001".
+export const generateNextRegId = async (schoolId) =>
+  "#" +
+  String(
+    await nextSequence(`regid:${schoolId}`, async () => {
+      const users = await User.find({ schoolId, regId: { $regex: /^#\d{6}$/ } })
+        .select("regId")
+        .lean();
+      return users.reduce((max, u) => Math.max(max, parseInt(u.regId.slice(1), 10) || 0), 0);
+    })
+  ).padStart(6, "0");
 
-  const maxNum = users.reduce((max, u) => {
-    const n = parseInt(u.regId.slice(1), 10);
-    return n > max ? n : max;
-  }, 0);
-
-  return "#" + String(maxNum + 1).padStart(6, "0");
-};
 /**
  * @desc Register a new user
  * @route POST /api/auth/register

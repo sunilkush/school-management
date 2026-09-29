@@ -7,7 +7,8 @@ import { Employee } from "../models/Employee.model.js";
 import { User } from "../models/user.model.js";
 import { School } from "../models/school.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
-import { generateNextCardNumber } from "../utils/generateCardNumber.js";
+import { formatCardNumber } from "../utils/generateCardNumber.js";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { requireSchoolId } from "../utils/resolveSchoolId.js";
 
@@ -26,12 +27,24 @@ const withComputedStatus = (card, today = startOfToday()) => ({
     card.status === "Revoked" ? "Revoked" : new Date(card.expiryDate) < today ? "Expired" : "Active",
 });
 
+/**
+ * The next card number for the school this year, from an atomic counter so two issues at the
+ * same moment never take the same one. Reading back the most recently created card and adding
+ * one did — cards created together share a createdAt, so the read could miss the highest number
+ * — and the loser was told to "try again". The counter starts after the highest number already
+ * issued in this format.
+ */
 const buildCardNumber = async (schoolId) => {
-  const lastCard = await LibraryCard.findOne({ schoolId, cardNumber: new RegExp(`^${CARD_PREFIX}/`) })
-    .sort({ createdAt: -1 })
-    .select("cardNumber")
-    .lean();
-  return generateNextCardNumber(lastCard?.cardNumber, { prefix: CARD_PREFIX, digits: 4 });
+  const year = new Date().getFullYear();
+  const prefix = `${CARD_PREFIX}/${year}/`;
+  const seq = await nextSequence(`libcard:${schoolId}:${year}`, async () => {
+    const issued = await LibraryCard.find({ schoolId }).select("cardNumber").lean();
+    return highestSuffix(
+      issued.map((c) => c.cardNumber).filter((n) => String(n || "").startsWith(prefix)),
+      prefix
+    );
+  });
+  return formatCardNumber(seq, { prefix: CARD_PREFIX, year });
 };
 
 // Latest enrolment per student — the active year first, falling back to the most recent one.
@@ -194,28 +207,22 @@ export const issueLibraryCard = asyncHandler(async (req, res) => {
     }
   );
 
+  // The card number is unique by construction now (see buildCardNumber), so the only unique
+  // index left to trip is the one active card per holder.
   let card;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const cardNumber = await buildCardNumber(schoolId);
-    try {
-      card = await LibraryCard.create({
-        ...snapshot,
-        schoolId,
-        holderType,
-        holderId,
-        cardNumber,
-        expiryDate: expiry,
-        issuedBy: req.user._id,
-      });
-      break;
-    } catch (err) {
-      if (err?.code !== 11000) throw err;
-      // Which unique index refused it decides what to do next.
-      if (err.keyPattern?.holderId || String(err.message).includes("one_active_card_per_holder")) {
-        throw new ApiError(409, `${snapshot.fullName} already has an active library card`);
-      }
-      if (attempt === 2) throw new ApiError(409, "Could not allocate a card number, please try again");
-    }
+  try {
+    card = await LibraryCard.create({
+      ...snapshot,
+      schoolId,
+      holderType,
+      holderId,
+      cardNumber: await buildCardNumber(schoolId),
+      expiryDate: expiry,
+      issuedBy: req.user._id,
+    });
+  } catch (err) {
+    if (err?.code !== 11000) throw err;
+    throw new ApiError(409, `${snapshot.fullName} already has an active library card`);
   }
 
   return res.status(201).json(new ApiResponse(201, withComputedStatus(card.toObject()), "Library card issued"));

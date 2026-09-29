@@ -7,7 +7,8 @@ import { Employee } from "../models/Employee.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { School } from "../models/school.model.js";
 import { exportIdCardsPdf } from "../utils/exportService.js";
-import { generateNextCardNumber, getCardPrefix } from "../utils/generateCardNumber.js";
+import { formatCardNumber, getCardPrefix } from "../utils/generateCardNumber.js";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { actingRoleName } from "../utils/actingRole.js";
 
@@ -89,21 +90,36 @@ const resolveMyStudentIds = async (req) => {
   return [];
 };
 
-const buildCardNumber = async (schoolId, holderType) => {
-  const prefix = getCardPrefix(holderType);
+/**
+ * The next `count` card numbers for a school's holder type this year, from an atomic counter so
+ * that two requests never take the same one. Reading back the most recently *created* card and
+ * adding one did: cards issued together share a createdAt, so the read could miss the highest
+ * number and hand it out again, and a bulk run numbering every row from one such read collided
+ * with anything issued beside it. Returns the first number of the block; the counter starts
+ * after the highest number already issued in this format.
+ */
+const takeCardNumbers = (schoolId, holderType, count = 1) => {
   const year = new Date().getFullYear();
-
-  const lastCard = await IDCard.findOne({ schoolId, holderType })
-    .sort({ createdAt: -1 })
-    .select("cardNumber")
-    .lean();
-
-  return generateNextCardNumber(lastCard?.cardNumber, { prefix, year, digits: 4 });
+  const prefix = `${getCardPrefix(holderType)}/${year}/`;
+  return nextSequence(
+    `idcard:${schoolId}:${holderType}:${year}`,
+    async () => {
+      const issued = await IDCard.find({ schoolId, holderType }).select("cardNumber").lean();
+      return highestSuffix(
+        issued.map((c) => c.cardNumber).filter((n) => String(n || "").startsWith(prefix)),
+        prefix
+      );
+    },
+    count
+  );
 };
 
+const buildCardNumber = async (schoolId, holderType) =>
+  formatCardNumber(await takeCardNumbers(schoolId, holderType), { prefix: getCardPrefix(holderType) });
+
 // Shared by the manual /generate endpoint below and by the auto-issue hooks called from
-// student admission and promotion — builds a fresh snapshot and a unique card number,
-// retrying once on a cardNumber collision (same race-safety as generateIdCard/generateBulkIdCards).
+// student admission and promotion — builds a fresh snapshot and a card number that is unique by
+// construction (see takeCardNumbers), so there is nothing to retry.
 const createStudentIdCardDoc = async ({ schoolId, studentId, generatedBy = null, validUntil = null }) => {
   const student = await Student.findById(studentId).populate("userId", "name avatar").lean();
   if (!student) return null;
@@ -112,27 +128,17 @@ const createStudentIdCardDoc = async ({ schoolId, studentId, generatedBy = null,
   const enrollment = await resolveStudentEnrollment(studentId, schoolId, school?.activeAcademicYearId);
   const snapshot = buildStudentSnapshot(student, enrollment);
 
-  let card;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const cardNumber = await buildCardNumber(schoolId, "Student");
-    try {
-      [card] = await IDCard.create([
-        {
-          ...snapshot,
-          schoolId,
-          holderType: "Student",
-          holderId: studentId,
-          cardNumber,
-          validUntil,
-          generatedBy,
-        },
-      ]);
-      break;
-    } catch (error) {
-      if (error?.code === 11000 && attempt === 0) continue;
-      throw error;
-    }
-  }
+  const [card] = await IDCard.create([
+    {
+      ...snapshot,
+      schoolId,
+      holderType: "Student",
+      holderId: studentId,
+      cardNumber: await buildCardNumber(schoolId, "Student"),
+      validUntil,
+      generatedBy,
+    },
+  ]);
   return card;
 };
 
@@ -187,25 +193,15 @@ export const generateIdCard = asyncHandler(async (req, res) => {
     snapshot = buildEmployeeSnapshot(employee);
   }
 
-  let card;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const cardNumber = await buildCardNumber(schoolId, holderType);
-    try {
-      card = await IDCard.create({
-        ...snapshot,
-        schoolId,
-        holderType,
-        holderId,
-        cardNumber,
-        validUntil: validUntil || null,
-        generatedBy: req.user._id,
-      });
-      break;
-    } catch (error) {
-      if (error?.code === 11000 && attempt === 0) continue;
-      throw error;
-    }
-  }
+  const card = await IDCard.create({
+    ...snapshot,
+    schoolId,
+    holderType,
+    holderId,
+    cardNumber: await buildCardNumber(schoolId, holderType),
+    validUntil: validUntil || null,
+    generatedBy: req.user._id,
+  });
 
   return res.status(201).json(new ApiResponse(201, card, "ID card generated successfully"));
 });
@@ -281,25 +277,18 @@ export const generateBulkIdCards = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, { cards: [], skippedCount }, "All selected holders already have an active ID card"));
   }
 
+  // One reservation covers the whole run, so a bulk generation and anything issued beside it can
+  // never share a number. Numbering every row from a single read of the last card did exactly
+  // that, and the insert then failed on the unique index with no cards generated at all.
+  const firstNumber = await takeCardNumbers(schoolId, holderType, targetHolders.length);
   const prefix = getCardPrefix(holderType);
-  const year = new Date().getFullYear();
-  const lastCard = await IDCard.findOne({ schoolId, holderType })
-    .sort({ createdAt: -1 })
-    .select("cardNumber")
-    .lean();
-
-  let baseNumber = 0;
-  if (lastCard?.cardNumber) {
-    const match = lastCard.cardNumber.match(new RegExp(`^${prefix}/${year}/(\\d+)$`));
-    if (match) baseNumber = parseInt(match[1], 10);
-  }
 
   const payloads = targetHolders.map((h, index) => ({
     ...h.snapshot,
     schoolId,
     holderType,
     holderId: h.holderId,
-    cardNumber: `${prefix}/${year}/${String(baseNumber + index + 1).padStart(4, "0")}`,
+    cardNumber: formatCardNumber(firstNumber + index, { prefix }),
     validUntil: validUntil || null,
     generatedBy: req.user._id,
   }));

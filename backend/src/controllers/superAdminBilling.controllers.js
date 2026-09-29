@@ -10,6 +10,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { forgetSchoolAccess } from "../utils/schoolAccess.js";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 
 const buildSnapshotFromPlan = (plan) => ({
   price: plan.price,
@@ -27,9 +28,20 @@ const buildEndDate = (startDate, days) => {
 const calcTotalAmount = ({ planPrice = 0, discount = 0, taxGst = 0 }) =>
   Math.max(0, Number(planPrice) - Number(discount) + Number(taxGst));
 
+// The next invoice number, from an atomic counter. Counting the invoices and adding one gave the
+// same number to two invoices raised at the same moment — the renewal pass bills every due
+// subscription one after another — and invoiceNumber is unique, so the second was refused and
+// that school went unbilled. It also handed back a number already in use once any invoice had
+// been removed. The counter starts after the highest number already issued in this format.
 const nextInvoiceNumber = async () => {
-  const count = await SubscriptionInvoice.countDocuments();
-  return `INV-${String(count + 1).padStart(6, "0")}`;
+  const seq = await nextSequence("subinvoice", async () => {
+    const issued = await SubscriptionInvoice.find({}).select("invoiceNumber").lean();
+    return highestSuffix(
+      issued.map((i) => i.invoiceNumber).filter((n) => String(n || "").startsWith("INV-")),
+      "INV-"
+    );
+  });
+  return `INV-${String(seq).padStart(6, "0")}`;
 };
 
 export const createPlanV2 = asyncHandler(async (req, res) => {

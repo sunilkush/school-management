@@ -6,8 +6,11 @@ import { Counter } from "../models/Counter.model.js";
  *
  * On first use the counter starts after `seed()`, the highest number already issued before the
  * counter existed (compare those as numbers: as text "…1000" sorts before "…999").
+ *
+ * `count` reserves that many consecutive numbers in the same $inc and returns the first of them,
+ * so a bulk insert can number its rows without a round trip each.
  */
-export const nextSequence = async (key, seed = async () => 0) => {
+export const nextSequence = async (key, seed = async () => 0, count = 1) => {
   if (!(await Counter.exists({ _id: key }))) {
     const start = Number(await seed()) || 0;
     try {
@@ -16,8 +19,8 @@ export const nextSequence = async (key, seed = async () => 0) => {
       if (error?.code !== 11000) throw error; // another request created it first
     }
   }
-  const { seq } = await Counter.findOneAndUpdate({ _id: key }, { $inc: { seq: 1 } }, { new: true }).lean();
-  return seq;
+  const { seq } = await Counter.findOneAndUpdate({ _id: key }, { $inc: { seq: count } }, { new: true }).lean();
+  return seq - count + 1; // the first of the block; for count = 1, the number itself
 };
 
 /** Highest numeric suffix after `prefix` among the given codes. */

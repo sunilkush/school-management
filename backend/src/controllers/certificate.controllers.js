@@ -9,9 +9,10 @@ import { exportCertificatePdf } from "../utils/exportService.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { actingRoleName } from "../utils/actingRole.js";
 import {
-  generateNextCertificateNumber,
+  formatCertificateNumber,
   getCertificatePrefix,
 } from "../utils/generateCertificateNumber.js";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 
 const ensureCertificateAccess = (doc, user) => {
   if (!doc) throw new ApiError(404, "Certificate not found");
@@ -44,16 +45,26 @@ const resolveMyStudentIds = async (req) => {
   return [];
 };
 
+/**
+ * The next certificate number of this type for the school this year, from an atomic counter so
+ * that two requests never take the same one. Reading back the most recently created certificate
+ * and adding one did: certificates issued in the same moment share a createdAt, so the read
+ * could miss the highest number and hand it out again. The counter starts after the highest
+ * number already issued in this format. A certificate that fails after taking a number leaves
+ * that number unused.
+ */
 const buildCertificateNumber = async (schoolId, certificateType) => {
-  const prefix = getCertificatePrefix(certificateType);
+  const type = getCertificatePrefix(certificateType);
   const year = new Date().getFullYear();
-
-  const lastCert = await Certificate.findOne({ schoolId, certificateType })
-    .sort({ createdAt: -1 })
-    .select("certificateNumber")
-    .lean();
-
-  return generateNextCertificateNumber(lastCert?.certificateNumber, { prefix, year, digits: 4 });
+  const prefix = `${type}/${year}/`;
+  const seq = await nextSequence(`cert:${schoolId}:${type}:${year}`, async () => {
+    const issued = await Certificate.find({ schoolId, certificateType }).select("certificateNumber").lean();
+    return highestSuffix(
+      issued.map((c) => c.certificateNumber).filter((n) => String(n || "").startsWith(prefix)),
+      prefix
+    );
+  });
+  return formatCertificateNumber(seq, { prefix: type, year });
 };
 
 export const generateCertificate = asyncHandler(async (req, res) => {
@@ -132,17 +143,13 @@ export const generateCertificate = asyncHandler(async (req, res) => {
     generatedBy: req.user._id,
   };
 
-  let certificate;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const certificateNumber = await buildCertificateNumber(schoolId, certificateType);
-    try {
-      certificate = await Certificate.create({ ...snapshot, certificateType, certificateNumber });
-      break;
-    } catch (error) {
-      if (error?.code === 11000 && attempt === 0) continue;
-      throw error;
-    }
-  }
+  // The number is unique by construction now (see buildCertificateNumber), so there is nothing
+  // to retry.
+  const certificate = await Certificate.create({
+    ...snapshot,
+    certificateType,
+    certificateNumber: await buildCertificateNumber(schoolId, certificateType),
+  });
 
   return res
     .status(201)

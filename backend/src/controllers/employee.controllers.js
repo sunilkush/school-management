@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 
 // EMPLOYEE_ROLES (employee.routes.js) also grants Teacher/Sports Teacher/Transport Manager read
 // access to these two endpoints for basic staff-directory lookups (assign-task pickers, driver
@@ -105,9 +106,17 @@ export const registerEmployee = asyncHandler(async (req, res) => {
       ? qualification
       : [];
 
-  // Auto-generate unique employeeCode to avoid compound unique-index conflict
-  const empCount = await Employee.countDocuments({ schoolId });
-  const generatedEmployeeCode = `EMP${String(empCount + 1).padStart(4, "0")}`;
+  // The school's next employee code, from an atomic counter. Counting the employees and adding
+  // one gave the same code to two people registered at the same moment, and gave a code that was
+  // already in use once anyone had been removed — either way the unique (schoolId, employeeCode)
+  // index refused the save and registration failed. The counter starts after the highest code
+  // already issued in this format.
+  const generatedEmployeeCode = `EMP${String(
+    await nextSequence(`empcode:${schoolId}`, async () => {
+      const issued = await Employee.find({ schoolId }).select("employeeCode").lean();
+      return highestSuffix(issued.map((e) => e.employeeCode).filter((c) => String(c || "").startsWith("EMP")), "EMP");
+    })
+  ).padStart(4, "0")}`;
 
   const employee = await Employee.create({
     employeeCode: generatedEmployeeCode,
