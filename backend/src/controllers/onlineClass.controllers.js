@@ -189,13 +189,18 @@ export const cancelOnlineClass = asyncHandler(async (req, res) => {
   if (!session) throw new ApiError(404, "Online class not found");
   if (session.status === "completed") throw new ApiError(400, "That class has already finished");
 
-  session.status = "cancelled";
-  session.cancelledReason = req.body.reason || "";
-  await session.save();
+  // Only while the class has not finished or already been called off — the check above and the
+  // save were separate steps, so a class that finished in between was marked cancelled anyway.
+  const cancelled = await OnlineClass.findOneAndUpdate(
+    { _id: session._id, schoolId, status: { $nin: ["completed", "cancelled"] } },
+    { $set: { status: "cancelled", cancelledReason: req.body.reason || "" } },
+    { new: true, runValidators: true }
+  );
+  if (!cancelled) throw new ApiError(409, "This class was just changed — refresh to see it");
 
   // Cancelled rather than deleted: students were told it was happening, and the record of it
   // being called off is the answer to "why did nobody turn up".
-  return res.json(new ApiResponse(200, session, "Online class cancelled"));
+  return res.json(new ApiResponse(200, cancelled, "Online class cancelled"));
 });
 
 export const setOnlineClassStatus = asyncHandler(async (req, res) => {

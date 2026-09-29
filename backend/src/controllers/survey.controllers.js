@@ -141,13 +141,23 @@ export const openSurvey = asyncHandler(async (req, res) => {
     throw new ApiError(400, "That audience matches nobody — check the roles and classes selected");
   }
 
-  survey.recipients = recipients;
-  survey.recipientCount = recipients.length;
-  survey.status = "open";
-  survey.openedAt = new Date();
-  await survey.save();
+  // Only while it is still a draft, so two people opening it together cannot both freeze a
+  // recipient list and overwrite when it was opened.
+  const opened = await Survey.findOneAndUpdate(
+    { _id: survey._id, schoolId, status: "draft" },
+    {
+      $set: {
+        recipients,
+        recipientCount: recipients.length,
+        status: "open",
+        openedAt: new Date(),
+      },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!opened) throw new ApiError(409, "This survey was just opened by someone else — refresh to see it");
 
-  return res.json(new ApiResponse(200, survey, `Open to ${recipients.length} recipient(s)`));
+  return res.json(new ApiResponse(200, opened, `Open to ${recipients.length} recipient(s)`));
 });
 
 export const closeSurvey = asyncHandler(async (req, res) => {
@@ -156,11 +166,15 @@ export const closeSurvey = asyncHandler(async (req, res) => {
   if (!survey) throw new ApiError(404, "Survey not found");
   if (survey.status !== "open") throw new ApiError(400, "Only an open survey can be closed");
 
-  survey.status = "closed";
-  survey.closedAt = new Date();
-  await survey.save();
+  // Only while it is still open — same reason as opening it.
+  const closed = await Survey.findOneAndUpdate(
+    { _id: survey._id, schoolId, status: "open" },
+    { $set: { status: "closed", closedAt: new Date() } },
+    { new: true, runValidators: true }
+  );
+  if (!closed) throw new ApiError(409, "This survey was just closed by someone else — refresh to see it");
 
-  return res.json(new ApiResponse(200, survey, "Survey closed"));
+  return res.json(new ApiResponse(200, closed, "Survey closed"));
 });
 
 export const deleteSurvey = asyncHandler(async (req, res) => {

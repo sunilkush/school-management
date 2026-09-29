@@ -162,22 +162,27 @@ export const cancelSubstitution = asyncHandler(async (req, res) => {
   const substitution = await Substitution.findOne({ _id: req.params.id, schoolId });
   if (!substitution) throw new ApiError(404, "Substitution not found");
 
-  substitution.status = "cancelled";
-  substitution.updatedBy = req.user._id;
-  await substitution.save();
+  // Only while it has not already been cancelled. There was no check at all, so cancelling
+  // twice told the covering teacher twice that their cover was off.
+  const cancelled = await Substitution.findOneAndUpdate(
+    { _id: substitution._id, schoolId, status: { $ne: "cancelled" } },
+    { $set: { status: "cancelled", updatedBy: req.user._id } },
+    { new: true, runValidators: true }
+  );
+  if (!cancelled) throw new ApiError(409, "This substitution was already cancelled");
 
-  if (substitution.substituteTeacherId) {
+  if (cancelled.substituteTeacherId) {
     notifyUser({
       schoolId,
-      userId: substitution.substituteTeacherId,
+      userId: cancelled.substituteTeacherId,
       title: "Substitution cancelled",
-      message: `Your cover on ${substitution.date.toISOString().slice(0, 10)} has been cancelled.`,
+      message: `Your cover on ${cancelled.date.toISOString().slice(0, 10)} has been cancelled.`,
       channels: { inApp: true },
       createdById: req.user._id,
     });
   }
 
-  return res.json(new ApiResponse(200, substitution, "Substitution cancelled"));
+  return res.json(new ApiResponse(200, cancelled, "Substitution cancelled"));
 });
 
 /* ── Teacher self-service ───────────────────────────────────────── */

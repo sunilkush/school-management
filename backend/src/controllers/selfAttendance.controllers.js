@@ -118,31 +118,34 @@ export const checkIn = asyncHandler(async (req, res) => {
   const role = ROLE_MAP[roleName] || "staff";
   const now = new Date();
 
-  let record = await Attendance.findOne({ schoolId, userId, date });
-
-  if (record) {
-    if (record.checkInAt) throw new ApiError(409, "Already checked in today");
-    record.checkInAt = now;
-    record.checkInGps = { lat, lng, accuracy: accuracy || null };
-    record.gpsVerified = gpsVerified;
-    record.distanceFromSchool = distanceFromSchool;
-    record.status = "present";
-  } else {
-    record = new Attendance({
-      schoolId,
-      userId,
-      role,
-      date,
-      status: "present",
-      markedBy: userId,
-      checkInAt: now,
-      checkInGps: { lat, lng, accuracy: accuracy || null },
-      gpsVerified,
-      distanceFromSchool,
-    });
+  // Looking for today's record and then writing it were separate steps, so tapping Check in
+  // twice — or a phone retrying on a bad connection — got past the "already checked in" reply:
+  // both requests found no record and both tried to create one, and the second was answered
+  // with a duplicate-key 500 rather than being told they were already in. One statement now
+  // takes today's record, or makes it, only while no check-in is recorded against it.
+  let record;
+  try {
+    record = await Attendance.findOneAndUpdate(
+      { schoolId, userId, date, checkInAt: null },
+      {
+        $set: {
+          checkInAt: now,
+          checkInGps: { lat, lng, accuracy: accuracy || null },
+          gpsVerified,
+          distanceFromSchool,
+          status: "present",
+        },
+        $setOnInsert: { role, markedBy: userId },
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true, runValidators: true }
+    );
+  } catch (error) {
+    // The filter did not match because a check-in is already recorded, so the upsert tried to
+    // add a second record for the day and the unique index refused it.
+    if (error?.code === 11000) throw new ApiError(409, "Already checked in today");
+    throw error;
   }
 
-  await record.save();
   sendSuccess(res, record, "Check-in successful", 201);
 });
 
@@ -179,15 +182,20 @@ export const checkOut = asyncHandler(async (req, res) => {
     }
   }
 
-  record.checkOutAt = new Date();
-  record.checkOutGps = { lat, lng, accuracy: accuracy || null };
-  await record.save();
+  // Only while no check-out is recorded yet — the checks above and the save were separate
+  // steps, so a second tap got past "Already checked out today" and moved the time.
+  const checkedOut = await Attendance.findOneAndUpdate(
+    { _id: record._id, schoolId, checkOutAt: null },
+    { $set: { checkOutAt: new Date(), checkOutGps: { lat, lng, accuracy: accuracy || null } } },
+    { new: true, runValidators: true }
+  );
+  if (!checkedOut) throw new ApiError(409, "Already checked out today");
 
-  const durationMs = record.checkOutAt - record.checkInAt;
+  const durationMs = checkedOut.checkOutAt - checkedOut.checkInAt;
   const hours = Math.floor(durationMs / 3600000);
   const minutes = Math.floor((durationMs % 3600000) / 60000);
 
-  sendSuccess(res, { record, duration: { hours, minutes } }, "Check-out successful");
+  sendSuccess(res, { record: checkedOut, duration: { hours, minutes } }, "Check-out successful");
 });
 
 /* ═══════════════════════════════════════════

@@ -24,6 +24,7 @@ import { AcademicYear } from "../src/models/AcademicYear.model.js";
 import { nextSequence } from "../src/utils/sequence.js";
 import { SchoolSubscription } from "../src/models/schoolSubscription.model.js";
 import { expireIfElapsed } from "../src/utils/subscriptionExpiry.js";
+import { Attendance } from "../src/models/attendance.model.js";
 
 const URI = process.env.E2E_MONGO_URI || "mongodb://127.0.0.1:27017/school_management_decide_once_check";
 if (/mongodb\+srv|mongodb\.net/i.test(URI)) {
@@ -427,6 +428,62 @@ console.log("── a school paying at the moment its plan runs out ──");
     SchoolSubscription.findById(other._id).then(expireIfElapsed),
   ]);
   ok("two readers agree on the result", both.every((s) => s.status === "expired"));
+}
+
+console.log("");
+console.log("── tapping Check in twice ──");
+{
+  // The unique index is what the second tap used to trip, so it has to be in place here.
+  await Attendance.syncIndexes();
+  const day = new Date(Date.UTC(2026, 8, 29));
+
+  // The same statement checkIn runs: take today's record, or make it, but only while no
+  // check-in is recorded against it.
+  const checkIn = async (userId) => {
+    try {
+      return await Attendance.findOneAndUpdate(
+        { schoolId, userId, date: day, checkInAt: null },
+        {
+          $set: { checkInAt: new Date(), gpsVerified: true, status: "present" },
+          $setOnInsert: { role: "staff", markedBy: userId },
+        },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      );
+    } catch (error) {
+      if (error?.code === 11000) return "already";
+      throw error;
+    }
+  };
+
+  let failures = 0;
+  let doubles = 0;
+  for (let round = 0; round < 10; round += 1) {
+    const userId = id();
+    let results;
+    try {
+      results = await Promise.all([checkIn(userId), checkIn(userId)]);
+    } catch {
+      failures += 1;
+      continue;
+    }
+    if (results.filter((r) => r !== "already").length !== 1) doubles += 1;
+    if ((await Attendance.countDocuments({ schoolId, userId, date: day })) !== 1) doubles += 1;
+  }
+  ok("a double tap never fails with an unexplained error", failures === 0, `${failures} of 10`);
+  ok("one of the two is told they are already in, and one record exists", doubles === 0, `${doubles} problems`);
+
+  // Checking out twice moves the time once.
+  const userId = id();
+  await checkIn(userId);
+  const record = await Attendance.findOne({ schoolId, userId, date: day });
+  const checkOut = () =>
+    Attendance.findOneAndUpdate(
+      { _id: record._id, schoolId, checkOutAt: null },
+      { $set: { checkOutAt: new Date() } },
+      { new: true }
+    );
+  const outs = await Promise.all([checkOut(), checkOut(), checkOut()]);
+  ok("only one check-out is accepted", won(outs) === 1, `${won(outs)} accepted`);
 }
 
 await mongoose.connection.db.dropDatabase();
