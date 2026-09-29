@@ -132,7 +132,7 @@ export const updateCircular = asyncHandler(async (req, res) => {
  */
 export const publishCircular = asyncHandler(async (req, res) => {
   const schoolId = requireSchool(req);
-  const circular = await Circular.findOne({ _id: objectId(req.params.id, "circular id"), schoolId });
+  let circular = await Circular.findOne({ _id: objectId(req.params.id, "circular id"), schoolId });
   if (!circular) throw new ApiError(404, "Circular not found");
   if (circular.status === "published") throw new ApiError(400, "This circular is already published");
   if (circular.status === "archived") throw new ApiError(400, "An archived circular cannot be published");
@@ -153,17 +153,33 @@ export const publishCircular = asyncHandler(async (req, res) => {
     throw new ApiError(400, "That audience matches nobody — check the roles and classes selected");
   }
 
-  circular.circularNumber = await nextCircularNumber({
+  // Published once. Two clicks both passed the "already published" read, each took a number and
+  // the second save won, so the first response announced a number the circular does not carry and
+  // the sequence skipped one. The draft is claimed first, and only the winner takes a number.
+  const claimed = await Circular.findOneAndUpdate(
+    { _id: circular._id, schoolId, status: "draft" },
+    {
+      $set: {
+        recipients,
+        recipientCount: recipients.length,
+        status: "published",
+        publishedAt: new Date(),
+        issuedBy: req.user._id,
+      },
+    },
+    { new: true }
+  );
+  if (!claimed) throw new ApiError(409, "This circular was just published or archived — refresh to see it");
+
+  const circularNumber = await nextCircularNumber({
     schoolId,
     academicYearId: circular.academicYearId,
     yearLabel: year?.name,
   });
-  circular.recipients = recipients;
-  circular.recipientCount = recipients.length;
-  circular.status = "published";
-  circular.publishedAt = new Date();
-  circular.issuedBy = req.user._id;
-  await circular.save();
+  // Set once, by a query: a save of a published circular is refused by the model (its text is frozen).
+  await Circular.updateOne({ _id: claimed._id, schoolId, circularNumber: { $in: ["", null] } }, { $set: { circularNumber } });
+  claimed.circularNumber = circularNumber;
+  circular = claimed;
 
   // Link both ways, so the superseded one can say so on its own page.
   if (circular.supersedesId) {

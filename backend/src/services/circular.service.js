@@ -1,5 +1,6 @@
 import { Circular } from "../models/Circular.model.js";
 import { CircularAcknowledgement } from "../models/CircularAcknowledgement.model.js";
+import { Counter } from "../models/Counter.model.js";
 import { Role } from "../models/Roles.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
@@ -89,17 +90,33 @@ export const nextCircularNumber = async ({ schoolId, academicYearId, yearLabel }
   const label = yearLabel || String(new Date().getFullYear());
   const prefix = `CIR/${label}/`;
 
-  const last = await Circular.findOne({
-    schoolId,
-    ...(academicYearId ? { academicYearId } : {}),
-    circularNumber: new RegExp(`^${prefix.replace(/\//g, "\\/")}`),
-  })
-    .sort({ circularNumber: -1 })
-    .select("circularNumber")
-    .lean();
+  // Numbers come from one atomic counter per school and year. Reading the highest number and adding
+  // one gave two circulars published at the same moment the same number.
+  const key = `circular:${schoolId}:${academicYearId || label}`;
 
-  const lastSeq = last ? parseInt(String(last.circularNumber).slice(prefix.length), 10) : 0;
-  return `${prefix}${String((Number.isNaN(lastSeq) ? 0 : lastSeq) + 1).padStart(3, "0")}`;
+  // First use: start the counter after the highest number already issued. Compared as numbers,
+  // since as text "CIR/x/1000" sorts before "CIR/x/999".
+  if (!(await Counter.exists({ _id: key }))) {
+    const issued = await Circular.find({
+      schoolId,
+      ...(academicYearId ? { academicYearId } : {}),
+      circularNumber: new RegExp(`^${prefix.replace(/\//g, "\\/")}`),
+    })
+      .select("circularNumber")
+      .lean();
+    const highest = issued.reduce((max, c) => {
+      const n = parseInt(String(c.circularNumber).slice(prefix.length), 10);
+      return Number.isNaN(n) ? max : Math.max(max, n);
+    }, 0);
+    try {
+      await Counter.updateOne({ _id: key }, { $setOnInsert: { seq: highest } }, { upsert: true });
+    } catch (error) {
+      if (error?.code !== 11000) throw error; // another request created it first
+    }
+  }
+
+  const { seq } = await Counter.findOneAndUpdate({ _id: key }, { $inc: { seq: 1 } }, { new: true }).lean();
+  return `${prefix}${String(seq).padStart(3, "0")}`;
 };
 
 /**
