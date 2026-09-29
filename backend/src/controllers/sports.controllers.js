@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -40,6 +41,16 @@ const resolveMyStudentIds = async (req) => {
     return children.map((c) => c._id);
   }
   return [];
+};
+
+// Team members and achievements are filed under one school and shown on the student's own page.
+// Unchecked, another school's student (or team) was accepted: their name was copied into this
+// school's records, and an achievement written here appeared on that child's page at their school.
+const findSchoolStudent = async (studentId, schoolId) => {
+  if (!mongoose.Types.ObjectId.isValid(studentId)) throw new ApiError(400, "Invalid studentId");
+  const student = await Student.findById(studentId).populate("userId", "name").lean();
+  if (!student || `${student.schoolId}` !== `${schoolId}`) throw new ApiError(404, "Student not found in this school");
+  return student;
 };
 
 /* ══════════════════════════ Teams ══════════════════════════ */
@@ -119,8 +130,7 @@ export const addTeamMember = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Student is already a member of this team");
   }
 
-  const student = await Student.findById(studentId).populate("userId", "name").lean();
-  if (!student) throw new ApiError(404, "Student not found");
+  const student = await findSchoolStudent(studentId, team.schoolId);
 
   team.members.push({ studentId, studentName: student.userId?.name || "", position: position || "", joinedDate: new Date() });
   await team.save();
@@ -207,12 +217,11 @@ export const createAchievement = asyncHandler(async (req, res) => {
 
   if (holderType === "Student") {
     if (!studentId) throw new ApiError(400, "studentId is required for a student achievement");
-    const student = await Student.findById(studentId).populate("userId", "name").lean();
-    if (!student) throw new ApiError(404, "Student not found");
+    const student = await findSchoolStudent(studentId, schoolId);
     holderName = student.userId?.name || "";
   } else {
     if (!teamId) throw new ApiError(400, "teamId is required for a team achievement");
-    const team = await SportsTeam.findById(teamId).lean();
+    const team = mongoose.Types.ObjectId.isValid(teamId) ? await SportsTeam.findOne({ _id: teamId, schoolId }).lean() : null;
     if (!team) throw new ApiError(404, "Team not found");
     holderName = team.name;
   }
@@ -268,7 +277,12 @@ export const getMyAchievements = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, [], "No achievements found"));
   }
 
-  const achievements = await Achievement.find({ holderType: "Student", studentId: { $in: studentIds } })
+  // Only what the child's own school recorded.
+  const students = await Student.find({ _id: { $in: studentIds } }).select("schoolId").lean();
+  const achievements = await Achievement.find({
+    holderType: "Student",
+    $or: students.map((s) => ({ studentId: s._id, schoolId: s.schoolId })),
+  })
     .sort({ achievementDate: -1 })
     .lean();
 

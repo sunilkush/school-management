@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { optionalHttpUrlValidator } from "../utils/safeUrl.js";
 
 export const ACHIEVEMENT_HOLDER_TYPES = ["Student", "Team"];
 export const ACHIEVEMENT_LEVELS = ["School", "District", "State", "National", "International"];
@@ -17,7 +18,7 @@ const achievementSchema = new Schema(
     eventName: { type: String, trim: true, default: "" },
     achievementDate: { type: Date, required: true, default: Date.now },
     description: { type: String, trim: true, default: "" },
-    certificateUrl: { type: String, trim: true, default: "" },
+    certificateUrl: { type: String, trim: true, default: "", validate: optionalHttpUrlValidator },
 
     recordedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
