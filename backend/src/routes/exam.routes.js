@@ -6,7 +6,6 @@ import {
   downloadAdmitCardPdf,
   downloadResultSheet,
   enterMarksBulk,
-  evaluateAttempt,
   getClassResultSummary,
   getExamById,
   getExamAnalytics,
@@ -108,7 +107,8 @@ router.patch("/marks/:id", auth, roleMiddleware(TEACHER_ROLES), updateMarks);
 // Online exam attempts are taken through routes/attempt.routes.js. An older start/submit pair used
 // to live here too, unused by any screen but open to students — and its submit scored whatever
 // "marks" the request sent, for any question id, any number of times. Removed.
-router.post("/attempts/evaluate", auth, roleMiddleware(TEACHER_ROLES), evaluateAttempt);
+// The marking screen uses POST /attempt/evaluate. A second evaluate lived here without its checks: any
+// teacher could re-mark any attempt in the school, with any number of marks. Removed.
 
 router.get("/results/parent/:studentId", auth, roleMiddleware(PARENT_RESULT_ROLES), getParentViewResult);
 router.get(

@@ -3,7 +3,6 @@ import { ApiResponse } from '../utils/ApiResponse.js'
 import { ApiError } from '../utils/ApiError.js'
 import mongoose from 'mongoose'
 import { Exam } from '../models/Exam.model.js'
-import { ExamAttempt } from '../models/ExamAttempts.model.js'
 import { ExamResult } from '../models/ExamResult.model.js'
 import { AdmitCard } from '../models/AdmitCard.model.js'
 import { Question } from '../models/Questions.model.js'
@@ -273,42 +272,6 @@ export const getClassResultSummary = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, data, 'Class summary fetched successfully'))
 })
 
-
-export const evaluateAttempt = asyncHandler(async (req, res) => {
-    const { attemptId, evaluations = [] } = req.body
-    if (!mongoose.Types.ObjectId.isValid(attemptId))
-        throw new ApiError(400, 'Invalid attemptId')
-    const attempt = await ExamAttempt.findById(attemptId)
-    if (!attempt) throw new ApiError(404, 'Attempt not found')
-    if (
-        req.userRole?.name !== 'Super Admin' &&
-        `${attempt.schoolId}` !== `${req.user.schoolId}`
-    ) {
-        throw new ApiError(403, 'Forbidden for this school attempt')
-    }
-
-    let totalMarks = 0
-    attempt.answers = attempt.answers.map((ans) => {
-        const evalData = evaluations.find(
-            (e) => e.questionId === ans.questionId.toString()
-        )
-        if (evalData) {
-            ans.isCorrect = evalData.isCorrect ?? ans.isCorrect
-            ans.marksObtained = evalData.marksObtained ?? ans.marksObtained
-        }
-        totalMarks += ans.marksObtained
-        return ans
-    })
-
-    attempt.totalObtainedMarks = totalMarks
-    attempt.status = 'evaluated'
-    attempt.evaluatedBy = req.user._id
-    await attempt.save()
-
-    return res
-        .status(200)
-        .json(new ApiResponse(200, attempt, 'Attempt evaluated successfully'))
-})
 
 const ADMIT_CARD_INSTRUCTIONS = [
     'Carry a valid school identity card.',

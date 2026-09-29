@@ -327,23 +327,41 @@ export const evaluateAttempt = asyncHandler(async (req, res) => {
     if (!ownsExam) throw new ApiError(403, "Forbidden: you may only evaluate exams you created");
   }
 
+  // Marking an attempt the student is still writing closed it under them as "evaluated".
+  if (attempt.status === "in_progress") {
+    throw new ApiError(400, "The student has not submitted this attempt yet");
+  }
+
   attempt.answers = attempt.answers.map((ans) => {
     const questionId = ans.questionId?.toString?.() || ans.questionRef?.toString?.();
-    const evalData = evaluations.find((e) => {
-      const evaluationQuestionId = e.questionRef || e.questionId;
+    const evalData = (Array.isArray(evaluations) ? evaluations : []).find((e) => {
+      const evaluationQuestionId = e?.questionRef || e?.questionId;
       return `${evaluationQuestionId}` === `${questionId}`;
     });
     if (!evalData) return ans;
 
-    ans.marksObtained = evalData.marksObtained ?? ans.marksObtained;
+    // A question is worth what the exam said when the attempt started. Only the marking screen
+    // limited this, so the API took 500 marks on a 5-mark question, or a negative score.
+    if (evalData.marksObtained !== undefined && evalData.marksObtained !== null) {
+      const marks = Number(evalData.marksObtained);
+      const max = Number(ans.questionSnapshot?.marks ?? 1);
+      const min = -Math.abs(Number(ans.questionSnapshot?.negativeMarks) || 0);
+      if (!Number.isFinite(marks) || marks < min || marks > max) {
+        throw new ApiError(400, `Marks for each question must be between ${min} and ${max}`);
+      }
+      ans.marksObtained = marks;
+    }
     ans.isCorrect = evalData.isCorrect ?? ans.isCorrect;
     ans.reviewComments = evalData.reviewComments ?? ans.reviewComments;
     return ans;
   });
 
-  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (a.marksObtained || 0), 0);
+  attempt.totalMarksObtained = attempt.answers.reduce((sum, a) => sum + (Number(a.marksObtained) || 0), 0);
   attempt.status = "evaluated";
-  attempt.grade = req.body.grade ?? attempt.grade;
+  // Worked out here, the same way a submit does, rather than taken from the request.
+  const exam = await Exam.findById(attempt.examId).select("totalMarks").lean();
+  const total = Number(exam?.totalMarks || 0);
+  attempt.grade = calcGrade(total > 0 ? Math.round((attempt.totalMarksObtained / total) * 100) : 0);
 
   await attempt.save();
   return sendSuccess(res, { message: "Attempt evaluated successfully", data: attempt });
