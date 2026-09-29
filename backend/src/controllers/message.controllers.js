@@ -109,12 +109,17 @@ export const listMessageRecipients = asyncHandler(async (req, res) => {
     .sort({ name: 1 })
     .lean();
 
+  // The list is everyone in the school (plus platform accounts). Handing it to a Student or Parent
+  // with email addresses gave them the email of every child, parent and staff member — and of the
+  // Super Admins. The picker only needs a name and a role to choose someone.
+  const showEmail = !["Student", "Parent"].includes(getRoleName(req.user));
+
   return sendSuccess(res, {
     message: "Message recipients fetched successfully",
     data: users.map((user) => ({
       _id: user._id,
       name: user.name,
-      email: user.email,
+      ...(showEmail ? { email: user.email } : {}),
       role: user.roleId?.name || "User",
       schoolId: user.schoolId,
     })),
