@@ -400,6 +400,22 @@ export const enterMarksBulkService = async ({ body, user }) => {
       );
     }
 
+    // bulkWrite skips the Marks model validators (min 0, obtained and passing <= total), so this
+    // path saved 150 out of 100, or -10, and publishing then ranked students on them. The input
+    // boxes cap the value, but a sheet uploaded on the teacher screen does not go through them.
+    const totalMarks = Number(entry.totalMarks);
+    const passingMarks = Number(entry.passingMarks ?? 0);
+    const obtainedMarks = Number(entry.obtainedMarks ?? 0);
+    if (![totalMarks, passingMarks, obtainedMarks].every(Number.isFinite) || totalMarks <= 0) {
+      throw new ApiError(400, `Marks for student ${entry.studentId} must be numbers, with total marks above 0`);
+    }
+    if (obtainedMarks < 0 || obtainedMarks > totalMarks) {
+      throw new ApiError(400, `Marks for student ${entry.studentId} must be between 0 and ${totalMarks}`);
+    }
+    if (passingMarks < 0 || passingMarks > totalMarks) {
+      throw new ApiError(400, `Passing marks must be between 0 and ${totalMarks}`);
+    }
+
     bulkOps.push({
       updateOne: {
         filter: {
@@ -413,9 +429,9 @@ export const enterMarksBulkService = async ({ body, user }) => {
             academicYearId: exam.academicYearId,
             schoolClassId: exam.schoolClassId, // ✅ FIXED
             sectionId: exam.sectionId || null, // ✅ FIXED
-            totalMarks: Number(entry.totalMarks) || 0,
-            passingMarks: Number(entry.passingMarks) || 0,
-            obtainedMarks: Number(entry.obtainedMarks) || 0,
+            totalMarks,
+            passingMarks,
+            obtainedMarks,
             updatedBy: user._id,
           },
           $setOnInsert: {
