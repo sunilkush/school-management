@@ -13,7 +13,7 @@ import {
   balanceSheet,
   accountLedger,
 } from "../services/ledger.service.js";
-import { reconciliationReport, postPendingEvents } from "../services/ledgerPosting.service.js";
+import { nextJournalNumber, reconciliationReport, postPendingEvents } from "../services/ledgerPosting.service.js";
 
 /**
  * Double-entry ledger: chart of accounts, journal entries, the statements built from them, and
@@ -121,17 +121,9 @@ export const deleteAccount = asyncHandler(async (req, res) => {
 /* ── Journal entries ─────────────────────────────────────────────── */
 
 /** Sequential per school and year, so the books read the way an auditor expects. */
-const nextEntryNumber = async (schoolId, date) => {
-  const year = new Date(date).getFullYear();
-  const prefix = `JV-${year}-`;
-  const last = await JournalEntry.findOne({ schoolId, entryNumber: new RegExp(`^${prefix}`) })
-    .sort({ entryNumber: -1 })
-    .select("entryNumber")
-    .lean();
-
-  const lastSeq = last ? parseInt(String(last.entryNumber).slice(prefix.length), 10) : 0;
-  return `${prefix}${String((Number.isNaN(lastSeq) ? 0 : lastSeq) + 1).padStart(5, "0")}`;
-};
+// Drawn from the same atomic counter as the auto-posting sweep (services/ledgerPosting.service.js),
+// so a manual entry and a swept one can never share a number.
+const nextEntryNumber = (schoolId, date) => nextJournalNumber(schoolId, date);
 
 /** Every account referenced must exist in this school — otherwise a typo in an id would post
  *  money into an account belonging to someone else, or to nothing at all. */

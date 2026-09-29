@@ -6,6 +6,21 @@ import { Payment } from "../models/payment.model.js";
 import { PayrollItem } from "../models/PayrollItem.model.js";
 import { PayrollRun } from "../models/PayrollRun.model.js";
 import { Refund } from "../models/Refund.model.js";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
+
+/**
+ * The next journal voucher number, JV-<year>-00001 per school. One atomic counter serves manual
+ * entries and the posting sweep alike, so two entries can never share a number.
+ */
+export const nextJournalNumber = async (schoolId, date) => {
+  const year = new Date(date).getFullYear();
+  const prefix = `JV-${year}-`;
+  const seq = await nextSequence(`journal:${schoolId}:${year}`, async () => {
+    const issued = await JournalEntry.find({ schoolId, entryNumber: new RegExp(`^${prefix}`) }).select("entryNumber").lean();
+    return highestSuffix(issued.map((e) => e.entryNumber), prefix);
+  });
+  return `${prefix}${String(seq).padStart(5, "0")}`;
+};
 
 /**
  * Turns the money events the rest of the system already records into journal entries.
@@ -331,22 +346,9 @@ export const postPendingEvents = async ({ schoolId, from = null, to = null, post
 
   // Numbered per school and year like manual entries, so a swept entry is indistinguishable from
   // a hand-written one in the register — an auditor should not have to care which produced it.
-  const seqByYear = new Map();
-  const nextNumber = async (date) => {
-    const year = new Date(date).getFullYear();
-    if (!seqByYear.has(year)) {
-      const prefix = `JV-${year}-`;
-      const last = await JournalEntry.findOne({ schoolId, entryNumber: new RegExp(`^${prefix}`) })
-        .sort({ entryNumber: -1 })
-        .select("entryNumber")
-        .lean();
-      const lastSeq = last ? parseInt(String(last.entryNumber).slice(prefix.length), 10) : 0;
-      seqByYear.set(year, Number.isNaN(lastSeq) ? 0 : lastSeq);
-    }
-    const next = seqByYear.get(year) + 1;
-    seqByYear.set(year, next);
-    return `JV-${year}-${String(next).padStart(5, "0")}`;
-  };
+  // From the shared atomic counter. Keeping the running number in memory for the whole sweep meant
+  // a manual entry posted while it ran was given a number the sweep then handed out again.
+  const nextNumber = (date) => nextJournalNumber(schoolId, date);
 
   // Created one at a time so the model validation (balanced lines) runs on every entry —
   // insertMany would bypass it, which is the one shortcut this module cannot afford.

@@ -1,10 +1,10 @@
 import { Circular } from "../models/Circular.model.js";
 import { CircularAcknowledgement } from "../models/CircularAcknowledgement.model.js";
-import { Counter } from "../models/Counter.model.js";
 import { Role } from "../models/Roles.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { User } from "../models/user.model.js";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 
 /**
  * Working out who a circular is for, and who has still not acknowledged it.
@@ -90,13 +90,9 @@ export const nextCircularNumber = async ({ schoolId, academicYearId, yearLabel }
   const label = yearLabel || String(new Date().getFullYear());
   const prefix = `CIR/${label}/`;
 
-  // Numbers come from one atomic counter per school and year. Reading the highest number and adding
-  // one gave two circulars published at the same moment the same number.
-  const key = `circular:${schoolId}:${academicYearId || label}`;
-
-  // First use: start the counter after the highest number already issued. Compared as numbers,
-  // since as text "CIR/x/1000" sorts before "CIR/x/999".
-  if (!(await Counter.exists({ _id: key }))) {
+  // One atomic counter per school and year: "highest + 1" gave circulars published at the same
+  // moment the same number.
+  const seq = await nextSequence(`circular:${schoolId}:${academicYearId || label}`, async () => {
     const issued = await Circular.find({
       schoolId,
       ...(academicYearId ? { academicYearId } : {}),
@@ -104,18 +100,8 @@ export const nextCircularNumber = async ({ schoolId, academicYearId, yearLabel }
     })
       .select("circularNumber")
       .lean();
-    const highest = issued.reduce((max, c) => {
-      const n = parseInt(String(c.circularNumber).slice(prefix.length), 10);
-      return Number.isNaN(n) ? max : Math.max(max, n);
-    }, 0);
-    try {
-      await Counter.updateOne({ _id: key }, { $setOnInsert: { seq: highest } }, { upsert: true });
-    } catch (error) {
-      if (error?.code !== 11000) throw error; // another request created it first
-    }
-  }
-
-  const { seq } = await Counter.findOneAndUpdate({ _id: key }, { $inc: { seq: 1 } }, { new: true }).lean();
+    return highestSuffix(issued.map((c) => c.circularNumber), prefix);
+  });
   return `${prefix}${String(seq).padStart(3, "0")}`;
 };
 
