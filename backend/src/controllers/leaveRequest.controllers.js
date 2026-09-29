@@ -23,6 +23,12 @@ const verifyParentChild = async (parentId, childUserId) => {
   return child;
 };
 
+// Leave is taken in whole school days, and the school's day is IST. The forms send either a plain
+// date or a timestamp with the time of day in it, so both ends are compared by their IST day.
+const DAY_MS = 24 * 60 * 60 * 1000;
+const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+const istDayStart = (date) => new Date(Math.floor((date.getTime() + IST_OFFSET_MS) / DAY_MS) * DAY_MS - IST_OFFSET_MS);
+
 /* ── CREATE LEAVE REQUEST ────────────────────────────────────────────────── */
 export const createLeaveRequest = asyncHandler(async (req, res) => {
   const { userId, role, leaveType, startDate, endDate, totalDays, reason, attachmentUrl } =
@@ -66,14 +72,41 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
 
   if (!schoolId) throw new ApiError(400, "School context not found");
 
+  // Checked here rather than trusted from the form: an end date before the start was saved as is,
+  // "30 days" could be claimed for a single day, and the same person could file the same days
+  // twice and have both approved.
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) throw new ApiError(400, "Invalid start or end date");
+  const firstDay = istDayStart(start);
+  const lastDay = istDayStart(end);
+  if (lastDay < firstDay) throw new ApiError(400, "End date cannot be before start date");
+  const daysInRange = Math.round((lastDay - firstDay) / DAY_MS) + 1;
+  const days = Number(totalDays);
+  if (!Number.isFinite(days) || days < 0.5 || days > daysInRange) {
+    throw new ApiError(400, `Total days must be between 0.5 and ${daysInRange} for these dates`);
+  }
+
+  const clash = await LeaveRequest.findOne({
+    schoolId,
+    userId: resolvedUserId,
+    status: { $in: ["pending", "approved"] },
+    startDate: { $lt: new Date(lastDay.getTime() + DAY_MS) },
+    endDate: { $gte: firstDay },
+  }).select("startDate endDate status").lean();
+  if (clash) {
+    const fmt = (d) => new Date(d).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" });
+    throw new ApiError(409, `There is already a ${clash.status} leave from ${fmt(clash.startDate)} to ${fmt(clash.endDate)} covering these days`);
+  }
+
   const leaveRequest = await LeaveRequest.create({
     schoolId,
     userId: resolvedUserId,
     role,
     leaveType: leaveType || "casual",
-    startDate: new Date(startDate),
-    endDate: new Date(endDate),
-    totalDays,
+    startDate: start,
+    endDate: end,
+    totalDays: days,
     reason: reason.trim(),
     attachmentUrl: attachmentUrl?.trim(),
   });
