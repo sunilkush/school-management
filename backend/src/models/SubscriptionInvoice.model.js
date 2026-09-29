@@ -26,6 +26,11 @@ const subscriptionInvoiceSchema = new mongoose.Schema(
       enum: ["draft", "unpaid", "paid", "overdue", "cancelled"],
       default: "draft",
     },
+    // Razorpay orders created to pay this invoice. A checkout signature only proves an order and
+    // payment belong together — not which invoice they were for — so verifying a payment requires
+    // its order to be one of these. Otherwise a cheap invoice's paid order could be presented
+    // against an expensive invoice and mark that one paid. A list, since each "Pay" makes a new order.
+    gatewayOrderIds: { type: [String], default: [], select: false },
   },
   { timestamps: true }
 );

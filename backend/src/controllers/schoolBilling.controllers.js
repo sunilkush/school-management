@@ -4,7 +4,12 @@ import { SubscriptionInvoice } from "../models/SubscriptionInvoice.model.js";
 import { School } from "../models/school.model.js";
 import { GlobalConfig } from "../models/GlobalConfig.model.js";
 import { createOrder, verifyPaymentSignature } from "../services/paymentGateway/razorpayGateway.js";
-import { createInvoiceForSubscription, recordSubscriptionPayment } from "./superAdminBilling.controllers.js";
+import {
+  createInvoiceForSubscription,
+  recordSubscriptionPayment,
+  rememberInvoiceOrder,
+  assertOrderIsForInvoice,
+} from "./superAdminBilling.controllers.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -81,6 +86,7 @@ export const createMyPaymentIntent = asyncHandler(async (req, res) => {
       schoolName: invoice.schoolId?.name || "",
     },
   });
+  await rememberInvoiceOrder(invoice._id, order.orderId);
 
   return res.status(200).json(new ApiResponse(200, {
     orderId: order.orderId,
@@ -108,6 +114,8 @@ export const verifyMyPayment = asyncHandler(async (req, res) => {
     signature: razorpay_signature,
   });
   if (!isValid) throw new ApiError(400, "Payment verification failed: invalid signature");
+  // The order must have been created for this invoice, not for a cheaper one of this school's.
+  await assertOrderIsForInvoice(invoiceId, razorpay_order_id);
 
   const { payment } = await recordSubscriptionPayment({
     invoiceId,

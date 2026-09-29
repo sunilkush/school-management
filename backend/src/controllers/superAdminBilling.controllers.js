@@ -384,6 +384,24 @@ export const addManualPayment = asyncHandler(async (req, res) => {
   return res.status(201).json(new ApiResponse(201, payment, "Payment added"));
 });
 
+/** Records that a Razorpay order was created to pay this invoice (see SubscriptionInvoice.gatewayOrderIds). */
+export const rememberInvoiceOrder = (invoiceId, orderId) =>
+  SubscriptionInvoice.updateOne({ _id: invoiceId }, { $addToSet: { gatewayOrderIds: orderId } });
+
+/**
+ * A verified checkout signature proves the order and payment belong together, not which invoice
+ * they paid for. Refuse a payment whose order was not created for this invoice — otherwise paying
+ * a cheap invoice's order and presenting it against an expensive invoice marked that one paid
+ * (and recorded it at the expensive invoice's amount).
+ */
+export const assertOrderIsForInvoice = async (invoiceId, orderId) => {
+  const invoice = await SubscriptionInvoice.findById(invoiceId).select("+gatewayOrderIds").lean();
+  if (!invoice) throw new ApiError(404, "Invoice not found");
+  if (!orderId || !(invoice.gatewayOrderIds || []).includes(String(orderId))) {
+    throw new ApiError(400, "This payment was not made for this invoice");
+  }
+};
+
 export const createGatewayPaymentIntent = asyncHandler(async (req, res) => {
   const { invoiceId } = req.params;
 
@@ -400,6 +418,7 @@ export const createGatewayPaymentIntent = asyncHandler(async (req, res) => {
       schoolName: invoice.schoolId?.name || "",
     },
   });
+  await rememberInvoiceOrder(invoice._id, order.orderId);
 
   return res.status(200).json(new ApiResponse(200, {
     orderId: order.orderId,
@@ -534,6 +553,7 @@ export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
   if (!isValid) {
     throw new ApiError(400, "Payment verification failed: invalid signature");
   }
+  await assertOrderIsForInvoice(invoiceId, razorpay_order_id);
 
   const { payment, invoice } = await recordSubscriptionPayment({
     invoiceId,
