@@ -630,7 +630,17 @@ export const publishResultService = async ({ body, user }) => {
   if (!aggregated.length) throw new ApiError(404, "No finalized marks found");
 
   const sorted = [...aggregated].sort((a, b) => b.totalObtainedMarks - a.totalObtainedMarks);
-  const rankMap = new Map(sorted.map((item, idx) => [`${item._id.studentId}`, idx + 1]));
+  // Equal totals share a rank and the next total takes the position after them (1, 2, 2, 4), the
+  // same rule report cards use. Numbering by position gave two students with the same marks rank
+  // 1 and 2, and which of them came first depended on the order the rows came back in.
+  const rankMap = new Map();
+  sorted.forEach((item, idx) => {
+    const previous = sorted[idx - 1];
+    const rank = previous && previous.totalObtainedMarks === item.totalObtainedMarks
+      ? rankMap.get(`${previous._id.studentId}`)
+      : idx + 1;
+    rankMap.set(`${item._id.studentId}`, rank);
+  });
 
   // Every row belongs to the same school (baseMatch.schoolId), so the scale is fetched once and
   // reused for the whole batch rather than re-querying per student.
