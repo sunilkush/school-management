@@ -26,6 +26,7 @@ import {
     exportResultSheetPdf,
 } from '../utils/exportService.js'
 import { actingRoleName } from '../utils/actingRole.js'
+import { personFields } from '../utils/familyView.js'
 
 // Mirrors the role lists in routes/exam.routes.js, broadest first. Handlers below that treat
 // Student/Parent differently branch on actingRoleName, not the primary role: the routes admit
@@ -90,7 +91,7 @@ export const getExamById = asyncHandler(async (req, res) => {
         .populate('schoolClassId', 'name')
         .populate('sectionId', 'name')
         .populate('subjectId', 'name')
-        .populate('createdBy', 'name email')
+        .populate('createdBy', personFields(req, 'name email'))
         .lean()
 
     ensureExamVisibleToCaller(exam, req.user)

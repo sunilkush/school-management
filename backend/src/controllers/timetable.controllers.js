@@ -13,6 +13,7 @@ import { assertAllInSchool } from "../utils/schoolScope.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { generateTimetable, commitGeneratedTimetable } from "../services/timetableGenerator.service.js";
+import { personFields } from "../utils/familyView.js"
 
 // These controller-level lists are a SECOND gate: every route in timetable.routes.js already runs
 // roleMiddleware(TIMETABLE_MANAGE | TIMETABLE_READ) first, so the effective access is the overlap.
@@ -110,7 +111,7 @@ const handleDuplicate = (error) => {
   throw new ApiError(409, "Duplicate timetable setup record already exists");
 };
 
-const populateTimetable = (query) =>
+const populateTimetable = (query, req = null) =>
   query
     .populate("schoolId", "schoolName name code")
     .populate("academicYearId", "name year startDate endDate isActive")
@@ -118,7 +119,7 @@ const populateTimetable = (query) =>
     .populate("sectionId", "name")
     .populate("timeSlotId", "name startTime endTime type order")
     .populate("subjectId", "name code shortName")
-    .populate("teacherId", "name email avatar")
+    .populate("teacherId", req ? personFields(req, "name email avatar") : "name email avatar")
     .populate("roomId", "name code type capacity")
     .lean();
 
@@ -260,7 +261,8 @@ export const listTimetable = asyncHandler(async (req, res) => {
   // days × periods, not headcount — the cap is generous headroom for that, not a UI page size.
   const limit = Math.min(Math.max(Number(req.query.limit) || 3000, 1), 10000);
   const rows = await populateTimetable(
-    Timetable.find(compact({ schoolId, academicYearId, schoolClassId, sectionId, teacherId: selectedTeacherId, dayOfWeek: normalizeDay(dayOfWeek || day), status: "active" })).limit(limit)
+    Timetable.find(compact({ schoolId, academicYearId, schoolClassId, sectionId, teacherId: selectedTeacherId, dayOfWeek: normalizeDay(dayOfWeek || day), status: "active" })).limit(limit),
+    req
   );
   return success(res, 200, sortTimetable(rows), "Timetable fetched successfully");
 });
@@ -274,7 +276,7 @@ export const createTimetableEntry = asyncHandler(async (req, res) => {
   await assertNoClashes(entry);
   try {
     const created = await Timetable.create(entry);
-    const populated = await populateTimetable(Timetable.findById(created._id));
+    const populated = await populateTimetable(Timetable.findById(created._id), req);
     return success(res, 201, populated, "Timetable entry created successfully");
   } catch (error) { handleDuplicate(error); }
 });
@@ -298,7 +300,7 @@ export const bulkSaveTimetable = asyncHandler(async (req, res) => {
     );
     saved.push(row);
   }
-  const rows = await populateTimetable(Timetable.find({ _id: { $in: saved.map((row) => row._id) } }));
+  const rows = await populateTimetable(Timetable.find({ _id: { $in: saved.map((row) => row._id) } }), req);
   return success(res, 200, sortTimetable(rows), "Timetable saved successfully");
 });
 
@@ -315,7 +317,7 @@ export const updateTimetableEntry = asyncHandler(async (req, res) => {
   await assertNoClashes({ ...merged, skipId: existing._id });
   try {
     const row = await Timetable.findByIdAndUpdate(existing._id, patch, { new: true, runValidators: true });
-    const populated = await populateTimetable(Timetable.findById(row._id));
+    const populated = await populateTimetable(Timetable.findById(row._id), req);
     return success(res, 200, populated, "Timetable entry updated successfully");
   } catch (error) { handleDuplicate(error); }
 });
@@ -346,7 +348,7 @@ export const copyWeekTimetable = asyncHandler(async (req, res) => {
     );
     copied.push(row);
   }
-  const rows = await populateTimetable(Timetable.find({ _id: { $in: copied.map((row) => row._id) } }));
+  const rows = await populateTimetable(Timetable.find({ _id: { $in: copied.map((row) => row._id) } }), req);
   return success(res, 200, sortTimetable(rows), "Weekly timetable copied successfully");
 });
 
@@ -354,7 +356,7 @@ export const myTeacherTimetable = asyncHandler(async (req, res) => {
   requireRole(req, ["Teacher", "Subject Coordinator", "Class Teacher", "Lab Technician", ...CRUD_ROLES, "Staff", "Support Staff"]);
   const schoolId = resolveSchoolId(req);
   const { academicYearId } = req.query;
-  const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, teacherId: req.user._id, status: "active" })));
+  const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, teacherId: req.user._id, status: "active" })), req);
   return success(res, 200, sortTimetable(rows), "Teacher timetable fetched successfully");
 });
 
@@ -362,7 +364,7 @@ export const myStudentTimetable = asyncHandler(async (req, res) => {
   requireRole(req, ["Student"]);
   const { academicYearId } = req.query;
   const { enrollment } = await currentEnrollmentForUser(req.user._id, academicYearId);
-  const rows = await populateTimetable(Timetable.find({ schoolId: enrollment.schoolId, academicYearId: enrollment.academicYearId, schoolClassId: enrollment.schoolClassId, sectionId: enrollment.sectionId, status: "active" }));
+  const rows = await populateTimetable(Timetable.find({ schoolId: enrollment.schoolId, academicYearId: enrollment.academicYearId, schoolClassId: enrollment.schoolClassId, sectionId: enrollment.sectionId, status: "active" }), req);
   return success(res, 200, sortTimetable(rows), "Student timetable fetched successfully");
 });
 
@@ -395,7 +397,7 @@ export const childTimetable = asyncHandler(async (req, res) => {
   if (actingAsStaff && roleName(req) !== "Super Admin" && id(enrollment.schoolId) !== id(req.user?.schoolId ?? req.user?.school?._id)) {
     throw new ApiError(403, "You are not allowed to access another school's timetable");
   }
-  const rows = await populateTimetable(Timetable.find({ schoolId: enrollment.schoolId, academicYearId: enrollment.academicYearId, schoolClassId: enrollment.schoolClassId, sectionId: enrollment.sectionId, status: "active" }));
+  const rows = await populateTimetable(Timetable.find({ schoolId: enrollment.schoolId, academicYearId: enrollment.academicYearId, schoolClassId: enrollment.schoolClassId, sectionId: enrollment.sectionId, status: "active" }), req);
   return success(res, 200, sortTimetable(rows), "Child timetable fetched successfully");
 });
 
@@ -405,7 +407,7 @@ export const classSectionTimetable = asyncHandler(async (req, res) => {
   const { academicYearId } = req.query;
   const { schoolClassId, sectionId } = req.params;
   validateIds({ academicYearId, schoolClassId, sectionId });
-  const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, schoolClassId, sectionId, status: "active" })));
+  const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, schoolClassId, sectionId, status: "active" })), req);
   return success(res, 200, sortTimetable(rows), "Class section timetable fetched successfully");
 });
 

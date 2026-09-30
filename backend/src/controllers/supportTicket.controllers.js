@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../utils/response.js";
+import { personFields } from "../utils/familyView.js"
 
 const PRIVILEGED_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "IT Support", "Support Staff"];
 
@@ -116,8 +117,8 @@ export const getSupportTickets = asyncHandler(async (req, res) => {
 
   const [tickets, total] = await Promise.all([
     SupportTicket.find(query)
-      .populate("createdBy", "name email")
-      .populate("assignedTo", "name email")
+      .populate("createdBy", personFields(req, "name email"))
+      .populate("assignedTo", personFields(req, "name email"))
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
@@ -138,10 +139,10 @@ export const getSupportTickets = asyncHandler(async (req, res) => {
 
 export const getSupportTicketById = asyncHandler(async (req, res) => {
   const ticket = await SupportTicket.findById(req.params.id)
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("resolvedBy", "name email")
-    .populate("updates.updatedBy", "name email");
+    .populate("createdBy", personFields(req, "name email"))
+    .populate("assignedTo", personFields(req, "name email"))
+    .populate("resolvedBy", personFields(req, "name email"))
+    .populate("updates.updatedBy", personFields(req, "name email"));
 
   if (!ticket) throw new ApiError(404, "Support ticket not found");
 

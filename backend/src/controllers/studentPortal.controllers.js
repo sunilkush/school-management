@@ -19,6 +19,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { isHttpUrl } from "../utils/safeUrl.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { personFields } from "../utils/familyView.js"
 const getMyActiveEnrollment = async (user) => {
   const student = await Student.findOne({ userId: user._id }).select("_id");
   if (!student) {
@@ -180,7 +181,7 @@ export const getMyTimetable = asyncHandler(async (req, res) => {
     isActive: true,
   })
     .populate("subjectId", "name code")
-    .populate({ path: "teacherId", select: "name email", match: { isActive: true, isDeleted: { $ne: true } } })
+    .populate({ path: "teacherId", select: personFields(req, "name email"), match: { isActive: true, isDeleted: { $ne: true } } })
     .sort({ day: 1, startTime: 1 })
     .lean();
 

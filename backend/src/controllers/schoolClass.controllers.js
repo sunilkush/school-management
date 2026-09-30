@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Section } from "../models/section.model.js";
 import mongoose from "mongoose";
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
+import { personFields } from "../utils/familyView.js"
 // 🔹 CREATE
 export const createSchoolClass = async (req, res) => {
   try {
@@ -110,7 +111,7 @@ export const getAllSchoolClasses = async (req, res) => {
       }),
     })
       .select("name schoolId schoolClassId classTeacherId subjects")
-      .populate("classTeacherId", "name email")
+      .populate("classTeacherId", personFields(req, "name email"))
       .populate("subjects.subjectId", "name")
       .lean();
 

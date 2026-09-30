@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { personFields } from "../utils/familyView.js"
 
 const getSchoolId = (req) => req.user.school?._id || req.user.schoolId;
 
@@ -96,7 +97,7 @@ export const getStudyMaterials = asyncHandler(async (req, res) => {
   const items = await StudyMaterial.find(filter)
     .populate("schoolClassId", "name")
     .populate("subjectId", "name")
-    .populate("uploadedBy", "name email")
+    .populate("uploadedBy", personFields(req, "name email"))
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(Number(limit));
@@ -109,7 +110,7 @@ export const getStudyMaterialById = asyncHandler(async (req, res) => {
   const material = await StudyMaterial.findById(id)
     .populate("schoolClassId", "name")
     .populate("subjectId", "name")
-    .populate("uploadedBy", "name email");
+    .populate("uploadedBy", personFields(req, "name email"));
 
   if (!material || !material.isActive) throw new ApiError(404, "Study material not found");
   assertSameSchool(req, material);
