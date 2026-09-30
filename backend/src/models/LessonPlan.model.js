@@ -76,9 +76,15 @@ const lessonPlanSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "approved", "completed"],
+      // draft → submitted (for review) → approved | returned (with a comment) → … → completed.
+      // Only a reviewer approves or returns (controllers/lessonPlan.controllers.js).
+      enum: ["draft", "submitted", "approved", "returned", "completed"],
       default: "draft",
     },
+    submittedAt: { type: Date, default: null },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    reviewedAt: { type: Date, default: null },
+    reviewComment: { type: String, trim: true, maxlength: 1000, default: "" },
     isActive: {
       type: Boolean,
       default: true,

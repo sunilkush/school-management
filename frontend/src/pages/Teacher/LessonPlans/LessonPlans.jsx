@@ -3,23 +3,21 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Button, Form, Input, Select, Modal, Table, Tag, Space, Popconfirm, message, Empty, DatePicker,
 } from "antd";
-import { PlusOutlined, BookOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, BookOutlined, EditOutlined, DeleteOutlined, SendOutlined, CheckOutlined, RollbackOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import apiClient from "../../../api/httpClient";
 import { fetchAssignedClasses } from "../../../features/classSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { statGrid, iconWell } from "../../../styles/pageStyles";
+import { LESSON_STATUS } from "../../../utils/lessonPlanStatus";
 
-const STATUS_COLOR = { draft: "orange", approved: "green", completed: "blue" };
 
-const StatCard = ({ icon, label, value, color }) => (
-  <div className="section-panel is-header-strip">
-    <div style={iconWell(color, 42)}>{icon}</div>
-    <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div className="u-title-lg">{value}</div>
-    </div>
-  </div>
+const Chip = ({ label, value, active, onClick }) => (
+  <button type="button" onClick={onClick} style={{
+    border: `1px solid ${active ? "var(--primary)" : "var(--border-muted)"}`, background: active ? "var(--primary-light)" : "var(--surface)",
+    borderRadius: 20, padding: "4px 12px", fontSize: 12, cursor: "pointer", color: "var(--text-secondary)",
+  }}>
+    <b style={{ color: "var(--text-primary)", marginRight: 4 }}>{value}</b>{label}
+  </button>
 );
 
 const getId = (v) => (!v ? "" : typeof v === "object" ? v._id : v);
@@ -95,7 +93,6 @@ const LessonPlans = () => {
     try {
       // The table pages the list itself; without a limit the API stopped at 20 plans.
       const params = { academicYearId: selectedAcademicYear._id, limit: 1000 };
-      if (filterStatus) params.status = filterStatus;
       const res = await apiClient.get("/lesson-plans", { params });
       setPlans(res.data?.data?.items || []);
     } catch (err) {
@@ -103,7 +100,7 @@ const LessonPlans = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedAcademicYear?._id, filterStatus]);
+  }, [selectedAcademicYear?._id]);
 
   useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
@@ -127,26 +124,28 @@ const LessonPlans = () => {
       assessment:   rec.assessment,
       plannedDate:  rec.plannedDate ? dayjs(rec.plannedDate) : null,
       duration:     rec.duration,
-      status:       rec.status,
     });
     setOpen(true);
   };
 
-  const handleSave = async () => {
+  // submit: true sends it for review; otherwise it keeps its status (a new plan is a draft).
+  const handleSave = async (submit = false) => {
     const values = await form.validateFields();
     setSaving(true);
     try {
       const payload = {
         ...values,
         academicYearId: selectedAcademicYear._id,
-        plannedDate: values.plannedDate?.toISOString(),
+        // A calendar day: toISOString() moved it to the day before in IST.
+        plannedDate: values.plannedDate?.format("YYYY-MM-DD"),
+        ...(submit ? { status: "submitted" } : {}),
       };
       if (editTarget) {
         await apiClient.put(`/lesson-plans/${editTarget._id}`, payload);
-        message.success("Lesson plan updated.");
+        message.success(submit ? "Sent for review." : "Lesson plan updated.");
       } else {
         await apiClient.post("/lesson-plans", payload);
-        message.success("Lesson plan created.");
+        message.success(submit ? "Created and sent for review." : "Saved as draft.");
       }
       resetModal();
       fetchPlans();
@@ -154,6 +153,16 @@ const LessonPlans = () => {
       message.error(err?.response?.data?.message || err?.message || "Failed to save.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const moveTo = async (rec, status, done) => {
+    try {
+      await apiClient.put(`/lesson-plans/${rec._id}`, { status });
+      message.success(done);
+      fetchPlans();
+    } catch (err) {
+      message.error(err?.response?.data?.message || "Could not update the plan.");
     }
   };
 
@@ -167,17 +176,18 @@ const LessonPlans = () => {
     }
   };
 
-  const stats = useMemo(() => ({
-    total:     plans.length,
-    draft:     plans.filter((p) => p.status === "draft").length,
-    approved:  plans.filter((p) => p.status === "approved").length,
-    completed: plans.filter((p) => p.status === "completed").length,
-  }), [plans]);
+  const counts = useMemo(() => {
+    const c = { all: plans.length };
+    Object.keys(LESSON_STATUS).forEach((k) => { c[k] = plans.filter((p) => p.status === k).length; });
+    return c;
+  }, [plans]);
+  const shown = filterStatus ? plans.filter((p) => p.status === filterStatus) : plans;
+  const editable = (r) => ["draft", "returned", "submitted"].includes(r?.status);
 
   const columns = [
     { title: "Title", dataIndex: "title", render: (v) => <span style={{ fontWeight: 600 }}>{v}</span> },
     { title: "Subject", dataIndex: "subjectId", render: (v) => v?.name || "—" },
-    { title: "Class", dataIndex: "schoolClassId", render: (v) => v?.name || "—" },
+    { title: "Class", render: (_, r) => `${r.schoolClassId?.name || "—"}${r.sectionId?.name ? `-${r.sectionId.name}` : ""}` },
     {
       title: "Planned Date",
       dataIndex: "plannedDate",
@@ -187,16 +197,36 @@ const LessonPlans = () => {
     {
       title: "Status",
       dataIndex: "status",
-      render: (v) => <Tag color={STATUS_COLOR[v] || "default"}>{String(v || "—").toUpperCase()}</Tag>,
+      render: (v, r) => (
+        <div style={{ maxWidth: 260 }}>
+          <Tag color={LESSON_STATUS[v]?.color || "default"}>{LESSON_STATUS[v]?.label || v}</Tag>
+          {r.reviewComment ? (
+            <div style={{ fontSize: 11, marginTop: 2, color: v === "returned" ? "var(--danger)" : "var(--text-muted)" }}>
+              {r.reviewedBy?.name ? `${r.reviewedBy.name}: ` : ""}{r.reviewComment}
+            </div>
+          ) : null}
+        </div>
+      ),
     },
     {
       title: "Actions",
       render: (_, r) => (
-        <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
-          <Popconfirm title="Delete this lesson plan?" onConfirm={() => handleDelete(r._id)} okText="Delete" okButtonProps={{ danger: true }}>
-            <Button size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+        <Space size={4} wrap>
+          {["draft", "returned"].includes(r.status) && (
+            <Button size="small" type="primary" icon={<SendOutlined />} onClick={() => moveTo(r, "submitted", "Sent for review.")}>Submit</Button>
+          )}
+          {r.status === "submitted" && (
+            <Button size="small" icon={<RollbackOutlined />} onClick={() => moveTo(r, "draft", "Withdrawn to draft.")}>Withdraw</Button>
+          )}
+          {r.status === "approved" && (
+            <Button size="small" icon={<CheckOutlined />} onClick={() => moveTo(r, "completed", "Marked as taught.")}>Mark completed</Button>
+          )}
+          {editable(r) && <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />}
+          {["draft", "returned"].includes(r.status) && (
+            <Popconfirm title="Delete this lesson plan?" onConfirm={() => handleDelete(r._id)} okText="Delete" okButtonProps={{ danger: true }}>
+              <Button size="small" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -215,29 +245,18 @@ const LessonPlans = () => {
         }
       />
 
-      <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<BookOutlined />} label="Total"     value={stats.total}     color="var(--accent)" />
-        <StatCard icon={<BookOutlined />} label="Draft"     value={stats.draft}     color="var(--warning)" />
-        <StatCard icon={<BookOutlined />} label="Approved"  value={stats.approved}  color="var(--success)" />
-        <StatCard icon={<BookOutlined />} label="Completed" value={stats.completed} color="var(--cyan)" />
-      </div>
-
-      <div className="section-panel" style={{ marginTop: 0 }}>
-        <div className="toolbar-row">
-          <Select
-            placeholder="Filter by Status" style={{ width: 180 }} allowClear
-            value={filterStatus} onChange={setFilterStatus}
-            options={[
-              { value: "draft",     label: "Draft" },
-              { value: "approved",  label: "Approved" },
-              { value: "completed", label: "Completed" },
-            ]}
-          />
+      <div className="section-panel" style={{ marginTop: 16, padding: 14 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+          <Chip label="All" value={counts.all} active={!filterStatus} onClick={() => setFilterStatus(undefined)} />
+          {Object.entries(LESSON_STATUS).map(([k, cfg]) => (
+            <Chip key={k} label={cfg.label} value={counts[k]} active={filterStatus === k} onClick={() => setFilterStatus(k)} />
+          ))}
         </div>
 
         <Table
-          columns={columns} dataSource={plans} rowKey="_id"
-          loading={loading || classLoading} pagination={{ pageSize: 10 }}
+          size="small" scroll={{ x: "max-content" }}
+          columns={columns} dataSource={shown} rowKey="_id"
+          loading={loading || classLoading} pagination={{ pageSize: 10, hideOnSinglePage: true }}
           locale={{ emptyText: <Empty description="No lesson plans created yet" /> }}
         />
       </div>
@@ -246,7 +265,12 @@ const LessonPlans = () => {
         title={editTarget ? "Edit Lesson Plan" : "Create Lesson Plan"}
         open={open} onCancel={resetModal} footer={null} destroyOnClose width={600}
       >
-        <Form form={form} layout="vertical" onFinish={handleSave}>
+        {editTarget?.status === "returned" && editTarget.reviewComment && (
+          <div style={{ border: "1px solid var(--danger)", borderRadius: 8, padding: "8px 10px", marginBottom: 12, fontSize: 12 }}>
+            <b>Returned{editTarget.reviewedBy?.name ? ` by ${editTarget.reviewedBy.name}` : ""}:</b> {editTarget.reviewComment}
+          </div>
+        )}
+        <Form form={form} layout="vertical" onFinish={() => handleSave(false)}>
           <Form.Item label="Class" name="schoolClassId" rules={[{ required: true, message: "Required" }]}>
             <Select
               placeholder="Select class" loading={classLoading}
@@ -288,16 +312,16 @@ const LessonPlans = () => {
           <Form.Item label="Assessment" name="assessment">
             <Input.TextArea rows={2} placeholder="How will students be assessed..." />
           </Form.Item>
-          <Form.Item label="Status" name="status" initialValue="draft">
-            <Select options={[
-              { value: "draft",     label: "Draft" },
-              { value: "approved",  label: "Approved" },
-              { value: "completed", label: "Completed" },
-            ]} />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" block loading={saving}>
-            {editTarget ? "Update Plan" : "Create Plan"}
-          </Button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button htmlType="submit" block loading={saving}>
+              {editTarget ? "Save changes" : "Save as draft"}
+            </Button>
+            {(!editTarget || ["draft", "returned"].includes(editTarget.status)) && (
+              <Button type="primary" block icon={<SendOutlined />} loading={saving} onClick={() => handleSave(true)}>
+                {editTarget ? "Save & submit for review" : "Submit for review"}
+              </Button>
+            )}
+          </div>
         </Form>
       </Modal>
     </div>

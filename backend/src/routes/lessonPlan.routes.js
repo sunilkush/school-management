@@ -5,6 +5,8 @@ import {
   getLessonPlanById,
   updateLessonPlan,
   deleteLessonPlan,
+  reviewLessonPlan,
+  LESSON_PLAN_REVIEWERS,
 } from "../controllers/lessonPlan.controllers.js";
 import { auth, roleMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -27,6 +29,7 @@ router.get("/",    auth, roleMiddleware(LP_READ),  getLessonPlans);
 router.post("/",   auth, roleMiddleware(LP_WRITE), createLessonPlan);
 router.get("/:id", auth, roleMiddleware(LP_READ),  getLessonPlanById);
 router.put("/:id", auth, roleMiddleware(LP_WRITE), updateLessonPlan);
+router.patch("/:id/review", auth, roleMiddleware(LESSON_PLAN_REVIEWERS), reviewLessonPlan);
 router.delete("/:id", auth, roleMiddleware(LP_WRITE), deleteLessonPlan);
 
 export default router;

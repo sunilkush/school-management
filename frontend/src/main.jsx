@@ -362,6 +362,7 @@ const TeacherReports = lazy(() => import("./pages/Teacher/Reports/TeacherReports
 const TeacherLeave = lazy(() => import("./pages/Teacher/Leave/TeacherLeave.jsx"));
 const SubjectResources = lazy(() => import("./pages/Teacher/StudyMaterials/SubjectResources.jsx"));
 const LessonPlans = lazy(() => import("./pages/Teacher/LessonPlans/LessonPlans.jsx"));
+const LessonPlanReview = lazy(() => import("./pages/LessonPlans/LessonPlanReview.jsx"));
 const MyAttendanceMonthlyReport = lazy(() => import("./pages/Attendance/MyAttendanceMonthlyReport.jsx"));
 
 // Student
@@ -762,6 +763,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
             children: [
+              { path: "lesson-plans/review", element: <LessonPlanReview /> },
               { index: true, element: <SchoolAdminDashboard /> },
               { path: "textbooks", element: <TextbooksPage /> },
               //{ path: "users/student/add", element: <AddStudent /> },
@@ -1061,6 +1063,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
             children: [
+              { path: "lesson-plans/review", element: <LessonPlanReview /> },
               { index: true, element: <SchoolAdminDashboard /> },
               { path: "textbooks", element: <TextbooksPage /> },
               { path: "overview", element: <SchoolAdminDashboard /> },
@@ -1111,6 +1114,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
             children: [
+              { path: "lesson-plans/review", element: <LessonPlanReview /> },
               { index: true,                      element: <SchoolAdminDashboard /> },
               { path: "textbooks", element: <TextbooksPage /> },
               { path: "discipline",               element: <DisciplinePage /> },
@@ -1152,6 +1156,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
             children: [
+              { path: "lesson-plans/review", element: <LessonPlanReview /> },
               { index: true,             element: <SubjectCoordinatorDashboard /> },
               { path: "textbooks", element: <TextbooksPage /> },
               { path: "subjects",        element: <Subjects /> },
