@@ -15,6 +15,8 @@ import {
     getClassResultSummaryService,
     getExamsService,
     getExamAnalyticsService,
+    getMarkableExamsService,
+    getMarksSheetService,
     getStudentResultService,
     publishResultService,
     submitFinalMarksService,
@@ -211,6 +213,16 @@ export const enterMarksBulk = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(new ApiResponse(200, data, 'Marks saved successfully'))
+})
+
+export const getMarksSheet = asyncHandler(async (req, res) => {
+    const data = await getMarksSheetService({ examId: req.params.id, user: req.user })
+    return res.status(200).json(new ApiResponse(200, data, 'Marks sheet fetched'))
+})
+
+export const getMarkableExams = asyncHandler(async (req, res) => {
+    const data = await getMarkableExamsService({ query: req.query, user: req.user })
+    return res.status(200).json(new ApiResponse(200, data, 'Exams fetched'))
 })
 
 export const updateMarks = asyncHandler(async (req, res) => {

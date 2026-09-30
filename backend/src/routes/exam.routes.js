@@ -6,6 +6,8 @@ import {
   downloadAdmitCardPdf,
   downloadResultSheet,
   enterMarksBulk,
+  getMarksSheet,
+  getMarkableExams,
   getClassResultSummary,
   getExamById,
   getExamAnalytics,
@@ -71,6 +73,9 @@ router.post(
 );
 
 router.post("/marks/bulk", auth, roleMiddleware(TEACHER_ROLES), enterMarksBulk);
+// Marks entry screen: the exams this user can mark, and one exam's students with saved marks.
+router.get("/markable", auth, roleMiddleware(TEACHER_ROLES), getMarkableExams);
+router.get("/:id/marks-sheet", auth, roleMiddleware(TEACHER_ROLES), validate({ params: { id: { required: true, type: "objectId" } } }), getMarksSheet);
 
 router.post(
   "/marks/submit",

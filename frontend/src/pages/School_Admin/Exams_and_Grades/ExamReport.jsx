@@ -20,12 +20,15 @@ const ExamReports = () => {
   const [filters, setFilters] = useState({ examId: undefined, schoolClassId: undefined, type: "", search: "" });
   const [downloading, setDownloading] = useState(null);
 
-  const schoolId = user?.school?._id;
+  // A teacher's login carries schoolId, not a populated school: with only school._id the page
+  // loaded nothing for them.
+  const schoolId = user?.school?._id || user?.schoolId?._id || user?.schoolId;
   const academicYearId = selectedAcademicYear?._id;
 
   useEffect(() => {
     if (!schoolId || !academicYearId) return;
-    dispatch(getExams({ schoolId, academicYearId }));
+    // The API returns 20 by default; the exam picker needs the whole year.
+    dispatch(getExams({ schoolId, academicYearId, limit: 2000 }));
     dispatch(getClassData({ schoolId, academicYearId }));
   }, [dispatch, schoolId, academicYearId]);
 

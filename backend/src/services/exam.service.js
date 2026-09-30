@@ -6,6 +6,7 @@ import { Marks } from "../models/Marks.model.js";
 import { ExamResult } from "../models/ExamResult.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { Section } from "../models/section.model.js";
 import { ExamAttempt } from "../models/ExamAttempts.model.js";
 import { getGradeBands, resolveGrade } from "./gradingScale.service.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
@@ -275,6 +276,124 @@ const assertTeacherOwnsExam = async (user, examOrId) => {
   }
 };
 
+/**
+ * Whose marks a staff member may enter for an exam. The exam's creator, and every exam role above
+ * Teacher, may mark the whole class. Any other Teacher may mark the students of the sections where
+ * they teach the exam's subject or are the class teacher. This used to be creator-only, so a subject
+ * teacher could not enter marks for an exam the office had set, which is how most exams are set.
+ * Changing the exam itself (edit, delete, class) stays with its creator.
+ */
+const markingScope = async (user, exam) => {
+  if (actingRoleName(user, EXAM_STAFF_ROLES) !== "Teacher" || `${exam.createdBy}` === `${user._id}`) {
+    return { all: true, sectionIds: null };
+  }
+  const sections = await Section.find({
+    schoolId: exam.schoolId,
+    academicYearId: exam.academicYearId,
+    schoolClassId: exam.schoolClassId,
+    ...(exam.sectionId ? { _id: exam.sectionId } : {}),
+    $or: [
+      { classTeacherId: user._id },
+      { subjects: { $elemMatch: { subjectId: exam.subjectId, teacherId: user._id } } },
+    ],
+  }).select("_id").lean();
+  if (!sections.length) {
+    throw new ApiError(403, "You can enter marks only for exams you created, or for a subject you teach (or a section you are class teacher of)");
+  }
+  return { all: false, sectionIds: sections.map((s) => s._id) };
+};
+
+// The enrolled students a scope covers (Student doc ids and their user ids).
+const scopedEnrollments = (exam, scope, extra = {}) => StudentEnrollment.find({
+  schoolId: exam.schoolId,
+  academicYearId: exam.academicYearId,
+  schoolClassId: exam.schoolClassId,
+  ...(exam.sectionId ? { sectionId: exam.sectionId } : {}),
+  ...(scope.all ? {} : { sectionId: { $in: scope.sectionIds } }),
+  status: "Active",
+  ...extra,
+});
+
+/**
+ * The marks sheet for one exam: every student this user may mark, with what is saved already.
+ * The teacher screen built its list from the whole class and started every student at 0, so it
+ * showed other sections, never the saved marks, and saving again overwrote them with 0.
+ */
+export const getMarksSheetService = async ({ examId, user }) => {
+  const exam = await Exam.findById(examId)
+    .select("schoolId academicYearId schoolClassId sectionId subjectId createdBy title totalMarks passingMarks examDate")
+    .lean();
+  if (!exam) throw new ApiError(404, "Exam not found");
+  if (user.roleId?.name !== "Super Admin" && `${exam.schoolId}` !== `${user.schoolId}`) {
+    throw new ApiError(403, "Forbidden for this school exam");
+  }
+  const scope = await markingScope(user, exam);
+  const enrollments = await scopedEnrollments(exam, scope)
+    .select("studentId sectionId rollNumber")
+    .populate({ path: "studentId", select: "userId", populate: { path: "userId", select: "name" } })
+    .populate("sectionId", "name")
+    .lean();
+  const userIds = enrollments.map((e) => e.studentId?.userId?._id).filter(Boolean);
+  const marks = await Marks.find({ examId, subjectId: exam.subjectId, studentId: { $in: userIds } })
+    .select("studentId obtainedMarks isFinalSubmitted")
+    .lean();
+  const byStudent = new Map(marks.map((m) => [`${m.studentId}`, m]));
+  const students = enrollments
+    .filter((e) => e.studentId?.userId?._id)
+    .map((e) => {
+      const m = byStudent.get(`${e.studentId.userId._id}`);
+      return {
+        studentId: e.studentId.userId._id,
+        studentName: e.studentId.userId.name,
+        rollNumber: e.rollNumber ?? null,
+        sectionId: e.sectionId?._id || null,
+        sectionName: e.sectionId?.name || "",
+        obtainedMarks: m ? m.obtainedMarks : null,
+        isFinalSubmitted: Boolean(m?.isFinalSubmitted),
+      };
+    })
+    .sort((a, b) => `${a.sectionName}`.localeCompare(`${b.sectionName}`) || (a.rollNumber ?? 1e9) - (b.rollNumber ?? 1e9));
+  return {
+    examId,
+    totalMarks: exam.totalMarks,
+    passingMarks: exam.passingMarks,
+    wholeClass: scope.all,
+    students,
+  };
+};
+
+/**
+ * The year's exams this user can enter marks for: for a Teacher, the ones they created and the
+ * ones in a subject they teach (or a section they are class teacher of); everyone else, all.
+ */
+export const getMarkableExamsService = async ({ query, user }) => {
+  const filters = { schoolId: user.schoolId };
+  if (query.academicYearId) filters.academicYearId = query.academicYearId;
+  const exams = await Exam.find(filters)
+    .select("title examDate examType totalMarks passingMarks schoolClassId sectionId subjectId createdBy status academicYearId")
+    .populate("schoolClassId", "name")
+    .populate("sectionId", "name")
+    .populate("subjectId", "name")
+    .sort({ examDate: -1 })
+    .limit(2000)
+    .lean();
+  if (actingRoleName(user, EXAM_STAFF_ROLES) !== "Teacher") return exams;
+
+  const mine = await Section.find({
+    schoolId: user.schoolId,
+    ...(query.academicYearId ? { academicYearId: query.academicYearId } : {}),
+    $or: [{ classTeacherId: user._id }, { "subjects.teacherId": user._id }],
+  }).select("schoolClassId classTeacherId subjects").lean();
+  const id = (v) => `${v?._id || v || ""}`;
+  return exams.filter((ex) => {
+    if (id(ex.createdBy) === `${user._id}`) return true;
+    return mine.some((s) => id(s.schoolClassId) === id(ex.schoolClassId)
+      && (!ex.sectionId || id(ex.sectionId) === id(s._id))
+      && (id(s.classTeacherId) === `${user._id}`
+        || (s.subjects || []).some((x) => id(x.subjectId) === id(ex.subjectId) && id(x.teacherId) === `${user._id}`)));
+  });
+};
+
 export const assignExamToClassService = async ({ body, user }) => {
   const exam = await Exam.findById(body.examId).select("schoolId totalMarks passingMarks createdBy").lean();
   if (!exam) throw new ApiError(404, "Exam not found");
@@ -325,7 +444,7 @@ export const enterMarksBulkService = async ({ body, user }) => {
   ) {
     throw new ApiError(403, "Forbidden for this school exam");
   }
-  await assertTeacherOwnsExam(user, exam);
+  const scope = await markingScope(user, exam);
 
   // 3. Get student identifiers from payload (can be either User._id or Student._id)
   const studentIdentifiers = [
@@ -357,14 +476,8 @@ export const enterMarksBulkService = async ({ body, user }) => {
   const studentObjectIds = students.map((row) => row._id);
 
   // 5. Check enrollment
-  const enrollments = await StudentEnrollment.find({
-    studentId: { $in: studentObjectIds },
-    schoolId: exam.schoolId,
-    academicYearId: exam.academicYearId,
-    schoolClassId: exam.schoolClassId,
-    ...(exam.sectionId ? { sectionId: exam.sectionId } : {}),
-    status: "Active",
-  })
+  // Only students this user may mark (see markingScope).
+  const enrollments = await scopedEnrollments(exam, scope, { studentId: { $in: studentObjectIds } })
     .select("studentId")
     .lean();
 
@@ -475,7 +588,13 @@ export const updateMarksService = async ({ markId, body, user }) => {
   if (user.roleId?.name !== "Super Admin" && `${mark.schoolId}` !== `${user.schoolId}`) {
     throw new ApiError(403, "Not allowed");
   }
-  await assertTeacherOwnsExam(user, mark.examId);
+  const markExam = await Exam.findById(mark.examId).select("schoolId academicYearId schoolClassId sectionId subjectId createdBy").lean();
+  const markScope = await markingScope(user, markExam);
+  if (!markScope.all) {
+    const student = await Student.findOne({ userId: mark.studentId }).select("_id").lean();
+    const inScope = student && (await scopedEnrollments(markExam, markScope, { studentId: student._id }).countDocuments());
+    if (!inScope) throw new ApiError(403, "This student is not in a section you teach this subject in");
+  }
 
   if (body.obtainedMarks !== undefined) mark.obtainedMarks = Number(body.obtainedMarks);
   if (body.totalMarks !== undefined) mark.totalMarks = Number(body.totalMarks);
@@ -486,13 +605,23 @@ export const updateMarksService = async ({ markId, body, user }) => {
 };
 
 export const submitFinalMarksService = async ({ body, user }) => {
-  await assertTeacherOwnsExam(user, body.examId);
+  const exam = await Exam.findById(body.examId).select("schoolId academicYearId schoolClassId sectionId subjectId createdBy").lean();
+  if (!exam) throw new ApiError(404, "Exam not found");
+  const scope = await markingScope(user, exam);
   const filter = {
     examId: body.examId,
     schoolClassId: body.schoolClassId,
     sectionId: body.sectionId || null,
     schoolId: user.schoolId,
   };
+  // A subject teacher finalises only their own sections' students.
+  if (!scope.all) {
+    const enrolled = await scopedEnrollments(exam, scope)
+      .select("studentId")
+      .populate("studentId", "userId")
+      .lean();
+    filter.studentId = { $in: enrolled.map((e) => e.studentId?.userId).filter(Boolean) };
+  }
 
   const update = await Marks.updateMany(filter, { $set: { isFinalSubmitted: true, updatedBy: user._id } });
   return update;

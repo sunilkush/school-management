@@ -1,434 +1,263 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Button, Input, InputNumber, Select, Table, Tag,
-  Tooltip, Upload, message, Segmented, Progress, Spin,
+  Alert, Button, Empty, Input, InputNumber, Popconfirm, Segmented, Select, Spin, Table, Tag, Tooltip, message,
 } from "antd";
-import {
-  SearchOutlined, UploadOutlined, SaveOutlined,
-  CheckCircleOutlined, ReloadOutlined,
-} from "@ant-design/icons";
-import {
-  GraduationCap, BookOpen, Users, TrendingUp, Trophy, AlertCircle,
-} from "lucide-react";
+import { CheckCircleOutlined, LockOutlined, ReloadOutlined, SaveOutlined, SearchOutlined } from "@ant-design/icons";
+import { GraduationCap } from "lucide-react";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
-import { enterMarksBulk, getExams, submitFinalMarks } from "../../../features/examSlice";
-import { fetchStudentsBySchoolId } from "../../../features/studentSlice";
+import { enterMarksBulk, submitFinalMarks } from "../../../features/examSlice";
+import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { statGrid, statCard, statLabel, statValue, pill } from "../../../styles/pageStyles.js";
 
-/* ── Status helpers ───────────────────────────────────────────────── */
-const examStatus = (examDate) => {
-  if (!examDate) return { label: "No Date", color: "var(--text-secondary)", bg: "var(--surface-soft)" };
-  const d = dayjs(examDate);
-  if (d.isBefore(dayjs(), "day")) return { label: "Completed", color: "var(--success)", bg: "rgba(var(--success-rgb),0.08)" };
-  if (d.isSame(dayjs(), "day"))   return { label: "Today",     color: "var(--info)", bg: "rgba(59,130,246,0.08)" };
-  return                                 { label: "Upcoming",  color: "var(--warning)", bg: "rgba(var(--warning-rgb),0.08)" };
+/**
+ * Marks entry for the exams this teacher may mark: ones they created, and ones in a subject they
+ * teach (or a section they are class teacher of). Data: GET /exams/markable and
+ * GET /exams/:id/marks-sheet (students with the marks already saved).
+ *
+ * The old screen listed every exam in the school (only the first 20), built its student list from
+ * the whole class, started every student at 0 instead of their saved mark, and saving then wrote
+ * those zeros over real marks. An exam set by the office also refused to save for its subject
+ * teacher.
+ */
+const examWhen = (d) => {
+  if (!d) return { label: "No date", color: "default" };
+  if (dayjs(d).isBefore(dayjs(), "day")) return { label: "Done", color: "green" };
+  if (dayjs(d).isSame(dayjs(), "day")) return { label: "Today", color: "blue" };
+  return { label: "Upcoming", color: "orange" };
 };
 
-/* ── Mini stat box ────────────────────────────────────────────────── */
-const Stat = ({ icon: Icon, label, value, color }) => (
-  <div style={statCard({ color, bg: "var(--surface)", accentBar: color })}>
-    <div>
-      <div style={statLabel(color)}>{label}</div>
-      <div style={statValue(color)}>{value ?? "—"}</div>
-    </div>
-    <div style={{
-      width: 44, height: 44, borderRadius: 12,
-      background: `${color}18`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <Icon size={20} color={color} strokeWidth={1.8} />
-    </div>
+const Stat = ({ label, value, color = "var(--text-primary)" }) => (
+  <div style={{ border: "1px solid var(--border-muted)", borderRadius: 10, padding: "6px 12px", background: "var(--surface)" }}>
+    <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
+    <div style={{ fontSize: 17, fontWeight: 800, color, lineHeight: 1.2 }}>{value}</div>
   </div>
 );
 
-/* ── Main page ────────────────────────────────────────────────────── */
 const TeacherExamsPage = () => {
   const dispatch = useDispatch();
-  const { exams = [], loading }  = useSelector((s) => s.exams  || {});
-  const { schoolStudents = [] }  = useSelector((s) => s.students || {});
-  const { user = {} }            = useSelector((s) => s.auth    || {});
   const { selectedAcademicYear } = useSelector((s) => s.academicYear || {});
-
-  const [selectedExamId, setSelectedExamId] = useState(null);
-  const [rows,           setRows]           = useState([]);
-  const [searchText,     setSearchText]     = useState("");
-  const [examFilter,     setExamFilter]     = useState("all");
-  const [saving,         setSaving]         = useState(false);
-  const [submitting,     setSubmitting]     = useState(false);
-
-  const selectedExam = useMemo(
-    () => exams.find((e) => e._id === selectedExamId),
-    [exams, selectedExamId]
-  );
-  const schoolId      = user?.schoolId?._id || user?.schoolId || user?.school?._id;
   const academicYearId = selectedAcademicYear?._id;
-  const status        = examStatus(selectedExam?.examDate);
 
-  /* ── Fetch exams on mount ── */
-  useEffect(() => {
-    dispatch(getExams({ sortBy: "examDate", sortOrder: "desc" }));
-  }, [dispatch]);
+  const [exams, setExams] = useState([]);
+  const [examsLoading, setExamsLoading] = useState(false);
+  const [examId, setExamId] = useState(null);
+  const [sheet, setSheet] = useState(null);
+  const [sheetError, setSheetError] = useState("");
+  const [sheetLoading, setSheetLoading] = useState(false);
+  const [entered, setEntered] = useState({}); // studentId -> number | null (edits not yet saved)
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [saving, setSaving] = useState(false);
 
-  /* ── Auto-select first exam ── */
-  useEffect(() => {
-    if (!selectedExamId && exams.length) setSelectedExamId(exams[0]._id);
-  }, [exams, selectedExamId]);
+  const loadExams = useCallback(async () => {
+    if (!academicYearId) return;
+    setExamsLoading(true);
+    try {
+      const res = await apiClient.get("/exams/markable", { params: { academicYearId } });
+      const list = Array.isArray(res?.data?.data) ? res.data.data : [];
+      setExams(list);
+      setExamId((cur) => (cur && list.some((e) => e._id === cur) ? cur : list[0]?._id || null));
+    } catch (e) {
+      message.error(e?.response?.data?.message || "Could not load exams");
+    } finally {
+      setExamsLoading(false);
+    }
+  }, [academicYearId]);
+  useEffect(() => { loadExams(); }, [loadExams]);
 
-  /* ── Fetch students when exam changes ── */
-  useEffect(() => {
-    const classId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
-    if (!selectedExamId || !classId || !schoolId || !academicYearId) { setRows([]); return; }
-    dispatch(fetchStudentsBySchoolId({ schoolId, academicYearId, schoolClassId: classId, limit: 200 }));
-  }, [dispatch, selectedExamId, selectedExam, schoolId, academicYearId]);
+  const loadSheet = useCallback(async () => {
+    if (!examId) { setSheet(null); return; }
+    setSheetLoading(true);
+    setSheetError("");
+    try {
+      const res = await apiClient.get(`/exams/${examId}/marks-sheet`);
+      setSheet(res?.data?.data || null);
+      setEntered({});
+    } catch (e) {
+      setSheet(null);
+      setSheetError(e?.response?.data?.message || "Could not load the students for this exam");
+    } finally {
+      setSheetLoading(false);
+    }
+  }, [examId]);
+  useEffect(() => { loadSheet(); }, [loadSheet]);
 
-  /* ── Build rows when students load ── */
-  useEffect(() => {
-    if (!selectedExamId) return;
-    const classId = selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId;
-    if (!schoolStudents.length || !classId) { setRows([]); return; }
-    const matched = schoolStudents.filter((s) => {
-      const cid = s?.schoolClassId?._id || s?.schoolClass?._id ||
-        s?.schoolClassId || s?.studentInfo?.schoolClassId || s?.enrollment?.schoolClassId;
-      return `${cid || ""}` === `${classId}`;
-    });
-    setRows(matched.map((s, i) => ({
-      studentId:    s?.student?._id || s?.studentInfo?._id || s?.studentId || s?._id,
-      studentName:  s?.user?.name   || s?.userDetails?.name || s?.studentName || `Student ${i + 1}`,
-      sectionId:    s?.section?._id || s?.sectionDetails?._id,
-      obtainedMarks: 0,
-      totalMarks:   selectedExam?.totalMarks   || 100,
-      passingMarks: selectedExam?.passingMarks || 33,
-    })));
-  }, [selectedExamId, selectedExam, schoolStudents]);
+  const exam = exams.find((e) => e._id === examId);
+  const total = sheet?.totalMarks || exam?.totalMarks || 100;
+  const passing = sheet?.passingMarks ?? exam?.passingMarks ?? 0;
 
-  const onMarkChange = (studentId, value) =>
-    setRows((prev) => prev.map((r) => r.studentId === studentId ? { ...r, obtainedMarks: value ?? 0 } : r));
+  const rows = useMemo(() => (sheet?.students || []).map((s) => ({
+    ...s,
+    value: Object.prototype.hasOwnProperty.call(entered, s.studentId) ? entered[s.studentId] : s.obtainedMarks,
+    changed: Object.prototype.hasOwnProperty.call(entered, s.studentId),
+  })), [sheet, entered]);
 
-  /* ── Save bulk ── */
-  const saveBulk = async () => {
-    if (!selectedExamId) { message.error("Select an exam first"); return false; }
-    const payload = rows.filter((r) => r.studentId).map((r) => ({
-      ...r,
-      schoolClassId: selectedExam?.schoolClassId?._id || selectedExam?.schoolClassId,
-      sectionId:     r.sectionId || selectedExam?.sectionId?._id || selectedExam?.sectionId,
-    }));
-    if (!payload.length) { message.warning("No students found for this class"); return false; }
+  const stats = useMemo(() => {
+    const marked = rows.filter((r) => r.value != null);
+    const passed = marked.filter((r) => r.value >= passing).length;
+    return {
+      students: rows.length,
+      marked: marked.length,
+      passed,
+      failed: marked.length - passed,
+      avg: marked.length ? Math.round((marked.reduce((a, r) => a + Number(r.value), 0) / marked.length) * 10) / 10 : null,
+      finalized: rows.filter((r) => r.isFinalSubmitted).length,
+    };
+  }, [rows, passing]);
+
+  const visible = rows.filter((r) => {
+    const kw = search.trim().toLowerCase();
+    if (kw && !`${r.studentName} ${r.rollNumber ?? ""}`.toLowerCase().includes(kw)) return false;
+    if (filter === "pending") return r.value == null;
+    if (filter === "pass") return r.value != null && r.value >= passing;
+    if (filter === "fail") return r.value != null && r.value < passing;
+    return true;
+  });
+
+  const changedCount = Object.keys(entered).length;
+
+  // Saves only what was typed on this screen; students left blank are not touched.
+  const save = async () => {
+    const marks = rows
+      .filter((r) => r.changed && r.value != null && !r.isFinalSubmitted)
+      .map((r) => ({ studentId: r.studentId, obtainedMarks: r.value, totalMarks: total, passingMarks: passing }));
+    if (!marks.length) { message.info("Nothing new to save"); return false; }
     setSaving(true);
     try {
-      await dispatch(enterMarksBulk({ examId: selectedExamId, marks: payload })).unwrap();
-      message.success("Marks saved successfully");
+      await dispatch(enterMarksBulk({ examId, marks })).unwrap();
+      message.success(`Saved marks for ${marks.length} student(s)`);
+      await loadSheet();
       return true;
-    } catch (err) {
-      message.error(err || "Failed to save marks"); return false;
-    } finally { setSaving(false); }
+    } catch (e) {
+      message.error(typeof e === "string" ? e : "Could not save marks");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
 
-  /* ── Submit final ── */
   const submitFinal = async () => {
-    if (!selectedExam) return false;
-    setSubmitting(true);
+    if (changedCount && !(await save())) return;
+    setSaving(true);
     try {
       await dispatch(submitFinalMarks({
-        examId:       selectedExam._id,
-        schoolClassId: selectedExam.schoolClassId?._id || selectedExam.schoolClassId,
-        sectionId:    selectedExam.sectionId?._id     || selectedExam.sectionId,
+        examId,
+        schoolClassId: exam?.schoolClassId?._id || exam?.schoolClassId,
+        sectionId: exam?.sectionId?._id || exam?.sectionId || undefined,
       })).unwrap();
-      message.success("Final marks submitted");
-      return true;
-    } catch (err) {
-      message.error(err || "Failed to submit"); return false;
-    } finally { setSubmitting(false); }
+      message.success("Marks submitted as final");
+      await loadSheet();
+    } catch (e) {
+      message.error(typeof e === "string" ? e : "Could not submit");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const saveAndSubmit = async () => {
-    const saved = await saveBulk();
-    if (saved) await submitFinal();
-  };
+  const examOptions = exams.map((e) => ({
+    value: e._id,
+    label: `${e.title || "Untitled"} · ${e.subjectId?.name || "Subject"} · ${e.schoolClassId?.name || "Class"}${e.sectionId?.name ? `-${e.sectionId.name}` : ""} · ${e.examDate ? dayjs(e.examDate).format("DD MMM") : "no date"}`,
+  }));
 
-  /* ── Upload JSON ── */
-  const uploadProps = {
-    accept: ".json",
-    showUploadList: false,
-    beforeUpload: async (file) => {
-      try {
-        const parsed = JSON.parse(await file.text());
-        if (Array.isArray(parsed)) { setRows(parsed); message.success("Bulk marks loaded"); }
-        else message.error("Expected JSON array");
-      } catch { message.error("Invalid JSON file"); }
-      return false;
-    },
-  };
-
-  /* ── Stats ── */
-  const summary = useMemo(() => {
-    if (!rows.length) return null;
-    const passCount = rows.filter((r) => r.obtainedMarks >= r.passingMarks).length;
-    const avg       = Math.round(rows.reduce((s, r) => s + Number(r.obtainedMarks || 0), 0) / rows.length);
-    return { total: rows.length, passCount, failCount: rows.length - passCount,
-      avg, passPercent: rows.length ? Math.round((passCount / rows.length) * 100) : 0 };
-  }, [rows]);
-
-  /* ── Filtered rows ── */
-  const visibleRows = useMemo(() => {
-    const kw = searchText.trim().toLowerCase();
-    return rows.filter((r) => {
-      const matchSearch = !kw || `${r.studentName} ${r.studentId}`.toLowerCase().includes(kw);
-      const matchFilter = examFilter === "all" || (r.obtainedMarks >= r.passingMarks ? "pass" : "fail") === examFilter;
-      return matchSearch && matchFilter;
-    });
-  }, [rows, searchText, examFilter]);
-
-  /* ── Exam dropdown options ── */
-  const examOptions = useMemo(() =>
-    exams.map((e) => ({
-      value: e._id,
-      label: `${e?.title || "Untitled"} · ${e?.schoolClassId?.name || "Class"} · ${e?.examDate ? dayjs(e.examDate).format("DD MMM YYYY") : "No date"}`,
-    })), [exams]);
-
-  /* ── Table columns ── */
   const columns = [
+    { title: "#", dataIndex: "rollNumber", width: 56, render: (v) => <span className="u-muted">{v ?? "—"}</span> },
+    { title: "Student", dataIndex: "studentName", render: (v) => <span className="u-strong">{v}</span> },
+    { title: "Section", dataIndex: "sectionName", width: 80, render: (v) => v || "—" },
     {
-      title: "Student",
-      dataIndex: "studentName",
-      render: (name) => (
-        <div className="u-row">
-          <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: "rgba(var(--purple-rgb),0.09)", color: "var(--purple)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 700, fontSize: 13, flexShrink: 0,
-          }}>{(name || "S")[0].toUpperCase()}</div>
-          <span className="u-label">{name}</span>
-        </div>
-      ),
-    },
-    {
-      title: "Total", dataIndex: "totalMarks", width: 80,
-      render: (v) => <span className="u-meta-md">{v}</span>,
-    },
-    {
-      title: "Passing", dataIndex: "passingMarks", width: 90,
-      render: (v) => <span className="u-meta-md">{v}</span>,
-    },
-    {
-      title: "Obtained", width: 150,
-      render: (_, r) => (
+      title: `Marks (of ${total})`, width: 150,
+      render: (_, r) => r.isFinalSubmitted ? (
+        <span><b>{r.value}</b> <LockOutlined className="u-muted" /></span>
+      ) : (
         <InputNumber
-          min={0} max={r.totalMarks} value={r.obtainedMarks}
-          onChange={(v) => onMarkChange(r.studentId, v)}
-          style={{ width: 110, borderRadius: 8 }}
+          size="small" min={0} max={total} value={r.value} placeholder="—"
+          onChange={(v) => setEntered((p) => ({ ...p, [r.studentId]: v ?? null }))}
+          style={{ width: 96, borderColor: r.changed ? "var(--warning)" : undefined }}
         />
       ),
     },
     {
-      title: "Status", width: 100, align: "center",
-      render: (_, r) => {
-        const pass = r.obtainedMarks >= r.passingMarks;
-        return (
-          <span style={pill(pass ? "var(--success)" : "var(--danger)", pass ? "rgba(var(--success-rgb),0.09)" : "rgba(var(--danger-rgb),0.09)")}>
-            {pass ? "PASS" : "FAIL"}
-          </span>
-        );
-      },
-    },
-    {
-      title: "Progress", width: 120,
-      render: (_, r) => {
-        const pct = Math.min(100, Math.round((r.obtainedMarks / (r.totalMarks || 1)) * 100));
-        const color = pct >= 60 ? "var(--success)" : pct >= 33 ? "var(--warning)" : "var(--danger)";
-        return (
-          <div className="u-row-sm">
-            <div style={{ flex: 1, height: 6, background: "var(--border-muted)", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.3s" }} />
-            </div>
-            <span style={{ fontSize: 11, color: "var(--text-muted)", width: 30 }}>{pct}%</span>
-          </div>
-        );
-      },
+      title: "Result", width: 90,
+      render: (_, r) => r.value == null
+        ? <span className="u-muted" style={{ fontSize: 12 }}>Pending</span>
+        : <Tag color={r.value >= passing ? "green" : "red"}>{r.value >= passing ? "PASS" : "FAIL"}</Tag>,
     },
   ];
 
+  const when = examWhen(exam?.examDate);
+
   return (
     <div className="page-wrapper">
-
       <PageHeader
         title="Exam & Marks Entry"
-        subtitle={selectedAcademicYear?.name ? `Academic Year: ${selectedAcademicYear.name}` : "Select an academic year"}
+        subtitle={selectedAcademicYear?.name ? `Exams you can mark · ${selectedAcademicYear.name}` : "Select an academic year"}
         icon={<GraduationCap size={20} />}
-        extra={
-          <Tooltip title="Refresh">
-            <Button icon={<ReloadOutlined />} onClick={() => dispatch(getExams({ sortBy: "examDate", sortOrder: "desc" }))} />
-          </Tooltip>
-        }
+        extra={<Tooltip title="Refresh"><Button icon={<ReloadOutlined />} onClick={() => { loadExams(); loadSheet(); }} /></Tooltip>}
       />
 
-      {/* ── Exam Selector ── */}
-      <div className="section-panel u-mt-5">
-        <div style={{
-          fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
-          textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10,
-        }}>
-          Select Exam
-        </div>
-
-        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-start" }}>
-          <div style={{ flex: 1, minWidth: 280 }}>
-            <Spin spinning={loading} size="small">
-              <Select
-                showSearch
-                optionFilterProp="label"
-                className="u-full"
-                placeholder="Choose an exam to enter marks…"
-                options={examOptions}
-                value={selectedExamId}
-                onChange={setSelectedExamId}
-                size="large"
-              />
-            </Spin>
-          </div>
-
-          {/* Selected exam detail pill */}
-          {selectedExam && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-              background: "var(--surface-soft)", border: "1px solid var(--border-muted)",
-              borderRadius: 12, padding: "10px 16px",
-            }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
-                  {selectedExam?.subjectId?.name || "Subject N/A"}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
-                  {selectedExam?.examType || "Exam"} ·{" "}
-                  {selectedExam?.examDate ? dayjs(selectedExam.examDate).format("DD MMM YYYY") : "No date"}
-                </div>
-              </div>
-              <span style={pill(status.color, status.bg)}>{status.label}</span>
-              <span style={pill("var(--purple)", "rgba(var(--purple-rgb),0.08)")}>
-                Total: {selectedExam?.totalMarks || 100} · Pass: {selectedExam?.passingMarks || 33}
-              </span>
+      <div className="section-panel" style={{ marginTop: 16, padding: 14 }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <Select
+            showSearch optionFilterProp="label" style={{ flex: "1 1 320px" }}
+            placeholder="Choose an exam…" options={examOptions} value={examId} onChange={setExamId}
+            loading={examsLoading} notFoundContent={examsLoading ? <Spin size="small" /> : "No exams you can mark"}
+          />
+          {exam && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+              <Tag color={when.color}>{when.label}</Tag>
+              <Tag>{exam.examType || "Exam"}</Tag>
+              <Tag color="purple">Total {total} · Pass {passing}</Tag>
+              {sheet && !sheet.wholeClass && <Tag color="blue">Your sections only</Tag>}
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Stats (only when rows loaded) ── */}
-      {summary && (
-        <div style={statGrid(150)}>
-          <Stat icon={Users}       label="Total Students" value={summary.total}       color="var(--purple)" />
-          <Stat icon={TrendingUp}  label="Class Average"  value={`${summary.avg}/${selectedExam?.totalMarks || 100}`} color="var(--info)" />
-          <Stat icon={Trophy}      label="Passed"         value={summary.passCount}   color="var(--success)" />
-          <Stat icon={AlertCircle} label="Failed"         value={summary.failCount}   color="var(--danger)" />
-        </div>
+      {!examsLoading && !exams.length && academicYearId && (
+        <Empty style={{ marginTop: 24 }} image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="No exams to mark: you have not created any, and none is set in a subject you teach." />
       )}
 
-      {/* ── Marks Table ── */}
-      {selectedExamId && (
-        <div className="section-panel">
-          {/* Toolbar */}
-          <div style={{
-            display: "flex", alignItems: "center",
-            justifyContent: "space-between", flexWrap: "wrap", gap: 10,
-            marginBottom: 16,
-          }}>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <Input
-                allowClear
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search student…"
-                prefix={<SearchOutlined className="u-muted" />}
-                style={{ width: 220, borderRadius: 9 }}
-              />
-              <Segmented
-                value={examFilter}
-                onChange={setExamFilter}
-                options={[
-                  { label: "All",  value: "all"  },
-                  { label: "Pass", value: "pass" },
-                  { label: "Fail", value: "fail" },
-                ]}
-              />
-              {summary && (
-                <Tooltip title={`${summary.passPercent}% passed`}>
-                  <Progress type="circle" size={40} percent={summary.passPercent}
-                    strokeColor="var(--success)"
-                    format={(p) => <span style={{ fontSize: 10, fontWeight: 700 }}>{p}%</span>}
-                  />
-                </Tooltip>
-              )}
-            </div>
+      {sheetError && <Alert type="warning" showIcon message={sheetError} style={{ marginTop: 12 }} />}
 
-            <div className="u-row-wrap">
-              <Upload {...uploadProps}>
-                <Button icon={<UploadOutlined />} size="small">Bulk JSON</Button>
-              </Upload>
-              <Button
-                size="small"
-                icon={<SaveOutlined />}
-                loading={saving}
-                onClick={saveBulk}
-                style={{ background: "var(--purple)", borderColor: "var(--purple)", color: "#fff" }}
-              >
-                Save Marks
+      {sheet && (
+        <div className="section-panel" style={{ marginTop: 12, padding: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <Stat label="Students" value={stats.students} />
+              <Stat label="Marked" value={`${stats.marked}/${stats.students}`} color={stats.marked === stats.students ? "var(--success)" : "var(--warning)"} />
+              <Stat label="Average" value={stats.avg == null ? "—" : stats.avg} />
+              <Stat label="Pass / Fail" value={`${stats.passed} / ${stats.failed}`} />
+              {stats.finalized > 0 && <Stat label="Final" value={stats.finalized} color="var(--purple)" />}
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <Button type="primary" icon={<SaveOutlined />} loading={saving} disabled={!changedCount} onClick={save}>
+                Save{changedCount ? ` (${changedCount})` : ""}
               </Button>
-              <Button
-                size="small"
-                loading={submitting}
-                onClick={submitFinal}
+              <Popconfirm
+                title="Submit these marks as final?"
+                description="Final marks cannot be changed from this screen."
+                okText="Submit final" onConfirm={submitFinal}
               >
-                Submit Final
-              </Button>
-              <Button
-                size="small"
-                type="dashed"
-                loading={saving || submitting}
-                onClick={saveAndSubmit}
-                icon={<CheckCircleOutlined />}
-              >
-                Save & Submit
-              </Button>
+                <Button icon={<CheckCircleOutlined />} disabled={saving || !stats.marked}>Submit Final</Button>
+              </Popconfirm>
             </div>
           </div>
 
-          {/* Table */}
-          {rows.length === 0 ? (
-            <div className="empty-state">
-              <div style={{ fontSize: 34, marginBottom: 10 }}>📋</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-                No Students Found
-              </div>
-              <div className="u-meta-md">
-                Select an exam with an assigned class to see students.
-              </div>
-            </div>
-          ) : (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+            <Input size="small" allowClear placeholder="Search student or roll no." prefix={<SearchOutlined className="u-muted" />}
+              value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: 220 }} />
+            <Segmented size="small" value={filter} onChange={setFilter}
+              options={[{ label: "All", value: "all" }, { label: "Not marked", value: "pending" }, { label: "Pass", value: "pass" }, { label: "Fail", value: "fail" }]} />
+          </div>
+
+          <Spin spinning={sheetLoading}>
             <Table
-              className="exam-table data-table"
-              rowKey={(r, i) => `${r.studentId || "r"}-${i}`}
-              dataSource={visibleRows}
-              columns={columns}
-              pagination={{ pageSize: 20, showSizeChanger: false, size: "small" }}
-              size="small"
-              scroll={{ x: 700 }}
-              locale={{ emptyText: "No students match the current filter" }}
+              size="small" rowKey="studentId" columns={columns} dataSource={visible}
+              pagination={{ pageSize: 40, hideOnSinglePage: true, showSizeChanger: false }} scroll={{ x: 520 }}
+              locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={rows.length ? "No students match" : "No students enrolled for this exam"} /> }}
             />
-          )}
-        </div>
-      )}
-
-      {/* ── No exam selected empty state ── */}
-      {!selectedExamId && !loading && (
-        <div className="empty-state">
-          <div style={{ fontSize: 38, marginBottom: 12 }}>📝</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
-            No Exams Found
-          </div>
-          <div className="u-meta-md">
-            No exams have been assigned to you yet. Contact your school admin.
-          </div>
+          </Spin>
         </div>
       )}
     </div>
