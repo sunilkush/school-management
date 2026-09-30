@@ -63,7 +63,7 @@ export default function MySubstitutions() {
         {loading ? (
           <Skeleton active paragraph={{ rows: 4 }} />
         ) : !rows.length ? (
-          <Empty description="No cover duties in this period" />
+          <Empty description="No cover duties in these dates. When a teacher is absent and the office gives you one of their periods, the date, period, class and whose class it is appear here." />
         ) : (
           <Table
             size="small"
