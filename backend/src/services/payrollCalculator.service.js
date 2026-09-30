@@ -70,7 +70,10 @@ export const calculatePayrollEntry = ({
   // (Voluntary PF) rides on top of the statutory employee % on the same wage base, and is
   // NOT subject to the wage ceiling (an employee may voluntarily contribute more). ──
   const pfWageCeiling = Number(policy.pfWageCeiling ?? 15000);
-  const rawPfWage = resolvePfWage(structure, policy);
+  // PF and ESI are due on wages actually earned. Charged on the full month's wage, an absent
+  // employee (all days LOP) was left owing PF: a negative payslip.
+  const earnedRatio = workingDays > 0 ? Math.max(workingDays - lopDays, 0) / workingDays : 1;
+  const rawPfWage = resolvePfWage(structure, policy) * earnedRatio;
   const pfWage = policy.pfAppliedOnCeiling === false ? rawPfWage : Math.min(rawPfWage, pfWageCeiling);
   const statutoryPf = pfEnabled ? (Number(policy.pfPercent || 0) / 100) * pfWage : 0;
   const vpf = pfEnabled ? (Number(structure.vpfPercent || 0) / 100) * rawPfWage : 0;
@@ -80,7 +83,7 @@ export const calculatePayrollEntry = ({
   // (₹21,000/month by default) — above it the employee is simply not ESI-covered. ──
   const esiWageCeiling = Number(policy.esiWageCeiling ?? 21000);
   const esiEligible = esiEnabled && gross <= esiWageCeiling;
-  const esiWage = esiEligible ? resolveEsiWage(structure, policy, gross) : 0;
+  const esiWage = esiEligible ? resolveEsiWage(structure, policy, gross) * earnedRatio : 0;
   const esi = esiEligible ? (Number(policy.esiPercent || 0) / 100) * esiWage : 0;
 
   const professionalTax = structure.professionalTaxEnabled ? Number(policy.professionalTaxAmount || 0) : 0;

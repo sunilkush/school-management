@@ -67,6 +67,12 @@ const resolvePayrollPolicy = async ({ schoolId, asOfDate }) => {
 // to every employee, so a shorter tenure (naturally fewer of *their own* attendance records)
 // shows up as fewer paid days relative to that shared denominator, not as a proportionally
 // smaller denominator that cancels itself back out to a full month.
+// The attendance day (UTC midnight of the IST calendar date) a moment falls on.
+const attendanceDayOf = (value) => {
+  const ist = new Date(new Date(value).getTime() + 330 * 60 * 1000);
+  return new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate()));
+};
+
 const summarizeAttendanceRecords = (records, workingDays) => {
   const statusCount = records.reduce(
     (acc, item) => {
@@ -318,8 +324,10 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   const { start: attStart, end: attEnd } = monthRangeUTC({ month, year });
   const allAttendance = await Attendance.find({
     schoolId,
+    // Every employee's own attendance, whatever their role. This used to keep only "teacher" and
+    // "staff" rows, so an accountant, librarian, principal or school admin who checked in every
+    // day had no present days and lost their whole salary to LOP.
     userId: { $in: userIds },
-    role: { $in: ["teacher", "staff"] },
     date: { $gte: attStart, $lte: attEnd },
   })
     .select("userId date status checkInAt checkOutAt")
@@ -350,8 +358,12 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   // they joined or after they left (data-entry error, or a rehire reusing the same userId) can't
   // count as legitimate presence — but note this only filters which of *their* records count,
   // not the shared cycleWorkingDays denominator above.
-  const employeeJoin = employee.joinDate ? new Date(employee.joinDate) : cycleStart;
-  const employeeLeave = employee.relievingDate ? new Date(employee.relievingDate) : cycleEnd;
+  // Whole days: attendance is dated at midnight, and a join date carries the time the record was
+  // made (2 pm), so the joining day's own attendance fell outside the window and was docked.
+  const employeeJoin = employee.joinDate ? attendanceDayOf(employee.joinDate) : cycleStart;
+  const employeeLeave = employee.relievingDate
+    ? new Date(attendanceDayOf(employee.relievingDate).getTime() + 24 * 3600 * 1000 - 1)
+    : cycleEnd;
   const windowStart = employeeJoin > cycleStart ? employeeJoin : cycleStart;
   const windowEnd = employeeLeave < cycleEnd ? employeeLeave : cycleEnd;
 
