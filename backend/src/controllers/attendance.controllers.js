@@ -511,8 +511,13 @@ export const updateAttendance = asyncHandler(async (req, res) => {
 
   // Identity fields must not be attacker-settable via the body — an unfiltered $set would let a
   // caller reassign this (already-verified) record to a different school/student/marker.
-  const { schoolId, userId, markedBy, _id, ...updates } = req.body;
-  const updated = await Attendance.findByIdAndUpdate(req.params.id, { $set: updates }, { new: true });
+  // Only what the edit form changes, and through the model's validators: everything else in the body
+  // (date, role, class, any status string) used to be written as sent.
+  const updates = {};
+  for (const field of ["status", "remarks", "checkInAt", "checkOutAt"]) {
+    if (req.body?.[field] !== undefined) updates[field] = req.body[field];
+  }
+  const updated = await Attendance.findByIdAndUpdate(req.params.id, { $set: updates }, { new: true, runValidators: true });
   return res.status(200).json(new ApiResponse(200, updated, "Attendance updated"));
 });
 

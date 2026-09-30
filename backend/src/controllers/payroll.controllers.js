@@ -181,7 +181,12 @@ export const updatePayrollStructure = asyncHandler(async (req, res) => {
   const existingStructure = await PayrollStructure.findOne({ _id: req.params.id, schoolId });
   if (!existingStructure) throw new ApiError(404, "Payroll structure not found");
 
-  const nextStructure = { ...existingStructure.toObject(), ...req.body };
+  // The whole body used to be written with $set and no validators: a salary structure could be moved
+  // to another school or another employee, marked approved without the approval step, and saved with
+  // negative amounts (the model's min: 0 never ran). Identity and approval are not editable here.
+  const { _id, schoolId: _school, employeeId: _employee, approvalStatus, approvedBy, createdAt, updatedAt, __v, ...editable } =
+    req.body || {};
+  const nextStructure = { ...existingStructure.toObject(), ...editable };
   if (nextStructure.status === "active") {
     const hasOverlap = await hasOverlappingActiveStructure({
       schoolId,
@@ -195,8 +200,8 @@ export const updatePayrollStructure = asyncHandler(async (req, res) => {
 
   const structure = await PayrollStructure.findOneAndUpdate(
     { _id: req.params.id, schoolId },
-    { $set: req.body },
-    { new: true }
+    { $set: editable },
+    { new: true, runValidators: true }
   );
 
   

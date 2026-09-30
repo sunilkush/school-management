@@ -34,10 +34,13 @@ export const createMaintenanceTask = async (req, res) => {
 export const updateMaintenanceTask = async (req, res) => {
   try {
     const schoolFilter = req.user.schoolId ? { school: req.user.schoolId } : {};
+    // Not the record's identity or school: the whole body was written, so a task could be moved into
+    // another school; and the model's validators now run.
+    const { _id, school, createdBy, createdAt, updatedAt, __v, ...editable } = req.body || {};
     const task = await MaintenanceTask.findOneAndUpdate(
       { _id: req.params.id, ...schoolFilter },
-      { $set: req.body },
-      { new: true }
+      { $set: editable },
+      { new: true, runValidators: true }
     );
     if (!task) return res.status(404).json({ success: false, message: "Task not found" });
     res.json({ success: true, data: task });

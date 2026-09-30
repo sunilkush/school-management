@@ -250,6 +250,9 @@ export const updateGeofenceSettings = asyncHandler(async (req, res) => {
   const { lat, lng, geofenceRadius, address, startTime, endTime, autoCheckoutEnabled } = req.body;
 
   if (lat == null || lng == null) throw new ApiError(400, "lat and lng are required");
+  if (!(Number(lat) >= -90 && Number(lat) <= 90) || !(Number(lng) >= -180 && Number(lng) <= 180)) {
+    throw new ApiError(400, "lat must be between -90 and 90 and lng between -180 and 180");
+  }
   if (geofenceRadius != null && geofenceRadius < 50)
     throw new ApiError(400, "Geofence radius must be at least 50 metres");
   if (startTime != null && !TIME_RE.test(startTime)) throw new ApiError(400, "startTime must be in HH:mm format");

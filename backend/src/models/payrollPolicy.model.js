@@ -20,28 +20,28 @@ const payrollPolicySchema = new Schema(
     // Employee.statutoryCompliance.pfCategory === "excluded", but there's no separate
     // per-structure toggle any more — that was a second place to configure the same thing.
     pfEnabled: { type: Boolean, default: true },
-    pfPercent: { type: Number, default: 12, min: 0 }, // employee share, deducted from pay
+    pfPercent: { type: Number, default: 12, min: 0, max: 100 }, // employee share, deducted from pay
     pfWageCeiling: { type: Number, default: 15000, min: 0 }, // statutory PF wage ceiling (₹15,000/month)
     pfAppliedOnCeiling: { type: Boolean, default: true }, // true: PF computed on min(wage, ceiling); false: on full applicable wage (voluntary higher PF)
     // Wage-base methodology is an organization-wide policy choice (how this school computes PF
     // wage for everyone), not a per-employee attribute — lives here, not on PayrollStructure.
     pfApplicableOn: { type: String, enum: ["basic", "basicPlusDa", "custom"], default: "basicPlusDa" },
     pfCustomComponents: { type: [String], default: [] }, // used only when pfApplicableOn === "custom"
-    employerPfPercent: { type: Number, default: 12, min: 0 }, // employer's total PF cost (EPS + EPF), not deducted from employee
-    epsPercent: { type: Number, default: 8.33, min: 0 }, // portion of employer PF routed to EPS (Employee Pension Scheme) — always capped at pfWageCeiling by statute
-    epfAdminChargesPercent: { type: Number, default: 0.5, min: 0 }, // EPF administrative charges — employer cost, on PF wage
-    edliPercent: { type: Number, default: 0.5, min: 0 }, // EDLI (Employee Deposit Linked Insurance) — employer cost, on PF wage capped at ceiling
+    employerPfPercent: { type: Number, default: 12, min: 0, max: 100 }, // employer's total PF cost (EPS + EPF), not deducted from employee
+    epsPercent: { type: Number, default: 8.33, min: 0, max: 100 }, // portion of employer PF routed to EPS (Employee Pension Scheme) — always capped at pfWageCeiling by statute
+    epfAdminChargesPercent: { type: Number, default: 0.5, min: 0, max: 100 }, // EPF administrative charges — employer cost, on PF wage
+    edliPercent: { type: Number, default: 0.5, min: 0, max: 100 }, // EDLI (Employee Deposit Linked Insurance) — employer cost, on PF wage capped at ceiling
 
     // ── ESI (Employees' State Insurance) — ESI Act, 1948. Applies only while gross
     // wages stay within the eligibility ceiling; rates per the 2019 revision. ──
     // Same idea as pfEnabled above — school-wide on/off, with per-employee exclusion via
     // Employee.statutoryCompliance.esiCategory === "excluded" rather than a second toggle.
     esiEnabled: { type: Boolean, default: true },
-    esiPercent: { type: Number, default: 0.75, min: 0 }, // employee share, deducted from pay
+    esiPercent: { type: Number, default: 0.75, min: 0, max: 100 }, // employee share, deducted from pay
     esiWageCeiling: { type: Number, default: 21000, min: 0 }, // gross wages above this are not ESI-eligible
     esiApplicableOn: { type: String, enum: ["gross", "custom"], default: "gross" },
     esiCustomComponents: { type: [String], default: [] }, // used only when esiApplicableOn === "custom"
-    employerEsiPercent: { type: Number, default: 3.25, min: 0 }, // employer's ESI cost, not deducted from employee
+    employerEsiPercent: { type: Number, default: 3.25, min: 0, max: 100 }, // employer's ESI cost, not deducted from employee
 
     professionalTaxAmount: { type: Number, default: 0, min: 0 },
     paidLeavePerMonth: { type: Number, default: 1, min: 0 },

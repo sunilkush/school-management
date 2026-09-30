@@ -126,7 +126,9 @@ export const assignFeesToStudents = asyncHandler(async (req, res) => {
   // ✅ Prepare records — apply each student's own discount percentage (if any) to the flat
   // structure amount; an explicit customAmount bypasses this entirely.
   const records = newStudents.map((sid) => {
-    const discountPercent = discountByStudent.get(sid.toString()) || 0;
+    // Held to 0–100: a discount saved above 100 before the model limited it made this student's fee
+    // negative, and that one record failed the whole class's assignment.
+    const discountPercent = Math.min(100, Math.max(0, discountByStudent.get(sid.toString()) || 0));
     const totalAmount = discountPercent
       ? Number((flatTotalAmount * (1 - discountPercent / 100)).toFixed(2))
       : flatTotalAmount;

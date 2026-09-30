@@ -42,9 +42,13 @@ const studentEnrollmentSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // A percentage. Only the admission form limited it: 150 was saved, and assigning the class's fees
+    // then failed outright on that student's negative fee.
     feeDiscount: {
       type: Number,
       default: 0,
+      min: [0, "Fee discount cannot be negative"],
+      max: [100, "Fee discount cannot be more than 100%"],
     },
     smsMobile: String,
     mobileNumber: String,

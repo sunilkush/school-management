@@ -364,7 +364,8 @@ export const listBackupSchedules = asyncHandler(async (req, res) => {
 
 export const updateBackupSchedule = asyncHandler(async (req, res) => {
   ensureRole(req, BACKUP_ROLES);
-  const updated = await BackupSchedule.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true }).lean();
+  const { _id, createdAt, updatedAt, __v, ...editable } = req.body || {};
+  const updated = await BackupSchedule.findByIdAndUpdate(req.params.id, { $set: editable }, { new: true, runValidators: true }).lean();
   if (!updated) throw new ApiError(404, "Backup schedule not found");
   return sendSuccess(res, { message: "Backup schedule updated successfully", data: updated });
 });
