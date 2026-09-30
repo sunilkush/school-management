@@ -86,118 +86,118 @@ One pattern at a time across every controller, one commit per pattern sweep.
 
 | Controller | A | B | C | D | E | F | Notes |
 |---|---|---|---|---|---|---|---|
-| academicYear | ➖ | ✅ |  |  | ✅ |  | B fixed a0405da1 |
-| accountantDashboard | ➖ | ➖ |  |  | ✅ |  |  |
-| activity | ➖ | ✅ |  |  | ✅ |  |  |
-| admissionInquiry | ➖ | ✅ |  |  | ➖ |  |  |
-| advance | ✅ | ✅ |  |  | ➖ |  | B fixed edd8840d, 706c5c89 |
-| alumniProfile | ✅ | ✅ |  |  | ➖ |  |  |
-| amcTracking | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3 |
-| analytics | ➖ | ➖ |  |  | ➖ |  |  |
-| attempt | ✅ | ✅ |  |  | ✅ |  | B fixed d38f39fa |
-| attendance | ✅ | ✅ |  |  | ✅ |  | A fixed 069f74f3 |
-| attendanceDevice | ✅ | ✅ |  |  | ✅ |  |  |
-| auditLog | ✅ | ✅ |  |  | ➖ |  |  |
-| board | ✅ | ✅ |  |  | ➖ |  |  |
-| boardClass | ✅ | ✅ |  |  | ➖ |  |  |
-| bonus | ✅ | ✅ |  |  | ➖ |  | B fixed c76fb75a |
-| book | ✅ | ✅ |  |  | ✅ |  |  |
-| callLog | ➖ | ✅ |  |  | ➖ |  |  |
-| canteen | ✅ | ✅ |  |  | ✅ |  | B fixed earlier (cancel, wallet) |
-| certificate | ✅ | ✅ |  |  | ✅ |  | B fixed a0405da1 |
-| chapter | ✅ | ✅ |  |  | ✅ |  |  |
-| circular | ✅ | ✅ |  |  | ✅ |  | B fixed dcb08125 |
-| class | ✅ | ✅ |  |  | ➖ |  |  |
-| classTeacherAssignment | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3 |
-| communicationSettings | ➖ | ✅ |  |  | ➖ |  |  |
-| compliance | ✅ | ✅ |  |  | ➖ |  |  |
-| counselingSession | ✅ | ✅ |  |  | ➖ |  |  |
-| dashboard | ➖ | ➖ |  |  | ✅ |  |  |
-| department | ➖ | ✅ |  |  | ✅ |  |  |
-| designation | ✅ | ✅ |  |  | ✅ |  |  |
-| deviceToken | ✅ | ✅ |  |  | ✅ |  |  |
-| disciplineIncident | ✅ | ✅ |  |  | ➖ |  |  |
-| emergencyAlert | ➖ | ✅ |  |  | ➖ |  |  |
-| employee | ✅ | ✅ |  |  | ➖ |  | A fixed 28050d56 (could create Super Admin) |
-| exam | ✅ | ✅ |  |  | ✅ |  | E fixed f0205484 |
-| exam.report | ✅ | ➖ |  |  | ➖ |  |  |
-| expense | ✅ | ✅ |  |  | ➖ |  |  |
-| faq | ➖ | ✅ |  |  | ✅ |  |  |
-| feeHead | ➖ | ✅ |  |  | ➖ |  |  |
-| feeInstallment | ✅ | ➖ |  |  | ✅ |  |  |
-| feeReport | ✅ | ➖ |  |  | ➖ |  |  |
-| feeSettings | ➖ | ✅ |  |  | ➖ |  |  |
-| feeStructure | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3 |
-| gateEntry | ➖ | ✅ |  |  | ➖ |  |  |
-| globalConfig | ➖ | ✅ |  |  | ✅ |  |  |
-| gradingScale | ➖ | ✅ |  |  | ➖ |  |  |
-| healthRecord | ✅ | ✅ |  |  | ➖ |  |  |
-| hostelAttendance | ✅ | ✅ |  |  | ➖ |  | A fixed 0ba043d0 |
-| hostelComplaint | ✅ | ✅ |  |  | ➖ |  | A fixed 0ba043d0 |
-| hostelDashboard | ➖ | ➖ |  |  | ✅ |  |  |
-| hostelLeave | ✅ | ✅ |  |  | ➖ |  | A fixed e1109896, 0ba043d0; B fixed edd8840d |
-| hostelRoom | ✅ | ✅ |  |  | ➖ |  | A fixed 0bcb1d6c; B fixed 0bcb1d6c |
-| hostelVisitor | ✅ | ✅ |  |  | ➖ |  | A fixed 0ba043d0 |
-| hr | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3; B fixed d38f39fa, 706c5c89 |
-| idCard | ✅ | ✅ |  |  | ✅ |  | B fixed a0405da1 |
-| income | ✅ | ✅ |  |  | ➖ |  |  |
-| inventory | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3; B fixed b7097d8a |
-| ipRestriction | ➖ | ✅ |  |  | ➖ |  |  |
-| issuedBook | ✅ | ✅ |  |  | ✅ |  | A fixed 22439739; B fixed 706c5c89 |
-| leaveRequest | ✅ | ✅ |  |  | ✅ |  | B fixed edd8840d, 706c5c89 |
-| ledger | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3; B fixed 706c5c89 |
-| lessonPlan | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3 |
-| libraryCard | ✅ | ✅ |  |  | ➖ |  |  |
-| librarySetting | ➖ | ✅ |  |  | ➖ |  |  |
-| loginLog | ✅ | ✅ |  |  | ✅ |  |  |
-| maintenanceTask | ➖ | ✅ |  |  | ➖ |  |  |
-| message | ✅ | ✅ |  |  | ✅ |  | E fixed 4466040a, ae9cde76 |
-| module | ➖ | ➖ |  |  | ✅ |  |  |
-| notification | ➖ | ✅ |  |  | ✅ |  |  |
-| onlineClass | ✅ | ✅ |  |  | ✅ |  | A fixed 069f74f3; B fixed 8b19d643 |
-| payment | ✅ | ✅ |  |  | ✅ |  |  |
-| paymentGateway | ➖ | ➖ |  |  | ➖ |  |  |
-| payroll | ✅ | ✅ |  |  | ➖ |  | B fixed c76fb75a |
-| platformOverview | ➖ | ➖ |  |  | ✅ |  |  |
-| ptm | ✅ | ✅ |  |  | ✅ |  | A fixed 069f74f3; B fixed 9eb3dc2e, a0405da1 |
-| publicAdmission | ➖ | ✅ |  |  | ✅ |  |  |
-| purchaseOrder | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3 (also cross-school stock); B fixed 706c5c89 |
-| question | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3 |
-| reimbursement | ✅ | ✅ |  |  | ➖ |  | B fixed c76fb75a |
-| report | ✅ | ✅ |  |  | ➖ |  |  |
-| reportCard | ✅ | ✅ |  |  | ✅ |  |  |
-| role | ➖ | ✅ |  |  | ➖ |  |  |
-| scholarship | ✅ | ✅ |  |  | ➖ |  | B fixed 9c255095 |
-| school | ➖ | ✅ |  |  | ✅ |  |  |
-| schoolBilling | ✅ | ➖ |  |  | ➖ |  | B fixed 12315fd7 |
-| schoolClass | ✅ | ✅ |  |  | ✅ |  | E fixed f0205484 |
-| schoolEvent | ➖ | ✅ |  |  | ✅ |  |  |
-| section | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3 |
-| selfAttendance | ➖ | ✅ |  |  | ➖ |  | B fixed 8b19d643 |
-| sports | ✅ | ✅ |  |  | ✅ |  | A fixed 1c1b874d |
-| stockIssue | ✅ | ✅ |  |  | ➖ |  | B fixed b7097d8a |
-| student | ✅ | ✅ |  |  | ✅ |  | A fixed 069f74f3 (roll number) |
-| studentFee | ✅ | ✅ |  |  | ✅ |  |  |
-| studentPortal | ✅ | ✅ |  |  | ✅ |  | A fixed 069f74f3 (dup transport route removed); E fixed f0205484 |
-| studyMaterial | ✅ | ✅ |  |  | ✅ |  | E fixed f0205484 |
-| subject | ➖ | ✅ |  |  | ➖ |  |  |
-| subscriptionPlan | ➖ | ➖ |  |  | ✅ |  |  |
-| substitution | ✅ | ✅ |  |  | ✅ |  | B fixed 8b19d643 |
-| superAdminBilling | ✅ | ✅ |  |  | ➖ |  | Super Admin only; B fixed 08d4d5ea, 12315fd7 |
-| supportTicket | ➖ | ✅ |  |  | ✅ |  | E fixed f0205484 |
-| survey | ✅ | ✅ |  |  | ✅ |  | B fixed d6f7f2f4, 8b19d643 |
-| systemBackup | ✅ | ✅ |  |  | ➖ |  | Super Admin only |
-| task | ➖ | ✅ |  |  | ➖ |  |  |
-| tempAccess | ✅ | ✅ |  |  | ➖ |  | Super Admin only; not read by auth |
-| textbook | ➖ | ✅ |  |  | ✅ |  |  |
-| timetable | ✅ | ✅ |  |  | ✅ |  | A fixed 069f74f3; E fixed f0205484 |
-| topic | ✅ | ✅ |  |  | ✅ |  |  |
-| transport | ✅ | ✅ |  |  | ✅ |  | A fixed dd44ea1c; B fixed 0a1461bd |
-| transportTracking | ✅ | ✅ |  |  | ✅ |  |  |
-| twoFactor | ✅ | ✅ |  |  | ✅ |  |  |
-| user | ✅ | ✅ |  |  | ✅ |  | A fixed 069f74f3; E fixed 4457562b |
-| vehicleMaintenance | ✅ | ✅ |  |  | ➖ |  | A fixed 069f74f3 |
-| vendor | ➖ | ✅ |  |  | ➖ |  |  |
-| webhook | ➖ | ➖ |  |  | ✅ |  |  |
+| academicYear | ➖ | ✅ |  |  | ✅ | ➖ | B fixed a0405da1 |
+| accountantDashboard | ➖ | ➖ |  |  | ✅ | ➖ |  |
+| activity | ➖ | ✅ |  |  | ✅ | ✅ |  |
+| admissionInquiry | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| advance | ✅ | ✅ |  |  | ➖ | ➖ | B fixed edd8840d, 706c5c89 |
+| alumniProfile | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| amcTracking | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 069f74f3 |
+| analytics | ➖ | ➖ |  |  | ➖ | ➖ |  |
+| attempt | ✅ | ✅ |  |  | ✅ | ✅ | B fixed d38f39fa; F fixed 63be66c3 |
+| attendance | ✅ | ✅ |  |  | ✅ | ✅ | A fixed 069f74f3 |
+| attendanceDevice | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| auditLog | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| board | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| boardClass | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| bonus | ✅ | ✅ |  |  | ➖ | ➖ | B fixed c76fb75a |
+| book | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| callLog | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| canteen | ✅ | ✅ |  |  | ✅ | ✅ | B fixed earlier (cancel, wallet) |
+| certificate | ✅ | ✅ |  |  | ✅ | ➖ | B fixed a0405da1 |
+| chapter | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| circular | ✅ | ✅ |  |  | ✅ | ✅ | B fixed dcb08125 |
+| class | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| classTeacherAssignment | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 069f74f3 |
+| communicationSettings | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| compliance | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| counselingSession | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| dashboard | ➖ | ➖ |  |  | ✅ | ➖ |  |
+| department | ➖ | ✅ |  |  | ✅ | ✅ |  |
+| designation | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| deviceToken | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| disciplineIncident | ✅ | ✅ |  |  | ➖ | ✅ |  |
+| emergencyAlert | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| employee | ✅ | ✅ |  |  | ➖ | ✅ | A fixed 28050d56 (could create Super Admin); F fixed 28050d56 |
+| exam | ✅ | ✅ |  |  | ✅ | ✅ | E fixed f0205484; F fixed 66f18f6d (marks/results), 63be66c3 |
+| exam.report | ✅ | ➖ |  |  | ➖ | ➖ |  |
+| expense | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| faq | ➖ | ✅ |  |  | ✅ | ✅ |  |
+| feeHead | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| feeInstallment | ✅ | ➖ |  |  | ✅ | ✅ |  |
+| feeReport | ✅ | ➖ |  |  | ➖ | ➖ |  |
+| feeSettings | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| feeStructure | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 069f74f3 |
+| gateEntry | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| globalConfig | ➖ | ✅ |  |  | ✅ | ✅ |  |
+| gradingScale | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| healthRecord | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| hostelAttendance | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 0ba043d0 |
+| hostelComplaint | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 0ba043d0 |
+| hostelDashboard | ➖ | ➖ |  |  | ✅ | ➖ |  |
+| hostelLeave | ✅ | ✅ |  |  | ➖ | ➖ | A fixed e1109896, 0ba043d0; B fixed edd8840d |
+| hostelRoom | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 0bcb1d6c; B fixed 0bcb1d6c |
+| hostelVisitor | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 0ba043d0 |
+| hr | ✅ | ✅ |  |  | ➖ | ✅ | A fixed 069f74f3; B fixed d38f39fa, 706c5c89 |
+| idCard | ✅ | ✅ |  |  | ✅ | ➖ | B fixed a0405da1 |
+| income | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| inventory | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 069f74f3; B fixed b7097d8a |
+| ipRestriction | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| issuedBook | ✅ | ✅ |  |  | ✅ | ✅ | A fixed 22439739; B fixed 706c5c89; F fixed 742ab5b4 |
+| leaveRequest | ✅ | ✅ |  |  | ✅ | ✅ | B fixed edd8840d, 706c5c89 |
+| ledger | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 069f74f3; B fixed 706c5c89 |
+| lessonPlan | ✅ | ✅ |  |  | ➖ | ✅ | A fixed 069f74f3 |
+| libraryCard | ✅ | ✅ |  |  | ➖ | ➖ |  |
+| librarySetting | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| loginLog | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| maintenanceTask | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| message | ✅ | ✅ |  |  | ✅ | ✅ | E fixed 4466040a, ae9cde76 |
+| module | ➖ | ➖ |  |  | ✅ | ➖ |  |
+| notification | ➖ | ✅ |  |  | ✅ | ✅ |  |
+| onlineClass | ✅ | ✅ |  |  | ✅ | ✅ | A fixed 069f74f3; B fixed 8b19d643; F fixed 66f18f6d |
+| payment | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| paymentGateway | ➖ | ➖ |  |  | ➖ | ➖ |  |
+| payroll | ✅ | ✅ |  |  | ➖ | ➖ | B fixed c76fb75a |
+| platformOverview | ➖ | ➖ |  |  | ✅ | ➖ |  |
+| ptm | ✅ | ✅ |  |  | ✅ | ✅ | A fixed 069f74f3; B fixed 9eb3dc2e, a0405da1; F fixed 66f18f6d |
+| publicAdmission | ➖ | ✅ |  |  | ✅ | ✅ |  |
+| purchaseOrder | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 069f74f3 (also cross-school stock); B fixed 706c5c89 |
+| question | ✅ | ✅ |  |  | ➖ | ✅ | A fixed 069f74f3 |
+| reimbursement | ✅ | ✅ |  |  | ➖ | ✅ | B fixed c76fb75a |
+| report | ✅ | ✅ |  |  | ➖ | ✅ |  |
+| reportCard | ✅ | ✅ |  |  | ✅ | ✅ | F fixed 66f18f6d |
+| role | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| scholarship | ✅ | ✅ |  |  | ➖ | ➖ | B fixed 9c255095 |
+| school | ➖ | ✅ |  |  | ✅ | ✅ |  |
+| schoolBilling | ✅ | ➖ |  |  | ➖ | ➖ | B fixed 12315fd7 |
+| schoolClass | ✅ | ✅ |  |  | ✅ | ➖ | E fixed f0205484 |
+| schoolEvent | ➖ | ✅ |  |  | ✅ | ➖ |  |
+| section | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 069f74f3 |
+| selfAttendance | ➖ | ✅ |  |  | ➖ | ✅ | B fixed 8b19d643 |
+| sports | ✅ | ✅ |  |  | ✅ | ✅ | A fixed 1c1b874d |
+| stockIssue | ✅ | ✅ |  |  | ➖ | ➖ | B fixed b7097d8a |
+| student | ✅ | ✅ |  |  | ✅ | ➖ | A fixed 069f74f3 (roll number) |
+| studentFee | ✅ | ✅ |  |  | ✅ | ➖ |  |
+| studentPortal | ✅ | ✅ |  |  | ✅ | ✅ | A fixed 069f74f3 (dup transport route removed); E fixed f0205484 |
+| studyMaterial | ✅ | ✅ |  |  | ✅ | ✅ | E fixed f0205484 |
+| subject | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| subscriptionPlan | ➖ | ➖ |  |  | ✅ | ➖ |  |
+| substitution | ✅ | ✅ |  |  | ✅ | ➖ | B fixed 8b19d643 |
+| superAdminBilling | ✅ | ✅ |  |  | ➖ | ➖ | Super Admin only; B fixed 08d4d5ea, 12315fd7 |
+| supportTicket | ➖ | ✅ |  |  | ✅ | ✅ | E fixed f0205484 |
+| survey | ✅ | ✅ |  |  | ✅ | ✅ | B fixed d6f7f2f4, 8b19d643 |
+| systemBackup | ✅ | ✅ |  |  | ➖ | ➖ | Super Admin only |
+| task | ➖ | ✅ |  |  | ➖ | ✅ |  |
+| tempAccess | ✅ | ✅ |  |  | ➖ | ➖ | Super Admin only; not read by auth |
+| textbook | ➖ | ✅ |  |  | ✅ | ➖ |  |
+| timetable | ✅ | ✅ |  |  | ✅ | ➖ | A fixed 069f74f3; E fixed f0205484 |
+| topic | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| transport | ✅ | ✅ |  |  | ✅ | ➖ | A fixed dd44ea1c; B fixed 0a1461bd |
+| transportTracking | ✅ | ✅ |  |  | ✅ | ➖ |  |
+| twoFactor | ✅ | ✅ |  |  | ✅ | ✅ |  |
+| user | ✅ | ✅ |  |  | ✅ | ✅ | A fixed 069f74f3; E fixed 4457562b |
+| vehicleMaintenance | ✅ | ✅ |  |  | ➖ | ➖ | A fixed 069f74f3 |
+| vendor | ➖ | ✅ |  |  | ➖ | ➖ |  |
+| webhook | ➖ | ➖ |  |  | ✅ | ✅ |  |
 
 Frontend (pattern G) is tracked per page in a second table once the backend sweep is done.
