@@ -82,8 +82,15 @@ const GeofenceSettings = () => {
         endTime: hours.endTime ? dayjs(hours.endTime, "HH:mm") : undefined,
         autoCheckoutEnabled: hours.autoCheckoutEnabled !== false,
         autoAbsentEnabled: hours.autoAbsentEnabled !== false,
+        halfDayHours: hours.halfDayHours ?? 4.5,
+        fullDayHours: hours.fullDayHours ?? 8,
       });
     }
+    const leave = geofenceSettings?.leavePolicy;
+    form.setFieldsValue({
+      clPerMonth: leave?.clPerMonth ?? 1,
+      elPerMonth: leave?.elPerMonth ?? 0.5,
+    });
   }, [geofenceSettings, form]);
 
   const handleAutoDetect = () => {
@@ -337,6 +344,32 @@ const GeofenceSettings = () => {
           <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>
             When on, staff who never checked in are marked Absent once School Ends passes (Leave if their leave is
             approved). Not on Sundays or Holiday events. Students are marked by their teacher's roll call instead.
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+            <Form.Item label="Half day from (hours worked)" name="halfDayHours" initialValue={4.5}
+              extra="Less than this between check-in and check-out is Absent">
+              <InputNumber min={0} max={24} step={0.5} className="u-full" />
+            </Form.Item>
+            <Form.Item label="Full day from (hours worked)" name="fullDayHours" initialValue={8}
+              extra="Never more than school hours: a 7-hour school needs 7">
+              <InputNumber min={0} max={24} step={0.5} className="u-full" />
+            </Form.Item>
+          </div>
+          <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16, marginTop: -4 }}>
+            A half day is A (first half) or B (second half), by which half of school hours the time was worked in.
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+            <Form.Item label="CL earned per month" name="clPerMonth" initialValue={1}>
+              <InputNumber min={0} max={31} step={0.5} className="u-full" />
+            </Form.Item>
+            <Form.Item label="EL earned per month" name="elPerMonth" initialValue={0.5}>
+              <InputNumber min={0} max={31} step={0.5} className="u-full" />
+            </Form.Item>
+          </div>
+          <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16, marginTop: -4 }}>
+            Staff leave is paid from these balances. What is left on 31 March is paid with March salary and the new year starts at zero.
           </div>
 
           <Button

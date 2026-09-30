@@ -89,6 +89,18 @@ const leaveRequestSchema = new Schema(
       type: String,
       trim: true,
     },
+    /** Half-day leave: "A" = first half, "B" = second half. Only on a single-day request. */
+    halfDaySession: { type: String, enum: ["A", "B", null], default: null },
+    /**
+     * Staff leave is paid from a CL/EL balance (services/leaveBalance.service.js). The days it
+     * takes, split by financial year, are worked out when it is filed (Sundays and holidays do
+     * not count) so pending requests can hold their days until decided.
+     */
+    balanceType: { type: String, enum: ["CL", "EL", null], default: null },
+    balanceByFy: {
+      type: [{ _id: false, fy: Number, days: Number }],
+      default: [],
+    },
   },
   { timestamps: true }
 );

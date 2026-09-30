@@ -2,6 +2,7 @@ import { Attendance } from "../models/attendance.model.js";
 import { School } from "../models/school.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { describeWorked, statusFromWorkedHours } from "../services/workHours.service.js";
 
 const sendSuccess = (res, data, message = "Success", statusCode = 200) =>
   res.status(statusCode).json({ success: true, message, data });
@@ -159,7 +160,7 @@ export const checkOut = asyncHandler(async (req, res) => {
 
   if (lat == null || lng == null) throw new ApiError(400, "GPS coordinates required");
 
-  const school = await School.findById(schoolId).select("location").lean();
+  const school = await School.findById(schoolId).select("location attendanceHours").lean();
   if (!school) throw new ApiError(404, "School not found");
 
   const date = todayUTC();
@@ -190,6 +191,13 @@ export const checkOut = asyncHandler(async (req, res) => {
     { new: true, runValidators: true }
   );
   if (!checkedOut) throw new ApiError(409, "Already checked out today");
+
+  // The hours worked decide the day: full, half (first or second half) or absent.
+  const outcome = statusFromWorkedHours(checkedOut, school.attendanceHours);
+  checkedOut.status = outcome.status;
+  checkedOut.halfDaySession = outcome.halfDaySession;
+  checkedOut.remarks = describeWorked(outcome);
+  await checkedOut.save();
 
   const durationMs = checkedOut.checkOutAt - checkedOut.checkInAt;
   const hours = Math.floor(durationMs / 3600000);
@@ -234,7 +242,7 @@ export const getSelfHistory = asyncHandler(async (req, res) => {
 ═══════════════════════════════════════════ */
 export const getGeofenceSettings = asyncHandler(async (req, res) => {
   const { schoolId } = req.user;
-  const school = await School.findById(schoolId).select("name location attendanceHours").lean();
+  const school = await School.findById(schoolId).select("name location attendanceHours leavePolicy").lean();
   if (!school) throw new ApiError(404, "School not found");
   sendSuccess(res, school, "Geofence settings fetched");
 });
@@ -247,7 +255,7 @@ const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/; // "HH:mm", 24-hour
 ═══════════════════════════════════════════ */
 export const updateGeofenceSettings = asyncHandler(async (req, res) => {
   const { schoolId } = req.user;
-  const { lat, lng, geofenceRadius, address, startTime, endTime, autoCheckoutEnabled, autoAbsentEnabled } = req.body;
+  const { lat, lng, geofenceRadius, address, startTime, endTime, autoCheckoutEnabled, autoAbsentEnabled, halfDayHours, fullDayHours, clPerMonth, elPerMonth } = req.body;
 
   if (lat == null || lng == null) throw new ApiError(400, "lat and lng are required");
   if (!(Number(lat) >= -90 && Number(lat) <= 90) || !(Number(lng) >= -180 && Number(lng) <= 180)) {
@@ -270,11 +278,24 @@ export const updateGeofenceSettings = asyncHandler(async (req, res) => {
   if (endTime != null) update["attendanceHours.endTime"] = endTime;
   if (autoCheckoutEnabled != null) update["attendanceHours.autoCheckoutEnabled"] = autoCheckoutEnabled;
   if (autoAbsentEnabled != null) update["attendanceHours.autoAbsentEnabled"] = autoAbsentEnabled === true;
+  const hoursOk = (v) => Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 24;
+  const perMonthOk = (v) => Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 31;
+  if (halfDayHours != null && !hoursOk(halfDayHours)) throw new ApiError(400, "halfDayHours must be 0–24");
+  if (fullDayHours != null && !hoursOk(fullDayHours)) throw new ApiError(400, "fullDayHours must be 0–24");
+  if (halfDayHours != null && fullDayHours != null && Number(halfDayHours) > Number(fullDayHours)) {
+    throw new ApiError(400, "Half-day hours cannot be more than full-day hours");
+  }
+  if (clPerMonth != null && !perMonthOk(clPerMonth)) throw new ApiError(400, "CL per month must be 0–31");
+  if (elPerMonth != null && !perMonthOk(elPerMonth)) throw new ApiError(400, "EL per month must be 0–31");
+  if (halfDayHours != null) update["attendanceHours.halfDayHours"] = Number(halfDayHours);
+  if (fullDayHours != null) update["attendanceHours.fullDayHours"] = Number(fullDayHours);
+  if (clPerMonth != null) update["leavePolicy.clPerMonth"] = Number(clPerMonth);
+  if (elPerMonth != null) update["leavePolicy.elPerMonth"] = Number(elPerMonth);
 
   const school = await School.findByIdAndUpdate(
     schoolId,
     { $set: update },
-    { new: true, select: "name location attendanceHours" }
+    { new: true, select: "name location attendanceHours leavePolicy" }
   ).lean();
 
   if (!school) throw new ApiError(404, "School not found");

@@ -75,7 +75,47 @@ export const deleteLeaveRequest = createAsyncThunk(
   }
 );
 
+// Staff CL / EL balances (backend services/leaveBalance.service.js).
+export const fetchMyLeaveBalance = createAsyncThunk(
+  "leaveRequests/myBalance",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const { data } = await apiClient.get("/leave-requests/balance/me", { params });
+      return data?.data ?? data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+export const fetchLeaveBalances = createAsyncThunk(
+  "leaveRequests/balances",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const { data } = await apiClient.get("/leave-requests/balances", { params });
+      return data?.data ?? data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+export const adjustLeaveBalance = createAsyncThunk(
+  "leaveRequests/adjustBalance",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const { data } = await apiClient.post("/leave-requests/balances/adjust", payload);
+      return data?.data ?? data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
 const initialState = {
+  myBalance: null,
+  balances: { fy: null, rows: [] },
+  balancesLoading: false,
   requests: [],
   myRequests: [],
   total: 0,
@@ -107,6 +147,15 @@ const leaveRequestSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       });
+
+    builder
+      .addCase(fetchMyLeaveBalance.fulfilled, (state, action) => { state.myBalance = action.payload; })
+      .addCase(fetchLeaveBalances.pending, (state) => { state.balancesLoading = true; })
+      .addCase(fetchLeaveBalances.fulfilled, (state, action) => {
+        state.balancesLoading = false;
+        state.balances = { fy: action.payload?.fy ?? null, rows: action.payload?.rows ?? [] };
+      })
+      .addCase(fetchLeaveBalances.rejected, (state) => { state.balancesLoading = false; });
 
     // getMyLeaveRequests
     builder

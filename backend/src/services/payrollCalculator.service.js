@@ -93,6 +93,8 @@ export const calculatePayrollEntry = ({
   policy,
   employeeStatutory = null,
   reimbursements = 0,
+  // Unused CL/EL paid out with March salary (payroll.controllers.js). Not part of PF/ESI wages.
+  leaveEncashment = 0,
   otherDeductions = 0,
   // { year, month } of the payroll cycle: which ceiling and wage rules were in force. Omitted,
   // today's rules apply.
@@ -108,8 +110,9 @@ export const calculatePayrollEntry = ({
   const presentDays = Number(attendance.presentDays || 0);
   const leaveDays = Number(attendance.leaveDays || 0);
 
-  const paidLeaveLimit = Number(policy.paidLeavePerMonth || 0);
-  const paidLeaves = Math.min(leaveDays, paidLeaveLimit);
+  // Staff leave is approved only against an earned CL/EL balance (services/leaveBalance.service.js),
+  // so every leave day on attendance is a paid one. (policy.paidLeavePerMonth predates balances.)
+  const paidLeaves = leaveDays;
   const lopDays = Math.max(workingDays - (presentDays + paidLeaves), 0);
   const lateCount = Number(attendance.lateCount || 0);
   const overtimeHours = Number(attendance.overtimeHours || 0);
@@ -160,7 +163,7 @@ export const calculatePayrollEntry = ({
   const overtimeRatePerHour = Number(policy.overtimeRatePerHour || 0);
   const overtimePay = overtimeHours * overtimeRatePerHour;
   const totalDeductions = lopDeduction + statutoryDeductions + lateFine + tds + Number(otherDeductions || 0);
-  const netRaw = gross - totalDeductions + Number(reimbursements || 0) + overtimePay;
+  const netRaw = gross - totalDeductions + Number(reimbursements || 0) + overtimePay + Number(leaveEncashment || 0);
   const netPay = applyRounding(netRaw, policy.roundingMode);
 
   return {
@@ -178,6 +181,7 @@ export const calculatePayrollEntry = ({
       da: Number(structure.da || 0),
       specialAllowance: Number(structure.specialAllowance || 0),
       reimbursements: Number(reimbursements || 0),
+      leaveEncashment: Number(leaveEncashment || 0),
       overtimePay,
     },
     deductionsBreakdown: {
@@ -204,7 +208,7 @@ export const calculatePayrollEntry = ({
       edli,
       esi: employerEsi,
     },
-    grossEarnings: gross,
+    grossEarnings: gross + Number(leaveEncashment || 0),
     totalDeductions,
     netPay,
   };

@@ -252,8 +252,11 @@ const PayrollSettingsPage = () => {
               <Form.Item label="Rounding Mode" name="roundingMode" style={fi}>
                 <Select options={[{ value: "nearest", label: "Nearest rupee" }, { value: "up", label: "Round up" }, { value: "down", label: "Round down" }]} />
               </Form.Item>
-              <Form.Item label="Paid Leaves / Month" name="paidLeavePerMonth" style={fi}>
-                <InputNumber min={0} className="u-full" />
+              {/* Paid leave now comes from each employee's CL / EL balance (Leave Management →
+                  Leave Balances), so there is no separate monthly allowance to set here. */}
+              <Form.Item label="Paid Leave" style={fi}
+                extra="Comes from each employee's CL / EL balance: see Leave Management → Leave Balances">
+                <InputNumber disabled className="u-full" placeholder="From leave balance" />
               </Form.Item>
               <Form.Item label="Overtime Rate (₹/hour)" name="overtimeRatePerHour" style={fi}>
                 <InputNumber min={0} className="u-full" />

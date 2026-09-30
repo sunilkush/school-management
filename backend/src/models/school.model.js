@@ -186,6 +186,16 @@ const schoolSchema = new Schema(
       autoCheckoutEnabled: { type: Boolean, default: true },
       // Staff who never checked in by School Ends are recorded absent (jobs/autoAbsent.job.js).
       autoAbsentEnabled: { type: Boolean, default: true },
+      // Hours between check-in and check-out: below halfDayHours the day is absent, from it a half
+      // day, from fullDayHours a full day. A full day never needs more than the school's own hours.
+      halfDayHours: { type: Number, default: 4.5, min: 0, max: 24 },
+      fullDayHours: { type: Number, default: 8, min: 0, max: 24 },
+    },
+
+    /** Paid leave staff earn each month (services/leaveBalance.service.js). */
+    leavePolicy: {
+      clPerMonth: { type: Number, default: 1, min: 0, max: 31 },
+      elPerMonth: { type: Number, default: 0.5, min: 0, max: 31 },
     },
 
     /* ================= STATUTORY IDENTITY ================= */

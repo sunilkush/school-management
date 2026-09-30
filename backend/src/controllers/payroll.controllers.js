@@ -14,6 +14,8 @@ import { sendSuccess } from "../utils/response.js";
 import { toCsv } from "../utils/csv.js";
 import { calculatePayrollEntry } from "../services/payrollCalculator.service.js";
 import { addMissingStaffToPayroll } from "../services/employeeProfile.service.js";
+import { getBalances } from "../services/leaveBalance.service.js";
+import { LeaveLedger } from "../models/LeaveLedger.model.js";
 
 // Roles allowed to view/download any employee's payslip for payroll administration —
 // everyone else may only fetch their own, enforced in fetchAuthorizedPayslip() below.
@@ -73,18 +75,21 @@ const attendanceDayOf = (value) => {
   return new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate()));
 };
 
-const summarizeAttendanceRecords = (records, workingDays) => {
-  const statusCount = records.reduce(
-    (acc, item) => {
-      acc[item.status] = (acc[item.status] || 0) + 1;
-      return acc;
-    },
-    { present: 0, leave: 0, halfday: 0, absent: 0, late: 0 }
-  );
+const WORKED_PART = { present: 1, late: 1, halfday: 0.5 };
 
-  const presentDays = statusCount.present + statusCount.late + statusCount.halfday * 0.5;
-  const leaveDays = statusCount.leave;
-  const lateCount = statusCount.late;
+const summarizeAttendanceRecords = (records, workingDays) => {
+  // Each day is what was worked plus the paid-leave part (a half-day leave is 0.5), never more
+  // than one day. Older rows have no leaveDays: a "leave" status there is a whole day.
+  let presentDays = 0;
+  let leaveDays = 0;
+  let lateCount = 0;
+  for (const r of records) {
+    const worked = WORKED_PART[r.status] || 0;
+    const leave = r.leaveDays != null ? Number(r.leaveDays) : r.status === "leave" ? 1 : 0;
+    presentDays += worked;
+    leaveDays += Math.max(Math.min(leave, 1 - worked), 0);
+    if (r.status === "late") lateCount += 1;
+  }
   const overtimeHours = records.reduce((acc, record) => {
     if (!record?.checkInAt || !record?.checkOutAt) return acc;
     const workedMs = new Date(record.checkOutAt).getTime() - new Date(record.checkInAt).getTime();
@@ -349,7 +354,7 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     userId: { $in: userIds },
     date: { $gte: attStart, $lte: attEnd },
   })
-    .select("userId date status checkInAt checkOutAt")
+    .select("userId date status checkInAt checkOutAt leaveDays")
     .lean();
 
   const attendanceByUser = new Map();
@@ -367,6 +372,9 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   // exactly the original bug, since a smaller denominator alongside a proportionally smaller
   // presentDays cancels out back to a full month's pay regardless of actual tenure length.
   const cycleWorkingDays = new Set(allAttendance.map((rec) => new Date(rec.date).toISOString().slice(0, 10))).size;
+
+  // March: what each employee still has for the year ending now (see leaveEncashment below).
+  const encashBalances = month === 3 ? await getBalances(schoolId, userIds, year - 1) : null;
 
  for (const employee of employees) {
   const structure = structureByEmployee.get(String(employee._id));
@@ -393,13 +401,31 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   });
   const attendance = summarizeAttendanceRecords(records, cycleWorkingDays);
 
+  // March closes the financial year: unused CL and EL are paid at the day rate (gross ÷ the
+  // month's working days) and the new year starts from zero. The balance is spent when this
+  // cycle is paid (payPayrollCycle).
+  let leaveEncashment = 0;
+  let leaveEncashmentDays = null;
+  const bal = encashBalances?.[String(employee.userId)];
+  if (bal) {
+    const cl = Math.max(bal.CL.balance, 0);
+    const el = Math.max(bal.EL.balance, 0);
+    if (cl + el > 0) {
+      const dayRate = Number(structure.grossMonthly || 0) / (cycleWorkingDays || 30);
+      leaveEncashment = Math.round((cl + el) * dayRate * 100) / 100;
+      leaveEncashmentDays = { CL: cl, EL: el, fy: year - 1, dayRate: Math.round(dayRate * 100) / 100 };
+    }
+  }
+
   const calculated = calculatePayrollEntry({
     structure,
     attendance,
     policy,
     employeeStatutory: employee.statutoryCompliance,
     period: { year, month },
+    leaveEncashment,
   });
+  if (leaveEncashmentDays) calculated.earningsBreakdown.leaveEncashmentDays = leaveEncashmentDays;
 
   const warnings = [];
 
@@ -577,6 +603,30 @@ export const payPayrollCycle = asyncHandler(async (req, res) => {
     ]
   );
 
+  // Leave paid out with March salary leaves the balance: the year ends at zero. Once per cycle.
+  const encashed = await PayrollEntry.find({ payrollCycleId: paidCycle._id, "earningsBreakdown.leaveEncashmentDays": { $ne: null } })
+    .populate("employeeId", "userId")
+    .select("employeeId earningsBreakdown")
+    .lean();
+  for (const entry of encashed) {
+    const info = entry.earningsBreakdown?.leaveEncashmentDays;
+    const userId = entry.employeeId?.userId;
+    if (!info || !userId) continue;
+    for (const leaveType of ["CL", "EL"]) {
+      if (!(info[leaveType] > 0)) continue;
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await LeaveLedger.create({
+          schoolId, userId, leaveType, kind: "encashment", days: -info[leaveType], fy: info.fy,
+          payrollCycleId: paidCycle._id, createdBy: req.user._id,
+          note: `Paid with ${paidCycle.month}/${paidCycle.year} salary`,
+        });
+      } catch (err) {
+        if (err?.code !== 11000) throw err;
+      }
+    }
+  }
+
   await writeAuditLog(req, "PAYROLL_CYCLE_PAID", "Payroll cycle marked as paid", {
     payrollCycleId: paidCycle._id,
     paidEntries: modifiedCount,
@@ -665,6 +715,9 @@ export const downloadPayslipPdf = asyncHandler(async (req, res) => {
     ["Basic", earnings.basic], ["HRA", earnings.hra], ["DA", earnings.da],
     ["Special Allowance", earnings.specialAllowance], ["Overtime", earnings.overtimePay],
     ["Reimbursements", earnings.reimbursements],
+    ...(earnings.leaveEncashment > 0
+      ? [[`Leave Encashment (CL ${earnings.leaveEncashmentDays?.CL || 0} + EL ${earnings.leaveEncashmentDays?.EL || 0} days)`, earnings.leaveEncashment]]
+      : []),
   ].forEach(([label, value]) => { twoCol(label, money(value), y); y += 16; });
   doc.y = y + 4;
 

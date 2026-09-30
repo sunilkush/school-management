@@ -342,7 +342,7 @@ const EmployeeSelfAttendance = () => {
               </div>
               {statusCfg ? (
                 <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 800, background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.border}` }}>
-                  {statusCfg.label}
+                  {statusCfg.label}{selfStatus?.halfDaySession ? ` · ${selfStatus.halfDaySession}` : ""}
                 </span>
               ) : (
                 <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 800, background: "var(--surface-soft)", color: "var(--text-muted)", border: "1px solid var(--border-muted)" }}>
@@ -525,8 +525,9 @@ const EmployeeSelfAttendance = () => {
                             {dayjs(r.date).format("ddd, DD MMM")}
                           </span>
                           <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 4, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, fontWeight: 700 }}>
-                            {cfg.label}
+                            {cfg.label}{r.halfDaySession ? ` · ${r.halfDaySession === "A" ? "A (1st half)" : "B (2nd half)"}` : ""}
                           </span>
+                          {r.remarks ? <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{r.remarks}</span> : null}
                         </div>
                         <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
                           <LoginOutlined style={{ fontSize: 10 }} />

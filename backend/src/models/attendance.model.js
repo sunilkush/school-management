@@ -115,6 +115,14 @@ const attendanceSchema = new Schema(
       enum: ["manual", "self", "device", "online", "auto"],
       default: "manual",
     },
+    /**
+     * The paid-leave part of the day: 1 for a full day's approved leave, 0.5 for a half-day leave.
+     * Missing on older rows, where a "leave" status means a whole day. Payroll adds it to the
+     * worked part (present 1, halfday 0.5), never past one day.
+     */
+    leaveDays: { type: Number, min: 0, max: 1, default: null },
+    /** Which half: "A" = first half, "B" = second half — of the half worked, or of the leave. */
+    halfDaySession: { type: String, enum: ["A", "B", null], default: null },
     deviceId: {
       type: Schema.Types.ObjectId,
       ref: "AttendanceDevice",

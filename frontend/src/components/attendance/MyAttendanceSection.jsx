@@ -155,7 +155,7 @@ const MyAttendanceSection = ({ basePath: basePathProp, style }) => {
             <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>{detail}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10, alignItems: "center" }}>
               {record?.status && STATUS[record.status] && (
-                <span style={pill(STATUS[record.status].color)}>{STATUS[record.status].label}</span>
+                <span style={pill(STATUS[record.status].color)}>{STATUS[record.status].label}{record.halfDaySession ? ` · ${record.halfDaySession}` : ""}</span>
               )}
               {checkedIn && (
                 record.gpsVerified ? (

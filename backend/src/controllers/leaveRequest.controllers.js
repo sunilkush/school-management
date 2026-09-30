@@ -7,6 +7,19 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { holdsRole } from "../utils/actingRole.js";
+import { Employee } from "../models/Employee.model.js";
+import { LeaveLedger } from "../models/LeaveLedger.model.js";
+import { School } from "../models/school.model.js";
+import {
+  BALANCE_TYPE_OF,
+  assertEnoughBalance,
+  countLeaveDays,
+  currentFy,
+  getBalances,
+  isStaffMember,
+  monthlyUsage,
+  recordLeaveSpend,
+} from "../services/leaveBalance.service.js";
 
 // Parent checks below look at every role held. A Teacher whose child studies here holds "Parent"
 // as an additional role; a primary-role check never saw it, so a leave they filed for their child
@@ -83,9 +96,31 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
   const lastDay = istDayStart(end);
   if (lastDay < firstDay) throw new ApiError(400, "End date cannot be before start date");
   const daysInRange = Math.round((lastDay - firstDay) / DAY_MS) + 1;
-  const days = Number(totalDays);
-  if (!Number.isFinite(days) || days < 0.5 || days > daysInRange) {
-    throw new ApiError(400, `Total days must be between 0.5 and ${daysInRange} for these dates`);
+  let days = Number(totalDays);
+
+  const halfDaySession = ["A", "B"].includes(req.body.halfDaySession) ? req.body.halfDaySession : null;
+  if (halfDaySession && lastDay.getTime() !== firstDay.getTime()) {
+    throw new ApiError(400, "A half-day leave is for a single day");
+  }
+
+  // Staff leave is Casual (CL) or Earned (EL) and is paid from what they have earned; without
+  // enough of it the leave cannot be applied for. The days are counted here (school days only,
+  // half for a half day), not taken from the form.
+  let balanceType = null;
+  let balanceByFy = [];
+  if (await isStaffMember(schoolId, resolvedUserId)) {
+    balanceType = BALANCE_TYPE_OF[leaveType];
+    if (!balanceType) throw new ApiError(400, "Staff leave is Casual Leave (CL) or Earned Leave (EL)");
+    const counted = await countLeaveDays(schoolId, start, end, halfDaySession);
+    if (!counted.days) throw new ApiError(400, "These dates are Sundays or holidays: no leave is needed");
+    await assertEnoughBalance({ schoolId, userId: resolvedUserId, balanceType, byFy: counted.byFy, ApiError });
+    days = counted.days;
+    balanceByFy = counted.byFy;
+  } else {
+    if (halfDaySession) days = 0.5;
+    if (!Number.isFinite(days) || days < 0.5 || days > daysInRange) {
+      throw new ApiError(400, `Total days must be between 0.5 and ${daysInRange} for these dates`);
+    }
   }
 
   const clash = await LeaveRequest.findOne({
@@ -110,6 +145,9 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
     totalDays: days,
     reason: reason.trim(),
     attachmentUrl: attachmentUrl?.trim(),
+    halfDaySession,
+    balanceType,
+    balanceByFy,
   });
 
   // The overlap check above and this create are separate steps: a double-click filed the same days
@@ -219,35 +257,36 @@ const toAttendanceDay = (d) => new Date(Math.floor((new Date(d).getTime() + DAY_
 
 /**
  * An approved leave shows as "Leave" in attendance on each of its days, straight away rather
- * than only once the day is over. Sundays are skipped (no school). A day that already has a
- * record keeps it (they came in after all, or someone marked it), except the end-of-day job's own
- * "absent" (jobs/autoAbsent.job.js), which is exactly what an approval made after the day corrects.
+ * than only once the day is over. Sundays and holidays are skipped (no school). A day that
+ * already has a record keeps its status (they came in after all, or someone marked it) and gains
+ * the paid-leave part (leaveDays), except the end-of-day job's own "absent"
+ * (jobs/autoAbsent.job.js), which is exactly what an approval made after the day corrects.
+ * A half-day leave is half a day's paid leave: working the other half makes the day whole.
  */
 const recordLeaveInAttendance = async (leave, approverId) => {
-  const first = toAttendanceDay(leave.startDate);
-  const last = toAttendanceDay(leave.endDate);
-  const days = [];
-  for (let t = first.getTime(); t <= last.getTime() && days.length < 366; t += DAY_MS) {
-    const day = new Date(t);
-    if (day.getUTCDay() !== 0) days.push(day);
-  }
+  const { dates: days } = await countLeaveDays(leave.schoolId, leave.startDate, leave.endDate);
   if (!days.length) return;
 
   const role = ATTENDANCE_ROLES.includes(leave.role) ? leave.role : "staff";
-  const remarks = "On approved leave";
+  const half = leave.halfDaySession || null;
+  const leaveDays = half ? 0.5 : 1;
+  const remarks = half ? `Half-day leave (${half === "A" ? "first" : "second"} half)` : "On approved leave";
   try {
     await Attendance.bulkWrite([
       ...days.map((date) => ({
         updateOne: {
           filter: { schoolId: leave.schoolId, userId: leave.userId, date },
-          update: { $setOnInsert: { role, status: "leave", source: "manual", markedBy: approverId, remarks } },
+          update: {
+            $set: { leaveDays },
+            $setOnInsert: { role, status: "leave", source: "manual", markedBy: approverId, remarks, halfDaySession: half },
+          },
           upsert: true,
         },
       })),
       {
         updateMany: {
           filter: { schoolId: leave.schoolId, userId: leave.userId, source: "auto", status: "absent", date: { $in: days } },
-          update: { $set: { status: "leave", remarks } },
+          update: { $set: { status: "leave", remarks, halfDaySession: half } },
         },
       },
     ], { ordered: false });
@@ -269,6 +308,14 @@ export const approveLeaveRequest = asyncHandler(async (req, res) => {
   if (leaveRequest.status !== "pending")
     throw new ApiError(400, "Request already processed");
 
+  // What was free when it was filed may since have been used by another approval.
+  if (leaveRequest.balanceType) {
+    await assertEnoughBalance({
+      schoolId: leaveRequest.schoolId, userId: leaveRequest.userId, balanceType: leaveRequest.balanceType,
+      byFy: leaveRequest.balanceByFy, excludeRequestId: leaveRequest._id, countPending: false, ApiError,
+    });
+  }
+
   // Only while still pending, in one update: approve and reject together both saved before, and
   // the last one silently replaced a decision the person had already been shown.
   const decided = await LeaveRequest.findOneAndUpdate(
@@ -277,6 +324,21 @@ export const approveLeaveRequest = asyncHandler(async (req, res) => {
     { new: true, runValidators: true }
   );
   if (!decided) throw new ApiError(409, "This leave request was just decided by someone else — refresh to see it");
+
+  if (decided.balanceType) {
+    await recordLeaveSpend(decided, req.user._id);
+    // Two approvals at the same moment could each have seen the days as free. The one that
+    // leaves the balance below zero is undone.
+    for (const { fy } of decided.balanceByFy) {
+      // eslint-disable-next-line no-await-in-loop
+      const b = (await getBalances(decided.schoolId, [decided.userId], fy))[String(decided.userId)][decided.balanceType];
+      if (b.balance < 0) {
+        await LeaveLedger.deleteMany({ leaveRequestId: decided._id, kind: "leave" });
+        await LeaveRequest.updateOne({ _id: decided._id }, { $set: { status: "pending" }, $unset: { approvedBy: 1, approvedAt: 1 } });
+        throw new ApiError(409, `Not enough ${decided.balanceType} balance any more: another leave was just approved`);
+      }
+    }
+  }
 
   await recordLeaveInAttendance(decided, req.user._id);
 
@@ -344,4 +406,79 @@ export const deleteLeaveRequest = asyncHandler(async (req, res) => {
   if (!deletedCount) throw new ApiError(409, "This leave request was just decided — refresh to see it");
 
   res.status(200).json(new ApiResponse(200, null, "Leave request deleted successfully"));
+});
+
+/* ── LEAVE BALANCES (staff CL / EL) ──────────────────────────────────────── */
+const parseFy = (value) => {
+  const fy = Number(value);
+  return Number.isInteger(fy) && fy >= 2000 && fy <= 2100 ? fy : currentFy();
+};
+
+/** GET /leave-requests/balance/me: the caller's own CL and EL for a financial year. */
+export const getMyLeaveBalance = asyncHandler(async (req, res) => {
+  const schoolId = req.user.school?._id || req.user.schoolId;
+  const fy = parseFy(req.query.fy);
+  const isStaff = await isStaffMember(schoolId, req.user._id);
+  const balance = isStaff ? (await getBalances(schoolId, [req.user._id], fy))[String(req.user._id)] : null;
+  const monthly = isStaff ? await monthlyUsage(schoolId, req.user._id, fy) : [];
+  const school = await School.findById(schoolId).select("leavePolicy").lean();
+  const policy = { clPerMonth: school?.leavePolicy?.clPerMonth ?? 1, elPerMonth: school?.leavePolicy?.elPerMonth ?? 0.5 };
+  res.status(200).json(new ApiResponse(200, { fy, isStaff, ...(balance || {}), monthly, policy }, "Leave balance fetched"));
+});
+
+/** GET /leave-requests/balances: every staff member's CL and EL (admin). */
+export const getLeaveBalances = asyncHandler(async (req, res) => {
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const schoolId = isSuperAdmin ? req.query.schoolId : req.user.school?._id || req.user.schoolId;
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
+  const fy = parseFy(req.query.fy);
+  const employees = await Employee.find({ schoolId, isActive: { $ne: false } })
+    .select("userId employeeCode designation")
+    .populate("userId", "name email")
+    .lean();
+  const withUser = employees.filter((e) => e.userId);
+  const balances = await getBalances(schoolId, withUser.map((e) => e.userId._id), fy);
+  const rows = withUser
+    .map((e) => ({
+      userId: e.userId._id,
+      name: e.userId.name,
+      employeeCode: e.employeeCode,
+      designation: e.designation,
+      ...balances[String(e.userId._id)],
+    }))
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  res.status(200).json(new ApiResponse(200, { fy, rows }, "Leave balances fetched"));
+});
+
+/**
+ * POST /leave-requests/balances/adjust: an admin's correction or opening balance.
+ * body: { userId, leaveType: "CL" | "EL", days (+ adds, - takes away), note, fy? }
+ */
+export const adjustLeaveBalance = asyncHandler(async (req, res) => {
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const { userId, leaveType, note } = req.body || {};
+  const days = Number(req.body?.days);
+  if (!mongoose.isValidObjectId(userId)) throw new ApiError(400, "userId must be a valid user id");
+  if (!["CL", "EL"].includes(leaveType)) throw new ApiError(400, "leaveType must be CL or EL");
+  if (!Number.isFinite(days) || days === 0 || Math.abs(days) > 365 || Math.round(days * 2) !== days * 2) {
+    throw new ApiError(400, "days must be a non-zero number of whole or half days");
+  }
+  if (!String(note || "").trim()) throw new ApiError(400, "A note is required (why the balance changes)");
+
+  const employee = await Employee.findOne({ userId, ...(isSuperAdmin ? {} : { schoolId: req.user.school?._id || req.user.schoolId }) })
+    .select("schoolId")
+    .lean();
+  if (!employee) throw new ApiError(404, "Staff member not found in your school");
+  const fy = parseFy(req.body?.fy);
+
+  const before = (await getBalances(employee.schoolId, [userId], fy))[String(userId)][leaveType];
+  if (before.balance + days < 0) {
+    throw new ApiError(400, `That would leave ${leaveType} below zero (balance ${before.balance})`);
+  }
+  await LeaveLedger.create({
+    schoolId: employee.schoolId, userId, leaveType, kind: "adjustment", days, fy,
+    note: String(note).trim().slice(0, 300), createdBy: req.user._id,
+  });
+  const after = (await getBalances(employee.schoolId, [userId], fy))[String(userId)];
+  res.status(201).json(new ApiResponse(201, { fy, ...after }, "Leave balance adjusted"));
 });

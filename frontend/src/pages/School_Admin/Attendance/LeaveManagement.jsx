@@ -13,6 +13,7 @@ import {
   message,
   Button,
   Spin,
+  InputNumber,
 } from "antd";
 import {
   CalendarOutlined,
@@ -27,6 +28,8 @@ import {
   approveLeaveRequest,
   rejectLeaveRequest,
   createLeaveRequest,
+  fetchLeaveBalances,
+  adjustLeaveBalance,
 } from "../../../features/leaveRequestSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import apiClient from "../../../api/httpClient";
@@ -57,6 +60,9 @@ const LEAVE_TYPE_COLOR = {
   emergency: "orange",
   other:     "default",
 };
+
+const LEAVE_TYPE_LABEL = { casual: "Casual (CL)", paid: "Earned (EL)", sick: "Sick", emergency: "Emergency", other: "Other" };
+const HALF_LABEL = { A: "First half", B: "Second half" };
 
 const STATUS_COLOR = {
   pending:  "var(--warning)",
@@ -90,7 +96,7 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
     title: "Leave Type",
     render: (_, r) => (
       <Tag color={LEAVE_TYPE_COLOR[r?.leaveType] || "default"}>
-        {r?.leaveType ? r.leaveType.charAt(0).toUpperCase() + r.leaveType.slice(1) : "—"}
+        {LEAVE_TYPE_LABEL[r?.leaveType] || r?.leaveType || "—"}
       </Tag>
     ),
   },
@@ -105,8 +111,11 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
   {
     title: "Days",
     dataIndex: "totalDays",
-    render: (v) => (
-      <span style={{ fontWeight: 600 }}>{v ?? "—"}</span>
+    render: (v, r) => (
+      <span style={{ fontWeight: 600 }}>
+        {v ?? "—"}
+        {r?.halfDaySession ? <Tag style={{ marginLeft: 6, fontWeight: 400 }}>{HALF_LABEL[r.halfDaySession]}</Tag> : null}
+      </span>
     ),
   },
   {
@@ -183,7 +192,7 @@ const buildColumns = ({ isPending, onApprove, onReject }) => [
 /* ── Main component ──────────────────────────────────────────────── */
 const LeaveManagement = () => {
   const dispatch = useDispatch();
-  const { requests: _raw = [], loading, saving } = useSelector((s) => s.leaveRequests || {});
+  const { requests: _raw = [], loading, saving, balances, balancesLoading } = useSelector((s) => s.leaveRequests || {});
   const requests = useMemo(() => Array.isArray(_raw) ? _raw : [], [_raw]);
   const { user: currentUser }              = useSelector((s) => s.auth || {});
 
@@ -195,6 +204,8 @@ const LeaveManagement = () => {
   const [rejectReason, setRejectReason]   = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [adjustFor, setAdjustFor] = useState(null);
+  const [adjustForm] = Form.useForm();
 
   /* ── Person picker ──
      This used to be a free-text "User ID / Name" box, but the server needs the user's id: a typed
@@ -250,7 +261,23 @@ const LeaveManagement = () => {
     // The page splits one list into Pending / Approved / Rejected tabs itself, so it needs all of
     // it — the API returns 20 by default, which hid every older request, pending ones included.
     dispatch(fetchLeaveRequests({ schoolId, limit: 1000 }));
+    dispatch(fetchLeaveBalances());
   }, [schoolId, dispatch]);
+
+  /* ── Balance adjustment (opening balance or a correction) ── */
+  const handleAdjust = async () => {
+    try {
+      const vals = await adjustForm.validateFields();
+      await dispatch(adjustLeaveBalance({ userId: adjustFor.userId, ...vals })).unwrap();
+      message.success(`${vals.leaveType} balance updated for ${adjustFor.name}`);
+      setAdjustFor(null);
+      adjustForm.resetFields();
+      dispatch(fetchLeaveBalances());
+    } catch (e) {
+      if (e?.errorFields) return;
+      message.error(typeof e === "string" ? e : "Could not update the balance");
+    }
+  };
 
   /* ── Derived lists ── */
   const pending  = useMemo(() => requests.filter((r) => r.status === "pending"),  [requests]);
@@ -265,6 +292,7 @@ const LeaveManagement = () => {
     try {
       await dispatch(approveLeaveRequest(approveModal.id)).unwrap();
       message.success("Leave approved successfully");
+      dispatch(fetchLeaveBalances());
     } catch (e) {
       message.error(typeof e === "string" ? e : "Failed to approve leave");
     } finally {
@@ -362,6 +390,47 @@ const LeaveManagement = () => {
       key: "all",
       label: `All (${requests.length})`,
       children: <Table {...tableProps(requests, false)} />,
+    },
+    {
+      key: "balances",
+      label: "Leave Balances",
+      children: (
+        <>
+          <div className="u-muted" style={{ fontSize: 12, marginBottom: 10 }}>
+            Financial year {balances?.fy ? `${balances.fy}-${String(balances.fy + 1).slice(2)}` : ""}. Staff earn CL and EL every month;
+            leave is approved only against what is available, and what is left on 31 March is paid with March salary.
+          </div>
+          <Table
+            rowKey="userId"
+            loading={balancesLoading}
+            dataSource={balances?.rows || []}
+            pagination={{ pageSize: 15, showSizeChanger: false }}
+            scroll={{ x: 750 }}
+            columns={[
+              { title: "Name", render: (_, r) => <span className="u-strong">{r.name}</span>, sorter: (a, b) => String(a.name).localeCompare(String(b.name)) },
+              { title: "Code", dataIndex: "employeeCode", render: (v) => v || "—" },
+              ...["CL", "EL"].map((t) => ({
+                title: t === "CL" ? "Casual (CL)" : "Earned (EL)",
+                render: (_, r) => (
+                  <div>
+                    <span style={{ fontWeight: 800, fontSize: 15 }}>{r[t]?.available ?? 0}</span>
+                    <span className="u-muted" style={{ fontSize: 11 }}> available</span>
+                    <div className="u-muted" style={{ fontSize: 11 }}>
+                      Earned {r[t]?.earned ?? 0}{r[t]?.adjusted ? ` · Adj ${r[t].adjusted > 0 ? "+" : ""}${r[t].adjusted}` : ""} · Used {r[t]?.used ?? 0}{r[t]?.pending ? ` · Pending ${r[t].pending}` : ""}
+                    </div>
+                  </div>
+                ),
+              })),
+              {
+                title: "",
+                render: (_, r) => (
+                  <Button size="small" onClick={() => { adjustForm.resetFields(); setAdjustFor(r); }}>Adjust</Button>
+                ),
+              },
+            ]}
+          />
+        </>
+      ),
     },
   ];
 
@@ -489,6 +558,30 @@ const LeaveManagement = () => {
         </div>
       </Modal>
 
+      {/* ── Adjust Balance Modal ── */}
+      <Modal
+        open={Boolean(adjustFor)}
+        title={<span className="u-strong-bold">Adjust leave balance · {adjustFor?.name}</span>}
+        onOk={handleAdjust}
+        onCancel={() => setAdjustFor(null)}
+        okText="Save"
+        width={420}
+        destroyOnClose
+      >
+        <Form form={adjustForm} layout="vertical" className="u-mt-4" initialValues={{ leaveType: "CL" }}>
+          <Form.Item label="Leave" name="leaveType" rules={[{ required: true }]}>
+            <Select options={[{ value: "CL", label: "Casual (CL)" }, { value: "EL", label: "Earned (EL)" }]} />
+          </Form.Item>
+          <Form.Item label="Days to add (use minus to take away)" name="days" rules={[{ required: true, message: "Required" }]}
+            extra="Whole or half days, e.g. 2 or -0.5">
+            <InputNumber className="u-full" step={0.5} min={-365} max={365} />
+          </Form.Item>
+          <Form.Item label="Note" name="note" rules={[{ required: true, message: "Say why, e.g. opening balance" }]}>
+            <TextArea rows={2} placeholder="e.g. Opening balance carried from the old register" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
       {/* ── Create Leave Modal ── */}
       <Modal
         open={createModalOpen}
@@ -524,8 +617,8 @@ const LeaveManagement = () => {
               placeholder="Select leave type"
               options={[
                 { value: "sick",      label: "Sick"      },
-                { value: "casual",    label: "Casual"    },
-                { value: "paid",      label: "Paid"      },
+                { value: "casual",    label: "Casual (CL)" },
+                { value: "paid",      label: "Earned (EL)" },
                 { value: "emergency", label: "Emergency" },
                 { value: "other",     label: "Other"     },
               ]}

@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { School } from "../models/school.model.js";
 import { Attendance } from "../models/attendance.model.js";
+import { describeWorked, statusFromWorkedHours } from "../services/workHours.service.js";
 
 function todayUTC() {
   const d = new Date();
@@ -62,18 +63,40 @@ export function startAutoCheckoutJob() {
       let totalCheckedOut = 0;
 
       for (const school of dueSchools) {
+        // Staff: closed at the end of school hours, and the hours then decide the day (full, half
+        // or absent), the same as a check-out they made themselves.
+        // eslint-disable-next-line no-await-in-loop
+        const open = await Attendance.find({
+          schoolId: school._id,
+          date,
+          role: { $ne: "student" },
+          checkInAt: { $ne: null },
+          checkOutAt: null,
+        }).select("_id date status checkInAt").lean();
+        // At School Ends, not whenever this run happens: a run delayed by a restart must not
+        // count the evening as hours worked.
+        const [eh, em] = (school.attendanceHours?.endTime || "15:00").split(":").map(Number);
+        const closedAt = new Date(Math.min(Date.now(), date.getTime() + ((eh * 60 + em) - 330) * 60000));
+        const selfOps = open.map((r) => {
+          const outcome = statusFromWorkedHours({ ...r, checkOutAt: closedAt }, school.attendanceHours);
+          return {
+            updateOne: {
+              filter: { _id: r._id, checkOutAt: null },
+              update: {
+                $set: {
+                  checkOutAt: closedAt,
+                  autoCheckedOut: true,
+                  status: outcome.status,
+                  halfDaySession: outcome.halfDaySession,
+                  remarks: `${describeWorked(outcome)} (checked out automatically)`,
+                },
+              },
+            },
+          };
+        });
         // eslint-disable-next-line no-await-in-loop
         const [selfCheckinResult, studentResult] = await Promise.all([
-          Attendance.updateMany(
-            {
-              schoolId: school._id,
-              date,
-              role: { $ne: "student" },
-              checkInAt: { $ne: null },
-              checkOutAt: null,
-            },
-            { $set: { checkOutAt: new Date(), autoCheckedOut: true } }
-          ),
+          selfOps.length ? Attendance.bulkWrite(selfOps, { ordered: false }) : { modifiedCount: 0 },
           Attendance.updateMany(
             {
               schoolId: school._id,
