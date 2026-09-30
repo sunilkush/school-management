@@ -3,6 +3,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
+import { Role } from "../models/Roles.model.js";
+import { findForbiddenRole } from "../utils/roleAssignment.js";
 import { highestSuffix, nextSequence } from "../utils/sequence.js";
 
 // EMPLOYEE_ROLES (employee.routes.js) also grants Teacher/Sports Teacher/Transport Manager read
@@ -22,7 +24,6 @@ export const registerEmployee = asyncHandler(async (req, res) => {
     email,
     password,
     roleId,
-    schoolId,
     academicYearId,
     phoneNo,
     gender,
@@ -57,6 +58,14 @@ export const registerEmployee = asyncHandler(async (req, res) => {
     notes,
   } = req.body;
 
+  // The school came from the request body, and the new account's role was never checked, so any
+  // caller on this route — an Accountant included — could create a user in another school, with
+  // any role there or the platform's Super Admin role. The school now comes from the token (a
+  // Super Admin may name one), and the role goes through the same guard as registerUser.
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const schoolId = isSuperAdmin ? req.body.schoolId : req.user.schoolId;
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
+
   let finalUserId = userId;
   let createdUser = null;
 
@@ -73,6 +82,16 @@ export const registerEmployee = asyncHandler(async (req, res) => {
       throw new ApiError(400, "User with this email already exists");
     }
 
+    const requestedRole = await Role.findById(roleId).select("_id name schoolId").lean();
+    if (!requestedRole) throw new ApiError(400, "Invalid role");
+    const forbiddenRole = findForbiddenRole([requestedRole], { isSuperAdmin, callerSchoolId: req.user?.schoolId });
+    if (forbiddenRole) throw new ApiError(403, `Not allowed to assign role "${forbiddenRole.name}"`);
+    // An Accountant may add staff, not the people who run the school.
+    const LEADERSHIP_ROLES = ["School Admin", "Principal", "Vice Principal"];
+    if (!isSuperAdmin && req.userRole?.name !== "School Admin" && LEADERSHIP_ROLES.includes(requestedRole.name)) {
+      throw new ApiError(403, `Not allowed to assign role "${requestedRole.name}"`);
+    }
+
     const newUser = await User.create({
       name,
       email,
@@ -87,6 +106,7 @@ export const registerEmployee = asyncHandler(async (req, res) => {
   } else {
     const existingUser = await User.findOne({
       _id: finalUserId,
+      schoolId,
       isDeleted: { $ne: true },
     });
     if (!existingUser) {
