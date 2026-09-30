@@ -3,6 +3,8 @@ import { Inventory } from "../models/Inventory.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { Vendor } from "../models/Vendor.model.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
 
 const resolveSchoolId = (req) => req.user?.schoolId || req.body?.schoolId || req.query?.schoolId;
 const resolveAcademicYearId = (req) => req.body?.academicYearId || null;
@@ -70,6 +72,7 @@ export const createInventoryItem = asyncHandler(async (req, res) => {
   const parsedPurchasePrice = parseNumericField(purchasePrice, 0);
 
   validateInventoryPayload({ quantity, allocated, minThreshold });
+  await assertInSchool(Vendor, vendorId, schoolId, "vendor");
 
   const item = await Inventory.create({
     schoolId,
@@ -115,6 +118,7 @@ export const updateInventoryItem = asyncHandler(async (req, res) => {
     minThreshold: nextMinThreshold,
   });
 
+  await assertInSchool(Vendor, req.body.vendorId, schoolId, "vendor");
   [
     "itemType", "name", "category", "unit", "location",
     "serialNumber", "purchaseDate", "purchasePrice", "warrantyExpiry", "condition", "vendorId", "assignedTo",

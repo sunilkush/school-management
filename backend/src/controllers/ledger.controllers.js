@@ -14,6 +14,7 @@ import {
   accountLedger,
 } from "../services/ledger.service.js";
 import { nextJournalNumber, reconciliationReport, postPendingEvents } from "../services/ledgerPosting.service.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
 
 /**
  * Double-entry ledger: chart of accounts, journal entries, the statements built from them, and
@@ -70,6 +71,7 @@ export const createAccount = asyncHandler(async (req, res) => {
   if (!name?.trim()) throw new ApiError(400, "Account name is required");
   if (!ACCOUNT_TYPES.includes(type)) throw new ApiError(400, `Type must be one of: ${ACCOUNT_TYPES.join(", ")}`);
 
+  await assertInSchool(LedgerAccount, parentId, schoolId, "parent account");
   const account = await LedgerAccount.create({
     schoolId,
     code: code.trim(),
@@ -92,7 +94,10 @@ export const updateAccount = asyncHandler(async (req, res) => {
   // account appears on, so changing it would silently restate every statement already produced.
   if (req.body.name !== undefined) account.name = req.body.name;
   if (req.body.description !== undefined) account.description = req.body.description;
-  if (req.body.parentId !== undefined) account.parentId = req.body.parentId || null;
+  if (req.body.parentId !== undefined) {
+    await assertInSchool(LedgerAccount, req.body.parentId, schoolId, "parent account");
+    account.parentId = req.body.parentId || null;
+  }
   if (req.body.isActive !== undefined) account.isActive = Boolean(req.body.isActive);
   account.updatedBy = req.user._id;
 

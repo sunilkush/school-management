@@ -5,6 +5,10 @@ import * as XLSX from "xlsx";
 import mongoose from "mongoose";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Subject } from "../models/subject.model.js";
+import { Chapter } from "../models/Chapter.model.js";
+import { assertAllInSchool } from "../utils/schoolScope.js";
 
 // =============================
 // Create Question
@@ -75,6 +79,13 @@ export const createQuestion = asyncHandler(async (req, res) => {
   // question too is what lets a year be filtered on directly. An id that is not one is ignored
   // rather than rejected — it is not worth failing a question over.
   const validId = (value) => (value && mongoose.Types.ObjectId.isValid(value) ? value : null);
+
+  // Pattern A (docs/bug-audit.md). Subjects and NCERT chapters can be platform-wide.
+  await assertAllInSchool(schoolId, [
+    [SchoolClass, schoolClassId, "class"],
+    [Subject, subjectId, "subject", { allowShared: true }],
+    [Chapter, validId(chapterId || chapter), "chapter", { allowShared: true }],
+  ]);
 
   const payload = {
     schoolId,

@@ -10,6 +10,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 import { actingRoleName } from "../utils/actingRole.js";
+import { User } from "../models/user.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { Subject } from "../models/subject.model.js";
+import { assertAllInSchool } from "../utils/schoolScope.js";
 
 /**
  * Live online classes.
@@ -135,6 +140,14 @@ export const createOnlineClass = asyncHandler(async (req, res) => {
   const start = parseDate(scheduledStart, "start time");
   const end = parseDate(scheduledEnd, "end time");
   if (!start || !end) throw new ApiError(400, "Both a start and an end time are required");
+
+  // Pattern A (docs/bug-audit.md): the class is shown with the teacher's name.
+  await assertAllInSchool(schoolId, [
+    [User, teacherId, "teacher"],
+    [SchoolClass, schoolClassId, "class"],
+    [Section, sectionId, "section"],
+    [Subject, subjectId, "subject", { allowShared: true }],
+  ]);
 
   const session = await OnlineClass.create({
     schoolId,

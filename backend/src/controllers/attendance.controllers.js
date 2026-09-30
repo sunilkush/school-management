@@ -5,6 +5,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { holdsRole } from "../utils/actingRole.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
+import { User } from "../models/user.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { Subject } from "../models/subject.model.js";
 
 const SUPER_ADMIN = "Super Admin";
 const SCHOOL_ADMIN = "School Admin";
@@ -202,6 +207,15 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
 
   const resolvedSchoolId = ensureSchoolAccess(req, schoolId);
   const normalizedDate = normalizeDateStart(date);
+
+  // Everyone being marked, and the class, section and subject, must be this school's (pattern A in
+  // docs/bug-audit.md): another school's user could be given an attendance record here.
+  await assertAllInSchool(resolvedSchoolId, [
+    [User, (Array.isArray(records) ? records : []).map((record) => record?.userId), "user"],
+    [SchoolClass, schoolClassId, "class"],
+    [Section, sectionId, "section"],
+    [Subject, subjectId, "subject", { allowShared: true }],
+  ]);
 
   if (normalizedDate.getTime() > normalizeDateStart(new Date()).getTime()) {
     throw new ApiError(400, "Cannot mark attendance for a future date");

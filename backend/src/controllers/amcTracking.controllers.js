@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 import { AMCTracking } from "../models/AMCTracking.model.js";
+import { Inventory } from "../models/Inventory.model.js";
+import { Vendor } from "../models/Vendor.model.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -61,6 +64,12 @@ export const createAMC = asyncHandler(async (req, res) => {
   if (new Date(endDate) <= new Date(startDate))
     throw new ApiError(400, "endDate must be after startDate");
 
+  // The contract list shows the asset and the vendor's name and phone.
+  await assertAllInSchool(schoolId, [
+    [Inventory, assetId, "asset"],
+    [Vendor, vendorId, "vendor"],
+  ]);
+
   const amc = await AMCTracking.create({
     schoolId,
     assetId, assetName,
@@ -84,6 +93,7 @@ export const updateAMC = asyncHandler(async (req, res) => {
   if (!amc) throw new ApiError(404, "AMC not found");
 
   const allowed = ["assetName", "vendorId", "contractNumber", "serviceType", "startDate", "endDate", "cost", "nextServiceDate", "notes"];
+  if (req.body.vendorId) await assertInSchool(Vendor, req.body.vendorId, schoolId, "vendor");
   allowed.forEach((f) => { if (req.body[f] !== undefined) amc[f] = req.body[f]; });
 
   amc.status = computeStatus(amc.startDate, amc.endDate);

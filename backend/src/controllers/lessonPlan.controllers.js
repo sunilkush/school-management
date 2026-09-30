@@ -2,6 +2,10 @@ import { LessonPlan } from "../models/LessonPlan.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { Subject } from "../models/subject.model.js";
+import { assertAllInSchool } from "../utils/schoolScope.js";
 
 const getSchoolId = (req) => req.user.school?._id || req.user.schoolId;
 
@@ -21,6 +25,11 @@ export const createLessonPlan = asyncHandler(async (req, res) => {
   if (!academicYearId || !schoolClassId || !subjectId || !title || !plannedDate) {
     throw new ApiError(400, "academicYearId, schoolClassId, subjectId, title, and plannedDate are required");
   }
+  await assertAllInSchool(schoolId, [
+    [SchoolClass, schoolClassId, "class"],
+    [Section, sectionId, "section"],
+    [Subject, subjectId, "subject", { allowShared: true }],
+  ]);
 
   const plan = await LessonPlan.create({
     schoolId,

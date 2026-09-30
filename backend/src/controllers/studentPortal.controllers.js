@@ -10,6 +10,10 @@ import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { StudentTimetable } from "../models/StudentTimetable.model.js";
 import { StudentTransportAssignment } from "../models/StudentTransportAssignment.model.js";
 import { User } from "../models/user.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { Subject } from "../models/subject.model.js";
+import { assertAllInSchool } from "../utils/schoolScope.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { isHttpUrl } from "../utils/safeUrl.js";
@@ -304,6 +308,11 @@ export const createTeacherHomework = asyncHandler(async (req, res) => {
   if (!academicYearId || !schoolClassId || !subjectId || !title || !description || !dueDate) {
     throw new ApiError(400, "academicYearId, schoolClassId, subjectId, title, description, dueDate are required");
   }
+  await assertAllInSchool(req.user.schoolId, [
+    [SchoolClass, schoolClassId, "class"],
+    [Section, sectionId, "section"],
+    [Subject, subjectId, "subject", { allowShared: true }],
+  ]);
 
   const created = await Assignment.create({
     academicYearId,
@@ -494,6 +503,13 @@ export const createTimetableEntry = asyncHandler(async (req, res) => {
   if (!academicYearId || !schoolClassId || !sectionId || !subjectId || !day || !startTime || !endTime) {
     throw new ApiError(400, "Missing required timetable fields");
   }
+  // Students see this entry with the teacher's name and email.
+  await assertAllInSchool(req.user.schoolId, [
+    [User, teacherId, "teacher"],
+    [SchoolClass, schoolClassId, "class"],
+    [Section, sectionId, "section"],
+    [Subject, subjectId, "subject", { allowShared: true }],
+  ]);
 
   const payload = {
     schoolId: req.user.schoolId,
@@ -543,41 +559,6 @@ export const getMyTransport = asyncHandler(async (req, res) => {
   );
 });
 
-export const assignStudentTransport = asyncHandler(async (req, res) => {
-  const { studentEnrollmentId, academicYearId, routeId, vehicleId, pickupStop, dropStop } = req.body;
-
-  if (!studentEnrollmentId || !academicYearId || !routeId || !vehicleId) {
-    throw new ApiError(400, "studentEnrollmentId, academicYearId, routeId and vehicleId are required");
-  }
-
-  const assignment = await StudentTransportAssignment.findOneAndUpdate(
-    {
-      studentEnrollmentId,
-      academicYearId,
-      schoolId: req.user.schoolId,
-    },
-    {
-      studentEnrollmentId,
-      academicYearId,
-      schoolId: req.user.schoolId,
-      routeId,
-      vehicleId,
-      pickupStop: pickupStop || "",
-      dropStop: dropStop || "",
-      isActive: true,
-    },
-    {
-      new: true,
-      upsert: true,
-      runValidators: true,
-      setDefaultsOnInsert: true,
-    }
-  );
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, assignment, "Student transport assigned successfully"));
-});
 
 export const getMyLibraryBooks = asyncHandler(async (req, res) => {
   const { student } = await getMyActiveEnrollment(req.user);

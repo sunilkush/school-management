@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import { PurchaseOrder } from "../models/PurchaseOrder.model.js";
 import { Inventory } from "../models/Inventory.model.js";
+import { Vendor } from "../models/Vendor.model.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -61,6 +63,8 @@ export const createPurchaseOrder = asyncHandler(async (req, res) => {
 
   if (!vendorId) throw new ApiError(400, "vendorId is required");
   if (!items.length) throw new ApiError(400, "At least one item is required");
+  // The order is shown with the vendor's phone, email, address and GST number.
+  await assertInSchool(Vendor, vendorId, schoolId, "vendor");
 
   const enrichedItems = items.map((i) => ({
     ...i,
@@ -93,7 +97,10 @@ export const updatePurchaseOrder = asyncHandler(async (req, res) => {
 
   const { items, taxRate, vendorId, expectedDate, notes } = req.body;
 
-  if (vendorId) order.vendorId = vendorId;
+  if (vendorId) {
+    await assertInSchool(Vendor, vendorId, schoolId, "vendor");
+    order.vendorId = vendorId;
+  }
   if (expectedDate !== undefined) order.expectedDate = expectedDate;
   if (notes !== undefined) order.notes = notes;
 
@@ -140,8 +147,9 @@ export const updatePOStatus = asyncHandler(async (req, res) => {
       // Update inventory stock when items are received
       for (const ri of receivedItems) {
         const item = order.items[ri.index];
-        if (!item || !ri.inventoryItemId) continue;
-        await Inventory.findByIdAndUpdate(ri.inventoryItemId, { $inc: { quantity: ri.qty } });
+        if (!item || !ri.inventoryItemId || !(Number(ri.qty) > 0)) continue;
+        // This school's stock only: by id alone, receiving an order added to another school's item.
+        await Inventory.updateOne({ _id: ri.inventoryItemId, schoolId }, { $inc: { quantity: Number(ri.qty) } });
       }
     }
   }

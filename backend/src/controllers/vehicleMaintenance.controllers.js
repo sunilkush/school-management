@@ -2,6 +2,8 @@ import { VehicleMaintenance } from "../models/VehicleMaintenance.model.js";
 import { ApiError }           from "../utils/ApiError.js";
 import { ApiResponse }        from "../utils/ApiResponse.js";
 import { asyncHandler }       from "../utils/asyncHandler.js";
+import { Transport } from "../models/Transport.model.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
 
 const getSchoolId = (req) => req.user.school?._id || req.user.schoolId;
 
@@ -12,6 +14,7 @@ export const createMaintenance = asyncHandler(async (req, res) => {
   const { vehicleId, vehicleNo, vehicleName, serviceType, scheduledDate, estimatedCost, notes } = req.body;
   if (!serviceType)   throw new ApiError(400, "Service type is required");
   if (!scheduledDate) throw new ApiError(400, "Scheduled date is required");
+  await assertInSchool(Transport, vehicleId, schoolId, "vehicle");
 
   const record = await VehicleMaintenance.create({
     schoolId, vehicleId, vehicleNo, vehicleName, serviceType,

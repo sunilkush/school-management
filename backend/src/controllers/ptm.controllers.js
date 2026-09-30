@@ -7,6 +7,10 @@ import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { notifyUser } from "../utils/notifyService.js";
 import { actingRoleName } from "../utils/actingRole.js";
+import { User } from "../models/user.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { assertAllInSchool } from "../utils/schoolScope.js";
 
 // The roles the parent booking routes admit (PTM_PARENT_ROLES in routes/ptm.routes.js), broadest
 // first. Anyone not acting as an admin got in as a Parent and is held to a parent's rules — even
@@ -66,6 +70,13 @@ export const createSession = asyncHandler(async (req, res) => {
   if (!(start < end)) throw new ApiError(400, "startTime must be before endTime");
 
   const schoolId = resolveSchoolId(req);
+
+  // Pattern A (docs/bug-audit.md): parents see the meeting with the teacher's name.
+  await assertAllInSchool(schoolId, [
+    [User, teacherId, "teacher"],
+    [SchoolClass, schoolClassId, "class"],
+    [Section, sectionId, "section"],
+  ]);
 
   const session = await PTMSession.create({
     schoolId, title, teacherId: teacherId || null, schoolClassId, sectionId,

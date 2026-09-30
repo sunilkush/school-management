@@ -6,6 +6,17 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 import { buildSchoolAccessFilter } from "../utils/buildSchoolAccessFilter.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
+import { User } from "../models/user.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { assertInSchool } from "../utils/schoolScope.js";
+
+// The teacher named in the request must work at the section's own school: the section and class
+// lists show the teacher's name and email, and another school's teacher could be set here.
+const assertTeacherForSection = async (req, sectionId, teacherId) => {
+  const target = await Section.findOne(buildSchoolAccessFilter(req, { _id: sectionId })).select("schoolId").lean();
+  if (!target) throw new ApiError(404, "Section not found");
+  await assertInSchool(User, teacherId, target.schoolId, "teacher");
+};
 
 // ==============================
 // 🔹 CREATE SECTION
@@ -174,6 +185,7 @@ export const deleteSection = asyncHandler(async (req, res) => {
 // ==============================
 export const assignClassTeacher = asyncHandler(async (req, res) => {
   const { sectionId, teacherId } = req.body;
+  await assertTeacherForSection(req, sectionId, teacherId);
   const section = await Section.findOneAndUpdate(
     buildSchoolAccessFilter(req, { _id: sectionId }),
     {
@@ -225,6 +237,9 @@ export const addStudentToSection = asyncHandler(async (req, res) => {
   if (!section) {
     throw new ApiError(404, "Section not found");
   }
+
+  // An enrollment of this school only.
+  await assertInSchool(StudentEnrollment, studentId, section.schoolId, "enrollment");
 
   // ✅ prevent duplicate
   if (section.StudentEnrollmentId.includes(studentId)) {
@@ -349,6 +364,8 @@ export const assignSubjectTeacher = asyncHandler(async (req, res) => {
       message: "sectionId, subjectId and teacherId are required",
     });
   }
+
+  await assertTeacherForSection(req, sectionId, teacherId);
 
   /* =============================
      ✅ UPDATE DIRECTLY (OPTIMIZED)

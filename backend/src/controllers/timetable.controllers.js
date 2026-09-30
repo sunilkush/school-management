@@ -5,6 +5,11 @@ import { Timetable } from "../models/Timetable.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { ApiError } from "../utils/ApiError.js";
+import { User } from "../models/user.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { Subject } from "../models/subject.model.js";
+import { assertAllInSchool } from "../utils/schoolScope.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { generateTimetable, commitGeneratedTimetable } from "../services/timetableGenerator.service.js";
@@ -66,6 +71,18 @@ const normalizeEntryPayload = (payload = {}) => {
   };
   return normalized;
 };
+
+// Everything an entry points at must be the school's own (pattern A, docs/bug-audit.md): the
+// timetable is shown with the teacher's name, email and photo.
+const assertEntryInSchool = (entry) =>
+  assertAllInSchool(entry.schoolId, [
+    [User, entry.teacherId, "teacher"],
+    [Subject, entry.subjectId, "subject", { allowShared: true }],
+    [SchoolClass, entry.schoolClassId, "class"],
+    [Section, entry.sectionId, "section"],
+    [TimeSlot, entry.timeSlotId, "time slot"],
+    [Room, entry.roomId, "room"],
+  ]);
 
 const resolveSchoolId = (req, source = {}) => {
   const requested = id(source.schoolId ?? req.query?.schoolId ?? req.body?.schoolId);
@@ -253,6 +270,7 @@ export const createTimetableEntry = asyncHandler(async (req, res) => {
   const schoolId = resolveSchoolId(req, req.body);
   const entry = { ...normalizeEntryPayload(req.body), schoolId, academicYearId: req.body.academicYearId, schoolClassId: req.body.schoolClassId, sectionId: req.body.sectionId, createdBy: req.user._id, updatedBy: req.user._id };
   validateEntry(entry);
+  await assertEntryInSchool(entry);
   await assertNoClashes(entry);
   try {
     const created = await Timetable.create(entry);
@@ -270,6 +288,7 @@ export const bulkSaveTimetable = asyncHandler(async (req, res) => {
   for (const raw of entries) {
     const entry = { ...normalizeEntryPayload(raw), schoolId, academicYearId, schoolClassId, sectionId, updatedBy: req.user._id };
     validateEntry(entry);
+    await assertEntryInSchool(entry);
     const existing = await Timetable.findOne({ schoolId, academicYearId, schoolClassId, sectionId, dayOfWeek: entry.dayOfWeek, timeSlotId: entry.timeSlotId }).lean();
     await assertNoClashes({ ...entry, skipId: existing?._id });
     const row = await Timetable.findOneAndUpdate(
@@ -292,6 +311,7 @@ export const updateTimetableEntry = asyncHandler(async (req, res) => {
   const patch = { ...normalizeEntryPayload({ ...existing.toObject(), ...req.body }), academicYearId: req.body.academicYearId || existing.academicYearId, schoolClassId: req.body.schoolClassId || existing.schoolClassId, sectionId: req.body.sectionId || existing.sectionId, updatedBy: req.user._id };
   const merged = { ...existing.toObject(), ...patch, academicYearId: req.body.academicYearId || existing.academicYearId, schoolClassId: req.body.schoolClassId || existing.schoolClassId, sectionId: req.body.sectionId || existing.sectionId };
   validateEntry(merged);
+  await assertEntryInSchool({ ...merged, schoolId });
   await assertNoClashes({ ...merged, skipId: existing._id });
   try {
     const row = await Timetable.findByIdAndUpdate(existing._id, patch, { new: true, runValidators: true });
@@ -361,6 +381,10 @@ export const childTimetable = asyncHandler(async (req, res) => {
   const actingAsStaff = CRUD_ROLES.some((r) => holdsRole(req, r));
   if (!actingAsStaff && ![id(student.fatherId), id(student.motherId), id(student.guardianId)].includes(id(req.user._id))) {
     throw new ApiError(403, "You are not allowed to view this child's timetable");
+  }
+  // Staff see their own school's children only; this read any school's.
+  if (actingAsStaff && roleName(req) !== "Super Admin" && id(student.schoolId) !== id(req.user?.schoolId)) {
+    throw new ApiError(404, "Student not found");
   }
   const enrollment = await StudentEnrollment.findOne(compact({ studentId: student._id, academicYearId, status: "Active" })).sort({ createdAt: -1 }).lean();
   if (!enrollment) throw new ApiError(404, "Active student enrollment not found");

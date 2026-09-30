@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  assignStudentTransport,
   createTeacherHomework,
   createTimetableEntry,
   deleteTeacherHomework,
@@ -81,11 +80,7 @@ router.post(
   roleMiddleware(ADMIN_AND_TEACHER),
   createTimetableEntry
 );
-router.post(
-  "/transport/assign",
-  auth,
-  roleMiddleware(["Super Admin", "School Admin"]),
-  assignStudentTransport
-);
+// Transport is assigned through POST /transport/assignments (transport.controllers.js), which checks the
+// student, route and vehicle belong to the school. A second, unchecked copy lived here; no screen used it.
 
 export default router;

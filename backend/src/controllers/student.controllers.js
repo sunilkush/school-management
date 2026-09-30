@@ -1890,7 +1890,12 @@ const updateStudentRollNumber = asyncHandler(async (req, res) => {
     throw new ApiError(400, "rollNumber must be a positive integer");
   }
 
-  const enrollment = await StudentEnrollment.findById(enrollmentId);
+  // This school's enrollments only: by id alone, a School Admin could change roll numbers in
+  // another school.
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const enrollment = await StudentEnrollment.findOne(
+    isSuperAdmin ? { _id: enrollmentId } : { _id: enrollmentId, schoolId: req.user.schoolId }
+  );
   if (!enrollment) {
     throw new ApiError(404, "Enrollment not found");
   }

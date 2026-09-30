@@ -1,5 +1,9 @@
 import { ClassTeacherAssignment } from "../models/ClassTeacherAssignment.model.js";
 import { AcademicYear } from "../models/AcademicYear.model.js";
+import { User } from "../models/user.model.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { Section } from "../models/section.model.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -56,6 +60,13 @@ export const assignClassTeacher = asyncHandler(async (req, res) => {
   if (!teacherId || !schoolClassId) {
     throw new ApiError(400, "teacherId and schoolClassId are required");
   }
+
+  // The teacher (whose name and email the response carries), class and section must be this school's.
+  await assertAllInSchool(schoolId, [
+    [User, teacherId, "teacher"],
+    [SchoolClass, schoolClassId, "class"],
+    [Section, sectionId, "section"],
+  ]);
 
   const ayId = await resolveAcademicYear(schoolId, academicYearId);
 

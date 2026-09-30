@@ -5,6 +5,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 import { requireSchoolId } from "../utils/resolveSchoolId.js";
 import { summarizeFeeLines } from "../services/feeSchedule.service.js";
+import { SchoolClass } from "../models/schoolClass.model.js";
+import { FeeHead } from "../models/feeHead.model.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
 
 /* ================= CREATE ================= */
 export const createFeeStructure = asyncHandler(async (req, res) => {
@@ -19,6 +22,10 @@ export const createFeeStructure = asyncHandler(async (req, res) => {
       throw new ApiError(400, `Invalid ${key}`);
     }
   }
+  await assertAllInSchool(schoolId, [
+    [SchoolClass, schoolClassId, "class"],
+    [FeeHead, feeHeadId, "fee head", { allowShared: true }],
+  ]);
   const existing = await FeeStructure.findOne({
   schoolId,
   schoolClassId,

@@ -17,6 +17,10 @@ import {
   validateStageMove,
   weightedScore,
 } from "../services/hr.service.js";
+import { User } from "../models/user.model.js";
+import { Department } from "../models/Department.model.js";
+import { Designation } from "../models/Designation.model.js";
+import { assertAllInSchool, assertInSchool } from "../utils/schoolScope.js";
 
 /**
  * Recruitment and staff appraisal.
@@ -92,6 +96,10 @@ export const createPosting = asyncHandler(async (req, res) => {
   const { title, departmentId, designationId, employmentType, openings, description, requirements, location, salaryMin, salaryMax, closesAt, academicYearId } = req.body;
 
   if (!title?.trim()) throw new ApiError(400, "A job title is required");
+  await assertAllInSchool(schoolId, [
+    [Department, departmentId, "department"],
+    [Designation, designationId, "designation"],
+  ]);
 
   const posting = await JobPosting.create({
     schoolId,
@@ -119,6 +127,10 @@ export const updatePosting = asyncHandler(async (req, res) => {
   if (!posting) throw new ApiError(404, "Job posting not found");
 
   const fields = ["title", "departmentId", "designationId", "employmentType", "openings", "description", "requirements", "location", "salaryMin", "salaryMax"];
+  await assertAllInSchool(schoolId, [
+    [Department, req.body.departmentId, "department"],
+    [Designation, req.body.designationId, "designation"],
+  ]);
   fields.forEach((field) => {
     if (req.body[field] !== undefined) posting[field] = req.body[field];
   });
@@ -362,6 +374,8 @@ export const startCycleReviews = asyncHandler(async (req, res) => {
 
   const employees = await Employee.find({ schoolId }).select("_id userId").lean();
   if (!employees.length) throw new ApiError(400, "There are no employees to review");
+  // Every review is shown with the reviewer's name.
+  await assertInSchool(User, req.body.reviewerId, schoolId, "reviewer");
 
   const existing = await AppraisalReview.find({ cycleId: cycle._id }).select("employeeId").lean();
   const already = new Set(existing.map((r) => String(r.employeeId)));

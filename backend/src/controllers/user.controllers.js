@@ -21,6 +21,9 @@ import { billingOnlyMessage, canUseBillingOnly, findSchoolAccessProblem, isSuper
 import { issueOtp } from '../utils/otpCodes.js'
 import { resolvePlanModules } from '../utils/planModules.js'
 import { findForbiddenRole } from '../utils/roleAssignment.js'
+import { assertAllInSchool } from '../utils/schoolScope.js'
+import { Department } from '../models/Department.model.js'
+import { Designation } from '../models/Designation.model.js'
 // ✅ Generate Access & Refresh Token
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -456,6 +459,7 @@ const updateUser = asyncHandler(async (req, res) => {
   if (qualification      !== undefined) user.qualification        = qualification
   if (emergencyContactName  !== undefined) user.emergencyContactName  = emergencyContactName
   if (emergencyContactPhone !== undefined) user.emergencyContactPhone = emergencyContactPhone
+  await assertAllInSchool(user.schoolId, [[Department, departmentId, 'department'], [Designation, designationId, 'designation']])
   if (departmentId       !== undefined) user.departmentId         = departmentId || null
   if (designationId      !== undefined) user.designationId        = designationId || null
 
@@ -1047,6 +1051,7 @@ const adminUpdateUser = asyncHandler(async (req, res) => {
   if (qualification      !== undefined) user.qualification        = qualification;
   if (emergencyContactName  !== undefined) user.emergencyContactName  = emergencyContactName;
   if (emergencyContactPhone !== undefined) user.emergencyContactPhone = emergencyContactPhone;
+  await assertAllInSchool(user.schoolId, [[Department, departmentId, "department"], [Designation, designationId, "designation"]]);
   if (departmentId       !== undefined) user.departmentId         = departmentId  || null;
   if (designationId      !== undefined) user.designationId        = designationId || null;
 
