@@ -137,10 +137,21 @@ const hasOverlappingActiveStructure = async ({ schoolId, employeeId, effectiveFr
   if (excludeId) overlapFilter._id = { $ne: excludeId };
   return Boolean(await PayrollStructure.exists(overlapFilter));
 };
+// Gross is what payroll pays and the parts are what the payslip lists, so they must agree. A typed
+// gross of ₹50,000 over ₹10,000 of components paid ₹40,000 that no line on the payslip accounted for.
+const GROSS_COMPONENTS = ["basic", "hra", "da", "conveyance", "medical", "specialAllowance", "bonus", "incentive"];
+const assertGrossMatchesComponents = (structure) => {
+  const parts = GROSS_COMPONENTS.reduce((sum, key) => sum + Number(structure[key] || 0), 0);
+  if (Math.abs(parts - Number(structure.grossMonthly || 0)) > 1) {
+    throw new ApiError(400, `Gross (₹${Number(structure.grossMonthly || 0)}) must equal Basic + HRA + DA + allowances (₹${parts})`);
+  }
+};
+
 export const createPayrollStructure = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req);
   assertSchoolId(schoolId);
   await ensureEmployeeBelongsToSchool({ employeeId: req.body.employeeId, schoolId });
+  assertGrossMatchesComponents(req.body);
 
   if (req.body.status !== "inactive") {
     const hasOverlap = await hasOverlappingActiveStructure({
@@ -194,6 +205,7 @@ export const updatePayrollStructure = asyncHandler(async (req, res) => {
   const { _id, schoolId: _school, employeeId: _employee, approvalStatus, approvedBy, createdAt, updatedAt, __v, ...editable } =
     req.body || {};
   const nextStructure = { ...existingStructure.toObject(), ...editable };
+  if ([...GROSS_COMPONENTS, "grossMonthly"].some((key) => key in editable)) assertGrossMatchesComponents(nextStructure);
   if (nextStructure.status === "active") {
     const hasOverlap = await hasOverlappingActiveStructure({
       schoolId,
@@ -232,6 +244,13 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
 
   if (!year || year < 2000) {
     throw new ApiError(400, "Invalid year");
+  }
+
+  // A month that has not begun has no attendance, so every day would be a paid working day it
+  // could not check (0 working days = no LOP), and it would show as the "latest" cycle.
+  const istNow = new Date(Date.now() + 330 * 60 * 1000);
+  if (year * 12 + month > istNow.getUTCFullYear() * 12 + istNow.getUTCMonth() + 1) {
+    throw new ApiError(400, "Payroll can only be run for the current or a past month");
   }
 
   let cycle = await PayrollCycle.findOne({
@@ -582,8 +601,12 @@ const fetchAuthorizedPayslip = async ({ req, employeeId, month, year }) => {
   if (!entry) throw new ApiError(404, "Payslip not found for employee");
 
   const isSelf = req.user?._id?.toString() === entry.employeeId?.userId?._id?.toString();
-  if (!isSelf && !PAYSLIP_ADMIN_ROLES.includes(req.userRole?.name)) {
+  const isPayrollAdmin = PAYSLIP_ADMIN_ROLES.includes(req.userRole?.name);
+  if (!isSelf && !isPayrollAdmin) {
     throw new ApiError(403, "You can only view your own payslip");
+  }
+  if (!isPayrollAdmin && cycle.status === "draft") {
+    throw new ApiError(404, "This payslip has not been released yet");
   }
 
   return { cycle, entry, schoolId };
@@ -715,8 +738,10 @@ export const getMyPayrollSummary = asyncHandler(async (req, res) => {
     .limit(limit)
     .lean();
 
+  // A draft is still being worked on and can change on every regenerate; staff see a payslip once
+  // it is locked or paid.
   const payslips = entries
-    .filter((entry) => entry.payrollCycleId)
+    .filter((entry) => entry.payrollCycleId && entry.payrollCycleId.status !== "draft")
     .map((entry) => ({
       _id: entry._id,
       cycle: entry.payrollCycleId,

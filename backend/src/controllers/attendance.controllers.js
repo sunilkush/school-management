@@ -264,6 +264,8 @@ export const markBulkAttendance = asyncHandler(async (req, res) => {
           schoolClassId: doc.schoolClassId,
           sectionId: doc.sectionId,
           subjectId: doc.subjectId,
+          // A person decided this row now, even if the end-of-day job wrote it first ("auto").
+          source: "manual",
         };
         // Only update check-in/out times if admin explicitly supplied them
         if (doc.checkInAt != null) setFields.checkInAt = doc.checkInAt;

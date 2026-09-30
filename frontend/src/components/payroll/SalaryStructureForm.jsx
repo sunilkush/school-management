@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   Button, DatePicker, Form, InputNumber, Select, Switch,
 } from "antd";
@@ -65,6 +65,11 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId,
     () => Number(basic) + Number(hra) + Number(da) + Number(specialAllowance),
     [basic, hra, da, specialAllowance],
   );
+  // Gross is the sum of its parts. Typed separately, it could say ₹50,000 over ₹10,000 of
+  // components: payroll paid the typed figure while the payslip listed the parts.
+  useEffect(() => {
+    if (form.getFieldValue("grossMonthly") !== gross) form.setFieldValue("grossMonthly", gross);
+  }, [form, gross]);
   // Estimate only — this school's *actual* configured Payroll Settings (falls back to
   // statutory defaults only until Settings load), run through the same formula shape the
   // real engine (payrollCalculator.service.js) uses. Can't account for attendance/LOP,
@@ -143,9 +148,10 @@ const SalaryStructureForm = ({ form, employees, onSubmit, submitting, editingId,
           </Form.Item>
         </div>
 
-        <Form.Item label="Gross Monthly (₹)" name="grossMonthly" rules={[{ required: true }]} style={fi}>
+        <Form.Item label="Gross Monthly (₹)" name="grossMonthly" rules={[{ required: true }]} style={fi}
+          extra="Basic + HRA + DA + Special Allowance">
           <InputNumber
-            min={0} className="u-full" placeholder="Total gross monthly salary"
+            min={0} className="u-full" placeholder="Total gross monthly salary" disabled
             formatter={(v) => v ? `₹ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
             parser={(v) => v.replace(/₹\s?|(,*)/g, "")}
           />
