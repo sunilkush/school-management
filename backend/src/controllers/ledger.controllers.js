@@ -217,28 +217,41 @@ export const reverseJournalEntry = asyncHandler(async (req, res) => {
 
   const reversalDate = parseDate(req.body.date, "date") || new Date();
 
-  const reversal = await JournalEntry.create({
-    schoolId,
-    academicYearId: original.academicYearId,
-    entryNumber: await nextEntryNumber(schoolId, reversalDate),
-    date: reversalDate,
-    narration: req.body.narration || `Reversal of ${original.entryNumber}`,
-    lines: original.lines.map((l) => ({
-      accountId: l.accountId,
-      debit: l.credit,
-      credit: l.debit,
-      description: l.description,
-    })),
-    source: original.source,
-    status: "posted",
-    postedAt: new Date(),
-    postedBy: req.user._id,
-    reversesEntryId: original._id,
-    createdBy: req.user._id,
-  });
+  // Claimed before the mirror entry is written: two reversals sent together both passed the
+  // "already reversed" check above and each posted a mirror entry, undoing the original twice.
+  const reversalId = new mongoose.Types.ObjectId();
+  const claim = await JournalEntry.updateOne(
+    { _id: original._id, schoolId, status: "posted", reversedByEntryId: null },
+    { $set: { reversedByEntryId: reversalId } }
+  );
+  if (!claim.modifiedCount) throw new ApiError(409, "This entry has already been reversed");
 
-  original.reversedByEntryId = reversal._id;
-  await original.save();
+  let reversal;
+  try {
+    reversal = await JournalEntry.create({
+      _id: reversalId,
+      schoolId,
+      academicYearId: original.academicYearId,
+      entryNumber: await nextEntryNumber(schoolId, reversalDate),
+      date: reversalDate,
+      narration: req.body.narration || `Reversal of ${original.entryNumber}`,
+      lines: original.lines.map((l) => ({
+        accountId: l.accountId,
+        debit: l.credit,
+        credit: l.debit,
+        description: l.description,
+      })),
+      source: original.source,
+      status: "posted",
+      postedAt: new Date(),
+      postedBy: req.user._id,
+      reversesEntryId: original._id,
+      createdBy: req.user._id,
+    });
+  } catch (error) {
+    await JournalEntry.updateOne({ _id: original._id, reversedByEntryId: reversalId }, { $set: { reversedByEntryId: null } });
+    throw error;
+  }
 
   return res.status(201).json(new ApiResponse(201, reversal, "Entry reversed"));
 });

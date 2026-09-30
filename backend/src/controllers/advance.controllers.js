@@ -42,6 +42,18 @@ export const createAdvance = asyncHandler(async (req, res) => {
     }],
   });
 
+  // The "already has one" check above and this create are separate steps, so a double-click made two
+  // pending advances for the same person. The earlier one stands; this one is withdrawn.
+  const [first] = await LoanAdvance.find({ schoolId, employeeId, status: { $in: ["pending", "active"] } })
+    .sort({ createdAt: 1, _id: 1 })
+    .limit(1)
+    .select("_id")
+    .lean();
+  if (first && String(first._id) !== String(advance._id)) {
+    await LoanAdvance.deleteOne({ _id: advance._id });
+    throw new ApiError(409, "Employee already has an active or pending advance");
+  }
+
   return sendSuccess(res, { data: advance, message: "Advance request submitted successfully" }, 201);
 });
 

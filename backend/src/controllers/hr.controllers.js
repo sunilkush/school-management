@@ -239,16 +239,27 @@ export const moveApplicationStage = asyncHandler(async (req, res) => {
   const problem = validateStageMove(application.stage, stage);
   if (problem) throw new ApiError(400, problem);
 
-  application.stage = stage;
-  application.history.push({
-    stage,
-    at: new Date(),
-    by: req.user._id,
-    note: note || "",
-    rating: rating ?? null,
-    scheduledFor: parseDate(scheduledFor, "scheduled date"),
-  });
-  await application.save();
+  // Applied only while the application is still at the stage that was checked: two moves sent
+  // together both passed validateStageMove and both wrote history, so the record showed a candidate
+  // moved twice (or to two different stages).
+  const moved = await JobApplication.findOneAndUpdate(
+    { _id: application._id, schoolId, stage: application.stage },
+    {
+      $set: { stage },
+      $push: {
+        history: {
+          stage,
+          at: new Date(),
+          by: req.user._id,
+          note: note || "",
+          rating: rating ?? null,
+          scheduledFor: parseDate(scheduledFor, "scheduled date"),
+        },
+      },
+    },
+    { new: true, runValidators: true }
+  );
+  if (!moved) throw new ApiError(409, "This application was just moved — refresh to see where it is");
 
   // Filling the last opening closes the posting on its own — otherwise it sits "open" and the
   // school keeps getting applications for a job that no longer exists.
@@ -263,7 +274,7 @@ export const moveApplicationStage = asyncHandler(async (req, res) => {
     }
   }
 
-  return res.json(new ApiResponse(200, application, `Moved to ${stage}`));
+  return res.json(new ApiResponse(200, moved, `Moved to ${stage}`));
 });
 
 export const reopenApplication = asyncHandler(async (req, res) => {

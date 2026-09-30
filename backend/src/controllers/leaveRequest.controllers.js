@@ -111,6 +111,25 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
     attachmentUrl: attachmentUrl?.trim(),
   });
 
+  // The overlap check above and this create are separate steps: a double-click filed the same days
+  // twice. If an earlier request now covers these days, it stands and this one is withdrawn.
+  const earlier = await LeaveRequest.exists({
+    _id: { $ne: leaveRequest._id },
+    schoolId,
+    userId: resolvedUserId,
+    status: { $in: ["pending", "approved"] },
+    startDate: { $lt: new Date(lastDay.getTime() + DAY_MS) },
+    endDate: { $gte: firstDay },
+    $or: [
+      { createdAt: { $lt: leaveRequest.createdAt } },
+      { createdAt: leaveRequest.createdAt, _id: { $lt: leaveRequest._id } },
+    ],
+  });
+  if (earlier) {
+    await LeaveRequest.deleteOne({ _id: leaveRequest._id });
+    throw new ApiError(409, "There is already a leave request covering these days");
+  }
+
   res.status(201).json(new ApiResponse(201, leaveRequest, "Leave request created successfully"));
 });
 

@@ -133,29 +133,44 @@ export const updatePOStatus = asyncHandler(async (req, res) => {
   const order = await PurchaseOrder.findOne({ _id: id, schoolId });
   if (!order) throw new ApiError(404, "Purchase order not found");
 
+  const loadedAt = order.updatedAt;
+  const stockIn = [];
   order.status = status;
   if (status === "approved") order.approvedBy = req.user._id;
   if (["received", "partial"].includes(status)) {
     order.receivedDate = receivedDate || new Date();
-    if (receivedItems) {
-      receivedItems.forEach(({ index, qty }) => {
-        if (order.items[index]) order.items[index].receivedQty = qty;
-      });
-      const allReceived = order.items.every((i) => i.receivedQty >= i.quantity);
-      order.status = allReceived ? "received" : "partial";
-
-      // Update inventory stock when items are received
+    if (Array.isArray(receivedItems)) {
+      // qty is the running total received for that line. Stock goes up by what is new since the
+      // last receipt, never past what was ordered: adding the whole running total each time counted
+      // earlier deliveries again (3 then 5 received added 8), and repeating a receipt added it twice.
       for (const ri of receivedItems) {
         const item = order.items[ri.index];
-        if (!item || !ri.inventoryItemId || !(Number(ri.qty) > 0)) continue;
-        // This school's stock only: by id alone, receiving an order added to another school's item.
-        await Inventory.updateOne({ _id: ri.inventoryItemId, schoolId }, { $inc: { quantity: Number(ri.qty) } });
+        if (!item) continue;
+        const before = Number(item.receivedQty) || 0;
+        const now = Math.min(Math.max(Number(ri.qty) || 0, before), Number(item.quantity) || 0);
+        item.receivedQty = now;
+        if (ri.inventoryItemId && now > before) stockIn.push({ id: ri.inventoryItemId, qty: now - before });
       }
+      const allReceived = order.items.every((i) => i.receivedQty >= i.quantity);
+      order.status = allReceived ? "received" : "partial";
     }
   }
 
-  await order.save();
-  return res.status(200).json(new ApiResponse(200, order, "Status updated"));
+  // Saved only if nobody changed the order since it was read, so two receipts sent together cannot
+  // both add their stock.
+  const saved = await PurchaseOrder.findOneAndUpdate(
+    { _id: order._id, schoolId, updatedAt: loadedAt },
+    { $set: { status: order.status, approvedBy: order.approvedBy, receivedDate: order.receivedDate, items: order.items } },
+    { new: true, runValidators: true }
+  );
+  if (!saved) throw new ApiError(409, "This order was just updated — refresh and try again");
+
+  // This school's stock only: by id alone, receiving an order added to another school's item.
+  for (const { id: itemId, qty } of stockIn) {
+    await Inventory.updateOne({ _id: itemId, schoolId }, { $inc: { quantity: qty } });
+  }
+
+  return res.status(200).json(new ApiResponse(200, saved, "Status updated"));
 });
 
 export const deletePurchaseOrder = asyncHandler(async (req, res) => {

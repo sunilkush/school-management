@@ -127,13 +127,30 @@ export const issueBook = asyncHandler(async (req, res) => {
 
     await session.commitTransaction();
 
+    // The limit and same-book checks ran before the transaction, so issues sent together could all
+    // pass them. Recounted now: the earliest loans stand, and this one is undone (its copy put back)
+    // if it is a second copy of a title or goes past the limit.
+    const loans = await IssuedBook.find({ schoolId, [borrowerField]: borrowerId, status: { $in: ["Issued", "Overdue"] } })
+      .sort({ createdAt: 1, _id: 1 })
+      .select("_id bookId")
+      .lean();
+    const position = loans.findIndex((loan) => String(loan._id) === String(issuedBook._id));
+    const sameBookEarlier = loans.slice(0, Math.max(position, 0)).some((loan) => String(loan.bookId) === String(bookId));
+    if (sameBookEarlier || (Number.isFinite(limit) && position >= limit)) {
+      await IssuedBook.deleteOne({ _id: issuedBook._id });
+      await Book.updateOne({ _id: bookId, schoolId }, [
+        { $set: { availableCopies: { $min: [{ $add: ["$availableCopies", 1] }, "$totalCopies"] } } },
+      ]);
+      throw new ApiError(409, sameBookEarlier ? "This person already has a copy of this book" : `The limit is ${limit} books; return one first.`);
+    }
+
     const populated = await IssuedBook.findById(issuedBook._id)
       .populate("bookId", "title author isbn")
       .populate("schoolId", "name");
 
     res.status(201).json(new ApiResponse(201, populated, "Book issued successfully"));
   } catch (err) {
-    await session.abortTransaction();
+    if (session.inTransaction()) await session.abortTransaction();
     throw err;
   } finally {
     session.endSession();

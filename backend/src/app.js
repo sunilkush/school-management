@@ -71,6 +71,14 @@ const asClientError = (err) => {
     return { statusCode: 400, message: `${err.path} is not a valid ${err.kind === "ObjectId" ? "id" : err.kind}` };
   }
 
+  // Two requests changed the same record inside transactions at the same moment and MongoDB let one
+  // through. The other used to reach the user as a 500 "Please retry your operation"; it is a
+  // conflict, and trying again (after a refresh) is the right answer.
+  const labels = err?.errorLabels ? [...err.errorLabels] : [];
+  if (labels.includes("TransientTransactionError") || err?.code === 112 || err?.codeName === "WriteConflict") {
+    return { statusCode: 409, message: "This was changed by someone else at the same moment — refresh and try again" };
+  }
+
   if (err?.code === 11000) {
     const fields = Object.keys(err.keyPattern || err.keyValue || {}).join(", ");
     return { statusCode: 409, message: fields ? `A record with that ${fields} already exists` : "That record already exists" };
