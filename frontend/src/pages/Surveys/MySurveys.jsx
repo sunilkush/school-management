@@ -136,7 +136,7 @@ const MySurveys = () => {
     <div className="page-wrapper">
       <PageHeader
         title="Surveys"
-        subtitle="Questions the school has asked you"
+        subtitle="Short questionnaires from the school (feedback, opinions). Answer the open ones; anonymous surveys do not show your name to anyone."
         icon={<Badge count={waiting.length} size="small"><FormOutlined /></Badge>}
       />
 
@@ -144,7 +144,7 @@ const MySurveys = () => {
         <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
       ) : !mine?.length ? (
         <div className="empty-state">
-          <Empty description="Nothing to answer at the moment" />
+          <Empty description="No survey to answer right now. When the school sends a questionnaire to staff, it appears here until you answer it or it closes." />
         </div>
       ) : (
         <>

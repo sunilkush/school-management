@@ -64,7 +64,7 @@ const MyAppraisal = () => {
 
       {!myReview ? (
         <div className="empty-state">
-          <Empty description="You have no appraisal open" />
+          <Empty description="No appraisal open. When the school starts a staff appraisal cycle, you score yourself on each criterion here, your reviewer scores you separately, and the final result is shown on this page." />
           <p style={{ color: "var(--text-muted)", marginTop: 12 }}>
             One will appear here when the school starts its next review round.
           </p>

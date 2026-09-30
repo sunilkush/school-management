@@ -89,7 +89,7 @@ const MyCirculars = () => {
     <div className="page-wrapper">
       <PageHeader
         title="Circulars"
-        subtitle="Notices from the school"
+        subtitle="Official notices from the school office. Open each one; where asked, confirm that you have read it."
         icon={
           <Badge count={needsAction.length} size="small">
             <FileTextOutlined />
@@ -101,7 +101,7 @@ const MyCirculars = () => {
         <div style={{ textAlign: "center", padding: 64 }}><Spin size="large" /></div>
       ) : !mine?.length ? (
         <div className="empty-state">
-          <Empty description="Nothing from the school yet" />
+          <Empty description="No circulars yet. When the office publishes a notice for you (holiday, meeting, rule change), it appears here, and the ones that need your confirmation are marked." />
         </div>
       ) : (
         <>
