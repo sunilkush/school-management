@@ -245,15 +245,29 @@ export const submitResponse = asyncHandler(async (req, res) => {
       { $set: { answers, submittedAt: new Date() } }
     );
   } else {
-    await SurveyResponse.create({
-      schoolId,
-      surveyId: survey._id,
-      // The whole anonymity guarantee is this line.
-      respondentId: survey.isAnonymous ? null : req.user._id,
-      respondentRole: req.userRole?.name || "",
-      answers,
-    });
-    await SurveyParticipation.create({ schoolId, surveyId: survey._id, userId: req.user._id });
+    // The participation record is written first: its unique index lets exactly one of two
+    // simultaneous submits (a double-click) through. Written after the response, both responses
+    // were saved before the second participation failed — so an anonymous answer, which nothing
+    // can trace back to remove, was counted twice.
+    try {
+      await SurveyParticipation.create({ schoolId, surveyId: survey._id, userId: req.user._id });
+    } catch (error) {
+      if (error?.code === 11000) throw new ApiError(409, "Your answers were already submitted");
+      throw error;
+    }
+    try {
+      await SurveyResponse.create({
+        schoolId,
+        surveyId: survey._id,
+        // The whole anonymity guarantee is this line.
+        respondentId: survey.isAnonymous ? null : req.user._id,
+        respondentRole: req.userRole?.name || "",
+        answers,
+      });
+    } catch (error) {
+      await SurveyParticipation.deleteOne({ surveyId: survey._id, userId: req.user._id });
+      throw error;
+    }
   }
 
   return res.json(
