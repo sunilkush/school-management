@@ -31,7 +31,7 @@ const CUSTOM_COMPONENT_OPTIONS = [
 const DEFAULTS = {
   pfEnabled: true,
   pfPercent: 12,
-  pfWageCeiling: 15000,
+  pfWageCeiling: 25000,
   pfAppliedOnCeiling: true,
   pfApplicableOn: "basicPlusDa",
   pfCustomComponents: [],

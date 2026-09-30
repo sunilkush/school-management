@@ -21,7 +21,7 @@ const payrollPolicySchema = new Schema(
     // per-structure toggle any more — that was a second place to configure the same thing.
     pfEnabled: { type: Boolean, default: true },
     pfPercent: { type: Number, default: 12, min: 0, max: 100 }, // employee share, deducted from pay
-    pfWageCeiling: { type: Number, default: 15000, min: 0 }, // statutory PF wage ceiling (₹15,000/month)
+    pfWageCeiling: { type: Number, default: 25000, min: 0 }, // statutory PF wage ceiling (₹25,000/month from 17 Sep 2026); the calculator never goes below the one in force
     pfAppliedOnCeiling: { type: Boolean, default: true }, // true: PF computed on min(wage, ceiling); false: on full applicable wage (voluntary higher PF)
     // Wage-base methodology is an organization-wide policy choice (how this school computes PF
     // wage for everyone), not a per-employee attribute — lives here, not on PayrollStructure.

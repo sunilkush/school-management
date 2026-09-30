@@ -52,7 +52,7 @@ export const payrollSettingsCreateSchema = z.object({
     schoolId: objectId.optional(),
     pfEnabled: z.boolean().default(true),
     pfPercent: z.number().min(0).max(100).default(12),
-    pfWageCeiling: z.number().nonnegative().default(15000),
+    pfWageCeiling: z.number().nonnegative().default(25000),
     pfAppliedOnCeiling: z.boolean().default(true),
     pfApplicableOn: pfApplicabilityEnum.default("basicPlusDa"),
     pfCustomComponents: z.array(z.string()).default([]),

@@ -50,9 +50,13 @@ export const estimatePayrollDeductions = (structure, settings) => {
     : s.pfApplicableOn === "custom"
       ? sumPayrollComponents(structure, s.pfCustomComponents)
       : basic + da;
-  const pfWage = s.pfAppliedOnCeiling === false ? rawPfWage : Math.min(rawPfWage, s.pfWageCeiling);
+  // Labour codes: PF wages are at least half of gross, and the statutory ceiling (₹25,000 from
+  // 17 Sep 2026) is a floor under the school's own setting. Same rules as the backend calculator.
+  const pfBase = Math.max(rawPfWage, gross / 2);
+  const ceiling = Math.max(Number(s.pfWageCeiling) || 0, dayjs().isBefore("2026-09-17") ? 15000 : 25000);
+  const pfWage = s.pfAppliedOnCeiling === false ? pfBase : Math.min(pfBase, ceiling);
   const statutoryPf = s.pfEnabled ? (Number(s.pfPercent) / 100) * pfWage : 0;
-  const vpf = s.pfEnabled ? (Number(structure.vpfPercent || 0) / 100) * rawPfWage : 0;
+  const vpf = s.pfEnabled ? (Number(structure.vpfPercent || 0) / 100) * pfBase : 0;
   const pf = statutoryPf + vpf;
 
   const esiEligible = Boolean(s.esiEnabled) && gross <= s.esiWageCeiling;

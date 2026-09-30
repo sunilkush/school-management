@@ -379,6 +379,7 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
     attendance,
     policy,
     employeeStatutory: employee.statutoryCompliance,
+    period: { year, month },
   });
 
   const warnings = [];
