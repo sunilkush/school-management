@@ -42,8 +42,10 @@ const FinancialReports = () => {
   const buildParams = () => {
     const p = {};
     if (dateRange?.length === 2) {
-      p.startDate = dateRange[0].toISOString();
-      p.endDate   = dateRange[1].toISOString();
+      // Whole days: a picked date carries the time it was picked, which cut part of the first and
+      // last day out of the report.
+      p.startDate = dateRange[0].startOf("day").toISOString();
+      p.endDate   = dateRange[1].endOf("day").toISOString();
     }
     return p;
   };

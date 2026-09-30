@@ -53,8 +53,9 @@ const LeaveManagement = () => {
     const params = { page: 1, limit: 20 };
     if (statusFilter) params.status = statusFilter;
     if (dateRange?.length === 2) {
-      params.fromDate = dateRange[0].toISOString();
-      params.toDate   = dateRange[1].toISOString();
+      // Whole days: a picked date carries the time it was picked.
+      params.fromDate = dateRange[0].startOf("day").toISOString();
+      params.toDate   = dateRange[1].endOf("day").toISOString();
     }
     dispatch(fetchHostelLeaves(params));
     setPage(1);
@@ -64,8 +65,10 @@ const LeaveManagement = () => {
     try {
       const payload = {
         ...values,
-        fromDate: values.dateRange[0].toISOString(),
-        toDate:   values.dateRange[1].toISOString(),
+        // A leave covers whole days; with the pick-time kept, two leaves on the same day could
+        // miss each other in the overlap check.
+        fromDate: values.dateRange[0].startOf("day").toISOString(),
+        toDate:   values.dateRange[1].endOf("day").toISOString(),
       };
       delete payload.dateRange;
       await dispatch(createHostelLeave(payload)).unwrap();

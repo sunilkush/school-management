@@ -2,6 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
+import { downloadCsv, escapeHtml } from "../../../../utils/exportFormat";
 
 const toRows = (items) =>
   items.map((r, idx) => ({
@@ -14,18 +15,6 @@ const toRows = (items) =>
     "Created At": r.createdAt ? dayjs(r.createdAt).format("YYYY-MM-DD") : "-",
   }));
 
-const downloadBlob = (content, filename, type) => {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
-
 const ExportButtons = () => {
   const { items = [] } = useSelector((state) => state.reports || {});
 
@@ -33,10 +22,9 @@ const ExportButtons = () => {
     if (!items.length) return;
     const rows = toRows(items);
     const headers = Object.keys(rows[0]);
-    const csv = [headers, ...rows.map((r) => headers.map((h) => `"${r[h] ?? ""}"`))]
-      .map((row) => row.join(","))
-      .join("\n");
-    downloadBlob(csv, `reports-${dayjs().format("YYYY-MM-DD")}.csv`, "text/csv");
+    // The shared writer: quotes inside a value no longer break the row, and a school or report name
+    // starting with = + - @ cannot run as a formula when the file is opened in Excel.
+    downloadCsv(`reports-${dayjs().format("YYYY-MM-DD")}.csv`, [headers, ...rows.map((r) => headers.map((h) => r[h]))]);
   };
 
   const exportExcel = () => {
@@ -57,8 +45,8 @@ const ExportButtons = () => {
       td{padding:6px 7px;border-bottom:1px solid #e2e8f0;font-size:12px}
       @media print{button{display:none}}</style></head><body>
       <h2>Reports — ${dayjs().format("DD MMMM YYYY")}</h2>
-      <table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead>
-      <tbody>${rows.map((r) => `<tr>${headers.map((h) => `<td>${r[h] ?? ""}</td>`).join("")}</tr>`).join("")}</tbody>
+      <table><thead><tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map((r) => `<tr>${headers.map((h) => `<td>${escapeHtml(r[h] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody>
       </table></body></html>`;
     const win = window.open("", "_blank");
     win.document.write(html);

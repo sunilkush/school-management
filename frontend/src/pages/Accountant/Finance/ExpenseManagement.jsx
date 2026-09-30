@@ -68,8 +68,10 @@ const ExpenseManagement = () => {
     if (modeFilter) params.paymentMode = modeFilter;
     if (statusFilter) params.status = statusFilter;
     if (dateRange?.length === 2) {
-      params.startDate = dateRange[0].toISOString();
-      params.endDate   = dateRange[1].toISOString();
+      // Whole days: a picked date carries the time it was picked, so the first day's earlier
+      // entries fell outside the range.
+      params.startDate = dateRange[0].startOf("day").toISOString();
+      params.endDate   = dateRange[1].endOf("day").toISOString();
     }
     dispatch(fetchExpenses(params));
     dispatch(fetchExpenseSummary(params));

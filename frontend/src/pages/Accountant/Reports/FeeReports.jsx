@@ -49,8 +49,10 @@ const FeeReports = () => {
     const params = { page: 1, limit: 50 };
     if (modeFilter) params.paymentMode = modeFilter;
     if (dateRange?.length === 2) {
-      params.startDate = dateRange[0].toISOString();
-      params.endDate   = dateRange[1].toISOString();
+      // Whole days: a picked date carries the time it was picked, which cut part of the first and
+      // last day out of the report.
+      params.startDate = dateRange[0].startOf("day").toISOString();
+      params.endDate   = dateRange[1].endOf("day").toISOString();
     }
     dispatch(fetchPayments(params));
     setPage(1);
