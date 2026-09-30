@@ -81,6 +81,7 @@ const GeofenceSettings = () => {
         startTime: hours.startTime ? dayjs(hours.startTime, "HH:mm") : undefined,
         endTime: hours.endTime ? dayjs(hours.endTime, "HH:mm") : undefined,
         autoCheckoutEnabled: hours.autoCheckoutEnabled !== false,
+        autoAbsentEnabled: hours.autoAbsentEnabled !== false,
       });
     }
   }, [geofenceSettings, form]);
@@ -325,6 +326,17 @@ const GeofenceSettings = () => {
           </div>
           <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>
             When on, anyone who checked in but forgot to check out is auto-checked-out once School Ends passes.
+          </div>
+
+          <div style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
+            <Form.Item name="autoAbsentEnabled" valuePropName="checked" initialValue={true} noStyle>
+              <Switch size="small" />
+            </Form.Item>
+            <span style={{ fontSize: 13, fontWeight: 600, color: C.textSub }}>Mark absent if no check-in by end of school hours</span>
+          </div>
+          <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>
+            When on, staff who never checked in are marked Absent once School Ends passes (Leave if their leave is
+            approved). Not on Sundays or Holiday events. Students are marked by their teacher's roll call instead.
           </div>
 
           <Button

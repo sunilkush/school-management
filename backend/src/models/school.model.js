@@ -184,6 +184,8 @@ const schoolSchema = new Schema(
       // into a wall of "late" rows and the flag stops meaning anything.
       lateGraceMinutes: { type: Number, default: 10, min: 0, max: 120 },
       autoCheckoutEnabled: { type: Boolean, default: true },
+      // Staff who never checked in by School Ends are recorded absent (jobs/autoAbsent.job.js).
+      autoAbsentEnabled: { type: Boolean, default: true },
     },
 
     /* ================= STATUTORY IDENTITY ================= */

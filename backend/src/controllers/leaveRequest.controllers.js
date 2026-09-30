@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { LeaveRequest } from "../models/LeaveRequest.model.js";
+import { Attendance, ATTENDANCE_ROLES } from "../models/attendance.model.js";
 import { Student } from "../models/student.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -212,6 +213,50 @@ export const getMyLeaveRequests = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, requests, "My leave requests fetched successfully"));
 });
 
+// Attendance days are UTC midnights; a date picked in the browser may arrive as IST midnight
+// (18:30 the day before in UTC), so round to the nearest day rather than truncating.
+const toAttendanceDay = (d) => new Date(Math.floor((new Date(d).getTime() + DAY_MS / 2) / DAY_MS) * DAY_MS);
+
+/**
+ * An approved leave shows as "Leave" in attendance on each of its days, straight away rather
+ * than only once the day is over. Sundays are skipped (no school). A day that already has a
+ * record keeps it (they came in after all, or someone marked it), except the end-of-day job's own
+ * "absent" (jobs/autoAbsent.job.js), which is exactly what an approval made after the day corrects.
+ */
+const recordLeaveInAttendance = async (leave, approverId) => {
+  const first = toAttendanceDay(leave.startDate);
+  const last = toAttendanceDay(leave.endDate);
+  const days = [];
+  for (let t = first.getTime(); t <= last.getTime() && days.length < 366; t += DAY_MS) {
+    const day = new Date(t);
+    if (day.getUTCDay() !== 0) days.push(day);
+  }
+  if (!days.length) return;
+
+  const role = ATTENDANCE_ROLES.includes(leave.role) ? leave.role : "staff";
+  const remarks = "On approved leave";
+  try {
+    await Attendance.bulkWrite([
+      ...days.map((date) => ({
+        updateOne: {
+          filter: { schoolId: leave.schoolId, userId: leave.userId, date },
+          update: { $setOnInsert: { role, status: "leave", source: "manual", markedBy: approverId, remarks } },
+          upsert: true,
+        },
+      })),
+      {
+        updateMany: {
+          filter: { schoolId: leave.schoolId, userId: leave.userId, source: "auto", status: "absent", date: { $in: days } },
+          update: { $set: { status: "leave", remarks } },
+        },
+      },
+    ], { ordered: false });
+  } catch (err) {
+    // A check-in for one of these days landed at the same moment; that record stands.
+    if (!err?.writeErrors?.every?.((e) => e.code === 11000)) throw err;
+  }
+};
+
 /* ── APPROVE LEAVE REQUEST ───────────────────────────────────────────────── */
 export const approveLeaveRequest = asyncHandler(async (req, res) => {
   const isSuperAdmin = (req.userRole?.name || "").toLowerCase() === "super admin";
@@ -232,6 +277,8 @@ export const approveLeaveRequest = asyncHandler(async (req, res) => {
     { new: true, runValidators: true }
   );
   if (!decided) throw new ApiError(409, "This leave request was just decided by someone else — refresh to see it");
+
+  await recordLeaveInAttendance(decided, req.user._id);
 
   res
     .status(200)

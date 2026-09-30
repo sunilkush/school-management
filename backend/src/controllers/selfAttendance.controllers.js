@@ -18,7 +18,7 @@ function haversineMetres(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
-const ROLE_MAP = {
+export const ROLE_MAP = {
   "Super Admin": "super_admin",
   "School Admin": "school_admin",
   Admin: "admin",
@@ -247,7 +247,7 @@ const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/; // "HH:mm", 24-hour
 ═══════════════════════════════════════════ */
 export const updateGeofenceSettings = asyncHandler(async (req, res) => {
   const { schoolId } = req.user;
-  const { lat, lng, geofenceRadius, address, startTime, endTime, autoCheckoutEnabled } = req.body;
+  const { lat, lng, geofenceRadius, address, startTime, endTime, autoCheckoutEnabled, autoAbsentEnabled } = req.body;
 
   if (lat == null || lng == null) throw new ApiError(400, "lat and lng are required");
   if (!(Number(lat) >= -90 && Number(lat) <= 90) || !(Number(lng) >= -180 && Number(lng) <= 180)) {
@@ -269,6 +269,7 @@ export const updateGeofenceSettings = asyncHandler(async (req, res) => {
   if (startTime != null) update["attendanceHours.startTime"] = startTime;
   if (endTime != null) update["attendanceHours.endTime"] = endTime;
   if (autoCheckoutEnabled != null) update["attendanceHours.autoCheckoutEnabled"] = autoCheckoutEnabled;
+  if (autoAbsentEnabled != null) update["attendanceHours.autoAbsentEnabled"] = autoAbsentEnabled === true;
 
   const school = await School.findByIdAndUpdate(
     schoolId,

@@ -70,7 +70,9 @@ const attendanceSchema = new Schema(
     markedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      // Nobody marks an "auto" row: the end-of-day job records it (jobs/autoAbsent.job.js).
+      required: function markedByRequired() { return this.source !== "auto"; },
+      default: null,
     },
     remarks: {
       type: String,
@@ -110,7 +112,7 @@ const attendanceSchema = new Schema(
      */
     source: {
       type: String,
-      enum: ["manual", "self", "device", "online"],
+      enum: ["manual", "self", "device", "online", "auto"],
       default: "manual",
     },
     deviceId: {
