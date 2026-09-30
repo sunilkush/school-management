@@ -4,7 +4,7 @@ import {
   Alert, Button, Form, Input, DatePicker, Select, Modal, Table, Tag, Popconfirm, message, Empty, Radio, Switch,
   Progress, Segmented, Tooltip as AntTooltip,
 } from "antd";
-import { PlusOutlined, CalendarOutlined } from "@ant-design/icons";
+import { PlusOutlined, CalendarOutlined, SwapOutlined } from "@ant-design/icons";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import dayjs from "dayjs";
 import {
@@ -12,6 +12,9 @@ import {
   createLeaveRequest,
   deleteLeaveRequest,
   fetchMyLeaveBalance,
+  claimCompOff,
+  fetchMyCompOffs,
+  withdrawCompOff,
 } from "../../../features/leaveRequestSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { getRoleName } from "../../../utils/roles";
@@ -26,8 +29,9 @@ const LEAVE_TYPES = [
   { value: "paid",      label: "Earned Leave (EL)" },
   { value: "emergency", label: "Emergency Leave" },
   { value: "other",     label: "Other" },
+  { value: "compoff",   label: "Comp Off (CO)" },
 ];
-const SHORT_TYPE = { casual: "CL", paid: "EL" };
+const SHORT_TYPE = { casual: "CL", paid: "EL", compoff: "CO" };
 const HALF_LABEL = { A: "1st half", B: "2nd half" };
 const fyLabel = (fy) => (fy ? `${fy}-${String(fy + 1).slice(2)}` : "");
 
@@ -65,12 +69,43 @@ const TeacherLeave = () => {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("all");
   const [form] = Form.useForm();
+  const [coOpen, setCoOpen] = useState(false);
+  const [coClaims, setCoClaims] = useState([]);
+  const [coSaving, setCoSaving] = useState(false);
+  const [coForm] = Form.useForm();
   const halfDay = Form.useWatch("halfDay", form);
   const isStaff = Boolean(myBalance?.isStaff);
 
+  const loadCompOffs = () => dispatch(fetchMyCompOffs()).unwrap().then((d) => setCoClaims(Array.isArray(d) ? d : [])).catch(() => {});
   const refresh = () => {
     dispatch(getMyLeaveRequests());
     dispatch(fetchMyLeaveBalance());
+    loadCompOffs();
+  };
+
+  const handleClaimCompOff = async () => {
+    const v = await coForm.validateFields();
+    setCoSaving(true);
+    try {
+      await dispatch(claimCompOff({ body: { date: v.date.format("YYYY-MM-DD"), halfDay: Boolean(v.halfDay), reason: v.reason } })).unwrap();
+      message.success("Comp Off claim sent for approval.");
+      setCoOpen(false);
+      coForm.resetFields();
+      loadCompOffs();
+    } catch (e) {
+      message.error(typeof e === "string" ? e : "Could not send the claim.");
+    } finally {
+      setCoSaving(false);
+    }
+  };
+  const handleWithdrawCompOff = async (id) => {
+    try {
+      await dispatch(withdrawCompOff({ id })).unwrap();
+      message.success("Claim withdrawn.");
+      loadCompOffs();
+    } catch (e) {
+      message.error(typeof e === "string" ? e : "Could not withdraw.");
+    }
   };
   useEffect(() => { refresh(); }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -79,6 +114,7 @@ const TeacherLeave = () => {
     ? [
         { value: "casual", label: `Casual Leave (CL) · ${myBalance?.CL?.available ?? 0} left`, disabled: !(myBalance?.CL?.available > 0) },
         { value: "paid",   label: `Earned Leave (EL) · ${myBalance?.EL?.available ?? 0} left`, disabled: !(myBalance?.EL?.available > 0) },
+        { value: "compoff", label: `Comp Off (CO) · ${myBalance?.CO?.available ?? 0} left`, disabled: !(myBalance?.CO?.available > 0) },
       ]
     : LEAVE_TYPES;
 
@@ -131,14 +167,14 @@ const TeacherLeave = () => {
   const thisMonth = monthly.find((m) => m.month === dayjs().format("YYYY-MM")) || {};
   // Consumed this month: approved plus applied-for (still pending), so a request counts the
   // moment it is made; the chart shows only what has been approved.
-  const approvedNow = (thisMonth.CL || 0) + (thisMonth.EL || 0);
-  const pendingNow = (thisMonth.pendingCL || 0) + (thisMonth.pendingEL || 0);
+  const approvedNow = (thisMonth.CL || 0) + (thisMonth.EL || 0) + (thisMonth.CO || 0);
+  const pendingNow = (thisMonth.pendingCL || 0) + (thisMonth.pendingEL || 0) + (thisMonth.pendingCO || 0);
 
   const columns = [
     {
       title: "Type",
       dataIndex: "leaveType",
-      render: (v) => <Tag color={v === "casual" ? "blue" : v === "paid" ? "green" : "default"}>{SHORT_TYPE[v] || LEAVE_TYPES.find((t) => t.value === v)?.label || v || "—"}</Tag>,
+      render: (v) => <Tag color={v === "casual" ? "blue" : v === "paid" ? "green" : v === "compoff" ? "purple" : "default"}>{SHORT_TYPE[v] || LEAVE_TYPES.find((t) => t.value === v)?.label || v || "—"}</Tag>,
     },
     {
       title: "Dates",
@@ -191,9 +227,14 @@ const TeacherLeave = () => {
         subtitle="Your leave balance, what you have used, and your applications"
         icon={<CalendarOutlined />}
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
-            Apply Leave
-          </Button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {isStaff && (
+              <Button icon={<SwapOutlined />} onClick={() => setCoOpen(true)}>Claim Comp Off</Button>
+            )}
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
+              Apply Leave
+            </Button>
+          </div>
         }
       />
 
@@ -202,13 +243,14 @@ const TeacherLeave = () => {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
             <span className="u-title">Leave balance · {fyLabel(myBalance.fy)}</span>
             <span className="u-muted" style={{ fontSize: 11.5 }}>
-              +{myBalance.policy?.clPerMonth ?? 1} CL and +{myBalance.policy?.elPerMonth ?? 0.5} EL every month · unused leave is paid with March salary
+              +{myBalance.policy?.clPerMonth ?? 1} CL and +{myBalance.policy?.elPerMonth ?? 0.5} EL every month · CO for a Sunday/holiday worked · unused leave is paid with March salary
             </span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, alignContent: "start" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(118px, 1fr))", gap: 8, alignContent: "start" }}>
               <BalanceTile label="Casual (CL)" b={myBalance.CL} color="var(--primary)" />
               <BalanceTile label="Earned (EL)" b={myBalance.EL} color="var(--success)" />
+              <BalanceTile label="Comp Off (CO)" b={myBalance.CO} color="var(--purple)" />
               <div style={tile}>
                 <div style={tileLabel("var(--warning)")}>{dayjs().format("MMM")} consumed</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 2 }}>
@@ -232,7 +274,8 @@ const TeacherLeave = () => {
                     <YAxis allowDecimals tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickLine={false} axisLine={false} />
                     <Tooltip formatter={(v, name) => [`${v} day(s)`, name]} cursor={{ fill: "var(--border-muted)", opacity: 0.4 }} />
                     <Bar dataKey="CL" name="CL" stackId="leave" fill="var(--primary)" />
-                    <Bar dataKey="EL" name="EL" stackId="leave" fill="var(--success)" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="EL" name="EL" stackId="leave" fill="var(--success)" />
+                    <Bar dataKey="CO" name="CO" stackId="leave" fill="var(--purple)" radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -264,9 +307,59 @@ const TeacherLeave = () => {
         />
       </div>
 
+      {coClaims.length > 0 && (
+        <div className="section-panel" style={{ marginTop: 16, padding: 14 }}>
+          <div className="u-title" style={{ marginBottom: 10 }}>Comp Off claims</div>
+          <Table
+            size="small" rowKey="_id" dataSource={coClaims} pagination={{ pageSize: 5, hideOnSinglePage: true }} scroll={{ x: "max-content" }}
+            columns={[
+              { title: "Day worked", dataIndex: "date", render: (v) => dayjs(v).format("ddd, DD MMM YYYY") },
+              { title: "Days", dataIndex: "days" },
+              { title: "Work", dataIndex: "reason", ellipsis: true },
+              {
+                title: "Status", dataIndex: "status",
+                render: (v, r) => (
+                  <>
+                    <Tag color={STATUS_COLOR[v] || "default"}>{String(v).toUpperCase()}</Tag>
+                    {r.rejectionReason ? <div style={{ color: "var(--danger)", fontSize: 11 }}>{r.rejectionReason}</div> : null}
+                  </>
+                ),
+              },
+              {
+                title: "", render: (_, r) => r.status === "pending" ? (
+                  <Popconfirm title="Withdraw this claim?" onConfirm={() => handleWithdrawCompOff(r._id)} okText="Withdraw" okButtonProps={{ danger: true }}>
+                    <Button size="small" type="text" danger>Withdraw</Button>
+                  </Popconfirm>
+                ) : null,
+              },
+            ]}
+          />
+        </div>
+      )}
+
+      <Modal title="Claim Comp Off" open={coOpen} onCancel={() => { setCoOpen(false); coForm.resetFields(); }} footer={null} destroyOnClose width={420}>
+        <div className="u-muted" style={{ fontSize: 12, marginBottom: 12 }}>
+          Worked on a Sunday or a school holiday? Claim it here. Once approved it is added to your Comp Off (CO) balance.
+        </div>
+        <Form form={coForm} layout="vertical" onFinish={handleClaimCompOff} requiredMark={false} initialValues={{ halfDay: false }}>
+          <Form.Item label="Day worked" name="date" rules={[{ required: true, message: "Pick the day" }]}
+            extra="A Sunday or a holiday, within the last 90 days">
+            <DatePicker className="u-full" disabledDate={(d) => d && (d.isAfter(dayjs(), "day") || d.isBefore(dayjs().subtract(90, "day"), "day"))} />
+          </Form.Item>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <Form.Item name="halfDay" valuePropName="checked" noStyle><Switch size="small" /></Form.Item>
+            <span style={{ fontSize: 13 }}>Only half the day (0.5)</span>
+          </div>
+          <Form.Item label="What was the work" name="reason" rules={[{ required: true, message: "Add a line about the work" }]}>
+            <Input.TextArea rows={2} placeholder="e.g. Annual day preparation" />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" block loading={coSaving}>Send for approval</Button>
+        </Form>
+      </Modal>
+
       <Modal title="Apply for Leave" open={open} onCancel={() => { setOpen(false); form.resetFields(); }} footer={null} destroyOnClose width={440}>
-        {isStaff && !(myBalance?.CL?.available > 0) && !(myBalance?.EL?.available > 0) && (
-          <Alert type="warning" showIcon style={{ marginBottom: 12 }} message="No leave balance left" description="You can apply once more CL or EL is earned next month." />
+        {isStaff && !(myBalance?.CL?.available > 0) && !(myBalance?.EL?.available > 0) && !(myBalance?.CO?.available > 0) && (
+          <Alert type="warning" showIcon style={{ marginBottom: 12 }} message="No leave balance left" description="You can apply once more CL or EL is earned next month, or a Comp Off is approved." />
         )}
         <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ halfDay: false, halfDaySession: "A" }} requiredMark={false}>
           <Form.Item label="Leave type" name="leaveType" rules={[{ required: true, message: "Choose a leave type" }]}>

@@ -112,6 +112,27 @@ export const adjustLeaveBalance = createAsyncThunk(
   }
 );
 
+// Comp Off: a Sunday or holiday worked, claimed by staff and approved by an admin. The pages keep
+// these lists themselves; the thunks only talk to the API.
+const call = (method, url) => createAsyncThunk(`leaveRequests/${method}:${url}`, async (arg = {}, { rejectWithValue }) => {
+  try {
+    const { id, body, params } = arg || {};
+    const path = id ? url.replace(":id", id) : url;
+    const { data } = method === "get"
+      ? await apiClient.get(path, { params })
+      : await apiClient[method](path, body);
+    return data?.data ?? data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || err.message);
+  }
+});
+export const claimCompOff       = call("post", "/leave-requests/comp-off");
+export const fetchMyCompOffs    = call("get", "/leave-requests/comp-off/my");
+export const fetchCompOffClaims = call("get", "/leave-requests/comp-off");
+export const approveCompOff     = call("patch", "/leave-requests/comp-off/:id/approve");
+export const rejectCompOff      = call("patch", "/leave-requests/comp-off/:id/reject");
+export const withdrawCompOff    = call("delete", "/leave-requests/comp-off/:id");
+
 const initialState = {
   myBalance: null,
   balances: { fy: null, rows: [] },

@@ -30,6 +30,9 @@ import {
   createLeaveRequest,
   fetchLeaveBalances,
   adjustLeaveBalance,
+  fetchCompOffClaims,
+  approveCompOff,
+  rejectCompOff,
 } from "../../../features/leaveRequestSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import apiClient from "../../../api/httpClient";
@@ -57,11 +60,12 @@ const LEAVE_TYPE_COLOR = {
   sick:      "red",
   casual:    "blue",
   paid:      "green",
+  compoff:   "purple",
   emergency: "orange",
   other:     "default",
 };
 
-const LEAVE_TYPE_LABEL = { casual: "Casual (CL)", paid: "Earned (EL)", sick: "Sick", emergency: "Emergency", other: "Other" };
+const LEAVE_TYPE_LABEL = { casual: "Casual (CL)", paid: "Earned (EL)", compoff: "Comp Off (CO)", sick: "Sick", emergency: "Emergency", other: "Other" };
 const HALF_LABEL = { A: "First half", B: "Second half" };
 
 const STATUS_COLOR = {
@@ -205,6 +209,31 @@ const LeaveManagement = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [adjustFor, setAdjustFor] = useState(null);
+  const [coClaims, setCoClaims] = useState([]);
+  const [coLoading, setCoLoading] = useState(false);
+  const loadCompOffs = () => {
+    setCoLoading(true);
+    dispatch(fetchCompOffClaims()).unwrap()
+      .then((d) => setCoClaims(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setCoLoading(false));
+  };
+  const [coReject, setCoReject] = useState({ id: null, reason: "" });
+  const decideCompOff = async (id, approve, rejectionReason = "") => {
+    if (!approve && !rejectionReason.trim()) {
+      setCoReject({ id, reason: "" });
+      return;
+    }
+    try {
+      await dispatch(approve ? approveCompOff({ id }) : rejectCompOff({ id, body: { rejectionReason } })).unwrap();
+      message.success(approve ? "Comp Off approved" : "Comp Off rejected");
+      loadCompOffs();
+      dispatch(fetchLeaveBalances());
+      setCoReject({ id: null, reason: "" });
+    } catch (e) {
+      message.error(typeof e === "string" ? e : "Could not update the claim");
+    }
+  };
   const [adjustForm] = Form.useForm();
 
   /* ── Person picker ──
@@ -262,7 +291,8 @@ const LeaveManagement = () => {
     // it — the API returns 20 by default, which hid every older request, pending ones included.
     dispatch(fetchLeaveRequests({ schoolId, limit: 1000 }));
     dispatch(fetchLeaveBalances());
-  }, [schoolId, dispatch]);
+    loadCompOffs();
+  }, [schoolId, dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Balance adjustment (opening balance or a correction) ── */
   const handleAdjust = async () => {
@@ -392,6 +422,55 @@ const LeaveManagement = () => {
       children: <Table {...tableProps(requests, false)} />,
     },
     {
+      key: "compoff",
+      label: (
+        <span>
+          Comp Off{" "}
+          {coClaims.filter((c) => c.status === "pending").length > 0 && (
+            <Badge count={coClaims.filter((c) => c.status === "pending").length} style={{ backgroundColor: "var(--purple)", marginLeft: 4 }} />
+          )}
+        </span>
+      ),
+      children: (
+        <>
+          <div className="u-muted" style={{ fontSize: 12, marginBottom: 10 }}>
+            Staff claim a Sunday or holiday they worked. Approving adds it to their Comp Off (CO) balance.
+          </div>
+          <Table
+            rowKey="_id"
+            loading={coLoading}
+            dataSource={coClaims}
+            pagination={{ pageSize: 15, showSizeChanger: false }}
+            scroll={{ x: 700 }}
+            columns={[
+              { title: "Name", render: (_, r) => <span className="u-strong">{r.userId?.name || "—"}</span> },
+              { title: "Day worked", dataIndex: "date", render: (v) => dayjs(v).format("ddd, DD MMM YYYY") },
+              { title: "Days", dataIndex: "days" },
+              { title: "Work", dataIndex: "reason", ellipsis: true },
+              {
+                title: "Status", dataIndex: "status",
+                render: (v, r) => (
+                  <>
+                    <Tag color={v === "approved" ? "green" : v === "rejected" ? "red" : "orange"}>{String(v).toUpperCase()}</Tag>
+                    {r.decidedBy?.name ? <div className="u-muted" style={{ fontSize: 11 }}>by {r.decidedBy.name}</div> : null}
+                  </>
+                ),
+              },
+              {
+                title: "",
+                render: (_, r) => r.status === "pending" ? (
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <Button size="small" icon={<CheckOutlined />} onClick={() => decideCompOff(r._id, true)}>Approve</Button>
+                    <Button size="small" danger icon={<CloseOutlined />} onClick={() => decideCompOff(r._id, false)}>Reject</Button>
+                  </div>
+                ) : null,
+              },
+            ]}
+          />
+        </>
+      ),
+    },
+    {
       key: "balances",
       label: "Leave Balances",
       children: (
@@ -409,8 +488,8 @@ const LeaveManagement = () => {
             columns={[
               { title: "Name", render: (_, r) => <span className="u-strong">{r.name}</span>, sorter: (a, b) => String(a.name).localeCompare(String(b.name)) },
               { title: "Code", dataIndex: "employeeCode", render: (v) => v || "—" },
-              ...["CL", "EL"].map((t) => ({
-                title: t === "CL" ? "Casual (CL)" : "Earned (EL)",
+              ...["CL", "EL", "CO"].map((t) => ({
+                title: { CL: "Casual (CL)", EL: "Earned (EL)", CO: "Comp Off (CO)" }[t],
                 render: (_, r) => (
                   <div>
                     <span style={{ fontWeight: 800, fontSize: 15 }}>{r[t]?.available ?? 0}</span>
@@ -558,6 +637,23 @@ const LeaveManagement = () => {
         </div>
       </Modal>
 
+      {/* ── Reject Comp Off Modal ── */}
+      <Modal
+        open={Boolean(coReject.id)}
+        title={<span className="u-strong-bold">Reject Comp Off claim</span>}
+        onOk={() => {
+          if (!coReject.reason.trim()) return message.warning("Please enter a reason");
+          return decideCompOff(coReject.id, false, coReject.reason);
+        }}
+        onCancel={() => setCoReject({ id: null, reason: "" })}
+        okText="Reject"
+        okButtonProps={{ danger: true }}
+        width={420}
+      >
+        <TextArea rows={3} className="u-mt-4" placeholder="Reason for rejection…" value={coReject.reason}
+          onChange={(e) => setCoReject((c) => ({ ...c, reason: e.target.value }))} />
+      </Modal>
+
       {/* ── Adjust Balance Modal ── */}
       <Modal
         open={Boolean(adjustFor)}
@@ -570,7 +666,7 @@ const LeaveManagement = () => {
       >
         <Form form={adjustForm} layout="vertical" className="u-mt-4" initialValues={{ leaveType: "CL" }}>
           <Form.Item label="Leave" name="leaveType" rules={[{ required: true }]}>
-            <Select options={[{ value: "CL", label: "Casual (CL)" }, { value: "EL", label: "Earned (EL)" }]} />
+            <Select options={[{ value: "CL", label: "Casual (CL)" }, { value: "EL", label: "Earned (EL)" }, { value: "CO", label: "Comp Off (CO)" }]} />
           </Form.Item>
           <Form.Item label="Days to add (use minus to take away)" name="days" rules={[{ required: true, message: "Required" }]}
             extra="Whole or half days, e.g. 2 or -0.5">
@@ -619,6 +715,7 @@ const LeaveManagement = () => {
                 { value: "sick",      label: "Sick"      },
                 { value: "casual",    label: "Casual (CL)" },
                 { value: "paid",      label: "Earned (EL)" },
+                { value: "compoff",   label: "Comp Off (CO)" },
                 { value: "emergency", label: "Emergency" },
                 { value: "other",     label: "Other"     },
               ]}

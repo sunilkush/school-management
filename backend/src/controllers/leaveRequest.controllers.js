@@ -10,6 +10,7 @@ import { holdsRole } from "../utils/actingRole.js";
 import { Employee } from "../models/Employee.model.js";
 import { LeaveLedger } from "../models/LeaveLedger.model.js";
 import { School } from "../models/school.model.js";
+import { CompOffClaim } from "../models/CompOffClaim.model.js";
 import {
   BALANCE_TYPE_OF,
   assertEnoughBalance,
@@ -17,6 +18,9 @@ import {
   currentFy,
   getBalances,
   isStaffMember,
+  isOffDay,
+  istDay,
+  fyOfDay,
   monthlyUsage,
   recordLeaveSpend,
 } from "../services/leaveBalance.service.js";
@@ -110,7 +114,7 @@ export const createLeaveRequest = asyncHandler(async (req, res) => {
   let balanceByFy = [];
   if (await isStaffMember(schoolId, resolvedUserId)) {
     balanceType = BALANCE_TYPE_OF[leaveType];
-    if (!balanceType) throw new ApiError(400, "Staff leave is Casual Leave (CL) or Earned Leave (EL)");
+    if (!balanceType) throw new ApiError(400, "Staff leave is Casual Leave (CL), Earned Leave (EL) or Comp Off (CO)");
     const counted = await countLeaveDays(schoolId, start, end, halfDaySession);
     if (!counted.days) throw new ApiError(400, "These dates are Sundays or holidays: no leave is needed");
     await assertEnoughBalance({ schoolId, userId: resolvedUserId, balanceType, byFy: counted.byFy, ApiError });
@@ -459,7 +463,7 @@ export const adjustLeaveBalance = asyncHandler(async (req, res) => {
   const { userId, leaveType, note } = req.body || {};
   const days = Number(req.body?.days);
   if (!mongoose.isValidObjectId(userId)) throw new ApiError(400, "userId must be a valid user id");
-  if (!["CL", "EL"].includes(leaveType)) throw new ApiError(400, "leaveType must be CL or EL");
+  if (!["CL", "EL", "CO"].includes(leaveType)) throw new ApiError(400, "leaveType must be CL, EL or CO");
   if (!Number.isFinite(days) || days === 0 || Math.abs(days) > 365 || Math.round(days * 2) !== days * 2) {
     throw new ApiError(400, "days must be a non-zero number of whole or half days");
   }
@@ -482,3 +486,103 @@ export const adjustLeaveBalance = asyncHandler(async (req, res) => {
   const after = (await getBalances(employee.schoolId, [userId], fy))[String(userId)];
   res.status(201).json(new ApiResponse(201, { fy, ...after }, "Leave balance adjusted"));
 });
+
+/* ── COMP OFF (a Sunday or holiday worked → a day of CO leave) ───────────── */
+/** POST /leave-requests/comp-off  body: { date: "YYYY-MM-DD", halfDay?: boolean, reason } */
+export const createCompOffClaim = asyncHandler(async (req, res) => {
+  const schoolId = req.user.school?._id || req.user.schoolId;
+  const { date, reason } = req.body || {};
+  if (!date || Number.isNaN(new Date(date).getTime())) throw new ApiError(400, "Date worked is required");
+  if (!String(reason || "").trim()) throw new ApiError(400, "Say what the work was");
+  if (!(await isStaffMember(schoolId, req.user._id))) throw new ApiError(403, "Comp Off is for staff on payroll");
+
+  const day = istDay(date);
+  if (day.getTime() > istDay(new Date()).getTime()) throw new ApiError(400, "Comp Off is claimed for a day already worked");
+  if (day.getTime() < istDay(new Date()).getTime() - 90 * 24 * 3600 * 1000) {
+    throw new ApiError(400, "Claim within 90 days of the day worked");
+  }
+  if (!(await isOffDay(schoolId, day))) throw new ApiError(400, "Comp Off is for working on a Sunday or a school holiday");
+
+  try {
+    const claim = await CompOffClaim.create({
+      schoolId, userId: req.user._id, date: day, days: req.body.halfDay ? 0.5 : 1, reason: String(reason).trim(),
+    });
+    res.status(201).json(new ApiResponse(201, claim, "Comp Off claim sent for approval"));
+  } catch (err) {
+    if (err?.code === 11000) throw new ApiError(409, "You have already claimed Comp Off for this day");
+    throw err;
+  }
+});
+
+/** GET /leave-requests/comp-off/my */
+export const getMyCompOffClaims = asyncHandler(async (req, res) => {
+  const claims = await CompOffClaim.find({ userId: req.user._id }).populate("decidedBy", "name").sort({ date: -1 }).limit(100).lean();
+  res.status(200).json(new ApiResponse(200, claims, "Comp Off claims fetched"));
+});
+
+/** GET /leave-requests/comp-off (admin) ?status= */
+export const getCompOffClaims = asyncHandler(async (req, res) => {
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const schoolId = isSuperAdmin ? req.query.schoolId : req.user.school?._id || req.user.schoolId;
+  if (!schoolId) throw new ApiError(400, "schoolId is required");
+  const filter = { schoolId };
+  if (["pending", "approved", "rejected"].includes(req.query.status)) filter.status = req.query.status;
+  const claims = await CompOffClaim.find(filter)
+    .populate("userId", "name email")
+    .populate("decidedBy", "name")
+    .sort({ status: 1, date: -1 })
+    .limit(1000)
+    .lean();
+  res.status(200).json(new ApiResponse(200, claims, "Comp Off claims fetched"));
+});
+
+const decideCompOff = async (req, approve) => {
+  const isSuperAdmin = req.userRole?.name === "Super Admin";
+  const claim = await CompOffClaim.findById(req.params.id);
+  if (!claim) throw new ApiError(404, "Comp Off claim not found");
+  if (!isSuperAdmin && String(claim.schoolId) !== String(req.user.school?._id || req.user.schoolId)) throw new ApiError(404, "Comp Off claim not found");
+  if (String(claim.userId) === String(req.user._id)) throw new ApiError(403, "Someone else must decide your own claim");
+  if (!approve && !String(req.body?.rejectionReason || "").trim()) throw new ApiError(400, "Rejection reason is required");
+
+  const decided = await CompOffClaim.findOneAndUpdate(
+    { _id: claim._id, status: "pending" },
+    { $set: {
+      status: approve ? "approved" : "rejected",
+      decidedBy: req.user._id,
+      decidedAt: new Date(),
+      ...(approve ? {} : { rejectionReason: String(req.body.rejectionReason).trim() }),
+    } },
+    { new: true }
+  );
+  if (!decided) throw new ApiError(409, "This claim was already decided — refresh to see it");
+  if (approve) {
+    try {
+      await LeaveLedger.create({
+        schoolId: decided.schoolId, userId: decided.userId, leaveType: "CO", kind: "compoff",
+        days: decided.days, fy: fyOfDay(decided.date), compOffClaimId: decided._id, createdBy: req.user._id,
+        note: `Worked ${decided.date.toISOString().slice(0, 10)}`,
+      });
+    } catch (err) {
+      if (err?.code !== 11000) throw err;
+    }
+  }
+  return decided;
+};
+
+export const approveCompOffClaim = asyncHandler(async (req, res) => {
+  const decided = await decideCompOff(req, true);
+  res.status(200).json(new ApiResponse(200, decided, "Comp Off approved"));
+});
+
+export const rejectCompOffClaim = asyncHandler(async (req, res) => {
+  const decided = await decideCompOff(req, false);
+  res.status(200).json(new ApiResponse(200, decided, "Comp Off rejected"));
+});
+
+/** DELETE /leave-requests/comp-off/:id — the claimant withdraws a pending claim. */
+export const deleteCompOffClaim = asyncHandler(async (req, res) => {
+  const { deletedCount } = await CompOffClaim.deleteOne({ _id: req.params.id, userId: req.user._id, status: "pending" });
+  if (!deletedCount) throw new ApiError(404, "No pending claim of yours with that id");
+  res.status(200).json(new ApiResponse(200, null, "Comp Off claim withdrawn"));
+});
+

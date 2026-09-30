@@ -16,7 +16,8 @@ import { SchoolEvent } from "../models/SchoolEvent.model.js";
  */
 
 // Leave types on a request that draw from a balance.
-export const BALANCE_TYPE_OF = { casual: "CL", paid: "EL" };
+export const BALANCE_TYPE_OF = { casual: "CL", paid: "EL", compoff: "CO" };
+export const BALANCE_TYPES = ["CL", "EL", "CO"];
 
 const DAY_MS = 24 * 3600 * 1000;
 const IST_MS = 330 * 60 * 1000;
@@ -56,6 +57,12 @@ const holidayDays = async (schoolId, first, last) => {
   return set;
 };
 
+/** Whether a day is a Sunday or a holiday on the school calendar (a day off worth a Comp Off). */
+export const isOffDay = async (schoolId, day) => {
+  if (day.getUTCDay() === 0) return true;
+  return (await holidayDays(schoolId, day, day)).has(day.toISOString().slice(0, 10));
+};
+
 /**
  * The days a leave actually takes: school days only (not Sundays, not holidays), half a day for a
  * half-day leave. Returns the dates and the total split by financial year.
@@ -88,13 +95,13 @@ const emptyBalance = () => ({ earned: 0, used: 0, encashed: 0, adjusted: 0, bala
 export const getBalances = async (schoolId, userIds, fy, { excludeRequestId = null } = {}) => {
   const ids = userIds.map((id) => new mongoose.Types.ObjectId(String(id)));
   const out = {};
-  for (const id of ids) out[String(id)] = { CL: emptyBalance(), EL: emptyBalance() };
+  for (const id of ids) out[String(id)] = { CL: emptyBalance(), EL: emptyBalance(), CO: emptyBalance() };
 
   const rows = await LeaveLedger.aggregate([
     { $match: { schoolId: new mongoose.Types.ObjectId(String(schoolId)), userId: { $in: ids }, fy } },
     { $group: { _id: { userId: "$userId", leaveType: "$leaveType", kind: "$kind" }, days: { $sum: "$days" } } },
   ]);
-  const field = { accrual: "earned", leave: "used", encashment: "encashed", adjustment: "adjusted" };
+  const field = { accrual: "earned", compoff: "earned", leave: "used", encashment: "encashed", adjustment: "adjusted" };
   for (const r of rows) {
     const b = out[String(r._id.userId)]?.[r._id.leaveType];
     if (!b) continue;
@@ -107,7 +114,7 @@ export const getBalances = async (schoolId, userIds, fy, { excludeRequestId = nu
     schoolId,
     userId: { $in: ids },
     status: "pending",
-    balanceType: { $in: ["CL", "EL"] },
+    balanceType: { $in: BALANCE_TYPES },
     "balanceByFy.fy": fy,
     ...(excludeRequestId ? { _id: { $ne: excludeRequestId } } : {}),
   }).select("userId balanceType balanceByFy").lean();
@@ -219,14 +226,14 @@ export const monthlyUsage = async (schoolId, userId, fy) => {
   const months = [];
   for (let i = 0; i < 12; i += 1) {
     const d = new Date(Date.UTC(fy, 3 + i, 1));
-    months.push({ month: periodOfDay(d), CL: 0, EL: 0, pendingCL: 0, pendingEL: 0 });
+    months.push({ month: periodOfDay(d), CL: 0, EL: 0, CO: 0, pendingCL: 0, pendingEL: 0, pendingCO: 0 });
   }
   const byMonth = new Map(months.map((m) => [m.month, m]));
   const leaves = await LeaveRequest.find({
     schoolId,
     userId,
     status: { $in: ["approved", "pending"] },
-    balanceType: { $in: ["CL", "EL"] },
+    balanceType: { $in: BALANCE_TYPES },
     "balanceByFy.fy": fy,
   }).select("startDate endDate halfDaySession balanceType status").lean();
   for (const l of leaves) {

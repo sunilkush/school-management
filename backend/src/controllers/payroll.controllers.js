@@ -410,10 +410,11 @@ export const generatePayrollCycle = asyncHandler(async (req, res) => {
   if (bal) {
     const cl = Math.max(bal.CL.balance, 0);
     const el = Math.max(bal.EL.balance, 0);
-    if (cl + el > 0) {
+    const co = Math.max(bal.CO?.balance || 0, 0);
+    if (cl + el + co > 0) {
       const dayRate = Number(structure.grossMonthly || 0) / (cycleWorkingDays || 30);
-      leaveEncashment = Math.round((cl + el) * dayRate * 100) / 100;
-      leaveEncashmentDays = { CL: cl, EL: el, fy: year - 1, dayRate: Math.round(dayRate * 100) / 100 };
+      leaveEncashment = Math.round((cl + el + co) * dayRate * 100) / 100;
+      leaveEncashmentDays = { CL: cl, EL: el, CO: co, fy: year - 1, dayRate: Math.round(dayRate * 100) / 100 };
     }
   }
 
@@ -612,7 +613,7 @@ export const payPayrollCycle = asyncHandler(async (req, res) => {
     const info = entry.earningsBreakdown?.leaveEncashmentDays;
     const userId = entry.employeeId?.userId;
     if (!info || !userId) continue;
-    for (const leaveType of ["CL", "EL"]) {
+    for (const leaveType of ["CL", "EL", "CO"]) {
       if (!(info[leaveType] > 0)) continue;
       try {
         // eslint-disable-next-line no-await-in-loop
@@ -716,7 +717,7 @@ export const downloadPayslipPdf = asyncHandler(async (req, res) => {
     ["Special Allowance", earnings.specialAllowance], ["Overtime", earnings.overtimePay],
     ["Reimbursements", earnings.reimbursements],
     ...(earnings.leaveEncashment > 0
-      ? [[`Leave Encashment (CL ${earnings.leaveEncashmentDays?.CL || 0} + EL ${earnings.leaveEncashmentDays?.EL || 0} days)`, earnings.leaveEncashment]]
+      ? [[`Leave Encashment (CL ${earnings.leaveEncashmentDays?.CL || 0} + EL ${earnings.leaveEncashmentDays?.EL || 0}${earnings.leaveEncashmentDays?.CO ? ` + CO ${earnings.leaveEncashmentDays.CO}` : ""} days)`, earnings.leaveEncashment]]
       : []),
   ].forEach(([label, value]) => { twoCol(label, money(value), y); y += 16; });
   doc.y = y + 4;

@@ -44,7 +44,7 @@ const leaveRequestSchema = new Schema(
     },
     leaveType: {
       type: String,
-      enum: ["sick", "casual", "paid", "emergency", "other"],
+      enum: ["sick", "casual", "paid", "emergency", "other", "compoff"],
       required: true,
       default: "casual",
     },
@@ -96,7 +96,7 @@ const leaveRequestSchema = new Schema(
      * takes, split by financial year, are worked out when it is filed (Sundays and holidays do
      * not count) so pending requests can hold their days until decided.
      */
-    balanceType: { type: String, enum: ["CL", "EL", null], default: null },
+    balanceType: { type: String, enum: ["CL", "EL", "CO", null], default: null },
     balanceByFy: {
       type: [{ _id: false, fy: Number, days: Number }],
       default: [],

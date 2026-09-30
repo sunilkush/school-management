@@ -9,21 +9,23 @@ import mongoose, { Schema } from "mongoose";
  *  - leave       minus the days of an approved leave, split by the year each day falls in
  *  - encashment  minus what March's payroll paid out, written when that payroll is paid
  *  - adjustment  an admin's correction or opening balance, either sign
+ *  - compoff     +1 / +0.5 CO for a Sunday or holiday worked, once its claim is approved
  */
-export const LEAVE_BALANCE_TYPES = ["CL", "EL"];
+export const LEAVE_BALANCE_TYPES = ["CL", "EL", "CO"];
 
 const leaveLedgerSchema = new Schema(
   {
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     leaveType: { type: String, enum: LEAVE_BALANCE_TYPES, required: true },
-    kind: { type: String, enum: ["accrual", "leave", "encashment", "adjustment"], required: true },
+    kind: { type: String, enum: ["accrual", "leave", "encashment", "adjustment", "compoff"], required: true },
     days: { type: Number, required: true },
     /** Financial year by its starting calendar year: 2026 = April 2026 – March 2027. */
     fy: { type: Number, required: true },
     /** "YYYY-MM" of the month an accrual is for. */
     period: { type: String, default: null },
     leaveRequestId: { type: Schema.Types.ObjectId, ref: "LeaveRequest", default: null },
+    compOffClaimId: { type: Schema.Types.ObjectId, ref: "CompOffClaim", default: null },
     payrollCycleId: { type: Schema.Types.ObjectId, ref: "PayrollCycle", default: null },
     note: { type: String, trim: true, maxlength: 300, default: "" },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
@@ -40,6 +42,10 @@ leaveLedgerSchema.index(
 leaveLedgerSchema.index(
   { leaveRequestId: 1, fy: 1 },
   { unique: true, partialFilterExpression: { kind: "leave" } }
+);
+leaveLedgerSchema.index(
+  { compOffClaimId: 1 },
+  { unique: true, partialFilterExpression: { kind: "compoff" } }
 );
 leaveLedgerSchema.index(
   { payrollCycleId: 1, userId: 1, leaveType: 1 },
