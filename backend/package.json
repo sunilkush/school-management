@@ -11,7 +11,8 @@
     "check:numbering": "node scripts/checkNumbering.mjs",
     "check:decide-once": "node scripts/checkDecideOnce.mjs",
     "check:duplicate-invoices": "node scripts/checkDuplicateInvoices.mjs",
-    "check:scoping": "node scripts/checkScoping.mjs"
+    "check:scoping": "node scripts/checkScoping.mjs",
+    "fix:po-number-index": "node scripts/fixPurchaseOrderNumberIndex.mjs"
   },
   "keywords": [
     "node.js",

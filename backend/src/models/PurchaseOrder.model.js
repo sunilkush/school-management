@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 
 const POItemSchema = new Schema(
   {
@@ -15,7 +16,9 @@ const POItemSchema = new Schema(
 const PurchaseOrderSchema = new Schema(
   {
     schoolId:     { type: Schema.Types.ObjectId, ref: "School", required: true },
-    poNumber:     { type: String, unique: true },
+    // Unique within a school (index below). It was unique across the whole platform while being
+    // numbered per school, so every school after the first collided on PO-<year>-0001.
+    poNumber:     { type: String },
     vendorId:     { type: Schema.Types.ObjectId, ref: "Vendor", required: true },
     items:        { type: [POItemSchema], default: [] },
     subtotal:     { type: Number, default: 0 },
@@ -39,11 +42,20 @@ const PurchaseOrderSchema = new Schema(
 PurchaseOrderSchema.index({ schoolId: 1, status: 1 });
 PurchaseOrderSchema.index({ schoolId: 1, vendorId: 1 });
 
+PurchaseOrderSchema.index({ schoolId: 1, poNumber: 1 }, { unique: true, partialFilterExpression: { poNumber: { $type: "string" } } });
+
+// Numbered from an atomic counter per school and year. "How many orders + 1" handed two orders
+// made together the same number, and after a draft was deleted repeated one still in use.
 PurchaseOrderSchema.pre("save", async function (next) {
   if (!this.poNumber) {
     const year = new Date().getFullYear();
-    const count = await this.constructor.countDocuments({ schoolId: this.schoolId });
-    this.poNumber = `PO-${year}-${String(count + 1).padStart(4, "0")}`;
+    const prefix = `PO-${year}-`;
+    const Model = this.constructor;
+    const seq = await nextSequence(`po:${this.schoolId}:${year}`, async () => {
+      const issued = await Model.find({ schoolId: this.schoolId, poNumber: new RegExp(`^${prefix}`) }).select("poNumber").lean();
+      return highestSuffix(issued.map((p) => p.poNumber), prefix);
+    });
+    this.poNumber = `${prefix}${String(seq).padStart(4, "0")}`;
   }
   next();
 });

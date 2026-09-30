@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { highestSuffix, nextSequence } from "../utils/sequence.js";
 
 const StockIssueSchema = new Schema(
   {
@@ -29,11 +30,18 @@ const StockIssueSchema = new Schema(
 StockIssueSchema.index({ schoolId: 1, status: 1 });
 StockIssueSchema.index({ schoolId: 1, inventoryItemId: 1 });
 
+// Numbered from an atomic counter per school and year, as purchase orders are: counting the
+// issues and adding one gave issues made together the same number.
 StockIssueSchema.pre("save", async function (next) {
   if (!this.issueNumber) {
     const year = new Date().getFullYear();
-    const count = await this.constructor.countDocuments({ schoolId: this.schoolId });
-    this.issueNumber = `ISS-${year}-${String(count + 1).padStart(4, "0")}`;
+    const prefix = `ISS-${year}-`;
+    const Model = this.constructor;
+    const seq = await nextSequence(`stockissue:${this.schoolId}:${year}`, async () => {
+      const issued = await Model.find({ schoolId: this.schoolId, issueNumber: new RegExp(`^${prefix}`) }).select("issueNumber").lean();
+      return highestSuffix(issued.map((i) => i.issueNumber), prefix);
+    });
+    this.issueNumber = `${prefix}${String(seq).padStart(4, "0")}`;
   }
   next();
 });
