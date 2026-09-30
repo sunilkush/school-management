@@ -19,6 +19,17 @@ const PTM_BOOKING_ROLES = ["Super Admin", "School Admin", "Parent"];
 const actsAsParent = (user) =>
   !["Super Admin", "School Admin"].includes(actingRoleName(user, PTM_BOOKING_ROLES));
 
+// Pattern F (docs/bug-audit.md): a teacher manages their own meetings. Any teacher could cancel a
+// colleague's PTM (every booked parent is told it is off) or mark its slots.
+const PTM_MANAGER_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Teacher", "Class Teacher"];
+const assertCanManagePtm = (user, session) => {
+  if (!["Teacher", "Class Teacher"].includes(actingRoleName(user, PTM_MANAGER_ROLES))) return;
+  const me = String(user._id);
+  if (String(session?.teacherId || "") !== me && String(session?.createdBy || "") !== me) {
+    throw new ApiError(403, "You can manage only your own parent-teacher meetings");
+  }
+};
+
 const resolveSchoolId = (req) =>
   req.user.roleId?.name === "Super Admin" ? req.query.schoolId || req.body.schoolId || req.user.schoolId : req.user.schoolId;
 
@@ -133,6 +144,7 @@ export const getSessionSlots = asyncHandler(async (req, res) => {
 export const cancelSession = asyncHandler(async (req, res) => {
   const session = await PTMSession.findById(req.params.id);
   ensureAccess(session, req.user, "PTM session not found");
+  assertCanManagePtm(req.user, session);
 
   if (session.status === "Cancelled") throw new ApiError(400, "Session already cancelled");
 
@@ -158,6 +170,7 @@ export const markAttendance = asyncHandler(async (req, res) => {
 
   const slot = await PTMSlot.findById(req.params.id);
   ensureAccess(slot, req.user, "PTM slot not found");
+  assertCanManagePtm(req.user, await PTMSession.findById(slot.ptmSessionId).select("teacherId createdBy").lean());
 
   if (slot.status !== "Booked") throw new ApiError(400, "Only a booked slot can be marked");
 

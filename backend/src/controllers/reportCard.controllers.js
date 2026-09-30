@@ -9,6 +9,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 import { actingRoleName } from "../utils/actingRole.js";
+import { Section } from "../models/section.model.js";
+import { ClassTeacherAssignment } from "../models/ClassTeacherAssignment.model.js";
 import { generateReportCards } from "../services/reportCard.service.js";
 import { renderReportCardPdf } from "../services/reportCardPdf.service.js";
 
@@ -174,6 +176,17 @@ export const updateReportCard = asyncHandler(async (req, res) => {
   const card = await ReportCard.findOne({ _id: req.params.id, schoolId });
   if (!card) throw new ApiError(404, "Report card not found");
   if (card.isPublished) throw new ApiError(400, "This report card is published — unpublish it before editing");
+
+  // Pattern F (docs/bug-audit.md): the class teacher's remarks are the class teacher's. Any teacher
+  // in the school could write them on any student's card.
+  const CARD_EDITORS = ["Super Admin", "School Admin", "Principal", "Vice Principal", "Exam Coordinator", "Subject Coordinator", "Teacher", "Class Teacher"];
+  if (["Teacher", "Class Teacher"].includes(actingRoleName(req.user, CARD_EDITORS))) {
+    const sectionId = card.sectionId || null;
+    const isClassTeacher =
+      (sectionId && (await Section.exists({ _id: sectionId, schoolId, classTeacherId: req.user._id }))) ||
+      (await ClassTeacherAssignment.exists({ schoolId, teacherId: req.user._id, schoolClassId: card.schoolClassId, sectionId, isActive: true }));
+    if (!isClassTeacher) throw new ApiError(403, "Only this class's class teacher can edit these report cards");
+  }
 
   if (req.body.coScholastic !== undefined) card.coScholastic = req.body.coScholastic;
   if (req.body.classTeacherRemarks !== undefined) card.classTeacherRemarks = req.body.classTeacherRemarks;

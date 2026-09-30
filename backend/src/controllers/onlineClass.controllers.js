@@ -45,6 +45,16 @@ const HOST_ROLES = [
 const actingRole = (req) => actingRoleName(req.user, [...HOST_ROLES, "Student", "Parent"]);
 const isHostRole = (role) => HOST_ROLES.includes(role);
 
+// Pattern F (docs/bug-audit.md): a teacher runs their own classes. Any teacher could reschedule,
+// cancel or change the meeting link of a colleague's class, sending its students somewhere else.
+const assertCanManage = (req, session) => {
+  if (!["Teacher", "Class Teacher"].includes(actingRole(req))) return;
+  const me = String(req.user._id);
+  if (String(session.teacherId) !== me && String(session.createdBy || "") !== me) {
+    throw new ApiError(403, "You can change only your own online classes");
+  }
+};
+
 const parseDate = (value, label) => {
   if (!value) return null;
   const d = new Date(value);
@@ -176,6 +186,7 @@ export const updateOnlineClass = asyncHandler(async (req, res) => {
   const schoolId = requireSchool(req);
   const session = await OnlineClass.findOne({ _id: req.params.id, schoolId });
   if (!session) throw new ApiError(404, "Online class not found");
+  assertCanManage(req, session);
   if (session.status === "completed") {
     // The recording is the one thing that arrives after the class is over.
     const onlyRecording = Object.keys(req.body).every((k) => k === "recordingUrl");
@@ -200,6 +211,7 @@ export const cancelOnlineClass = asyncHandler(async (req, res) => {
   const schoolId = requireSchool(req);
   const session = await OnlineClass.findOne({ _id: req.params.id, schoolId });
   if (!session) throw new ApiError(404, "Online class not found");
+  assertCanManage(req, session);
   if (session.status === "completed") throw new ApiError(400, "That class has already finished");
 
   // Only while the class has not finished or already been called off — the check above and the
@@ -220,6 +232,7 @@ export const setOnlineClassStatus = asyncHandler(async (req, res) => {
   const schoolId = requireSchool(req);
   const session = await OnlineClass.findOne({ _id: req.params.id, schoolId });
   if (!session) throw new ApiError(404, "Online class not found");
+  assertCanManage(req, session);
 
   const { status } = req.body;
   if (!["live", "completed"].includes(status)) throw new ApiError(400, "Status must be live or completed");
@@ -385,6 +398,7 @@ export const markAttendanceFromJoins = asyncHandler(async (req, res) => {
   const schoolId = requireSchool(req);
   const session = await OnlineClass.findOne({ _id: req.params.id, schoolId }).lean();
   if (!session) throw new ApiError(404, "Online class not found");
+  assertCanManage(req, session);
 
   const joins = await OnlineClassJoin.find({ onlineClassId: session._id }).lean();
   if (!joins.length) throw new ApiError(400, "Nobody opened the link, so there is nothing to mark");

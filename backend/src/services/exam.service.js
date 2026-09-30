@@ -264,6 +264,17 @@ export const getExamsService = async ({ query, user }) => {
   };
 };
 
+// A Teacher changes only exams they created — the rule for editing, deleting and assigning one.
+// Entering and finalising its marks and publishing its results are changing it too: without this,
+// any teacher could enter or overwrite marks on a colleague's exam and publish the results.
+const assertTeacherOwnsExam = async (user, examOrId) => {
+  if (actingRoleName(user, EXAM_STAFF_ROLES) !== "Teacher") return;
+  const exam = examOrId?.createdBy !== undefined ? examOrId : await Exam.findById(examOrId).select("createdBy").lean();
+  if (!exam || `${exam.createdBy}` !== `${user._id}`) {
+    throw new ApiError(403, "Teachers can change only exams they created");
+  }
+};
+
 export const assignExamToClassService = async ({ body, user }) => {
   const exam = await Exam.findById(body.examId).select("schoolId totalMarks passingMarks createdBy").lean();
   if (!exam) throw new ApiError(404, "Exam not found");
@@ -302,7 +313,7 @@ export const enterMarksBulkService = async ({ body, user }) => {
 
   // 1. Get Exam
   const exam = await Exam.findById(examId)
-    .select("schoolId academicYearId subjectId schoolClassId sectionId")
+    .select("schoolId academicYearId subjectId schoolClassId sectionId createdBy")
     .lean();
 
   if (!exam) throw new ApiError(404, "Exam not found");
@@ -314,6 +325,7 @@ export const enterMarksBulkService = async ({ body, user }) => {
   ) {
     throw new ApiError(403, "Forbidden for this school exam");
   }
+  await assertTeacherOwnsExam(user, exam);
 
   // 3. Get student identifiers from payload (can be either User._id or Student._id)
   const studentIdentifiers = [
@@ -463,6 +475,7 @@ export const updateMarksService = async ({ markId, body, user }) => {
   if (user.roleId?.name !== "Super Admin" && `${mark.schoolId}` !== `${user.schoolId}`) {
     throw new ApiError(403, "Not allowed");
   }
+  await assertTeacherOwnsExam(user, mark.examId);
 
   if (body.obtainedMarks !== undefined) mark.obtainedMarks = Number(body.obtainedMarks);
   if (body.totalMarks !== undefined) mark.totalMarks = Number(body.totalMarks);
@@ -473,6 +486,7 @@ export const updateMarksService = async ({ markId, body, user }) => {
 };
 
 export const submitFinalMarksService = async ({ body, user }) => {
+  await assertTeacherOwnsExam(user, body.examId);
   const filter = {
     examId: body.examId,
     schoolClassId: body.schoolClassId,
@@ -616,6 +630,7 @@ const studentResultPipeline = ({ match }) => [
 ];
 
 export const publishResultService = async ({ body, user }) => {
+  await assertTeacherOwnsExam(user, body.examId);
   const baseMatch = {
     examId: new OBJECT_ID(body.examId),
     schoolClassId: new OBJECT_ID(body.schoolClassId),
