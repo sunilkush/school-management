@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Empty, Spin, Table, Typography, message } from "antd";
 import dayjs from "dayjs";
 import {
-  DollarSign, FileText, BarChart3, CalendarDays,
+  FileText, BarChart3, CalendarDays,
   TrendingUp, TrendingDown, Wallet, Clock,
   CreditCard, CalendarCheck, CalendarX, AlertTriangle,
   BadgeCheck, Download,
@@ -10,6 +10,7 @@ import {
 import httpClient from "../../api/httpClient";
 import { formatCurrencyINR } from "../../utils/payroll";
 import PageHeader from "../../components/layout/PageHeader";
+import RupeeIcon from "../../components/icons/RupeeIcon";
 import { statGrid, iconWell } from "../../styles/pageStyles";
 
 const { Text } = Typography;
@@ -168,17 +169,36 @@ export default function PayrollSelfServicePage() {
   const [summary,    setSummary]    = useState(null);
   const [activeTab,  setActiveTab]  = useState("payslips");
   const [downloadingKey, setDownloadingKey] = useState(null);
+  const [loadError,  setLoadError]  = useState(null); // { notSetUp: boolean, message: string }
 
-  const payslips      = useMemo(() => (Array.isArray(summary?.payslips) ? summary.payslips : []), [summary]);
+  // Newest month first. The API returns them in the order the entries were created, so a month
+  // re-run later (August after September) used to show as the "latest" payslip.
+  const payslips = useMemo(() => {
+    const list = Array.isArray(summary?.payslips) ? [...summary.payslips] : [];
+    return list.sort((a, b) => (Number(b.year) - Number(a.year)) || (Number(b.month) - Number(a.month)));
+  }, [summary]);
   const latestPayslip = payslips[0] ?? null;
 
-  useEffect(() => {
+  const loadSummary = () => {
     setLoading(true);
+    setLoadError(null);
     httpClient
       .get("/payroll/self/summary")
       .then((r) => setSummary(r?.data?.data || null))
-      .catch(() => setSummary(null))
+      .catch((error) => {
+        // Said, not swallowed: before, any failure showed ₹0 everywhere and "structure not
+        // assigned", which reads as "you have no salary".
+        setSummary(null);
+        setLoadError({
+          notSetUp: error?.response?.status === 404,
+          message: error?.response?.data?.message || "Your payroll could not be loaded.",
+        });
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadSummary();
   }, []);
 
   const handleDownloadPayslip = async (row) => {
@@ -306,8 +326,24 @@ export default function PayrollSelfServicePage() {
       <PageHeader
         title="My Payroll"
         subtitle="View your salary, payslips, and monthly attendance summary."
-        icon={<DollarSign size={20} />}
+        icon={<RupeeIcon />}
       />
+
+      {loadError && (
+        <Alert
+          className="u-mt-5"
+          type={loadError.notSetUp ? "info" : "error"}
+          showIcon
+          style={{ borderRadius: 10 }}
+          message={loadError.notSetUp ? "Your payroll profile is not set up yet" : "Could not load your payroll"}
+          description={
+            loadError.notSetUp
+              ? "Payslips appear here once the school office adds you as an employee in Payroll. Please ask them to set it up."
+              : loadError.message
+          }
+          action={!loadError.notSetUp && <Button size="small" onClick={loadSummary}>Try again</Button>}
+        />
+      )}
 
       {(summary?.employee?.statutoryCompliance?.uan || summary?.employee?.statutoryCompliance?.esicNumber) && (
         <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 12, color: "var(--text-muted)" }}>
@@ -316,6 +352,7 @@ export default function PayrollSelfServicePage() {
         </div>
       )}
 
+      {!loadError && (
       <div className="u-mt-5">
         <Spin spinning={loading}>
 
@@ -488,8 +525,9 @@ export default function PayrollSelfServicePage() {
                       justifyContent:"space-between",
                       alignItems:    "center",
                       padding:       "14px 20px",
-                      background:    "var(--primary)10",
-                      borderTop:     "2px solid var(--primary)30",
+                      // "var(--primary)10" is not a colour, so this total row had no tint at all.
+                      background:    "color-mix(in srgb, var(--primary) 6%, transparent)",
+                      borderTop:     "2px solid color-mix(in srgb, var(--primary) 19%, transparent)",
                     }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)" }}>Gross Monthly</span>
                       <span style={{ fontSize: 15, fontWeight: 800, color: "var(--primary)" }}>
@@ -613,6 +651,7 @@ export default function PayrollSelfServicePage() {
 
         </Spin>
       </div>
+      )}
     </div>
   );
 }
