@@ -86,118 +86,118 @@ One pattern at a time across every controller, one commit per pattern sweep.
 
 | Controller | A | B | C | D | E | F | Notes |
 |---|---|---|---|---|---|---|---|
-| academicYear | | | | | | | |
-| accountantDashboard | | | | | | | |
-| activity | | | | | | | |
-| admissionInquiry | | | | | | | |
-| advance | | | | | | | |
-| alumniProfile | | | | | | | |
-| amcTracking | | | | | | | |
-| analytics | | | | | | | |
-| attempt | | | | | | | |
-| attendance | | | | | | | |
-| attendanceDevice | | | | | | | |
-| auditLog | | | | | | | |
-| board | | | | | | | |
-| boardClass | | | | | | | |
-| bonus | | | | | | | |
-| book | | | | | | | |
-| callLog | | | | | | | |
-| canteen | | | | | | | |
-| certificate | | | | | | | |
-| chapter | | | | | | | |
-| circular | | | | | | | |
-| class | | | | | | | |
-| classTeacherAssignment | | | | | | | |
-| communicationSettings | | | | | | | |
-| compliance | | | | | | | |
-| counselingSession | | | | | | | |
-| dashboard | | | | | | | |
-| department | | | | | | | |
-| designation | | | | | | | |
-| deviceToken | | | | | | | |
-| disciplineIncident | | | | | | | |
-| emergencyAlert | | | | | | | |
-| employee | | | | | | | |
-| exam | | | | | | | |
-| exam.report | | | | | | | |
-| expense | | | | | | | |
-| faq | | | | | | | |
-| feeHead | | | | | | | |
-| feeInstallment | | | | | | | |
-| feeReport | | | | | | | |
-| feeSettings | | | | | | | |
-| feeStructure | | | | | | | |
-| gateEntry | | | | | | | |
-| globalConfig | | | | | | | |
-| gradingScale | | | | | | | |
-| healthRecord | | | | | | | |
-| hostelAttendance | | | | | | | |
-| hostelComplaint | | | | | | | |
-| hostelDashboard | | | | | | | |
-| hostelLeave | | | | | | | |
-| hostelRoom | | | | | | | |
-| hostelVisitor | | | | | | | |
-| hr | | | | | | | |
-| idCard | | | | | | | |
-| income | | | | | | | |
-| inventory | | | | | | | |
-| ipRestriction | | | | | | | |
-| issuedBook | | | | | | | |
-| leaveRequest | | | | | | | |
-| ledger | | | | | | | |
-| lessonPlan | | | | | | | |
-| libraryCard | | | | | | | |
-| librarySetting | | | | | | | |
-| loginLog | | | | | | | |
-| maintenanceTask | | | | | | | |
-| message | | | | | | | |
-| module | | | | | | | |
-| notification | | | | | | | |
-| onlineClass | | | | | | | |
-| payment | | | | | | | |
-| paymentGateway | | | | | | | |
-| payroll | | | | | | | |
-| platformOverview | | | | | | | |
-| ptm | | | | | | | |
-| publicAdmission | | | | | | | |
-| purchaseOrder | | | | | | | |
-| question | | | | | | | |
-| reimbursement | | | | | | | |
-| report | | | | | | | |
-| reportCard | | | | | | | |
-| role | | | | | | | |
-| scholarship | | | | | | | |
-| school | | | | | | | |
-| schoolBilling | | | | | | | |
-| schoolClass | | | | | | | |
-| schoolEvent | | | | | | | |
-| section | | | | | | | |
-| selfAttendance | | | | | | | |
-| sports | | | | | | | |
-| stockIssue | | | | | | | |
-| student | | | | | | | |
-| studentFee | | | | | | | |
-| studentPortal | | | | | | | |
-| studyMaterial | | | | | | | |
-| subject | | | | | | | |
-| subscriptionPlan | | | | | | | |
-| substitution | | | | | | | |
-| superAdminBilling | | | | | | | |
-| supportTicket | | | | | | | |
-| survey | | | | | | | |
-| systemBackup | | | | | | | |
-| task | | | | | | | |
-| tempAccess | | | | | | | |
-| textbook | | | | | | | |
-| timetable | | | | | | | |
-| topic | | | | | | | |
-| transport | | | | | | | |
-| transportTracking | | | | | | | |
-| twoFactor | | | | | | | |
-| user | | | | | | | |
-| vehicleMaintenance | | | | | | | |
-| vendor | | | | | | | |
-| webhook | | | | | | | |
+| academicYear | ➖ |  |  |  |  |  |  |
+| accountantDashboard | ➖ |  |  |  |  |  |  |
+| activity | ➖ |  |  |  |  |  |  |
+| admissionInquiry | ➖ |  |  |  |  |  |  |
+| advance | ✅ |  |  |  |  |  |  |
+| alumniProfile | ✅ |  |  |  |  |  |  |
+| amcTracking | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| analytics | ➖ |  |  |  |  |  |  |
+| attempt | ✅ |  |  |  |  |  |  |
+| attendance | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| attendanceDevice | ✅ |  |  |  |  |  |  |
+| auditLog | ✅ |  |  |  |  |  |  |
+| board | ✅ |  |  |  |  |  |  |
+| boardClass | ✅ |  |  |  |  |  |  |
+| bonus | ✅ |  |  |  |  |  |  |
+| book | ✅ |  |  |  |  |  |  |
+| callLog | ➖ |  |  |  |  |  |  |
+| canteen | ✅ |  |  |  |  |  |  |
+| certificate | ✅ |  |  |  |  |  |  |
+| chapter | ✅ |  |  |  |  |  |  |
+| circular | ✅ |  |  |  |  |  |  |
+| class | ✅ |  |  |  |  |  |  |
+| classTeacherAssignment | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| communicationSettings | ➖ |  |  |  |  |  |  |
+| compliance | ✅ |  |  |  |  |  |  |
+| counselingSession | ✅ |  |  |  |  |  |  |
+| dashboard | ➖ |  |  |  |  |  |  |
+| department | ➖ |  |  |  |  |  |  |
+| designation | ✅ |  |  |  |  |  |  |
+| deviceToken | ✅ |  |  |  |  |  |  |
+| disciplineIncident | ✅ |  |  |  |  |  |  |
+| emergencyAlert | ➖ |  |  |  |  |  |  |
+| employee | ✅ |  |  |  |  |  | A fixed 28050d56 (could create Super Admin) |
+| exam | ✅ |  |  |  |  |  |  |
+| exam.report | ✅ |  |  |  |  |  |  |
+| expense | ✅ |  |  |  |  |  |  |
+| faq | ➖ |  |  |  |  |  |  |
+| feeHead | ➖ |  |  |  |  |  |  |
+| feeInstallment | ✅ |  |  |  |  |  |  |
+| feeReport | ✅ |  |  |  |  |  |  |
+| feeSettings | ➖ |  |  |  |  |  |  |
+| feeStructure | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| gateEntry | ➖ |  |  |  |  |  |  |
+| globalConfig | ➖ |  |  |  |  |  |  |
+| gradingScale | ➖ |  |  |  |  |  |  |
+| healthRecord | ✅ |  |  |  |  |  |  |
+| hostelAttendance | ✅ |  |  |  |  |  | A fixed 0ba043d0 |
+| hostelComplaint | ✅ |  |  |  |  |  | A fixed 0ba043d0 |
+| hostelDashboard | ➖ |  |  |  |  |  |  |
+| hostelLeave | ✅ |  |  |  |  |  | A fixed e1109896, 0ba043d0 |
+| hostelRoom | ✅ |  |  |  |  |  | A fixed 0bcb1d6c |
+| hostelVisitor | ✅ |  |  |  |  |  | A fixed 0ba043d0 |
+| hr | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| idCard | ✅ |  |  |  |  |  |  |
+| income | ✅ |  |  |  |  |  |  |
+| inventory | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| ipRestriction | ➖ |  |  |  |  |  |  |
+| issuedBook | ✅ |  |  |  |  |  | A fixed 22439739 |
+| leaveRequest | ✅ |  |  |  |  |  |  |
+| ledger | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| lessonPlan | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| libraryCard | ✅ |  |  |  |  |  |  |
+| librarySetting | ➖ |  |  |  |  |  |  |
+| loginLog | ✅ |  |  |  |  |  |  |
+| maintenanceTask | ➖ |  |  |  |  |  |  |
+| message | ✅ |  |  |  |  |  |  |
+| module | ➖ |  |  |  |  |  |  |
+| notification | ➖ |  |  |  |  |  |  |
+| onlineClass | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| payment | ✅ |  |  |  |  |  |  |
+| paymentGateway | ➖ |  |  |  |  |  |  |
+| payroll | ✅ |  |  |  |  |  |  |
+| platformOverview | ➖ |  |  |  |  |  |  |
+| ptm | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| publicAdmission | ➖ |  |  |  |  |  |  |
+| purchaseOrder | ✅ |  |  |  |  |  | A fixed 069f74f3 (also cross-school stock) |
+| question | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| reimbursement | ✅ |  |  |  |  |  |  |
+| report | ✅ |  |  |  |  |  |  |
+| reportCard | ✅ |  |  |  |  |  |  |
+| role | ➖ |  |  |  |  |  |  |
+| scholarship | ✅ |  |  |  |  |  |  |
+| school | ➖ |  |  |  |  |  |  |
+| schoolBilling | ✅ |  |  |  |  |  |  |
+| schoolClass | ✅ |  |  |  |  |  |  |
+| schoolEvent | ➖ |  |  |  |  |  |  |
+| section | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| selfAttendance | ➖ |  |  |  |  |  |  |
+| sports | ✅ |  |  |  |  |  | A fixed 1c1b874d |
+| stockIssue | ✅ |  |  |  |  |  |  |
+| student | ✅ |  |  |  |  |  | A fixed 069f74f3 (roll number) |
+| studentFee | ✅ |  |  |  |  |  |  |
+| studentPortal | ✅ |  |  |  |  |  | A fixed 069f74f3 (dup transport route removed) |
+| studyMaterial | ✅ |  |  |  |  |  |  |
+| subject | ➖ |  |  |  |  |  |  |
+| subscriptionPlan | ➖ |  |  |  |  |  |  |
+| substitution | ✅ |  |  |  |  |  |  |
+| superAdminBilling | ✅ |  |  |  |  |  | Super Admin only |
+| supportTicket | ➖ |  |  |  |  |  |  |
+| survey | ✅ |  |  |  |  |  |  |
+| systemBackup | ✅ |  |  |  |  |  | Super Admin only |
+| task | ➖ |  |  |  |  |  |  |
+| tempAccess | ✅ |  |  |  |  |  | Super Admin only; not read by auth |
+| textbook | ➖ |  |  |  |  |  |  |
+| timetable | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| topic | ✅ |  |  |  |  |  |  |
+| transport | ✅ |  |  |  |  |  | A fixed dd44ea1c |
+| transportTracking | ✅ |  |  |  |  |  |  |
+| twoFactor | ✅ |  |  |  |  |  |  |
+| user | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| vehicleMaintenance | ✅ |  |  |  |  |  | A fixed 069f74f3 |
+| vendor | ➖ |  |  |  |  |  |  |
+| webhook | ➖ |  |  |  |  |  |  |
 
 Frontend (pattern G) is tracked per page in a second table once the backend sweep is done.
