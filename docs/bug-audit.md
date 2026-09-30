@@ -200,4 +200,12 @@ One pattern at a time across every controller, one commit per pattern sweep.
 | vendor | ➖ | ✅ | ➖ | ✅ | ➖ | ➖ |  |
 | webhook | ➖ | ➖ | ➖ | ➖ | ✅ | ✅ |  |
 
-Frontend (pattern G) is tracked per page in a second table once the backend sweep is done.
+## Frontend (pattern G)
+
+| Part | Status | Notes |
+|---|---|---|
+| Dates sent with toISOString() | ✅ | 112 uses checked; range filters fixed (Income, Expense, Fee/Financial Reports, hostel leave). Instants (check-in times, schedules) are correct as they are. |
+| Print windows (document.write) | ✅ | 8 found; 7 print React-rendered HTML or escape already; Super Admin report export fixed. |
+| CSV exports | ✅ | Super Admin report export moved to downloadCsv; the rest already used it. |
+| Links from user data (safeHref) | ✅ | Done 2026-09-28 (see memory "XSS: links, prints, CSV"). |
+| Lists fetched without a limit, filtered on the page | partly | Fixed 2026-09-28 for questions, leave, exams, classes, ID cards; not yet swept page by page. |
