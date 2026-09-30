@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Select, DatePicker, Spin, Empty, Table } from "antd";
+import { Select, DatePicker, Spin, Empty, Table, Tag } from "antd";
 import {
   CalendarOutlined, TeamOutlined, CheckCircleOutlined,
   CloseCircleOutlined, TrophyOutlined, WarningOutlined,
@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import { fetchMonthlyAttendance } from "../../../features/attendanceSlice";
 import { fetchAssignedClasses }   from "../../../features/classSlice";
 import PageHeader                 from "../../../components/layout/PageHeader";
+import { FilterGrid, FilterField } from "../../../components/attendance/FilterGrid";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
 const TABLE_CLS = "teacher-monthly-tbl";
@@ -57,12 +58,6 @@ const STATUS = {
 };
 
 /* ── helpers ── */
-const FL = ({ children }) => (
-  <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
-    {children}
-  </div>
-);
-
 const pctColor = (n) => n >= 90 ? C.success : n >= 75 ? C.warning : C.danger;
 const pctBg    = (n) => n >= 90 ? C.successLight : n >= 75 ? C.warningLight : C.dangerLight;
 const pctBdr   = (n) => n >= 90 ? "var(--success-light)" : n >= 75 ? "var(--warning-light)" : "var(--danger-light)";
@@ -152,7 +147,9 @@ const MonthlyAttendanceReport = () => {
   const { user: currentUser }     = useSelector((s) => s.auth || {});
   const { selectedAcademicYear }  = useSelector((s) => s.academicYear || {});
 
-  const schoolId       = currentUser?.school?._id || null;
+  // Either shape of the signed-in user: with only `school._id` read here, a user carrying
+  // `schoolId` never loaded their classes and the Class & Section list stayed empty.
+  const schoolId       = currentUser?.school?._id || currentUser?.schoolId || null;
   const academicYearId = selectedAcademicYear?._id || null;
   const teacherId      = currentUser?._id || null;
 
@@ -189,6 +186,23 @@ const MonthlyAttendanceReport = () => {
   }, [selectedKey, classSections]);
 
   const selected = useMemo(() => classSections.find((c) => c.key === selectedKey) || null, [classSections, selectedKey]);
+
+  // Grouped under each class, so a teacher with several sections of one class sees them together;
+  // the chosen value still reads "Class 5 – A" in the box.
+  const classSectionOptions = useMemo(() => {
+    const groups = new Map();
+    classSections.forEach((item) => {
+      if (!groups.has(item.classId)) groups.set(item.classId, { label: item.className, title: item.className, options: [] });
+      groups.get(item.classId).options.push({
+        value: item.key,
+        label: `${item.className} – ${item.sectionName}`,
+        sectionName: item.sectionName,
+        isClassTeacher: item.isClassTeacher,
+        studentCount: item.studentCount,
+      });
+    });
+    return [...groups.values()];
+  }, [classSections]);
 
   /* fetch attendance */
   useEffect(() => {
@@ -343,37 +357,48 @@ const MonthlyAttendanceReport = () => {
 
       {/* ── Filter Panel ── */}
       <div className="section-panel u-mt-5">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14, alignItems: "end" }}>
-
-          <div>
-            <FL>Class & Section</FL>
+        {/* The shared attendance filter row: top-aligned, so the hint under Class & Section no
+            longer pushes the Month picker out of line with it. */}
+        <FilterGrid>
+          <FilterField
+            label="Class & Section"
+            hint={selected ? (selected.isClassTeacher ? "You are the class teacher" : "You teach a subject here") : null}
+          >
             <Select
-              placeholder="Select assigned class & section"
+              placeholder="Select class & section"
               className="u-full"
               value={selectedKey}
               onChange={setSelectedKey}
               loading={classLoading}
-              options={classSections.map((item) => ({
-                label: `${item.className} – ${item.sectionName}${item.isClassTeacher ? " ★" : ""}`,
-                value: item.key,
-              }))}
+              disabled={!classLoading && classSections.length === 0}
+              showSearch
+              optionFilterProp="label"
+              popupMatchSelectWidth={false}
+              options={classSectionOptions}
+              optionRender={(option) => (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 200 }}>
+                  <span style={{ fontWeight: 600 }}>Section {option.data.sectionName}</span>
+                  {option.data.isClassTeacher && (
+                    <Tag color="green" bordered={false} style={{ marginInlineEnd: 0, fontSize: 11 }}>Class teacher</Tag>
+                  )}
+                  <span style={{ marginLeft: "auto", fontSize: 12, color: C.textMuted }}>
+                    {option.data.studentCount} {option.data.studentCount === 1 ? "student" : "students"}
+                  </span>
+                </div>
+              )}
             />
-            {selected?.isClassTeacher && (
-              <div style={{ fontSize: 11, color: C.success, marginTop: 4, fontWeight: 600 }}>
-                ★ You are the class teacher
-              </div>
-            )}
-          </div>
+          </FilterField>
 
-          <div>
-            <FL>Month</FL>
+          <FilterField label="Month">
             <DatePicker
               picker="month" className="u-full"
               value={month}
               onChange={(v) => setMonth(v || dayjs())}
+              disabledDate={(d) => d && d.isAfter(dayjs(), "month")}
+              allowClear={false}
             />
-          </div>
-        </div>
+          </FilterField>
+        </FilterGrid>
 
         {/* No classes warning */}
         {!loading && classSections.length === 0 && (
