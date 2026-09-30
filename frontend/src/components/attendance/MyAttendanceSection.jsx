@@ -44,7 +44,7 @@ const Stat = ({ label, value, color }) => (
   </div>
 );
 
-const MyAttendanceSection = ({ basePath: basePathProp, style }) => {
+const MyAttendanceSection = ({ basePath: basePathProp, style, compact = false }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   // Dashboards live at /dashboard/<role path>; several roles share one dashboard component, so the
@@ -121,6 +121,56 @@ const MyAttendanceSection = ({ basePath: basePathProp, style }) => {
     detail = "Check in from school with your location on";
     tone = "var(--warning)";
     action = { label: "Check in", icon: <LoginOutlined />, primary: true };
+  }
+
+  // One strip: today's state and the action on the left, the month's counts on the right.
+  if (compact) {
+    const bits = [
+      ["Present", (counts.present || 0) + (counts.late || 0), STATUS.present.color],
+      ["Half day", counts.halfday || 0, STATUS.halfday.color],
+      ["Absent", counts.absent || 0, STATUS.absent.color],
+      ["Leave", counts.leave || 0, STATUS.leave.color],
+    ];
+    return (
+      <div className="section-panel" style={{ padding: "10px 14px", ...style }}>
+        {loading && !record && !month.length ? (
+          <Skeleton active paragraph={{ rows: 1 }} title={false} />
+        ) : error ? (
+          <div style={{ fontSize: 13, color: "var(--danger)" }}>
+            {error} — <Button type="link" size="small" style={{ padding: 0 }} onClick={load}>try again</Button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 260px", minWidth: 0 }}>
+              <div style={iconWell(tone, 32)}><ClockCircleOutlined /></div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 14, color: tone, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {headline}
+                  {record?.status && STATUS[record.status] && (
+                    <span style={{ ...pill(STATUS[record.status].color), marginLeft: 8, fontSize: 11 }}>
+                      {STATUS[record.status].label}{record.halfDaySession ? ` · ${record.halfDaySession}` : ""}
+                    </span>
+                  )}
+                </div>
+                <div className="u-meta" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{detail}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              <span className="u-muted" style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>{dayjs().format("MMM")}</span>
+              {bits.map(([label, value, color]) => (
+                <div key={label} style={{ textAlign: "center", minWidth: 40 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color, lineHeight: 1.1 }}>{value}</div>
+                  <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            <Button size="small" type={action.primary ? "primary" : "default"} icon={action.icon} onClick={() => navigate(selfPage)} style={{ borderRadius: 8 }}>
+              {action.label}
+            </Button>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (

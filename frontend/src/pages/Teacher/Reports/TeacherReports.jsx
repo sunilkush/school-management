@@ -53,7 +53,7 @@ const TeacherReports = () => {
   }, [month]);
   useEffect(() => { load(); }, [load]);
 
-  const sections = data?.sections || [];
+  const sections = useMemo(() => data?.sections || [], [data]);
   const summary = useMemo(() => {
     const students = sections.reduce((s, x) => s + x.students, 0);
     const attended = sections.reduce((s, x) => s + x.present + x.late + x.halfday * 0.5, 0);
