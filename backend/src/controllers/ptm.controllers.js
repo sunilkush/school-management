@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { PTMSession } from "../models/PTMSession.model.js";
 import { PTMSlot } from "../models/PTMSlot.model.js";
 import { Student } from "../models/student.model.js";
+import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
 import { notifyUser } from "../utils/notifyService.js";
 import { actingRoleName } from "../utils/actingRole.js";
 
@@ -208,6 +209,24 @@ export const bookSlot = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ _id: studentId, schoolId: existingSlot.schoolId }).populate("userId", "name").lean();
   if (!student) throw new ApiError(404, "Student not found");
 
+  // A session is one teacher meeting one class-section. Nothing checked the child was in it, or
+  // that they did not already have a slot: one parent could take every slot in the session (or a
+  // parent from another class could take one), leaving the class's own parents none.
+  const ptmSession = await PTMSession.findOne({ _id: existingSlot.ptmSessionId, schoolId: existingSlot.schoolId })
+    .select("schoolClassId sectionId status")
+    .lean();
+  if (!ptmSession || ptmSession.status !== "Scheduled") throw new ApiError(400, "This meeting is not open for booking");
+  const inClass = await StudentEnrollment.exists({
+    studentId,
+    schoolId: existingSlot.schoolId,
+    schoolClassId: ptmSession.schoolClassId,
+    sectionId: ptmSession.sectionId,
+    status: "Active",
+  });
+  if (!inClass) throw new ApiError(400, "This meeting is for another class or section");
+  const hasSlot = await PTMSlot.exists({ ptmSessionId: ptmSession._id, studentId, status: { $in: ["Booked", "Completed"] } });
+  if (hasSlot) throw new ApiError(409, "This child already has a slot in this meeting — cancel it to pick another");
+
   const slot = await PTMSlot.findOneAndUpdate(
     { _id: req.params.id, status: "Available", schoolId: existingSlot.schoolId },
     {
@@ -223,6 +242,21 @@ export const bookSlot = asyncHandler(async (req, res) => {
   );
 
   if (!slot) throw new ApiError(400, "This slot is no longer available");
+
+  // Two slots booked for one child at the same moment both pass the check above. The earlier
+  // booking keeps its slot; this one is handed back.
+  const [first] = await PTMSlot.find({ ptmSessionId: ptmSession._id, studentId, status: "Booked" })
+    .sort({ bookedAt: 1, _id: 1 })
+    .limit(1)
+    .select("_id")
+    .lean();
+  if (first && String(first._id) !== String(slot._id)) {
+    await PTMSlot.updateOne(
+      { _id: slot._id, status: "Booked", studentId },
+      { $set: { status: "Available", studentId: null, studentName: "", parentId: null, bookedAt: null } }
+    );
+    throw new ApiError(409, "This child already has a slot in this meeting — cancel it to pick another");
+  }
 
   const session = await PTMSession.findById(slot.ptmSessionId).select("title location").lean();
   const timeRange = `${new Date(slot.startTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}`;
