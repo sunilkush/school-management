@@ -4,6 +4,7 @@ import { startSubscriptionExpiryJob } from "./jobs/subscriptionExpiry.job.js";
 import { startPtmReminderJob } from "./jobs/ptmReminder.job.js";
 import { startAutoCheckoutJob } from "./jobs/autoCheckout.job.js";
 import { startFeeOverdueJob } from "./jobs/feeOverdue.job.js";
+import { startPayrollStaffJob } from "./jobs/payrollStaff.job.js";
 
 const PORT = process.env.PORT || 9000;
 
@@ -23,6 +24,7 @@ dbConnection()
     startPtmReminderJob();
     startAutoCheckoutJob();
     startFeeOverdueJob();
+    startPayrollStaffJob();
 
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);

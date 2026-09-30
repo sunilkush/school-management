@@ -13,6 +13,21 @@ const C = {
 
 const StatusBadge = ({ status }) => {
   const active = status === "active";
+  // A ₹0 draft made automatically for a staff member (services/employeeProfile.service.js):
+  // it needs amounts and to be made active before payroll will pay them.
+  if (status === "draft") {
+    return (
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 5,
+        padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+        background: "var(--warning-light)", color: "var(--warning-hover)",
+        border: "1px solid color-mix(in srgb, var(--warning) 40%, transparent)",
+      }}>
+        <MinusCircleOutlined style={{ fontSize: 10 }} />
+        Draft · fill in
+      </span>
+    );
+  }
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
@@ -102,7 +117,7 @@ const SalaryStructureTable = ({ data, loading, onEdit, settings }) => {
     {
       title: "Status",
       dataIndex: "status",
-      filters: [{ text: "Active", value: "active" }, { text: "Inactive", value: "inactive" }],
+      filters: [{ text: "Active", value: "active" }, { text: "Draft (to fill in)", value: "draft" }, { text: "Inactive", value: "inactive" }],
       onFilter: (v, r) => r.status === v,
       render: (v) => <StatusBadge status={v} />,
     },

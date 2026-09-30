@@ -34,8 +34,8 @@ const SalaryStructures = () => {
     setAddingStaff(true);
     try {
       const res = await dispatch(addMissingStaffToPayroll()).unwrap();
-      if (res?.added?.length) {
-        message.success(`${res.message}. Fill in each one's bank and statutory details before running payroll.`);
+      if (res?.added?.length || res?.structuresAdded) {
+        message.success(`${res.message}. Set each draft's salary and make it active; add bank and statutory details before running payroll.`);
       } else {
         message.info(res?.message || "Everyone eligible is already on payroll");
       }
@@ -122,6 +122,9 @@ const SalaryStructures = () => {
     form.setFieldsValue({
       ...row,
       employeeId:    row.employeeId?._id || row.employeeId,
+      // A draft is opened to be filled in and put to use; the form (and the API) only know
+      // active and inactive.
+      status:        row.status === "draft" ? "active" : row.status,
       effectiveFrom: row.effectiveFrom ? dayjs(row.effectiveFrom) : null,
       effectiveTo:   row.effectiveTo   ? dayjs(row.effectiveTo)   : null,
     });

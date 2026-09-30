@@ -970,8 +970,8 @@ export const addMissingStaff = asyncHandler(async (req, res) => {
     });
   }
   return sendSuccess(res, {
-    message: result.added.length
-      ? `Added ${result.added.length} staff to payroll`
+    message: result.added.length || result.structuresAdded
+      ? `Added ${result.added.length} staff to payroll and ${result.structuresAdded} draft salary structure(s) to fill in`
       : "Everyone eligible is already on payroll",
     data: result,
   });
