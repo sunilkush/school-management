@@ -6,6 +6,7 @@ import {
   viewReport,
   getSchoolOverviewReport,
 } from "../controllers/report.controllers.js";
+import { getTeacherOverview } from "../controllers/teacherReport.controllers.js";
 import { requireRoles } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -26,6 +27,8 @@ const REPORT_WRITE = [
 const REPORT_DELETE = ["Super Admin", "School Admin"];
 
 router.get("/",       requireRoles(REPORT_READ),   getReports);
+// A teacher's own classes: attendance this month, students below 75%, exam results.
+router.get("/teacher/overview", requireRoles([...REPORT_READ, "Class Teacher", "Sports Teacher"]), getTeacherOverview);
 router.post("/",      requireRoles(REPORT_WRITE),  createReport);
 
 // Legacy endpoints kept for backward compatibility

@@ -1,253 +1,163 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Input, Select, Spin, Table, Tooltip } from "antd";
-import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
-import {
-  FileText, Users, CalendarCheck, BarChart3, Clock, FolderOpen,
-} from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Button, DatePicker, Empty, Progress, Spin, Table, Tag, Tooltip } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
+import { BarChart3 } from "lucide-react";
 import dayjs from "dayjs";
-import { fetchDashboardSummary } from "../../../features/dashboardSlice";
-import { fetchReports } from "../../../features/reportSlice";
+import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
-import { statGrid, statCard, statLabel, statValue, pill } from "../../../styles/pageStyles.js";
-import { categoricalColorFor } from "../../../utils/colorPalette";
 
-// RGB triples for the shared categorical palette, keyed by var(--x) string — used to
-// build an alpha-tinted background from a CSS custom property (rgba() rather than the
-// hex-alpha-suffix trick, which doesn't work once the base color is a var()).
-const CATEGORICAL_RGB = {
-  "var(--primary)": "var(--primary-rgb)",
-  "var(--accent)":  "var(--accent-rgb)",
-  "var(--purple)":  "var(--purple-rgb)",
-  "var(--success)": "var(--success-rgb)",
-  "var(--warning)": "var(--warning-rgb)",
-  "var(--danger)":  "var(--danger-rgb)",
-  "var(--pink)":    "236,72,153",
-  "var(--cyan)":    "6,182,212",
-  "var(--info)":    "59,130,246",
-  "var(--orange)":  "249,115,22",
-};
-const tint = (colorVar, alpha) => `rgba(${CATEGORICAL_RGB[colorVar] || "100,116,139"}, ${alpha})`;
+/**
+ * A teacher's own classes: this month's attendance per section, the students below 75%, and exam
+ * results (class average, pass rate, and the average in the subjects this teacher teaches).
+ * Data: GET /report/teacher/overview. The page used to list only "Report" records the teacher had
+ * generated, which no teacher screen ever creates, so it was always empty.
+ */
+const pctColor = (p) => (p == null ? "var(--text-muted)" : p >= 90 ? "var(--success)" : p >= 75 ? "var(--primary)" : "var(--danger)");
 
-const normalizeUserContext = (rawUser) => {
-  const roleName =
-    (typeof rawUser?.role === "string" ? rawUser?.role : rawUser?.role?.name) || "";
-  return {
-    role:        roleName,
-    teacherId:   rawUser?._id       || "",
-    schoolId:    rawUser?.school?._id || rawUser?.schoolId || "",
-    teacherName: rawUser?.name      || "Teacher",
-  };
-};
-
-// Report-type badge colors, sourced from the shared categorical palette (see
-// utils/colorPalette.js) so each type gets a distinct, stable hue like everywhere else.
-const typeColor = (type = "") => {
-  const key = type.toLowerCase() || "other";
-  const color = categoricalColorFor(key);
-  return { color, bg: tint(color, 0.08) };
-};
-
-/* ── Stat card ───────────────────────────────────────────────────── */
-const Stat = ({ icon: Icon, label, value, color, loading }) => (
-  <div style={statCard({ color, bg: "var(--surface)", accentBar: color })}>
-    <div>
-      <div style={statLabel(color)}>{label}</div>
-      <div style={statValue(color)}>{loading ? "…" : (value ?? 0)}</div>
-    </div>
-    <div style={{
-      width: 44, height: 44, borderRadius: 12,
-      background: `${color}18`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <Icon size={20} color={color} strokeWidth={1.8} />
-    </div>
+const Stat = ({ label, value, sub, color = "var(--text-primary)" }) => (
+  <div style={{ border: "1px solid var(--border-muted)", borderRadius: 12, padding: "10px 14px", background: "var(--surface)", minWidth: 0 }}>
+    <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+    <div style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1.2 }}>{value}</div>
+    {sub ? <div className="u-muted" style={{ fontSize: 11 }}>{sub}</div> : null}
   </div>
 );
 
-/* ── Main page ───────────────────────────────────────────────────── */
+const PctBar = ({ value }) => (
+  value == null
+    ? <span className="u-muted" style={{ fontSize: 12 }}>Not marked</span>
+    : (
+      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 140 }}>
+        <Progress percent={value} showInfo={false} size="small" strokeColor={pctColor(value)} style={{ margin: 0, flex: 1 }} />
+        <span style={{ fontWeight: 700, color: pctColor(value), fontSize: 12, width: 44, textAlign: "right" }}>{value}%</span>
+      </div>
+    )
+);
+
 const TeacherReports = () => {
-  const dispatch = useDispatch();
-  const { user }  = useSelector((s) => s.auth     || {});
-  const { summary = [], loading: summaryLoading, error: summaryError } =
-    useSelector((s) => s.dashboard || {});
-  const { items = [], loading: reportsLoading, error: reportsError } =
-    useSelector((s) => s.reports  || {});
+  const [month, setMonth] = useState(dayjs());
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [searchText,   setSearchText]   = useState("");
-  const [selectedType, setSelectedType] = useState("all");
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await apiClient.get("/report/teacher/overview", { params: { month: month.format("YYYY-MM") } });
+      setData(res?.data?.data || null);
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || "Could not load your class report");
+    } finally {
+      setLoading(false);
+    }
+  }, [month]);
+  useEffect(() => { load(); }, [load]);
 
-  const { role, teacherId, schoolId, teacherName } = useMemo(
-    () => normalizeUserContext(user), [user]
-  );
-
-  const refreshAll = () => {
-    if (role) dispatch(fetchDashboardSummary({ role, schoolId }));
-    dispatch(fetchReports({ sort: "-createdAt", school: schoolId, generatedBy: teacherId }));
-  };
-
-  useEffect(() => { refreshAll(); }, [role, schoolId]); // eslint-disable-line
-
-  /* ── Filtered reports ── */
-  const filteredReports = useMemo(() => {
-    const kw = searchText.trim().toLowerCase();
-    return items.filter((r) => {
-      const matchType = selectedType === "all" || r?.type === selectedType;
-      if (!matchType) return false;
-      if (!kw) return true;
-      return [r?.title, r?.type, r?.generatedBy?.name, r?.school?.name]
-        .filter(Boolean).join(" ").toLowerCase().includes(kw);
-    });
-  }, [items, searchText, selectedType]);
-
-  /* ── Type dropdown options ── */
-  const reportTypeOptions = useMemo(() => {
-    const types = new Set(items.map((i) => i?.type).filter(Boolean));
-    return [
-      { label: "All Types", value: "all" },
-      ...[...types].map((t) => ({
-        label: t.charAt(0).toUpperCase() + t.slice(1),
-        value: t,
-      })),
-    ];
-  }, [items]);
-
-  /* ── Summary stat values ── */
-  const studentCount    = summary.find((i) => i.title === "Students")?.value          || 0;
-  const attendanceCount = summary.find((i) => i.title === "Attendance Marked")?.value || 0;
-
-  /* ── Table columns ── */
-  const columns = [
-    {
-      title: "Report Title",
-      dataIndex: "title",
-      render: (v) => (
-        <div className="u-row">
-          <div style={{
-            width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-            background: "rgba(var(--purple-rgb),0.08)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <FileText size={14} color="var(--purple)" strokeWidth={1.8} />
-          </div>
-          <span className="u-label">
-            {v || "Untitled Report"}
-          </span>
-        </div>
-      ),
-    },
-    {
-      title: "Type", dataIndex: "type", width: 130,
-      render: (v) => {
-        const c = typeColor(v || "");
-        return <span style={pill(c.color, c.bg)}>{(v || "unknown").toUpperCase()}</span>;
-      },
-    },
-    {
-      title: "Created By", dataIndex: ["generatedBy", "name"], width: 160,
-      render: (v) => (
-        <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{v || "—"}</span>
-      ),
-    },
-    {
-      title: "Created On", dataIndex: "createdAt", width: 140,
-      render: (v) => (
-        <div className="u-row-sm">
-          <Clock size={12} color="var(--text-muted)" />
-          <span className="u-meta">
-            {v ? dayjs(v).format("DD MMM YYYY") : "—"}
-          </span>
-        </div>
-      ),
-    },
-  ];
+  const sections = data?.sections || [];
+  const summary = useMemo(() => {
+    const students = sections.reduce((s, x) => s + x.students, 0);
+    const attended = sections.reduce((s, x) => s + x.present + x.late + x.halfday * 0.5, 0);
+    const marked = sections.reduce((s, x) => s + x.days, 0);
+    return {
+      students,
+      avg: marked ? Math.round((attended / marked) * 1000) / 10 : null,
+      classTeacherOf: sections.filter((x) => x.isClassTeacher).map((x) => `${x.className}-${x.sectionName}`),
+    };
+  }, [sections]);
 
   return (
     <div className="page-wrapper">
-
       <PageHeader
-        title={`${teacherName} — Reports`}
-        subtitle="View and track all your generated reports"
+        title="My Class Reports"
+        subtitle="Attendance and exam results for the classes you teach"
         icon={<BarChart3 size={20} />}
         extra={
-          <Tooltip title="Refresh">
-            <Button icon={<ReloadOutlined />} onClick={refreshAll} />
-          </Tooltip>
+          <div style={{ display: "flex", gap: 8 }}>
+            <DatePicker picker="month" value={month} onChange={(v) => v && setMonth(v)} allowClear={false}
+              disabledDate={(d) => d && d.isAfter(dayjs(), "month")} format="MMM YYYY" />
+            <Tooltip title="Refresh"><Button icon={<ReloadOutlined />} onClick={load} /></Tooltip>
+          </div>
         }
       />
 
-      {summaryError && (
-        <Alert type="error" showIcon message={summaryError} style={{ marginTop: 16, borderRadius: 10 }} />
-      )}
-      {reportsError && (
-        <Alert type="error" showIcon message={reportsError} style={{ marginTop: 8, borderRadius: 10 }} />
-      )}
+      {error && <Alert type="error" showIcon message={error} style={{ marginTop: 12, borderRadius: 10 }} />}
 
-      {/* ── Stat cards ── */}
-      <div style={{ ...statGrid(150), marginTop: 20 }}>
-        <Stat icon={Users}         label="Linked Students"   value={studentCount}    color="var(--purple)" loading={summaryLoading} />
-        <Stat icon={CalendarCheck} label="Attendance Marked" value={attendanceCount} color="var(--info)" loading={summaryLoading} />
-        <Stat icon={FolderOpen}    label="Reports Available" value={items.length}    color="var(--success)" loading={reportsLoading} />
-      </div>
-
-      {/* ── Reports table ── */}
-      <div className="section-panel">
-        <div style={{
-          display: "flex", alignItems: "center", gap: 10,
-          flexWrap: "wrap", marginBottom: 16,
-          justifyContent: "space-between",
-        }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
-            {filteredReports.length} report{filteredReports.length !== 1 ? "s" : ""}
-            {selectedType !== "all" || searchText ? " (filtered)" : ""}
-          </div>
-          <div className="u-row-wrap">
-            <Input
-              allowClear
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              placeholder="Search title, type, creator…"
-              prefix={<SearchOutlined className="u-muted" />}
-              style={{ width: 240, borderRadius: 9 }}
-            />
-            <Select
-              style={{ width: 160 }}
-              options={reportTypeOptions}
-              value={selectedType}
-              onChange={setSelectedType}
-              placeholder="Filter by type"
-            />
-          </div>
-        </div>
-
-        {reportsLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}>
-            <Spin size="large" />
-          </div>
-        ) : filteredReports.length === 0 ? (
-          <div className="empty-state">
-            <div style={{ fontSize: 36, marginBottom: 10 }}>📊</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-              No Reports Found
-            </div>
-            <div className="u-meta-md">
-              {items.length === 0
-                ? "No reports have been generated yet."
-                : "No reports match your current filter."}
-            </div>
-          </div>
-        ) : (
-          <Table
-            className="reports-table data-table"
-            rowKey={(r) => r._id}
-            columns={columns}
-            dataSource={filteredReports}
-            pagination={{ pageSize: 8, showSizeChanger: false, size: "small" }}
-            size="small"
-            scroll={{ x: 600 }}
-          />
+      <Spin spinning={loading}>
+        {data && !data.academicYear && (
+          <Alert type="info" showIcon style={{ marginTop: 12 }} message="No active academic year" description="Ask the school admin to set the current academic year." />
         )}
-      </div>
+        {data?.academicYear && !sections.length && (
+          <Alert type="info" showIcon style={{ marginTop: 12 }} message="No classes assigned to you"
+            description={`You are not the class teacher or a subject teacher of any section in ${data.academicYear}. Ask the school admin to assign you in Classes & Sections.`} />
+        )}
+
+        {sections.length > 0 && (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginTop: 16 }}>
+              <Stat label="Sections" value={sections.length} sub={summary.classTeacherOf.length ? `Class teacher: ${summary.classTeacherOf.join(", ")}` : "Subject teacher"} />
+              <Stat label="Students" value={summary.students} />
+              <Stat label={`Attendance · ${month.format("MMM")}`} value={summary.avg == null ? "—" : `${summary.avg}%`} color={pctColor(summary.avg)} />
+              <Stat label="Below 75%" value={data.lowAttendance.length} color={data.lowAttendance.length ? "var(--danger)" : "var(--success)"} sub="students this month" />
+            </div>
+
+            <div className="section-panel" style={{ marginTop: 16, padding: 14 }}>
+              <div className="u-title" style={{ marginBottom: 10 }}>Attendance by section · {month.format("MMMM YYYY")}</div>
+              <Table
+                size="small" rowKey="sectionId" dataSource={sections} pagination={false} scroll={{ x: "max-content" }}
+                columns={[
+                  {
+                    title: "Class",
+                    render: (_, r) => (
+                      <span>
+                        <span className="u-strong">{r.className}-{r.sectionName}</span>
+                        {r.isClassTeacher ? <Tag color="purple" style={{ marginLeft: 6 }}>Class teacher</Tag> : null}
+                      </span>
+                    ),
+                  },
+                  { title: "Your subjects", render: (_, r) => r.mySubjects.length ? r.mySubjects.join(", ") : <span className="u-muted">—</span> },
+                  { title: "Students", dataIndex: "students" },
+                  { title: "Days marked", dataIndex: "markedDays" },
+                  { title: "Attendance", render: (_, r) => <PctBar value={r.attendancePct} /> },
+                  { title: "Absent", dataIndex: "absent", render: (v) => v ? <span style={{ color: "var(--danger)", fontWeight: 600 }}>{v}</span> : 0 },
+                ]}
+              />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 16, marginTop: 16 }}>
+              <div className="section-panel" style={{ margin: 0, padding: 14 }}>
+                <div className="u-title" style={{ marginBottom: 10 }}>Students below 75%</div>
+                <Table
+                  size="small" rowKey={(r) => `${r.sectionName}-${r.name}-${r.rollNumber}`} dataSource={data.lowAttendance}
+                  pagination={{ pageSize: 8, hideOnSinglePage: true }}
+                  locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Everyone is at 75% or above" /> }}
+                  columns={[
+                    { title: "Student", render: (_, r) => <span className="u-strong">{r.name}</span> },
+                    { title: "Class", render: (_, r) => `${r.className}-${r.sectionName}` },
+                    { title: "Absent", render: (_, r) => `${r.absent} of ${r.days}` },
+                    { title: "%", dataIndex: "attendancePct", render: (v) => <span style={{ color: pctColor(v), fontWeight: 700 }}>{v}%</span> },
+                  ]}
+                />
+              </div>
+
+              <div className="section-panel" style={{ margin: 0, padding: 14 }}>
+                <div className="u-title" style={{ marginBottom: 10 }}>Exam results · {data.academicYear}</div>
+                <Table
+                  size="small" rowKey={(r) => `${r.examName}-${r.className}-${r.sectionName}`} dataSource={data.exams}
+                  pagination={{ pageSize: 8, hideOnSinglePage: true }} scroll={{ x: "max-content" }}
+                  locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No exam results yet" /> }}
+                  columns={[
+                    { title: "Exam", render: (_, r) => <span className="u-strong">{r.examName}</span> },
+                    { title: "Class", render: (_, r) => `${r.className}-${r.sectionName}` },
+                    { title: "Avg", dataIndex: "avgPct", render: (v) => `${v}%` },
+                    { title: "Pass", dataIndex: "passPct", render: (v) => <span style={{ color: pctColor(v), fontWeight: 600 }}>{v}%</span> },
+                    { title: "Your subject", render: (_, r) => r.mySubjects.length ? r.mySubjects.map((s) => `${s.name} ${s.avgPct}%`).join(", ") : "—" },
+                  ]}
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </Spin>
     </div>
   );
 };
