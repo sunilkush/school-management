@@ -65,6 +65,10 @@ export const registerEmployee = asyncHandler(async (req, res) => {
   const isSuperAdmin = req.userRole?.name === "Super Admin";
   const schoolId = isSuperAdmin ? req.body.schoolId : req.user.schoolId;
   if (!schoolId) throw new ApiError(400, "schoolId is required");
+  // Required when an employee is registered by hand, as the form asks. The model no longer
+  // insists, because records made automatically for staff users may not have them yet.
+  if (!phoneNo) throw new ApiError(400, "Phone number is required");
+  if (!gender) throw new ApiError(400, "Gender is required");
 
   let finalUserId = userId;
   let createdUser = null;

@@ -16,6 +16,7 @@ import {
   updatePayrollStructure,
   createPayrollSettings,
   getPayrollSettings,
+  addMissingStaff,
   updateEmployeeStatutory,
   getPfReport,
   getEsiReport,
@@ -65,6 +66,7 @@ router.get("/payslip/:employeeId/:month/:year/download", auth, roleMiddleware(PA
 // ── Payroll Settings (versioned PF/ESI/PT/rounding config) ──────────────────────
 router.post("/settings", auth, roleMiddleware(FULL_ACCESS_ROLES), validateRequest(payrollSettingsCreateSchema), createPayrollSettings);
 router.get("/settings", auth, roleMiddleware(REVIEW_ROLES), getPayrollSettings);
+router.post("/employees/add-missing", auth, roleMiddleware(FULL_ACCESS_ROLES), addMissingStaff);
 
 // ── Employee PF/ESI statutory details ────────────────────────────────────────────
 router.patch("/employee/:employeeId/statutory", auth, roleMiddleware(FULL_ACCESS_ROLES), validateRequest(employeeStatutoryUpdateSchema), updateEmployeeStatutory);

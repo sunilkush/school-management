@@ -13,6 +13,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { sendSuccess } from "../utils/response.js";
 import { toCsv } from "../utils/csv.js";
 import { calculatePayrollEntry } from "../services/payrollCalculator.service.js";
+import { addMissingStaffToPayroll } from "../services/employeeProfile.service.js";
 
 // Roles allowed to view/download any employee's payslip for payroll administration —
 // everyone else may only fetch their own, enforced in fetchAuthorizedPayslip() below.
@@ -950,5 +951,28 @@ export const getEsiReport = asyncHandler(async (req, res) => {
     rows: rows.map((r) => [r.employeeName, r.esicNumber, r.esiWage, r.employeeEsi, r.employerEsi]),
     message: "ESI report fetched",
     data: { cycle, rows },
+  });
+});
+
+/**
+ * POST /payroll/employees/add-missing
+ * Puts every active paid-staff user of the school who has no employee record onto payroll, so
+ * they are included in payroll runs and can see My Payroll. Safe to run again: staff already on
+ * payroll are left as they are.
+ */
+export const addMissingStaff = asyncHandler(async (req, res) => {
+  const schoolId = getSchoolId(req);
+  assertSchoolId(schoolId);
+  const result = await addMissingStaffToPayroll(schoolId);
+  if (result.added.length) {
+    await writeAuditLog(req, "PAYROLL_STAFF_ADDED", `Added ${result.added.length} staff to payroll`, {
+      employeeIds: result.added.map((a) => a.employeeId),
+    });
+  }
+  return sendSuccess(res, {
+    message: result.added.length
+      ? `Added ${result.added.length} staff to payroll`
+      : "Everyone eligible is already on payroll",
+    data: result,
   });
 });

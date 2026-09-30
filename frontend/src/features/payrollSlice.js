@@ -25,6 +25,16 @@ export const fetchPayrollEmployees = createAsyncThunk("payroll/fetchEmployees", 
   }
 });
 
+// Puts every paid-staff user of the school who has no employee record yet onto payroll.
+export const addMissingStaffToPayroll = createAsyncThunk("payroll/addMissingStaff", async (_, { rejectWithValue }) => {
+  try {
+    const response = await httpClient.post("/payroll/employees/add-missing");
+    return { message: response?.data?.message, ...(response?.data?.data || {}) };
+  } catch (error) {
+    return rejectWithValue(getErrorPayload(error, "Could not add staff to payroll"));
+  }
+});
+
 export const savePayrollStructure = createAsyncThunk(
   "payroll/saveStructure",
   async ({ editingId, payload }, { rejectWithValue }) => {

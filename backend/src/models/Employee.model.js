@@ -20,15 +20,16 @@ const employeeSchema = new Schema(
     },
 
     // Basic Info
+    // Not required here: every paid staff user gets an employee record automatically
+    // (services/employeeProfile.service.js), and many user accounts have no phone or gender on
+    // file. The employee form still asks for both; when given they must be valid.
     phoneNo: {
       type: String,
-      required: [true, "Phone number is required"],
       match: [/^\+?[0-9]{10,13}$/, "Invalid phone number"],
     },
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
-      required: [true, "Gender is required"],
     },
     dateOfBirth: {
       type: Date,

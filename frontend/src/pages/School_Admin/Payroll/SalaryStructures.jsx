@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Form, Input, message } from "antd";
+import { Alert, Button, Form, Input, message } from "antd";
 import {
   TeamOutlined, CheckCircleOutlined,
-  BarChartOutlined, SearchOutlined,
+  BarChartOutlined, SearchOutlined, UserAddOutlined,
 } from "@ant-design/icons";
 import RupeeIcon from "../../../components/icons/RupeeIcon";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import SalaryStructureForm from "../../../components/payroll/SalaryStructureForm";
 import SalaryStructureTable from "../../../components/payroll/SalaryStructureTable";
-import { fetchPayrollEmployees, fetchPayrollSettings, fetchPayrollStructures, savePayrollStructure } from "../../../features/payrollSlice";
+import { addMissingStaffToPayroll, fetchPayrollEmployees, fetchPayrollSettings, fetchPayrollStructures, savePayrollStructure } from "../../../features/payrollSlice";
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell } from "../../../styles/pageStyles";
 import { formatCurrencyINR } from "../../../utils/payroll";
@@ -26,6 +26,26 @@ const SalaryStructures = () => {
   const [form] = Form.useForm();
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
+  const [addingStaff, setAddingStaff] = useState(false);
+
+  // Staff who exist only as user accounts have no employee record, so they were missing from
+  // this list and from every payroll run.
+  const handleAddMissingStaff = async () => {
+    setAddingStaff(true);
+    try {
+      const res = await dispatch(addMissingStaffToPayroll()).unwrap();
+      if (res?.added?.length) {
+        message.success(`${res.message}. Fill in each one's bank and statutory details before running payroll.`);
+      } else {
+        message.info(res?.message || "Everyone eligible is already on payroll");
+      }
+      await dispatch(fetchPayrollEmployees()).unwrap().catch(() => {});
+    } catch (e) {
+      message.error(e?.message || "Could not add staff to payroll");
+    } finally {
+      setAddingStaff(false);
+    }
+  };
 
   const { employees, structures, loadingStructures, savingStructure, currentSettings } = useSelector((s) => s.payroll);
   const safeEmployees  = useMemo(() => (Array.isArray(employees)  ? employees  : []), [employees]);
@@ -132,6 +152,11 @@ const SalaryStructures = () => {
         title="Salary Structures"
         subtitle="Define and manage employee salary components, allowances, and deductions"
         icon={<RupeeIcon />}
+        extra={
+          <Button icon={<UserAddOutlined />} loading={addingStaff} onClick={handleAddMissingStaff}>
+            Add missing staff to payroll
+          </Button>
+        }
       />
 
       {/* Stats */}

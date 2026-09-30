@@ -22,6 +22,7 @@ import { issueOtp } from '../utils/otpCodes.js'
 import { resolvePlanModules } from '../utils/planModules.js'
 import { findForbiddenRole } from '../utils/roleAssignment.js'
 import { assertAllInSchool } from '../utils/schoolScope.js'
+import { ensureEmployeeProfile } from '../services/employeeProfile.service.js'
 import { Department } from '../models/Department.model.js'
 import { Designation } from '../models/Designation.model.js'
 // ✅ Generate Access & Refresh Token
@@ -191,6 +192,14 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   await sendVerificationEmail(newUser);
+
+  // Paid staff go on payroll as soon as they exist; a user account alone left them out of every
+  // payroll run. Best effort: the account is made either way.
+  try {
+    await ensureEmployeeProfile(newUser);
+  } catch (employeeError) {
+    console.error("Could not add the new user to payroll:", employeeError?.message);
+  }
 
   const createdUser = await User.findById(newUser._id).select(
     "-password -refreshToken -emailVerificationToken -resetPasswordToken"
