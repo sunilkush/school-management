@@ -60,6 +60,15 @@ const studentFeeSchema = new mongoose.Schema(
       default: null,
     },
 
+    // How the family chose to pay this year: monthly, quarterly or yearly. Null = the fee head's
+    // own frequency. Set for all of a student's fees together by applyPayPlan() in
+    // services/feeSchedule.service.js, which reshapes the unpaid installments to match.
+    payPlan: {
+      type: String,
+      enum: ["monthly", "quarterly", "yearly", null],
+      default: null,
+    },
+
     // 🔹 Payment Tracking
     // The whole year's fee for this head: per-period amount × periods, after discount.
     totalAmount: {

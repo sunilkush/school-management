@@ -11,6 +11,9 @@ import { resolveSchoolId } from "../utils/resolveSchoolId.js";
 import { actingRoleName } from "../utils/actingRole.js";
 import {
   FEE_FREQUENCIES,
+  PAY_PLANS,
+  applyPayPlan,
+  draftPayPlan,
   generateSchedules,
   getFeeSettings,
   outstandingOf,
@@ -164,7 +167,8 @@ export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
   const perFrequency = {};
   const heads = studentFees.map((fee) => {
     const structure = fee.feeStructureId || {};
-    const frequency = structure.frequency || "yearly";
+    // A family on a pay plan pays every head on that plan, whatever the head's own frequency.
+    const frequency = fee.payPlan || structure.frequency || "yearly";
     const feeRows = instByFee.get(String(fee._id)) || [];
     const periods = FEE_FREQUENCIES[frequency]?.periods || 1;
     // What this student is charged per period, after discount — not the structure's list price.
@@ -203,10 +207,61 @@ export const getFeeInstallmentsByStudent = asyncHandler(async (req, res) => {
     overdueCount: rows.filter((r) => r.status === "overdue").length,
   };
 
+  /* What falls due together, as one line: "Oct 2026 — ₹3,500". A fee screen for a parent shows
+     these rather than one row per fee head. */
+  const STATUS_RANK = { overdue: 3, partial: 2, pending: 1, paid: 0 };
+  const periodMap = new Map();
+  for (const row of rows) {
+    const day = new Date(row.dueDate);
+    const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}|${row.installmentName}`;
+    if (!periodMap.has(key)) {
+      periodMap.set(key, { key, label: row.installmentName, dueDate: row.dueDate, amount: 0, fineAmount: 0, paidAmount: 0, balance: 0, status: "paid", dueNow: false, installmentIds: [], lines: [] });
+    }
+    const p = periodMap.get(key);
+    p.amount = round2(p.amount + row.amount);
+    p.fineAmount = round2(p.fineAmount + row.fineAmount);
+    p.paidAmount = round2(p.paidAmount + row.paidAmount);
+    p.balance = round2(p.balance + row.balance);
+    if (STATUS_RANK[row.status] > STATUS_RANK[p.status]) p.status = row.status;
+    if (row.dueNow) p.dueNow = true;
+    if (row.balance > 0) p.installmentIds.push(row._id);
+    p.lines.push({ _id: row._id, feeHeadName: row.feeHeadName, amount: row.amount, fineAmount: row.fineAmount, paidAmount: row.paidAmount, balance: row.balance, status: row.status });
+  }
+  const periods = [...periodMap.values()];
+
+  /* The three ways to pay, each with what it would come to from today. */
+  const plansInUse = new Set(studentFees.map((f) => f.payPlan || null));
+  const payPlan = plansInUse.size === 1 ? [...plansInUse][0] : null;
+  let planOptions = [];
+  if (academicYearId && studentFees.length) {
+    planOptions = await Promise.all(PAY_PLANS.map(async (plan) => {
+      const draft = await draftPayPlan({ schoolId, studentId, academicYearId, plan });
+      const byDue = new Map();
+      draft.forEach((d) => d.created.forEach((doc) => {
+        const k = `${new Date(doc.dueDate).getTime()}|${doc.installmentName}`;
+        if (!byDue.has(k)) byDue.set(k, { label: doc.installmentName, dueDate: doc.dueDate, amount: 0 });
+        byDue.get(k).amount = round2(byDue.get(k).amount + doc.amount);
+      }));
+      const upcoming = [...byDue.values()].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+      return {
+        plan,
+        label: FEE_FREQUENCIES[plan].label,
+        count: upcoming.length,
+        amountEach: upcoming[0]?.amount || 0,
+        firstDue: upcoming[0]?.dueDate || null,
+        lastDue: upcoming[upcoming.length - 1]?.dueDate || null,
+        total: round2(upcoming.reduce((s, u) => s + u.amount, 0)),
+        // Stays as it is whichever plan is chosen: already due, or partly paid.
+        staysDue: round2(draft.reduce((s, d) => s + d.kept.reduce((t, k) => t + outstandingOf(k), 0), 0)),
+      };
+    }));
+  }
+  const role = actingRoleName(req.user, INSTALLMENT_READ_ROLES)?.toLowerCase();
+
   return res.status(200).json(
     new ApiResponse(
       200,
-      { installments: rows, heads, perFrequency, totals, settings },
+      { installments: rows, periods, heads, perFrequency, totals, settings, payPlan, planOptions, canChoosePlan: role !== "student" },
       "Fee schedule fetched successfully"
     )
   );
@@ -264,4 +319,35 @@ export const quoteInstallments = asyncHandler(async (req, res) => {
       "Quote"
     )
   );
+});
+
+/* =====================================================
+   ✅ CHOOSE A PAY PLAN
+   POST /fee-installments/plan   { studentId, academicYearId, plan: monthly | quarterly | yearly }
+
+   The year's fee, split the way the family wants to pay it. Paid and partly paid installments
+   stay; so does anything that was already due before today. The rest is re-split evenly over the
+   plan's periods still ahead. Staff may pass respreadArrears to re-split overdue ones as well.
+===================================================== */
+export const choosePayPlan = asyncHandler(async (req, res) => {
+  const { studentId, academicYearId, plan } = req.body || {};
+  const schoolId = resolveSchoolId(req.user);
+  validateIds({ schoolId, studentId, academicYearId });
+  if (!academicYearId) throw new ApiError(400, "academicYearId is required");
+  if (!PAY_PLANS.includes(plan)) throw new ApiError(400, "Plan must be monthly, quarterly or yearly");
+
+  await assertOwnsStudentRecord({ user: req.user, studentId, schoolId });
+  const role = actingRoleName(req.user, INSTALLMENT_READ_ROLES)?.toLowerCase();
+  if (role === "student") throw new ApiError(403, "A parent or the school office chooses the pay plan");
+
+  const hasFees = await StudentFee.exists({ schoolId, studentId, academicYearId });
+  if (!hasFees) throw new ApiError(404, "No fees have been assigned for this academic year");
+
+  await refreshInstallments({ schoolId, studentId, academicYearId });
+  const result = await applyPayPlan({
+    schoolId, studentId, academicYearId, plan,
+    respreadArrears: role !== "parent" && req.body?.respreadArrears === true,
+  });
+
+  return res.status(200).json(new ApiResponse(200, result, `Pay plan set to ${FEE_FREQUENCIES[plan].label.toLowerCase()}`));
 });

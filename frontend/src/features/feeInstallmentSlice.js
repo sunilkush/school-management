@@ -51,12 +51,33 @@ export const generateMissingSchedules = createAsyncThunk(
   }
 );
 
+/**
+ * Monthly, quarterly or yearly: how the family pays this year's fee. The server reshapes the
+ * unpaid installments; the caller reloads the schedule afterwards.
+ */
+export const choosePayPlan = createAsyncThunk(
+  "feeInstallment/choosePlan",
+  async ({ studentId, academicYearId, plan }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post(`/fee-installments/plan`, { studentId, academicYearId, plan });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Could not change the pay plan");
+    }
+  }
+);
+
 /* ============================
    SLICE
 ============================ */
 
 const EMPTY_SCHEDULE = {
   installments: [],
+  // What falls due together, as one line per month / quarter / year.
+  periods: [],
+  payPlan: null,
+  planOptions: [],
+  canChoosePlan: false,
   heads: [],
   perFrequency: {},
   totals: null,

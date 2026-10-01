@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { FeeInstallment } from "../models/feeInstallment.model.js";
 import { StudentFee } from "../models/studentFee.model.js";
 import { School } from "../models/school.model.js";
+import { Payment } from "../models/payment.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
 
 /**
  * The fee calendar: how a fee head's per-period amount becomes a student's dated installments,
@@ -284,4 +286,131 @@ export const refreshInstallments = async ({
   await syncStudentFeeFines({ studentFeeIds: touched, session });
 
   return { checked: installments.length, updated: touched.size };
+};
+
+/* ── Pay plan: monthly, quarterly or yearly ──────────────────────── */
+
+export const PAY_PLANS = ["monthly", "quarterly", "yearly"];
+
+/** The next school due day that is today or later. */
+const nextDueDay = (dueDay, now) => {
+  const today = startOfDay(now);
+  const thisMonth = new Date(today.getFullYear(), today.getMonth(), dueDay);
+  return thisMonth >= today ? thisMonth : new Date(today.getFullYear(), today.getMonth() + 1, dueDay);
+};
+
+/**
+ * The installments one StudentFee gets under a pay plan, given the ones that stay as they are.
+ *
+ * `kept` is what the plan may not touch: installments with money on them, and the ones that were
+ * already due before today (choosing a plan never makes arrears disappear). Whatever of the year's
+ * fee they do not cover is split evenly over the plan's periods still ahead, the last one taking
+ * the rounding. With no period ahead — "yearly" chosen in October — it is one installment, due on
+ * the next due day.
+ */
+export const planInstallments = ({ studentFee, kept, plan, academicYear, dueDay, now = new Date() }) => {
+  const uncovered = round2(Number(studentFee.totalAmount || 0) - kept.reduce((s, k) => s + Number(k.amount || 0), 0));
+  // Never more than the fee record itself still owes. Older records exist whose fee is marked
+  // paid while its installments are not; a plan must not invent a new charge on those.
+  const finePaid = kept.reduce((s, k) => s + Math.max(Number(k.paidAmount || 0) - Number(k.amount || 0), 0), 0);
+  const feeOwes = round2(Number(studentFee.totalAmount || 0) - (Number(studentFee.paidAmount || 0) - finePaid));
+  const keptOwes = kept.reduce((s, k) => s + Math.max(Number(k.amount || 0) - Number(k.paidAmount || 0), 0), 0);
+  const remaining = Math.min(uncovered, Math.max(round2(feeOwes - keptOwes), 0));
+  if (remaining <= 0) return [];
+
+  const { periods, monthsApart } = FEE_FREQUENCIES[plan];
+  const yearStart = new Date(academicYear?.startDate || now);
+  const today = startOfDay(now);
+  const usedNames = new Set(kept.map((k) => k.installmentName));
+
+  let slots = Array.from({ length: periods }, (_, i) => {
+    const periodStart = new Date(yearStart.getFullYear(), yearStart.getMonth() + i * monthsApart, 1);
+    return {
+      periodIndex: i,
+      installmentName: periodLabel(plan, i, periodStart),
+      dueDate: new Date(periodStart.getFullYear(), periodStart.getMonth(), dueDay),
+    };
+  }).filter((slot) => slot.dueDate >= today && !usedNames.has(slot.installmentName));
+
+  if (!slots.length) {
+    let name = plan === "yearly" && !usedNames.has("Annual") ? "Annual" : "Balance";
+    for (let n = 2; usedNames.has(name); n += 1) name = `Balance ${n}`;
+    slots = [{ periodIndex: periods, installmentName: name, dueDate: nextDueDay(dueDay, now) }];
+  }
+
+  const share = Math.floor((remaining / slots.length) * 100) / 100;
+  return slots.map((slot, i) => ({
+    schoolId: studentFee.schoolId,
+    academicYearId: studentFee.academicYearId,
+    studentId: studentFee.studentId,
+    studentFeeId: studentFee._id,
+    installmentType: plan,
+    ...slot,
+    amount: i === slots.length - 1 ? round2(remaining - share * (slots.length - 1)) : share,
+    fineAmount: 0,
+    paidAmount: 0,
+    status: "pending",
+  }));
+};
+
+/**
+ * Works out a student's schedule under `plan` for one academic year, without saving anything.
+ * Returns, per StudentFee, the installments that stay, the ones to drop and the new ones.
+ *
+ * `respreadArrears` (staff only) lets untouched overdue installments be re-split too.
+ */
+export const draftPayPlan = async ({ schoolId, studentId, academicYearId, plan, respreadArrears = false, now = new Date(), session = null }) => {
+  const [fees, academicYear, { dueDay }] = await Promise.all([
+    StudentFee.find({ schoolId, studentId, academicYearId }).session(session),
+    AcademicYear.findOne({ _id: academicYearId, schoolId }).select("startDate").session(session).lean(),
+    getFeeSettings(schoolId, session),
+  ]);
+  const installments = await FeeInstallment.find({ studentFeeId: { $in: fees.map((f) => f._id) } }).session(session);
+
+  // An installment an online payment is waiting on, or that a receipt points at, must stay.
+  const ids = installments.map((i) => i._id);
+  const payments = ids.length
+    ? await Payment.find({ schoolId, $or: [{ requestedInstallmentIds: { $in: ids } }, { "allocations.installmentId": { $in: ids } }, { installmentId: { $in: ids } }] })
+      .select("requestedInstallmentIds allocations.installmentId installmentId").session(session).lean()
+    : [];
+  const referenced = new Set();
+  payments.forEach((p) => {
+    (p.requestedInstallmentIds || []).forEach((id) => referenced.add(String(id)));
+    (p.allocations || []).forEach((a) => referenced.add(String(a.installmentId)));
+    if (p.installmentId) referenced.add(String(p.installmentId));
+  });
+
+  const today = startOfDay(now);
+  return fees.map((fee) => {
+    const own = installments.filter((i) => String(i.studentFeeId) === String(fee._id));
+    const stays = (i) => Number(i.paidAmount || 0) > 0 || referenced.has(String(i._id)) || (!respreadArrears && startOfDay(i.dueDate) < today);
+    const kept = own.filter(stays);
+    const dropped = own.filter((i) => !stays(i));
+    return { fee, kept, dropped, created: planInstallments({ studentFee: fee, kept, plan, academicYear, dueDay, now }) };
+  });
+};
+
+/** Puts a student on a pay plan: reshapes the unpaid installments and records the choice. */
+export const applyPayPlan = async ({ schoolId, studentId, academicYearId, plan, respreadArrears = false, now = new Date() }) => {
+  const session = await mongoose.startSession();
+  try {
+    let result = null;
+    await session.withTransaction(async () => {
+      const draft = await draftPayPlan({ schoolId, studentId, academicYearId, plan, respreadArrears, now, session });
+      const dropIds = draft.flatMap((d) => d.dropped.map((i) => i._id));
+      const docs = draft.flatMap((d) => d.created);
+      if (dropIds.length) await FeeInstallment.deleteMany({ _id: { $in: dropIds } }, { session });
+      if (docs.length) await FeeInstallment.insertMany(docs, { session });
+      for (const { fee } of draft) {
+        fee.payPlan = plan;
+        await fee.save({ session });
+      }
+      // Dropped installments may have carried a fine.
+      await syncStudentFeeFines({ studentFeeIds: new Set(draft.map((d) => String(d.fee._id))), session });
+      result = { fees: draft.length, removed: dropIds.length, created: docs.length };
+    });
+    return result;
+  } finally {
+    session.endSession();
+  }
 };
