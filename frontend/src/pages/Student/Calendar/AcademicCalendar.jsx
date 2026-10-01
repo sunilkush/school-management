@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Badge, Calendar, Empty, List, Modal, Spin, Tag, message } from "antd";
+import { Calendar, Empty, List, Modal, Spin, Tag, message } from "antd";
 import { CalendarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import apiClient from "../../../api/httpClient";
 import PageHeader from "../../../components/layout/PageHeader";
-import { statGrid, iconWell } from "../../../styles/pageStyles";
 
 const EVENT_TYPE_COLOR = {
   Holiday:  "red",
@@ -15,15 +14,8 @@ const EVENT_TYPE_COLOR = {
   Event:    "purple",
 };
 
-const StatCard = ({ icon, label, value, color }) => (
-  <div className="section-panel is-header-strip">
-    <div style={iconWell(color, 42)}>{icon}</div>
-    <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div className="u-title-lg">{value}</div>
-    </div>
-  </div>
-);
+// antd tag colour names → the dot shown under a date.
+const DOT_COLOR = { red: "var(--danger)", blue: "var(--primary)", cyan: "var(--cyan)", green: "var(--success)", orange: "var(--warning)", purple: "var(--purple)" };
 
 const AcademicCalendar = () => {
   const [events, setEvents]     = useState([]);
@@ -68,28 +60,30 @@ const AcademicCalendar = () => {
     };
   }, [events]);
 
+  const upcoming = useMemo(
+    () => events
+      .filter((e) => dayjs(e.startDate || e.date).isAfter(dayjs().subtract(1, "day")))
+      .sort((a, b) => dayjs(a.startDate || a.date).diff(dayjs(b.startDate || b.date)))
+      .slice(0, 12),
+    [events]
+  );
+
+  // One dot per event (three at most) under the date.
   const dateCellRender = (value) => {
-    const key  = value.format("YYYY-MM-DD");
-    const list = eventsByDate[key] || [];
+    const list = eventsByDate[value.format("YYYY-MM-DD")] || [];
     if (!list.length) return null;
     return (
-      <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-        {list.slice(0, 2).map((ev) => (
-          <li key={ev._id} style={{ marginBottom: 2 }}>
-            <Badge
-              color={EVENT_TYPE_COLOR[ev.type] || "#666"}
-              text={<span style={{ fontSize: 11, color: "var(--text-primary)" }}>{ev.title}</span>}
-            />
-          </li>
+      <div style={{ display: "flex", justifyContent: "center", gap: 2, height: 5 }}>
+        {list.slice(0, 3).map((ev) => (
+          <span key={ev._id} style={{ width: 5, height: 5, borderRadius: "50%", background: DOT_COLOR[EVENT_TYPE_COLOR[ev.type]] || "var(--text-muted)" }} />
         ))}
-        {list.length > 2 && (
-          <li style={{ fontSize: 11, color: "var(--primary)" }}>+{list.length - 2} more</li>
-        )}
-      </ul>
+      </div>
     );
   };
 
-  const handleSelectDay = (value) => {
+  const handleSelectDay = (value, info) => {
+    // Changing month or year also "selects" a date; only a click on a day opens its events.
+    if (info && info.source !== "date") return;
     const key = value.format("YYYY-MM-DD");
     const list = eventsByDate[key] || [];
     if (list.length) {
@@ -107,75 +101,53 @@ const AcademicCalendar = () => {
         icon={<CalendarOutlined />}
       />
 
-      <div style={{ ...statGrid(160), marginTop: 20 }}>
-        <StatCard icon={<CalendarOutlined />} label="Total Events" value={stats.total}    color="var(--accent)" />
-        <StatCard icon={<CalendarOutlined />} label="Upcoming"     value={stats.upcoming} color="var(--cyan)" />
-        <StatCard icon={<CalendarOutlined />} label="Holidays"     value={stats.holidays} color="var(--danger)" />
-        <StatCard icon={<CalendarOutlined />} label="Exams"        value={stats.exams}    color="var(--success)" />
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0" }}>
+        {[
+          ["Total", stats.total, "var(--accent)"],
+          ["Upcoming", stats.upcoming, "var(--cyan)"],
+          ["Holidays", stats.holidays, "var(--danger)"],
+          ["Exams", stats.exams, "var(--success)"],
+        ].map(([label, value, color]) => (
+          <span key={label} style={{ padding: "4px 12px", borderRadius: 99, fontSize: 12, fontWeight: 600, background: "var(--surface)", border: "1px solid var(--border-muted)", borderLeft: `3px solid ${color}` }}>
+            {label} <b style={{ fontSize: 14, marginLeft: 4 }}>{value}</b>
+          </span>
+        ))}
       </div>
 
-      <div className="section-panel" style={{ marginTop: 0 }}>
-        {loading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: 48 }}>
-            <Spin size="large" />
-          </div>
-        ) : (
-          <Calendar
-            cellRender={dateCellRender}
-            onSelect={handleSelectDay}
-            style={{ background: "transparent" }}
-          />
-        )}
-      </div>
-
-      {/* Upcoming events list */}
-      <div className="section-panel" style={{ marginTop: 0 }}>
-        <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 14 }}>
-          Upcoming Events
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
+        <div className="section-panel" style={{ margin: 0, padding: "8px 12px" }}>
+          {loading ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: 40 }}><Spin /></div>
+          ) : (
+            <Calendar fullscreen={false} cellRender={dateCellRender} onSelect={handleSelectDay} style={{ background: "transparent" }} />
+          )}
+          <div className="u-meta" style={{ padding: "2px 4px 4px" }}>A dot marks a day with events. Click the day to see them.</div>
         </div>
-        {events
-          .filter((e) => dayjs(e.startDate || e.date).isAfter(dayjs().subtract(1, "day")))
-          .sort((a, b) => dayjs(a.startDate || a.date).diff(dayjs(b.startDate || b.date)))
-          .slice(0, 10)
-          .length === 0 ? (
-          <Empty description="No upcoming events" />
-        ) : (
-          <List
-            dataSource={events
-              .filter((e) => dayjs(e.startDate || e.date).isAfter(dayjs().subtract(1, "day")))
-              .sort((a, b) => dayjs(a.startDate || a.date).diff(dayjs(b.startDate || b.date)))
-              .slice(0, 10)}
-            renderItem={(ev) => (
-              <List.Item>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 14, width: "100%" }}>
-                  <div style={{
-                    flexShrink: 0, width: 50, textAlign: "center",
-                    background: "var(--primary)", color: "#fff",
-                    borderRadius: 10, padding: "6px 4px",
-                  }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1 }}>
-                      {dayjs(ev.startDate || ev.date).format("DD")}
-                    </div>
-                    <div style={{ fontSize: 10, fontWeight: 600 }}>
-                      {dayjs(ev.startDate || ev.date).format("MMM")}
-                    </div>
+
+        <div className="section-panel" style={{ margin: 0, padding: "12px 14px" }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", marginBottom: 8 }}>Upcoming Events</div>
+          {upcoming.length === 0 ? (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No upcoming events" />
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {upcoming.map((ev) => (
+                <div key={ev._id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 8px", borderRadius: 10, border: "1px solid var(--border-muted)" }}>
+                  <div style={{ flexShrink: 0, width: 40, textAlign: "center", background: "var(--primary)", color: "#fff", borderRadius: 8, padding: "4px 2px" }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, lineHeight: 1 }}>{dayjs(ev.startDate || ev.date).format("DD")}</div>
+                    <div style={{ fontSize: 9, fontWeight: 600 }}>{dayjs(ev.startDate || ev.date).format("MMM")}</div>
                   </div>
-                  <div className="u-grow">
-                    <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>{ev.title}</div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                      <Tag color={EVENT_TYPE_COLOR[ev.type] || "default"} style={{ fontSize: 11 }}>
-                        {ev.type || "Event"}
-                      </Tag>
-                      {ev.description && (
-                        <span className="u-meta">{ev.description}</span>
-                      )}
-                    </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ev.title}</div>
+                    {ev.description && (
+                      <div style={{ fontSize: 11.5, color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={ev.description}>{ev.description}</div>
+                    )}
                   </div>
+                  <Tag color={EVENT_TYPE_COLOR[ev.type] || "default"} style={{ fontSize: 11, margin: 0 }}>{ev.type || "Event"}</Tag>
                 </div>
-              </List.Item>
-            )}
-          />
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Day events modal */}
