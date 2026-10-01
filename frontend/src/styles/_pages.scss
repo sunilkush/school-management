@@ -191,7 +191,7 @@
    here, instead of a wall of inline color-mix() calls. */
 .tm-board {
   display: flex;
-  gap: 14px;
+  gap: 10px;
   align-items: stretch;
   overflow-x: auto;
   padding-bottom: 12px;
@@ -202,8 +202,8 @@
 }
 
 .tm-col {
-  flex: 1 1 260px;
-  min-width: 260px;
+  flex: 1 1 220px;
+  min-width: 220px;
   display: flex;
   flex-direction: column;
 }
@@ -213,8 +213,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  padding: 11px 14px;
-  border-radius: 14px 14px 0 0;
+  padding: 7px 11px;
+  border-radius: 12px 12px 0 0;
   background: color-mix(in srgb, var(--tm-col) 6%, transparent);
   border: 1px solid color-mix(in srgb, var(--tm-col) 16%, transparent);
   border-bottom: none;
@@ -244,11 +244,11 @@
 
 .tm-drop {
   flex: 1;
-  min-height: 120px;
-  padding: 10px 10px 8px;
+  min-height: 90px;
+  padding: 7px 7px 6px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 6px;
   background: var(--surface-page);
   border: 1px solid color-mix(in srgb, var(--tm-col) 13%, transparent);
   border-top: none;
@@ -264,7 +264,7 @@
 /* "Add task" closes the column, so it carries the bottom radius. */
 .tm-add {
   width: 100%;
-  padding: 9px 14px;
+  padding: 6px 11px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -274,7 +274,7 @@
   background: transparent;
   border: 1.5px dashed color-mix(in srgb, var(--tm-col) 16%, transparent);
   border-top: none;
-  border-radius: 0 0 14px 14px;
+  border-radius: 0 0 12px 12px;
   cursor: pointer;
   transition: all 0.15s ease;
 
@@ -287,7 +287,7 @@
 
 .tm-col-empty {
   flex: 1;
-  min-height: 74px;
+  min-height: 52px;
   margin: 2px 0;
   display: flex;
   flex-direction: column;
@@ -303,8 +303,8 @@
 .tm-card {
   position: relative;
   background: var(--surface);
-  border-radius: 12px;
-  padding: 11px 13px;
+  border-radius: 10px;
+  padding: 8px 10px;
   border: 1px solid var(--border-muted);
   border-left: 3px solid var(--tm-col);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
@@ -327,18 +327,18 @@
   font-weight: var(--weight-bold);
   font-size: var(--font-md);
   color: var(--text-primary);
-  line-height: 1.45;
-  margin-bottom: 5px;
-  padding-right: 26px; /* room for the always-visible ⋯ button */
+  line-height: 1.35;
+  margin-bottom: 4px;
+  padding-right: 22px; /* room for the always-visible ⋯ button */
 }
 
 .tm-card-desc {
   font-size: var(--font-sm);
   color: var(--text-muted);
-  line-height: 1.55;
-  margin-bottom: 8px;
+  line-height: 1.45;
+  margin-bottom: 6px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -346,8 +346,8 @@
 /* Always rendered, not hover-only: on a touch screen there is no hover to reveal it. */
 .tm-card-menu {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 5px;
+  right: 5px;
   width: 22px;
   height: 22px;
   display: flex;
@@ -362,18 +362,16 @@
   &:hover { background: var(--surface-soft); color: var(--text-primary); }
 }
 
-/* Stat tiles above the board double as filters, so they have to look pressable. */
+/* Count chips above the board double as filters, so they have to look pressable. */
 .tm-stat {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 13px 15px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 12px;
   text-align: left;
-  background: var(--surface);
-  border: 1px solid var(--border-muted);
-  border-left: 4px solid var(--tm-col);
-  border-radius: 14px;
+  background: color-mix(in srgb, var(--tm-col) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tm-col) 30%, transparent);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   transition: box-shadow 0.18s ease, border-color 0.18s ease;
 
@@ -387,19 +385,16 @@
 }
 
 .tm-stat-value {
-  font-size: var(--font-2xl);
+  font-size: var(--font-md);
   font-weight: 800;
-  line-height: 1;
-  color: var(--text-primary);
+  line-height: 1.2;
+  color: var(--tm-col);
 }
 
 .tm-stat-label {
-  margin-top: 4px;
-  font-size: var(--font-xs);
-  font-weight: var(--weight-bold);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
 }
 
 /* Drawer: label / value pairs for the facts a card has no room for. */

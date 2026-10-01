@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Avatar, Button, DatePicker, Drawer, Dropdown, Empty, Flex, Form, Input,
-  Modal, Select, Skeleton, Tooltip, Typography, message,
+  Modal, Segmented, Select, Skeleton, Table, Tooltip, Typography, message,
 } from "antd";
 import {
   CheckCircleOutlined, ClockCircleOutlined, DeleteOutlined, EditOutlined,
   ExclamationCircleOutlined, MoreOutlined, PlusOutlined, SnippetsOutlined,
-  StopOutlined, SyncOutlined, UserOutlined,
+  StopOutlined, SyncOutlined, UserOutlined, AppstoreOutlined, UnorderedListOutlined,
 } from "@ant-design/icons";
 import { AlertTriangle, ChevronDown, Flame, Minus } from "lucide-react";
 import dayjs from "dayjs";
@@ -16,7 +16,7 @@ import {
   createTask, deleteTask, fetchAssignableUsers, fetchTasks, updateTask,
 } from "../../../features/taskSlice";
 import PageHeader from "../../../components/layout/PageHeader";
-import { iconWell, modalTitle, statGrid } from "../../../styles/pageStyles";
+import { modalTitle } from "../../../styles/pageStyles";
 import { categoricalColorFor } from "../../../utils/colorPalette";
 
 dayjs.extend(relativeTime);
@@ -118,7 +118,7 @@ const Faces = ({ users = [], size = 22 }) => {
     <Avatar.Group max={{ count: 3 }} size={size}>
       {users.map((u) => (
         <Tooltip key={u._id} title={u.name}>
-          <Avatar size={size} src={u.avatar}
+          <Avatar size={size} src={u.avatar || undefined}
             style={{ background: avatarBg(u.name), fontSize: 9, border: "1.5px solid var(--surface)" }}
           >
             {!u.avatar && u.name?.[0]?.toUpperCase()}
@@ -148,17 +148,16 @@ const TaskCard = ({ task, onOpen, onMenu, onDragStart, onDragEnd, isDragging }) 
       onClick={() => onOpen(task)}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
     >
-      <Flex align="center" justify="space-between" style={{ marginBottom: 7 }}>
-        <PriorityPill priority={task.priority} />
-      </Flex>
-
       <div className="tm-card-title">{task.title}</div>
 
       {task.description && <div className="tm-card-desc">{task.description}</div>}
 
       <Flex align="center" justify="space-between" wrap="wrap" gap={6}>
-        <DueChip task={task} />
-        <Faces users={task.assignedTo || []} />
+        <Flex align="center" gap={5} wrap="wrap">
+          <PriorityPill priority={task.priority} />
+          <DueChip task={task} />
+        </Flex>
+        <Faces users={task.assignedTo || []} size={20} />
       </Flex>
 
       <Dropdown menu={onMenu(task)} trigger={["click"]} placement="bottomRight">
@@ -234,9 +233,11 @@ const TaskManagement = () => {
   const [quick,       setQuick]       = useState(null);
   const [search,      setSearch]      = useState("");
   const [dragState,   setDragState]   = useState(null);
+  const [view,        setView]        = useState("board");
   const [form] = Form.useForm();
 
-  useEffect(() => { dispatch(fetchTasks()); }, [dispatch]);
+  // Everything at once: the board sorts and filters it here, and the API's default page hid the rest.
+  useEffect(() => { dispatch(fetchTasks({ limit: 1000 })); }, [dispatch]);
 
   const openCreate = (status = "todo") => {
     setEditTask(null);
@@ -269,7 +270,8 @@ const TaskManagement = () => {
         description: values.description || "",
         priority:    values.priority,
         status:      values.status || initStatus,
-        dueDate:     values.dueDate ? values.dueDate.toISOString() : null,
+        // A calendar day: toISOString() moved it to the day before in IST.
+        dueDate:     values.dueDate ? values.dueDate.format("YYYY-MM-DD") : null,
         assignedTo:  values.assignedTo || [],
       };
       if (editTask) {
@@ -417,30 +419,23 @@ const TaskManagement = () => {
       />
 
       <div className="page-wrapper">
-        {/* ── Stat tiles — each one is also a filter ── */}
-        <div style={{ ...statGrid(170), marginBottom: 16 }}>
-          {STATS.map((s) => (
-            <button
-              key={s.key}
-              className={quick === s.key ? "tm-stat is-active" : "tm-stat"}
-              style={{ "--tm-col": s.color }}
-              disabled={s.value === 0 && quick !== s.key}
-              onClick={() => setQuick((cur) => (cur === s.key ? null : s.key))}
-            >
-              <div style={iconWell(s.color, 42)}>
-                {React.cloneElement(s.icon, { style: { fontSize: 17 } })}
-              </div>
-              <div className="u-grow-min">
-                <div className="tm-stat-value">{s.value}</div>
-                <div className="tm-stat-label">{s.label}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* ── Progress + filter toolbar ── */}
-        <div className="section-panel" style={{ padding: "12px 16px", marginBottom: 16 }}>
-          <Flex align="center" justify="space-between" gap={12} wrap="wrap">
+        {/* ── One toolbar: quick-filter chips, progress, search and filters ── */}
+        <div className="section-panel" style={{ padding: "10px 14px", marginBottom: 12 }}>
+          <Flex align="center" justify="space-between" gap={10} wrap="wrap" style={{ marginBottom: 8 }}>
+            <Flex gap={6} wrap="wrap">
+              {STATS.map((s) => (
+                <button
+                  key={s.key}
+                  className={quick === s.key ? "tm-stat is-active" : "tm-stat"}
+                  style={{ "--tm-col": s.color }}
+                  disabled={s.value === 0 && quick !== s.key}
+                  onClick={() => setQuick((cur) => (cur === s.key ? null : s.key))}
+                >
+                  <span className="tm-stat-value">{s.value}</span>
+                  <span className="tm-stat-label">{s.label}</span>
+                </button>
+              ))}
+            </Flex>
             <Flex align="center" gap={10}>
               <div style={{ width: 120, height: 6, background: "var(--border-muted)", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${pct}%`, background: "var(--success)", borderRadius: 4, transition: "width 0.4s" }} />
@@ -452,20 +447,24 @@ const TaskManagement = () => {
                 {tasks.length !== trackedCount && ` · ${tasks.length - trackedCount} cancelled`}
               </Text>
             </Flex>
+          </Flex>
 
+          <Flex align="center" justify="space-between" gap={8} wrap="wrap">
             <Flex gap={8} align="center" wrap="wrap">
               <Input.Search
+                size="small"
                 placeholder="Search tasks…"
                 allowClear
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onSearch={setSearch}
-                style={{ width: 210 }}
+                style={{ width: 200 }}
               />
               <Select
+                size="small"
                 allowClear
                 placeholder="All priorities"
-                style={{ width: 145 }}
+                style={{ width: 130 }}
                 value={filterPri}
                 onChange={setFilterPri}
               >
@@ -476,17 +475,25 @@ const TaskManagement = () => {
                 ))}
               </Select>
               <Select
+                size="small"
                 allowClear
                 showSearch
                 optionFilterProp="label"
                 placeholder="Anyone"
-                style={{ width: 160 }}
+                style={{ width: 150 }}
                 value={filterWho}
                 onChange={setFilterWho}
                 options={assigneeOptions}
               />
-              {isFiltered && <Button onClick={clearFilters}>Clear</Button>}
+              {isFiltered && <Button size="small" onClick={clearFilters}>Clear</Button>}
             </Flex>
+            <Segmented
+              size="small" value={view} onChange={setView}
+              options={[
+                { value: "board", icon: <AppstoreOutlined />, label: "Board" },
+                { value: "list", icon: <UnorderedListOutlined />, label: "List" },
+              ]}
+            />
           </Flex>
 
           {isFiltered && (
@@ -527,6 +534,47 @@ const TaskManagement = () => {
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No tasks match these filters">
               <Button onClick={clearFilters}>Clear filters</Button>
             </Empty>
+          </div>
+        ) : view === "list" ? (
+          <div className="section-panel" style={{ padding: 10 }}>
+            <Table
+              size="small" rowKey="_id" dataSource={sortTasks(filtered)}
+              pagination={{ pageSize: 20, hideOnSinglePage: true, showSizeChanger: false }} scroll={{ x: "max-content" }}
+              onRow={(t) => ({ onClick: () => setDetail(t), style: { cursor: "pointer" } })}
+              columns={[
+                {
+                  title: "Task",
+                  render: (_, t) => (
+                    <div style={{ maxWidth: 360 }}>
+                      <div style={{ fontWeight: 600, textDecoration: t.status === "cancelled" ? "line-through" : "none" }}>{t.title}</div>
+                      {t.description ? <div className="u-meta" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.description}</div> : null}
+                    </div>
+                  ),
+                },
+                { title: "Priority", width: 100, render: (_, t) => <PriorityPill priority={t.priority} /> },
+                {
+                  title: "Status", width: 150,
+                  render: (_, t) => (
+                    <span onClick={(e) => e.stopPropagation()} role="presentation">
+                      <Select size="small" value={t.status} style={{ width: 130 }} onChange={(v) => moveTo(t, v)}
+                        options={COLUMNS.map((c) => ({ value: c.key, label: c.label }))} />
+                    </span>
+                  ),
+                },
+                { title: "Due", width: 150, render: (_, t) => (t.dueDate ? <DueChip task={t} /> : "—") },
+                { title: "Assigned to", width: 130, render: (_, t) => <Faces users={t.assignedTo || []} size={20} /> },
+                {
+                  title: "", width: 40,
+                  render: (_, t) => (
+                    <span onClick={(e) => e.stopPropagation()} role="presentation">
+                      <Dropdown menu={cardMenu(t)} trigger={["click"]} placement="bottomRight">
+                        <Button size="small" type="text" icon={<MoreOutlined />} aria-label="Task actions" />
+                      </Dropdown>
+                    </span>
+                  ),
+                },
+              ]}
+            />
           </div>
         ) : (
           <div className="tm-board">
@@ -636,21 +684,21 @@ const TaskManagement = () => {
           editTask ? "Edit Task" : "Create New Task",
           editTask ? "Update task details" : "Add a new task to the board",
         )}
-        width={560}
+        width={520}
         destroyOnClose
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit} className="u-mt-4">
           <Form.Item label="Task Title" name="title" rules={[{ required: true, message: "Title is required" }]}>
-            <Input placeholder="Enter task title" size="large" />
+            <Input placeholder="Enter task title" />
           </Form.Item>
 
           <Form.Item label="Description" name="description">
-            <TextArea rows={3} placeholder="Describe the task (optional)" />
+            <TextArea autoSize={{ minRows: 2, maxRows: 5 }} placeholder="Describe the task (optional)" />
           </Form.Item>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 12px" }}>
             <Form.Item label="Priority" name="priority" initialValue="medium">
-              <Select size="large">
+              <Select>
                 {Object.entries(PRIORITY_LABEL).map(([k, v]) => (
                   <Option key={k} value={k}>
                     <span style={{ color: PRIORITY[k].color, fontWeight: 600 }}>{v}</span>
@@ -659,17 +707,16 @@ const TaskManagement = () => {
               </Select>
             </Form.Item>
             <Form.Item label="Status" name="status" initialValue={initStatus}>
-              <Select size="large">
+              <Select>
                 {Object.entries(STATUS_LABEL).map(([k, v]) => (
                   <Option key={k} value={k}>{v}</Option>
                 ))}
               </Select>
             </Form.Item>
+            <Form.Item label="Due Date" name="dueDate">
+              <DatePicker className="u-full" format="DD MMM YYYY" />
+            </Form.Item>
           </div>
-
-          <Form.Item label="Due Date" name="dueDate">
-            <DatePicker className="u-full" size="large" format="DD MMM YYYY" />
-          </Form.Item>
 
           <Form.Item label="Assign To" name="assignedTo">
             <Select
@@ -679,12 +726,11 @@ const TaskManagement = () => {
               filterOption={(input, opt) => opt?.label?.toLowerCase().includes(input.toLowerCase())}
               loading={usersLoading}
               optionLabelProp="label"
-              size="large"
             >
               {assignableUsers.map((u) => (
                 <Option key={u._id} value={u._id} label={u.name}>
                   <Flex align="center" gap={8}>
-                    <Avatar size={20} src={u.avatar} style={{ background: avatarBg(u.name), fontSize: 9 }}>
+                    <Avatar size={20} src={u.avatar || undefined} style={{ background: avatarBg(u.name), fontSize: 9 }}>
                       {!u.avatar && u.name?.[0]?.toUpperCase()}
                     </Avatar>
                     <span style={{ fontSize: 13 }}>{u.name}</span>
@@ -696,8 +742,8 @@ const TaskManagement = () => {
           </Form.Item>
 
           <Flex gap={10} className="u-mt-3">
-            <Button block size="large" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button block size="large" type="primary" htmlType="submit" loading={saving}>
+            <Button block onClick={() => setModalOpen(false)}>Cancel</Button>
+            <Button block type="primary" htmlType="submit" loading={saving}>
               {editTask ? "Save Changes" : "Create Task"}
             </Button>
           </Flex>

@@ -65,8 +65,11 @@ export const listTasks = asyncHandler(async (req, res) => {
   const schoolId = getSchoolId(req.user);
   const userId = req.user._id;
 
-  const { status, priority, page = 1, limit = 50 } = req.query;
-  const skip = (Number(page) - 1) * Number(limit);
+  const { status, priority, page = 1 } = req.query;
+  // The task boards load everything once and sort it themselves; 50 hid the older tasks. Capped
+  // so a request cannot ask for an unbounded list.
+  const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 2000);
+  const skip = (Math.max(Number(page) || 1, 1) - 1) * limit;
 
   const filter = { schoolId };
 
@@ -83,13 +86,13 @@ export const listTasks = asyncHandler(async (req, res) => {
       .populate("assignedBy", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit)),
+      .limit(limit),
     Task.countDocuments(filter),
   ]);
 
   return sendSuccess(res, {
     data: tasks,
-    meta: { total, page: Number(page), limit: Number(limit) },
+    meta: { total, page: Number(page), limit },
   });
 });
 
