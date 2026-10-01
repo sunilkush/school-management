@@ -34,7 +34,7 @@ const TIMETABLE_MANAGE = [
 // Who can view timetables (broad: all school members)
 const TIMETABLE_READ = [
   "Super Admin", "School Admin", "Principal", "Vice Principal",
-  "Teacher", "Subject Coordinator", "Exam Coordinator",
+  "Teacher", "Class Teacher", "Sports Teacher", "Lab Technician", "Subject Coordinator", "Exam Coordinator",
   "Student", "Parent", "Accountant",
   "Librarian", "Hostel Warden", "Transport Manager", "Receptionist",
 ];
@@ -52,7 +52,7 @@ router.put("/rooms/:id",    roleMiddleware(TIMETABLE_MANAGE), updateRoom);
 router.delete("/rooms/:id", roleMiddleware(TIMETABLE_MANAGE), deleteRoom);
 
 // Self-service views
-router.get("/teacher/my",                              roleMiddleware(["Teacher", "Subject Coordinator", "Exam Coordinator", "Lab Technician", "Class Teacher"]), myTeacherTimetable);
+router.get("/teacher/my",                              roleMiddleware(["Teacher", "Subject Coordinator", "Exam Coordinator", "Lab Technician", "Class Teacher", "Sports Teacher"]), myTeacherTimetable);
 router.get("/student/my",                              roleMiddleware(["Student"]),                                            myStudentTimetable);
 router.get("/parent/child/:studentId",                 roleMiddleware(["Parent"]),                                             childTimetable);
 router.get("/class-section/:schoolClassId/:sectionId", roleMiddleware(TIMETABLE_READ),                                        classSectionTimetable);

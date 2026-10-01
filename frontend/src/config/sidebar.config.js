@@ -782,6 +782,7 @@ export const sidebarMenu = {
     { title: "Textbooks", path: "sportsteacher/textbooks", icon: BookOpenText },
     { title: "Sports",           path: "sportsteacher/sports",           icon: Trophy          },
     { title: "My Classes",       path: "sportsteacher/classes",          icon: BookOpen        },
+    { title: "My Timetable",     path: "sportsteacher/timetable",        icon: CalendarClock   },
     { title: "Mark Attendance",  path: "sportsteacher/attendance/students", icon: ClipboardCheck },
     { title: "Assignments",      path: "sportsteacher/assignments",      icon: ClipboardList   },
     { title: "My Payroll",       path: "sportsteacher/payroll",          icon: IndianRupee     },

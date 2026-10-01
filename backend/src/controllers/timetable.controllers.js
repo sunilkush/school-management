@@ -27,7 +27,7 @@ const CRUD_ROLES = ["Super Admin", "School Admin", "Principal", "Vice Principal"
 // turned them away, so the time-slot, room and class-section timetable views all 403'd for them.
 const READ_ROLES = [
   ...CRUD_ROLES,
-  "Teacher", "Student", "Parent", "Staff", "Support Staff",
+  "Teacher", "Class Teacher", "Sports Teacher", "Lab Technician", "Student", "Parent", "Staff", "Support Staff",
   "Subject Coordinator", "Accountant", "Librarian", "Hostel Warden", "Transport Manager", "Receptionist",
 ];
 const DAY_ORDER = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -353,7 +353,7 @@ export const copyWeekTimetable = asyncHandler(async (req, res) => {
 });
 
 export const myTeacherTimetable = asyncHandler(async (req, res) => {
-  requireRole(req, ["Teacher", "Subject Coordinator", "Class Teacher", "Lab Technician", ...CRUD_ROLES, "Staff", "Support Staff"]);
+  requireRole(req, ["Teacher", "Subject Coordinator", "Class Teacher", "Sports Teacher", "Lab Technician", ...CRUD_ROLES, "Staff", "Support Staff"]);
   const schoolId = resolveSchoolId(req);
   const { academicYearId } = req.query;
   const rows = await populateTimetable(Timetable.find(compact({ schoolId, academicYearId, teacherId: req.user._id, status: "active" })), req);

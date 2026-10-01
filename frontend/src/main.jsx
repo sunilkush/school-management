@@ -1422,6 +1422,7 @@ const router = createBrowserRouter([
               { index: true,                        element: <TeacherDashboard /> },
               { path: "textbooks", element: <TextbooksPage /> },
               { path: "sports",                     element: <SportsPage /> },
+              { path: "timetable",                  element: <TeacherTimetablePage /> },
               { path: "classes",                    element: <AssignedClasses /> },
               { path: "classes/:classId",           element: <ClassDetails /> },
               { path: "assignments",                element: <Assignments /> },
