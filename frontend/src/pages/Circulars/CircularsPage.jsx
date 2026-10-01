@@ -83,7 +83,7 @@ const CircularsPage = () => {
     };
     const res = await dispatch(editing ? updateCircular({ id: editing._id, ...payload }) : createCircular(payload));
     if (res.type.endsWith("/fulfilled")) {
-      message.success(editing ? "Draft updated" : "Saved as a draft");
+      message.success(editing ? "Draft updated. Not sent yet: press Publish on its row." : "Saved as a draft. Nobody can see it yet: press Publish on its row to send it.", 6);
       setModalOpen(false);
       load();
     } else {

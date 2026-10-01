@@ -80,9 +80,10 @@ const publicView = (application) => ({
  *  notification problem must not fail the applicant's submission. */
 const notifySchoolAdmins = async ({ schoolId, application }) => {
   try {
-    const adminRole = await Role.findOne({ name: "School Admin", schoolId });
-    if (!adminRole) return;
-    const admins = await User.find({ schoolId, roleId: adminRole._id, isActive: true }).select("_id");
+    // The role may be the school's own or the shared global one (schoolId null).
+    const adminRoleIds = await Role.find({ name: "School Admin", $or: [{ schoolId }, { schoolId: null }] }).distinct("_id");
+    if (!adminRoleIds.length) return;
+    const admins = await User.find({ schoolId, roleId: { $in: adminRoleIds }, isActive: true }).select("_id");
     await Promise.all(
       admins.map((admin) =>
         notifyUser({

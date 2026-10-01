@@ -27,9 +27,14 @@ import { highestSuffix, nextSequence } from "../utils/sequence.js";
 export const resolveRecipients = async ({ schoolId, audience = {}, academicYearId = null }) => {
   const { roles = [], schoolClassIds = [], sectionIds = [], userIds = [] } = audience;
 
+  // Roles are either the school's own or global (schoolId null: the seeded system roles every
+  // school shares). This looked only for the school's own, so in a school on the shared roles a
+  // circular or survey sent to "Teacher" matched no role, no people, and reached nobody.
   const roleIds = roles.length
-    ? (await Role.find({ schoolId, name: { $in: roles } }).select("_id").lean()).map((r) => r._id)
+    ? (await Role.find({ name: { $in: roles }, $or: [{ schoolId }, { schoolId: null }] }).select("_id").lean()).map((r) => r._id)
     : [];
+  // Someone holds a role as their main one or as an additional one (a Teacher who is also a Parent).
+  const holdsRole = { $or: [{ roleId: { $in: roleIds } }, { additionalRoles: { $in: roleIds } }] };
 
   const ids = new Set();
   const hasClassScope = schoolClassIds.length > 0 || sectionIds.length > 0;
@@ -55,7 +60,7 @@ export const resolveRecipients = async ({ schoolId, audience = {}, academicYearI
 
     // Narrow to the named roles when both were given.
     if (roleIds.length) {
-      const allowed = await User.find({ schoolId, _id: { $in: [...ids] }, roleId: { $in: roleIds } })
+      const allowed = await User.find({ schoolId, _id: { $in: [...ids] }, ...holdsRole })
         .select("_id")
         .lean();
       const keep = new Set(allowed.map((u) => String(u._id)));
@@ -67,7 +72,7 @@ export const resolveRecipients = async ({ schoolId, audience = {}, academicYearI
     // a school-wide broadcast. An audience that was specified and matched nobody must stay empty
     // so the publish step refuses it.
     const users = roleIds.length
-      ? await User.find({ schoolId, roleId: { $in: roleIds }, isActive: true }).select("_id").lean()
+      ? await User.find({ schoolId, isActive: true, ...holdsRole }).select("_id").lean()
       : [];
     users.forEach((u) => ids.add(String(u._id)));
   } else if (!userIds.length) {
