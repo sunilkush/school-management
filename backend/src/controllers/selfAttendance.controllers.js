@@ -71,8 +71,10 @@ export const getSelfStatus = asyncHandler(async (req, res) => {
   const date = todayUTC();
 
   const record = await Attendance.findOne({ schoolId, userId, date }).lean();
+  // attendanceHours too: the check-in screen shows when check-in is open and how many hours make
+  // a half day and a full day.
   const school = await School.findById(schoolId)
-    .select("location name")
+    .select("location name attendanceHours")
     .lean();
 
   sendSuccess(res, { record, school }, "Self-attendance status fetched");

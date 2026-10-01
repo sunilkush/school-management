@@ -1,26 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { DatePicker, Empty, Spin, Table, Tooltip } from "antd";
+import { DatePicker, Empty, Spin, Table } from "antd";
 import { CalendarOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyAttendance } from "../../features/attendanceSlice";
 import PageHeader from "../../components/layout/PageHeader";
+import AttendanceMonthGrid from "../../components/attendance/AttendanceMonthGrid";
+import { ATTENDANCE_STATUS, attendanceLabel, workedText } from "../../utils/attendanceStatus";
 
-const STATUS = {
-  present: { color: "var(--success)", label: "Present", short: "P" },
-  late:    { color: "var(--warning)", label: "Late", short: "L" },
-  halfday: { color: "var(--purple)", label: "Half Day", short: "½" },
-  absent:  { color: "var(--danger)", label: "Absent", short: "A" },
-  leave:   { color: "var(--cyan)", label: "Leave", short: "Lv" },
-};
-const HALF = { A: "1st half", B: "2nd half" };
-
-const worked = (r) => {
-  if (!r.checkInAt || !r.checkOutAt) return null;
-  const mins = Math.max(0, dayjs(r.checkOutAt).diff(dayjs(r.checkInAt), "minute"));
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-};
-const label = (r) => `${STATUS[r.status]?.label || r.status}${r.halfDaySession ? ` · ${HALF[r.halfDaySession]}` : ""}${r.leaveDays === 0.5 && r.status !== "leave" ? " + ½ leave" : ""}`;
+const STATUS = ATTENDANCE_STATUS;
+const label = attendanceLabel;
+const worked = (r) => workedText(r.checkInAt, r.checkOutAt);
 
 const Chip = ({ text, value, color }) => (
   <span style={{
@@ -45,12 +35,6 @@ const MyAttendanceMonthlyReport = () => {
     dispatch(fetchMyAttendance({ month: month.month() + 1, year: month.year() }));
   }, [month, dispatch]);
 
-  const byDate = useMemo(() => {
-    const m = {};
-    myAttendance.forEach((r) => { m[dayjs(r.date).format("YYYY-MM-DD")] = r; });
-    return m;
-  }, [myAttendance]);
-
   const summary = useMemo(() => {
     const s = { present: 0, late: 0, halfday: 0, absent: 0, leave: 0 };
     myAttendance.forEach((r) => { if (s[r.status] !== undefined) s[r.status] += 1; });
@@ -59,15 +43,6 @@ const MyAttendanceMonthlyReport = () => {
     const attended = s.present + s.late + s.halfday * 0.5;
     return { ...s, marked, pct: marked > 0 ? Math.round((attended / marked) * 1000) / 10 : null };
   }, [myAttendance]);
-
-  // Weeks start on Monday; blanks before the 1st.
-  const cells = useMemo(() => {
-    const first = month.startOf("month");
-    const lead = (first.day() + 6) % 7;
-    const out = Array.from({ length: lead }, () => null);
-    for (let d = 1; d <= month.daysInMonth(); d += 1) out.push(first.date(d));
-    return out;
-  }, [month]);
 
   const today = dayjs();
   const isLoading = loading || reportLoading;
@@ -99,40 +74,7 @@ const MyAttendanceMonthlyReport = () => {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14, alignItems: "start" }}>
           <div className="section-panel" style={{ margin: 0, padding: 14 }}>
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{month.format("MMMM YYYY")}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-                <div key={d} style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textAlign: "center", paddingBottom: 2 }}>{d}</div>
-              ))}
-              {cells.map((d, i) => {
-                if (!d) return <div key={`b${i}`} />;
-                const r = byDate[d.format("YYYY-MM-DD")];
-                const cfg = r ? STATUS[r.status] : null;
-                const future = d.isAfter(today, "day");
-                const sunday = d.day() === 0;
-                const tile = (
-                  <div style={{
-                    height: 42, borderRadius: 8, padding: "3px 5px", display: "flex", flexDirection: "column", justifyContent: "space-between",
-                    border: d.isSame(today, "day") ? "2px solid var(--primary)" : "1px solid var(--border-muted)",
-                    background: cfg ? `color-mix(in srgb, ${cfg.color} 14%, transparent)` : "var(--surface)",
-                    opacity: future ? 0.45 : 1,
-                  }}>
-                    <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{d.date()}</span>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: cfg?.color || "var(--text-muted)", textAlign: "center" }}>
-                      {cfg ? `${cfg.short}${r.halfDaySession || ""}` : sunday ? "off" : future ? "" : "·"}
-                    </span>
-                  </div>
-                );
-                return r ? (
-                  <Tooltip key={d.format("D")} title={
-                    <div style={{ fontSize: 12 }}>
-                      <b>{d.format("ddd, DD MMM")}</b> · {label(r)}
-                      {r.checkInAt ? <div>In {dayjs(r.checkInAt).format("hh:mm A")}{r.checkOutAt ? ` · Out ${dayjs(r.checkOutAt).format("hh:mm A")}` : ""}</div> : null}
-                      {r.remarks ? <div style={{ opacity: 0.8 }}>{r.remarks}</div> : null}
-                    </div>
-                  }>{tile}</Tooltip>
-                ) : <div key={d.format("D")}>{tile}</div>;
-              })}
-            </div>
+            <AttendanceMonthGrid month={month} records={myAttendance} />
             <div className="u-muted" style={{ fontSize: 11, marginTop: 8 }}>
               P present · L late · ½A / ½B half day (1st / 2nd half) · A absent · Lv leave · · not recorded
             </div>

@@ -1,488 +1,186 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Button, DatePicker, Empty, Segmented, Spin, Table, Tag, Tooltip } from "antd";
 import {
-  DatePicker, Button, Spin, Progress, Tooltip,
-} from "antd";
-import {
-  CalendarOutlined, CheckCircleOutlined, ClockCircleOutlined,
-  CloseCircleOutlined, MinusCircleOutlined, QuestionCircleOutlined,
-  LoginOutlined, LogoutOutlined, AimOutlined, EnvironmentOutlined,
-  ArrowRightOutlined,
+  AimOutlined, CalendarOutlined, EnvironmentOutlined, LeftOutlined, RightOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { fetchMyAttendance } from "../../features/attendanceSlice";
 import PageHeader from "../../components/layout/PageHeader";
+import { ATTENDANCE_STATUS, attendanceLabel, workedText } from "../../utils/attendanceStatus";
 
-/* ── theme ── */
-const C = {
-  primary:    "var(--primary)", primaryLight:  "var(--primary-light)", primaryLighter: "var(--primary-light)",
-  accent:     "var(--accent)", accentLight:   "var(--accent-light)",
-  success:    "var(--success)", successLight:  "var(--success-light)",
-  warning:    "var(--warning)", warningLight:  "var(--warning-light)",
-  danger:     "var(--danger)", dangerLight:   "var(--danger-light)",
-  purple:     "var(--purple)", purpleLight:   "rgba(var(--purple-rgb), 0.12)",
-  cyan:       "var(--cyan)", cyanLight:     "var(--cyan-light)",
-  border:     "var(--border)", text:          "var(--text)",
-  textSub:    "var(--text-secondary)", textMuted:     "var(--text-muted)",
-  surface:    "var(--surface)", surfaceSoft:   "var(--surface-soft)",
-};
+const fmtTime = (d) => (d ? dayjs(d).format("hh:mm A") : "—");
 
-const PANEL = {
-  background: C.surface, borderRadius: 14,
-  border: `1px solid ${C.border}`, padding: 20,
-  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-};
-
-const STATUS = {
-  present: { color: C.success, bg: C.successLight, border: "var(--success-light)", label: "Present",  icon: <CheckCircleOutlined /> },
-  absent:  { color: C.danger,  bg: C.dangerLight,  border: "var(--danger-light)", label: "Absent",   icon: <CloseCircleOutlined /> },
-  late:    { color: C.warning, bg: C.warningLight, border: "var(--warning)", label: "Late",     icon: <ClockCircleOutlined /> },
-  halfday: { color: C.purple,  bg: C.purpleLight,  border: "rgba(var(--purple-rgb), 0.5)", label: "Half Day", icon: <MinusCircleOutlined /> },
-  leave:   { color: C.cyan,    bg: C.cyanLight,    border: "rgba(var(--cyan-rgb), 0.4)", label: "On Leave", icon: <QuestionCircleOutlined /> },
-};
-
-/* ── helpers ── */
-function fmtTime(d) {
-  return d ? dayjs(d).format("hh:mm A") : null;
-}
-
-function workingHours(ci, co) {
-  if (!ci || !co) return null;
-  const diff = new Date(co) - new Date(ci);
-  return `${Math.floor(diff / 3600000)}h ${Math.floor((diff % 3600000) / 60000)}m`;
-}
-
-/* ── sub-components ── */
-const StatusBadge = ({ status }) => {
-  const cfg = STATUS[status];
-  if (!cfg) return <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>;
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 5,
-      padding: "3px 10px", borderRadius: 20, fontWeight: 700, fontSize: 11,
-      background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-    }}>
-      {cfg.icon} {cfg.label}
-    </span>
-  );
-};
-
-const StatCard = ({ label, value, color, bg, icon, suffix }) => (
-  <div style={{
-    background: bg, borderRadius: 12, padding: "14px 16px",
-    border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`,
-    display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 100,
-  }}>
-    <div style={{
-      width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-      background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "flex", alignItems: "center",
-      justifyContent: "center", fontSize: 16, color,
-    }}>
-      {icon}
-    </div>
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: C.text, lineHeight: 1.15 }}>
-        {value}{suffix && <span style={{ fontSize: 12, color: C.textMuted, marginLeft: 2 }}>{suffix}</span>}
-      </div>
-    </div>
-  </div>
-);
-
-const Th = ({ children }) => (
-  <th style={{
-    padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700,
-    color: C.textSub, textTransform: "uppercase", letterSpacing: "0.06em",
-    borderBottom: `2px solid ${C.border}`, background: C.surfaceSoft, whiteSpace: "nowrap",
-  }}>
-    {children}
-  </th>
-);
-
-const Td = ({ children, style: s }) => (
-  <td style={{ padding: "11px 14px", fontSize: 13, color: C.text, ...s }}>
-    {children}
-  </td>
-);
-
-/* ════════════════════════════════════════════════════ */
+/**
+ * A staff member's attendance, month by month: today on one strip, the month's counts as chips,
+ * and every recorded day in one compact table that can be narrowed to a status.
+ */
 const MyAttendancePage = () => {
-  const dispatch  = useDispatch();
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { myAttendance = [], loading } = useSelector((s) => s.attendance);
-  const [month, setMonth] = useState(dayjs());
+  const [month, setMonth] = useState(dayjs().startOf("month"));
+  const [filter, setFilter] = useState("all");
 
-  /* resolve GPS page path relative to current role (teacher/staff/etc.) */
+  // The check-in page of whichever role this is opened under (/dashboard/<role>/attendance/self).
   const gpsPath = useMemo(() => {
-    /* location.pathname = /dashboard/teacher/attendance/my */
     const parts = location.pathname.split("/").filter(Boolean);
-    /* find the role segment index (after "dashboard") */
     const dashIdx = parts.indexOf("dashboard");
-    if (dashIdx !== -1 && parts[dashIdx + 1]) {
-      return `/dashboard/${parts[dashIdx + 1]}/attendance/self`;
-    }
-    return null;
+    return dashIdx !== -1 && parts[dashIdx + 1] ? `/dashboard/${parts[dashIdx + 1]}/attendance/self` : null;
   }, [location.pathname]);
 
-  /* fetch */
   useEffect(() => {
     dispatch(fetchMyAttendance({ month: month.month() + 1, year: month.year() }));
+    setFilter("all");
   }, [month, dispatch]);
 
-  /* summary */
   const summary = useMemo(() => {
-    const s = { present: 0, absent: 0, late: 0, halfday: 0, leave: 0 };
-    myAttendance.forEach((r) => { if (s[r.status] !== undefined) s[r.status]++; });
-    const total = myAttendance.length;
-    const attended = s.present + s.late * 0.5 + s.halfday * 0.5;
-    const pct = total ? Math.round((attended / total) * 100) : 0;
-    return { ...s, total, pct };
+    const s = { present: 0, late: 0, halfday: 0, absent: 0, leave: 0 };
+    myAttendance.forEach((r) => { if (s[r.status] !== undefined) s[r.status] += 1; });
+    // Late is still a day attended; approved leave is not a day missed, so it is left out.
+    const marked = myAttendance.length - s.leave;
+    const attended = s.present + s.late + s.halfday * 0.5;
+    return { ...s, pct: marked > 0 ? Math.round((attended / marked) * 1000) / 10 : null };
   }, [myAttendance]);
 
-  /* today's record */
-  const todayKey    = dayjs().format("YYYY-MM-DD");
-  const isThisMonth = month.isSame(dayjs(), "month");
-  const todayRecord = isThisMonth
-    ? myAttendance.find((r) => dayjs(r.date).format("YYYY-MM-DD") === todayKey)
-    : null;
+  const today = dayjs();
+  const isThisMonth = month.isSame(today, "month");
+  const todayRecord = isThisMonth ? myAttendance.find((r) => dayjs(r.date).isSame(today, "day")) : null;
+  const checkedIn = Boolean(todayRecord?.checkInAt);
+  const checkedOut = Boolean(todayRecord?.checkOutAt);
+  const todayCfg = todayRecord ? ATTENDANCE_STATUS[todayRecord.status] : null;
+  const pctColor = summary.pct == null ? "var(--text-muted)" : summary.pct >= 90 ? "var(--success)" : summary.pct >= 75 ? "var(--warning)" : "var(--danger)";
 
-  const checkedIn  = !!todayRecord?.checkInAt;
-  const checkedOut = !!todayRecord?.checkOutAt;
-  const wh         = workingHours(todayRecord?.checkInAt, todayRecord?.checkOutAt);
-  const pctColor   = summary.pct >= 90 ? C.success : summary.pct >= 75 ? C.warning : C.danger;
-  const sorted     = [...myAttendance].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  /* ── Today Banner ── */
-  const todayCfg = todayRecord ? STATUS[todayRecord.status] : null;
-  const bannerBg = todayCfg ? todayCfg.bg : C.primaryLighter;
-  const bannerBorder = todayCfg ? todayCfg.border : C.primaryLight;
-
-  const todayBannerIcon = todayCfg
-    ? todayCfg.icon
-    : <EnvironmentOutlined />;
-
-  const todayBannerColor = todayCfg ? todayCfg.color : C.primary;
+  const rows = useMemo(
+    () => [...myAttendance]
+      .filter((r) => filter === "all" || r.status === filter)
+      .sort((a, b) => new Date(b.date) - new Date(a.date)),
+    [myAttendance, filter],
+  );
 
   return (
     <div className="page-wrapper">
       <PageHeader
         title="My Attendance History"
-        subtitle="Your attendance month by month, with check-in and check-out times"
+        subtitle="Every recorded day of the month, with check-in and check-out times"
         icon={<CalendarOutlined />}
         extra={
-          <DatePicker
-            picker="month"
-            value={month}
-            onChange={(v) => setMonth(v || dayjs())}
-            style={{ borderRadius: 8 }}
-            allowClear={false}
-          />
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <Button size="small" icon={<LeftOutlined />} aria-label="Previous month" onClick={() => setMonth((m) => m.subtract(1, "month"))} />
+            <DatePicker picker="month" size="small" value={month} allowClear={false} format="MMM YYYY"
+              onChange={(v) => v && setMonth(v.startOf("month"))} disabledDate={(d) => d && d.isAfter(today, "month")} />
+            <Button size="small" icon={<RightOutlined />} aria-label="Next month" disabled={isThisMonth} onClick={() => setMonth((m) => m.add(1, "month"))} />
+          </div>
         }
       />
 
-      {/* ─────────────── TODAY STATUS BANNER ─────────────── */}
+      {/* ── Today, on one strip ── */}
       {isThisMonth && (
-        <div style={{
-          ...PANEL, marginTop: 16,
-          background: bannerBg,
-          border: `1px solid ${bannerBorder}`,
-          display: "flex", alignItems: "center", flexWrap: "wrap", gap: 16,
+        <div className="section-panel" style={{
+          marginTop: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: "8px 18px", flexWrap: "wrap",
+          borderLeft: `3px solid ${todayCfg?.color || "var(--border)"}`,
         }}>
-          {/* icon */}
-          <div style={{
-            width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-            background: `color-mix(in srgb, ${todayBannerColor} 13%, transparent)`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 24, color: todayBannerColor,
-          }}>
-            {todayBannerIcon}
-          </div>
-
-          {/* info */}
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-              Today — {dayjs().format("dddd, DD MMM YYYY")}
+          <div style={{ minWidth: 150 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Today · {today.format("ddd, DD MMM")}
             </div>
-
-            {todayRecord ? (
-              <>
-                <div style={{ fontSize: 18, fontWeight: 800, color: todayCfg?.color || C.text, marginTop: 3 }}>
-                  {todayCfg?.label || todayRecord.status}
-                </div>
-
-                {/* times row */}
-                <div style={{ display: "flex", gap: 18, marginTop: 5, flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13 }}>
-                    <div style={{
-                      width: 26, height: 26, borderRadius: 6,
-                      background: `color-mix(in srgb, ${C.success} 13%, transparent)`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <LoginOutlined style={{ color: C.success, fontSize: 12 }} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase" }}>Check-In</div>
-                      <div style={{ fontFamily: "monospace", fontWeight: 700, color: checkedIn ? C.success : C.textMuted, fontSize: 14 }}>
-                        {fmtTime(todayRecord.checkInAt) || "—"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13 }}>
-                    <div style={{
-                      width: 26, height: 26, borderRadius: 6,
-                      background: `color-mix(in srgb, ${C.danger} 13%, transparent)`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <LogoutOutlined style={{ color: C.danger, fontSize: 12 }} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase" }}>Check-Out</div>
-                      <div style={{ fontFamily: "monospace", fontWeight: 700, color: checkedOut ? C.danger : C.textMuted, fontSize: 14 }}>
-                        {fmtTime(todayRecord.checkOutAt) || "—"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {wh && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13 }}>
-                      <div style={{
-                        width: 26, height: 26, borderRadius: 6,
-                        background: `color-mix(in srgb, ${C.accent} 13%, transparent)`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <ClockCircleOutlined style={{ color: C.accent, fontSize: 12 }} />
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: C.textMuted, textTransform: "uppercase" }}>Duration</div>
-                        <div style={{ fontFamily: "monospace", fontWeight: 700, color: C.accent, fontSize: 14 }}>{wh}</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {todayRecord.gpsVerified && (
-                    <Tooltip title={todayRecord.distanceFromSchool != null ? `${todayRecord.distanceFromSchool}m from school` : "GPS Verified"}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: C.accent, fontWeight: 600 }}>
-                        <AimOutlined /> GPS Verified
-                      </div>
-                    </Tooltip>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.textMuted, marginTop: 3 }}>
-                Not marked yet for today
-              </div>
-            )}
+            <div style={{ fontSize: 15, fontWeight: 800, color: todayCfg?.color || "var(--text-muted)" }}>
+              {todayRecord ? attendanceLabel(todayRecord) : "Not marked yet"}
+            </div>
           </div>
-
-          {/* GPS Punch button */}
+          {[
+            ["In", fmtTime(todayRecord?.checkInAt)],
+            ["Out", fmtTime(todayRecord?.checkOutAt)],
+            ["Worked", workedText(todayRecord?.checkInAt, todayRecord?.checkOutAt) || "—"],
+          ].map(([k, v]) => (
+            <div key={k}>
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>{k}</div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{v}</div>
+            </div>
+          ))}
+          {todayRecord?.gpsVerified && (
+            <Tooltip title={todayRecord.distanceFromSchool != null ? `${todayRecord.distanceFromSchool}m from school` : "GPS verified"}>
+              <span style={{ fontSize: 12, color: "var(--success)" }}><AimOutlined /> GPS verified</span>
+            </Tooltip>
+          )}
           {gpsPath && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-              {!checkedIn ? (
-                <Button
-                  type="primary"
-                  icon={<EnvironmentOutlined />}
-                  onClick={() => navigate(gpsPath)}
-                  style={{
-                    background: C.success, borderColor: C.success,
-                    borderRadius: 10, fontWeight: 700, height: 42, paddingInline: 20,
-                    boxShadow: `0 2px 8px color-mix(in srgb, ${C.success} 27%, transparent)`,
-                  }}
-                >
-                  Punch In  <ArrowRightOutlined />
-                </Button>
-              ) : !checkedOut ? (
-                <Button
-                  type="primary"
-                  icon={<EnvironmentOutlined />}
-                  onClick={() => navigate(gpsPath)}
-                  style={{
-                    background: C.danger, borderColor: C.danger,
-                    borderRadius: 10, fontWeight: 700, height: 42, paddingInline: 20,
-                    boxShadow: `0 2px 8px color-mix(in srgb, ${C.danger} 27%, transparent)`,
-                  }}
-                >
-                  Punch Out  <ArrowRightOutlined />
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => navigate(gpsPath)}
-                  style={{
-                    borderRadius: 10, fontWeight: 700, height: 42, paddingInline: 20,
-                    color: C.textSub, borderColor: C.border,
-                  }}
-                >
-                  Open My Attendance  <ArrowRightOutlined />
-                </Button>
-              )}
-              <div style={{ fontSize: 11, color: C.textMuted, textAlign: "right" }}>
-                {!checkedIn
-                  ? "Check in from My Attendance"
-                  : !checkedOut
-                  ? "Remember to punch out when leaving"
-                  : "Attendance complete for today"}
-              </div>
-            </div>
+            <Button
+              style={{ marginLeft: "auto" }} icon={<EnvironmentOutlined />}
+              type={checkedIn && checkedOut ? "default" : "primary"} danger={checkedIn && !checkedOut}
+              onClick={() => navigate(gpsPath)}
+            >
+              {!checkedIn ? "Punch In" : !checkedOut ? "Punch Out" : "Open My Attendance"}
+            </Button>
           )}
         </div>
       )}
 
-      {/* ─────────────── STAT CARDS ─────────────── */}
-      <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
-        <StatCard label="Present"  value={summary.present}  color={C.success} bg={C.successLight} icon={<CheckCircleOutlined />} />
-        <StatCard label="Absent"   value={summary.absent}   color={C.danger}  bg={C.dangerLight}  icon={<CloseCircleOutlined />} />
-        <StatCard label="Late"     value={summary.late}     color={C.warning} bg={C.warningLight} icon={<ClockCircleOutlined />} />
-        <StatCard label="Half Day" value={summary.halfday}  color={C.purple}  bg={C.purpleLight}  icon={<MinusCircleOutlined />} />
-        <StatCard label="Leave"    value={summary.leave}    color={C.cyan}    bg={C.cyanLight}    icon={<QuestionCircleOutlined />} />
-
-        {/* Attendance % */}
-        <div style={{ ...PANEL, padding: "14px 20px", display: "flex", alignItems: "center", gap: 16, flex: 1, minWidth: 160 }}>
-          <div className="u-grow">
-            <div style={{ fontSize: 10, fontWeight: 700, color: pctColor, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
-              Attendance %
-            </div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: C.text, lineHeight: 1.1, marginBottom: 6 }}>
-              {summary.pct}%
-            </div>
-            <Progress percent={summary.pct} strokeColor={pctColor} trailColor={C.border} showInfo={false} size="small" />
-          </div>
-          <div style={{
-            width: 48, height: 48, borderRadius: "50%",
-            background: `color-mix(in srgb, ${pctColor} 8%, transparent)`, border: `2px solid ${pctColor}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 13, fontWeight: 800, color: pctColor, flexShrink: 0,
-          }}>
-            {summary.pct}%
-          </div>
-        </div>
-      </div>
-
-      {/* ─────────────── RECORDS TABLE ─────────────── */}
-      <div style={{ ...PANEL, marginTop: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
-          <div style={{ fontWeight: 800, fontSize: 15, color: C.text }}>
-            Records — {month.format("MMMM YYYY")}
-          </div>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            {Object.entries(STATUS).map(([key, cfg]) => (
-              <div key={key} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.textSub }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.color }} />
-                {cfg.label}
-              </div>
+      {/* ── The month ── */}
+      <div className="section-panel" style={{ marginTop: 12, padding: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            <span style={{ fontSize: 12, padding: "2px 10px", borderRadius: 20, border: `1px solid ${pctColor}`, color: "var(--text-secondary)" }}>
+              <b style={{ color: pctColor, fontSize: 14 }}>{summary.pct == null ? "—" : `${summary.pct}%`}</b> attendance
+            </span>
+            {Object.entries(ATTENDANCE_STATUS).map(([k, cfg]) => (
+              <span key={k} style={{
+                fontSize: 12, padding: "2px 9px", borderRadius: 20, color: "var(--text-secondary)",
+                border: `1px solid color-mix(in srgb, ${cfg.color} 30%, transparent)`, background: `color-mix(in srgb, ${cfg.color} 8%, transparent)`,
+              }}>
+                <b style={{ color: cfg.color }}>{summary[k]}</b> {cfg.label}
+              </span>
             ))}
           </div>
+          <Segmented
+            size="small" value={filter} onChange={setFilter}
+            options={[
+              { value: "all", label: `All ${myAttendance.length}` },
+              ...Object.entries(ATTENDANCE_STATUS).filter(([k]) => summary[k] > 0).map(([k, cfg]) => ({ value: k, label: cfg.label })),
+            ]}
+          />
         </div>
 
         <Spin spinning={loading}>
-          {sorted.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 0", color: C.textMuted }}>
-              <CalendarOutlined style={{ fontSize: 36, marginBottom: 12, display: "block", color: C.border }} />
-              No attendance records for {month.format("MMMM YYYY")}
-            </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <Th>#</Th>
-                    <Th>Date</Th>
-                    <Th>Day</Th>
-                    <Th>Status</Th>
-                    <Th>Check-In</Th>
-                    <Th>Check-Out</Th>
-                    <Th>Working Hrs</Th>
-                    <Th>GPS</Th>
-                    <Th>Remarks</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sorted.map((r, i) => {
-                    const d  = dayjs(r.date);
-                    const whr = workingHours(r.checkInAt, r.checkOutAt);
-                    const isToday = d.format("YYYY-MM-DD") === todayKey;
-
-                    return (
-                      <tr
-                        key={r._id}
-                        style={{
-                          borderBottom: `1px solid ${C.border}`,
-                          background: isToday ? C.primaryLighter : "transparent",
-                          transition: "background 0.15s",
-                        }}
-                        onMouseEnter={(e) => !isToday && (e.currentTarget.style.background = C.surfaceSoft)}
-                        onMouseLeave={(e) => !isToday && (e.currentTarget.style.background = "transparent")}
-                      >
-                        <Td style={{ color: C.textMuted, fontSize: 12 }}>{sorted.length - i}</Td>
-
-                        <Td>
-                          <div style={{ fontWeight: 700, fontSize: 13 }}>
-                            {d.format("DD MMM YYYY")}
-                            {isToday && (
-                              <span style={{
-                                marginLeft: 6, fontSize: 9, fontWeight: 800,
-                                background: C.primary, color: "#fff",
-                                padding: "1px 6px", borderRadius: 20, verticalAlign: "middle",
-                              }}>TODAY</span>
-                            )}
-                          </div>
-                        </Td>
-
-                        <Td style={{ color: C.textSub, fontSize: 12 }}>{d.format("ddd")}</Td>
-
-                        <Td><StatusBadge status={r.status} /></Td>
-
-                        <Td>
-                          {r.checkInAt ? (
-                            <span style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 12, color: C.success, fontWeight: 600 }}>
-                              <LoginOutlined style={{ fontSize: 11 }} />
-                              {fmtTime(r.checkInAt)}
-                            </span>
-                          ) : (
-                            <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>
-                          )}
-                        </Td>
-
-                        <Td>
-                          {r.checkOutAt ? (
-                            <span style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 12, color: C.danger, fontWeight: 600 }}>
-                              <LogoutOutlined style={{ fontSize: 11 }} />
-                              {fmtTime(r.checkOutAt)}
-                            </span>
-                          ) : (
-                            <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>
-                          )}
-                        </Td>
-
-                        <Td style={{ color: C.accent, fontWeight: 600, fontSize: 12 }}>{whr || "—"}</Td>
-
-                        <Td>
-                          {r.gpsVerified ? (
-                            <Tooltip title={r.distanceFromSchool != null ? `${r.distanceFromSchool}m from school` : "GPS Verified"}>
-                              <span style={{ display: "flex", alignItems: "center", gap: 4, color: C.accent, fontSize: 12, fontWeight: 600 }}>
-                                <AimOutlined /> Verified
-                              </span>
-                            </Tooltip>
-                          ) : (
-                            <span style={{ color: C.textMuted, fontSize: 12 }}>—</span>
-                          )}
-                        </Td>
-
-                        <Td style={{ color: C.textSub, fontSize: 12, fontStyle: r.remarks ? "italic" : "normal" }}>
-                          {r.remarks || "—"}
-                        </Td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <Table
+            size="small" rowKey={(r) => r._id || r.date} dataSource={rows}
+            pagination={{ pageSize: 31, hideOnSinglePage: true }} scroll={{ x: "max-content" }}
+            locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={`No attendance recorded for ${month.format("MMMM YYYY")}`} /> }}
+            columns={[
+              {
+                title: "Date",
+                render: (_, r) => {
+                  const d = dayjs(r.date);
+                  return (
+                    <span style={{ whiteSpace: "nowrap" }}>
+                      <b>{d.format("DD MMM")}</b> <span className="u-muted">{d.format("ddd")}</span>
+                      {d.isSame(today, "day") ? <Tag color="blue" style={{ marginLeft: 6 }}>Today</Tag> : null}
+                    </span>
+                  );
+                },
+              },
+              {
+                title: "Status",
+                render: (_, r) => <span style={{ color: ATTENDANCE_STATUS[r.status]?.color, fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>{attendanceLabel(r)}</span>,
+              },
+              {
+                title: "In – Out",
+                render: (_, r) => (r.checkInAt
+                  ? <span style={{ fontSize: 12, whiteSpace: "nowrap" }}>{dayjs(r.checkInAt).format("hh:mm")} – {r.checkOutAt ? dayjs(r.checkOutAt).format("hh:mm A") : "…"}</span>
+                  : <span className="u-muted">—</span>),
+              },
+              { title: "Worked", render: (_, r) => workedText(r.checkInAt, r.checkOutAt) || <span className="u-muted">—</span> },
+              {
+                title: "GPS", width: 60,
+                render: (_, r) => (r.gpsVerified
+                  ? <Tooltip title={r.distanceFromSchool != null ? `${r.distanceFromSchool}m from school` : "GPS verified"}><AimOutlined style={{ color: "var(--success)" }} /></Tooltip>
+                  : <span className="u-muted">—</span>),
+              },
+              { title: "Remarks", dataIndex: "remarks", ellipsis: true, render: (v) => (v ? <span className="u-muted" style={{ fontSize: 12 }}>{v}</span> : <span className="u-muted">—</span>) },
+            ]}
+          />
         </Spin>
       </div>
     </div>

@@ -1,10 +1,10 @@
 import React, {
   useCallback, useEffect, useMemo, useRef, useState,
 } from "react";
-import { Alert, Calendar, Progress, Spin, Tooltip, message } from "antd";
+import { Alert, Button, Progress, Spin, Tag, Tooltip, message } from "antd";
 import {
-  AimOutlined, CheckCircleOutlined, ClockCircleOutlined, EnvironmentOutlined,
-  LoginOutlined, LogoutOutlined, WarningOutlined,
+  AimOutlined, CheckCircleOutlined, EnvironmentOutlined, LeftOutlined,
+  LoginOutlined, LogoutOutlined, RightOutlined, WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,6 +13,8 @@ import {
   clearAttendanceFeedback, fetchMyAttendance,
 } from "../../features/attendanceSlice";
 import PageHeader from "../../components/layout/PageHeader";
+import AttendanceMonthGrid from "../../components/attendance/AttendanceMonthGrid";
+import { ATTENDANCE_STATUS, attendanceLabel, workedText } from "../../utils/attendanceStatus";
 import AttendanceMap from "./AttendanceMap";
 
 /* ─── Constants ─────────────────────────────────────────────── */
@@ -22,164 +24,27 @@ const GPS_STATE = { IDLE: "idle", LOCATING: "locating", READY: "ready", ERROR: "
 // Wi-Fi or the IP address, not a position to judge a 200–300m school zone with.
 const COARSE_FIX_METRES = 100;
 const formatAccuracy = (m) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`);
+const fmtTime = (d) => (d ? dayjs(d).format("hh:mm A") : "—");
+const hoursText = (h) => (Number.isInteger(h) ? `${h}h` : `${Math.floor(h)}h ${Math.round((h % 1) * 60)}m`);
 
-const STATUS_CFG = {
-  present: { color: "var(--success)", bg: "var(--success-light)", border: "var(--success-light)", label: "Present"  },
-  absent:  { color: "var(--danger)", bg: "var(--danger-light)", border: "var(--danger-light)", label: "Absent"   },
-  late:    { color: "var(--warning)", bg: "var(--warning-light)", border: "var(--warning)", label: "Late"     },
-  halfday: { color: "var(--purple)", bg: "rgba(var(--purple-rgb), 0.12)", border: "rgba(var(--purple-rgb), 0.5)", label: "Half Day" },
-  leave:   { color: "var(--cyan)", bg: "var(--cyan-light)", border: "rgba(var(--cyan-rgb), 0.5)", label: "On Leave" },
-};
+const card = { background: "var(--surface)", border: "1px solid var(--border-muted)", borderRadius: 14, padding: 14 };
+const label = { fontSize: 10.5, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" };
 
-function fmtTime(d) { return d ? dayjs(d).format("hh:mm A") : null; }
-
-function calcWorkHours(a, b) {
-  if (!a || !b) return null;
-  const m = Math.round((new Date(b) - new Date(a)) / 60000);
-  return m > 0 ? `${Math.floor(m / 60)}h ${m % 60}m` : null;
-}
-
-/* ─── GPS Status Pill ───────────────────────────────────────── */
-const GpsPill = ({ gpsState, distanceInfo, gpsError, onEnable, onRetry }) => {
-  const base = {
-    display: "inline-flex", alignItems: "center", gap: 6,
-    padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700,
-    lineHeight: 1.4,
-  };
-  if (gpsState === GPS_STATE.IDLE) return (
-    <button onClick={onEnable} style={{
-      ...base,
-      background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--primary-light)",
-      cursor: "pointer",
-    }}>
-      <EnvironmentOutlined /> Enable GPS
-    </button>
-  );
-  if (gpsState === GPS_STATE.LOCATING) return (
-    <span style={{ ...base, background: "var(--surface-soft)", color: "var(--text-muted)", border: "1px solid var(--border-muted)" }}>
-      <Spin size="small" /> Acquiring GPS…
-    </span>
-  );
-  if (gpsState === GPS_STATE.ERROR) return (
-    <Tooltip title={gpsError || "Unable to get location"}>
-      <span style={{ ...base, background: "var(--danger-light)", color: "var(--danger)", border: "1px solid var(--danger-light)", cursor: "default" }}>
-        <WarningOutlined /> GPS Error ·&nbsp;
-        <button onClick={onRetry} style={{ color: "var(--primary)", background: "none", border: "none", cursor: "pointer", fontWeight: 800, padding: 0, fontSize: 12 }}>Retry</button>
-      </span>
-    </Tooltip>
-  );
-  if (!distanceInfo) return (
-    <span style={{ ...base, background: "var(--success-light)", color: "var(--success)", border: "1px solid var(--success-light)" }}>
-      <AimOutlined /> GPS Ready
-    </span>
-  );
-  const ok = distanceInfo.inside;
-  return (
-    <span style={{ ...base, background: ok ? "var(--success-light)" : "var(--warning-light)", color: ok ? "var(--success)" : "var(--warning-hover)", border: `1px solid ${ok ? "var(--success-light)" : "var(--warning-light)"}` }}>
-      {ok ? <AimOutlined /> : <WarningOutlined />}
-      {ok ? "Inside Zone" : "Outside Zone"} · {distanceInfo.dist}m
-    </span>
-  );
-};
-
-/* ─── Day Progress Track ────────────────────────────────────── */
-const DayTrack = ({ checkedIn, checkedOut, checkInAt, checkOutAt }) => {
-  const step   = checkedOut ? 2 : checkedIn ? 1 : 0;
-  const wh     = calcWorkHours(checkInAt, checkOutAt);
-  const nodes  = [
-    { key: "in",  label: "Check In",  time: fmtTime(checkInAt),  color: "var(--success)", icon: <LoginOutlined  style={{ fontSize: 13 }} /> },
-    { key: "out", label: "Check Out", time: fmtTime(checkOutAt), color: "var(--danger)", icon: <LogoutOutlined style={{ fontSize: 13 }} /> },
-  ];
-  return (
-    <div style={{ padding: "2px 0 4px" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
-        {nodes.map((n, i) => (
-          <React.Fragment key={n.key}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 90 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: "50%",
-                background: (i === 0 && step >= 1) || (i === 1 && step >= 2) ? n.color : "var(--surface-soft)",
-                border: `2px solid ${(i === 0 && step >= 1) || (i === 1 && step >= 2) ? n.color : "var(--border-muted)"}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: (i === 0 && step >= 1) || (i === 1 && step >= 2) ? "#fff" : "var(--text-muted)",
-                transition: "all 0.3s",
-              }}>
-                {n.icon}
-              </div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", marginTop: 5, textAlign: "center", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                {n.label}
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: (i === 0 && step >= 1) || (i === 1 && step >= 2) ? n.color : "var(--text-muted)", fontFamily: "monospace", marginTop: 1 }}>
-                {n.time || "—"}
-              </div>
-            </div>
-            {i < nodes.length - 1 && (
-              <div style={{ flex: 1, height: 3, marginTop: 16, background: step >= 2 ? "var(--success)" : "var(--border-muted)", transition: "background 0.4s" }} />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-      {wh && (
-        <div style={{ textAlign: "center", fontSize: 11, color: "var(--success)", fontWeight: 700, marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-          <ClockCircleOutlined /> {wh} worked
-        </div>
-      )}
-    </div>
-  );
-};
-
-/* ─── Punch Button ──────────────────────────────────────────── */
-const PunchBtn = ({ checkedIn, checkedOut, canAct, loading, onPunch }) => {
-  const done = checkedIn && checkedOut;
-  const bg   = done ? "var(--surface-soft)" : checkedIn ? "var(--danger)" : "var(--success)";
-  const label = done ? "Done for Today" : checkedIn ? "Punch Out" : "Punch In";
-  const Icon  = done ? CheckCircleOutlined : checkedIn ? LogoutOutlined : LoginOutlined;
-  const off   = done || !canAct;
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "4px 0 2px" }}>
-      <div style={{ position: "relative", display: "inline-flex" }}>
-        {!off && (
-          <span style={{
-            position: "absolute", inset: -10, borderRadius: "50%",
-            background: `color-mix(in srgb, ${bg} 16%, transparent)`,
-            animation: "att-pulse 2s ease-in-out infinite",
-            pointerEvents: "none",
-          }} />
-        )}
-        <button
-          onClick={!off && !loading ? onPunch : undefined}
-          disabled={off || loading}
-          style={{
-            width: 148, height: 148, borderRadius: "50%",
-            background: off ? "var(--surface-soft)" : bg,
-            border: `3px solid ${off ? "var(--border-muted)" : bg}`,
-            color: off ? "var(--text-muted)" : "#fff",
-            fontSize: 14, fontWeight: 800,
-            cursor: off ? "not-allowed" : "pointer",
-            boxShadow: off ? "none" : `0 0 36px color-mix(in srgb, ${bg} 27%, transparent)`,
-            transition: "all 0.25s",
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", gap: 6,
-            letterSpacing: "0.02em",
-          }}
-        >
-          {loading
-            ? <Spin size="large" />
-            : <>
-                <Icon style={{ fontSize: 38 }} />
-                <span style={{ fontSize: 13, lineHeight: 1.2, textAlign: "center" }}>{label}</span>
-              </>
-          }
-        </button>
-      </div>
-      {!canAct && !done && (
-        <div style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}>
-          Waiting for GPS…
-        </div>
-      )}
-          </div>
-  );
+/* ─── GPS status, one small tag ─────────────────────────────── */
+const GpsTag = ({ gpsState, distanceInfo, gpsError, onRetry }) => {
+  if (gpsState === GPS_STATE.IDLE) return <Button size="small" icon={<EnvironmentOutlined />} onClick={onRetry}>Enable GPS</Button>;
+  if (gpsState === GPS_STATE.LOCATING) return <Tag style={{ margin: 0 }}><Spin size="small" style={{ marginRight: 6 }} />Finding you…</Tag>;
+  if (gpsState === GPS_STATE.ERROR) {
+    return (
+      <Tooltip title={gpsError || "Unable to get location"}>
+        <Tag color="red" style={{ margin: 0, cursor: "pointer" }} onClick={onRetry}><WarningOutlined /> GPS error · retry</Tag>
+      </Tooltip>
+    );
+  }
+  if (!distanceInfo) return <Tag color="green" style={{ margin: 0 }}><AimOutlined /> GPS ready</Tag>;
+  return distanceInfo.inside
+    ? <Tag color="green" style={{ margin: 0 }}><AimOutlined /> Inside zone · {distanceInfo.dist}m</Tag>
+    : <Tag color="orange" style={{ margin: 0 }}><WarningOutlined /> Outside zone · {distanceInfo.dist}m</Tag>;
 };
 
 /* ─── Main Page ─────────────────────────────────────────────── */
@@ -192,7 +57,8 @@ const EmployeeSelfAttendance = () => {
   const [position,  setPosition]  = useState(null);
   const [gpsError,  setGpsError]  = useState(null);
   const [actLoading, setActLoad]  = useState(false);
-  const [calMonth,   setCalMonth] = useState(dayjs());
+  const [calMonth,   setCalMonth] = useState(dayjs().startOf("month"));
+  const [now, setNow] = useState(() => new Date());
   const watchRef = useRef(null);
 
   /* ── GPS ── */
@@ -220,7 +86,6 @@ const EmployeeSelfAttendance = () => {
   useEffect(() => {
     dispatch(clearAttendanceFeedback());
     dispatch(fetchSelfStatus());
-    dispatch(fetchSelfHistory({ month: dayjs().format("YYYY-MM") }));
     startGPS();
   }, [dispatch, startGPS]);
 
@@ -229,6 +94,12 @@ const EmployeeSelfAttendance = () => {
   }, [calMonth, dispatch]);
 
   useEffect(() => () => { if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current); }, []);
+
+  // Keeps "working for 2h 14m" honest while the page stays open.
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   /* ── Haversine ── */
   const distanceInfo = useMemo(() => {
@@ -254,9 +125,23 @@ const EmployeeSelfAttendance = () => {
     return null;
   }, [geofenceSettings]);
 
+  // School hours and what a day counts as (same rules as the backend's workHours.service.js):
+  // under halfDay hours absent, from it a half day, from fullDay hours (never more than the
+  // school's own hours) a full day.
+  const rules = useMemo(() => {
+    const h = geofenceSettings?.attendanceHours;
+    if (!h) return null;
+    const mins = (hm, fb) => { const m = /^(\d{1,2}):(\d{2})$/.exec(hm || ""); return m ? Number(m[1]) * 60 + Number(m[2]) : fb; };
+    const span = Math.max((mins(h.endTime, 900) - mins(h.startTime, 480)) / 60, 0);
+    const full = Math.min(Number(h.fullDayHours ?? 8), span || 24);
+    const half = Math.min(Number(h.halfDayHours ?? 4.5), full);
+    return { start: h.startTime || "08:00", end: h.endTime || "15:00", full, half };
+  }, [geofenceSettings]);
+
   /* ── Punch ── */
   const checkedIn  = !!selfStatus?.checkInAt;
   const checkedOut = !!selfStatus?.checkOutAt;
+  const done       = checkedIn && checkedOut;
   const gpsReady   = gpsState === GPS_STATE.READY && !!position;
 
   const handlePunch = async () => {
@@ -282,278 +167,180 @@ const EmployeeSelfAttendance = () => {
     }
   };
 
-  /* ── Calendar ── */
-  const historyByDate = useMemo(() => {
-    const m = {};
-    (selfHistory || []).forEach((r) => { m[dayjs(r.date).format("YYYY-MM-DD")] = r; });
-    return m;
-  }, [selfHistory]);
+  // Check-in is refused outside school hours, so say so on the button rather than after a press.
+  // Check-out has no such limit.
+  const nowHm = dayjs(now).format("HH:mm");
+  const outsideHours = Boolean(rules) && !checkedIn && (nowHm < rules.start || nowHm > rules.end);
 
-  const dateCellRender = (date, info) => {
-    if (info?.type !== "date") return null;
-    const rec = historyByDate[date.format("YYYY-MM-DD")];
-    if (!rec) return null;
-    const cfg = STATUS_CFG[rec.status] || {};
-    return (
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
-        <div style={{ width: 6, height: 6, borderRadius: "50%", background: cfg.color || "var(--text-muted)" }} />
-      </div>
-    );
-  };
-
-  const statusCfg = STATUS_CFG[selfStatus?.status];
-
-  /* ── Panel style ── */
-  const card = {
-    background: "var(--surface)", border: "1px solid var(--border-muted)",
-    borderRadius: 16, padding: "18px 20px",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-  };
+  const statusCfg = ATTENDANCE_STATUS[selfStatus?.status];
+  const worked = checkedIn ? workedText(selfStatus.checkInAt, checkedOut ? selfStatus.checkOutAt : now) : null;
+  const workedHours = checkedIn ? Math.max(0, (new Date(checkedOut ? selfStatus.checkOutAt : now) - new Date(selfStatus.checkInAt)) / 3600000) : 0;
+  const history = selfHistory || [];
+  const counts = Object.fromEntries(Object.keys(ATTENDANCE_STATUS).map((k) => [k, history.filter((r) => r.status === k).length]));
+  const recent = [...history].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
+  const today = dayjs();
 
   return (
     <div className="page-wrapper">
       <PageHeader
         title="My Attendance"
-        subtitle="GPS-based self check-in and check-out"
+        subtitle={rules ? `Check in from school between ${rules.start} and ${rules.end}` : "GPS-based self check-in and check-out"}
         icon={<EnvironmentOutlined />}
       />
 
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
-        gap: 14,
-        marginTop: 16,
-        alignItems: "start",
+        gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
+        gap: 12, marginTop: 14, alignItems: "start",
       }}>
 
-        {/* ════ LEFT — Today status + punch ════ */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-
-          {/* ── Today Card ── */}
-          <div style={card}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                  Today
-                </div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", marginTop: 1 }}>
-                  {dayjs().format("ddd, DD MMM YYYY")}
-                </div>
-              </div>
-              {statusCfg ? (
-                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 800, background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.border}` }}>
-                  {statusCfg.label}{selfStatus?.halfDaySession ? ` · ${selfStatus.halfDaySession}` : ""}
-                </span>
-              ) : (
-                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 800, background: "var(--surface-soft)", color: "var(--text-muted)", border: "1px solid var(--border-muted)" }}>
-                  Not Marked
-                </span>
-              )}
+        {/* ════ Today: status, times, location and the one button ════ */}
+        <div style={card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <div>
+              <div style={label}>Today</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)" }}>{today.format("ddd, DD MMM YYYY")}</div>
             </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+              {statusCfg
+                ? <Tag color={statusCfg.color} style={{ margin: 0 }}>{attendanceLabel(selfStatus)}</Tag>
+                : <Tag style={{ margin: 0 }}>Not marked</Tag>}
+              <GpsTag gpsState={gpsState} distanceInfo={distanceInfo} gpsError={gpsError} onRetry={startGPS} />
+            </div>
+          </div>
 
-            <DayTrack
-              checkedIn={checkedIn}
-              checkedOut={checkedOut}
-              checkInAt={selfStatus?.checkInAt}
-              checkOutAt={selfStatus?.checkOutAt}
+          {/* In · Out · Worked, on one line */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, margin: "12px 0" }}>
+            {[
+              { k: "In", v: fmtTime(selfStatus?.checkInAt), on: checkedIn, color: "var(--success)" },
+              { k: "Out", v: fmtTime(selfStatus?.checkOutAt), on: checkedOut, color: "var(--danger)" },
+              { k: checkedOut ? "Worked" : "Working", v: worked || "—", on: checkedIn, color: "var(--primary)" },
+            ].map((x) => (
+              <div key={x.k} style={{ border: "1px solid var(--border-muted)", borderRadius: 10, padding: "6px 10px" }}>
+                <div style={label}>{x.k}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: x.on ? x.color : "var(--text-muted)" }}>{x.v}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* How the hours count */}
+          {rules && (
+            <div style={{ marginBottom: 12 }}>
+              <Progress
+                percent={Math.min(100, Math.round((workedHours / (rules.full || 1)) * 100))}
+                showInfo={false} size={[null, 6]} trailColor="var(--border-muted)"
+                strokeColor={workedHours >= rules.full ? "var(--success)" : workedHours >= rules.half ? "var(--purple)" : "var(--warning)"}
+              />
+              <div className="u-muted" style={{ fontSize: 11, display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                <span>Half day from {hoursText(rules.half)} · full day from {hoursText(rules.full)}</span>
+                {checkedIn && !checkedOut && (
+                  <span>
+                    {workedHours >= rules.full ? "Full day reached" : workedHours >= rules.half ? `Half day reached · ${hoursText(rules.full - workedHours)} to a full day` : `${hoursText(rules.half - workedHours)} to a half day`}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {reduxError && (
+            <Alert type="error" showIcon closable message={reduxError}
+              onClose={() => dispatch(clearAttendanceFeedback())} style={{ marginBottom: 10, fontSize: 12 }} />
+          )}
+
+          {/* A browser on a laptop or desktop has no GPS chip: it estimates from Wi-Fi or the
+              internet connection and can be kilometres off. Without saying so, someone standing
+              inside the school sees "you are 4 km away" and assumes the app is broken. */}
+          {gpsState === GPS_STATE.READY && position?.accuracy > COARSE_FIX_METRES && (
+            <Alert
+              type="warning" showIcon style={{ marginBottom: 10, fontSize: 12 }}
+              message={`Location is approximate (±${formatAccuracy(position.accuracy)}): this device is guessing from Wi-Fi, not GPS. Check in from a phone with location on.`}
             />
+          )}
 
-            {selfStatus?.gpsVerified && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 10, fontSize: 11, color: "var(--accent-hover)", fontWeight: 700, background: "var(--accent-light)", borderRadius: 6, padding: "3px 8px" }}>
-                <AimOutlined /> GPS Verified · {selfStatus.distanceFromSchool}m from school
-              </div>
-            )}
-          </div>
-
-          {/* ── Punch Card ── */}
-          <div style={card}>
-
-            {/* GPS status */}
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 14 }}>
-              <GpsPill
-                gpsState={gpsState}
-                distanceInfo={distanceInfo}
-                gpsError={gpsError}
-                onEnable={startGPS}
-                onRetry={startGPS}
-              />
+          {/* Map: how someone sees where they are against the school zone. */}
+          {gpsState === GPS_STATE.READY && position && (
+            <div style={{ marginBottom: 10 }}>
+              <AttendanceMap userPosition={position} schoolCoords={schoolCoords} distanceInfo={distanceInfo} height={170} />
             </div>
+          )}
 
-            {/* Error from last punch attempt */}
-            {reduxError && (
-              <Alert
-                type="error" showIcon closable
-                message={reduxError}
-                onClose={() => dispatch(clearAttendanceFeedback())}
-                style={{ marginBottom: 14, borderRadius: 10, fontSize: 12 }}
-              />
-            )}
-
-            {/* Map — always shown once there is a position; it is how someone sees where they are
-                against the school zone, so it is not something to hide or switch off. */}
-            {gpsState === GPS_STATE.READY && position && (
-              <div style={{ marginBottom: 14 }}>
-                <AttendanceMap userPosition={position} schoolCoords={schoolCoords} distanceInfo={distanceInfo} height={240} />
-              </div>
-            )}
-
-            {/* A browser on a laptop or desktop has no GPS chip: it estimates from Wi-Fi or the
-                internet connection and can be kilometres off. Without saying so, someone standing
-                inside the school sees "you are 4 km away" and assumes the app is broken. */}
-            {gpsState === GPS_STATE.READY && position?.accuracy > COARSE_FIX_METRES && (
-              <Alert
-                type="warning" showIcon
-                style={{ marginBottom: 14, borderRadius: 10, fontSize: 12 }}
-                message={`Your location is only approximate (±${formatAccuracy(position.accuracy)})`}
-                description="This device is estimating where you are from Wi-Fi or the internet connection, not GPS, so the dot can be far from where you actually are. Check in from a phone with location turned on."
-              />
-            )}
-
-            {/* Distance bar — only when geofence is configured */}
-            {gpsState === GPS_STATE.READY && distanceInfo && (
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 700, marginBottom: 4, color: distanceInfo.inside ? "var(--success)" : "var(--warning-hover)" }}>
-                  <span>{distanceInfo.inside ? "✓ Within school zone" : "Move closer to school"}</span>
-                  <span>{distanceInfo.dist}m / {distanceInfo.radius}m</span>
-                </div>
-                <Progress
-                  percent={distanceInfo.pct}
-                  strokeColor={distanceInfo.inside ? "var(--success)" : "var(--warning)"}
-                  trailColor="var(--border-muted)"
-                  showInfo={false}
-                  size={[null, 6]}
-                />
-              </div>
-            )}
-
-            {/* No geofence info */}
-            {gpsState === GPS_STATE.READY && !schoolCoords && (
-              <div style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center", marginBottom: 10, padding: "6px 0" }}>
-                No geofence configured — check-in allowed from anywhere
-              </div>
-            )}
-
-            {/* THE BUTTON */}
-            <PunchBtn
-              checkedIn={checkedIn}
-              checkedOut={checkedOut}
-              canAct={gpsReady}
-              loading={actLoading}
-              onPunch={handlePunch}
-            />
-
-            {/* GPS accuracy */}
-            {gpsState === GPS_STATE.READY && position?.accuracy && (
-              <div style={{ textAlign: "center", fontSize: 10, color: "var(--text-muted)", marginTop: 6 }}>
-                GPS accuracy: ±{Math.round(position.accuracy)}m
-              </div>
-            )}
-          </div>
-
-          {/* ── Month summary chips ── */}
-          <div style={{ ...card, padding: "14px 16px" }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>
-              {calMonth.format("MMMM YYYY")} Summary
+          {gpsState === GPS_STATE.READY && distanceInfo && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 700, marginBottom: 10, color: distanceInfo.inside ? "var(--success)" : "var(--warning-hover)" }}>
+              <span>{distanceInfo.inside ? "Within the school zone" : "Move closer to school"}</span>
+              <span>{distanceInfo.dist}m of {distanceInfo.radius}m{position?.accuracy ? ` · ±${Math.round(position.accuracy)}m` : ""}</span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
-              {Object.entries(STATUS_CFG).map(([key, cfg]) => {
-                const count = (selfHistory || []).filter((r) => r.status === key).length;
-                return (
-                  <div key={key} style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 10, padding: "8px 4px", textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: cfg.color }}>{count}</div>
-                    <div style={{ fontSize: 9, color: cfg.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{cfg.label}</div>
-                  </div>
-                );
-              })}
+          )}
+          {gpsState === GPS_STATE.READY && !schoolCoords && (
+            <div className="u-muted" style={{ fontSize: 12, marginBottom: 10 }}>No school zone set: check-in is allowed from anywhere.</div>
+          )}
+
+          <Button
+            block size="large" type="primary" danger={checkedIn && !done}
+            icon={done ? <CheckCircleOutlined /> : checkedIn ? <LogoutOutlined /> : <LoginOutlined />}
+            disabled={done || !gpsReady || outsideHours} loading={actLoading} onClick={handlePunch}
+            style={{ height: 46, fontWeight: 800, borderRadius: 12 }}
+          >
+            {done ? "Done for today" : checkedIn ? "Punch Out" : "Punch In"}
+          </Button>
+          {outsideHours ? (
+            <div className="u-muted" style={{ fontSize: 12, textAlign: "center", marginTop: 6 }}>
+              Check-in is open {rules.start}–{rules.end}. {nowHm > rules.end ? "It has closed for today." : "It has not opened yet."}
             </div>
-          </div>
+          ) : !gpsReady && !done ? (
+            <div className="u-muted" style={{ fontSize: 12, textAlign: "center", marginTop: 6 }}>Waiting for your location…</div>
+          ) : null}
+          {selfStatus?.gpsVerified && (
+            <div style={{ fontSize: 11, textAlign: "center", marginTop: 6, color: "var(--success)" }}>
+              <AimOutlined /> Check-in verified {selfStatus.distanceFromSchool}m from school
+            </div>
+          )}
         </div>
 
-        {/* ════ RIGHT — Calendar + History ════ */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-
-          {/* ── Calendar ── */}
-          <div style={card}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-              <div className="u-title-sm">
-                {calMonth.format("MMMM YYYY")}
-              </div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {Object.entries(STATUS_CFG).map(([k, cfg]) => (
-                  <div key={k} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--text-muted)", fontWeight: 600 }}>
-                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: cfg.color }} />
-                    {cfg.label}
-                  </div>
-                ))}
-              </div>
+        {/* ════ This month: counts, the month grid, and the latest days ════ */}
+        <div style={card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ fontWeight: 800, fontSize: 14 }}>{calMonth.format("MMMM YYYY")}</div>
+            <div style={{ display: "flex", gap: 4 }}>
+              <Button size="small" icon={<LeftOutlined />} aria-label="Previous month" onClick={() => setCalMonth((m) => m.subtract(1, "month"))} />
+              <Button size="small" icon={<RightOutlined />} aria-label="Next month" disabled={calMonth.isSame(today, "month")} onClick={() => setCalMonth((m) => m.add(1, "month"))} />
             </div>
-            <Spin spinning={selfLoading}>
-              <Calendar
-                fullscreen={false}
-                value={calMonth}
-                onPanelChange={(v) => setCalMonth(v)}
-                cellRender={dateCellRender}
-                style={{ border: "none" }}
-              />
-            </Spin>
           </div>
 
-          {/* ── Recent Records ── */}
-          <div style={card}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)", marginBottom: 12 }}>
-              Recent Records
-            </div>
-            {selfHistory?.length ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[...selfHistory].reverse().slice(0, 7).map((r) => {
-                  const cfg = STATUS_CFG[r.status] || {};
-                  const wh  = calcWorkHours(r.checkInAt, r.checkOutAt);
-                  const inT = fmtTime(r.checkInAt);
-                  const outT = fmtTime(r.checkOutAt);
-                  return (
-                    <div key={r._id || r.date} style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      padding: "10px 12px", borderRadius: 10,
-                      background: "var(--surface-soft)", border: "1px solid var(--border-muted)",
-                    }}>
-                      {/* Status dot */}
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: cfg.color || "var(--text-muted)", flexShrink: 0 }} />
-                      {/* Main info */}
-                      <div className="u-grow-min">
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
-                            {dayjs(r.date).format("ddd, DD MMM")}
-                          </span>
-                          <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 4, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, fontWeight: 700 }}>
-                            {cfg.label}{r.halfDaySession ? ` · ${r.halfDaySession === "A" ? "A (1st half)" : "B (2nd half)"}` : ""}
-                          </span>
-                          {r.remarks ? <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{r.remarks}</span> : null}
-                        </div>
-                        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
-                          <LoginOutlined style={{ fontSize: 10 }} />
-                          <span>{inT || "—"}</span>
-                          <span>→</span>
-                          <LogoutOutlined style={{ fontSize: 10 }} />
-                          <span>{outT || "—"}</span>
-                          {wh && <span style={{ color: "var(--success)", fontWeight: 700 }}>· {wh}</span>}
-                        </div>
-                      </div>
-                      {/* GPS badge */}
-                      {r.gpsVerified && (
-                        <Tooltip title={`${r.distanceFromSchool}m from school`}>
-                          <AimOutlined style={{ color: "var(--accent)", fontSize: 13, flexShrink: 0 }} />
-                        </Tooltip>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "24px 0", fontSize: 13 }}>
-                No records for this month
-              </div>
-            )}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+            {Object.entries(ATTENDANCE_STATUS).map(([k, cfg]) => (
+              <span key={k} style={{
+                fontSize: 12, padding: "2px 9px", borderRadius: 20, color: "var(--text-secondary)",
+                border: `1px solid color-mix(in srgb, ${cfg.color} 30%, transparent)`, background: `color-mix(in srgb, ${cfg.color} 8%, transparent)`,
+              }}>
+                <b style={{ color: cfg.color }}>{counts[k]}</b> {cfg.label}
+              </span>
+            ))}
           </div>
+
+          <Spin spinning={selfLoading}>
+            <AttendanceMonthGrid month={calMonth} records={history} tile={38} />
+          </Spin>
+
+          <div style={{ ...label, margin: "12px 0 4px" }}>Latest days</div>
+          {recent.length ? recent.map((r, i) => {
+            const cfg = ATTENDANCE_STATUS[r.status] || {};
+            return (
+              <div key={r._id || r.date} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: i ? "1px solid var(--border-muted)" : "none", fontSize: 12 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.color || "var(--text-muted)", flexShrink: 0 }} />
+                <span style={{ fontWeight: 700, width: 74, flexShrink: 0 }}>{dayjs(r.date).format("ddd, DD MMM")}</span>
+                <span style={{ color: cfg.color, fontWeight: 700, whiteSpace: "nowrap" }}>{attendanceLabel(r)}</span>
+                <span className="u-muted" style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "right" }}>
+                  {r.checkInAt ? `${dayjs(r.checkInAt).format("hh:mm")} – ${r.checkOutAt ? dayjs(r.checkOutAt).format("hh:mm A") : "…"}` : r.remarks || ""}
+                  {workedText(r.checkInAt, r.checkOutAt) ? ` · ${workedText(r.checkInAt, r.checkOutAt)}` : ""}
+                </span>
+                {r.gpsVerified && (
+                  <Tooltip title={`${r.distanceFromSchool}m from school`}><AimOutlined style={{ color: "var(--success)", flexShrink: 0 }} /></Tooltip>
+                )}
+              </div>
+            );
+          }) : (
+            <div className="u-muted" style={{ fontSize: 12, padding: "10px 0" }}>Nothing recorded this month.</div>
+          )}
         </div>
       </div>
     </div>
