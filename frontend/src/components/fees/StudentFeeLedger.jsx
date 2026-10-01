@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import {
-  Alert, Button, Empty, Form, Input, InputNumber, Modal, Radio, Segmented, Space, Spin, Table, Tooltip, message,
+  Alert, Button, Checkbox, Empty, Form, Input, InputNumber, Modal, Progress, Radio, Segmented, Space, Spin, Table, Tooltip, message,
 } from "antd";
 import {
   CalendarOutlined, CheckCircleFilled, CheckCircleOutlined, ClockCircleOutlined, CreditCardOutlined, ExclamationCircleOutlined,
@@ -83,6 +83,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
   const [quote, setQuote] = useState({ total: 0, loading: false, error: null });
   const [planPick, setPlanPick] = useState(null);
   const [planSaving, setPlanSaving] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
   const { payOnline, paying } = useOnlineFeeCheckout();
 
   const isCollect = mode === "collect";
@@ -118,18 +119,12 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
     });
   }, [isCollect, installments, dueNowIds]);
 
-  const visiblePeriods = useMemo(() => {
-    if (view === "due") return periods.filter((p) => p.balance > 0);
-    if (view === "overdue") return periods.filter((p) => p.status === "overdue");
-    if (view === "paid") return periods.filter((p) => p.status === "paid");
-    return periods;
-  }, [periods, view]);
-
   const selectedPeriodKeys = useMemo(
     () => periods.filter((p) => p.installmentIds.length && p.installmentIds.every((id) => selectedIds.includes(String(id)))).map((p) => p.key),
     [periods, selectedIds]
   );
-  const nextPeriod = useMemo(() => periods.find((p) => p.balance > 0 && !p.dueNow) || null, [periods]);
+  const selectedPeriods = useMemo(() => periods.filter((p) => selectedPeriodKeys.includes(p.key)), [periods, selectedPeriodKeys]);
+  const nextPeriod = useMemo(() => periods.find((p) => p.balance > 0 && !p.dueNow && !selectedPeriodKeys.includes(p.key)) || null, [periods, selectedPeriodKeys]);
 
   const visibleRows = useMemo(() => {
     if (view === "due") return installments.filter((r) => r.balance > 0);
@@ -257,12 +252,20 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [returnedPaymentId, studentId]);
 
+  // Tick or untick a period for paying in advance. Due-now and paid periods do not move.
+  const togglePeriod = (period) => {
+    if (period.dueNow || !(period.balance > 0)) return;
+    const ids = period.installmentIds.map(String);
+    setSelectedIds((prev) => (ids.every((id) => prev.includes(id)) ? prev.filter((id) => !ids.includes(id)) : [...new Set([...prev, ...ids])]));
+  };
+
   const confirmPlan = async () => {
     try {
       setPlanSaving(true);
       const res = await dispatch(choosePayPlan({ studentId, academicYearId, plan: planPick.plan })).unwrap();
       message.success(res?.message || "Pay plan updated");
       setPlanPick(null);
+      setPlanOpen(false);
       load();
     } catch (err) {
       message.error(getErrorMessage(err, "Could not change the pay plan"));
@@ -384,42 +387,6 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
     { title: "Status", render: (_, r) => <FeeStatusTag status={r.status} paidAmount={r.paidAmount} /> },
   ];
 
-  const periodColumns = [
-    {
-      title: "Period",
-      render: (_, p) => (
-        <div>
-          <div className="u-strong">{p.label}</div>
-        </div>
-      ),
-    },
-    {
-      title: "Due Date",
-      render: (_, p) => (
-        <span style={{ color: p.status === "overdue" ? "var(--danger-hover)" : "var(--text-secondary)", fontWeight: p.status === "overdue" ? 600 : 400 }}>
-          {fmtDate(p.dueDate)}
-        </span>
-      ),
-    },
-    { title: "Amount", align: "right", render: (_, p) => money(p.amount) },
-    {
-      title: "Fine",
-      align: "right",
-      render: (_, p) => (p.fineAmount > 0 ? <span style={{ color: "var(--danger-hover)" }}>{money(p.fineAmount)}</span> : <span className="u-muted">—</span>),
-    },
-    { title: "Paid", align: "right", render: (_, p) => (p.paidAmount > 0 ? money(p.paidAmount) : <span className="u-muted">—</span>) },
-    { title: "To Pay", align: "right", render: (_, p) => <span style={{ fontWeight: 700, fontSize: 15 }}>{money(p.balance)}</span> },
-    {
-      title: "Status",
-      render: (_, p) => (
-        <Space size={6}>
-          <FeeStatusTag status={p.status} paidAmount={p.paidAmount} />
-          {p.dueNow && <Tooltip title="Due now — this is always part of the payment"><LockOutlined style={{ color: "var(--text-muted)" }} /></Tooltip>}
-        </Space>
-      ),
-    },
-  ];
-
   const historyColumns = [
     { title: "Receipt", dataIndex: "receiptNo", render: (v) => <span style={{ fontFamily: "monospace", fontSize: 12 }}>{v}</span> },
     { title: "Date", render: (_, p) => fmtDate(p.paymentDate || p.createdAt) },
@@ -466,6 +433,8 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
     <div>
 
       {/* 1 ── Summary */}
+      {isCollect ? (
+        <>
       <div className="stat-grid" style={statGrid(170)}>
         {stats.map((s) => (
           <div key={s.label} style={statCard({ color: s.color })}>
@@ -486,6 +455,80 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
           message={`${money(totals.overdueAmount)} is overdue`}
           description={fineRule || undefined}
         />
+      )}
+        </>
+      ) : (
+        <>
+          {/* What to pay, and one button to pay it */}
+          <div
+            className="section-panel"
+            style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20, flexWrap: "wrap", padding: 24,
+              background: selectedPeriods.length ? (totals?.overdueAmount > 0 ? "var(--danger-light)" : "var(--primary-light)") : "var(--success-light)",
+            }}
+          >
+            <div style={{ minWidth: 220 }}>
+              {selectedPeriods.length > 0 ? (
+                <>
+                  <div style={{ fontSize: 14, color: "var(--text-secondary)", fontWeight: 600 }}>To pay now</div>
+                  <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1.2, color: "var(--text-primary)" }}>
+                    {quote.loading ? <Spin /> : quote.error ? <span style={{ fontSize: 15, color: "var(--danger)" }}>{quote.error}</span> : money(selectedTotal)}
+                  </div>
+                  <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+                    For {selectedPeriods.length > 3
+                      ? `${selectedPeriods.slice(0, 2).map((x) => x.label).join(", ")} +${selectedPeriods.length - 2} more`
+                      : selectedPeriods.map((x) => x.label).join(", ")}
+                  </div>
+                  {totals?.overdueAmount > 0 && (
+                    <div style={{ fontSize: 13, color: "var(--danger-hover)", fontWeight: 600, marginTop: 6 }}>
+                      <ExclamationCircleOutlined /> {money(totals.overdueAmount)} of this is overdue{fineRule ? ` · ${fineRule}` : ""}
+                    </div>
+                  )}
+                </>
+              ) : totals?.dueAmount > 0 ? (
+                <>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}><CheckCircleFilled style={{ color: "var(--success)" }} /> Nothing to pay right now</div>
+                  {nextPeriod && (
+                    <div style={{ fontSize: 15, color: "var(--text-secondary)", marginTop: 6 }}>
+                      Next: <b>{money(nextPeriod.balance)}</b> for {nextPeriod.label}, by {fmtDate(nextPeriod.dueDate)}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}><CheckCircleFilled style={{ color: "var(--success)" }} /> This year's fee is fully paid</div>
+              )}
+            </div>
+            {selectedPeriods.length > 0 ? (
+              <Button type="primary" size="large" icon={<CreditCardOutlined />} disabled={!quoteReady} loading={paying} onClick={startOnline} style={{ height: 52, padding: "0 32px", fontSize: 16, fontWeight: 700 }}>
+                Pay {quoteReady ? money(selectedTotal) : ""}
+              </Button>
+            ) : nextPeriod ? (
+              <Button size="large" onClick={() => togglePeriod(nextPeriod)} style={{ height: 48 }}>Pay {nextPeriod.label} in advance</Button>
+            ) : null}
+          </div>
+
+          {/* The year at a glance */}
+          <div className="section-panel">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <div className="u-meta">This year's fee</div>
+                <div style={{ fontSize: 24, fontWeight: 800 }}>{money(totals?.yearlyAmount)}</div>
+              </div>
+              <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
+                <div><div className="u-meta">Paid</div><div style={{ fontSize: 18, fontWeight: 700, color: "var(--success)" }}>{money(totals?.paidAmount)}</div></div>
+                <div><div className="u-meta">Left to pay</div><div style={{ fontSize: 18, fontWeight: 700 }}>{money(totals?.dueAmount)}</div></div>
+                {Number(totals?.fineAmount) > 0 && (
+                  <div><div className="u-meta">Late fine</div><div style={{ fontSize: 18, fontWeight: 700, color: "var(--danger)" }}>{money(totals.fineAmount)}</div></div>
+                )}
+              </div>
+            </div>
+            <Progress
+              percent={totals?.yearlyAmount > 0 ? Math.min(Math.round((Number(totals?.paidAmount || 0) / totals.yearlyAmount) * 100), 100) : 0}
+              strokeColor="var(--success)"
+              style={{ marginTop: 12, marginBottom: 0 }}
+            />
+          </div>
+        </>
       )}
 
       {/* 2 ── Fee structure (school office only) */}
@@ -516,7 +559,20 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       )}
 
       {/* 3 ── Pay plan */}
-      {planOptions.some((o) => o.count > 0) && (
+      {planOptions.some((o) => o.count > 0) && payPlan && !planOpen && (
+        <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={iconWell("var(--primary)", 32)}><CalendarOutlined /></div>
+            <div>
+              <div className="u-title">You pay {FREQUENCIES[payPlan]?.label.toLowerCase()}</div>
+              <div className="u-meta">The fee left for this year is split evenly over each {FREQUENCIES[payPlan]?.per}</div>
+            </div>
+          </div>
+          {canChoosePlan && <Button onClick={() => setPlanOpen(true)}>Change</Button>}
+        </div>
+      )}
+
+      {planOptions.some((o) => o.count > 0) && (!payPlan || planOpen) && (
         <div className="section-panel">
           {panelTitle(
             <CalendarOutlined />,
@@ -566,30 +622,11 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
         </div>
       )}
 
-      {!isCollect && totals?.dueAmount > 0 && (
-        <div
-          className="section-panel"
-          style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", background: totals?.dueNowAmount > 0 ? "var(--warning-light)" : "var(--success-light)" }}
-        >
-          <div>
-            <div className="u-meta">{totals?.dueNowAmount > 0 ? "To pay now" : "Nothing to pay right now"}</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)" }}>{money(totals?.dueNowAmount)}</div>
-          </div>
-          {nextPeriod && (
-            <div style={{ textAlign: "right" }}>
-              <div className="u-meta">Next</div>
-              <div style={{ fontWeight: 700 }}>{nextPeriod.label} · {money(nextPeriod.balance)}</div>
-              <div className="u-meta">by {fmtDate(nextPeriod.dueDate)}</div>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* 4 ── Installments */}
       <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-          {panelTitle(<ClockCircleOutlined />, "Installments", fineRule || `Due on the ${settings?.dueDay ?? 10}th of each period`)}
-          <Segmented
+          {panelTitle(<ClockCircleOutlined />, isCollect ? "Installments" : "Payment schedule", isCollect ? (fineRule || `Due on the ${settings?.dueDay ?? 10}th of each period`) : "The whole year, in order. Tick a later one to pay it in advance.")}
+          {isCollect && <Segmented
             value={view}
             onChange={setView}
             options={[
@@ -598,7 +635,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
               { label: "Paid", value: "paid" },
               { label: "All", value: "all" },
             ]}
-          />
+          />}
         </div>
 
         {headsWithoutSchedule.length > 0 && (
@@ -621,40 +658,56 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
             </Button>
             {selectedIds.length > 0 && <Button size="small" type="text" onClick={() => setSelectedIds([])}>Clear selection</Button>}
           </div>
-        ) : (
-          <div className="u-meta" style={{ marginBottom: 12 }}>
-            <LockOutlined /> What is due by today is selected for you. Tick later periods if you want to pay them in advance.
+        ) : null}
+
+        {!isCollect && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {periods.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No installments yet" />}
+            {periods.map((period) => {
+              const paid = !(period.balance > 0);
+              const picked = selectedPeriodKeys.includes(period.key);
+              const overdue = period.status === "overdue";
+              return (
+                <div
+                  key={period.key}
+                  onClick={() => togglePeriod(period)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 14,
+                    border: `1.5px solid ${picked ? "var(--primary)" : "var(--border-muted)"}`,
+                    background: paid ? "var(--surface-soft)" : picked ? "var(--primary-light)" : "var(--surface)",
+                    cursor: paid || period.dueNow ? "default" : "pointer",
+                    opacity: paid ? 0.75 : 1,
+                  }}
+                >
+                  <div style={{ width: 22, textAlign: "center" }}>
+                    {paid
+                      ? <CheckCircleFilled style={{ color: "var(--success)", fontSize: 20 }} />
+                      : <Checkbox checked={picked} disabled={period.dueNow} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15 }}>{period.label}</div>
+                    <div style={{ fontSize: 13, color: overdue ? "var(--danger-hover)" : "var(--text-secondary)", fontWeight: overdue ? 600 : 400 }}>
+                      {paid ? "Paid" : overdue ? `Was due ${fmtDate(period.dueDate)}` : period.dueNow ? `Due today (${fmtDate(period.dueDate)})` : `Due ${fmtDate(period.dueDate)}`}
+                      {!paid && period.paidAmount > 0 ? ` · ${money(period.paidAmount)} already paid` : ""}
+                      {period.fineAmount > 0 ? ` · incl. late fine ${money(period.fineAmount)}` : ""}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontWeight: 800, fontSize: 17 }}>{money(paid ? period.amount : period.balance)}</div>
+                    {!paid && <FeeStatusTag status={period.dueNow && !overdue ? "pending" : period.status} paidAmount={period.paidAmount} />}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
-        <div className={`${TABLE_CLS} data-table`} style={{ overflowX: "auto", display: isCollect ? "none" : undefined }}>
-          <Table
-            rowKey="key"
-            columns={periodColumns}
-            dataSource={isCollect ? [] : visiblePeriods}
-            loading={loading}
-            size="middle"
-            scroll={{ x: 820 }}
-            pagination={{ pageSize: 12, size: "small", hideOnSinglePage: true }}
-            rowSelection={{
-              selectedRowKeys: selectedPeriodKeys,
-              hideSelectAll: true,
-              onChange: (keys) => {
-                const picked = periods.filter((p) => keys.includes(p.key)).flatMap((p) => p.installmentIds.map(String));
-                setSelectedIds([...new Set([...dueNowIds, ...picked])]);
-              },
-              // Due now is locked in; a paid period has nothing to pay.
-              getCheckboxProps: (p) => ({ disabled: !(p.balance > 0) || p.dueNow }),
-            }}
-            locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={view === "due" ? "Nothing due — all paid" : "No installments"} /> }}
-          />
-        </div>
-
-        <div className={`${TABLE_CLS} data-table`} style={{ overflowX: "auto", display: isCollect ? undefined : "none" }}>
+        {isCollect && (
+        <div className={`${TABLE_CLS} data-table`} style={{ overflowX: "auto" }}>
           <Table
             rowKey={(r) => String(r._id)}
             columns={instColumns}
-            dataSource={isCollect ? visibleRows : []}
+            dataSource={visibleRows}
             loading={loading}
             size="middle"
             scroll={{ x: 820 }}
@@ -668,6 +721,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
             locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={view === "due" ? "Nothing due — all paid" : "No installments"} /> }}
           />
         </div>
+        )}
 
         {/* Action bar */}
         <div
@@ -693,7 +747,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
                 {quote.loading ? <Spin size="small" /> : quote.error ? <span style={{ color: "var(--danger)" }}>{quote.error}</span> : <b style={{ fontSize: 16 }}>{money(selectedTotal)}</b>}
               </>
             ) : (
-              <span className="u-muted">Select installments to pay</span>
+              <span className="u-muted">{isCollect ? "Select installments to pay" : "Nothing selected"}</span>
             )}
           </div>
           {isCollect ? (
@@ -702,7 +756,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
             </Button>
           ) : (
             <Button type="primary" icon={<CreditCardOutlined />} disabled={!quoteReady} loading={paying} onClick={startOnline}>
-              Pay {quoteReady ? money(selectedTotal) : ""} Online
+              Pay {quoteReady ? money(selectedTotal) : ""}
             </Button>
           )}
         </div>
