@@ -5,7 +5,7 @@ import { fetchAllUser } from "../../../features/authSlice";
 import { assignSubjectTeacher } from "../../../features/sectionSlice";
 import {
   Modal, Select, Empty, Spin, message, Input, Button, Tag,
-  Typography, Collapse,
+  Typography, Collapse, Segmented,
 } from "antd";
 import {
   SearchOutlined,
@@ -18,6 +18,7 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import PageHeader from "../../../components/layout/PageHeader.jsx";
+import SubjectTeacherBoard from "../../../components/classes/SubjectTeacherBoard.jsx";
 import { CATEGORICAL_COLORS } from "../../../utils/colorPalette";
 
 const { Text } = Typography;
@@ -215,7 +216,7 @@ const Classes = () => {
   const { user, users = [] }            = useSelector((state) => state.auth || {});
   const { selectedAcademicYear }        = useSelector((s) => s.academicYear || {});
 
-  const schoolId       = user?.school?._id;
+  const schoolId       = user?.school?._id || user?.schoolId?._id || user?.schoolId;
   const academicYearId = selectedAcademicYear?._id || selectedAcademicYear || null;
 
   const [filterText,      setFilterText]      = useState("");
@@ -225,9 +226,12 @@ const Classes = () => {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [assigning,       setAssigning]       = useState(false);
+  // "classes": the class cards. "teachers": who teaches what, across the whole school.
+  const [view,            setView]            = useState("classes");
 
   useEffect(() => {
-    dispatch(fetchAllUser({ roleName: ["Teacher"], isActive: true }));
+    // Everyone who can be given a subject, not only the plain "Teacher" role.
+    dispatch(fetchAllUser({ roleName: ["Teacher", "Class Teacher", "Sports Teacher", "Subject Coordinator"], isActive: true, limit: 1000 }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -264,6 +268,15 @@ const Classes = () => {
     setOpenModal(true);
   };
 
+  // From a cell of the Subject Teachers board: the same dialog, already on that section and subject.
+  const handleAssignCell = (cls, sec, sub) => {
+    setSelectedClass(cls);
+    setSelectedSection(sec._id);
+    setSelectedSubject(sub._id);
+    setSelectedTeacher(sub.teacherId ? String(sub.teacherId) : null);
+    setOpenModal(true);
+  };
+
   const handleFinish = async () => {
     if (!selectedSection || !selectedSubject || !selectedTeacher)
       return message.error("Please fill in all fields");
@@ -284,6 +297,16 @@ const Classes = () => {
     }
   };
 
+  // The teacher list, plus anyone already teaching a subject: without them a teacher whose role
+  // is not in the list above showed in the dialog as a raw id instead of a name.
+  const teacherChoices = useMemo(() => {
+    const m = new Map(users.map((u) => [String(u._id), u.name]));
+    schoolClasses.forEach((c) => (c.sections || []).forEach((sec) => (sec.subjects || []).forEach((sub) => {
+      if (sub.teacherId && !m.has(String(sub.teacherId))) m.set(String(sub.teacherId), sub.teacherName);
+    })));
+    return [...m.entries()].map(([_id, name]) => ({ _id, name })).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  }, [users, schoolClasses]);
+
   /* subjects available for the selected section */
   const sectionSubjects = useMemo(
     () => selectedClass?.sections?.find((s) => s._id === selectedSection)?.subjects || [],
@@ -302,6 +325,24 @@ const Classes = () => {
 
         {/* ── Stats ── */}
         <StatRow classes={stats.classes} sections={stats.sections} subjects={stats.subjects} />
+
+        <div style={{ marginBottom: 16 }}>
+          <Segmented
+            size="large" value={view} onChange={setView}
+            options={[
+              { value: "classes", label: "Classes", icon: <AppstoreOutlined /> },
+              { value: "teachers", label: "Subject Teachers", icon: <TeamOutlined /> },
+            ]}
+          />
+        </div>
+
+        {view === "teachers" && (
+          loading
+            ? <div style={{ display: "flex", justifyContent: "center", padding: 60 }}><Spin size="large" /></div>
+            : <SubjectTeacherBoard classes={schoolClasses} teachers={teacherChoices} onAssign={handleAssignCell} />
+        )}
+
+        {view === "classes" && (<>
 
         {/* ── Toolbar ── */}
         <div className="u-mb-4">
@@ -343,6 +384,8 @@ const Classes = () => {
             ))}
           </div>
         )}
+
+        </>)}
 
         {/* ── Assign Teacher Modal ── */}
         <Modal
@@ -443,7 +486,7 @@ const Classes = () => {
                 optionFilterProp="children"
                 disabled={!selectedSubject}
               >
-                {users.map((teacher) => (
+                {teacherChoices.map((teacher) => (
                   <Option key={teacher._id} value={teacher._id}>{teacher.name}</Option>
                 ))}
               </Select>

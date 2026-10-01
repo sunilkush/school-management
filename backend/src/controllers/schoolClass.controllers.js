@@ -330,6 +330,7 @@ export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
   })
     .populate("subjects.subjectId", "name")
     .populate("subjects.teacherId", "name")
+    .populate("classTeacherId", "name")
     .lean();
 
   // =============================
@@ -354,6 +355,9 @@ export const getSchoolClassSectionSubjects = asyncHandler(async (req, res) => {
       return {
         _id: sectionId,
         name: fullSection?.name || sec?.name || null,
+        // Shown on the Subject Teachers view, beside who teaches each subject.
+        classTeacherId: fullSection?.classTeacherId?._id || null,
+        classTeacherName: fullSection?.classTeacherId?.name || null,
         subjects: (fullSection?.subjects || []).map((sub) => ({
           _id: sub?.subjectId?._id || null,
           name: sub?.subjectId?.name || null,
