@@ -6,6 +6,7 @@ import { Marks } from "../models/Marks.model.js";
 import { ExamResult } from "../models/ExamResult.model.js";
 import { Student } from "../models/student.model.js";
 import { StudentEnrollment } from "../models/StudentEnrollment.model.js";
+import { AcademicYear } from "../models/AcademicYear.model.js";
 import { Section } from "../models/section.model.js";
 import { ExamAttempt } from "../models/ExamAttempts.model.js";
 import { getGradeBands, resolveGrade } from "./gradingScale.service.js";
@@ -25,6 +26,18 @@ const examScopeRole = (user) => {
   if (!role) throw new ApiError(403, "Forbidden. Insufficient role access.");
   return role;
 };
+// With no year named, the enrollment in the school's active year — not simply the newest one,
+// which for a child promoted ahead of time is next year's class.
+const currentEnrollment = async (query) => {
+  const rows = await StudentEnrollment.find(query)
+    .sort({ createdAt: -1 })
+    .select("schoolId academicYearId schoolClassId sectionId")
+    .lean();
+  if (rows.length < 2) return rows[0] || null;
+  const activeYear = await AcademicYear.findOne({ schoolId: rows[0].schoolId, $or: [{ isActive: true }, { status: "active" }] }).select("_id").lean();
+  return rows.find((r) => String(r.academicYearId) === String(activeYear?._id)) || rows[0];
+};
+
 const getActiveEnrollmentForStudentUser = async ({ userId, academicYearId }) => {
   const student = await Student.findOne({ userId }).select("_id").lean();
   if (!student) return null;
@@ -33,11 +46,7 @@ const getActiveEnrollmentForStudentUser = async ({ userId, academicYearId }) => 
   if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) {
     enrollmentQuery.academicYearId = academicYearId;
   }
-
-  return StudentEnrollment.findOne(enrollmentQuery)
-    .sort({ createdAt: -1 })
-    .select("schoolId academicYearId schoolClassId sectionId")
-    .lean();
+  return currentEnrollment(enrollmentQuery);
 };
 
 const getParentChildEnrollment = async ({ parentId, studentUserId, academicYearId }) => {
@@ -55,11 +64,7 @@ const getParentChildEnrollment = async ({ parentId, studentUserId, academicYearI
   if (academicYearId && mongoose.Types.ObjectId.isValid(academicYearId)) {
     enrollmentQuery.academicYearId = academicYearId;
   }
-
-  return StudentEnrollment.findOne(enrollmentQuery)
-    .sort({ createdAt: -1 })
-    .select("schoolId academicYearId schoolClassId sectionId")
-    .lean();
+  return currentEnrollment(enrollmentQuery);
 };
 
 const normalizeExamPayload = (payload = {}) => ({

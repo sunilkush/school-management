@@ -1713,6 +1713,11 @@ const getMyChildren = asyncHandler(async (req, res) => {
   const parentId = req.user?._id;
   const schoolId = req.user?.schoolId;
 
+  // A child promoted ahead of time has two Active enrollments: this year's class and next year's.
+  // Taking the newest showed next year's class (Class 2 for a child still in Class 1). The class
+  // a parent should see is the one in the school's active year; the newest is only a fallback.
+  const activeYear = await AcademicYear.findOne({ schoolId, $or: [{ isActive: true }, { status: "active" }] }).select("_id").lean();
+
   const children = await Student.aggregate([
     {
       $match: {
@@ -1752,7 +1757,8 @@ const getMyChildren = asyncHandler(async (req, res) => {
               status: "Active",
             },
           },
-          { $sort: { createdAt: -1 } },
+          { $addFields: { inActiveYear: { $eq: ["$academicYearId", activeYear?._id || null] } } },
+          { $sort: { inActiveYear: -1, createdAt: -1 } },
           { $limit: 1 },
         ],
         as: "enrollment",
