@@ -7,6 +7,9 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { resolveSchoolId } from "../utils/resolveSchoolId.js";
+
+// Who may publish a circular, and so correct or remove one afterwards (routes/circular.routes.js).
+const CIRCULAR_ISSUERS = ["Super Admin", "School Admin", "Principal", "Vice Principal"];
 import {
   acknowledgementStatus,
   nextCircularNumber,
@@ -105,22 +108,47 @@ export const updateCircular = asyncHandler(async (req, res) => {
   const circular = await Circular.findOne({ _id: objectId(req.params.id, "circular id"), schoolId });
   if (!circular) throw new ApiError(404, "Circular not found");
 
-  // The model refuses edits to a published circular; this is the friendlier version of the same
-  // rule, said before the work is thrown away.
-  if (circular.status === "published") {
-    throw new ApiError(400, "A published circular cannot be edited — issue a new one that supersedes it");
+  // A published circular can be corrected by whoever may issue one (School Admin, Principal,
+  // Vice Principal). Who it went to stays as it was; if the wording changes, the confirmations
+  // already given were for the old wording, so they are cleared and people confirm again.
+  const wasPublished = circular.status !== "draft";
+  if (wasPublished && !CIRCULAR_ISSUERS.includes(req.userRole?.name)) {
+    throw new ApiError(403, "Only the school admin or principal can change a circular after it is published");
   }
 
-  const fields = ["title", "body", "category", "attachments", "audience", "requiresAcknowledgement", "acknowledgementText", "isPinned"];
+  const fields = wasPublished
+    ? ["title", "body", "category", "attachments", "requiresAcknowledgement", "acknowledgementText", "isPinned"]
+    : ["title", "body", "category", "attachments", "audience", "requiresAcknowledgement", "acknowledgementText", "isPinned"];
+  const wordingBefore = `${circular.title}
+${circular.body}`;
   fields.forEach((field) => {
     if (req.body[field] !== undefined) circular[field] = req.body[field];
   });
   if (req.body.acknowledgementDeadline !== undefined) {
     circular.acknowledgementDeadline = parseDate(req.body.acknowledgementDeadline, "acknowledgement deadline");
   }
+  if (!circular.title?.trim()) throw new ApiError(400, "A title is required");
+  if (!circular.body?.trim()) throw new ApiError(400, "The circular needs a body");
+
+  let cleared = 0;
+  if (wasPublished) {
+    circular.$locals.allowPublishedEdit = true;
+    circular.editedAt = new Date();
+    circular.editedBy = req.user._id;
+    if (wordingBefore !== `${circular.title}
+${circular.body}`) {
+      const r = await CircularAcknowledgement.updateMany(
+        { circularId: circular._id, acknowledgedAt: { $ne: null } },
+        { $set: { acknowledgedAt: null } }
+      );
+      cleared = r.modifiedCount || 0;
+    }
+  }
 
   await circular.save();
-  return res.json(new ApiResponse(200, circular, "Circular updated"));
+  return res.json(new ApiResponse(200, circular, wasPublished
+    ? `Circular updated${cleared ? `; ${cleared} confirmation(s) cleared so people read the new wording` : ""}`
+    : "Circular updated"));
 });
 
 /**
@@ -208,12 +236,15 @@ export const deleteCircular = asyncHandler(async (req, res) => {
   const schoolId = requireSchool(req);
   const circular = await Circular.findOne({ _id: objectId(req.params.id, "circular id"), schoolId });
   if (!circular) throw new ApiError(404, "Circular not found");
-  if (circular.status !== "draft") {
-    throw new ApiError(400, "Only a draft can be deleted — archive a published circular instead");
+  // A draft by anyone who can write one; a published or archived circular only by an issuer.
+  if (circular.status !== "draft" && !CIRCULAR_ISSUERS.includes(req.userRole?.name)) {
+    throw new ApiError(403, "Only the school admin or principal can remove a circular after it is published");
   }
 
+  const wasDraft = circular.status === "draft";
+  await CircularAcknowledgement.deleteMany({ circularId: circular._id });
   await circular.deleteOne();
-  return res.json(new ApiResponse(200, null, "Draft deleted"));
+  return res.json(new ApiResponse(200, null, wasDraft ? "Draft deleted" : "Circular removed"));
 });
 
 /* ══ Reading ══════════════════════════════════════════════════════ */

@@ -83,7 +83,12 @@ const CircularsPage = () => {
     };
     const res = await dispatch(editing ? updateCircular({ id: editing._id, ...payload }) : createCircular(payload));
     if (res.type.endsWith("/fulfilled")) {
-      message.success(editing ? "Draft updated. Not sent yet: press Publish on its row." : "Saved as a draft. Nobody can see it yet: press Publish on its row to send it.", 6);
+      message.success(
+        !editing ? "Saved as a draft. Nobody can see it yet: press Publish on its row to send it."
+          : editing.status === "draft" ? "Draft updated. Not sent yet: press Publish on its row."
+            : "Circular updated. If the wording changed, earlier confirmations were cleared so people read it again.",
+        6,
+      );
       setModalOpen(false);
       load();
     } else {
@@ -109,7 +114,7 @@ const CircularsPage = () => {
 
   const remove = async (circular) => {
     const res = await dispatch(deleteCircular(circular._id));
-    if (deleteCircular.fulfilled.match(res)) { message.success("Draft deleted"); load(); }
+    if (deleteCircular.fulfilled.match(res)) { message.success(circular.status === "draft" ? "Draft deleted" : "Circular removed"); load(); }
     else message.error(res.payload || "Could not delete");
   };
 
@@ -174,7 +179,7 @@ const CircularsPage = () => {
               <Button size="small" onClick={() => openEditor(r)}>Edit</Button>
               <Popconfirm
                 title="Publish this circular?"
-                description="Once published the wording cannot be changed — a correction has to be a new circular."
+                description="It is sent to everyone in its audience. You can still correct or remove it afterwards."
                 onConfirm={() => publish(r)}
               >
                 <Button size="small" type="primary" icon={<SendOutlined />}>Publish</Button>
@@ -187,11 +192,24 @@ const CircularsPage = () => {
           {r.status === "published" && (
             <>
               <Button size="small" onClick={() => openDrawer(r)}>Who has read it</Button>
+              <Button size="small" onClick={() => openEditor(r)}>Edit</Button>
               <Button size="small" onClick={() => archive(r)}>Archive</Button>
+              <Popconfirm
+                title="Remove this circular?"
+                description="It disappears for everyone it was sent to, with its read confirmations."
+                okText="Remove" okButtonProps={{ danger: true }} onConfirm={() => remove(r)}
+              >
+                <Button size="small" danger>Delete</Button>
+              </Popconfirm>
             </>
           )}
           {r.status === "archived" && (
-            <Button size="small" onClick={() => openDrawer(r)}>View</Button>
+            <>
+              <Button size="small" onClick={() => openDrawer(r)}>View</Button>
+              <Popconfirm title="Remove this circular?" okText="Remove" okButtonProps={{ danger: true }} onConfirm={() => remove(r)}>
+                <Button size="small" danger>Delete</Button>
+              </Popconfirm>
+            </>
           )}
         </div>
       ),
@@ -264,10 +282,16 @@ const CircularsPage = () => {
       {/* ── Write / edit ── */}
       <Modal
         open={modalOpen} width={720}
-        title={editing ? "Edit draft" : "New circular"}
+        title={!editing ? "New circular" : editing.status === "draft" ? "Edit draft" : `Edit circular ${editing.circularNumber || ""}`}
         onCancel={() => setModalOpen(false)} onOk={save}
-        confirmLoading={actionLoading} okText={editing ? "Save draft" : "Save as draft"}
+        confirmLoading={actionLoading} okText={!editing ? "Save as draft" : editing.status === "draft" ? "Save draft" : "Save changes"}
       >
+        {editing && editing.status !== "draft" && (
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
+            This circular is already published. Who it went to cannot be changed here. If you change the title or text,
+            people who had confirmed reading it are asked to confirm again, and it is marked as edited.
+          </div>
+        )}
         <Form form={form} layout="vertical" className="u-mt-4">
           <div style={{ display: "flex", gap: 12 }}>
             <Form.Item name="title" label="Title" rules={[{ required: true }]} className="u-grow">
@@ -290,11 +314,11 @@ const CircularsPage = () => {
           </p>
           <div style={{ display: "flex", gap: 12 }}>
             <Form.Item name="roles" label="Roles" className="u-grow">
-              <Select mode="multiple" allowClear placeholder="Everyone"
+              <Select mode="multiple" allowClear placeholder="Everyone" disabled={Boolean(editing && editing.status !== "draft")}
                       options={ROLES.map((r) => ({ value: r, label: r }))} />
             </Form.Item>
             <Form.Item name="schoolClassIds" label="Classes" className="u-grow">
-              <Select mode="multiple" allowClear placeholder="All classes" optionFilterProp="label"
+              <Select mode="multiple" allowClear placeholder="All classes" optionFilterProp="label" disabled={Boolean(editing && editing.status !== "draft")}
                       options={schoolClasses.map((c) => ({ value: c._id, label: c.name }))} />
             </Form.Item>
           </div>

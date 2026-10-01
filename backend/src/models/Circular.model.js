@@ -77,6 +77,9 @@ const circularSchema = new Schema(
     status: { type: String, enum: CIRCULAR_STATUSES, default: "draft", index: true },
     publishedAt: { type: Date, default: null },
     archivedAt: { type: Date, default: null },
+    /** Set when an issuer changes a published circular; readers see that it was edited. */
+    editedAt: { type: Date, default: null },
+    editedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
 
     /** Set when this circular replaces an earlier one, because a published one is never edited. */
     supersedesId: { type: Schema.Types.ObjectId, ref: "Circular", default: null },
@@ -107,6 +110,9 @@ circularSchema.post("init", function captureStatus() {
 circularSchema.pre("save", function blockPublishedEdits(next) {
   if (this.isNew) return next();
   if (this.$locals.originalStatus !== "published") return next();
+  // An issuer correcting a published circular (controllers/circular.controllers.js updateCircular):
+  // allowed on purpose, recorded in editedAt, and it asks readers to confirm again.
+  if (this.$locals.allowPublishedEdit) return next();
 
   const mutable = new Set([
     "status", "archivedAt", "isPinned", "supersededById",

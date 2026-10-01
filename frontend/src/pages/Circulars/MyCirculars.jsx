@@ -62,7 +62,7 @@ const MyCirculars = () => {
             {c.title}
           </div>
           <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-            {c.circularNumber} · {c.category} · {dayjs(c.publishedAt).format("D MMM YYYY")}
+            {c.circularNumber} · {c.category} · {dayjs(c.publishedAt).format("D MMM YYYY")}{c.editedAt ? ` · edited ${dayjs(c.editedAt).format("D MMM")}` : ""}
             {c.issuedBy?.name ? ` · ${c.issuedBy.name}` : ""}
           </div>
           <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 8 }}>
@@ -146,7 +146,7 @@ const MyCirculars = () => {
           <>
             <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
               {current.circularNumber} · {current.category}
-              {current.publishedAt ? ` · ${dayjs(current.publishedAt).format("D MMM YYYY")}` : ""}
+              {current.publishedAt ? ` · ${dayjs(current.publishedAt).format("D MMM YYYY")}` : ""}{current.editedAt ? ` · edited ${dayjs(current.editedAt).format("D MMM YYYY")}` : ""}
             </div>
 
             {current.supersededById && (
