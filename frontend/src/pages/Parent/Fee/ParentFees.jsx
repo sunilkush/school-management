@@ -39,7 +39,7 @@ const ParentFees = () => {
     <>
       <PageHeader
         title="Fees"
-        subtitle="Fee structure, due installments and online payment for your child"
+        subtitle="This year's fee, what is due and online payment for your child"
         icon={<WalletOutlined />}
         extra={
           <Space wrap>

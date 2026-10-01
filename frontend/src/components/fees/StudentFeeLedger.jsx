@@ -20,6 +20,17 @@ import {
 
 const TABLE_CLS = "fee-ledger-tbl";
 
+// A family sees one figure per period, not one per fee head: "Tuition Fee · Oct 2026" and
+// "Transport Fee · Oct 2026" become a single "Oct 2026" line.
+const byPeriod = (lines) => {
+  const out = new Map();
+  lines.forEach((l) => {
+    const label = l.label.includes(" · ") ? l.label.split(" · ").slice(1).join(" · ") : "Fee";
+    out.set(label, { label, amount: (out.get(label)?.amount || 0) + Number(l.amount || 0) });
+  });
+  return [...out.values()];
+};
+
 const panelTitle = (icon, title, sub) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
     <div style={iconWell("var(--primary)", 32)}>{icon}</div>
@@ -47,6 +58,8 @@ const panelTitle = (icon, title, sub) => (
  * mode "online" (Parent / Student): pays the chosen installments in full through the school's
  * Razorpay account. Here the schedule is one line per period ("Oct 2026 — ₹7,000") rather than
  * one per fee head, and whatever is due by today is selected already and cannot be left out.
+ * Fee heads are not shown at all in this mode — the family sees the year's total and what each
+ * period comes to, never Tuition / Transport / … separately.
  */
 const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student, onPaid }) => {
   const dispatch = useDispatch();
@@ -156,9 +169,14 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
 
   /* ── Actions ───────────────────────────────────────────────────── */
 
+  const linesFor = (payment, rowsPaid) => {
+    const lines = receiptLines(payment, rowsPaid);
+    return isCollect ? lines : byPeriod(lines);
+  };
+
   const afterPayment = (payment, rowsPaid) => {
     setSelectedIds([]);
-    setReceipt({ payment, lines: receiptLines(payment, rowsPaid) });
+    setReceipt({ payment, lines: linesFor(payment, rowsPaid) });
     load();
     onPaid?.(payment);
   };
@@ -372,7 +390,6 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       render: (_, p) => (
         <div>
           <div className="u-strong">{p.label}</div>
-          <div className="u-meta">{p.lines.map((l) => l.feeHeadName).join(" · ")}</div>
         </div>
       ),
     },
@@ -410,7 +427,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
     {
       title: "For",
       render: (_, p) => {
-        const lines = receiptLines(p);
+        const lines = linesFor(p);
         if (!lines.length) return <span className="u-muted">—</span>;
         const text = lines.map((l) => l.label).join(", ");
         return (
@@ -436,7 +453,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       title: "",
       align: "right",
       render: (_, p) => (
-        <Button size="small" icon={<PrinterOutlined />} onClick={() => setReceipt({ payment: p, lines: receiptLines(p) })}>
+        <Button size="small" icon={<PrinterOutlined />} onClick={() => setReceipt({ payment: p, lines: linesFor(p) })}>
           Receipt
         </Button>
       ),
@@ -471,7 +488,8 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
         />
       )}
 
-      {/* 2 ── Fee structure */}
+      {/* 2 ── Fee structure (school office only) */}
+      {isCollect && (
       <div className="section-panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
           {panelTitle(<RupeeIcon />, "Fee Structure", student?.className || "Assigned fee heads for this year")}
@@ -495,9 +513,10 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
           </div>
         </div>
       </div>
+      )}
 
       {/* 3 ── Pay plan */}
-      {planOptions.length > 0 && (
+      {planOptions.some((o) => o.count > 0) && (
         <div className="section-panel">
           {panelTitle(
             <CalendarOutlined />,
@@ -587,7 +606,9 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
             type="warning"
             showIcon
             style={{ marginBottom: 14, borderRadius: 12 }}
-            message={`${headsWithoutSchedule.map((h) => h.feeHeadName).join(", ")} ${headsWithoutSchedule.length > 1 ? "have" : "has"} no installments yet`}
+            message={isCollect
+              ? `${headsWithoutSchedule.map((h) => h.feeHeadName).join(", ")} ${headsWithoutSchedule.length > 1 ? "have" : "has"} no installments yet`
+              : "Part of this year's fee has no installments yet"}
             description={isCollect ? undefined : "Please contact the school office."}
             action={isCollect ? <Button size="small" onClick={backfill}>Generate</Button> : undefined}
           />
@@ -615,19 +636,6 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
             size="middle"
             scroll={{ x: 820 }}
             pagination={{ pageSize: 12, size: "small", hideOnSinglePage: true }}
-            expandable={{
-              rowExpandable: (p) => p.lines.length > 1,
-              expandedRowRender: (p) => (
-                <div style={{ maxWidth: 520 }}>
-                  {p.lines.map((l) => (
-                    <div key={l._id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "3px 0" }}>
-                      <span>{l.feeHeadName}{l.fineAmount > 0 ? ` (incl. fine ${money(l.fineAmount)})` : ""}</span>
-                      <span style={{ fontWeight: 600 }}>{money(l.balance > 0 ? l.balance : l.amount)}</span>
-                    </div>
-                  ))}
-                </div>
-              ),
-            }}
             rowSelection={{
               selectedRowKeys: selectedPeriodKeys,
               hideSelectAll: true,
@@ -741,6 +749,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       </Modal>
 
       {/* Counter collection */}
+      {isCollect && (
       <Modal
         title="Collect Payment"
         open={collectOpen}
@@ -799,6 +808,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
           </Form.Item>
         </Form>
       </Modal>
+      )}
 
       {/* Receipt */}
       <Modal
