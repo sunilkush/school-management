@@ -19,6 +19,8 @@ import {
 } from "./feeUi.jsx";
 
 const TABLE_CLS = "fee-ledger-tbl";
+// The family view is compact: tighter panels than the office's collect screen.
+const TIGHT = { padding: "12px 16px", marginBottom: 12 };
 
 // A family sees one figure per period, not one per fee head: "Tuition Fee · Oct 2026" and
 // "Transport Fee · Oct 2026" become a single "Oct 2026" line.
@@ -31,9 +33,9 @@ const byPeriod = (lines) => {
   return [...out.values()];
 };
 
-const panelTitle = (icon, title, sub) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-    <div style={iconWell("var(--primary)", 32)}>{icon}</div>
+const panelTitle = (icon, title, sub, tight = false) => (
+  <div style={{ display: "flex", alignItems: "center", gap: tight ? 8 : 10, marginBottom: tight ? 8 : 14 }}>
+    <div style={iconWell("var(--primary)", tight ? 26 : 32)}>{icon}</div>
     <div>
       <div className="u-title">{title}</div>
       {sub && <div className="u-meta">{sub}</div>}
@@ -463,69 +465,65 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
           <div
             className="section-panel"
             style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20, flexWrap: "wrap", padding: 24,
+              ...TIGHT, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap",
               background: selectedPeriods.length ? (totals?.overdueAmount > 0 ? "var(--danger-light)" : "var(--primary-light)") : "var(--success-light)",
             }}
           >
-            <div style={{ minWidth: 220 }}>
+            <div style={{ minWidth: 200 }}>
               {selectedPeriods.length > 0 ? (
                 <>
-                  <div style={{ fontSize: 14, color: "var(--text-secondary)", fontWeight: 600 }}>To pay now</div>
-                  <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1.2, color: "var(--text-primary)" }}>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>To pay now</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.2, color: "var(--text-primary)" }}>
                     {quote.loading ? <Spin /> : quote.error ? <span style={{ fontSize: 15, color: "var(--danger)" }}>{quote.error}</span> : money(selectedTotal)}
                   </div>
-                  <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
                     For {selectedPeriods.length > 3
                       ? `${selectedPeriods.slice(0, 2).map((x) => x.label).join(", ")} +${selectedPeriods.length - 2} more`
                       : selectedPeriods.map((x) => x.label).join(", ")}
                   </div>
                   {totals?.overdueAmount > 0 && (
-                    <div style={{ fontSize: 13, color: "var(--danger-hover)", fontWeight: 600, marginTop: 6 }}>
+                    <div style={{ fontSize: 12, color: "var(--danger-hover)", fontWeight: 600, marginTop: 2 }}>
                       <ExclamationCircleOutlined /> {money(totals.overdueAmount)} of this is overdue{fineRule ? ` · ${fineRule}` : ""}
                     </div>
                   )}
                 </>
               ) : totals?.dueAmount > 0 ? (
                 <>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}><CheckCircleFilled style={{ color: "var(--success)" }} /> Nothing to pay right now</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text-primary)" }}><CheckCircleFilled style={{ color: "var(--success)" }} /> Nothing to pay right now</div>
                   {nextPeriod && (
-                    <div style={{ fontSize: 15, color: "var(--text-secondary)", marginTop: 6 }}>
+                    <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>
                       Next: <b>{money(nextPeriod.balance)}</b> for {nextPeriod.label}, by {fmtDate(nextPeriod.dueDate)}
                     </div>
                   )}
                 </>
               ) : (
-                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}><CheckCircleFilled style={{ color: "var(--success)" }} /> This year's fee is fully paid</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text-primary)" }}><CheckCircleFilled style={{ color: "var(--success)" }} /> This year's fee is fully paid</div>
               )}
             </div>
             {selectedPeriods.length > 0 ? (
-              <Button type="primary" size="large" icon={<CreditCardOutlined />} disabled={!quoteReady} loading={paying} onClick={startOnline} style={{ height: 52, padding: "0 32px", fontSize: 16, fontWeight: 700 }}>
+              <Button type="primary" icon={<CreditCardOutlined />} disabled={!quoteReady} loading={paying} onClick={startOnline} style={{ height: 38, padding: "0 22px", fontWeight: 700 }}>
                 Pay {quoteReady ? money(selectedTotal) : ""}
               </Button>
             ) : nextPeriod ? (
-              <Button size="large" onClick={() => togglePeriod(nextPeriod)} style={{ height: 48 }}>Pay {nextPeriod.label} in advance</Button>
+              <Button onClick={() => togglePeriod(nextPeriod)}>Pay {nextPeriod.label} in advance</Button>
             ) : null}
           </div>
 
           {/* The year at a glance */}
-          <div className="section-panel">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-              <div>
-                <div className="u-meta">This year's fee</div>
-                <div style={{ fontSize: 24, fontWeight: 800 }}>{money(totals?.yearlyAmount)}</div>
-              </div>
-              <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
-                <div><div className="u-meta">Paid</div><div style={{ fontSize: 18, fontWeight: 700, color: "var(--success)" }}>{money(totals?.paidAmount)}</div></div>
-                <div><div className="u-meta">Left to pay</div><div style={{ fontSize: 18, fontWeight: 700 }}>{money(totals?.dueAmount)}</div></div>
-                {Number(totals?.fineAmount) > 0 && (
-                  <div><div className="u-meta">Late fine</div><div style={{ fontSize: 18, fontWeight: 700, color: "var(--danger)" }}>{money(totals.fineAmount)}</div></div>
-                )}
-              </div>
+          <div className="section-panel" style={TIGHT}>
+            <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "baseline", fontSize: 13 }}>
+              <span><span className="u-meta">This year's fee </span><b style={{ fontSize: 15 }}>{money(totals?.yearlyAmount)}</b></span>
+              <span><span className="u-meta">Paid </span><b style={{ fontSize: 15, color: "var(--success)" }}>{money(totals?.paidAmount)}</b></span>
+              <span><span className="u-meta">Left to pay </span><b style={{ fontSize: 15 }}>{money(totals?.dueAmount)}</b></span>
+              {Number(totals?.fineAmount) > 0 && (
+                <span><span className="u-meta">Late fine </span><b style={{ fontSize: 15, color: "var(--danger)" }}>{money(totals.fineAmount)}</b></span>
+              )}
             </div>
             <Progress
               percent={totals?.yearlyAmount > 0 ? Math.min(Math.round((Number(totals?.paidAmount || 0) / totals.yearlyAmount) * 100), 100) : 0}
               strokeColor="var(--success)"
-              style={{ marginTop: 12, marginBottom: 0 }}
+              size="small"
+              style={{ marginTop: 4, marginBottom: 0 }}
             />
           </div>
         </>
@@ -560,26 +558,25 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
 
       {/* 3 ── Pay plan */}
       {planOptions.some((o) => o.count > 0) && payPlan && !planOpen && (
-        <div className="section-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={iconWell("var(--primary)", 32)}><CalendarOutlined /></div>
-            <div>
-              <div className="u-title">You pay {FREQUENCIES[payPlan]?.label.toLowerCase()}</div>
-              <div className="u-meta">The fee left for this year is split evenly over each {FREQUENCIES[payPlan]?.per}</div>
-            </div>
+        <div className="section-panel" style={{ ...TIGHT, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 13 }}>
+            <CalendarOutlined style={{ color: "var(--primary)", marginRight: 8 }} />
+            <b>You pay {FREQUENCIES[payPlan]?.label.toLowerCase()}</b>
+            <span className="u-meta"> · the fee left is split evenly over each {FREQUENCIES[payPlan]?.per}</span>
           </div>
-          {canChoosePlan && <Button onClick={() => setPlanOpen(true)}>Change</Button>}
+          {canChoosePlan && <Button size="small" onClick={() => setPlanOpen(true)}>Change</Button>}
         </div>
       )}
 
       {planOptions.some((o) => o.count > 0) && (!payPlan || planOpen) && (
-        <div className="section-panel">
+        <div className="section-panel" style={isCollect ? undefined : TIGHT}>
           {panelTitle(
             <CalendarOutlined />,
             "How would you like to pay?",
-            canChoosePlan ? "The year's fee is split evenly over the option you pick. You can change it later." : "Chosen by your parent or the school office"
+            canChoosePlan ? "The year's fee is split evenly over the option you pick. You can change it later." : "Chosen by your parent or the school office",
+            !isCollect
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10 }}>
             {planOptions.map((o) => {
               const current = payPlan === o.plan;
               const f = FREQUENCIES[o.plan];
@@ -590,19 +587,19 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
                   disabled={!canChoosePlan || current || !(o.count > 0)}
                   onClick={() => setPlanPick(o)}
                   style={{
-                    textAlign: "left", padding: 16, borderRadius: 16, cursor: !canChoosePlan || current ? "default" : "pointer",
+                    textAlign: "left", padding: "10px 12px", borderRadius: 12, cursor: !canChoosePlan || current ? "default" : "pointer",
                     background: current ? f.bg : "var(--surface)",
                     border: `2px solid ${current ? f.color : "var(--border-muted)"}`,
                     color: "var(--text-primary)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontWeight: 700, fontSize: 15, color: f.color }}>{o.label}</span>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: f.color }}>{o.label}</span>
                     {current && <span style={{ fontSize: 12, fontWeight: 700, color: f.color }}><CheckCircleFilled /> Your plan</span>}
                   </div>
                   {o.count > 0 ? (
                     <>
-                      <div style={{ fontSize: 24, fontWeight: 800, marginTop: 8 }}>{money(o.amountEach)}</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, marginTop: 2 }}>{money(o.amountEach)}</div>
                       <div className="u-meta">
                         {o.count === 1 ? "one payment" : `per ${f.per} · ${o.count} payments`} · first on {fmtDate(o.firstDue)}
                       </div>
@@ -623,9 +620,9 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       )}
 
       {/* 4 ── Installments */}
-      <div className="section-panel">
+      <div className="section-panel" style={isCollect ? undefined : TIGHT}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-          {panelTitle(<ClockCircleOutlined />, isCollect ? "Installments" : "Payment schedule", isCollect ? (fineRule || `Due on the ${settings?.dueDay ?? 10}th of each period`) : "The whole year, in order. Tick a later one to pay it in advance.")}
+          {panelTitle(<ClockCircleOutlined />, isCollect ? "Installments" : "Payment schedule", isCollect ? (fineRule || `Due on the ${settings?.dueDay ?? 10}th of each period`) : "The whole year, in order. Tick a later one to pay it in advance.", !isCollect)}
           {isCollect && <Segmented
             value={view}
             onChange={setView}
@@ -661,7 +658,7 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
         ) : null}
 
         {!isCollect && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 8 }}>
             {periods.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No installments yet" />}
             {periods.map((period) => {
               const paid = !(period.balance > 0);
@@ -672,30 +669,27 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
                   key={period.key}
                   onClick={() => togglePeriod(period)}
                   style={{
-                    display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 14,
-                    border: `1.5px solid ${picked ? "var(--primary)" : "var(--border-muted)"}`,
+                    display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", borderRadius: 10,
+                    border: `1px solid ${picked ? "var(--primary)" : "var(--border-muted)"}`,
                     background: paid ? "var(--surface-soft)" : picked ? "var(--primary-light)" : "var(--surface)",
                     cursor: paid || period.dueNow ? "default" : "pointer",
                     opacity: paid ? 0.75 : 1,
                   }}
                 >
-                  <div style={{ width: 22, textAlign: "center" }}>
+                  <div style={{ width: 18, textAlign: "center" }}>
                     {paid
-                      ? <CheckCircleFilled style={{ color: "var(--success)", fontSize: 20 }} />
+                      ? <CheckCircleFilled style={{ color: "var(--success)", fontSize: 16 }} />
                       : <Checkbox checked={picked} disabled={period.dueNow} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 15 }}>{period.label}</div>
-                    <div style={{ fontSize: 13, color: overdue ? "var(--danger-hover)" : "var(--text-secondary)", fontWeight: overdue ? 600 : 400 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3 }}>{period.label}</div>
+                    <div style={{ fontSize: 11.5, lineHeight: 1.3, color: overdue ? "var(--danger-hover)" : "var(--text-secondary)", fontWeight: overdue ? 600 : 400 }}>
                       {paid ? "Paid" : overdue ? `Was due ${fmtDate(period.dueDate)}` : period.dueNow ? `Due today (${fmtDate(period.dueDate)})` : `Due ${fmtDate(period.dueDate)}`}
                       {!paid && period.paidAmount > 0 ? ` · ${money(period.paidAmount)} already paid` : ""}
                       {period.fineAmount > 0 ? ` · incl. late fine ${money(period.fineAmount)}` : ""}
                     </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontWeight: 800, fontSize: 17 }}>{money(paid ? period.amount : period.balance)}</div>
-                    {!paid && <FeeStatusTag status={period.dueNow && !overdue ? "pending" : period.status} paidAmount={period.paidAmount} />}
-                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 14, whiteSpace: "nowrap" }}>{money(paid ? period.amount : period.balance)}</div>
                 </div>
               );
             })}
@@ -728,9 +722,9 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
           style={{
             position: "sticky",
             bottom: 0,
-            marginTop: 14,
-            padding: "12px 16px",
-            borderRadius: 14,
+            marginTop: isCollect ? 14 : 10,
+            padding: isCollect ? "12px 16px" : "8px 12px",
+            borderRadius: isCollect ? 14 : 10,
             background: selectedIds.length ? "var(--primary-light)" : "var(--surface-soft)",
             border: "1px solid var(--border-muted)",
             display: "flex",
@@ -763,15 +757,15 @@ const StudentFeeLedger = ({ studentId, academicYearId, mode = "online", student,
       </div>
 
       {/* 5 ── Payment history */}
-      <div className="section-panel">
-        {panelTitle(<PrinterOutlined />, "Payment History", "Receipts for this student")}
+      <div className="section-panel" style={isCollect ? undefined : TIGHT}>
+        {panelTitle(<PrinterOutlined />, "Payment History", "Receipts for this student", !isCollect)}
         <div className={`${TABLE_CLS} data-table`} style={{ overflowX: "auto" }}>
           <Table
             rowKey="_id"
             columns={historyColumns}
             dataSource={history.rows}
             loading={history.loading}
-            size="middle"
+            size={isCollect ? "middle" : "small"}
             scroll={{ x: 720 }}
             pagination={{ pageSize: 8, size: "small", hideOnSinglePage: true }}
             locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No payments yet" /> }}
