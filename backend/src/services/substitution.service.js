@@ -6,6 +6,11 @@ import { Substitution } from "../models/Substitution.model.js";
 import { Teacher } from "../models/teacherAssignment.model.js";
 import { TimeSlot } from "../models/TimeSlot.model.js";
 import { Timetable } from "../models/Timetable.model.js";
+import { User } from "../models/user.model.js";
+import { Role } from "../models/Roles.model.js";
+
+// Roles whose people take classes, and so can cover one.
+const TEACHING_ROLES = ["Teacher", "Class Teacher", "Sports Teacher", "Subject Coordinator"];
 
 /**
  * Works out who is missing on a given date, which periods that leaves uncovered, and who is
@@ -101,20 +106,41 @@ export const suggestSubstitutes = async ({
 }) => {
   const excluded = new Set(excludeTeacherIds.map(String));
 
-  // Everyone who teaches anything this year is a candidate pool.
-  const assignments = await Teacher.find({ schoolId, academicYearId, status: "active" })
-    .select("teacherId subjectId")
-    .populate("teacherId", "name email")
-    .lean();
+  // The candidate pool is every teacher of the school: the staff in a teaching role, plus anyone
+  // on this year's sections or timetable. It used to be read only from the Teacher assignment
+  // collection, which nothing but the seed script writes, so a teacher added through the app was
+  // never offered (and could not be assigned: "That teacher is not free for this period"), and a
+  // school that was not seeded had no substitutes at all.
+  const roleIds = await Role.find({ name: { $in: TEACHING_ROLES } }).distinct("_id");
+  const [staff, sections, timetableRows, assignments] = await Promise.all([
+    User.find({ schoolId, roleId: { $in: roleIds }, isActive: { $ne: false } }).select("_id").lean(),
+    Section.find({ schoolId, academicYearId }).select("classTeacherId subjects").lean(),
+    Timetable.find({ schoolId, academicYearId, status: "active", teacherId: { $ne: null } }).select("teacherId subjectId").lean(),
+    Teacher.find({ schoolId, academicYearId, status: "active" }).select("teacherId subjectId").lean(),
+  ]);
 
-  const pool = new Map();
-  for (const a of assignments) {
-    if (!a.teacherId?._id) continue;
-    const key = String(a.teacherId._id);
-    if (excluded.has(key)) continue;
-    if (!pool.has(key)) pool.set(key, { teacher: a.teacherId, subjectIds: new Set() });
-    if (a.subjectId) pool.get(key).subjectIds.add(String(a.subjectId));
+  const subjectsOf = new Map();
+  const note = (teacherId, subjectId) => {
+    if (!teacherId) return;
+    const key = String(teacherId);
+    if (excluded.has(key)) return;
+    if (!subjectsOf.has(key)) subjectsOf.set(key, new Set());
+    if (subjectId) subjectsOf.get(key).add(String(subjectId));
+  };
+  staff.forEach((u) => note(u._id));
+  for (const sec of sections) {
+    note(sec.classTeacherId);
+    (sec.subjects || []).forEach((x) => note(x.teacherId, x.subjectId));
   }
+  timetableRows.forEach((r) => note(r.teacherId, r.subjectId));
+  assignments.forEach((a) => note(a.teacherId, a.subjectId));
+  if (subjectsOf.size === 0) return [];
+
+  // Only people who still have an active account in this school.
+  const people = await User.find({ _id: { $in: [...subjectsOf.keys()] }, schoolId, isActive: { $ne: false } })
+    .select("name email")
+    .lean();
+  const pool = new Map(people.map((u) => [String(u._id), { teacher: u, subjectIds: subjectsOf.get(String(u._id)) }]));
   if (pool.size === 0) return [];
 
   const teacherIds = [...pool.keys()];
