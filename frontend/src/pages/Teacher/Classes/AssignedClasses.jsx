@@ -1,236 +1,177 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Row, Col, Empty, Spin, Input } from "antd";
-import {
-  BookOutlined,
-  TeamOutlined,
-  EyeOutlined,
-  CalendarOutlined,
-  SearchOutlined,
-  ReadOutlined,
-  AppstoreOutlined,
-} from "@ant-design/icons";
+import { Button, Empty, Input, Segmented, Spin, Tag, Tooltip } from "antd";
+import { CalendarOutlined, ReadOutlined, RightOutlined, SearchOutlined, TeamOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchAssignedClasses } from "../../../features/classSlice.js";
 import PageHeader from "../../../components/layout/PageHeader";
-import { statGrid, iconWell, pill } from "../../../styles/pageStyles";
 import { getRoleName, getRolePath } from "../../../utils/roles";
 
-const StatCard = ({ icon, label, value, color }) => (
-  <div className="section-panel is-header-strip">
-    <div style={iconWell(color, 42)}>{icon}</div>
-    <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{label}</div>
-      <div className="u-title-lg">{value}</div>
-    </div>
-  </div>
-);
-
-const ClassCard = ({ cls, onView, onAttendance }) => {
-  const sectionNames = cls?.sections?.length
-    ? cls.sections.map((sec) => sec?.sectionId?.name).filter(Boolean).join(", ")
-    : "N/A";
-  const roleLabel = cls?.role?.[0] || "Teacher";
-  const isClassTeacher = /class teacher/i.test(roleLabel);
-
-  return (
-    <div
-      className="section-panel" style={{ marginBottom: 0, display: "flex", flexDirection: "column", gap: 14, height: "100%", transition: "box-shadow 0.2s ease, transform 0.2s ease" }}
-      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 18px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
-    >
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0 }}>
-          <div style={iconWell("var(--primary)", 44)}>
-            <BookOutlined />
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div className="u-title">
-              {cls?.name || "Class"}
-            </div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-              Sections: {sectionNames}
-            </div>
-          </div>
-        </div>
-        <span style={pill(
-          isClassTeacher ? "var(--success-hover)" : "var(--primary-hover)",
-          isClassTeacher ? "rgba(220,252,231,0.5)" : "rgba(219,234,254,0.4)"
-        )}>
-          {roleLabel}
-        </span>
-      </div>
-
-      <div style={{ borderTop: "1px solid var(--border-muted)" }} />
-
-      {/* Subjects */}
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
-          Subjects
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {cls?.subjects?.length ? (
-            cls.subjects.map((sub, i) => (
-              <span key={i} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>
-                {sub?.subjectId?.name || "Subject"}
-              </span>
-            ))
-          ) : (
-            <span className="u-meta">No subjects assigned</span>
-          )}
-        </div>
-      </div>
-
-      {/* Students */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-        <div className="u-row">
-          <TeamOutlined className="u-muted" />
-          <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{cls?.studentCount ?? 0} Students</span>
-        </div>
-        <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>Active</span>
-      </div>
-
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-        <button
-          onClick={() => onView(cls)}
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            padding: "9px 12px",
-            borderRadius: 10,
-            border: "none",
-            background: "var(--primary)",
-            color: "#fff",
-            fontWeight: 600,
-            fontSize: 13,
-            cursor: "pointer",
-          }}
-        >
-          <EyeOutlined /> View Class
-        </button>
-        <button
-          onClick={() => onAttendance(cls)}
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            padding: "9px 12px",
-            borderRadius: 10,
-            border: "1px solid var(--border-muted)",
-            background: "var(--surface)",
-            color: "var(--text-primary)",
-            fontWeight: 600,
-            fontSize: 13,
-            cursor: "pointer",
-          }}
-        >
-          <CalendarOutlined /> Take Attendance
-        </button>
-      </div>
-    </div>
-  );
+// "Class 2" before "Class 10": compare the number in the name, then the name.
+const classOrder = (a, b) => {
+  const n = (s) => { const m = /\d+/.exec(s || ""); return m ? Number(m[0]) : Number.MAX_SAFE_INTEGER; };
+  return n(a.name) - n(b.name) || String(a.name).localeCompare(String(b.name));
 };
 
-/* ── Main page ──────────────────────────────────────────────────────── */
+const Chip = ({ value, label, color = "var(--primary)" }) => (
+  <span style={{
+    fontSize: 12, padding: "3px 11px", borderRadius: 20, color: "var(--text-secondary)",
+    border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`, background: `color-mix(in srgb, ${color} 7%, transparent)`,
+  }}>
+    <b style={{ color, fontSize: 14 }}>{value}</b> {label}
+  </span>
+);
+
+/**
+ * The classes a teacher is assigned to this year. Each class is one compact card listing its
+ * sections: how many students, which subjects they teach there, whether they are its class teacher,
+ * and a button straight to that section's attendance.
+ *
+ * It used to show one tall card per class with a raw role string ("class_teacher": the check for
+ * "class teacher" never matched, so the tag was never the class-teacher one) and nothing about the
+ * individual sections, although the API sends all of it.
+ */
 const AssignedClasses = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
+  const [filter, setFilter] = useState("all");
 
-  const { classAssignTeacher = [], loading = false } = useSelector(
-    (state) => state.class || {}
-  );
-
-  const { selectedAcademicYear } = useSelector(
-    (state) => state.academicYear || {}
-  );
+  const { classAssignTeacher = [], loading = false } = useSelector((state) => state.class || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
   const { user } = useSelector((state) => state.auth || {});
   const rolePath = getRolePath(getRoleName(user));
-
   const academicYearId = selectedAcademicYear?._id;
 
   useEffect(() => {
-    dispatch(fetchAssignedClasses({ academicYearId }));
+    if (academicYearId) dispatch(fetchAssignedClasses({ academicYearId }));
   }, [dispatch, academicYearId]);
 
+  const classes = useMemo(() => [...classAssignTeacher].sort(classOrder).map((cls) => ({
+    ...cls,
+    sections: [...(cls.sections || [])].sort((a, b) => String(a.sectionId?.name).localeCompare(String(b.sectionId?.name))),
+    isClassTeacher: (cls.sections || []).some((s) => s.isClassTeacher),
+  })), [classAssignTeacher]);
+
   const stats = useMemo(() => {
-    const totalClasses = classAssignTeacher.length;
-    const totalStudents = classAssignTeacher.reduce((sum, cls) => sum + Number(cls?.studentCount || 0), 0);
-    const totalSections = classAssignTeacher.reduce((sum, cls) => sum + (cls?.sections?.length || 0), 0);
-    const totalSubjects = classAssignTeacher.reduce((sum, cls) => sum + (cls?.subjects?.length || 0), 0);
-    return { totalClasses, totalStudents, totalSections, totalSubjects };
-  }, [classAssignTeacher]);
+    const sections = classes.flatMap((c) => c.sections.map((s) => ({ ...s, className: c.name })));
+    const subjects = new Set(classes.flatMap((c) => (c.subjects || []).map((s) => s.subjectId?.name)).filter(Boolean));
+    return {
+      classes: classes.length,
+      sections: sections.length,
+      students: classes.reduce((sum, c) => sum + Number(c.studentCount || 0), 0),
+      subjects: subjects.size,
+      classTeacherOf: sections.filter((s) => s.isClassTeacher).map((s) => `${s.className}-${s.sectionId?.name}`),
+    };
+  }, [classes]);
 
-  const filteredClasses = useMemo(() => {
-    const keyword = searchText.trim().toLowerCase();
-    if (!keyword) return classAssignTeacher;
-    return classAssignTeacher.filter((cls) => {
-      const name = (cls?.name || "").toLowerCase();
-      const sections = (cls?.sections || []).map((sec) => sec?.sectionId?.name || "").join(" ").toLowerCase();
-      const subjects = (cls?.subjects || []).map((sub) => sub?.subjectId?.name || "").join(" ").toLowerCase();
-      return name.includes(keyword) || sections.includes(keyword) || subjects.includes(keyword);
-    });
-  }, [classAssignTeacher, searchText]);
+  const shown = useMemo(() => {
+    const kw = searchText.trim().toLowerCase();
+    return classes
+      .filter((c) => (filter === "ct" ? c.isClassTeacher : filter === "subject" ? !c.isClassTeacher : true))
+      .filter((c) => !kw || [
+        c.name,
+        ...c.sections.map((s) => s.sectionId?.name),
+        ...(c.subjects || []).map((s) => s.subjectId?.name),
+      ].join(" ").toLowerCase().includes(kw));
+  }, [classes, filter, searchText]);
 
-  const handleView = (cls) => cls?._id && navigate(`/dashboard/${rolePath}/classes/${cls._id}`);
-  const handleAttendance = (cls) =>
-    cls?._id &&
-    navigate(
-      `/dashboard/${rolePath}/attendance/students?classId=${cls._id}&className=${encodeURIComponent(cls?.name || "")}`
-    );
+  const openClass = (cls) => navigate(`/dashboard/${rolePath}/classes/${cls._id}`);
+  const takeAttendance = (cls, sec) => {
+    const params = new URLSearchParams({ classId: cls._id, className: cls.name || "" });
+    if (sec?.sectionId?._id) params.set("sectionId", sec.sectionId._id);
+    navigate(`/dashboard/${rolePath}/attendance/students?${params.toString()}`);
+  };
 
   return (
     <div className="page-wrapper">
       <PageHeader
-        title="My Assigned Classes"
-        subtitle="Manage your classes, subjects & students easily"
+        title="My Classes"
+        subtitle={selectedAcademicYear?.name ? `The classes and sections you teach in ${selectedAcademicYear.name}` : "The classes and sections you teach"}
         icon={<ReadOutlined />}
         extra={
           <Input
-            allowClear
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search by class, section or subject"
-            prefix={<SearchOutlined className="u-muted" />}
-            style={{ width: 260 }}
+            allowClear value={searchText} onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search class, section or subject" prefix={<SearchOutlined className="u-muted" />}
+            style={{ width: 240 }}
           />
         }
       />
 
-      <div style={{ ...statGrid(170), marginTop: 20 }}>
-        <StatCard icon={<AppstoreOutlined />} label="Classes"  value={stats.totalClasses}  color="var(--primary)" />
-        <StatCard icon={<TeamOutlined />}      label="Students" value={stats.totalStudents} color="var(--accent)" />
-        <StatCard icon={<BookOutlined />}      label="Sections" value={stats.totalSections} color="var(--warning)" />
-        <StatCard icon={<ReadOutlined />}      label="Subjects" value={stats.totalSubjects} color="var(--purple)" />
+      <div className="section-panel" style={{ marginTop: 14, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+          <Chip value={stats.classes} label="classes" />
+          <Chip value={stats.sections} label="sections" color="var(--warning)" />
+          <Chip value={stats.students} label="students" color="var(--success)" />
+          <Chip value={stats.subjects} label="subjects" color="var(--purple)" />
+          {stats.classTeacherOf.length > 0 && (
+            <span className="u-muted" style={{ fontSize: 12 }}>Class teacher of {stats.classTeacherOf.join(", ")}</span>
+          )}
+        </div>
+        <Segmented
+          size="small" value={filter} onChange={setFilter}
+          options={[
+            { value: "all", label: "All" },
+            { value: "ct", label: "Class teacher" },
+            { value: "subject", label: "Subject teacher" },
+          ]}
+        />
       </div>
 
-      {/* ── Cards ── */}
       <Spin spinning={loading}>
-        {!loading && filteredClasses.length === 0 ? (
-          <div className="empty-state">
+        {!loading && shown.length === 0 ? (
+          <div className="empty-state" style={{ marginTop: 16 }}>
             <Empty
-              description={
-                searchText
-                  ? "No classes match your search"
-                  : "No Classes Assigned Yet"
-              }
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={classes.length
+                ? "No classes match"
+                : "No classes assigned to you yet. The school admin assigns teachers to sections and subjects under Classes."}
             />
           </div>
         ) : (
-          <Row gutter={[20, 20]}>
-            {filteredClasses.map((cls) => (
-              <Col xs={24} sm={12} lg={8} key={cls?._id}>
-                <ClassCard cls={cls} onView={handleView} onAttendance={handleAttendance} />
-              </Col>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))", gap: 12, marginTop: 12, alignItems: "start" }}>
+            {shown.map((cls) => (
+              <div key={cls._id} className="section-panel" style={{ margin: 0, padding: 0, overflow: "hidden" }}>
+                {/* Class line */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "color-mix(in srgb, var(--primary) 5%, transparent)" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text-primary)" }}>{cls.name || "Class"}</div>
+                    <div className="u-muted" style={{ fontSize: 12 }}>
+                      <TeamOutlined /> {cls.studentCount ?? 0} students · {cls.sections.length} section{cls.sections.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <Button size="small" type="primary" onClick={() => openClass(cls)}>
+                    Open <RightOutlined />
+                  </Button>
+                </div>
+
+                {/* One line per section */}
+                {cls.sections.map((sec) => {
+                  const subjects = (sec.subjects || []).map((s) => s.subjectId?.name).filter(Boolean);
+                  return (
+                    <div key={sec.sectionId?._id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderTop: "1px solid var(--border-muted)" }}>
+                      <span style={{
+                        width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                        fontWeight: 800, fontSize: 13, color: "var(--primary)", background: "color-mix(in srgb, var(--primary) 10%, transparent)",
+                      }}>{sec.sectionId?.name}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          <b>{sec.studentCount ?? 0}</b> <span className="u-muted">students</span>
+                          {sec.isClassTeacher && <Tag color="purple" style={{ marginLeft: 6, marginRight: 0 }}>Class teacher</Tag>}
+                        </div>
+                        <div className="u-muted" style={{ fontSize: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={subjects.join(", ")}>
+                          {subjects.length ? subjects.join(", ") : "No subject assigned"}
+                        </div>
+                      </div>
+                      <Tooltip title={`Take attendance for ${cls.name}-${sec.sectionId?.name}`}>
+                        <Button size="small" icon={<CalendarOutlined />} onClick={() => takeAttendance(cls, sec)}>Attendance</Button>
+                      </Tooltip>
+                    </div>
+                  );
+                })}
+              </div>
             ))}
-          </Row>
+          </div>
         )}
       </Spin>
     </div>
