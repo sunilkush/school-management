@@ -17,6 +17,10 @@ const classOrder = (a, b) => {
   return n(a.name) - n(b.name) || String(a.name).localeCompare(String(b.name));
 };
 
+// A subject is the teacher's own when the API says so; an older API that sends no flag only ever
+// listed their own subjects outside the sections they are class teacher of.
+const isMine = (sub, sec) => (sub.isMine !== undefined ? sub.isMine : !sec?.isClassTeacher);
+
 const StatCard = ({ icon, label, value, color, sub }) => (
   <div className="section-panel is-header-strip">
     <div style={iconWell(color, 42)}>{icon}</div>
@@ -55,12 +59,14 @@ const ClassCard = ({ cls, onView, onAttendance }) => (
           </div>
         </div>
       </div>
-      <span style={pill(
-        cls.isClassTeacher ? "var(--purple)" : "var(--primary-hover)",
-        cls.isClassTeacher ? "rgba(var(--purple-rgb), 0.12)" : "rgba(219,234,254,0.4)",
-      )}>
-        {cls.isClassTeacher ? <><StarFilled style={{ fontSize: 10 }} /> Class Teacher</> : "Subject Teacher"}
-      </span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+        {cls.isClassTeacher && (
+          <span style={pill("var(--purple)", "rgba(var(--purple-rgb), 0.12)")}><StarFilled style={{ fontSize: 10 }} /> Class Teacher</span>
+        )}
+        {cls.teachesHere && (
+          <span style={pill("var(--primary-hover)", "rgba(219,234,254,0.4)")}>Subject Teacher</span>
+        )}
+      </div>
     </div>
 
     {/* Sections */}
@@ -70,7 +76,8 @@ const ClassCard = ({ cls, onView, onAttendance }) => (
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {cls.sections.map((sec) => {
-          const subjects = (sec.subjects || []).map((s) => s.subjectId?.name).filter(Boolean);
+          const own = (sec.subjects || []).filter((s) => isMine(s, sec) && s.subjectId?.name);
+          const others = (sec.subjects || []).filter((s) => !isMine(s, sec) && s.subjectId?.name);
           return (
             <div key={sec.sectionId?._id} style={{
               display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", borderRadius: 12,
@@ -85,11 +92,27 @@ const ClassCard = ({ cls, onView, onAttendance }) => (
                   <span><b>{sec.studentCount ?? 0}</b> <span className="u-muted">students</span></span>
                   {sec.isClassTeacher && <Tag color="purple" style={{ margin: 0 }}>Class teacher</Tag>}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                  {subjects.length ? subjects.map((name) => (
-                    <span key={name} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>{name}</span>
-                  )) : <span className="u-meta">No subject assigned</span>}
+                {/* What this teacher takes in the section. */}
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 10 }}>You teach</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                  {own.length ? own.map((sub) => (
+                    <span key={sub.subjectId._id || sub.subjectId.name} style={pill("#fff", "var(--primary)")}>{sub.subjectId.name}</span>
+                  )) : <span className="u-meta">No subject of your own here</span>}
                 </div>
+                {/* A class teacher also sees who takes the rest of the section's subjects. */}
+                {others.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 12 }}>Other subjects</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
+                      {others.map((sub) => (
+                        <div key={sub.subjectId._id || sub.subjectId.name} style={{ fontSize: 13, display: "flex", justifyContent: "space-between", gap: 10 }}>
+                          <span>{sub.subjectId.name}</span>
+                          <span style={{ color: sub.teacherName ? "var(--text-secondary)" : "var(--danger)" }}>{sub.teacherName || "No teacher yet"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
               <Tooltip title={`Take attendance for ${cls.name}-${sec.sectionId?.name}`}>
                 <Button icon={<CalendarOutlined />} onClick={() => onAttendance(cls, sec)} aria-label={`Attendance for section ${sec.sectionId?.name}`} />
@@ -133,11 +156,13 @@ const AssignedClasses = () => {
     ...cls,
     sections: [...(cls.sections || [])].sort((a, b) => String(a.sectionId?.name).localeCompare(String(b.sectionId?.name))),
     isClassTeacher: (cls.sections || []).some((s) => s.isClassTeacher),
+    teachesHere: (cls.sections || []).some((sec) => (sec.subjects || []).some((sub) => isMine(sub, sec))),
   })), [classAssignTeacher]);
 
   const stats = useMemo(() => {
     const sections = classes.flatMap((c) => c.sections.map((s) => ({ ...s, className: c.name })));
-    const subjects = new Set(classes.flatMap((c) => (c.subjects || []).map((s) => s.subjectId?.name)).filter(Boolean));
+    // Subjects this teacher takes themselves, not every subject of a section they are class teacher of.
+    const subjects = new Set(classes.flatMap((c) => c.sections.flatMap((sec) => (sec.subjects || []).filter((s) => isMine(s, sec)).map((s) => s.subjectId?.name))).filter(Boolean));
     return {
       classes: classes.length,
       sections: sections.length,
@@ -150,7 +175,7 @@ const AssignedClasses = () => {
   const shown = useMemo(() => {
     const kw = searchText.trim().toLowerCase();
     return classes
-      .filter((c) => (filter === "ct" ? c.isClassTeacher : filter === "subject" ? !c.isClassTeacher : true))
+      .filter((c) => (filter === "ct" ? c.isClassTeacher : filter === "subject" ? c.teachesHere : true))
       .filter((c) => !kw || [
         c.name,
         ...c.sections.map((s) => s.sectionId?.name),
@@ -185,7 +210,7 @@ const AssignedClasses = () => {
           sub={stats.classTeacherOf.length ? `Class teacher of ${stats.classTeacherOf.join(", ")}` : undefined} />
         <StatCard icon={<BookOutlined />} label="Sections" value={stats.sections} color="var(--warning)" />
         <StatCard icon={<TeamOutlined />} label="Students" value={stats.students} color="var(--accent)" />
-        <StatCard icon={<ReadOutlined />} label="Subjects" value={stats.subjects} color="var(--purple)" />
+        <StatCard icon={<ReadOutlined />} label="Subjects you teach" value={stats.subjects} color="var(--purple)" />
       </div>
 
       {classes.length > 0 && (

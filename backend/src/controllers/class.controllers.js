@@ -165,6 +165,8 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
   const sections = await Section.find(sectionQuery)
     .populate("schoolClassId", "name")
     .populate("subjects.subjectId", "name")
+    .populate("subjects.teacherId", "name")
+    .populate("classTeacherId", "name")
     .lean();
 
   // Section.StudentEnrollmentId is a denormalized cache that goes stale whenever a
@@ -203,18 +205,28 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
     }
     classMap[classId].studentCount += studentCountBySection.get(sec._id.toString()) || 0;
 
-    const isClassTeacher = isTeacher && sec.classTeacherId?.toString() === teacherId.toString();
-    const teacherSubjects = isTeacher
-      ? sec.subjects.filter((s) => s.teacherId?.toString() === teacherId.toString())
-      : sec.subjects;
+    // Populated above, so compare ids through _id.
+    const idOf = (v) => String(v?._id || v || "");
+    const mine = (sub) => isTeacher && idOf(sub.teacherId) === teacherId.toString();
+    const isClassTeacher = isTeacher && idOf(sec.classTeacherId) === teacherId.toString();
+    const teacherSubjects = isTeacher ? sec.subjects.filter(mine) : sec.subjects;
     const sectionSubjects = isClassTeacher ? sec.subjects : teacherSubjects;
+
+    // Each subject says whether it is this teacher's own and who takes it. A class teacher is sent
+    // every subject of their section, and without this they could not tell their own subject from
+    // the rest, nor see who teaches the others.
+    const describe = (sub) => ({
+      subjectId: { _id: sub.subjectId?._id, name: sub.subjectId?.name },
+      teacherId: sub.teacherId?._id || null,
+      teacherName: sub.teacherId?.name || null,
+      isMine: mine(sub),
+    });
 
     classMap[classId].sections.push({
       sectionId: { _id: sec._id, name: sec.name },
-      subjects: sectionSubjects.map((sub) => ({
-        subjectId: { _id: sub.subjectId?._id, name: sub.subjectId?.name },
-      })),
+      subjects: sectionSubjects.map(describe),
       isClassTeacher,
+      classTeacherName: sec.classTeacherId?.name || null,
       studentCount: studentCountBySection.get(sec._id.toString()) || 0,
     });
 
@@ -223,17 +235,22 @@ const fetchAssignedClasses = asyncHandler(async (req, res) => {
     sectionSubjects.forEach((sub) => {
       classMap[classId].subjects.push({
         subjectId: { _id: sub.subjectId?._id, name: sub.subjectId?.name },
+        isMine: mine(sub),
       });
-      classMap[classId].role.push(isTeacher ? "subject_teacher" : "coordinator");
+      // "subject_teacher" only for a subject they actually take; a class teacher who teaches
+      // nothing in the section is not one.
+      if (!isTeacher) classMap[classId].role.push("coordinator");
+      else if (mine(sub)) classMap[classId].role.push("subject_teacher");
     });
 
-    classMap[classId].subjects = [
-      ...new Map(
-        classMap[classId].subjects
-          .filter((s) => s?.subjectId?._id)
-          .map((s) => [s.subjectId._id.toString(), s])
-      ).values(),
-    ];
+    // One entry per subject; "mine" if it is theirs in any section of the class.
+    const merged = new Map();
+    classMap[classId].subjects.filter((s) => s?.subjectId?._id).forEach((s) => {
+      const key = s.subjectId._id.toString();
+      const prev = merged.get(key);
+      merged.set(key, prev ? { ...prev, isMine: prev.isMine || s.isMine } : s);
+    });
+    classMap[classId].subjects = [...merged.values()];
     classMap[classId].role = [...new Set(classMap[classId].role)];
   });
 

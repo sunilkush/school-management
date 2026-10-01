@@ -12,7 +12,6 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { fetchAssignedClasses } from "../../../features/classSlice";
-import memoryStorage from "../../../utils/memoryStorage";
 import { getRoleName, getRolePath } from "../../../utils/roles";
 import PageHeader from "../../../components/layout/PageHeader";
 import { statGrid, iconWell, pill } from "../../../styles/pageStyles";
@@ -27,9 +26,15 @@ const StatCard = ({ icon, label, value, color }) => (
   </div>
 );
 
+// A subject is the teacher's own when the API says so; an older API that sends no flag only ever
+// listed their own subjects outside the sections they are class teacher of.
+const isMine = (sub, sec) => (sub?.isMine !== undefined ? sub.isMine : !sec?.isClassTeacher);
+
 const SectionCard = ({ section, onAttendance }) => {
   const name = section?.sectionId?.name || "Section";
   const subjects = section?.subjects || [];
+  const own = subjects.filter((s) => isMine(s, section));
+  const others = subjects.filter((s) => !isMine(s, section));
 
   return (
     <div className="section-panel" style={{ marginBottom: 0, display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
@@ -45,33 +50,53 @@ const SectionCard = ({ section, onAttendance }) => {
             </div>
           </div>
         </div>
-        {section?.isClassTeacher ? (
-          <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>
-            <CrownOutlined style={{ marginRight: 4 }} /> Class Teacher
-          </span>
-        ) : (
-          <span style={pill("var(--primary-hover)", "rgba(219,234,254,0.4)")}>Subject Teacher</span>
-        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+          {section?.isClassTeacher && (
+            <span style={pill("var(--success-hover)", "rgba(220,252,231,0.5)")}>
+              <CrownOutlined style={{ marginRight: 4 }} /> Class Teacher
+            </span>
+          )}
+          {own.length > 0 && (
+            <span style={pill("var(--primary-hover)", "rgba(219,234,254,0.4)")}>Subject Teacher</span>
+          )}
+        </div>
       </div>
 
       <div style={{ borderTop: "1px solid var(--border-muted)" }} />
 
       <div>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
-          Subjects Taught Here
+          You teach
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {subjects.length ? (
-            subjects.map((sub, i) => (
-              <span key={sub?.subjectId?._id || i} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>
+          {own.length ? (
+            own.map((sub, i) => (
+              <span key={sub?.subjectId?._id || i} style={pill("#fff", "var(--primary)")}>
                 {sub?.subjectId?.name || "Subject"}
               </span>
             ))
           ) : (
-            <span className="u-meta">No subjects assigned</span>
+            <span className="u-meta">No subject of your own in this section</span>
           )}
         </div>
       </div>
+
+      {/* A class teacher also sees who takes the rest of the section's subjects. */}
+      {others.length > 0 && (
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+            Other subjects and their teachers
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {others.map((sub, i) => (
+              <div key={sub?.subjectId?._id || i} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 13 }}>
+                <span style={{ fontWeight: 600 }}>{sub?.subjectId?.name || "Subject"}</span>
+                <span style={{ color: sub?.teacherName ? "var(--text-secondary)" : "var(--danger)" }}>{sub?.teacherName || "No teacher yet"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <button
         onClick={onAttendance}
@@ -104,19 +129,18 @@ const ClassDetails = () => {
 
   const { classAssignTeacher = [], loading } = useSelector((state) => state.class || {});
 
-  const user = JSON.parse(memoryStorage.getItem("user") || "{}");
-  const academic = JSON.parse(memoryStorage.getItem("selectedAcademicYear") || "{}");
-
-  const teacherId = user?._id;
-  const schoolId = academic?.schoolId;
-  const academicYearId = academic?._id;
+  // From the app's own state, and fetched every time the page opens. This read the user and the
+  // academic year out of a side storage and fetched only when the list was empty and that storage
+  // had a school id: opened directly it said "Class details not found", and after the office
+  // assigned a subject it kept showing the list loaded before.
+  const { user } = useSelector((state) => state.auth || {});
+  const { selectedAcademicYear } = useSelector((state) => state.academicYear || {});
+  const academicYearId = selectedAcademicYear?._id;
   const rolePath = getRolePath(getRoleName(user));
 
   useEffect(() => {
-    if (!classAssignTeacher.length && teacherId && schoolId && academicYearId) {
-      dispatch(fetchAssignedClasses({ teacherId, schoolId, academicYearId }));
-    }
-  }, [dispatch, classAssignTeacher.length, teacherId, schoolId, academicYearId]);
+    if (academicYearId) dispatch(fetchAssignedClasses({ academicYearId }));
+  }, [dispatch, academicYearId]);
 
   const classData = useMemo(
     () => classAssignTeacher.find((item) => item?._id === classId),
@@ -124,6 +148,11 @@ const ClassDetails = () => {
   );
 
   const isClassTeacherOverall = classData?.role?.includes("class_teacher");
+  const mySubjects = useMemo(() => {
+    const names = new Set();
+    (classData?.sections || []).forEach((sec) => (sec.subjects || []).forEach((sub) => { if (isMine(sub, sec) && sub?.subjectId?.name) names.add(sub.subjectId.name); }));
+    return [...names];
+  }, [classData]);
   const classTeacherSectionCount = useMemo(
     () => (classData?.sections || []).filter((s) => s?.isClassTeacher).length,
     [classData]
@@ -137,7 +166,7 @@ const ClassDetails = () => {
         `&className=${encodeURIComponent(classData?.name || "")}`
     );
 
-  if (!loading && !classData) {
+  if (!loading && !classData && (classAssignTeacher.length > 0 || !academicYearId)) {
     return (
       <div className="page-wrapper">
         <PageHeader
@@ -161,7 +190,9 @@ const ClassDetails = () => {
     <div className="page-wrapper">
       <PageHeader
         title={classData?.name || "Class"}
-        subtitle={isClassTeacherOverall ? "You are the Class Teacher for one or more sections here" : "Subject Teacher · Overview of your assigned sections"}
+        subtitle={isClassTeacherOverall
+          ? `Class Teacher${mySubjects.length ? " and Subject Teacher" : ""} · your sections in this class`
+          : "Subject Teacher · your sections in this class"}
         icon={<ReadOutlined />}
         extra={
           <Space wrap>
@@ -179,7 +210,7 @@ const ClassDetails = () => {
         <div style={{ ...statGrid(170), marginTop: 20 }}>
           <StatCard icon={<TeamOutlined />} label="Students" value={classData?.studentCount || 0} color="var(--accent)" />
           <StatCard icon={<AppstoreOutlined />} label="Sections" value={classData?.sections?.length || 0} color="var(--warning)" />
-          <StatCard icon={<BookOutlined />} label="Subjects" value={classData?.subjects?.length || 0} color="var(--purple)" />
+          <StatCard icon={<BookOutlined />} label="Subjects you teach" value={mySubjects.length} color="var(--purple)" />
           <StatCard icon={<CrownOutlined />} label="Class Teacher Of" value={classTeacherSectionCount} color="var(--primary)" />
         </div>
 
@@ -188,17 +219,19 @@ const ClassDetails = () => {
             <div style={iconWell("var(--purple)", 34)}>
               <BookOutlined />
             </div>
-            <div className="u-title-sm">All Subjects</div>
+            <div className="u-title-sm">Subjects you teach in this class</div>
           </div>
           <div className="u-row-wrap">
-            {classData?.subjects?.length ? (
-              classData.subjects.map((sub, i) => (
-                <span key={sub?.subjectId?._id || i} style={pill("var(--primary)", "rgba(219,234,254,0.4)")}>
-                  {sub?.subjectId?.name || "Subject"}
-                </span>
+            {mySubjects.length ? (
+              mySubjects.map((name) => (
+                <span key={name} style={pill("#fff", "var(--primary)")}>{name}</span>
               ))
             ) : (
-              <span className="u-meta-md">No subjects assigned</span>
+              <span className="u-meta-md">
+                {isClassTeacherOverall
+                  ? "You are the class teacher here but have no subject of your own. The office assigns subjects under Classes → Subject Teachers."
+                  : "No subject assigned to you in this class yet."}
+              </span>
             )}
           </div>
         </div>
