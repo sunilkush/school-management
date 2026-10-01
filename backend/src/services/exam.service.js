@@ -28,14 +28,19 @@ const examScopeRole = (user) => {
 };
 // With no year named, the enrollment in the school's active year — not simply the newest one,
 // which for a child promoted ahead of time is next year's class.
-const currentEnrollment = async (query) => {
+const currentEnrollment = async ({ status, ...rest }) => {
+  // Active anywhere, or already marked Promoted — the active-year pick below decides between them.
+  const query = status === "Active" ? { ...rest, status: { $in: ["Active", "Promoted"] } } : { ...rest, status };
   const rows = await StudentEnrollment.find(query)
     .sort({ createdAt: -1 })
-    .select("schoolId academicYearId schoolClassId sectionId")
+    .select("schoolId academicYearId schoolClassId sectionId status")
     .lean();
-  if (rows.length < 2) return rows[0] || null;
+  if (!rows.length) return null;
   const activeYear = await AcademicYear.findOne({ schoolId: rows[0].schoolId, $or: [{ isActive: true }, { status: "active" }] }).select("_id").lean();
-  return rows.find((r) => String(r.academicYearId) === String(activeYear?._id)) || rows[0];
+  return rows.find((r) => String(r.academicYearId) === String(activeYear?._id))
+    || rows.find((r) => r.status === "Active")
+    // A year was named: whatever the student's enrollment in it is.
+    || (rest.academicYearId ? rows[0] : null);
 };
 
 const getActiveEnrollmentForStudentUser = async ({ userId, academicYearId }) => {

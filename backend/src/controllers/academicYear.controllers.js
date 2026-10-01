@@ -266,6 +266,24 @@ export const setActiveAcademicYear = asyncHandler(async (req, res) => {
   const activated = await AcademicYear.findOne({ _id: academicYear._id, isActive: true });
   if (!activated) throw new ApiError(409, `${academicYear.name} was just changed — refresh to see it`);
 
+  // The class a student is in follows the running year. Promotion ahead of time leaves this
+  // year's enrollment Active and adds next year's; when the new year starts, that is the moment
+  // the old one becomes "Promoted". Going back to an earlier year undoes it.
+  await StudentEnrollment.updateMany(
+    { schoolId: academicYear.schoolId, academicYearId: academicYear._id, status: "Promoted" },
+    { $set: { status: "Active" } }
+  );
+  const nowEnrolled = await StudentEnrollment.distinct("studentId", {
+    schoolId: academicYear.schoolId, academicYearId: academicYear._id, status: "Active",
+  });
+  const earlierYears = await AcademicYear.find({ schoolId: academicYear.schoolId, startDate: { $lt: academicYear.startDate } }).select("_id").lean();
+  if (nowEnrolled.length && earlierYears.length) {
+    await StudentEnrollment.updateMany(
+      { schoolId: academicYear.schoolId, academicYearId: { $in: earlierYears.map((y) => y._id) }, studentId: { $in: nowEnrolled }, status: "Active" },
+      { $set: { status: "Promoted" } }
+    );
+  }
+
   res.status(200).json({
     success: true,
     message: "Academic year set as active successfully",

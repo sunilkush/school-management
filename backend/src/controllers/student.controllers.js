@@ -1496,7 +1496,22 @@ const getPromotionCandidates = asyncHandler(async (req, res) => {
     .populate("sectionId", "name")
     .sort({ registrationNumber: 1 });
 
-  const data = students.map((enrollment) => ({
+  // A student promoted ahead of time stays Active in this year until the next one starts, so
+  // "Active" alone no longer means "not yet promoted": leave out anyone already placed in a later year.
+  const fromYear = await AcademicYear.findOne({ _id: academicYearId, schoolId }).select("startDate").lean();
+  const laterYears = fromYear?.startDate
+    ? await AcademicYear.find({ schoolId, startDate: { $gt: fromYear.startDate } }).select("_id").lean()
+    : [];
+  const placed = laterYears.length
+    ? new Set((await StudentEnrollment.distinct("studentId", {
+      schoolId,
+      academicYearId: { $in: laterYears.map((y) => y._id) },
+      studentId: { $in: students.map((e) => e.studentId?._id).filter(Boolean) },
+      status: { $ne: "Inactive" },
+    })).map(String))
+    : new Set();
+
+  const data = students.filter((enrollment) => !placed.has(String(enrollment.studentId?._id))).map((enrollment) => ({
     enrollmentId: enrollment._id,
     studentId: enrollment.studentId?._id || null,
     name: enrollment.studentId?.userId?.name || "N/A",
@@ -1538,6 +1553,13 @@ const promoteStudentsToNextAcademicYear = asyncHandler(async (req, res) => {
   if (!targetClass) {
     throw new ApiError(404, "Target class not found in selected academic year");
   }
+
+  // Promoting into a year that has not started must not take the student out of this year: they
+  // are still in their current class until the school sets the next year running. Marking them
+  // "Promoted" at once dropped them from this year's class lists and attendance, and showed next
+  // year's class in the portals. setActiveAcademicYear marks them when the new year starts.
+  const targetYear = await AcademicYear.findOne({ _id: toAcademicYearId, schoolId }).select("isActive status").lean();
+  const targetIsRunning = targetYear?.isActive === true || targetYear?.status === "active";
 
   const targetSection = await Section.findOne({
     _id: toSectionId,
@@ -1598,11 +1620,13 @@ const promoteStudentsToNextAcademicYear = asyncHandler(async (req, res) => {
 
     const promotedIds = promotable.map((item) => item._id);
 
-    await StudentEnrollment.updateMany(
-      { _id: { $in: promotedIds } },
-      { $set: { status: "Promoted" } },
-      { session }
-    );
+    if (targetIsRunning) {
+      await StudentEnrollment.updateMany(
+        { _id: { $in: promotedIds } },
+        { $set: { status: "Promoted" } },
+        { session }
+      );
+    }
 
     await Section.updateOne(
       { _id: toSectionId },
@@ -1616,7 +1640,8 @@ const promoteStudentsToNextAcademicYear = asyncHandler(async (req, res) => {
     // issue a fresh one. Failures here must never surface as a promotion failure, since the
     // promotion itself already committed above.
     try {
-      await Promise.allSettled(
+      // A card for next year's class is only right once that year is running.
+      if (targetIsRunning) await Promise.allSettled(
         createdEnrollments.map((item) =>
           reissueStudentIdCardOnPromotion({
             schoolId,
@@ -1754,7 +1779,9 @@ const getMyChildren = asyncHandler(async (req, res) => {
             $match: {
               $expr: { $eq: ["$studentId", "$$studentRef"] },
               schoolId: new mongoose.Types.ObjectId(schoolId),
-              status: "Active",
+              // "Promoted" inside the running year is an older record from before promotion left
+              // this year's enrollment Active; the child is still in that class.
+              $or: [{ status: "Active" }, { status: "Promoted", academicYearId: activeYear?._id || null }],
             },
           },
           { $addFields: { inActiveYear: { $eq: ["$academicYearId", activeYear?._id || null] } } },
